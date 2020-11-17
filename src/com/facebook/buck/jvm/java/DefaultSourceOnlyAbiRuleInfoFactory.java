@@ -17,29 +17,40 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.jvm.java.JarBuildStepsFactory.JavaDependencyInfo;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.collect.ImmutableList;
 import javax.tools.JavaFileManager;
 
 /** Default factory for SourceOnlyAbiRuleInfos. */
-class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleInfoFactory {
-  private final ImmutableList<JavaDependencyInfo> classPathInfo;
-  private final BuildTarget buildTarget;
-  private final boolean ruleIsRequiredForSourceOnlyAbi;
+@BuckStyleValue
+abstract class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleInfoFactory {
 
-  public DefaultSourceOnlyAbiRuleInfoFactory(
-      ImmutableList<JavaDependencyInfo> classPathInfo,
+  abstract ImmutableList<BaseJavaAbiInfo> getFullJarInfos();
+
+  abstract ImmutableList<BaseJavaAbiInfo> getAbiJarInfos();
+
+  abstract BuildTarget getBuildTarget();
+
+  abstract boolean isRuleIsRequiredForSourceOnlyAbi();
+
+  public static DefaultSourceOnlyAbiRuleInfoFactory of(
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       BuildTarget buildTarget,
       boolean ruleIsRequiredForSourceOnlyAbi) {
-    this.classPathInfo = classPathInfo;
-    this.buildTarget = buildTarget;
-    this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
+    return ImmutableDefaultSourceOnlyAbiRuleInfoFactory.ofImpl(
+        fullJarInfos, abiJarInfos, buildTarget, ruleIsRequiredForSourceOnlyAbi);
   }
 
   @Override
   public SourceOnlyAbiRuleInfo create(JavaFileManager fileManager) {
     return new DefaultSourceOnlyAbiRuleInfo(
-        classPathInfo, fileManager, buildTarget, ruleIsRequiredForSourceOnlyAbi);
+        getFullJarInfos(),
+        getAbiJarInfos(),
+        fileManager,
+        getBuildTarget(),
+        isRuleIsRequiredForSourceOnlyAbi());
   }
 }

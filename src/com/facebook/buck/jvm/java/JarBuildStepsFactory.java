@@ -40,6 +40,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
+import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
+import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -325,8 +328,30 @@ public class JarBuildStepsFactory
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
+    ImmutableList<BaseJavaAbiInfo> fullJarInfos =
+        dependencyInfos.infos.stream()
+            .map(this::toBaseJavaAbiInfo)
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<BaseJavaAbiInfo> abiJarInfos =
+        dependencyInfos.infos.stream()
+            .filter(info -> info.isRequiredForSourceOnlyAbi)
+            .map(this::toBaseJavaAbiInfo)
+            .collect(ImmutableList.toImmutableList());
+
     CompilerParameters compilerParameters =
-        getCompilerParameters(compileTimeClasspathPaths, javaSrcs, baseBuckPaths, buildTarget);
+        getCompilerParameters(
+            compileTimeClasspathPaths,
+            javaSrcs,
+            fullJarInfos,
+            abiJarInfos,
+            baseBuckPaths,
+            buildTarget,
+            trackClassUsage,
+            trackJavacPhaseEvents,
+            abiGenerationMode,
+            abiCompatibilityMode,
+            isRequiredForSourceOnlyAbi);
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
@@ -390,8 +415,30 @@ public class JarBuildStepsFactory
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
+    ImmutableList<BaseJavaAbiInfo> fullJarInfos =
+        dependencyInfos.infos.stream()
+            .map(this::toBaseJavaAbiInfo)
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<BaseJavaAbiInfo> abiJarInfos =
+        dependencyInfos.infos.stream()
+            .filter(info -> info.isRequiredForSourceOnlyAbi)
+            .map(this::toBaseJavaAbiInfo)
+            .collect(ImmutableList.toImmutableList());
+
     CompilerParameters compilerParameters =
-        getCompilerParameters(compileTimeClasspathPaths, javaSrcs, baseBuckPaths, buildTarget);
+        getCompilerParameters(
+            compileTimeClasspathPaths,
+            javaSrcs,
+            fullJarInfos,
+            abiJarInfos,
+            baseBuckPaths,
+            buildTarget,
+            trackClassUsage,
+            trackJavacPhaseEvents,
+            abiGenerationMode,
+            abiCompatibilityMode,
+            isRequiredForSourceOnlyAbi);
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
     configuredCompiler.createCompileToJarStep(
@@ -446,11 +493,18 @@ public class JarBuildStepsFactory
         pathToClassHashes);
   }
 
-  private CompilerParameters getCompilerParameters(
+  private static CompilerParameters getCompilerParameters(
       ImmutableSortedSet<Path> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       BaseBuckPaths baseBuckPaths,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
+      AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      boolean isRequiredForSourceOnlyAbi) {
     return CompilerParameters.builder()
         .setClasspathEntries(compileTimeClasspathPaths)
         .setSourceFilePaths(javaSrcs)
@@ -460,9 +514,14 @@ public class JarBuildStepsFactory
         .setAbiGenerationMode(abiGenerationMode)
         .setAbiCompatibilityMode(abiCompatibilityMode)
         .setSourceOnlyAbiRuleInfoFactory(
-            new DefaultSourceOnlyAbiRuleInfoFactory(
-                dependencyInfos.infos, buildTarget, isRequiredForSourceOnlyAbi))
+            DefaultSourceOnlyAbiRuleInfoFactory.of(
+                fullJarInfos, abiJarInfos, buildTarget, isRequiredForSourceOnlyAbi))
         .build();
+  }
+
+  private BaseJavaAbiInfo toBaseJavaAbiInfo(JavaDependencyInfo info) {
+    return new DefaultBaseJavaAbiInfo(
+        DefaultJavaAbiInfo.extractBuildTargetFromSourcePath(info.compileTimeJar));
   }
 
   private ImmutableSortedSet<Path> getJavaSrcs(
@@ -598,8 +657,31 @@ public class JarBuildStepsFactory
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
+    ImmutableList<BaseJavaAbiInfo> fullJarInfos =
+        dependencyInfos.infos.stream()
+            .map(this::toBaseJavaAbiInfo)
+            .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<BaseJavaAbiInfo> abiJarInfos =
+        dependencyInfos.infos.stream()
+            .filter(info -> info.isRequiredForSourceOnlyAbi)
+            .map(this::toBaseJavaAbiInfo)
+            .collect(ImmutableList.toImmutableList());
+
     CompilerParameters compilerParameters =
-        getCompilerParameters(compileTimeClasspathPaths, javaSrcs, baseBuckPaths, firstRule);
+        getCompilerParameters(
+            compileTimeClasspathPaths,
+            javaSrcs,
+            fullJarInfos,
+            abiJarInfos,
+            baseBuckPaths,
+            firstRule,
+            trackClassUsage,
+            trackJavacPhaseEvents,
+            abiGenerationMode,
+            abiCompatibilityMode,
+            isRequiredForSourceOnlyAbi);
+
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,

@@ -18,9 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
-import com.facebook.buck.jvm.core.JavaAbiInfo;
-import com.facebook.buck.jvm.java.JarBuildStepsFactory.JavaDependencyInfo;
+import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
 import com.google.common.collect.ImmutableList;
@@ -41,8 +39,9 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
-  private final ImmutableList<JavaAbiInfo> fullJarInfos;
-  private final ImmutableList<JavaAbiInfo> abiJarInfos;
+
+  private final ImmutableList<BaseJavaAbiInfo> fullJarInfos;
+  private final ImmutableList<BaseJavaAbiInfo> abiJarInfos;
   private final BuildTarget buildTarget;
   private final boolean ruleIsRequiredForSourceOnlyAbi;
 
@@ -50,25 +49,16 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   private final JavaFileManager fileManager;
 
   public DefaultSourceOnlyAbiRuleInfo(
-      ImmutableList<JavaDependencyInfo> classPathInfo,
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfo,
       JavaFileManager fileManager,
       BuildTarget buildTarget,
       boolean ruleIsRequiredForSourceOnlyAbi) {
-
+    this.fullJarInfos = fullJarInfos;
+    this.abiJarInfos = abiJarInfo;
     this.buildTarget = buildTarget;
     this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
     this.fileManager = fileManager;
-
-    fullJarInfos =
-        classPathInfo.stream()
-            .map(info -> DefaultJavaAbiInfo.of(info.compileTimeJar))
-            .collect(ImmutableList.toImmutableList());
-
-    abiJarInfos =
-        classPathInfo.stream()
-            .filter(info -> info.isRequiredForSourceOnlyAbi)
-            .map(info -> DefaultJavaAbiInfo.of(info.compileTimeJar))
-            .collect(ImmutableList.toImmutableList());
   }
 
   private JavaFileManager getFileManager() {
@@ -98,13 +88,13 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
 
   @Nullable
   private String getOwningTarget(
-      Elements elements, Element element, ImmutableList<JavaAbiInfo> classpath) {
+      Elements elements, Element element, ImmutableList<BaseJavaAbiInfo> classpath) {
     TypeElement enclosingType = MoreElements.getTypeElement(element);
     String classFilePath =
         elements.getBinaryName(enclosingType).toString().replace('.', File.separatorChar)
             + ".class";
 
-    for (JavaAbiInfo info : classpath) {
+    for (BaseJavaAbiInfo info : classpath) {
       if (info.jarContains(classFilePath)) {
         return info.getUnflavoredBuildTargetName();
       }
