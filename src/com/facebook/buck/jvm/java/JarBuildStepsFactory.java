@@ -441,9 +441,14 @@ public class JarBuildStepsFactory
             .map(PathWrapper::getPath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
 
+    ImmutableSortedSet<Path> javaSrcs =
+        srcs.stream()
+            .map(src -> filesystem.relativize(sourcePathResolver.getAbsolutePath(src)).getPath())
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
     return CompilerParameters.builder()
         .setClasspathEntries(compileTimeClasspathPaths)
-        .setSourceFileSourcePaths(srcs, filesystem, sourcePathResolver)
+        .setSourceFilePaths(javaSrcs)
         .setScratchPaths(buildTarget, filesystem)
         .setShouldTrackClassUsage(trackClassUsage)
         .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)

@@ -17,14 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -71,20 +68,10 @@ public abstract class CompilerParameters {
   }
 
   public static class Builder extends ImmutableCompilerParameters.Builder {
+
     public Builder setScratchPaths(BuildTarget target, ProjectFilesystem projectFilesystem) {
       CompilerOutputPaths paths = CompilerOutputPaths.of(target, projectFilesystem.getBuckPaths());
       return this.setOutputPaths(paths);
-    }
-
-    public Builder setSourceFileSourcePaths(
-        ImmutableSortedSet<SourcePath> srcs,
-        ProjectFilesystem projectFilesystem,
-        SourcePathResolverAdapter resolver) {
-      ImmutableSortedSet<Path> javaSrcs =
-          srcs.stream()
-              .map(src -> projectFilesystem.relativize(resolver.getAbsolutePath(src)).getPath())
-              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-      return this.setSourceFilePaths(javaSrcs);
     }
   }
 }
