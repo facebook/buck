@@ -8,6 +8,7 @@ java_library(
     deps = [
         "//src-gen:buildable-command-model",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/namedpipes:namedpipes",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/event/isolated:isolated",
         "//src/com/facebook/buck/external/log:log",

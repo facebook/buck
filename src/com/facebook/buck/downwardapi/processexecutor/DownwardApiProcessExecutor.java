@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
@@ -32,6 +33,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateLaunchedProcess;
 import com.facebook.buck.util.DelegateProcessExecutor;
@@ -95,7 +97,12 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         IsolatedEventBus buckEventBus,
         String actionId) {
       return new DownwardApiProcessExecutor(
-          delegate, consoleParams, buckEventBus, actionId, NamedPipeFactory.getFactory());
+          delegate,
+          consoleParams,
+          buckEventBus,
+          actionId,
+          NamedPipeFactory.getFactory(
+              DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE));
     }
   }
 
@@ -416,7 +423,9 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
      */
     void terminateAndWait(long timeout, TimeUnit unit)
         throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
-      NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
+      NamedPipeFactory namedPipeFactory =
+          NamedPipeFactory.getFactory(
+              DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE);
       try (NamedPipeWriter writer =
               namedPipeFactory.connectAsWriter(Paths.get(namedPipe.getName()));
           OutputStream outputStream = writer.getOutputStream()) {

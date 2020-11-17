@@ -18,6 +18,7 @@ package com.facebook.buck.external.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
@@ -29,6 +30,7 @@ import com.facebook.buck.external.parser.ParsedEnvVars;
 import com.facebook.buck.external.utils.BuildStepsRetriever;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
 import com.facebook.buck.util.Ansi;
@@ -58,7 +60,9 @@ public class ExternalActionsExecutable {
     ParsedEnvVars parsedEnvVars = ParsedEnvVars.parse(EnvVariablesProvider.getSystemEnv());
     Console console = createConsole(parsedEnvVars);
     try (NamedPipeWriter namedPipe =
-            NamedPipeFactory.getFactory().connectAsWriter(parsedEnvVars.getEventPipe());
+            NamedPipeFactory.getFactory(
+                    DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE)
+                .connectAsWriter(parsedEnvVars.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
       DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
       Logger.get("").addHandler(new ExternalLogHandler(outputStream));
