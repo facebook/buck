@@ -921,11 +921,34 @@ public final class MainRunner {
         remoteExecutionConfig.validateCertificatesOrThrow();
       }
 
+      Optional<String> reMetricsDumpPath =
+          remoteExecutionConfig
+              .getStrategyConfig()
+              .getStatsDumpPath()
+              .map(
+                  path -> {
+                    Path p = Paths.get(path);
+                    if (Files.isRegularFile(p)) {
+                      return path;
+                    }
+
+                    if (Files.exists(p) && Files.isDirectory(p)) {
+                      return Paths.get(
+                              path,
+                              String.format(
+                                  "%s_%s_%s.json",
+                                  command.getDeclaredSubCommandName(),
+                                  remoteExecutionConfig.getReSessionLabel(),
+                                  buildId))
+                          .toString();
+                    }
+
+                    return null;
+                  });
+
       Optional<RemoteExecutionEventListener> remoteExecutionListener =
           remoteExecutionConfig.isConsoleEnabled()
-              ? Optional.of(
-                  new RemoteExecutionEventListener(
-                      remoteExecutionConfig.getStrategyConfig().getStatsDumpPath()))
+              ? Optional.of(new RemoteExecutionEventListener(reMetricsDumpPath))
               : Optional.empty();
       MetadataProvider metadataProvider =
           MetadataProviderFactory.minimalMetadataProviderForBuild(
