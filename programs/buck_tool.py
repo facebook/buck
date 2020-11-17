@@ -715,27 +715,32 @@ class BuckTool(object):
                 else:
                     return ExecuteProcess(exit_code, path, argv, envp, cwd)
 
+    def _register_basic_info_for_report(self):
+        """ Store common information in reporter """
+        try:
+            repository = self._get_repository()
+            self._reporter.repository = repository
+        except Exception as e:
+            # _get_repository() is only for reporting,
+            # so skip on error
+            logging.warning(
+                "Failed to get repo name for reporting purpose: %s", repr(e)
+            )
+
+        buck_version_uid = self._get_buck_version_uid()
+        self._reporter.buck_version = buck_version_uid
+
     def launch_buck(self, build_id, client_cwd, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
-                self._reporter.build_id = build_id
-
-                try:
-                    repository = self._get_repository()
-                    self._reporter.repository = repository
-                except Exception as e:
-                    # _get_repository() is only for reporting,
-                    # so skip on error
-                    logging.warning("Failed to get repo name: " + str(e))
+                self._register_basic_info_for_report()
+                buck_version_uid = self._get_buck_version_uid()
 
                 if (
                     self._command_line.command == "clean"
                     and not self._command_line.is_help()
                 ):
                     self.kill_buckd()
-
-                buck_version_uid = self._get_buck_version_uid()
-                self._reporter.buck_version = buck_version_uid
 
                 if self._command_line.is_version():
                     print("buck version {}".format(buck_version_uid))
@@ -974,6 +979,8 @@ class BuckTool(object):
         with Tracing("BuckTool.kill_buckd"), exclusive_lock(
             self._buck_project.get_section_lock_path("buckd_kill"), wait=True
         ):
+            self._register_basic_info_for_report()
+
             buckd_transport_file_path = (
                 self._buck_project.get_buckd_transport_file_path()
             )

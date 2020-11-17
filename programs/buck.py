@@ -64,6 +64,7 @@ THIS_DIR = os.path.dirname(os.path.realpath(__file__))
 
 # Kill all buck processes
 def killall_buck(reporter):
+    reporter.no_buckd_reason = "killall"
     # Linux or macOS
     if os.name != "posix" and os.name != "nt":
         message = "killall is not implemented on: " + os.name
@@ -92,6 +93,7 @@ def killall_buck(reporter):
 
 # Invoke SOS report
 def sosreport(reporter):
+    reporter.no_buckd_reason = "sosreport"
     if os.name == "nt":
         # TODO: windows platform version
         message = "sosreport is not implemented on: " + os.name
@@ -197,6 +199,7 @@ def main(argv, reporter):
         build_id = str(uuid.uuid4())
     if "BUCK_ROOT_BUILD_ID" not in os.environ:
         os.environ["BUCK_ROOT_BUILD_ID"] = build_id
+    reporter.build_id = build_id
 
     java_version_status_queue = Queue(maxsize=1)
 
@@ -215,6 +218,7 @@ def main(argv, reporter):
     def kill_buck(reporter):
         buck_repo = get_repo(BuckProject.from_current_dir())
         buck_repo.kill_buckd()
+        reporter.no_buckd_reason = "kill"
         return ExitCode.SUCCESS
 
     # Execute wrapper specific commands
@@ -231,7 +235,6 @@ def main(argv, reporter):
     install_signal_handlers()
     try:
         tracing_dir = None
-        reporter.build_id = build_id
         with Tracing("main"):
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), "traces")
