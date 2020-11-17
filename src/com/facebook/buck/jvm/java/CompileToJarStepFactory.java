@@ -60,7 +60,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       BuildableContext buildableContext,
       boolean withDownwardApi,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      ImmutableMap<RelPath, RelPath> resourcesMap) {
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      Path buildCellRootPath) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
     steps.addAll(
@@ -90,7 +91,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
           libraryJarParameters,
           steps,
           buildableContext,
-          withDownwardApi);
+          withDownwardApi,
+          buildCellRootPath);
     }
 
     if (jarParameters != null) {
@@ -168,10 +170,10 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Path buildCellRootPath) {
     Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(
         libraryJarParameters != null
@@ -196,7 +198,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
             compilerParameters.getClasspathEntries(),
             getBootClasspath(),
             withDownwardApi,
-            context.getBuildCellRootPath()));
+            buildCellRootPath));
 
     createJarStep(libraryJarParameters, steps);
   }

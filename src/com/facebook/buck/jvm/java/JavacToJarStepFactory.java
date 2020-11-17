@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -186,7 +187,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Path buildCellRootPath) {
     Preconditions.checkArgument(
         libraryJarParameters == null
             || libraryJarParameters
@@ -242,7 +244,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
           libraryJarParameters,
           steps,
           buildableContext,
-          withDownwardApi);
+          withDownwardApi,
+          buildCellRootPath);
     }
   }
 

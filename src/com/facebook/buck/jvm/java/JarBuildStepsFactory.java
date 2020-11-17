@@ -357,6 +357,8 @@ public class JarBuildStepsFactory
     JarParameters libraryJarParameters =
         getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
 
+    Path buildCellRootPath = context.getBuildCellRootPath();
+
     CompilerParameters compilerParameters =
         getCompilerParameters(
             compileTimeClasspathPaths,
@@ -383,7 +385,8 @@ public class JarBuildStepsFactory
         buildableContext,
         withDownwardApi,
         cellToPathMappings,
-        resourcesMap);
+        resourcesMap,
+        buildCellRootPath);
 
     return steps.build();
   }
@@ -469,6 +472,8 @@ public class JarBuildStepsFactory
     JarParameters libraryJarParameters =
         getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
 
+    Path buildCellRootPath = context.getBuildCellRootPath();
+
     CompilerParameters compilerParameters =
         getCompilerParameters(
             compileTimeClasspathPaths,
@@ -495,7 +500,8 @@ public class JarBuildStepsFactory
         buildableContext,
         withDownwardApi,
         cellToPathMappings,
-        resourcesMap);
+        resourcesMap,
+        buildCellRootPath);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         filesystem.getIgnoredPaths(),
@@ -573,7 +579,9 @@ public class JarBuildStepsFactory
 
   private BaseJavaAbiInfo toBaseJavaAbiInfo(JavaDependencyInfo info) {
     return new DefaultBaseJavaAbiInfo(
-        DefaultJavaAbiInfo.extractBuildTargetFromSourcePath(info.compileTimeJar));
+        DefaultJavaAbiInfo.extractBuildTargetFromSourcePath(info.compileTimeJar)
+            .getUnflavoredBuildTarget()
+            .toString());
   }
 
   private ImmutableSortedSet<Path> getJavaSrcs(
