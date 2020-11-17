@@ -252,6 +252,10 @@ public class BuckProjectSettingsProvider
     return state.macroTargetTypeToTargetType.getOrDefault(targetType, targetType);
   }
 
+  public String getAndroidxTargetName(String directory) {
+    return state.directoryToAndroidxTargetName.getOrDefault(directory, directory);
+  }
+
   /** All settings are stored in this inner class. */
   public static class State {
 
@@ -309,6 +313,9 @@ public class BuckProjectSettingsProvider
     /** Mapping from macro build target types to actual build target types */
     public Map<String, String> macroTargetTypeToTargetType = new HashMap<>();
 
+    /** Mapping from directory to androidx Buck target names */
+    public Map<String, String> directoryToAndroidxTargetName = new HashMap<>();
+
     @Override
     public boolean equals(Object o) {
       if (this == o) {
@@ -330,7 +337,8 @@ public class BuckProjectSettingsProvider
           && Objects.equal(adbExecutable, state.adbExecutable)
           && Objects.equal(customizedInstallSettingCommand, state.customizedInstallSettingCommand)
           && Objects.equal(cells, state.cells)
-          && Objects.equal(macroTargetTypeToTargetType, state.macroTargetTypeToTargetType);
+          && Objects.equal(macroTargetTypeToTargetType, state.macroTargetTypeToTargetType)
+          && Objects.equal(directoryToAndroidxTargetName, state.directoryToAndroidxTargetName);
     }
 
     @Override
@@ -348,7 +356,8 @@ public class BuckProjectSettingsProvider
           customizedInstallSetting,
           customizedInstallSettingCommand,
           cells,
-          macroTargetTypeToTargetType);
+          macroTargetTypeToTargetType,
+          directoryToAndroidxTargetName);
     }
   }
 }

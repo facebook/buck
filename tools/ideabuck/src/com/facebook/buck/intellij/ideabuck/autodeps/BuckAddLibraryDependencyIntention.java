@@ -53,7 +53,14 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
     super(wrapper);
     this.importSourceTarget = importSourceTarget;
     this.importLibrary = importLibrary;
-    String message = "Add BUCK dependency on library(" + importSourceTarget + ")";
+    // Want to display correct target before running Buck query
+    TargetMetadata importMetadata = new TargetMetadata();
+    importMetadata.target = importSourceTarget;
+    String target =
+        TargetMetadataTransformer.transformImportedTarget(project, importMetadata)
+            .target
+            .toString();
+    String message = "Add BUCK dependency on library(" + target + ")";
     setText(message);
   }
 

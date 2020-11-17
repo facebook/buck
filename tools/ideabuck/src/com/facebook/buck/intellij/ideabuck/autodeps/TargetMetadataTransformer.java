@@ -35,7 +35,7 @@ public abstract class TargetMetadataTransformer {
     List<TargetMetadataTransformer> transformers = EP_NAME.getExtensions(project);
     TargetMetadata targetMetadata = editedTarget;
     for (TargetMetadataTransformer transformer : transformers) {
-      targetMetadata = transformer.transformEditedTarget(targetMetadata);
+      targetMetadata = transformer.transformEditedTargetWithProject(project, targetMetadata);
     }
     return targetMetadata;
   }
@@ -46,7 +46,7 @@ public abstract class TargetMetadataTransformer {
     List<TargetMetadataTransformer> transformers = EP_NAME.getExtensions(project);
     TargetMetadata targetMetadata = importedTarget;
     for (TargetMetadataTransformer transformer : transformers) {
-      targetMetadata = transformer.transformImportedTarget(targetMetadata);
+      targetMetadata = transformer.transformImportedTargetWithProject(project, targetMetadata);
     }
     return targetMetadata;
   }
@@ -60,10 +60,28 @@ public abstract class TargetMetadataTransformer {
   public abstract TargetMetadata transformEditedTarget(TargetMetadata editedTarget);
 
   /**
+   * Some subclasses may need a project to transform the target, left {@link
+   * #transformEditedTarget(TargetMetadata)} signature the same for compatibility
+   */
+  public TargetMetadata transformEditedTargetWithProject(
+      Project project, TargetMetadata editedTarget) {
+    return transformEditedTarget(editedTarget);
+  }
+
+  /**
    * Transform the TargetMetadata being edited
    *
    * @param importedTarget the TargetMetadata of the target being edited
    * @return
    */
   public abstract TargetMetadata transformImportedTarget(TargetMetadata importedTarget);
+
+  /**
+   * Some subclasses may need a project to transform the target, left {@link
+   * #transformImportedTarget(TargetMetadata)} signature the same for compatibility
+   */
+  public TargetMetadata transformImportedTargetWithProject(
+      Project project, TargetMetadata importedTarget) {
+    return transformImportedTarget(importedTarget);
+  }
 }
