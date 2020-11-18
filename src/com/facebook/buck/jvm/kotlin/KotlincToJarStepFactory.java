@@ -306,7 +306,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
       ImmutableList.Builder<String> extraArguments =
           ImmutableList.<String>builder()
-              .addAll(extraKotlincArguments)
               .add(friendPathsArg)
               .addAll(
                   getKotlinCompilerPluginsArgs(
@@ -322,6 +321,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             extraArguments.add("-jvm-target");
             extraArguments.add(target);
           });
+
+      extraArguments.addAll(extraKotlincArguments);
 
       steps.add(
           new KotlincStep(
