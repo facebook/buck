@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.Escaper;
@@ -28,7 +28,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /** Interface for a javac tool. */
-public interface Javac extends Tool {
+public interface Javac extends AddsToRuleKey {
   /** An escaper for arguments written to @argfiles. */
   Function<String, String> ARGFILES_ESCAPER = Escaper.javacEscaper();
 

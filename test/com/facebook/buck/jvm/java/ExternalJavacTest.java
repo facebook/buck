@@ -251,19 +251,7 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private Javac createTestStep() {
     return new ExternalJavac(
-        () ->
-            new Tool() {
-              @Override
-              public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-                return ImmutableList.of();
-              }
-
-              @Override
-              public ImmutableMap<String, String> getEnvironment(
-                  SourcePathResolverAdapter resolver) {
-                return ImmutableMap.of();
-              }
-            },
+        () -> new FakeTool(),
         filesystem.resolve(Paths.get("fakeJavac")).toString(),
         new TestActionGraphBuilder().getSourcePathResolver());
   }

@@ -17,12 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -47,16 +45,6 @@ public abstract class Jsr199Javac implements Javac {
   @Override
   public String getShortName() {
     return "javac";
-  }
-
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-    throw new UnsupportedOperationException("In memory javac may not be used externally");
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
-    throw new UnsupportedOperationException("In memory javac may not be used externally");
   }
 
   protected abstract JavaCompiler createCompiler(JavacExecutionContext context);

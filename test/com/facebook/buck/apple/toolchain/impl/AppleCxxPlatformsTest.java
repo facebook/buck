@@ -1069,6 +1069,7 @@ public class AppleCxxPlatformsTest {
 
   private abstract static class NoopBinaryBuildRule extends NoopBuildRuleWithDeclaredAndExtraDeps
       implements BinaryBuildRule {
+
     public NoopBinaryBuildRule(
         BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
       super(buildTarget, projectFilesystem, params);

@@ -69,7 +69,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
-import com.facebook.buck.jvm.java.FakeJavac;
+import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
@@ -1112,7 +1112,7 @@ public class AndroidBinaryGraphEnhancerTest {
         .setDexReorderToolFile(FakeSourcePath.of(""))
         .setDxExecutorService(MoreExecutors.newDirectExecutorService())
         .setDxMaxHeapSize("")
-        .setJavaRuntimeLauncher(new FakeJavac())
+        .setJavaRuntimeLauncher(new FakeTool())
         .setOptimizationPasses(0)
         .setProguardMaxHeapSize("")
         .setReorderClassesIntraDex(false)

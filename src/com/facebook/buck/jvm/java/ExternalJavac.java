@@ -27,11 +27,11 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -53,16 +53,6 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-    return commandPrefix;
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
-    return javac.get().getEnvironment(resolver);
-  }
-
-  @Override
   public String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
@@ -79,6 +69,11 @@ public class ExternalJavac implements Javac {
   @Override
   public String getShortName() {
     return shortName;
+  }
+
+  @VisibleForTesting
+  ImmutableList<String> getCommandPrefix() {
+    return commandPrefix;
   }
 
   @Override

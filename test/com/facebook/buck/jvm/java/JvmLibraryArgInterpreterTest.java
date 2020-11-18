@@ -177,9 +177,7 @@ public class JvmLibraryArgInterpreterTest {
     ExternalJavac javac =
         (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
 
-    assertEquals(
-        ImmutableList.of(externalJavac.toString()),
-        javac.getCommandPrefix(sourcePathResolverAdapter));
+    assertEquals(ImmutableList.of(externalJavac.toString()), javac.getCommandPrefix());
   }
 
   @Test
@@ -200,9 +198,7 @@ public class JvmLibraryArgInterpreterTest {
     ExternalJavac javac =
         (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
 
-    assertEquals(
-        ImmutableList.of(externalJavacPath.toString()),
-        javac.getCommandPrefix(sourcePathResolverAdapter));
+    assertEquals(ImmutableList.of(externalJavacPath.toString()), javac.getCommandPrefix());
   }
 
   @Test

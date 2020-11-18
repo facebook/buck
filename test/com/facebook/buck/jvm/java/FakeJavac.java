@@ -17,12 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -30,15 +28,6 @@ import javax.annotation.Nullable;
 
 /** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
 public class FakeJavac implements Javac {
-  @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
-    throw new UnsupportedOperationException();
-  }
 
   @Override
   public Javac.Invocation newBuildInvocation(

@@ -67,9 +67,7 @@ public class JavacSpecTest {
     specBuilder.setJavacPath(javacPath);
     ExternalJavac javac = (ExternalJavac) getJavac();
 
-    assertEquals(
-        ImmutableList.of(externalPath.toString()),
-        javac.getCommandPrefix(graphBuilder.getSourcePathResolver()));
+    assertEquals(ImmutableList.of(externalPath.toString()), javac.getCommandPrefix());
   }
 
   @Test
