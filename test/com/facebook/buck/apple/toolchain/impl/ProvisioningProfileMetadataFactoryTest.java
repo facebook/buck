@@ -19,6 +19,7 @@ package com.facebook.buck.apple.toolchain.impl;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -77,6 +78,19 @@ public class ProvisioningProfileMetadataFactoryTest {
     thrown.expect(IllegalArgumentException.class);
     ProvisioningProfileMetadataFactory.fromProvisioningProfilePath(
         executor, FAKE_READ_COMMAND, testdataDir.resolve("invalid.mobileprovision"));
+  }
+
+  @Test
+  public void testParseQualifiedEntitlementsProvisioningProfileFile() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+    Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
+    Path testFile = testdataDir.resolve("qualified_sample.mobileprovision");
+
+    ProvisioningProfileMetadata data =
+        ProvisioningProfileMetadataFactory.fromProvisioningProfilePath(
+            executor, FAKE_READ_COMMAND, testFile);
+    assertNotNull(data);
   }
 
   @Test

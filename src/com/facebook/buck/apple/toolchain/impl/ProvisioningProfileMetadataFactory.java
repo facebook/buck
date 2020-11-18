@@ -86,7 +86,15 @@ public class ProvisioningProfileMetadataFactory {
       for (String key : entitlements.keySet()) {
         builder = builder.put(key, entitlements.objectForKey(key));
       }
-      String appID = entitlements.get("application-identifier").toString();
+      String appID =
+          getAppIDFromEntitlements(entitlements)
+              .orElseThrow(
+                  () -> {
+                    return new IllegalArgumentException(
+                        String.format(
+                            "Entitlements do not contain app ID: %s",
+                            entitlements.toASCIIPropertyList()));
+                  });
 
       ProvisioningProfileMetadata.Builder provisioningProfileMetadata =
           ProvisioningProfileMetadata.builder();
@@ -106,5 +114,14 @@ public class ProvisioningProfileMetadataFactory {
     } catch (Exception e) {
       throw new IllegalArgumentException("Malformed embedded plist: " + e);
     }
+  }
+
+  private static Optional<String> getAppIDFromEntitlements(NSDictionary entitlements) {
+    NSObject appID = entitlements.get("application-identifier");
+    if (appID == null) {
+      appID = entitlements.get("com.apple.application-identifier");
+    }
+
+    return Optional.ofNullable(appID).map(NSObject::toString);
   }
 }
