@@ -377,17 +377,17 @@ public class ProvisioningProfileStoreTest {
         containsString(
             "mismatched entitlement aps-environment;"
                 + System.lineSeparator()
-                + "value is: development"
+                + "value in provisioning profile is: development"
                 + System.lineSeparator()
-                + "but expected: production"));
+                + "but expected value from entitlements file: production"));
     assertThat(
         diagnostics,
         containsString(
             "mismatched entitlement com.apple.security.application-groups;"
                 + System.lineSeparator()
-                + "value is: (\"foobar\", \"bar\")"
+                + "value in provisioning profile is: (\"foobar\", \"bar\")"
                 + System.lineSeparator()
-                + "but expected: (\"foo\", \"bar\")"));
+                + "but expected value from entitlements file: (\"foo\", \"bar\")"));
     assertFalse(actual.isPresent());
   }
 
@@ -480,8 +480,8 @@ public class ProvisioningProfileStoreTest {
         containsString(
             "mismatched entitlement com.made.up.entitlement;"
                 + System.lineSeparator()
-                + "value is: (not set)"
+                + "value in provisioning profile is: (not set)"
                 + System.lineSeparator()
-                + "but expected: buck"));
+                + "but expected value from entitlements file: buck"));
   }
 }

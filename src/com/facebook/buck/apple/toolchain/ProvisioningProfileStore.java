@@ -217,9 +217,9 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
                       + entry.getKey()
                       + ";"
                       + System.lineSeparator()
-                      + "value is: "
+                      + "value in provisioning profile is: "
                       + profileEntitlementString
-                      + "but expected: "
+                      + "but expected value from entitlements file: "
                       + entryValueString;
               LOG.debug(message);
               lines.add(message);
