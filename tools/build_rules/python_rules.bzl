@@ -29,7 +29,7 @@ def interpreter_override_args():
     else:
         return []
 
-def pytest_test(name, srcs = None, deps = None, main_module = "tools.pytest.pytest_runner", package_style = "inplace", **kwargs):
+def pytest_test(name, srcs = None, deps = None, main_module = "tools.pytest.pytest_runner", package_style = "inplace", env = None, **kwargs):
     """A pytest test"""
 
     if native.host_info().os.is_windows:
@@ -49,6 +49,11 @@ def pytest_test(name, srcs = None, deps = None, main_module = "tools.pytest.pyte
 
     deps.extend(["//tools/pytest:pytest_runner", "//third-party/py/setuptools:setuptools"])
 
+    env = env or {}
+    env["PYTEST_ADDOPTS"] = (
+        "-v -p no:cacheprovider --continue-on-collection-errors --color=no"
+    )
+
     if package_style != "inplace":
         # pytest execution requires the original source files and doesn't work with zip imports
         fail("package_style is not allowed to be configured for pytests")
@@ -59,6 +64,7 @@ def pytest_test(name, srcs = None, deps = None, main_module = "tools.pytest.pyte
         deps = deps,
         main_module = main_module,
         package_style = package_style,
+        env = env,
         **kwargs
     )
 
