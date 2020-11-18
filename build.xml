@@ -1024,13 +1024,13 @@
   </target>
 
   <target name="missing-test-files-check" depends="default">
-    <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
+    <exec dir="${user.dir}/scripts" executable="python3" failonerror="true">
       <arg line="verify-test-files.py" />
     </exec>
   </target>
 
   <target name="java-version-test" depends="default">
-    <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
+    <exec dir="${user.dir}/scripts" executable="python3" failonerror="true">
       <arg line="java_version_test.py" />
     </exec>
   </target>
@@ -1101,7 +1101,7 @@
   </target>
 
   <target name="gen-version-info">
-    <exec executable="python" output="${buck.version.info.file}" logError="true" failonerror="true">
+    <exec executable="python3" output="${buck.version.info.file}" logError="true" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}" />
       <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
@@ -1111,7 +1111,7 @@
   </target>
 
   <target name="gen-package-info" depends="gen-version-info, create-resources-signature">
-    <exec executable="python" output="${buck.package.info.file}" logError="true" failonerror="true">
+    <exec executable="python3" output="${buck.package.info.file}" logError="true" failonerror="true">
       <env key="PYTHONPATH" value="${basedir}" />
       <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/buck_package_info.py"/>
