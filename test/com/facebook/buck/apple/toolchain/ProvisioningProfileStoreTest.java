@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSObject;
@@ -388,5 +389,99 @@ public class ProvisioningProfileStoreTest {
                 + System.lineSeparator()
                 + "but expected: (\"foo\", \"bar\")"));
     assertFalse(actual.isPresent());
+  }
+
+  @Test
+  public void testForceIncludedAppEntitlements() {
+    NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
+    NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
+
+    ImmutableMap<String, NSObject> entitlementsInProfile =
+        ImmutableMap.of(
+            "keychain-access-groups",
+            fakeKeychainAccessGroupsArray,
+            "aps-environment",
+            new NSString("production"));
+
+    ProvisioningProfileStore profiles =
+        createStorefromProvisioningProfiles(
+            ImmutableList.of(
+                makeTestMetadata(
+                    "AAAAAAAAAA.com.facebook.test",
+                    new Date(Long.MAX_VALUE),
+                    "00000000-0000-0000-0000-000000000000",
+                    entitlementsInProfile)));
+
+    ImmutableMap<String, NSObject> entitlementsInApp =
+        ImmutableMap.of(
+            "application-identifier", // Force included key, even if not present in the profile
+            new NSString("AAAAAAAAAA.com.facebook.BuckApp"),
+            "keychain-access-groups",
+            fakeKeychainAccessGroupsArray,
+            "aps-environment",
+            new NSString("production"));
+
+    StringBuffer diagnosticsBuffer = new StringBuffer();
+    Optional<ProvisioningProfileMetadata> maybeBestProfile =
+        profiles.getBestProvisioningProfile(
+            "com.facebook.test",
+            ApplePlatform.IPHONEOS,
+            Optional.of(entitlementsInApp),
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            diagnosticsBuffer);
+
+    assertTrue(maybeBestProfile.isPresent());
+  }
+
+  @Test
+  public void testUnmatchedAppEntitlement() {
+    NSString[] fakeKeychainAccessGroups = {new NSString("AAAAAAAAAA.*")};
+    NSArray fakeKeychainAccessGroupsArray = new NSArray(fakeKeychainAccessGroups);
+
+    ImmutableMap<String, NSObject> entitlementsInProfile =
+        ImmutableMap.of(
+            "keychain-access-groups",
+            fakeKeychainAccessGroupsArray,
+            "aps-environment",
+            new NSString("production"));
+
+    ProvisioningProfileStore profiles =
+        createStorefromProvisioningProfiles(
+            ImmutableList.of(
+                makeTestMetadata(
+                    "AAAAAAAAAA.com.facebook.test",
+                    new Date(Long.MAX_VALUE),
+                    "00000000-0000-0000-0000-000000000000",
+                    entitlementsInProfile)));
+
+    ImmutableMap<String, NSObject> entitlementsInApp =
+        ImmutableMap.of(
+            "keychain-access-groups",
+            fakeKeychainAccessGroupsArray,
+            "aps-environment",
+            new NSString("production"),
+            "com.made.up.entitlement",
+            new NSString("buck"));
+
+    StringBuffer diagnosticsBuffer = new StringBuffer();
+    Optional<ProvisioningProfileMetadata> maybeBestProfile =
+        profiles.getBestProvisioningProfile(
+            "com.facebook.test",
+            ApplePlatform.IPHONEOS,
+            Optional.of(entitlementsInApp),
+            ProvisioningProfileStore.MATCH_ANY_IDENTITY,
+            diagnosticsBuffer);
+
+    assertFalse(maybeBestProfile.isPresent());
+
+    String diagnostics = diagnosticsBuffer.toString();
+    assertThat(
+        diagnostics,
+        containsString(
+            "mismatched entitlement com.made.up.entitlement;"
+                + System.lineSeparator()
+                + "value is: (not set)"
+                + System.lineSeparator()
+                + "but expected: buck"));
   }
 }
