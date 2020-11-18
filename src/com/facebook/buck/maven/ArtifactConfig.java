@@ -55,6 +55,9 @@ public class ArtifactConfig {
     @Option(name = "-visibility", usage = "Targets that can see the artifacts. (PUBLIC is allowed)")
     public List<String> visibility = new ArrayList<>();
 
+    @Option(name = "-global-visibility", usage = "if set then visibility applies to all unspecified dependencies")
+    public Boolean globalVisibility = false;
+
     @Option(name = "-json", usage = "JSON configuration file for artifacts, paths, and Maven repos")
     @Nullable
     public String artifactConfigJson = null;
@@ -79,6 +82,8 @@ public class ArtifactConfig {
 
   public List<String> visibility = new ArrayList<>();
 
+  public Boolean globalVisibility = false;
+
   public ArtifactConfig mergeCmdLineArgs(CmdLineArgs args) {
     buckRepoRoot = MoreObjects.firstNonNull(args.buckRepoRoot, buckRepoRoot);
 
@@ -88,6 +93,8 @@ public class ArtifactConfig {
     artifacts.addAll(args.artifacts);
 
     visibility.addAll(args.visibility);
+
+    globalVisibility = args.globalVisibility;
 
     for (String url : args.repositoryURIs) {
       repositories.add(new Repository(url));

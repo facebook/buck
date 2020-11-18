@@ -122,6 +122,7 @@ public class Resolver {
 
   private final VersionScheme versionScheme = new GenericVersionScheme();
   private final List<String> visibility;
+  private final Boolean globalVisibility;
   private final ModelBuilder modelBuilder;
 
   private ImmutableList<RemoteRepository> repos;
@@ -143,6 +144,7 @@ public class Resolver {
     this.buckRepoRoot = Paths.get(Objects.requireNonNull(config.buckRepoRoot));
     this.buckThirdPartyRelativePath = Paths.get(Objects.requireNonNull(config.thirdParty));
     this.visibility = config.visibility;
+    this.globalVisibility = config.globalVisibility;
 
     this.repos =
         config.repositories.stream()
@@ -253,7 +255,7 @@ public class Resolver {
       }
     }
 
-    if (specifiedDependencies.containsKey(buildKey(artifactToDownload))) {
+    if (globalVisibility || specifiedDependencies.containsKey(buildKey(artifactToDownload))) {
       for (String rule : visibility) {
         library.addVisibility(rule);
       }
