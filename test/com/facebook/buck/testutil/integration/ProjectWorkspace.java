@@ -224,7 +224,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
             ImmutableMap.of(
                 "buck_out_include_target_config_hash",
                 Boolean.toString(
-                    TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST))));
+                    TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST)),
+            // Starting from version 12.2.0, Xcode sets default minimum deployment target to 11.0,
+            // in order to be able to run tests without specifying it in every .buckconfig file
+            // we set it here.
+            "apple",
+            ImmutableMap.of("macosx_target_sdk_version", "10.15")));
 
     buckDaemonState = new BuckGlobalStateLifecycleManager();
 
