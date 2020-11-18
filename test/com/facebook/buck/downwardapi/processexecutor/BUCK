@@ -5,6 +5,7 @@ standard_java_test(
     deps = [
         "//src-gen:downward-model",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/namedpipes:namedpipes",
         "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/event:event",

@@ -31,7 +31,7 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
-import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.util.ConsoleParams;
@@ -49,9 +49,6 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Paths;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -121,9 +118,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
           new SynchronousQueue<>(),
           new MostExecutors.NamedThreadFactory("DownwardApiReader"));
 
-  private static final long SHUTDOWN_TIMEOUT = 2;
-  private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
-
   private final String isAnsiTerminal;
   private final String verbosity;
   private final String actionId;
@@ -171,7 +165,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     private void cancelHandler() {
       readerThreadTerminated = true;
       try {
-        namedPipeEventHandler.terminateAndWait(SHUTDOWN_TIMEOUT, SHUTDOWN_TIMEOUT_UNIT);
+        namedPipeEventHandler.terminateAndWait();
       } catch (CancellationException e) {
         // this is fine. it's just canceled
       } catch (InterruptedException e) {
@@ -181,31 +175,10 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         LOG.warn(e.getCause(), "Exception while cancelling named pipe events processing.");
       } catch (TimeoutException e) {
         LOG.error(
-            "Cannot shutdown downward api reader handler for named pipe: '%s'. Timeout: %s",
-            namedPipe.getName(), humanReadableFormat(SHUTDOWN_TIMEOUT_UNIT, SHUTDOWN_TIMEOUT));
+            "Cannot shutdown downward api reader handler for named pipe: '%s'",
+            namedPipe.getName());
         readerThreadTerminated = false;
       }
-    }
-
-    /**
-     * Converts {@link TimeUnit} and {@code duration} into a human readable format.
-     *
-     * <p>The result will look like:
-     *
-     * <ul>
-     *   <li>5h
-     *   <li>7h 15m
-     *   <li>6h 50m 15s
-     *   <li>2h 5s
-     *   <li>0.1s
-     * </ul>
-     */
-    private static String humanReadableFormat(TimeUnit timeUnit, long duration) {
-      return Duration.ofMillis(timeUnit.toMillis(duration))
-          .toString()
-          .substring(2)
-          .replaceAll("(\\d[HMS])(?!$)", "$1 ")
-          .toLowerCase();
     }
 
     private void closeNamedPipe() {
@@ -299,8 +272,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
    *
    * <ol>
    *   <li>Handler receives {@link EndEvent}. This event is written by buck in {@link
-   *       #terminateAndWait(long, TimeUnit)} after the subprocess has completed. Clients may also
-   *       choose to write this event themselves
+   *       #terminateAndWait()} after the subprocess has completed. Clients may also choose to write
+   *       this event themselves
    *   <li>Handler encounters an exception before delegating the event to its respective {@link
    *       EventHandler} Examples:
    *       <ul>
@@ -406,54 +379,22 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     /**
      * Terminate and wait for {@link NamedPipeEventHandler} to finish processing events.
      *
-     * <p>At this point, the {@link DownwardApiLaunchedProcess} has completed, and all of its {@link
-     * NamedPipeWriter} instances should be closed. This method connects a new instance of {@link
-     * NamedPipeWriter}, which should be the only connected writer now. This writer writes the
-     * {@link EndEvent} into the named pipe, which the {@link NamedPipeEventHandler} will consume as
-     * a signal for termination.
-     *
-     * <p>In case writing the {@link EndEvent} fails, fall back to terminating the event handler by
-     * canceling its associated {@link Future}. Note that on POSIX systems, canceling the future
-     * results in closing the {@link NamedPipeReader}'s {@link InputStream}, which means that there
-     * may be unread events left in the named pipe.
-     *
-     * <p>Warning: On Windows, the fallback flow is currently the expected flow if the client writes
-     * something into the named pipe. Additionally, the issue where events are orphaned in the named
-     * pipe is present on windows. Update this javadoc after updating the windows flow
+     * <p>In case the standard platform-specific flow for terminating the event handler fails, fall
+     * back to terminating the event handler by canceling its associated {@link Future}. Note that
+     * canceling the future means that there ay be unread events left in the named pipe.
      */
-    void terminateAndWait(long timeout, TimeUnit unit)
+    void terminateAndWait()
         throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
-      NamedPipeFactory namedPipeFactory =
-          NamedPipeFactory.getFactory(
-              DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE);
-      try (NamedPipeWriter writer =
-              namedPipeFactory.connectAsWriter(Paths.get(namedPipe.getName()));
-          OutputStream outputStream = writer.getOutputStream()) {
-        writeEndEvent(outputStream);
+      checkState(
+          namedPipe instanceof NamedPipeServer,
+          "DownwardApiProcessExecutor's named pipe must be a server!");
+      NamedPipeServer namedPipeServer = (NamedPipeServer) namedPipe;
+      try {
+        namedPipeServer.prepareToClose(done);
       } catch (IOException e) {
-        // TODO: Windows currently follows this code path. We should fix this
-        LOG.error(e, "Failed to write protocol termination event. Canceling handler");
+        LOG.error(e, "Failed to prepare to close named pipe. Canceling handler");
         running.map(future -> future.cancel(true));
       }
-      done.get(timeout, unit);
-    }
-
-    private void writeEndEvent(OutputStream outputStream) throws IOException {
-      // This null check is not perfectly synchronized with the handler, but in practice by the
-      // time the subprocess has finished, the handler should have read the protocol from the
-      // subprocess already, if any, so this is okay.
-      DownwardProtocol protocol = downwardProtocol;
-      if (protocol == null) {
-        // Client has not written anything into named pipe. Arbitrarily pick binary protocol to
-        // communicate with handler
-        DownwardProtocolType protocolType = DownwardProtocolType.BINARY;
-        protocolType.writeDelimitedTo(outputStream);
-        protocol = protocolType.getDownwardProtocol();
-      }
-      protocol.write(
-          EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.END_EVENT).build(),
-          EndEvent.getDefaultInstance(),
-          outputStream);
     }
   }
 

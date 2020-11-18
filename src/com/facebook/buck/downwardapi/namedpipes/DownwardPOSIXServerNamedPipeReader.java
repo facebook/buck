@@ -61,6 +61,16 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
     return protocol;
   }
 
+  /**
+   * Prepare to close this named pipe by writing an {@link EndEvent} to indicate protocol
+   * termination.
+   *
+   * <p>At this point, the launched subprocess has completed, and all of its {@link NamedPipeWriter}
+   * instances should be closed. This method connects a new instance of {@link NamedPipeWriter},
+   * which should be the only connected writer now. This writer writes the {@link EndEvent} into the
+   * named pipe, which the event handler will consume as a signal for termination. This method then
+   * waits until the handler signals that it has terminated.
+   */
   @Override
   public void prepareToClose(Future<Void> readyToClose)
       throws IOException, ExecutionException, TimeoutException, InterruptedException {

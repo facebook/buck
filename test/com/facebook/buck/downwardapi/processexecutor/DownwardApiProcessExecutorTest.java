@@ -41,6 +41,7 @@ import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downward.model.StepEvent;
+import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.testutil.LogRecordMatcher;
@@ -49,9 +50,12 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
+import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
@@ -79,11 +83,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -165,7 +173,10 @@ public class DownwardApiProcessExecutorTest {
 
   @Before
   public void setUp() throws Exception {
-    namedPipeReader = NamedPipeFactory.getFactory().createAsReader();
+    namedPipeReader =
+        NamedPipeFactory.getFactory(
+                DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE)
+            .createAsReader();
     instant = Instant.now();
     buckEventBus =
         BuckEventBusForTests.newInstance(
@@ -376,77 +387,16 @@ public class DownwardApiProcessExecutorTest {
                 stringContainsInOrder("Named pipe", namedPipeReader.getName(), "is closed"))));
   }
 
-  @Test
-  public void otherIOException() throws IOException, InterruptedException {
-    NamedPipeReader namedPipeReader =
-        new NamedPipeReader() {
-          @Override
-          public InputStream getInputStream() throws IOException {
-            throw new IOException("hello");
-          }
-
-          @Override
-          public String getName() {
-            return "unused_" + testName.getMethodName();
-          }
-
-          @Override
-          public void close() throws IOException {
-            Files.deleteIfExists(Paths.get(getName()));
-          }
-        };
-    String namedPipeName = namedPipeReader.getName();
-    ProcessExecutorParams params = getProcessExecutorParams(namedPipeName, buckEventBus);
-
-    FakeProcess fakeProcess = new FakeProcess(0);
-
-    DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
-
-    DownwardApiExecutionResult result;
-    try {
-      result = launchAndExecute(processExecutor);
-    } finally {
-      namedPipeReader.close();
-    }
-    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
-
-    assertThat(
-        executorLogSink.getRecords(),
-        hasItem(
-            TestLogSink.logRecordWithMessage(
-                stringContainsInOrder("Cannot read from named pipe: ", namedPipeName))));
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-  }
-
-  @Test
+  @Test(timeout = 10_000)
   public void generalUnhandledException() throws IOException, InterruptedException {
-    NamedPipeReader namedPipeReader =
-        new NamedPipeReader() {
-          @Override
-          public InputStream getInputStream() {
-            throw new RuntimeException("hello");
-          }
-
-          @Override
-          public String getName() {
-            return "unused_" + testName.getMethodName();
-          }
-
-          @Override
-          public void close() throws IOException {
-            Files.deleteIfExists(Paths.get(getName()));
-          }
-        };
-    String namedPipeName = namedPipeReader.getName();
+    NamedPipeReader namedPipe = new TestNamedPipeWithException(namedPipeReader);
+    String namedPipeName = namedPipe.getName();
     ProcessExecutorParams params = getProcessExecutorParams(namedPipeName, buckEventBus);
 
     FakeProcess fakeProcess = new FakeProcess(0);
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
 
     DownwardApiExecutionResult result;
     try {
@@ -746,5 +696,41 @@ public class DownwardApiProcessExecutorTest {
     downwardProtocol.write(
         EventTypeMessage.newBuilder().setEventType(eventType).build(), message, outputStream);
     return outputStream.toString(StandardCharsets.UTF_8.name());
+  }
+
+  private String getLogMessagesAsSingleString(TestLogSink logSink) {
+    return logSink.getRecords().stream()
+        .map(LogRecord::getMessage)
+        .collect(Collectors.joining(System.lineSeparator()));
+  }
+
+  private static class TestNamedPipeWithException implements NamedPipeReader, NamedPipeServer {
+
+    private final NamedPipe delegate;
+
+    private TestNamedPipeWithException(NamedPipe delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public InputStream getInputStream() {
+      throw new RuntimeException("hello");
+    }
+
+    @Override
+    public String getName() {
+      return delegate.getName();
+    }
+
+    @Override
+    public void prepareToClose(Future<Void> readyToClose)
+        throws IOException, ExecutionException, TimeoutException, InterruptedException {
+      ((NamedPipeServer) delegate).prepareToClose(readyToClose);
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
   }
 }

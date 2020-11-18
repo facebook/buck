@@ -180,24 +180,28 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
       throws InterruptedException, ExecutionException, TimeoutException {
     List<HANDLE> handlesToDisconnect = new ArrayList<>();
 
-    HANDLE handle;
-    if (connectedHandles.isEmpty()) {
-      // Client never connected. There should be an open handle
-      openHandles.drainTo(handlesToDisconnect);
-      disconnectNamedPipe(checkAndGetOnlyHandle(handlesToDisconnect));
-    } else {
-      connectedHandles.drainTo(handlesToDisconnect);
-      handle = checkAndGetOnlyHandle(handlesToDisconnect);
+    try {
+      HANDLE handle;
+      if (connectedHandles.isEmpty()) {
+        // Client never connected. There should be an open handle
+        openHandles.drainTo(handlesToDisconnect);
+        disconnectNamedPipe(checkAndGetOnlyHandle(handlesToDisconnect));
+      } else {
+        connectedHandles.drainTo(handlesToDisconnect);
+        handle = checkAndGetOnlyHandle(handlesToDisconnect);
 
-      API.FlushFileBuffers(handle);
+        API.FlushFileBuffers(handle);
 
-      try {
-        // After flushing, we need to wait until the handler thread finishes reading everything
-        // before disconnecting.
-        readyToClose.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-      } finally {
-        disconnectNamedPipe(handle);
+        try {
+          // After flushing, we need to wait until the handler thread finishes reading everything
+          // before disconnecting.
+          readyToClose.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+        } finally {
+          disconnectNamedPipe(handle);
+        }
       }
+    } catch (RuntimeException e) {
+      throw new ExecutionException("Unexpected runtime exception while preparing to close", e);
     }
   }
 
