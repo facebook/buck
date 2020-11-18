@@ -19,10 +19,14 @@ package com.facebook.buck.io.namedpipes.windows;
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.closeConnectedPipe;
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
@@ -31,8 +35,13 @@ import com.sun.jna.ptr.IntByReference;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 /**
@@ -41,15 +50,18 @@ import java.util.function.Consumer;
  *
  * <p>Ported from {@link com.facebook.nailgun.NGWin32NamedPipeServerSocket}
  */
-abstract class WindowsNamedPipeServerBase extends BaseNamedPipe {
+abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements NamedPipeServer {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
+  private static final Logger LOG = Logger.get(WindowsNamedPipeServerBase.class);
 
   private static final int KB_IN_BYTES = 1024;
   // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea?redirectedfrom=MSDN
   // The buffer size specified should be small enough that your process will not run out of nonpaged
   // pool, but large enough to accommodate typical requests.
   private static final int BUFFER_SIZE = 2 * KB_IN_BYTES;
+
+  private static final int WAIT_FOR_HANDLER_TIMEOUT_MILLIS = 5_000;
 
   private final LinkedBlockingQueue<HANDLE> openHandles;
   private final LinkedBlockingQueue<HANDLE> connectedHandles;
@@ -147,6 +159,60 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe {
     overlapped.hEvent = createEvent();
     overlapped.write();
     return overlapped;
+  }
+
+  /**
+   * Prepares to close this named pipe by flushing the named pipe if necessary, then disconnecting
+   * it.
+   *
+   * <p>Flushing is only necessary if a client has connected. If no client connected, nothing has
+   * been written to the named pipe. It is unnecessary to flush in this case, so we proceed with
+   * disconnecting directly.
+   *
+   * <p>If a client has connecting, we should flush the named pipe to make sure that the reader gets
+   * a chance to read everything that was written. After flushing, we must wait for the given {@link
+   * Future} to complete before disconnecting the named pipe. Otherwise, there may be unread events
+   * left in the named pipe. Those events are discarded upon disconnection and cannot be read again
+   * even upon reconnection.
+   */
+  @Override
+  public void prepareToClose(Future<Void> readyToClose)
+      throws InterruptedException, ExecutionException, TimeoutException {
+    List<HANDLE> handlesToDisconnect = new ArrayList<>();
+
+    HANDLE handle;
+    if (connectedHandles.isEmpty()) {
+      // Client never connected. There should be an open handle
+      openHandles.drainTo(handlesToDisconnect);
+      disconnectNamedPipe(checkAndGetOnlyHandle(handlesToDisconnect));
+    } else {
+      connectedHandles.drainTo(handlesToDisconnect);
+      handle = checkAndGetOnlyHandle(handlesToDisconnect);
+
+      API.FlushFileBuffers(handle);
+
+      try {
+        // After flushing, we need to wait until the handler thread finishes reading everything
+        // before disconnecting.
+        readyToClose.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+      } finally {
+        disconnectNamedPipe(handle);
+      }
+    }
+  }
+
+  private HANDLE checkAndGetOnlyHandle(Collection<HANDLE> handles) {
+    Preconditions.checkState(
+        handles.size() == 1, "Expected one handle to disconnect, got %s", handles.size());
+    return Iterables.getOnlyElement(handles);
+  }
+
+  private void disconnectNamedPipe(HANDLE handle) {
+    boolean disconnectSuccess = API.DisconnectNamedPipe(handle);
+    if (!disconnectSuccess) {
+      int error = API.GetLastError();
+      LOG.error("Failed to disconnect named pipe; error code = %s", error);
+    }
   }
 
   @Override

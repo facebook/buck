@@ -82,6 +82,8 @@ interface WindowsNamedPipeLibrary extends WinNT, Library {
 
   int GetLastError();
 
+  boolean FlushFileBuffers(HANDLE hFile);
+
   static void closeConnectedPipe(HANDLE handle, boolean shutdown) {
     if (!shutdown) {
       INSTANCE.WaitForSingleObject(handle, CLOSE_WAIT_IN_MILLIS);
