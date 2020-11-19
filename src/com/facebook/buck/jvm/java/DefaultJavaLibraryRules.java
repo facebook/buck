@@ -385,6 +385,57 @@ public abstract class DefaultJavaLibraryRules {
     return true;
   }
 
+  /**
+   * Build a {@link DefaultJavaLibrary} similar to {@link #buildLibraryRule(CalculateSourceAbi)} but
+   * with several important differences:
+   *
+   * <ul>
+   *   <li>The built rule DOES NOT get added to the build graph proactively. This is crucial for
+   *       ensuring that flavored targets are associated with Nullsafe build rule.
+   *   <li>No ABI rules get created. Nullsafe flavored targets are used for analysis and reporting
+   *       only.
+   * </ul>
+   *
+   * See {@link Nullsafe} for more details.
+   */
+  public DefaultJavaLibrary buildLibraryForNullsafe() {
+    UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
+
+    BuildTarget buildTarget = getLibraryTarget();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    ActionGraphBuilder actionGraphBuilder = getActionGraphBuilder();
+    JavaLibraryDeps javaLibraryDeps = Objects.requireNonNull(getDeps());
+    ConfiguredCompilerFactory configuredCompilerFactory = getConfiguredCompilerFactory();
+
+    Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory = Optional.empty();
+
+    CoreArg args = getArgs();
+
+    return getConstructor()
+        .newInstance(
+            buildTarget,
+            projectFilesystem,
+            getJarBuildStepsFactory(),
+            actionGraphBuilder,
+            getProguardConfig(),
+            javaLibraryDeps.getDeps(),
+            javaLibraryDeps.getExportedDeps(),
+            javaLibraryDeps.getProvidedDeps(),
+            javaLibraryDeps.getExportedProvidedDeps(),
+            javaLibraryDeps.getRuntimeDeps(),
+            null,
+            null,
+            getMavenCoords(),
+            getTests(),
+            getRequiredForSourceOnlyAbi(),
+            unusedDependenciesAction,
+            unusedDependenciesFinderFactory,
+            null,
+            isDesugarRequired(),
+            configuredCompilerFactory.shouldDesugarInterfaceMethods(),
+            args != null && args.getNeverMarkAsUnusedDependency().orElse(false));
+  }
+
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
     UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
 

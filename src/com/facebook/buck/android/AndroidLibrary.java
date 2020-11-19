@@ -282,6 +282,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       return (AndroidLibrary) delegate.buildLibrary();
     }
 
+    /** See {@link DefaultJavaLibraryRules#buildLibraryForNullsafe()} */
+    public AndroidLibrary buildLibraryForNullsafe() {
+      return (AndroidLibrary) delegate.buildLibraryForNullsafe();
+    }
+
     public BuildRule buildAbi() {
       return delegate.buildAbi();
     }

@@ -194,7 +194,8 @@ public class AndroidLibraryDescription
             context.getCellPathResolver());
 
     if (Nullsafe.hasSupportedFlavor(flavors)) {
-      return Nullsafe.create(context.getActionGraphBuilder(), androidLibraryBuilder.build());
+      return Nullsafe.create(
+          context.getActionGraphBuilder(), androidLibraryBuilder.buildLibraryForNullsafe());
     }
 
     if (hasDummyRDotJavaFlavor) {

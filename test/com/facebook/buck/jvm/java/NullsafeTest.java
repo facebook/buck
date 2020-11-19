@@ -175,5 +175,13 @@ public class NullsafeTest {
             params,
             arg);
     assertTrue(flavoredRule instanceof Nullsafe);
+
+    // Check: the rule that is actually in the build graph is Nullsafe rule not JavaLibrary rule
+    // DefaultJavaLibraryRules does graph manipulation as a side-effect of building JavaLibrary
+    // (i.e. it builds the library, but also proactively inserts it into the graph; and we don't
+    // want that).
+    graphBuilder.computeIfAbsent(flavored, target -> flavoredRule);
+    BuildRule ruleInGraph = graphBuilder.requireRule(flavored);
+    assertTrue(ruleInGraph instanceof Nullsafe);
   }
 }

@@ -261,7 +261,7 @@ public class JavaLibraryDescription
             .build();
 
     if (Nullsafe.hasSupportedFlavor(flavors)) {
-      return Nullsafe.create(graphBuilder, defaultJavaLibraryRules.buildLibrary());
+      return Nullsafe.create(graphBuilder, defaultJavaLibraryRules.buildLibraryForNullsafe());
     }
 
     if (JavaAbis.isAbiTarget(buildTarget)) {

@@ -38,6 +38,18 @@ import com.google.common.collect.ImmutableList;
 /**
  * Nullsafe build rule augments {@link com.facebook.buck.jvm.core.JavaLibrary} rule by enabling and
  * configuring Nullsafe javac plugin.
+ *
+ * <p>More precisely the integration happens in 2 steps:
+ *
+ * <ul>
+ *   <li>Change {@link JavacOptions} to enable * Nullsafe plugin during compilation.
+ *   <li>Opaquely wrap {@link DefaultJavaLibrary}. Take {@link DefaultJavaLibraryBuildable}, reuse *
+ *       its steps for running the compilation (and possibly add additional pre-/post-processing
+ *       steps).
+ * </ul>
+ *
+ * The reason for doing it this ways is to make the integration as non-invasive and isolate as
+ * possible to not further complicate Java build rules.
  */
 public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
 
