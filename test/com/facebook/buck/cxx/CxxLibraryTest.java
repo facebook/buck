@@ -192,7 +192,7 @@ public class CxxLibraryTest {
         new CxxLibraryGroup(
             target,
             projectFilesystem,
-            params.getDeclaredDeps(),
+            params,
             CxxDeps.EMPTY_INSTANCE,
             CxxDeps.EMPTY_INSTANCE,
             /* headerOnly */ x -> true,
@@ -255,7 +255,7 @@ public class CxxLibraryTest {
         new CxxLibraryGroup(
             target,
             projectFilesystem,
-            params.getDeclaredDeps(),
+            params,
             CxxDeps.EMPTY_INSTANCE,
             CxxDeps.EMPTY_INSTANCE,
             /* headerOnly */ x -> true,

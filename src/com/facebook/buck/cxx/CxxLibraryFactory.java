@@ -392,7 +392,7 @@ public class CxxLibraryFactory {
     return new CxxLibraryGroup(
         buildTarget,
         projectFilesystem,
-        metadataRuleParams.getDeclaredDeps(),
+        metadataRuleParams,
         args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
         hasObjects.negate(),
