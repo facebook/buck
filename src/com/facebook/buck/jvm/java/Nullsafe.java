@@ -71,6 +71,10 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
     JavacPlugin nullsafePlugin = (JavacPlugin) graphBuilder.requireRule(nullsafePluginTarget);
     JavacPluginProperties.Builder nullsafePluginPropsBuilder =
         JavacPluginProperties.builder(nullsafePlugin.getUnresolvedProperties());
+    nullsafeConfig
+        .getSignatures(buildTarget.getTargetConfiguration())
+        .ifPresent(
+            sigs -> nullsafePluginPropsBuilder.putSourcePathParams("nullsafe.signatures", sigs));
 
     ResolvedJavacPluginProperties resolvedNullsafePluginProperties =
         new ResolvedJavacPluginProperties(
