@@ -2408,6 +2408,49 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void
+      givenFrameworkIsAddedToDependenciesInCurrentBuild_whenIncrementalBuildIsPerformed_thenFrameworkDirectoryIsCorrectlyAddedToBundle()
+          throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_parts_of_every_kind", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("apple", "incremental_bundling_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign_type_override", "skip");
+
+    Path buildTriggerPath = Paths.get("App/BuildTrigger.m");
+    filesystem.writeContentsToPath("", buildTriggerPath);
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#macosx-x86_64,no-debug");
+    workspace.buildAndReturnOutput(target.toString());
+
+    Path buckFilePath = Paths.get("BUCK");
+
+    List<String> lines = filesystem.readLines(buckFilePath);
+    List<String> updatedLines =
+        lines.stream()
+            // Hacky way to add :TestFramework2 dependency
+            .map(s -> s.replaceAll(":TestFramework", ":TestFramework\", \":TestFramework2"))
+            .collect(Collectors.toList());
+    filesystem.writeLinesToPath(updatedLines, buckFilePath);
+
+    Path outputPath = workspace.buildAndReturnOutput(target.toString());
+
+    assertTrue(Files.exists(outputPath.resolve("Contents/Frameworks/TestFramework2.framework")));
+    assertTrue(
+        Files.exists(
+            outputPath.resolve(
+                "Contents/Frameworks/TestFramework2.framework/Resources/Info.plist")));
+    assertTrue(
+        Files.exists(
+            outputPath.resolve("Contents/Frameworks/TestFramework2.framework/Resources/PkgInfo")));
+    assertTrue(
+        Files.exists(
+            outputPath.resolve("Contents/Frameworks/TestFramework2.framework/TestFramework2")));
+  }
+
+  @Test
   public void resourcesHashesAreNotComputedByDefault() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_resources", tmp);

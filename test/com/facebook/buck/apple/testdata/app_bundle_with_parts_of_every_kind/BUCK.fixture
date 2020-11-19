@@ -31,10 +31,22 @@ apple_library(
     srcs = ["empty.c"],
 )
 
+apple_library(
+    name = "TestLib2",
+    srcs = ["empty.c"],
+)
+
 # Framework flavor doesn't work as expected, create a separate bundle instead.
 apple_bundle(
     name = "TestFramework",
     binary = ":TestLib#shared",
+    extension = "framework",
+    info_plist = "Dummy-Info.plist",
+)
+
+apple_bundle(
+    name = "TestFramework2",
+    binary = ":TestLib2#shared",
     extension = "framework",
     info_plist = "Dummy-Info.plist",
 )

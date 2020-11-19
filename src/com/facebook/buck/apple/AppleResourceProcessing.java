@@ -68,7 +68,14 @@ public class AppleResourceProcessing {
       Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier,
       Supplier<List<AppleBundleComponentCopySpec>> embeddedBundlesCopySpecsSupplier) {
     addStepsToCreateDirectoriesWhereBundlePartsAreCopied(
-        context, stepsBuilder, resources, bundleParts, dirRoot, destinations, projectFilesystem);
+        context,
+        stepsBuilder,
+        resources,
+        bundleParts,
+        dirRoot,
+        destinations,
+        projectFilesystem,
+        embeddedBundlesCopySpecsSupplier);
     addStepsToCopyContentOfDirectories(
         context.getSourcePathResolver(),
         stepsBuilder,
@@ -112,12 +119,16 @@ public class AppleResourceProcessing {
       ImmutableList<AppleBundlePart> bundleParts,
       Path dirRoot,
       AppleBundleDestinations destinations,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      Supplier<List<AppleBundleComponentCopySpec>> embeddedBundlesCopySpecsSupplier) {
     Set<AppleBundleDestination> usedDestinations =
         Stream.concat(
                 resources.getAllDestinations().stream(),
                 bundleParts.stream().map(AppleBundlePart::getDestination))
             .collect(Collectors.toSet());
+    // Every file or directory except for those managed by EmbeddedBundleAppleBundlePart will be
+    // copied directly into corresponding "apple bundle destination", so it's enough to just create
+    // those.
     for (AppleBundleDestination bundleDestination : usedDestinations) {
       Path bundleDestinationPath = dirRoot.resolve(bundleDestination.getPath(destinations));
       stepsBuilder.add(
@@ -125,6 +136,27 @@ public class AppleResourceProcessing {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), projectFilesystem, bundleDestinationPath)));
     }
+    // We handle embedded bundles separately, because files and directories they manage are not
+    // necessarily copied directly into "apple bundle destination" directories. In that case we have
+    // to prepare copy destination directories.
+    stepsBuilder.add(
+        new AbstractExecutionStep("apple-bundle-prepare-embedded-bundles-destination-directories") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+            Set<Path> directoriesToCreate =
+                embeddedBundlesCopySpecsSupplier.get().stream()
+                    .map(
+                        spec ->
+                            dirRoot
+                                .resolve(spec.getDestinationPathRelativeToBundleRoot().getPath())
+                                .getParent())
+                    .collect(Collectors.toSet());
+            for (Path dir : directoriesToCreate) {
+              projectFilesystem.createParentDirs(dir.resolve("dummy"));
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   private static void addStepsToCopyContentOfDirectories(
