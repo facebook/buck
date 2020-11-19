@@ -58,7 +58,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final boolean withDownwardApi;
 
   public ScalacToJarStepFactory(
@@ -70,6 +69,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath,
       boolean withDownwardApi) {
+    super(javacOptions);
     this.scalac = scalac;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
@@ -78,7 +78,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
             .map(BuildRule::getSourcePathToOutput)
             .collect(ImmutableSet.toImmutableSet());
     this.javac = javac;
-    this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClassPath;
     this.withDownwardApi = withDownwardApi;
   }
@@ -163,10 +162,5 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
               steps,
               buildableContext);
     }
-  }
-
-  @Override
-  public boolean hasAnnotationProcessing() {
-    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

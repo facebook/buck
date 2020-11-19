@@ -754,7 +754,7 @@ public class JarBuildStepsFactory
         filesystem.getRootPath());
   }
 
-  public boolean hasAnnotationProcessing() {
+  boolean hasAnnotationProcessing() {
     return configuredCompiler.hasAnnotationProcessing();
   }
 }

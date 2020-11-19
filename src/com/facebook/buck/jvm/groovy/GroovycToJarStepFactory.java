@@ -41,7 +41,6 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory {
 
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
-  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final boolean withDownwardApi;
 
   public GroovycToJarStepFactory(
@@ -49,9 +48,9 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory {
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
+    super(javacOptions);
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
-    this.javacOptions = javacOptions;
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -85,10 +84,5 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory {
             pathToSrcsList,
             declaredClasspathEntries,
             withDownwardApi));
-  }
-
-  @Override
-  public boolean hasAnnotationProcessing() {
-    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -45,6 +46,12 @@ import javax.annotation.Nullable;
 
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements AddsToRuleKey {
+
+  @AddToRuleKey protected final JavacOptions javacOptions;
+
+  protected CompileToJarStepFactory(JavacOptions javacOptions) {
+    this.javacOptions = javacOptions;
+  }
 
   public final void createCompileToJarStep(
       BuildContext context,
@@ -287,5 +294,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext);
 
-  public abstract boolean hasAnnotationProcessing();
+  boolean hasAnnotationProcessing() {
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
+  }
 }

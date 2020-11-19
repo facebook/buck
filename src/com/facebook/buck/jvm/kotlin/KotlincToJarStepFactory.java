@@ -69,7 +69,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -87,7 +86,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final boolean withDownwardApi;
 
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
@@ -128,6 +126,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
       Javac javac,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
+    super(javacOptions);
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraKotlincArguments = extraKotlincArguments;
@@ -137,7 +136,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
     this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClassPath;
     this.javac = javac;
-    this.javacOptions = Objects.requireNonNull(javacOptions);
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -502,11 +500,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
     return invokingRule.getCellRelativeBasePath().getPath().toString().replace('/', '.')
         + "."
         + invokingRule.getShortName();
-  }
-
-  @Override
-  public boolean hasAnnotationProcessing() {
-    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 
   public static RelPath getKaptAnnotationGenPath(

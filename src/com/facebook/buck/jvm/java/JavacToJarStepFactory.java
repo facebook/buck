@@ -46,7 +46,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
   @AddToRuleKey private final boolean withDownwardApi;
 
@@ -55,8 +54,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClasspathProvider,
       boolean withDownwardApi) {
+    super(javacOptions);
     this.javac = javac;
-    this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClasspathProvider;
     this.withDownwardApi = withDownwardApi;
   }
@@ -270,10 +269,5 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
   @VisibleForTesting
   public JavacOptions getJavacOptions() {
     return javacOptions;
-  }
-
-  @Override
-  public boolean hasAnnotationProcessing() {
-    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }
