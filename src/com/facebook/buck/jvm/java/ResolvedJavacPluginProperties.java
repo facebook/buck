@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
 import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.net.MalformedURLException;
@@ -37,6 +38,7 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
@@ -51,11 +53,22 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
       inputs = IgnoredFieldInputs.class)
   private ImmutableList<RelPath> classpath;
 
+  /**
+   * All dependencies are already encoded in {@code inner} props, therefore we can exclude this
+   * field from rule key. Also, this field will be empty for most of the plugins, since they don't
+   * yet take advantage of it.
+   */
+  @ExcludeFromRuleKey(
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private final ImmutableMap<String, RelPath> sourcePathParams;
+
   public ResolvedJavacPluginProperties(
       JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     this.inner = inner;
     this.classpathSupplier = new Memoizer<>();
     this.classpath = getClasspath(resolver, ruleCellRoot);
+    this.sourcePathParams = resolveSourcePathParams(inner, resolver, ruleCellRoot);
   }
 
   public boolean getCanReuseClassLoader() {
@@ -82,6 +95,19 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
                 .map(resolver::getAbsolutePath)
                 .map(root::relativize)
                 .collect(ImmutableList.toImmutableList()));
+  }
+
+  private static ImmutableMap<String, RelPath> resolveSourcePathParams(
+      JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath root) {
+    return inner.getSourcePathParams().entrySet().stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                Map.Entry::getKey,
+                (entry) -> root.relativize(resolver.getAbsolutePath(entry.getValue()))));
+  }
+
+  public ImmutableMap<String, RelPath> getSourcePathParams() {
+    return sourcePathParams;
   }
 
   private URL toUrl(AbsPath absPath) {

@@ -22,9 +22,11 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -38,6 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -124,6 +127,45 @@ public class JavacOptionsTest {
     JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
 
     assertOptionsHasFlag(options, "Xplugin:ThePlugin");
+  }
+
+  @Test
+  public void shouldAddResolvedPluginSourcePathParams() {
+    String dummyParam = "param1";
+    RelPath dummyRelPath = RelPath.get("buck-out/gen/lib/out");
+    SourcePath dummySourcePath = PathSourcePath.of(filesystem, dummyRelPath);
+
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.JAVAC_PLUGIN)
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("ThePlugin")
+            // !!! The important part is adding a SourcePath param
+            .setSourcePathParams(ImmutableMap.of(dummyParam, dummySourcePath))
+            .build();
+
+    SourcePathResolverAdapter sourcePathResolver =
+        new TestActionGraphBuilder().getSourcePathResolver();
+    AbsPath rootPath = filesystem.getRootPath();
+    ResolvedJavacPluginProperties resolvedProps =
+        new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
+
+    // Check that resolved options have the param SourcePath as RelPath
+    assertEquals(resolvedProps.getSourcePathParams().get(dummyParam), dummyRelPath);
+
+    JavacPluginParams params =
+        JavacPluginParams.builder()
+            .addPluginProperties(resolvedProps)
+            .build(sourcePathResolver, rootPath);
+
+    JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
+
+    String expectedFlag = String.format("A%s=%s", dummyParam, rootPath.resolve(dummyRelPath));
+
+    // Check that javacOptions resolved RelPath to absolute path
+    assertOptionsHasFlag(options, expectedFlag);
   }
 
   @Test

@@ -28,6 +28,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
@@ -70,6 +71,9 @@ abstract class JavacPluginProperties implements AddsToRuleKey {
 
   @AddToRuleKey
   public abstract boolean getSupportsAbiGenerationFromSource();
+
+  @AddToRuleKey
+  public abstract ImmutableMap<String, SourcePath> getSourcePathParams();
 
   public boolean isEmpty() {
     return getProcessorNames().isEmpty() && getClasspathEntries().isEmpty();
