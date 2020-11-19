@@ -573,7 +573,6 @@ public class DownwardApiProcessExecutorTest {
       for (String message : getMessages()) {
         LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
         outputStream.write(message.getBytes(StandardCharsets.UTF_8));
-        TimeUnit.MILLISECONDS.sleep(100);
       }
     }
   }
