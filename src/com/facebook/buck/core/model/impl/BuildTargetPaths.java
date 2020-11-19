@@ -75,10 +75,9 @@ public class BuildTargetPaths {
    *     {@code target}.
    */
   public static RelPath getAnnotationPath(
-      ProjectFilesystem filesystem, BuildTarget target, String format) {
+      BaseBuckPaths buckPaths, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
-    BuckPaths buckPaths = filesystem.getBuckPaths();
     return getRelativePath(
         target,
         format,

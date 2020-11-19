@@ -52,7 +52,7 @@ public class BuildPaths {
    *     {@code target}.
    */
   public static RelPath getAnnotationDir(ProjectFilesystem filesystem, BuildTarget target) {
-    return BuildTargetPaths.getAnnotationPath(filesystem, target, getFormat(target));
+    return BuildTargetPaths.getAnnotationPath(filesystem.getBuckPaths(), target, getFormat(target));
   }
 
   /**

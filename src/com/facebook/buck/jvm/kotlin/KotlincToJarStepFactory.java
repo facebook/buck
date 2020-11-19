@@ -171,17 +171,20 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     // Only invoke kotlinc if we have kotlin or src zip files.
     if (hasKotlinSources) {
       RelPath stubsOutput =
-          BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
+          BuildTargetPaths.getAnnotationPath(
+              projectFilesystem.getBuckPaths(), invokingRule, "__%s_stubs__");
       RelPath sourcesOutput =
-          BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
+          BuildTargetPaths.getAnnotationPath(
+              projectFilesystem.getBuckPaths(), invokingRule, "__%s_sources__");
       RelPath classesOutput =
-          BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
+          BuildTargetPaths.getAnnotationPath(
+              projectFilesystem.getBuckPaths(), invokingRule, "__%s_classes__");
       RelPath kaptGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
-              projectFilesystem, invokingRule, "__%s_kapt_generated__");
+              projectFilesystem.getBuckPaths(), invokingRule, "__%s_kapt_generated__");
       RelPath kotlincPluginGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
-              projectFilesystem, invokingRule, "__%s_kotlinc_plugin_generated__");
+              projectFilesystem.getBuckPaths(), invokingRule, "__%s_kotlinc_plugin_generated__");
       RelPath annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
       RelPath genOutputFolder =
           BuildTargetPaths.getGenPath(
