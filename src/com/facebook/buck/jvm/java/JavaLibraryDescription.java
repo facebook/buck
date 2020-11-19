@@ -70,7 +70,6 @@ public class JavaLibraryDescription
       ImmutableSet.of(
           InferJava.INFER_NULLSAFE,
           InferJava.INFER_JAVA_CAPTURE,
-          Nullsafe.NULLSAFEX,
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
@@ -108,7 +107,7 @@ public class JavaLibraryDescription
   @Override
   public boolean hasFlavors(
       ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
-    return SUPPORTED_FLAVORS.containsAll(flavors);
+    return SUPPORTED_FLAVORS.containsAll(flavors) || Nullsafe.hasSupportedFlavor(flavors);
   }
 
   @Override

@@ -17,23 +17,31 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.nullsafe.NullsafeConfig;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import javax.annotation.Nullable;
 
 /**
  * Nullsafe build rule augments {@link com.facebook.buck.jvm.core.JavaLibrary} rule by enabling and
@@ -54,9 +62,28 @@ import com.google.common.collect.ImmutableList;
 public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
 
   public static final Flavor NULLSAFEX = InternalFlavor.of("nullsafex");
+  public static final Flavor NULLSAFEX_JSON = InternalFlavor.of("nullsafex-json");
 
+  public static final String REPORTS_JSON_DIR = "reports";
+
+  /** Check that flavors in the set are nullsafe flavors only. */
+  public static boolean hasSupportedFlavor(ImmutableSet<Flavor> flavors) {
+    return !flavors.isEmpty()
+        && flavors.stream()
+            .allMatch(flavor -> flavor.equals(NULLSAFEX) || flavor.equals(NULLSAFEX_JSON));
+  }
+
+  /** See {@link #hasSupportedFlavor(ImmutableSet)} */
   public static boolean hasSupportedFlavor(FlavorSet flavors) {
-    return flavors.contains(NULLSAFEX);
+    return hasSupportedFlavor(flavors.getSet());
+  }
+
+  /**
+   * Check that the flavored target outputs JSON report, rather then reports issues as javac
+   * compilation errors.
+   */
+  public static boolean shouldReportJson(BuildTarget buildTarget) {
+    return buildTarget.getFlavors().contains(NULLSAFEX_JSON);
   }
 
   protected Nullsafe(
@@ -92,7 +119,15 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
         .getSignatures(buildTarget.getTargetConfiguration())
         .ifPresent(sigs -> pathParams.putSourcePathParams("nullsafe.signatures", sigs));
 
-    nullsafePluginPropsBuilder.setPathParams(pathParams.build());
+    if (shouldReportJson(buildTarget)) {
+      RelPath genPath = BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget);
+      pathParams.putRelPathParams(
+          "nullsafe.writeJsonReportToDir", genPath.resolveRel(REPORTS_JSON_DIR));
+    }
+
+    nullsafePluginPropsBuilder
+        .setPathParams(pathParams.build())
+        .setSupportsAbiGenerationFromSource(false);
 
     ResolvedJavacPluginProperties resolvedNullsafePluginProperties =
         new ResolvedJavacPluginProperties(
@@ -111,6 +146,10 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
             .setStandardJavacPluginParams(augmentedPluginParams)
             .addExtraArguments("-XDcompilePolicy=byfile");
 
+    if (shouldReportJson(buildTarget)) {
+      javacOptionsBuilder.addExtraArguments("-Anullsafe.reportToJava=false");
+    }
+
     return javacOptionsBuilder.build();
   }
 
@@ -119,7 +158,7 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
       BuildTarget buildTarget,
       NullsafeConfig nullsafeConfig) {
-    if (buildTarget.getFlavors().contains(NULLSAFEX)) {
+    if (hasSupportedFlavor(buildTarget.getFlavors())) {
       nullsafeConfig
           .getPlugin(buildTarget.getTargetConfiguration())
           .ifPresent(targetGraphOnlyDepsBuilder::add);
@@ -142,12 +181,27 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
    */
   public static Nullsafe create(
       ActionGraphBuilder graphBuilder, DefaultJavaLibrary augmentedJavaLibrary) {
-    Impl javaLibraryBuildable = new Impl(augmentedJavaLibrary.getBuildable());
+    BuildTarget buildTarget = augmentedJavaLibrary.getBuildTarget();
+
+    Impl javaLibraryBuildable =
+        new Impl(augmentedJavaLibrary.getBuildable(), shouldReportJson(buildTarget));
+
     return new Nullsafe(
         augmentedJavaLibrary.getBuildTarget(),
         augmentedJavaLibrary.getProjectFilesystem(),
         graphBuilder,
         javaLibraryBuildable);
+  }
+
+  @Nullable
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    OutputPath output = getBuildable().output;
+    if (output != null) {
+      return getSourcePath(output);
+    }
+
+    return null;
   }
 
   /**
@@ -167,9 +221,18 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
    */
   public static class Impl implements Buildable {
     @AddToRuleKey private final DefaultJavaLibraryBuildable underlyingLibrary;
+    @AddToRuleKey private final boolean reportJson;
+    @AddToRuleKey @Nullable private final OutputPath output;
 
-    public Impl(DefaultJavaLibraryBuildable underlyingLibrary) {
+    public Impl(DefaultJavaLibraryBuildable underlyingLibrary, boolean reportJson) {
       this.underlyingLibrary = underlyingLibrary;
+      this.reportJson = reportJson;
+
+      if (this.reportJson) {
+        output = new OutputPath(REPORTS_JSON_DIR);
+      } else {
+        output = null;
+      }
     }
 
     @Override
@@ -178,8 +241,21 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      return underlyingLibrary.getBuildSteps(
-          buildContext, filesystem, outputPathResolver, buildCellPathFactory);
+      ImmutableList<Step> compilationSteps =
+          underlyingLibrary.getBuildSteps(
+              buildContext, filesystem, outputPathResolver, buildCellPathFactory);
+
+      if (reportJson) {
+        Preconditions.checkNotNull(output, "output should be non-null for JSON reporting");
+        RelPath reportDir = outputPathResolver.resolvePath(output);
+
+        ImmutableList.Builder<Step> steps = ImmutableList.builder();
+        steps.addAll(MakeCleanDirectoryIsolatedStep.of(reportDir));
+        steps.addAll(compilationSteps);
+        return steps.build();
+      } else {
+        return compilationSteps;
+      }
     }
   }
 }

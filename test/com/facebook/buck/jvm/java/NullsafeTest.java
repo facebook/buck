@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -183,5 +184,24 @@ public class NullsafeTest {
     graphBuilder.computeIfAbsent(flavored, target -> flavoredRule);
     BuildRule ruleInGraph = graphBuilder.requireRule(flavored);
     assertTrue(ruleInGraph instanceof Nullsafe);
+
+    // Check: output of #nullsafex-json is a directory
+    BuildTarget jsonFlavored = library.withFlavors(Nullsafe.NULLSAFEX_JSON);
+    // Check: createBuildRule should return Nullsafe build rule rather than JavaLibrary rule
+    BuildRule jsonFlavoredRule =
+        javaLibraryDescription.createBuildRule(
+            TestBuildRuleCreationContextFactory.create(
+                graphBuilder, projectFilesystem, toolchainProvider),
+            jsonFlavored,
+            params,
+            arg);
+    graphBuilder.computeIfAbsent(jsonFlavored, target -> jsonFlavoredRule);
+
+    SourcePath outputPath = jsonFlavoredRule.getSourcePathToOutput();
+    assertTrue(
+        graphBuilder
+            .getSourcePathResolver()
+            .getAbsolutePath(outputPath)
+            .endsWith(Nullsafe.REPORTS_JSON_DIR));
   }
 }

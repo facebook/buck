@@ -218,7 +218,7 @@ public class AndroidLibraryDescription
         || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(InferJava.INFER_NULLSAFE))
         || flavors.equals(ImmutableSet.of(InferJava.INFER_JAVA_CAPTURE))
-        || flavors.equals(ImmutableSet.of(Nullsafe.NULLSAFEX));
+        || Nullsafe.hasSupportedFlavor(flavors);
   }
 
   @Override
