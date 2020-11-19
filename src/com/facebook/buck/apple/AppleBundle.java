@@ -287,7 +287,7 @@ public class AppleBundle extends AbstractBuildRule
 
   public static Path getBundleRoot(
       ProjectFilesystem filesystem, BuildTarget buildTarget, String binaryName, String extension) {
-    return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
         .resolve(binaryName + "." + extension);
   }
 

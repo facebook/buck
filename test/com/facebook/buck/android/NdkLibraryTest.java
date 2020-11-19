@@ -97,7 +97,7 @@ public class NdkLibraryTest {
 
     assertTrue(ndkLibrary.isAsset());
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "__lib%s").getPath(),
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "__lib%s").getPath(),
         ndkLibrary.getLibraryPath());
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());

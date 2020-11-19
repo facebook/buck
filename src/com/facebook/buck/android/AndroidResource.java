@@ -178,7 +178,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.resourceUnion = resourceUnion;
 
     this.pathToTextSymbolsDir =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), buildTarget, "__%s_text_symbols__");
     this.pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     this.pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
 

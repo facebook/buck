@@ -205,7 +205,9 @@ public class ConfiguredQueryTargetsAndOutputsMacroExpanderTest {
 
   private String absolutify(BuildTarget buildTarget, String format, String last) {
     return filesystem
-        .resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, format).resolve(last))
+        .resolve(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, format)
+                .resolve(last))
         .toString();
   }
 }

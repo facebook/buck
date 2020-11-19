@@ -29,6 +29,7 @@ public interface JsDependenciesOutputs extends BuildRule {
   default SourcePath getSourcePathToDepsFile() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.deps"));
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s.deps"));
   }
 }

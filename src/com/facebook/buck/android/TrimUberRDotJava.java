@@ -112,7 +112,9 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "%s/_trimmed_r_dot_java.src.zip"));
+            getProjectFilesystem().getBuckPaths(),
+            getBuildTarget(),
+            "%s/_trimmed_r_dot_java.src.zip"));
   }
 
   private class PerformTrimStep implements Step {

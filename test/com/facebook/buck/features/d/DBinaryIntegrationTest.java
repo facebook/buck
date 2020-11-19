@@ -58,7 +58,7 @@ public class DBinaryIntegrationTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        filesystem,
+                        filesystem.getBuckPaths(),
                         BuildTargetFactory.newInstance("//:test")
                             .withFlavors(DBinaryDescription.BINARY_FLAVOR),
                         "%s/test"))
@@ -86,7 +86,7 @@ public class DBinaryIntegrationTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        filesystem,
+                        filesystem.getBuckPaths(),
                         BuildTargetFactory.newInstance("//:xyzzy")
                             .withFlavors(DBinaryDescription.BINARY_FLAVOR),
                         "%s/xyzzy"))

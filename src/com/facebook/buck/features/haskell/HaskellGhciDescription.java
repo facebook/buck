@@ -265,7 +265,7 @@ public class HaskellGhciDescription
               projectFilesystem,
               graphBuilder,
               ruleTarget,
-              BuildTargetPaths.getGenPath(projectFilesystem, ruleTarget, "%s")
+              BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), ruleTarget, "%s")
                   .resolve("libghci_dependencies.so"),
               ImmutableMap.of(),
               Optional.of("libghci_dependencies.so"),

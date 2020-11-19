@@ -133,7 +133,8 @@ public class ExportFile extends AbstractBuildRule
 
   private Path getCopiedPath() {
     Preconditions.checkState(mode == ExportFileDescription.Mode.COPY);
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    return BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
         .resolve(name);
   }
 

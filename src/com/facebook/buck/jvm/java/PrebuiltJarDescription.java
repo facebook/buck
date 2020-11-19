@@ -127,7 +127,7 @@ public class PrebuiltJarDescription
         this.source = source;
         this.output =
             BuildTargetPaths.getGenPath(
-                getProjectFilesystem(),
+                getProjectFilesystem().getBuckPaths(),
                 buildTarget,
                 String.format("%s/%%s-gwt.jar", buildTarget.getShortName()));
       }

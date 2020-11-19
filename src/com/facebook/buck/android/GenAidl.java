@@ -88,7 +88,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.toolchainProvider = toolchainProvider;
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
-    this.genPath = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s");
+    this.genPath =
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s");
     this.output =
         genPath.resolveRel(
             String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));

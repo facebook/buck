@@ -112,7 +112,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.withDownwardApi = withDownwardApi;
     this.output =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(),
+            getProjectFilesystem().getBuckPaths(),
             getBuildTarget(),
             "%s/" + getBuildTarget().getShortName() + ".a");
     this.extraAsmOutputs = extraAsmOutputs;

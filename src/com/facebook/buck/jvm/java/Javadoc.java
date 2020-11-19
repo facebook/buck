@@ -83,7 +83,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
 
     this.output =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(),
+            getProjectFilesystem().getBuckPaths(),
             getBuildTarget(),
             String.format("%%s/%s-javadoc.jar", getBuildTarget().getShortName()));
     this.scratchDir =

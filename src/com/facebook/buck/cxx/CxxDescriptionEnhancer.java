@@ -259,7 +259,9 @@ public class CxxDescriptionEnhancer {
       HeaderVisibility headerVisibility,
       Flavor... flavors) {
     return BuildTargetPaths.getGenPath(
-        filesystem, createHeaderSymlinkTreeTarget(target, headerVisibility, flavors), "%s");
+        filesystem.getBuckPaths(),
+        createHeaderSymlinkTreeTarget(target, headerVisibility, flavors),
+        "%s");
   }
 
   public static Flavor getHeaderSymlinkTreeFlavor(HeaderVisibility headerVisibility) {
@@ -691,7 +693,8 @@ public class CxxDescriptionEnhancer {
 
   public static RelPath getSharedLibraryPath(
       ProjectFilesystem filesystem, BuildTarget sharedLibraryTarget, String soname) {
-    return BuildTargetPaths.getGenPath(filesystem, sharedLibraryTarget, "%s/" + soname);
+    return BuildTargetPaths.getGenPath(
+        filesystem.getBuckPaths(), sharedLibraryTarget, "%s/" + soname);
   }
 
   private static RelPath getBinaryOutputPath(
@@ -710,7 +713,7 @@ public class CxxDescriptionEnhancer {
       // Keep the current behavior if the user has not specified it's own output root name.
       fullFormat = extension.map(ext -> "%s." + ext).orElse("%s");
     }
-    return BuildTargetPaths.getGenPath(filesystem, target, fullFormat);
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, fullFormat);
   }
 
   @VisibleForTesting
@@ -1723,7 +1726,7 @@ public class CxxDescriptionEnhancer {
   public static RelPath getSharedLibrarySymlinkTreePath(
       ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
     return BuildTargetPaths.getGenPath(
-        filesystem, createSharedLibrarySymlinkTreeTarget(target, platform), "%s");
+        filesystem.getBuckPaths(), createSharedLibrarySymlinkTreeTarget(target, platform), "%s");
   }
 
   /**
@@ -1787,7 +1790,9 @@ public class CxxDescriptionEnhancer {
   private static RelPath getBinaryWithSharedLibrariesSymlinkTreePath(
       ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
     return BuildTargetPaths.getGenPath(
-        filesystem, createBinaryWithSharedLibrariesSymlinkTreeTarget(target, platform), "%s");
+        filesystem.getBuckPaths(),
+        createBinaryWithSharedLibrariesSymlinkTreeTarget(target, platform),
+        "%s");
   }
 
   private static MappedSymlinkTree createBinaryWithSharedLibrariesSymlinkTree(

@@ -254,7 +254,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
   private RelPath getRootGenPath() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/non_predexed_root");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/non_predexed_root");
   }
 
   private Path getSecondaryDexListing() {

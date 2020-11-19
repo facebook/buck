@@ -79,7 +79,8 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(), buildTarget, "__uber_classes_%s__/classes.jar");
     pathToTextSymbolsDir =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), buildTarget, "__%s_text_symbols__");
     pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
     pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);

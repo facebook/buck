@@ -244,7 +244,7 @@ public class AuditActionGraphCommandIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     RelPath genDir =
         BuildTargetPaths.getGenPath(
-            filesystem, BuildTargetFactory.newInstance(buildTarget), "%s" + suffix);
+            filesystem.getBuckPaths(), BuildTargetFactory.newInstance(buildTarget), "%s" + suffix);
     return tmp.getRoot().resolve(genDir);
   }
 
@@ -264,7 +264,8 @@ public class AuditActionGraphCommandIntegrationTest {
   private String getExtendedNodeViewStringForOutput(
       ProjectFilesystem filesystem, String targetName, String relPathToOutputDir) {
     Path output =
-        BuildTargetPaths.getGenPath(filesystem, BuildTargetFactory.newInstance(targetName), "%s")
+        BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(targetName), "%s")
             .resolve(relPathToOutputDir);
     return new StringBuilder("Pair(")
         .append(targetName)

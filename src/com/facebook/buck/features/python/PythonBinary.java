@@ -74,7 +74,7 @@ public abstract class PythonBinary extends AbstractBuildRule
     if (!legacyOutputPath) {
       target = target.withFlavors();
     }
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s" + extension);
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s" + extension);
   }
 
   final RelPath getBinPath() {

@@ -116,7 +116,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
             .getFileName()
             .toString();
     this.out =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s")
             .resolve(frameworkName);
     this.applePlatformFlavorDomain = applePlatformFlavorDomain;
   }

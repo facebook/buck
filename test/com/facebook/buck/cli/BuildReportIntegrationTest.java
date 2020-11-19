@@ -145,7 +145,7 @@ public class BuildReportIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
     RelPath expectedBasePath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//:rule_with_multiple_outputs"),
             "%s");
     AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");

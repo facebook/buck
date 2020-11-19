@@ -97,14 +97,14 @@ class RobolectricTestHelper {
   static RelPath getResourceDirectoriesPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     return BuildTargetPaths.getGenPath(
-        projectFilesystem, buildTarget, "%s/robolectric-resource-directories");
+        projectFilesystem.getBuckPaths(), buildTarget, "%s/robolectric-resource-directories");
   }
 
   @VisibleForTesting
   static RelPath getAssetDirectoriesPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     return BuildTargetPaths.getGenPath(
-        projectFilesystem, buildTarget, "%s/robolectric-asset-directories");
+        projectFilesystem.getBuckPaths(), buildTarget, "%s/robolectric-asset-directories");
   }
 
   private String getDirectoriesContent(

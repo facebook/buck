@@ -133,7 +133,8 @@ public class JsUtil {
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, String subpath) {
     return ExplicitBuildTargetSourcePath.of(
         buildTarget,
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(subpath));
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
+            .resolve(subpath));
   }
 
   public static String getValueForFlavor(ImmutableMap<UserFlavor, String> map, Flavor flavor) {

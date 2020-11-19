@@ -76,7 +76,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
         };
     graphBuilder.addToIndex(javaLibraryRule);
     RelPath jarOutput =
-        BuildTargetPaths.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(), javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
 
     BuildContext context =
@@ -86,7 +87,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     RelPath dexOutput =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
             "%s/dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
@@ -123,7 +124,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     MoreAsserts.assertContainsOne(
         "The folder that contain generated .dex.jar file should be in the set of recorded artifacts.",
         buildableContext.getRecordedArtifacts(),
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getPath());
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s").getPath());
 
     BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
         preDex.getBuildOutputInitializer();
@@ -198,7 +199,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(projectFilesystem, buildTarget);
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s__/dex.jar"),
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s__/dex.jar"),
         outputPathResolver.resolvePath(preDexWithClasses.getPathToDex()));
   }
 }

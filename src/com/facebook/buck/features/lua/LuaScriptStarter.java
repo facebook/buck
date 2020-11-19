@@ -111,7 +111,7 @@ abstract class LuaScriptStarter implements Starter {
                     getProjectFilesystem(),
                     getPureStarterTemplate(),
                     BuildTargetPaths.getGenPath(
-                        getProjectFilesystem(), templateTarget, "%s/starter.lua.in"),
+                        getProjectFilesystem().getBuckPaths(), templateTarget, "%s/starter.lua.in"),
                     /* executable */ false));
 
     Tool lua =

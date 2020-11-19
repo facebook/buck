@@ -124,7 +124,8 @@ public class LuaBinaryDescription
 
   private static RelPath getNativeLibsSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, getNativeLibsSymlinkTreeTarget(target), "%s");
+    return BuildTargetPaths.getGenPath(
+        filesystem.getBuckPaths(), getNativeLibsSymlinkTreeTarget(target), "%s");
   }
 
   private static BuildTarget getModulesSymlinkTreeTarget(BuildTarget target) {
@@ -133,7 +134,8 @@ public class LuaBinaryDescription
 
   private static RelPath getModulesSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, getModulesSymlinkTreeTarget(target), "%s");
+    return BuildTargetPaths.getGenPath(
+        filesystem.getBuckPaths(), getModulesSymlinkTreeTarget(target), "%s");
   }
 
   private static BuildTarget getPythonModulesSymlinkTreeTarget(BuildTarget target) {
@@ -142,12 +144,14 @@ public class LuaBinaryDescription
 
   private static RelPath getPythonModulesSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, getPythonModulesSymlinkTreeTarget(target), "%s");
+    return BuildTargetPaths.getGenPath(
+        filesystem.getBuckPaths(), getPythonModulesSymlinkTreeTarget(target), "%s");
   }
 
   private RelPath getOutputPath(
       BuildTarget target, ProjectFilesystem filesystem, LuaPlatform luaPlatform) {
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s" + luaPlatform.getExtension());
+    return BuildTargetPaths.getGenPath(
+        filesystem.getBuckPaths(), target, "%s" + luaPlatform.getExtension());
   }
 
   private Iterable<BuildTarget> getNativeStarterDepTargets(LuaPlatform luaPlatform) {

@@ -412,7 +412,7 @@ public class DarwinLinker extends DelegatingTool
 
     private RelPath getExportedSymbolsList() {
       return BuildTargetPaths.getGenPath(
-          getProjectFilesystem(), getBuildTarget(), "%s/exported_symbols_list.txt");
+          getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/exported_symbols_list.txt");
     }
 
     @Override

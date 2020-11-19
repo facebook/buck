@@ -118,7 +118,7 @@ public class CxxLuaExtensionDescription
   private Path getExtensionPath(
       ProjectFilesystem filesystem, BuildTarget target, CxxPlatform cxxPlatform) {
     return BuildTargetPaths.getGenPath(
-            filesystem, getExtensionTarget(target, cxxPlatform.getFlavor()), "%s")
+            filesystem.getBuckPaths(), getExtensionTarget(target, cxxPlatform.getFlavor()), "%s")
         .resolve(getExtensionName(target, cxxPlatform));
   }
 

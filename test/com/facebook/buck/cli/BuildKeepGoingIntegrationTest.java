@@ -50,7 +50,7 @@ public class BuildKeepGoingIntegrationTest {
     // genrule uses legacy format
     String genruleOutputPath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance("//:rule_with_output"),
                 "%s")
             .resolve("rule_with_output.txt")
@@ -71,7 +71,7 @@ public class BuildKeepGoingIntegrationTest {
     // genrule uses legacy format
     String genruleOutputPath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance("//:rule_with_output"),
                 "%s")
             .resolve("rule_with_output.txt")
@@ -99,7 +99,7 @@ public class BuildKeepGoingIntegrationTest {
     // genrule uses legacy format
     String genruleOutputPath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance("//:rule_with_output"),
                 "%s")
             .resolve("rule_with_output.txt")

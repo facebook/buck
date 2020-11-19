@@ -233,11 +233,15 @@ public class OCamlIntegrationTest {
     AbsPath basePath = filesystem.getRootPath().toRealPath();
 
     Path testerExecutableFile =
-        basePath.resolve(BuildTargetPaths.getGenPath(filesystem, binTarget, "%s/tester")).getPath();
+        basePath
+            .resolve(BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), binTarget, "%s/tester"))
+            .getPath();
 
     Path pluginCmxsFile =
         basePath
-            .resolve(BuildTargetPaths.getGenPath(filesystem, pluginTarget, "%s/libplugin.cmxs"))
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), pluginTarget, "%s/libplugin.cmxs"))
             .getPath();
 
     // Run `./tester /path/to/plugin.cmxs`

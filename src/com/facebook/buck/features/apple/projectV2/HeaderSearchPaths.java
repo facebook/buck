@@ -707,7 +707,8 @@ class HeaderSearchPaths {
                 NodeHelper.getSwiftModuleTarget(nativeNode, defaultPlatformFlavor);
 
             RelPath swiftModuleMap =
-                BuildTargetPaths.getGenPath(projectFilesystem, flavoredSwiftCompileTarget, "%s");
+                BuildTargetPaths.getGenPath(
+                    projectFilesystem.getBuckPaths(), flavoredSwiftCompileTarget, "%s");
             builder.add(projectFilesystem.resolve(swiftModuleMap).getPath());
           }
         });

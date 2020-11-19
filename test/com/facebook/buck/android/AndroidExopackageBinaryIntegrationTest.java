@@ -113,7 +113,9 @@ public class AndroidExopackageBinaryIntegrationTest {
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk")));
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET),
+                    "%s.apk")));
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/secondary-1.dex.jar");
     zipInspector.assertFileDoesNotExist("classes2.dex");
@@ -170,7 +172,7 @@ public class AndroidExopackageBinaryIntegrationTest {
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     BuildTargetFactory.newInstance(DEX_AND_NATIVE_EXOPACKAGE_TARGET),
                     "%s.apk")));
 
@@ -286,7 +288,9 @@ public class AndroidExopackageBinaryIntegrationTest {
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk")));
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET),
+                    "%s.apk")));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("assets/lib/armeabi-v7a/libnative_cxx_lib.so");
   }

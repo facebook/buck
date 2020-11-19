@@ -251,7 +251,7 @@ public class HttpArchiveIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:test_no_symlinks.zip"),
                     "%s"))
             .resolve("test_no_symlinks.zip");
@@ -265,7 +265,7 @@ public class HttpArchiveIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:test_no_symlinks.zip#archive-download"),
                     "%s"))
             .resolve("test_no_symlinks.zip");

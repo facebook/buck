@@ -160,7 +160,8 @@ public class CxxCompilationDatabaseTest {
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
-        BuildTargetPaths.getGenPath(filesystem, testBuildTarget, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(), testBuildTarget, "__%s/compile_commands.json"),
         graphBuilder
             .getSourcePathResolver()
             .getCellUnsafeRelPath(compilationDatabase.getSourcePathToOutput()));
@@ -193,13 +194,13 @@ public class CxxCompilationDatabaseTest {
                     "-fdebug-prefix-map=/Users/user/src=.",
                     "-gno-record-gcc-switches",
                     "-o",
-                    BuildTargetPaths.getGenPath(filesystem, compileTarget, "%s")
+                    BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), compileTarget, "%s")
                         .resolve("test.o")
                         .toString(),
                     "-c",
                     "-MD",
                     "-MF",
-                    BuildTargetPaths.getGenPath(filesystem, compileTarget, "%s")
+                    BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), compileTarget, "%s")
                         .resolve("test.o.dep")
                         .toString(),
                     "test.cpp")));

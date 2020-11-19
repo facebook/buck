@@ -56,7 +56,8 @@ public class AssembleDirectories extends AbstractBuildRule {
     super(buildTarget, projectFilesystem);
     this.originalDirectories = directories;
     this.destinationDirectory =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__assembled_%s__");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), buildTarget, "__assembled_%s__");
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
             () ->

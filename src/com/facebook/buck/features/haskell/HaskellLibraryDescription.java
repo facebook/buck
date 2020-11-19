@@ -505,7 +505,8 @@ public class HaskellLibraryDescription
     String name =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             Optional.empty(), target.withFlavors(), platform.getCxxPlatform(), projectFilesystem);
-    Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve(name);
+    Path outputPath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s").resolve(name);
 
     return HaskellDescriptionUtils.createLinkRule(
         target,

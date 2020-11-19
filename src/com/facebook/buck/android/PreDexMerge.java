@@ -77,7 +77,7 @@ public abstract class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraD
 
   RelPath getPrimaryDexRoot() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s_output/primary");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s_output/primary");
   }
 
   Path getPrimaryDexPath() {

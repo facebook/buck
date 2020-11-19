@@ -540,7 +540,8 @@ public class AppleBinaryDescription
                   buildTarget,
                   projectFilesystem,
                   Files.readAllBytes(stubBinaryPath.get()),
-                  BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
+                  BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
+                      .getPath(),
                   true);
             } catch (IOException e) {
               throw new HumanReadableException(

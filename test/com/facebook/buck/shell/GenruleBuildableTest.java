@@ -148,8 +148,8 @@ public class GenruleBuildableTest {
             "%s %s", pathResolver.getAbsolutePath(path2), pathResolver.getAbsolutePath(path1));
     ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
 
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__tmp");
     buildable.addEnvironmentVariables(
         pathResolver,
         outputPathResolver,
@@ -187,8 +187,8 @@ public class GenruleBuildableTest {
             "%s//%s", pathResolver.getAbsolutePath(path2), pathResolver.getAbsolutePath(path1));
     ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
 
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__tmp");
     buildable.addEnvironmentVariables(
         pathResolver,
         outputPathResolver,
@@ -247,8 +247,8 @@ public class GenruleBuildableTest {
             .build()
             .toBuildable();
 
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__tmp");
 
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     buildable.addEnvironmentVariables(
@@ -284,8 +284,8 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__tmp");
 
     buildable.addEnvironmentVariables(
         graphBuilder.getSourcePathResolver(),
@@ -365,7 +365,8 @@ public class GenruleBuildableTest {
         buildable.getBuildSteps(
             buildContext, filesystem, outputPathResolver, buildCellRelativePathFactory);
 
-    RelPath targetGenrulePath = BuildTargetPaths.getGenPath(filesystem, target, "%s");
+    RelPath targetGenrulePath =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s");
     Optional<Step> mkdir =
         steps.stream()
             .filter(
@@ -535,10 +536,11 @@ public class GenruleBuildableTest {
             .collect(ImmutableSet.toImmutableSet());
 
     // "out" uses the legacy path that isn't suffixed with "__"
+    final FakeProjectFilesystem filesystem1 = new FakeProjectFilesystem();
     assertThat(
         actual,
         Matchers.containsInAnyOrder(
-            BuildTargetPaths.getGenPath(new FakeProjectFilesystem(), target, "%s")
+            BuildTargetPaths.getGenPath(filesystem1.getBuckPaths(), target, "%s")
                 .resolve("output.txt")));
   }
 
@@ -550,8 +552,8 @@ public class GenruleBuildableTest {
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__tmp");
 
     ImmutableMap.Builder<String, String> envVarsBuilder = ImmutableMap.builder();
     GenruleBuildable buildable =
@@ -578,7 +580,8 @@ public class GenruleBuildableTest {
         envVarsBuilder.build().get("OUT"),
         Matchers.equalTo(
             fakeProjectFileSystem
-                .resolve(BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s"))
+                .resolve(
+                    BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s"))
                 .toString()));
   }
 
@@ -590,8 +593,10 @@ public class GenruleBuildableTest {
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    RelPath srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__tmp");
+    RelPath srcPath =
+        BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath =
+        BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s__tmp");
 
     ImmutableMap.Builder<String, String> envVarsBuilder = ImmutableMap.builder();
     GenruleBuildable buildable =
@@ -616,7 +621,7 @@ public class GenruleBuildableTest {
             fakeProjectFileSystem
                 .getRootPath()
                 .resolve(
-                    BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s")
+                    BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s")
                         .resolve("output.txt"))
                 .toString()));
   }
@@ -665,8 +670,10 @@ public class GenruleBuildableTest {
             .withBuildCellRootPath(fakeProjectFileSystem.getRootPath().getPath());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    RelPath srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__tmp");
+    RelPath srcPath =
+        BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath =
+        BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s__tmp");
 
     expectedThrownException.expect(BuckUncheckedExecutionException.class);
     expectedThrownException.expectCause(Matchers.instanceOf(FileNotFoundException.class));
@@ -716,8 +723,10 @@ public class GenruleBuildableTest {
             .withBuildCellRootPath(fakeProjectFileSystem.getRootPath().getPath());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    RelPath srcPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s__tmp");
+    RelPath srcPath =
+        BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath =
+        BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s__tmp");
 
     expectedThrownException.expect(BuckUncheckedExecutionException.class);
     expectedThrownException.expectCause(Matchers.instanceOf(FileNotFoundException.class));
@@ -727,7 +736,7 @@ public class GenruleBuildableTest {
             "Expected file %s to be written from genrule //example:genrule. File was not present",
             outputPathResolver.resolvePath(
                 new PublicOutputPath(
-                    BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s")
+                    BuildTargetPaths.getGenPath(fakeProjectFileSystem.getBuckPaths(), target, "%s")
                         .resolve("output.txt")))));
 
     GenruleBuildable buildable =
@@ -892,7 +901,7 @@ public class GenruleBuildableTest {
     return resolver
         .resolvePath(
             new PublicOutputPath(
-                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
                     .resolve(outputName)
                     .normalize()))
         .getPath();

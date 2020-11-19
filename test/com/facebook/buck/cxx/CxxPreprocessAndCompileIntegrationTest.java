@@ -94,7 +94,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
-    Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
+    Path lib =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s/libsimple.a"));
     String contents =
         Files.asByteSource(lib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
@@ -105,7 +107,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path longPwdLib =
         longPwdWorkspace.getPath(
-            BuildTargetPaths.getGenPath(longPwdFilesystem, target, "%s/libsimple.a"));
+            BuildTargetPaths.getGenPath(
+                longPwdFilesystem.getBuckPaths(), target, "%s/libsimple.a"));
     String longPwdContents =
         Files.asByteSource(longPwdLib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertEquals(contents, longPwdContents);
@@ -119,7 +122,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     processResult.assertSuccess();
     Path lib =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple_assembly.a"));
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), target, "%s/libsimple_assembly.a"));
     String contents =
         Files.asByteSource(lib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
@@ -149,7 +153,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     Path lib =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(), target, "%s/libsimple.a"));
+                workspace.getProjectFileSystem().getBuckPaths(), target, "%s/libsimple.a"));
     String contents =
         Files.asByteSource(lib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));

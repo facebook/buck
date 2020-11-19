@@ -100,17 +100,19 @@ public class ExportFileTest {
         ImmutableList.of(
             "rm -f -r "
                 + projectFilesystem.resolve(
-                    BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")),
-            "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+                    BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")),
+            "mkdir -p "
+                + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
+                + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
                     .resolve("example.html")),
         steps,
         TestExecutionContext.newInstance(rootPath));
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("example.html"),
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
+            .resolveRel("example.html"),
         pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
   }
 
@@ -133,16 +135,19 @@ public class ExportFileTest {
         ImmutableList.of(
             "rm -f -r "
                 + projectFilesystem.resolve(
-                    BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")),
-            "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+                    BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")),
+            "mkdir -p "
+                + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s"),
             "cp "
                 + projectFilesystem.resolve("example.html")
                 + " "
-                + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish")),
+                + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
+                    .resolve("fish")),
         steps,
         TestExecutionContext.newInstance(rootPath));
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
+            .resolveRel("fish"),
         pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
   }
 
@@ -168,16 +173,19 @@ public class ExportFileTest {
         ImmutableList.of(
             "rm -f -r "
                 + projectFilesystem.resolve(
-                    BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")),
-            "mkdir -p " + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+                    BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")),
+            "mkdir -p "
+                + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s"),
             "cp "
                 + projectFilesystem.resolve("chips")
                 + " "
-                + BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve("fish")),
+                + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
+                    .resolve("fish")),
         steps,
         TestExecutionContext.newInstance(rootPath));
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolveRel("fish"),
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
+            .resolveRel("fish"),
         pathResolver.getCellUnsafeRelPath(exportFile.getSourcePathToOutput()));
   }
 

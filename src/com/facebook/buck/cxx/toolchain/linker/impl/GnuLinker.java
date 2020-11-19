@@ -272,7 +272,8 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
 
     private RelPath getScript() {
       String format = String.format("%%s/%s_script.txt", getScriptType());
-      return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
+      return BuildTargetPaths.getGenPath(
+          getProjectFilesystem().getBuckPaths(), getBuildTarget(), format);
     }
 
     @Override

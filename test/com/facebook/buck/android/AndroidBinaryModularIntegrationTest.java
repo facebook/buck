@@ -63,7 +63,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/prebuilt/libs.txt");
     zipInspector.assertFileExists("assets/prebuilt/libs.xzs");
     zipInspector.assertFileExists("assets/prebuilt_asset/libs.txt");
@@ -78,7 +78,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/libs.xzs");
     zipInspector.assertFileExists("assets/lib/metadata.txt");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
@@ -99,7 +99,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/libs.xzs");
     zipInspector.assertFileExists("assets/lib/metadata.txt");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
@@ -120,7 +120,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
@@ -144,7 +144,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
@@ -168,7 +168,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
@@ -194,7 +194,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
     zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
     zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
@@ -219,7 +219,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -233,7 +233,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileExists("assets/feature1/feature12.dex");
     zipInspector.assertFileExists("assets/feature1/AndroidManifest.xml");
@@ -259,7 +259,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -273,7 +273,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -286,7 +286,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "-1_1.dex.jar");
@@ -303,7 +303,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
     moduleInspector.assertTypeExists("Lcom/facebook/sample/Shared;");
@@ -318,7 +318,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
@@ -341,7 +341,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
@@ -364,7 +364,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
     moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
@@ -382,7 +382,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
     moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
@@ -401,7 +401,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     DexInspector moduleInspector = new DexInspector(apkPath, modulePath);
     moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample3/private_shared/Sample;");
 
@@ -416,7 +416,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "java.com.sample.small.small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
@@ -429,7 +429,7 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     String module = "java.com.sample.small.small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");

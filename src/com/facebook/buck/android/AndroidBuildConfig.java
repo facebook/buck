@@ -162,7 +162,7 @@ public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.valuesFile = valuesFile;
     this.useConstantExpressions = useConstantExpressions;
     this.pathToOutputFile =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s__")
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "__%s__")
             .resolve("BuildConfig.java");
   }
 

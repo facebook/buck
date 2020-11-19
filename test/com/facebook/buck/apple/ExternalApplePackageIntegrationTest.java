@@ -49,7 +49,7 @@ public class ExternalApplePackageIntegrationTest {
     assertThat(
         workspace.getFileContents(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:FooPackage#iphonesimulator-x86_64"),
                     "%s")
                 .resolve("FooPackage.omg")),
@@ -67,7 +67,7 @@ public class ExternalApplePackageIntegrationTest {
     assertThat(
         workspace.getFileContents(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:FooPackage"),
                     "%s")
                 .resolve("FooPackage.omg")),

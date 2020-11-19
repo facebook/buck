@@ -375,22 +375,22 @@ public class JavaTestIntegrationTest {
     ImmutableSortedSet<Path> expectedPaths =
         ImmutableSortedSet.of(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:top"),
                     "lib__%s__output")
                 .resolve("top.jar"),
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:direct_dep"),
                     "lib__%s__output")
                 .resolve("direct_dep.jar"),
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:mid_test#testsjar"),
                     "lib__%s__output")
                 .resolve("mid_test#testsjar.jar"),
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:transitive_lib"),
                     "lib__%s__output")
                 .resolve("transitive_lib.jar"));

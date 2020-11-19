@@ -170,7 +170,7 @@ public class PythonTestDescription
   @VisibleForTesting
   protected static Path getTestModulesListPath(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
         .resolve(getTestModulesListName());
   }
 
@@ -237,7 +237,9 @@ public class PythonTestDescription
   private static class PythonTestMainRule extends AbstractBuildRule {
     private final RelPath output =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "%s/" + DEFAULT_TEST_MAIN_NAME);
+            getProjectFilesystem().getBuckPaths(),
+            getBuildTarget(),
+            "%s/" + DEFAULT_TEST_MAIN_NAME);
 
     public PythonTestMainRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
       super(buildTarget, projectFilesystem);

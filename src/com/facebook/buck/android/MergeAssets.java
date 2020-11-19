@@ -160,7 +160,7 @@ public class MergeAssets extends AbstractBuildRule {
 
   public RelPath getPathToMergedAssets() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/merged.assets.ap_");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/merged.assets.ap_");
   }
 
   private static class MergeAssetsStep extends AbstractExecutionStep {

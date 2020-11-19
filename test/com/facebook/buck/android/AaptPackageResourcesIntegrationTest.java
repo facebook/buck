@@ -68,7 +68,7 @@ public class AaptPackageResourcesIntegrationTest {
     Path aaptOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)
                     .withFlavors(
                         AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR,

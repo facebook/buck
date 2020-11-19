@@ -343,7 +343,9 @@ public class Omnibus {
                                   graphBuilder,
                                   dummyOmnibusTarget,
                                   BuildTargetPaths.getGenPath(
-                                          projectFilesystem, dummyOmnibusTarget, "%s")
+                                          projectFilesystem.getBuckPaths(),
+                                          dummyOmnibusTarget,
+                                          "%s")
                                       .resolve(omnibusSoname),
                                   ImmutableMap.of(),
                                   Optional.of(omnibusSoname),
@@ -482,7 +484,7 @@ public class Omnibus {
                   graphBuilder,
                   target,
                   output.orElse(
-                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
+                      BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
                           .resolve(
                               rootSoname.orElse(
                                   String.format(
@@ -513,7 +515,7 @@ public class Omnibus {
                   graphBuilder,
                   target,
                   output.orElse(
-                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s")
+                      BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s")
                           .resolve(target.getShortName())),
                   ImmutableMap.of(),
                   argsBuilder.build(),
@@ -843,7 +845,7 @@ public class Omnibus {
                 projectFilesystem,
                 graphBuilder,
                 omnibusTarget,
-                BuildTargetPaths.getGenPath(projectFilesystem, omnibusTarget, "%s")
+                BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), omnibusTarget, "%s")
                     .resolve(omnibusSoname),
                 ImmutableMap.of(),
                 Optional.of(omnibusSoname),

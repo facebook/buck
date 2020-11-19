@@ -97,7 +97,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (platform.getGoOs() == GoOs.WINDOWS) {
       outputFormat = outputFormat + ".exe";
     }
-    this.output = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, outputFormat);
+    this.output =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, outputFormat);
 
     this.linkerFlags = linkerFlags;
     this.linkMode = linkMode;

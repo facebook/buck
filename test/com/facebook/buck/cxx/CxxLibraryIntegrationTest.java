@@ -130,7 +130,7 @@ public class CxxLibraryIntegrationTest {
         Files.isRegularFile(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//subdir:library")
                         .withFlavors(
                             DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR),

@@ -167,18 +167,21 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private Path getObjectDir() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    return BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
         .resolve("objects");
   }
 
   private Path getInterfaceDir() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    return BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
         .resolve("interfaces");
   }
 
   /** @return the path where the compiler places generated FFI stub files. */
   private Path getStubDir() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+    return BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
         .resolve("stubs");
   }
 

@@ -96,7 +96,7 @@ public class TrimUberRDotJavaTest {
             + "}\n";
     RelPath rDotJavaDir =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             BuildTargetFactory.newInstance("//:aapt#aapt_package_resources"),
             "%s/__r_java_srcs__/R.java");
     Path rDotJavaPath = rDotJavaDir.resolve("com/test/R.java");

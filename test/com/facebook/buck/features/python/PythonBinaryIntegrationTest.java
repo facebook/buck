@@ -243,12 +243,12 @@ public class PythonBinaryIntegrationTest {
     // Verify that the linker and version scripts exist
     RelPath linkerScriptPath =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(InternalFlavor.of("omnibus-undefined-symbols-args")),
             "%s/linker_script.txt");
     RelPath versionScriptPath =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-args")),
             "%s/version_script.txt");
     MatcherAssert.assertThat(

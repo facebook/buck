@@ -334,7 +334,8 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
                   pattern
                       .replaceFirst("%name%", "%s")
                       .replace("%name%", buildTarget.getShortNameAndFlavorPostfix());
-              return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, format);
+              return BuildTargetPaths.getGenPath(
+                  projectFilesystem.getBuckPaths(), buildTarget, format);
             })
         .collect(ImmutableSet.toImmutableSet());
   }

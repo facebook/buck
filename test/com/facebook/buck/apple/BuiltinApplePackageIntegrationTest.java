@@ -101,7 +101,8 @@ public class BuiltinApplePackageIntegrationTest {
 
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")));
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("Payload/DemoApp.app/DemoApp");
     zipInspector.assertFileDoesNotExist("WatchKitSupport");
     zipInspector.assertFileDoesNotExist("WatchKitSupport2");
@@ -128,7 +129,8 @@ public class BuiltinApplePackageIntegrationTest {
 
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")));
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), packageTarget, "%s.ipa")));
     zipInspector.assertFileExists("SwiftSupport/iphonesimulator/libswiftCore.dylib");
   }
 
@@ -147,7 +149,8 @@ public class BuiltinApplePackageIntegrationTest {
 
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")));
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), packageTarget, "%s.ipa")));
     zipInspector.assertFileDoesNotExist("SwiftSupport");
   }
 
@@ -180,7 +183,8 @@ public class BuiltinApplePackageIntegrationTest {
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), packageTarget, "%s.ipa")),
             destination,
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
@@ -221,7 +225,7 @@ public class BuiltinApplePackageIntegrationTest {
       Path outputPath =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                  filesystem,
+                  filesystem.getBuckPaths(),
                   target.withAppendedFlavors(
                       InternalFlavor.of("dwarf-and-dsym"),
                       InternalFlavor.of("no-include-frameworks")),
@@ -267,7 +271,8 @@ public class BuiltinApplePackageIntegrationTest {
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), packageTarget, "%s.ipa")),
             workspace.getDestPath(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 

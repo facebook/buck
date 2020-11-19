@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.impl;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -97,12 +98,10 @@ public class BuildTargetPaths {
    * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of {@code
    *     target}.
    */
-  public static RelPath getGenPath(
-      ProjectFilesystem filesystem, BuildTarget target, String format) {
+  public static RelPath getGenPath(BaseBuckPaths buckPaths, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
 
-    BuckPaths buckPaths = filesystem.getBuckPaths();
     return getRelativePath(
         target,
         format,
@@ -136,7 +135,7 @@ public class BuildTargetPaths {
    * Return a relative path to a file. {@code format} will be prepended with the target base path,
    * then formatted with the target short name.
    *
-   * <p>This is portion of the path returned by, e.g., {@link #getGenPath(ProjectFilesystem,
+   * <p>This is portion of the path returned by, e.g., {@link #getGenPath(BaseBuckPaths,
    * BuildTarget, String)}
    *
    * @param target The {@link BuildTarget} to scope this path to.

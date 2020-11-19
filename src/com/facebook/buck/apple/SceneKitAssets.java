@@ -73,7 +73,8 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.sceneKitAssetsPaths = sceneKitAssetsPaths;
     this.withDownwardApi = withDownwardApi;
     String outputDirString =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s").toString();
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s")
+            .toString();
     this.outputDir = Paths.get(outputDirString);
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
     this.minOSVersion = appleCxxPlatform.getMinVersion();

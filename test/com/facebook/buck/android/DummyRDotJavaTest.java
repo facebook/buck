@@ -124,7 +124,9 @@ public class DummyRDotJavaTest {
                 rDotJavaOutputFolder,
                 dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
     String genFolder =
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent().toString();
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
+            .getParent()
+            .toString();
 
     List<String> sortedSymbolsFiles =
         Stream.of(resourceRule1, resourceRule2)

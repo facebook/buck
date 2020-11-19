@@ -368,12 +368,14 @@ public final class CommonRuleKeyHasherTest {
           ForwardingBuildTargetSourcePath.of(
               TARGET_1,
               ExplicitBuildTargetSourcePath.of(
-                  TARGET_2, BuildTargetPaths.getGenPath(filesystem1, TARGET_2, "%s.out")));
+                  TARGET_2,
+                  BuildTargetPaths.getGenPath(filesystem1.getBuckPaths(), TARGET_2, "%s.out")));
       ForwardingBuildTargetSourcePath forwardingSourcePath2 =
           ForwardingBuildTargetSourcePath.of(
               TARGET_1,
               ExplicitBuildTargetSourcePath.of(
-                  TARGET_2, BuildTargetPaths.getGenPath(filesystem2, TARGET_2, "%s.out")));
+                  TARGET_2,
+                  BuildTargetPaths.getGenPath(filesystem2.getBuckPaths(), TARGET_2, "%s.out")));
       assertEquals(
           newHasher().putBuildTargetSourcePath(forwardingSourcePath1).hash(),
           newHasher().putBuildTargetSourcePath(forwardingSourcePath2).hash());

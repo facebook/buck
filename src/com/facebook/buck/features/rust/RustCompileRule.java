@@ -157,7 +157,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
   }
 
   protected static RelPath getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s");
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s");
   }
 
   @Override

@@ -124,7 +124,7 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__")
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__java_test_%s_output__")
         .getPath();
   }
 

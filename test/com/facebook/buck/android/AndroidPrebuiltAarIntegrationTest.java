@@ -77,7 +77,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance(target),
                     "%s.apk")));
     zipInspector.assertFileExists("AndroidManifest.xml");

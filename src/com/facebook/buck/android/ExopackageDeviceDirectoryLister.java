@@ -64,7 +64,9 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     super(buildTarget, projectFilesystem);
     trigger = new InstallTrigger(projectFilesystem);
-    outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/exo.contents");
+    outputPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), buildTarget, "%s/exo.contents");
   }
 
   @Override

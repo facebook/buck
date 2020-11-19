@@ -290,7 +290,7 @@ public class CxxPrecompiledHeaderRuleTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        filesystem, workspace.newBuildTarget(binaryTarget), "%s"))
+                        filesystem.getBuckPaths(), workspace.newBuildTarget(binaryTarget), "%s"))
                 .toString())
         .getExitCode();
   }
@@ -705,7 +705,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 workspace
                     .resolve(
                         BuildTargetPaths.getGenPath(
-                            filesystem,
+                            filesystem.getBuckPaths(),
                             workspace.newBuildTarget(
                                 "//recompile_after_include_changed:main#default"),
                             "%s"))
@@ -733,7 +733,7 @@ public class CxxPrecompiledHeaderRuleTest {
                 workspace
                     .resolve(
                         BuildTargetPaths.getGenPath(
-                            filesystem,
+                            filesystem.getBuckPaths(),
                             workspace.newBuildTarget(
                                 "//recompile_after_include_changed:main#default"),
                             "%s"))

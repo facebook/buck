@@ -108,7 +108,7 @@ public class AndroidResourceIntegrationTest {
 
     String resourceFilePath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance("//generated_res:gen-res"),
                 "%s")
             .resolve("res/values/strings.xml")

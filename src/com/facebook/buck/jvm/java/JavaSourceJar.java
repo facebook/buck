@@ -63,7 +63,8 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.sources = sources;
     this.output =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s" + JavaPaths.SRC_JAR);
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), buildTarget, "%s" + JavaPaths.SRC_JAR);
     this.temp = BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "%s-srcs");
     this.mavenCoords = mavenCoords;
   }

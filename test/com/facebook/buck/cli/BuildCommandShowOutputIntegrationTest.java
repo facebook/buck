@@ -188,11 +188,11 @@ public class BuildCommandShowOutputIntegrationTest {
             String.format(
                 "\"//:bar\" : \"%s/bar\",\n  \"//:ex ample\" : \"%s/example\",\n  \"//:foo\" : \"%s/foo\"\n}",
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//:bar"), "%s"),
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:bar"), "%s"),
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//:ex ample"), "%s"),
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:ex ample"), "%s"),
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//:foo"), "%s"))));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:foo"), "%s"))));
   }
 
   @Test
@@ -245,13 +245,19 @@ public class BuildCommandShowOutputIntegrationTest {
                 "{\n  \"//:bar\" : \"%s/bar\",\n  \"//:ex ample\" : \"%s/example\",\n  \"//:foo\" : \"%s/foo\"\n}",
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        projectFilesystem, BuildTargetFactory.newInstance("//:bar"), "%s")),
+                        projectFilesystem.getBuckPaths(),
+                        BuildTargetFactory.newInstance("//:bar"),
+                        "%s")),
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        projectFilesystem, BuildTargetFactory.newInstance("//:ex ample"), "%s")),
+                        projectFilesystem.getBuckPaths(),
+                        BuildTargetFactory.newInstance("//:ex ample"),
+                        "%s")),
                 expectedRootDirectory.resolve(
                     BuildTargetPaths.getGenPath(
-                        projectFilesystem, BuildTargetFactory.newInstance("//:foo"), "%s")))));
+                        projectFilesystem.getBuckPaths(),
+                        BuildTargetFactory.newInstance("//:foo"),
+                        "%s")))));
   }
 
   @Test
@@ -332,7 +338,8 @@ public class BuildCommandShowOutputIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     runBuckResult.assertSuccess();
     String expected =
-        BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s").toString()
+        BuildTargetPaths.getGenPath(workspace.getProjectFileSystem().getBuckPaths(), target, "%s")
+                .toString()
             + ".jar";
     assertThat(
         expected,

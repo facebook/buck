@@ -249,7 +249,8 @@ public class PrebuiltCxxLibraryDescription
 
     // If not, setup a single link rule to link it from the static lib.
     Path builtSharedLibraryPath =
-        BuildTargetPaths.getGenPath(projectFilesystem, sharedTarget, "%s").resolve(soname);
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), sharedTarget, "%s")
+            .resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
         downwardApiConfig,

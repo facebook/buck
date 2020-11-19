@@ -59,7 +59,8 @@ public class CleanClasspathIntegrationTest {
         "example.jar should be written. This should not be on the classpath on the next build.",
         Files.isRegularFile(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/example.jar"))));
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), target, "lib__%s__output/example.jar"))));
 
     // Overwrite the existing BUCK file, redefining the java_library rule to exclude Bar.java from
     // its srcs.

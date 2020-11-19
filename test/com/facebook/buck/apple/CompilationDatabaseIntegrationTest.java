@@ -90,7 +90,7 @@ public class CompilationDatabaseIntegrationTest {
 
     String pathToPrivateHeaders =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withFlavors(
                     InternalFlavor.of("iphonesimulator-x86_64"),
                     CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -98,7 +98,7 @@ public class CompilationDatabaseIntegrationTest {
             .toString();
     String pathToPublicHeaders =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withFlavors(
                     CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
                     CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor()),
@@ -159,7 +159,7 @@ public class CompilationDatabaseIntegrationTest {
 
     String pathToPrivateHeaders =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withFlavors(
                     InternalFlavor.of("iphonesimulator-x86_64"),
                     CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
@@ -167,7 +167,7 @@ public class CompilationDatabaseIntegrationTest {
             .toString();
     String pathToPublicHeaders =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 BuildTargetFactory.newInstance("//Libraries/EXExample:EXExample")
                     .withAppendedFlavors(
                         CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR,
@@ -265,7 +265,9 @@ public class CompilationDatabaseIntegrationTest {
     }
 
     String output =
-        BuildTargetPaths.getGenPath(filesystem, outputTarget, "%s").resolve(outputPath).toString();
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), outputTarget, "%s")
+            .resolve(outputPath)
+            .toString();
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");

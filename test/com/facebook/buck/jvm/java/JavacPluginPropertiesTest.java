@@ -181,7 +181,7 @@ public class JavacPluginPropertiesTest {
                 filesystem
                     .resolve(
                         BuildTargetPaths.getGenPath(
-                            filesystem,
+                            filesystem.getBuckPaths(),
                             BuildTargetFactory.newInstance("//:internal_java_lib"),
                             "%s.jar"))
                     .getPath(),

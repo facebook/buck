@@ -179,7 +179,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   private Path getOutputDir() {
-    RelPath p = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    RelPath p =
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s");
     // Haddock doesn't like commas in its file-paths for --read-interface
     // so replace commas with dashes
     return Paths.get(p.toString().replaceAll(",", "-"));

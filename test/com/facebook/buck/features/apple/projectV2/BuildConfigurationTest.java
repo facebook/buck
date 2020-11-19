@@ -197,7 +197,8 @@ public class BuildConfigurationTest {
         BuildConfiguration.getXcconfigPath(
             projectFilesystem, fooBuildTarget, BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertEquals(
-        BuildTargetPaths.getGenPath(projectFilesystem, fooBuildTarget, "%s-Debug.xcconfig"),
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), fooBuildTarget, "%s-Debug.xcconfig"),
         xcconfigPath);
   }
 

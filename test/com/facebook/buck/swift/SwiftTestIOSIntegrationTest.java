@@ -70,7 +70,7 @@ public class SwiftTestIOSIntegrationTest {
         workspace
             .getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         InternalFlavor.of("iphonesimulator-x86_64"),
                         InternalFlavor.of("apple-test-bundle"),
@@ -118,7 +118,7 @@ public class SwiftTestIOSIntegrationTest {
         workspace
             .getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         InternalFlavor.of("iphonesimulator-x86_64"),
                         InternalFlavor.of("apple-test-bundle"),
@@ -173,7 +173,7 @@ public class SwiftTestIOSIntegrationTest {
         workspace
             .getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         InternalFlavor.of("macosx-x86_64"),
                         InternalFlavor.of("apple-test-bundle"),

@@ -219,7 +219,9 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private RelPath getOutputDirectory() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
+    return BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
+        .getParent();
   }
 
   @Override

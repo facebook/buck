@@ -170,14 +170,14 @@ abstract class NativeExecutableStarter implements Starter {
                                   getProjectFilesystem(),
                                   getNativeStarterCxxSourceTemplate(),
                                   BuildTargetPaths.getGenPath(
-                                      getProjectFilesystem(),
+                                      getProjectFilesystem().getBuckPaths(),
                                       templateTarget,
                                       "%s/native-starter.cpp.in"),
                                   /* executable */ false));
 
                   RelPath output =
                       BuildTargetPaths.getGenPath(
-                          getProjectFilesystem(), target, "%s/native-starter.cpp");
+                          getProjectFilesystem().getBuckPaths(), target, "%s/native-starter.cpp");
                   return WriteStringTemplateRule.from(
                       getProjectFilesystem(),
                       getBaseParams(),

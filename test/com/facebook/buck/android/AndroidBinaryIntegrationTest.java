@@ -133,7 +133,9 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(SIMPLE_TARGET), "%s.apk"));
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance(SIMPLE_TARGET),
+                "%s.apk"));
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
 
@@ -183,7 +185,9 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path apkPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(RAW_DEX_TARGET), "%s.apk"));
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance(RAW_DEX_TARGET),
+                "%s.apk"));
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
@@ -265,7 +269,8 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testEditingPrimaryDexClassForcesRebuildForSimplePackage() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(SIMPLE_TARGET);
-    RelPath outputPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk");
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.apk");
     HashFunction hashFunction = Hashing.sha1();
     String dexFileName = "classes.dex";
 
@@ -517,7 +522,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         new DexInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
 
     dexInspector.assertTypeExists("Lcom/facebook/sample/Dep;");
     dexInspector.assertTypeExists("Lcom/facebook/sample/ExportedDep;");
@@ -570,7 +575,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
             "//apps/multidex:app_with_resources_and_groups#secondary_dexes_1");
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path resourcesFile =
-        BuildTargetPaths.getGenPath(filesystem, dexTarget, "%s")
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), dexTarget, "%s")
             .resolve("referenced_resources.txt");
     Optional<String> referencedResources = filesystem.readFileIfItExists(resourcesFile);
     assertTrue(referencedResources.isPresent());
@@ -609,7 +614,9 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path mapping =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s/proguard/mapping.txt"));
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance(target),
+                "%s/proguard/mapping.txt"));
     assertTrue(Files.exists(mapping));
   }
 
@@ -634,7 +641,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path apk =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(apk))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -650,7 +657,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path pathToZip =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.apk"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
     ZipFile file = new ZipFile(pathToZip.toFile());
     ZipEntry metadata = file.getEntry("assets/lib/metadata.txt");
     assertNotNull(metadata);
@@ -771,7 +778,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path generatedConfig =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
                 NativeLibraryProguardGenerator.OUTPUT_FORMAT));
@@ -779,7 +786,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path proguardDir =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s/proguard"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s/proguard"));
 
     Path proguardCommandLine = proguardDir.resolve("command-line.txt");
     // Check that the proguard command line references the native lib proguard config.
@@ -799,7 +806,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path generatedConfig =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
                 NativeLibraryProguardGenerator.OUTPUT_FORMAT));
@@ -807,7 +814,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path proguardDir =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s/proguard"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s/proguard"));
 
     Path proguardCommandLine = proguardDir.resolve("command-line.txt");
     // Check that the proguard command line references the native lib proguard config.
@@ -826,7 +833,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path generatedConfig =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 BuildTargetFactory.newInstance(target)
                     .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
                 NativeLibraryProguardGenerator.OUTPUT_FORMAT));
@@ -834,7 +841,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     Path proguardDir =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s/proguard"));
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s/proguard"));
 
     Path proguardCommandLine = proguardDir.resolve("command-line.txt");
     // Check that the proguard command line references the native lib proguard config.

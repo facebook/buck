@@ -813,7 +813,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   public RelPath getManifestPath() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/AndroidManifest.xml");
   }
 
   /** All native-libs-as-assets are copied to this directory before running apkbuilder. */
@@ -863,12 +863,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private RelPath getPath(String format) {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), format);
   }
 
   private Path getRedexedApkPath() {
     RelPath path =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s__redex");
     return path.resolve(getBuildTarget().getShortName() + ".redex." + getExtension());
   }
 
@@ -876,7 +878,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
    * Directory of text files used by proguard. Unforunately, this contains both inputs and outputs.
    */
   private RelPath getProguardTextFilesPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/proguard");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/proguard");
   }
 
   @VisibleForTesting

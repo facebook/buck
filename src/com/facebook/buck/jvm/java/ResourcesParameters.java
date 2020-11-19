@@ -109,7 +109,8 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
                               .getOutputName(getOutputLabel(rawResource))));
         } else {
           RelPath genOutputParent =
-              BuildTargetPaths.getGenPath(filesystem, underlyingTarget, "%s").getParent();
+              BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), underlyingTarget, "%s")
+                  .getParent();
           RelPath scratchOutputParent =
               BuildTargetPaths.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
           Optional<RelPath> outputPath =

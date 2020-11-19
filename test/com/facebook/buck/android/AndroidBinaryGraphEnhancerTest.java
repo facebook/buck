@@ -831,7 +831,7 @@ public class AndroidBinaryGraphEnhancerTest {
             + " created via graph enhancement.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                    projectFilesystem, enhancedBuildConfigTarget, "lib__%s__output")
+                    projectFilesystem.getBuckPaths(), enhancedBuildConfigTarget, "lib__%s__output")
                 .resolveRel(enhancedBuildConfigTarget.getShortNameAndFlavorPostfix() + ".jar")),
         result.getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath)

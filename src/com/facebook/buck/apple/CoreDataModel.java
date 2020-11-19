@@ -75,7 +75,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.dataModelPaths = dataModelPaths;
     this.withDownwardApi = withDownwardApi;
     String outputDirString =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s")
             .toString()
             .replace('#', '-'); // momc doesn't like # in paths
     this.outputDir = Paths.get(outputDirString);

@@ -157,7 +157,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Path getPathToTestOutputDirectory() {
     // TODO(beng): Refactor the JavaTest implementation; this is identical.
     return BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__apple_test_%s_output__")
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__apple_test_%s_output__")
         .getPath();
   }
 

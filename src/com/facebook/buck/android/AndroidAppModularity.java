@@ -115,7 +115,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "%s/modulemetadata.txt"));
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/modulemetadata.txt"));
   }
 
   @Override

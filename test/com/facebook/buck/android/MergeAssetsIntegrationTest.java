@@ -52,7 +52,8 @@ public class MergeAssetsIntegrationTest {
             "home/"
                 + BuildTargetPaths.getGenPath(
                     FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
-                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH)
+                        .getBuckPaths(),
                     BuildTargetFactory.newInstance("//:list_outputs"),
                     "%s")
                 + "/list_of_outputs.txt");
@@ -69,7 +70,8 @@ public class MergeAssetsIntegrationTest {
             "home/"
                 + BuildTargetPaths.getGenPath(
                     FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
-                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH)
+                        .getBuckPaths(),
                     BuildTargetFactory.newInstance("//:list_outputs"),
                     "%s")
                 + "/list_of_outputs.txt");

@@ -86,7 +86,8 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
       this.withDownwardApi = withDownwardApi;
       this.output =
           new PublicOutputPath(
-              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.jslib"));
+              BuildTargetPaths.getGenPath(
+                  projectFilesystem.getBuckPaths(), buildTarget, "%s.jslib"));
     }
 
     @Override

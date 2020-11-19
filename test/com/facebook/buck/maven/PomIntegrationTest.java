@@ -232,7 +232,8 @@ public class PomIntegrationTest {
     public SourcePath getSourcePathToOutput() {
       return ExplicitBuildTargetSourcePath.of(
           getBuildTarget(),
-          BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar"));
+          BuildTargetPaths.getGenPath(
+              getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s.jar"));
     }
   }
 }

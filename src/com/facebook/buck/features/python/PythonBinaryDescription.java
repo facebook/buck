@@ -148,7 +148,8 @@ public class PythonBinaryDescription
       ActionGraphBuilder graphBuilder) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(buildTarget);
     RelPath emptyInitPath =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/__init__.py");
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), buildTarget, "%s/__init__.py");
     WriteFile rule =
         graphBuilder.addToIndex(
             new WriteFile(
@@ -196,7 +197,8 @@ public class PythonBinaryDescription
 
     SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, graphBuilder);
     BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));
-    RelPath linkTreeRoot = BuildTargetPaths.getGenPath(projectFilesystem, linkTreeTarget, "%s");
+    RelPath linkTreeRoot =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), linkTreeTarget, "%s");
     SymlinkTree linkTree =
         graphBuilder.addToIndex(
             new SymlinkTree(

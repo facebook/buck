@@ -3657,7 +3657,7 @@ public class CachingBuildEngineTest {
       SourcePath input =
           PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
       filesystem.touch(pathResolver.getCellUnsafeRelPath(input).getPath());
-      RelPath output = BuildTargetPaths.getGenPath(filesystem, target, "%s/output");
+      RelPath output = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s/output");
       DepFileBuildRule rule =
           new DepFileBuildRule(target, filesystem, params) {
             @AddToRuleKey private final SourcePath path = input;

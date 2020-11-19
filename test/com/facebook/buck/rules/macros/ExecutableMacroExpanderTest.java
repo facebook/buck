@@ -93,7 +93,8 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     AbsPath expectedClasspath =
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.jar")
+            .toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -112,7 +113,8 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     AbsPath expectedClasspath =
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.jar")
+            .toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -132,7 +134,8 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     AbsPath expectedClasspath =
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.jar")
+            .toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }

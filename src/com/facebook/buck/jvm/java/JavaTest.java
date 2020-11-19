@@ -212,7 +212,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private RelPath getClassPathFile() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/classpath-file");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/classpath-file");
   }
 
   private JUnitStep getJUnitStep(
@@ -396,7 +396,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__")
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__java_test_%s_output__")
         .getPath();
   }
 

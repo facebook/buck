@@ -394,7 +394,7 @@ abstract class GoDescriptors {
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
       AbsPath absBinaryDir =
           projectFilesystem.resolve(
-              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"));
+              BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s"));
 
       extraFlags.addAll(
           Linkers.iXlinker(
@@ -493,7 +493,9 @@ abstract class GoDescriptors {
                                   projectFilesystem,
                                   extractTestMainGenerator(),
                                   BuildTargetPaths.getGenPath(
-                                      projectFilesystem, generatorSourceTarget, "%s/main.go"),
+                                      projectFilesystem.getBuckPaths(),
+                                      generatorSourceTarget,
+                                      "%s/main.go"),
                                   /* executable */ false));
 
               return createGoBinaryRule(

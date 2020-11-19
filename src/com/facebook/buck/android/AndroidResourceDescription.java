@@ -248,7 +248,8 @@ public class AndroidResourceDescription
       }
     }
     Path symlinkTreeRoot =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
+            .resolve(outputDirName);
     return new MappedSymlinkTree(
         "android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }

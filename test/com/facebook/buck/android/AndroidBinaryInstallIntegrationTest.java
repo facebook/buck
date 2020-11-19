@@ -124,7 +124,7 @@ public class AndroidBinaryInstallIntegrationTest {
 
     apkPath =
         BuildTargetPaths.getGenPath(
-            filesystem, BuildTargetFactory.newInstance(BINARY_TARGET), "%s.apk");
+            filesystem.getBuckPaths(), BuildTargetFactory.newInstance(BINARY_TARGET), "%s.apk");
 
     setupDeviceWithAbi(SdkConstants.ABI_ARMEABI_V7A);
   }

@@ -67,7 +67,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
@@ -102,7 +102,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
@@ -137,7 +137,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
 
@@ -196,7 +196,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
@@ -228,7 +228,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
@@ -259,7 +259,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);
@@ -287,7 +287,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     sym = syms.getDynamicSymbols(aar, "assets/lib/x86/libnative_xdsodce_top.so");
@@ -321,7 +321,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
 
@@ -351,7 +351,7 @@ public class AndroidAarIntegrationTest {
     Path aar =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
     ZipInspector zipInspector = new ZipInspector(aar);

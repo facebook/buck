@@ -341,7 +341,8 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargetPaths.getGenPath(projectFilesystem, target, "%s.apk")));
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s.apk")));
 
     zipInspector.assertFileExists("assets/fruit-salad-in-a-bundle.js");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");
@@ -468,7 +469,8 @@ public class JsRulesIntegrationTest {
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     ZipInspector zipInspector =
         new ZipInspector(
-            workspace.getPath(BuildTargetPaths.getGenPath(projectFilesystem, target, "%s.apk")));
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s.apk")));
 
     zipInspector.assertFileExists("assets/postprocessed.txt");
     zipInspector.assertFileExists("res/drawable-mdpi-v4/pixel.gif");

@@ -183,7 +183,8 @@ public class ExternalJavacTest extends EasyMockSupport {
       public SourcePath getSourcePathToOutput() {
         return ExplicitBuildTargetSourcePath.of(
             javacTarget,
-            BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/javac"));
+            BuildTargetPaths.getGenPath(
+                getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/javac"));
       }
     }
     BinaryBuildRule binaryRule = new SimpleBinaryRule(javacTarget, filesystem);

@@ -79,7 +79,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
     this.cover = cover;
     this.coverageMode = coverageMode;
     this.withDownwardApi = withDownwardApi;
-    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
+    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s");
     this.buildDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
             .addAll(BuildableSupport.getDepsCollection(cover, ruleFinder))

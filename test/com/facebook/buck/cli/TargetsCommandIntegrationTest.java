@@ -107,7 +107,7 @@ public class TargetsCommandIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
     // targets like genrule use the legacy path (without double underscore suffix)
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s");
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s");
   }
 
   private static void assertJsonMatchesWithOutputPlaceholder(String expectedJson, String actualJson)
@@ -365,7 +365,8 @@ public class TargetsCommandIntegrationTest {
         linesToText(
             "//android:D "
                 + MorePaths.pathWithPlatformSeparators(
-                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"))
+                    BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem().getBuckPaths(), target, "%s"))
                 + ".apk"),
         result.getStdout().trim());
   }

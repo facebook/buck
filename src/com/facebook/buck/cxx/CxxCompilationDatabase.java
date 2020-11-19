@@ -108,7 +108,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     this.compileRules = compileRules;
     this.outputJsonFile =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), buildTarget, "__%s/compile_commands.json");
+            getProjectFilesystem().getBuckPaths(), buildTarget, "__%s/compile_commands.json");
     this.runtimeDeps = runtimeDeps;
     this.dbEntryPaths = dbEntryPaths;
     this.buildDeps = buildDeps;

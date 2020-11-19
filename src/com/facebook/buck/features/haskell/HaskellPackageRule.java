@@ -145,7 +145,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private RelPath getPackageDb() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s");
   }
 
   private WriteFileStep getWriteRegistrationFileStep(

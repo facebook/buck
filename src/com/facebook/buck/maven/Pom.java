@@ -102,7 +102,7 @@ public class Pom {
     return rule.getProjectFilesystem()
         .resolve(
             BuildTargetPaths.getGenPath(
-                rule.getProjectFilesystem(), rule.getBuildTarget(), "%s.pom"));
+                rule.getProjectFilesystem().getBuckPaths(), rule.getBuildTarget(), "%s.pom"));
   }
 
   @VisibleForTesting

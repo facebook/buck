@@ -470,7 +470,8 @@ public class CxxPreprocessAndCompileTest {
             .add("-O3")
             .add(
                 "-o",
-                BuildTargetPaths.getGenPath(projectFilesystem, target, "%s__/test.o").toString())
+                BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), target, "%s__/test.o")
+                    .toString())
             .add("-c")
             .add(input.toString())
             .build();
@@ -497,7 +498,9 @@ public class CxxPreprocessAndCompileTest {
     projectFilesystem.writeContentsToPath(
         "test.o: " + pathResolver.getCellUnsafeRelPath(DEFAULT_INPUT) + " ",
         BuildTargetPaths.getGenPath(
-                projectFilesystem, BuildTargetFactory.newInstance("//foo:bar"), "%s__")
+                projectFilesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance("//foo:bar"),
+                "%s__")
             .resolve("test.o.dep"));
     PathSourcePath fakeInput = FakeSourcePath.of(projectFilesystem, "test.cpp");
 

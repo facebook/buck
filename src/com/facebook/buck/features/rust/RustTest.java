@@ -159,7 +159,9 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getPath();
+    return BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
+        .getPath();
   }
 
   @Override

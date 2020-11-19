@@ -53,7 +53,7 @@ class DirectHeaderMap extends HeaderSymlinkTree {
       Path root,
       ImmutableMap<Path, SourcePath> links) {
     super(target, filesystem, root, links);
-    this.headerMapPath = BuildTargetPaths.getGenPath(filesystem, target, "%s.hmap");
+    this.headerMapPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s.hmap");
   }
 
   @Override

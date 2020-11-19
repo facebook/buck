@@ -62,7 +62,8 @@ public class DexWithClassesTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(
-        BuildTargetPaths.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s/dex.jar"),
+        BuildTargetPaths.getGenPath(
+            javaLibrary.getProjectFilesystem().getBuckPaths(), buildTarget, "%s/dex.jar"),
         ruleFinder
             .getSourcePathResolver()
             .getCellUnsafeRelPath(dexWithClasses.getSourcePathToDexFile()));

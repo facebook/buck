@@ -88,7 +88,9 @@ public class HttpFileDescriptionTest {
     Assert.assertEquals(
         filesystem.resolve(
             BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//foo/bar:baz"), "%s")
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//foo/bar:baz"),
+                    "%s")
                 .resolve("baz")),
         getOutputPath(buildRule).getPath());
   }
@@ -109,7 +111,9 @@ public class HttpFileDescriptionTest {
     Assert.assertEquals(
         filesystem.resolve(
             BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//foo/bar:baz"), "%s")
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//foo/bar:baz"),
+                    "%s")
                 .resolve("my_cool_exe")),
         getOutputPath(buildRule).getPath());
   }

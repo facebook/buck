@@ -71,7 +71,9 @@ public class ClasspathAbiMacroExpanderTest {
             "%s" + File.separator + "%s",
             filesystem.getRootPath(),
             BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//cheese:cake#class-abi"), "%s")
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//cheese:cake#class-abi"),
+                    "%s")
                 .resolve("cake-abi.jar")));
   }
 
@@ -98,11 +100,15 @@ public class ClasspathAbiMacroExpanderTest {
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             filesystem.getRootPath(),
             BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//exciting:dep#class-abi"), "%s")
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//exciting:dep#class-abi"),
+                    "%s")
                 .resolve("dep-abi.jar"),
             filesystem.getRootPath(),
             BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance("//exciting:target#class-abi"), "%s")
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//exciting:target#class-abi"),
+                    "%s")
                 .resolve("target-abi.jar")));
   }
 

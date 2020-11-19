@@ -57,7 +57,9 @@ public class PrecompiledHeaderIntegrationTest {
 
   private String getHeaderGenPath(String buildTarget, String suffix) throws IOException {
     return BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(), BuildTargetFactory.newInstance(buildTarget), "%s")
+                workspace.getProjectFileSystem().getBuckPaths(),
+                BuildTargetFactory.newInstance(buildTarget),
+                "%s")
             .toString()
         + suffix;
   }

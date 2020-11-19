@@ -324,7 +324,8 @@ public class HaskellDescriptionUtils {
                 emptyModuleTarget,
                 projectFilesystem,
                 "module Unused where",
-                BuildTargetPaths.getGenPath(projectFilesystem, emptyModuleTarget, "%s/Unused.hs"),
+                BuildTargetPaths.getGenPath(
+                    projectFilesystem.getBuckPaths(), emptyModuleTarget, "%s/Unused.hs"),
                 /* executable */ false));
     HaskellCompileRule emptyCompiledModule =
         graphBuilder.addToIndex(

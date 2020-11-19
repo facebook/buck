@@ -76,7 +76,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedSet<SourcePath> classpathsToIncludeInJar) {
     super(buildTarget, projectFilesystem, params);
     this.pathToOutputFile =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, AAR_FORMAT);
     this.temp = BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;

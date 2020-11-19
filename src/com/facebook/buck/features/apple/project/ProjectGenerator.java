@@ -714,7 +714,8 @@ public class ProjectGenerator {
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
-    RelPath compilerPath = BuildTargetPaths.getGenPath(projectFilesystem, compilerTarget, "%s");
+    RelPath compilerPath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), compilerTarget, "%s");
     ImmutableMap<String, String> appendedConfig = ImmutableMap.of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.of();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
@@ -2837,7 +2838,8 @@ public class ProjectGenerator {
   }
 
   private RelPath getConfigurationXcconfigPath(BuildTarget buildTarget, String input) {
-    return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s-" + input + ".xcconfig");
+    return BuildTargetPaths.getGenPath(
+        projectFilesystem.getBuckPaths(), buildTarget, "%s-" + input + ".xcconfig");
   }
 
   @VisibleForTesting

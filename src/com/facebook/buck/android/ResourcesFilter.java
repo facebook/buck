@@ -263,7 +263,8 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   private RelPath getStringFilesPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/string_files");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/string_files");
   }
 
   private void maybeAddPostFilterCmdStep(
@@ -315,7 +316,9 @@ public class ResourcesFilter extends AbstractBuildRule
 
   private RelPath getFilterResourcesDataPath() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/post_filter_resources_data.json");
+        getProjectFilesystem().getBuckPaths(),
+        getBuildTarget(),
+        "%s/post_filter_resources_data.json");
   }
 
   @Override
@@ -327,7 +330,8 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   private RelPath getRDotJsonPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.json");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/R.json");
   }
 
   @VisibleForTesting

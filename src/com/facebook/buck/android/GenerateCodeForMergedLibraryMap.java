@@ -118,12 +118,14 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "%s/MergedLibraryMapping.java"));
+            getProjectFilesystem().getBuckPaths(),
+            getBuildTarget(),
+            "%s/MergedLibraryMapping.java"));
   }
 
   private RelPath getMappingPath() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/merged_library_map.txt");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/merged_library_map.txt");
   }
 
   /**
@@ -132,7 +134,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
    */
   private RelPath getTargetsPath() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/shared_object_targets.txt");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/shared_object_targets.txt");
   }
 
   private class WriteMapDataStep implements Step {

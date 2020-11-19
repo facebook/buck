@@ -106,7 +106,7 @@ public class WindowsCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app:log"),
                     "%s"))
             .resolve("log.txt");
@@ -121,7 +121,7 @@ public class WindowsCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_asm:log"),
                     "%s")
                 .resolve("log.txt"));
@@ -148,7 +148,7 @@ public class WindowsCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//implib_usage:log"),
                     "%s"))
             .resolve("log.txt");
@@ -168,7 +168,7 @@ public class WindowsCxxIntegrationTest {
         Files.exists(
             workspace.resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//implib_usage:app_debug#windows-x86_64"),
                     "%s.pdb"))));
     assertTrue(
@@ -176,7 +176,7 @@ public class WindowsCxxIntegrationTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
+                        workspace.getProjectFileSystem().getBuckPaths(),
                         BuildTargetFactory.newInstance(
                             "//implib:implib_debug#windows-x86_64,shared"),
                         "%s"))
@@ -191,7 +191,7 @@ public class WindowsCxxIntegrationTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
+                        workspace.getProjectFileSystem().getBuckPaths(),
                         BuildTargetFactory.newInstance("//implib:implib_copy"),
                         "%s"))
                 .resolve("implib_copy.lib")));
@@ -213,7 +213,7 @@ public class WindowsCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//implib_prebuilt:log"),
                     "%s"))
             .resolve("log.txt");

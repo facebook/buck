@@ -265,7 +265,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private RelPath getOutputDir() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s");
   }
 
   @Override

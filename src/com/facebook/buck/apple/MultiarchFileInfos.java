@@ -189,7 +189,8 @@ public class MultiarchFileInfos {
               applePlatform.getLipo(),
               inputs,
               cxxBuckConfig.shouldCacheLinks(),
-              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, multiarchOutputPathFormat)
+              BuildTargetPaths.getGenPath(
+                      projectFilesystem.getBuckPaths(), buildTarget, multiarchOutputPathFormat)
                   .getPath(),
               downwardApiConfig.isEnabledForApple());
       graphBuilder.addToIndex(multiarchFile);

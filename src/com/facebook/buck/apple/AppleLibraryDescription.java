@@ -899,7 +899,7 @@ public class AppleLibraryDescription
                 headerPathPrefix,
                 args.getExportedHeaders()));
 
-    RelPath root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
+    RelPath root = BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s");
 
     String moduleName = SwiftLibraryDescription.getModuleName(buildTarget, args, true);
 

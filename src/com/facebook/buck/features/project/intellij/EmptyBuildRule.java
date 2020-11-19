@@ -59,7 +59,7 @@ class EmptyBuildRule extends AbstractBuildRule implements HasOutputName {
   @Override
   public SourcePath getSourcePathToOutput() {
     RelPath pathToOutDirectory =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s");
     Path pathToOutFile = pathToOutDirectory.resolve(out);
 
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutFile);

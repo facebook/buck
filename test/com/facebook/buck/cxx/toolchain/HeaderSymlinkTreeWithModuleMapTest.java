@@ -105,7 +105,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
 
     // The output path used by the buildable for the link tree.
     symlinkTreeRoot =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), buildTarget, "%s/symlink-tree-root");
 
     ruleResolver = new TestActionGraphBuilder(TargetGraph.EMPTY);
     resolver = ruleResolver.getSourcePathResolver();
@@ -142,7 +143,9 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 new ModuleMapStep(
                     projectFilesystem,
                     BuildTargetPaths.getGenPath(
-                            projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap")
+                            projectFilesystem.getBuckPaths(),
+                            buildTarget,
+                            "%s/SomeModule/module.modulemap")
                         .getPath(),
                     ModuleMap.create("SomeModule", ModuleMap.SwiftMode.NO_SWIFT, links.keySet())))
             .build();
@@ -174,7 +177,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         new ModuleMapStep(
             projectFilesystem,
             BuildTargetPaths.getGenPath(
-                    projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap")
+                    projectFilesystem.getBuckPaths(), buildTarget, "%s/SomeModule/module.modulemap")
                 .getPath(),
             ModuleMap.create(
                 "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet()));

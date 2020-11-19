@@ -64,7 +64,7 @@ public class ParserIntegrationTest {
 
     workspace.verify(
         RelPath.get("base_genrule_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s"));
   }
 
   /**

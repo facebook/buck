@@ -114,13 +114,15 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.output =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(),
+            getProjectFilesystem().getBuckPaths(),
             buildTarget,
             String.format("__%%s__/%s.sh", buildTarget.getShortNameAndFlavorPostfix()));
 
     this.runtimeResourcesDir =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), this.getBuildTarget(), "__%s__/" + RUNTIME_RESOURCES_DIR);
+            getProjectFilesystem().getBuckPaths(),
+            this.getBuildTarget(),
+            "__%s__/" + RUNTIME_RESOURCES_DIR);
   }
 
   @Override

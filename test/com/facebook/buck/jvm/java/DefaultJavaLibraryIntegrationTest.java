@@ -307,7 +307,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path outputFile =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 target,
                 "lib__%s__output/" + target.getShortName() + ".jar"));
     assertTrue(Files.exists(outputFile));
@@ -340,13 +340,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     RelPath utilOutputPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             utilTarget,
             "lib__%s__output/" + utilTarget.getShortName() + ".jar");
     long utilJarSize = Files.size(workspace.getPath(utilOutputPath));
     RelPath bizOutputPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             bizTarget,
             "lib__%s__output/" + bizTarget.getShortName() + ".jar");
     FileTime bizJarLastModified = Files.getLastModifiedTime(workspace.getPath(bizOutputPath));
@@ -752,7 +752,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     RelPath bizClassUsageFilePath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
+            workspace.getProjectFileSystem().getBuckPaths(),
+            bizTarget,
+            "lib__%s__output/used-classes.json");
 
     List<String> lines = Files.readAllLines(workspace.getPath(bizClassUsageFilePath), UTF_8);
 
@@ -764,7 +766,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
               BuildTargetPaths.getGenPath(
-                  workspace.getProjectFileSystem(),
+                  workspace.getProjectFileSystem().getBuckPaths(),
                   utilTarget,
                   "%s/" + utilTarget.getShortName() + "-abi.jar"));
     } else {
@@ -772,7 +774,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
               BuildTargetPaths.getGenPath(
-                  workspace.getProjectFileSystem(),
+                  workspace.getProjectFileSystem().getBuckPaths(),
                   utilTarget,
                   "lib__%s__output/" + utilTarget.getShortName() + ".jar"));
     }
@@ -827,7 +829,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     RelPath bizClassUsageFilePath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
+            workspace.getProjectFileSystem().getBuckPaths(),
+            bizTarget,
+            "lib__%s__output/used-classes.json");
 
     String usedClasses = getContents(workspace.getPath(bizClassUsageFilePath));
 
@@ -901,8 +905,10 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     for (RelPath filename :
         new RelPath[] {
-          BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binaryTarget, "%s.jar"),
-          BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binary2Target, "%s.jar")
+          BuildTargetPaths.getGenPath(
+              workspace.getProjectFileSystem().getBuckPaths(), binaryTarget, "%s.jar"),
+          BuildTargetPaths.getGenPath(
+              workspace.getProjectFileSystem().getBuckPaths(), binary2Target, "%s.jar")
         }) {
       Path file = workspace.getPath(filename);
       try (ZipArchive zipArchive = new ZipArchive(file, /* for writing? */ false)) {

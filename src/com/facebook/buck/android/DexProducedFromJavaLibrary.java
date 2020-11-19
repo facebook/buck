@@ -431,7 +431,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
   static Optional<String> getMetadataResources(
       ProjectFilesystem filesystem, BuildTarget buildTarget) {
     Path resourcesFile =
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
             .resolve(Impl.DEX_RULE_METADATA)
             .resolve(REFERENCED_RESOURCES.toString());
     return filesystem.readFileIfItExists(resourcesFile);

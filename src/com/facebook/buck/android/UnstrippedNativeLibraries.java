@@ -98,7 +98,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
 
   private RelPath getOutputPath() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "%s/unstripped-native-libs.txt");
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/unstripped-native-libs.txt");
   }
 
   @Override

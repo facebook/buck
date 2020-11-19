@@ -171,7 +171,9 @@ public class CxxPythonExtensionDescription
       Flavor pythonPlatform,
       CxxPlatform cxxPlatform) {
     return BuildTargetPaths.getGenPath(
-            filesystem, getExtensionTarget(target, pythonPlatform, cxxPlatform.getFlavor()), "%s")
+            filesystem.getBuckPaths(),
+            getExtensionTarget(target, pythonPlatform, cxxPlatform.getFlavor()),
+            "%s")
         .resolve(getExtensionName(moduleName, cxxPlatform));
   }
 

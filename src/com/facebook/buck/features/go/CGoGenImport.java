@@ -73,7 +73,8 @@ public class CGoGenImport extends AbstractBuildRule {
     this.platform = platform;
     this.sourceWithPackageName = sourceWithPackageName;
     this.withDownwardApi = withDownwardApi;
-    this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen");
+    this.genDir =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s/gen");
     this.outputFile = genDir.resolve("_cgo_import.go");
     this.cgoBin = cgoBin;
     this.deps =

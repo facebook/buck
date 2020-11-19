@@ -176,7 +176,7 @@ public class GenruleTest {
 
     // Verify all of the observers of the Genrule.
     assertEquals(
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
             .resolveRel("AndroidManifest.xml"),
         pathResolver.getCellUnsafeRelPath(genrule.getSourcePathToOutput()));
 
@@ -184,7 +184,7 @@ public class GenruleTest {
     AbsPath manifestPath = graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertEquals(
         filesystem.resolve(
-            BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
                 .resolve("AndroidManifest.xml")),
         manifestPath.getPath());
     BuildContext buildContext =
@@ -222,7 +222,7 @@ public class GenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 filesystem,
-                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
                     .resolve("AndroidManifest.xml")),
             true),
         steps.get(0));
@@ -232,7 +232,7 @@ public class GenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 filesystem,
-                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__")),
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s__")),
             true),
         steps.get(1));
     assertEquals(
@@ -240,7 +240,7 @@ public class GenruleTest {
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(),
                 filesystem,
-                BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__"))),
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s__"))),
         steps.get(2));
 
     assertEquals(
@@ -259,7 +259,8 @@ public class GenruleTest {
                 BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__"))),
         steps.get(4));
 
-    RelPath pathToOutDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+    RelPath pathToOutDir =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s");
     assertEquals(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -272,7 +273,8 @@ public class GenruleTest {
                 buildContext.getBuildCellRootPath(), filesystem, pathToOutDir)),
         steps.get(6));
 
-    RelPath pathToSrcDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__srcs");
+    RelPath pathToSrcDir =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s__srcs");
     assertEquals(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -307,7 +309,7 @@ public class GenruleTest {
                 "OUT",
                 filesystem
                     .resolve(
-                        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
                             .resolve("AndroidManifest.xml"))
                     .toString())
             .build(),
@@ -421,7 +423,8 @@ public class GenruleTest {
             "OUT",
             filesystem
                 .resolve(
-                    BuildTargetPaths.getGenPath(filesystem, genrule.getBuildTarget(), "%s")
+                    BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), genrule.getBuildTarget(), "%s")
                         .resolve("output.txt"))
                 .toString()));
   }
@@ -1126,7 +1129,7 @@ public class GenruleTest {
   }
 
   private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s").resolve(path);
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s").resolve(path);
   }
 
   private ImmutableSet<Path> convertSourcePathsToPaths(

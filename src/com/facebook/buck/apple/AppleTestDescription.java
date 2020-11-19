@@ -566,7 +566,7 @@ public class AppleTestDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     Path outputPath =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
             .resolve(AppleTestDescription.COMPILE_DEPS.getName());
 
     ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
@@ -687,7 +687,9 @@ public class AppleTestDescription
               .withAppendedFlavors(InternalFlavor.of(sha1Hash));
       RelPath outputDirectory =
           BuildTargetPaths.getGenPath(
-              xctoolZipBuildRule.getProjectFilesystem(), unzipXctoolTarget, "%s/unzipped");
+              xctoolZipBuildRule.getProjectFilesystem().getBuckPaths(),
+              unzipXctoolTarget,
+              "%s/unzipped");
       graphBuilder.computeIfAbsent(
           unzipXctoolTarget,
           ignored -> {

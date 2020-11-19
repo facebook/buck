@@ -61,7 +61,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
     super(buildTarget, projectFilesystem, params);
     // TODO(markwang): This will be different for Mac apps.
     this.pathToOutputFile =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s.ipa");
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s.ipa");
     this.temp = BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.bundle = bundle;
     this.compressionLevel = compressionLevel;

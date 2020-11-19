@@ -721,7 +721,8 @@ public class JsBundleGenruleDescriptionTest {
 
     Path targetOutputPath =
         BuildPaths.removeHashFrom(
-                BuildTargetPaths.getGenPath(setup.scenario.filesystem, setup.target, "%s")
+                BuildTargetPaths.getGenPath(
+                        setup.scenario.filesystem.getBuckPaths(), setup.target, "%s")
                     .resolve("js"),
                 setup.target)
             .get();
@@ -759,8 +760,8 @@ public class JsBundleGenruleDescriptionTest {
     GenruleBuildable buildable = genrule.getBuildable();
     ProjectFilesystem filesystem = setup.scenario.filesystem;
     BuildTarget target = setup.target;
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s__tmp");
     ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
     buildable.addEnvironmentVariables(
         sourcePathResolver(),

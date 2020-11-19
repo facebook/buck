@@ -217,7 +217,8 @@ public class WorkspaceAndProjectGenerator {
     if (combinedProject) {
       workspaceName += "-Combined";
       outputDirectory =
-          BuildTargetPaths.getGenPath(rootCell.getFilesystem(), workspaceBuildTarget, "%s")
+          BuildTargetPaths.getGenPath(
+                  rootCell.getFilesystem().getBuckPaths(), workspaceBuildTarget, "%s")
               .getParent()
               .resolve(workspaceName + ".xcodeproj");
     } else {

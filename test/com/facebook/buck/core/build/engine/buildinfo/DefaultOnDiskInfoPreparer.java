@@ -68,15 +68,18 @@ public class DefaultOnDiskInfoPreparer {
     recorder.addMetadata("artifact_key0", "value0");
     recorder.addMetadata("artifact_key1", "value1");
 
-    filePath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some.file");
-    dirPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some_dir");
+    filePath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s/some.file");
+    dirPath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s/some_dir");
     subDir = dirPath.resolve("sub_dir");
     emptySubDir = dirPath.resolve("empty_sub_dir");
     fileWithinDirPath = subDir.resolve("some_inner.path");
     otherPathWithinDir = subDir.resolve("other.file");
     RelPath symlinkedDirPath =
         BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s/symlinked_dir");
-    symlinkPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
+    symlinkPath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s/symlink");
     Path fileInSymlinkedDirPath = symlinkedDirPath.resolve("file_in_symlink");
     fileViaSymlinkPath = symlinkPath.resolve("file_in_symlink");
 

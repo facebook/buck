@@ -109,7 +109,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.withDownwardApi = withDownwardApi;
     this.output =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
             .resolveRel(getBuildTarget().getShortName() + ".jar");
   }
 

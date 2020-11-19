@@ -69,7 +69,8 @@ public class CalculateSourceAbiIntegrationTest {
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(
-            BuildTargetPaths.getGenPath(filesystem, abiTarget, "lib__%s__output/lib-abi.jar"));
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), abiTarget, "lib__%s__output/lib-abi.jar"));
     assertTrue(Files.exists(abiJarPath));
 
     // Check that the jar has an entry for the generated class
@@ -122,7 +123,7 @@ public class CalculateSourceAbiIntegrationTest {
     Path abiJarPath =
         filesystem.getPathForRelativePath(
             BuildTargetPaths.getGenPath(
-                filesystem, abiTarget, "lib__%s__output/lib-stripped-abi.jar"));
+                filesystem.getBuckPaths(), abiTarget, "lib__%s__output/lib-stripped-abi.jar"));
     assertTrue(Files.exists(abiJarPath));
 
     // Check that the jar does not have an entry for the removed class

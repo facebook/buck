@@ -162,7 +162,7 @@ public class JsBundleWorkerJobArgsTest {
     String expectedStr;
 
     String genPath =
-        BuildTargetPaths.getGenPath(scenario.filesystem, referenced, "%s")
+        BuildTargetPaths.getGenPath(scenario.filesystem.getBuckPaths(), referenced, "%s")
             .resolve("escaping")
             .toAbsolutePath()
             .toString();

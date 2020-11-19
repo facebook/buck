@@ -190,7 +190,7 @@ public class NdkLibraryDescription
   @VisibleForTesting
   protected static RelPath getGeneratedMakefilePath(
       BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, target, "Android.%s.mk");
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "Android.%s.mk");
   }
 
   /**

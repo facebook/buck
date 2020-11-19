@@ -687,7 +687,8 @@ public class XcodeNativeTargetGenerator {
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
-    RelPath compilerPath = BuildTargetPaths.getGenPath(projectFilesystem, compilerTarget, "%s");
+    RelPath compilerPath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), compilerTarget, "%s");
     ImmutableMap<String, String> appendedConfig = ImmutableMap.of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.of();
     Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();

@@ -64,7 +64,7 @@ public class BuildPaths {
    *     target}.
    */
   public static RelPath getGenDir(ProjectFilesystem filesystem, BuildTarget target) {
-    return BuildTargetPaths.getGenPath(filesystem, target, getFormat(target));
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, getFormat(target));
   }
 
   /**

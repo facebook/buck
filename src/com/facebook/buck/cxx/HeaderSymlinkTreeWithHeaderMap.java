@@ -109,6 +109,6 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   @VisibleForTesting
   static RelPath getPath(ProjectFilesystem filesystem, BuildTarget target) {
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s.hmap");
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s.hmap");
   }
 }

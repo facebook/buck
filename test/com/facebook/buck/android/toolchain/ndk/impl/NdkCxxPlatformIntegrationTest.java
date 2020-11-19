@@ -208,7 +208,7 @@ public class NdkCxxPlatformIntegrationTest {
     Path lib =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, target, "%s/lib" + target.getShortName() + ".a"));
+                filesystem.getBuckPaths(), target, "%s/lib" + target.getShortName() + ".a"));
     String contents = MorePaths.asByteSource(lib).asCharSource(StandardCharsets.ISO_8859_1).read();
 
     // Verify that the working directory is sanitized.
@@ -234,7 +234,7 @@ public class NdkCxxPlatformIntegrationTest {
     lib =
         longPwdWorkspace.getPath(
             BuildTargetPaths.getGenPath(
-                longPwdFilesystem, target, "%s/lib" + target.getShortName() + ".a"));
+                longPwdFilesystem.getBuckPaths(), target, "%s/lib" + target.getShortName() + ".a"));
     String movedContents =
         MorePaths.asByteSource(lib).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertEquals(contents, movedContents);

@@ -100,7 +100,7 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private static RelPath pathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s");
   }
 
   public static Path objectOutputPath(

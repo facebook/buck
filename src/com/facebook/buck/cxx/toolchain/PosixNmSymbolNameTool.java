@@ -157,7 +157,8 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
     private RelPath getSymbolsPath() {
       String format = String.format("%%s/%s_symbols.txt", getSymbolsType());
-      return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
+      return BuildTargetPaths.getGenPath(
+          getProjectFilesystem().getBuckPaths(), getBuildTarget(), format);
     }
 
     @Override

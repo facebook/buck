@@ -97,12 +97,14 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     this.inputType = inputType;
     this.preInclude = preInclude;
     this.output =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + outputName);
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/" + outputName);
     this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
     this.withDownwardApi = withDownwardApi;
     this.resultsDir =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-out-%s");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), this.getBuildTarget(), "infer-out-%s");
   }
 
   @Override

@@ -57,7 +57,7 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     if (AssumeAndroidPlatform.get(workspace).isArmAvailable()) {
       zipInspector.assertFileExists("lib/armeabi/libcxx.so");
       zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");

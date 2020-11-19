@@ -106,6 +106,7 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(
         getBuildTarget(),
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + name + ".o"));
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/" + name + ".o"));
   }
 }

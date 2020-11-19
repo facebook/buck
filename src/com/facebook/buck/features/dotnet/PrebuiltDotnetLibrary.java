@@ -53,7 +53,7 @@ public class PrebuiltDotnetLibrary extends AbstractBuildRuleWithDeclaredAndExtra
 
     AbsPath resolvedPath = resolver.getAbsolutePath(assembly);
     this.output =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "%s")
             .resolve(resolvedPath.getFileName());
   }
 

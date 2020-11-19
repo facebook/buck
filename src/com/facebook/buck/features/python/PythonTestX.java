@@ -111,7 +111,7 @@ public class PythonTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), getBuildTarget(), "__test_%s_output__")
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__test_%s_output__")
         .getPath();
   }
 

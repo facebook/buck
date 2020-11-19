@@ -129,7 +129,7 @@ public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
         new ZipInspector(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
     zipInspector.assertFileExists("assets/lib/libs.xzs");
     zipInspector.assertFileExists("assets/lib/metadata.txt");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");

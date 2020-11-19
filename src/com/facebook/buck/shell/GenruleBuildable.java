@@ -303,7 +303,9 @@ public class GenruleBuildable implements Buildable {
 
   private PublicOutputPath getPublicOutputPath(ProjectFilesystem filesystem, String output) {
     return new PublicOutputPath(
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(output).normalize());
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
+            .resolve(output)
+            .normalize());
   }
 
   /**
@@ -393,7 +395,8 @@ public class GenruleBuildable implements Buildable {
     // that consist of nested directory and file paths that will not be correct. The contract of
     // genrule is that only the legacyBasePath is created. All other paths must be created by the
     // shell script.
-    RelPath legacyBasePath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+    RelPath legacyBasePath =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s");
     commands.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -406,7 +409,8 @@ public class GenruleBuildable implements Buildable {
     // Create a directory to hold all the source files. Ideally this would be under the temp path,
     // but there exist tools (namely the Protobuf compiler) that have a hard dependency on the
     // compiler's working directory sharing a directory tree with the files being compiled.
-    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, SRC_DIRECTORY_PATTERN);
+    RelPath srcPath =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, SRC_DIRECTORY_PATTERN);
     commands.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -657,7 +661,8 @@ public class GenruleBuildable implements Buildable {
         }
 
         if (checkUntrackedArtifacts) {
-          RelPath genPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+          RelPath genPath =
+              BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s");
           ImmutableSet<Path> expectedOutputPaths = outputPathsBuilder.build();
 
           if (!expectedOutputPaths.contains(filesystem.resolve(genPath).getPath())) {
@@ -762,7 +767,8 @@ public class GenruleBuildable implements Buildable {
             environmentVariablesBuilder.put(
                 "OUT",
                 filesystem
-                    .resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"))
+                    .resolve(
+                        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s"))
                     .toString()));
     environmentVariablesBuilder.put(
         "SRCS",

@@ -88,7 +88,8 @@ public class AndroidResourceIndex extends AbstractBuildRuleWithDeclaredAndExtraD
   }
 
   private RelPath getPathToOutputDir() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "__%s");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "__%s");
   }
 
   @Nullable

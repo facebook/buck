@@ -54,7 +54,7 @@ public class PrebuiltJarIntegrationTest {
 
     RelPath localPath =
         BuildTargetPaths.getGenPath(
-                workspace.asCell().getFilesystem(),
+                workspace.asCell().getFilesystem().getBuckPaths(),
                 BuildTargetFactory.newInstance("//:jar_from_gen"),
                 "%s")
             .getParent();
@@ -86,7 +86,8 @@ public class PrebuiltJarIntegrationTest {
     Path binaryJar = workspace.getPath("junit.jar");
     HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
     Path expectedOut =
-        BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), abiTarget, "%s")
+        BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem().getBuckPaths(), abiTarget, "%s")
             .resolve(String.format("%s-abi.jar", abiTarget.getShortName()));
     Path abiJar = workspace.getPath(expectedOut.toString());
     HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());

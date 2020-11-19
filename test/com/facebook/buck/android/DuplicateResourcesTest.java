@@ -216,7 +216,7 @@ public class DuplicateResourcesTest {
       expectedSubslice.add(Matchers.is("-S"));
       expectedSubslice.add(
           Matchers.is(
-              BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+              BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
                   + "/res#resources-symlink-tree/res"));
     }
 

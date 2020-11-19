@@ -170,13 +170,17 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
   private static RelPath getArchiveNativeOutputPath(
       BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(
-        filesystem, target, "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXA);
+        filesystem.getBuckPaths(),
+        target,
+        "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXA);
   }
 
   private static RelPath getArchiveBytecodeOutputPath(
       BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(
-        filesystem, target, "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMA);
+        filesystem.getBuckPaths(),
+        target,
+        "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMA);
   }
 
   public RelPath getNativeOutput() {
@@ -186,7 +190,7 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
   public RelPath getNativePluginOutput() {
     BuildTarget target = getBuildTarget();
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(),
+        getProjectFilesystem().getBuckPaths(),
         target,
         "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXS);
   }

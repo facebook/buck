@@ -104,7 +104,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     // The output path used by the buildable for the link tree.
     symlinkTreeRoot =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), buildTarget, "%s/symlink-tree-root");
 
     graphBuilder = new TestActionGraphBuilder();
     resolver = graphBuilder.getSourcePathResolver();

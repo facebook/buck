@@ -101,7 +101,7 @@ public class AppleDsym extends AbstractBuildRule
   public static RelPath getDsymOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
     AppleDsym.checkFlavorCorrectness(target);
     return BuildTargetPaths.getGenPath(
-        filesystem, target, "%s." + AppleBundleExtension.DSYM.fileExtension);
+        filesystem.getBuckPaths(), target, "%s." + AppleBundleExtension.DSYM.fileExtension);
   }
 
   public static String getDwarfFilenameForDsymTarget(BuildTarget dsymTarget) {

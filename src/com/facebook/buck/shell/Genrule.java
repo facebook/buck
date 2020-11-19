@@ -230,7 +230,8 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
     Path pathToSrcDirectory = BuildPaths.getScratchDir(filesystem, buildTarget).resolve("srcs");
     RelPath pathToTmpDirectory = BuildPaths.getScratchDir(filesystem, buildTarget);
     RelPath pathToOutDirectory = BuildPaths.getGenDir(filesystem, buildTarget);
-    RelPath pathToPublicOutDirectory = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+    RelPath pathToPublicOutDirectory =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s");
 
     SandboxProperties.Builder builder = SandboxProperties.builder();
     return builder

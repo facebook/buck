@@ -55,7 +55,8 @@ public class DexProducedFromJavaLibraryTest {
             BuildTargetFactory.newInstance("//foo:lib"), filesystem, ImmutableSortedSet.of());
     graphBuilder.addToIndex(javaLibRule);
     RelPath jarLibOutput =
-        BuildTargetPaths.getGenPath(filesystem, javaLibRule.getBuildTarget(), "%s.jar");
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(), javaLibRule.getBuildTarget(), "%s.jar");
     javaLibRule.setOutputFile(jarLibOutput.toString());
 
     FakeJavaLibrary javaBarRule =
@@ -70,7 +71,8 @@ public class DexProducedFromJavaLibraryTest {
         };
     graphBuilder.addToIndex(javaBarRule);
     RelPath jarBarOutput =
-        BuildTargetPaths.getGenPath(filesystem, javaBarRule.getBuildTarget(), "%s.jar");
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(), javaBarRule.getBuildTarget(), "%s.jar");
     javaBarRule.setOutputFile(jarBarOutput.toString());
 
     BuildContext context =
@@ -80,7 +82,7 @@ public class DexProducedFromJavaLibraryTest {
 
     RelPath dexOutput =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             javaBarRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR),
             "%s.dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarLibOutput.toString(), jarBarOutput.toString());

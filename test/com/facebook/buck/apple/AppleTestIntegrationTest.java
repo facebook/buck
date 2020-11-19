@@ -161,7 +161,8 @@ public class AppleTestIntegrationTest {
         projectRoot.resolve(
             buildTarget.getCellRelativeBasePath().getPath().toPath(projectRoot.getFileSystem()));
     AbsPath outputPath =
-        projectRoot.resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"));
+        projectRoot.resolve(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s"));
 
     assertIsSymbolicLink(outputPath.resolve("Header.h"), inputPath.resolve("Header.h").getPath());
     assertIsSymbolicLink(
@@ -191,7 +192,8 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s")
+            BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), appleTestBundleFlavoredBuildTarget, "%s")
                 .getPath());
     Path bundlePath = outputPath.resolve("foo.xctest");
     Path infoPlistPath = bundlePath.resolve("Info.plist");
@@ -223,7 +225,8 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s")
+            BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), appleTestBundleFlavoredBuildTarget, "%s")
                 .getPath());
     Path bundlePath = outputPath.resolve("foo.xctest");
     Path testBinaryPath = bundlePath.resolve("foo");
@@ -246,7 +249,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(
                 AppleDebugFormat.DWARF.getFlavor(),
                 AppleTestDescription.BUNDLE_FLAVOR,
@@ -268,7 +271,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(
                 AppleTestDescription.BUNDLE_FLAVOR,
                 AppleDebugFormat.DWARF.getFlavor(),
@@ -289,7 +292,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         RelPath.get("DemoTest_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(
                 AppleTestDescription.BUNDLE_FLAVOR,
                 AppleDebugFormat.DWARF.getFlavor(),
@@ -354,7 +357,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             buildTarget.withAppendedFlavors(
                 AppleDebugFormat.DWARF.getFlavor(),
                 AppleTestDescription.BUNDLE_FLAVOR,
@@ -371,7 +374,8 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s")
+            BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), appleTestBundleFlavoredBuildTarget, "%s")
                 .getPath());
     Path bundlePath = outputPath.resolve("foo.xctest");
     Path testBinaryPath = bundlePath.resolve("foo");
@@ -420,7 +424,8 @@ public class AppleTestIntegrationTest {
     Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, buildTarget.withAppendedFlavors(), "%s")
+            BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(), buildTarget.withAppendedFlavors(), "%s")
                 .resolve(AppleTestDescription.COMPILE_DEPS.toString()));
     Path archivePath = outputPath.resolve("code").resolve("TEST_DEPS.a");
 
@@ -460,7 +465,7 @@ public class AppleTestIntegrationTest {
     workspace.verify(
         RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(
                 AppleDebugFormat.DWARF.getFlavor(),
                 AppleTestDescription.BUNDLE_FLAVOR,
@@ -482,7 +487,7 @@ public class AppleTestIntegrationTest {
 
     workspace.verify(
         Paths.get("foo_output_compile_deps.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target.withAppendedFlavors(), "%s")
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target.withAppendedFlavors(), "%s")
             .resolve("compile-deps"));
   }
 
@@ -751,7 +756,7 @@ public class AppleTestIntegrationTest {
             workspace
                 .getPath(
                     BuildTargetPaths.getGenPath(
-                        filesystem,
+                        filesystem.getBuckPaths(),
                         workspace.newBuildTarget("#AppBinary#binary,iphonesimulator-x86_64"),
                         "AppBinary#apple-dsym,iphonesimulator-x86_64.dSYM"))
                 .toString());
@@ -892,7 +897,7 @@ public class AppleTestIntegrationTest {
         AbsPath.of(workspace.getDestPath())
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     libraryTarget.withAppendedFlavors(AppleDsym.RULE_FLAVOR),
                     "%s.dSYM"))
             .resolve("Contents/Resources/DWARF/" + libraryTarget.getShortName());

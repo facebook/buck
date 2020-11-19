@@ -3347,7 +3347,8 @@ public class ProjectGeneratorTest {
     assertEquals(
         xcconfigReference.getPath(),
         "../"
-            + BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").toString()
+            + BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
+                .toString()
             + "-Debug.xcconfig");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");

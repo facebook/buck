@@ -266,7 +266,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     ImmutableMap<Path, SourcePath> headers =
         getObjCGeneratedHeader(buildTarget, graphBuilder, cxxPlatform, headerVisibility);
 
-    RelPath outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s");
 
     return HeaderSymlinkTreeWithHeaderMap.create(
         buildTarget, projectFilesystem, outputPath.getPath(), headers);

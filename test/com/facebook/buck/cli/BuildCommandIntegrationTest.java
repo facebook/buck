@@ -445,7 +445,8 @@ public class BuildCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path expected =
         workspace.resolve(
-            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem().getBuckPaths(), target, "%s")
                 .getPath()
                 .resolveSibling("binary.jar"));
     Path hardlink = BuildPaths.removeHashFrom(expected, target).get();
@@ -467,7 +468,8 @@ public class BuildCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary");
     Path expected =
         workspace.resolve(
-            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+            BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem().getBuckPaths(), target, "%s")
                 .getPath()
                 .resolveSibling("binary.jar"));
     Path symlink = BuildPaths.removeHashFrom(expected, target).get();
@@ -488,7 +490,8 @@ public class BuildCommandIntegrationTest {
     Path hardlink =
         BuildPaths.removeHashFrom(
                 workspace.resolve(
-                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                    BuildTargetPaths.getGenPath(
+                            workspace.getProjectFileSystem().getBuckPaths(), target, "%s")
                         .getPath()
                         .resolveSibling("binary.jar")),
                 target)
@@ -512,7 +515,8 @@ public class BuildCommandIntegrationTest {
     Path symlink =
         BuildPaths.removeHashFrom(
                 workspace.resolve(
-                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                    BuildTargetPaths.getGenPath(
+                            workspace.getProjectFileSystem().getBuckPaths(), target, "%s")
                         .resolve("output")),
                 target)
             .get();

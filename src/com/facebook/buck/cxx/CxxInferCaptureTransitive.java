@@ -51,7 +51,8 @@ class CxxInferCaptureTransitive extends AbstractBuildRule
     super(target, projectFilesystem);
     this.captureRules = captureRules;
     this.outputDirectory =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-%s");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), this.getBuildTarget(), "infer-%s");
   }
 
   public ImmutableSet<CxxInferCapture> getCaptureRules() {

@@ -127,7 +127,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getOutputPathFromJavaTargetNode(targetNode, buildTarget, filesystem);
     } else if (description instanceof AndroidManifestDescription) {
       return Optional.of(
-          BuildTargetPaths.getGenPath(filesystem, buildTarget, "AndroidManifest__%s__.xml")
+          BuildTargetPaths.getGenPath(
+                  filesystem.getBuckPaths(), buildTarget, "AndroidManifest__%s__.xml")
               .getPath());
     } else if (isJvmTestTargetNode(targetNode)) {
       // Test targets compile their code into a standard library under the hood using the
@@ -167,7 +168,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // doesn't have flavors, so this is roughly equivalent to `getShortName`, but it's more correct
     // in that it's what `getGenPath` does.
     String jarName = buildTarget.getShortNameAndFlavorPostfix() + ".jar";
-    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(jarName));
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s").resolve(jarName));
   }
 
   /**
@@ -248,7 +250,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // calculation
     String filename = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
     // This matches the output path calculation in RemoteFile's constructor
-    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s/" + filename));
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s/" + filename));
   }
 
   /** Calculate the output path for an ExportFile rule */
@@ -261,7 +264,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     }
     // Otherwise, we resolve the generated path for the COPY
     String name = arg.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
-    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(name));
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s").resolve(name));
   }
 
   /**
@@ -310,7 +314,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
         String.format("%s.jar", MorePaths.getNameWithoutExtension(fileName));
     // Matches the implementation in PrebuiltJar's constructor
     return Optional.of(
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s__/" + fileNameWithJarExtension));
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(), buildTarget, "__%s__/" + fileNameWithJarExtension));
   }
 
   /**
@@ -325,7 +330,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve("res"));
     } else {
       return Optional.of(
-          BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_text_symbols__").getPath());
+          BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "__%s_text_symbols__")
+              .getPath());
     }
   }
 
@@ -335,7 +341,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    */
   private Optional<RelPath> getOutputPathForAndroidBinary(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk"));
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.apk"));
   }
 
   /**
@@ -368,7 +375,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
     // Matches the implementation in JavaBinary#getOutputDirectory()
     RelPath outputDirectory =
-        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent();
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s").getParent();
     // Matches the implementation in JavaBinary#getSourcePathToOutput()
     return Optional.of(
         Paths.get(
@@ -378,7 +385,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
 
   private Optional<Path> getGenPathForOutput(
       BuildTarget buildTarget, ProjectFilesystem filesystem, String out) {
-    return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").resolve(out));
+    return Optional.of(
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s").resolve(out));
   }
 
   /** Calculate the output path for a zip file. */

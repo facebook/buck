@@ -184,10 +184,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               projectFilesystem, invokingRule, "__%s_kotlinc_plugin_generated__");
       RelPath annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
       RelPath genOutputFolder =
-          BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
+          BuildTargetPaths.getGenPath(
+              projectFilesystem.getBuckPaths(), invokingRule, "__%s_gen_sources__");
       RelPath genOutput =
           BuildTargetPaths.getGenPath(
-              projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
+              projectFilesystem.getBuckPaths(),
+              invokingRule,
+              "__%s_gen_sources__/generated" + SRC_ZIP);
 
       // Javac requires that the root directory for generated sources already exist.
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(stubsOutput));

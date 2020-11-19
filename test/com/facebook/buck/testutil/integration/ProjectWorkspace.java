@@ -937,7 +937,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public Path getGenPath(BuildTarget buildTarget, String format) throws IOException {
     return getProjectFileSystem()
-        .resolve(BuildTargetPaths.getGenPath(getProjectFileSystem(), buildTarget, format))
+        .resolve(
+            BuildTargetPaths.getGenPath(getProjectFileSystem().getBuckPaths(), buildTarget, format))
         .getPath();
   }
 

@@ -53,7 +53,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     RelPath sdkPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
             "%s");
     assertEquals(
@@ -61,7 +61,7 @@ public class AppleToolchainIntegrationTest {
             "strip:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
                     "%s")
                 + "/libTestLib.static.secret%n"
@@ -90,7 +90,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     RelPath sdkPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
             "%s");
     assertEquals(
@@ -99,7 +99,7 @@ public class AppleToolchainIntegrationTest {
                 + "strip:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
                     "%s")
                 + "/libTestLib.static.secret%n"
@@ -115,7 +115,7 @@ public class AppleToolchainIntegrationTest {
                 + "strip:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:TestLib#iphoneos-armv7,static"),
                     "%s")
                 + "/libTestLib.static.secret%n"
@@ -147,7 +147,7 @@ public class AppleToolchainIntegrationTest {
             "strip:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
                     "%s")
                 + "/libTestLib.static.secret%n"
@@ -173,17 +173,17 @@ public class AppleToolchainIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:TestSwiftBinary#iphoneos-arm64");
     RelPath swiftLibraryPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//:SwiftLibrary#iphoneos-arm64,swift-compile"),
             "%s");
     RelPath anotherSwiftLibraryPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//:AnotherSwiftLibrary#iphoneos-arm64,swift-compile"),
             "%s");
     RelPath companionLibraryPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//:SwiftCompanionLibrary#iphoneos-arm64,swift-compile"),
             "%s");
     assertEquals(
@@ -226,7 +226,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     RelPath sdkPath =
         BuildTargetPaths.getGenPath(
-            workspace.getProjectFileSystem(),
+            workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
             "%s");
     assertEquals(
@@ -234,7 +234,7 @@ public class AppleToolchainIntegrationTest {
             "strip:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//:TestLib#iphoneos-arm64,static"),
                     "%s")
                 + "/libTestLib.static.secret%n"

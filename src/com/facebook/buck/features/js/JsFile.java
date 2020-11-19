@@ -78,7 +78,8 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
       this.workerTool = workerTool;
       this.output =
           new PublicOutputPath(
-              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.jsfile"));
+              BuildTargetPaths.getGenPath(
+                  projectFilesystem.getBuckPaths(), buildTarget, "%s.jsfile"));
       this.transformProfile = JsFlavors.transformProfileArg(buildTarget.getFlavors());
       this.withDownwardApi = withDownwardApi;
     }

@@ -70,7 +70,9 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     result.assertSuccess();
 
     assertTrue(
-        Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+        Files.exists(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s"))));
   }
 
   @Test
@@ -86,7 +88,8 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path testBinaryPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path testBinaryPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s"));
     assertTrue(Files.exists(testBinaryPath));
 
     ProcessExecutor.Result otoolResult =
@@ -113,7 +116,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
 
     Path includedFramework =
         workspace
-            .getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))
+            .getPath(BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s"))
             .resolve("TestAppBundle.app")
             .resolve("Frameworks")
             .resolve("BuckTest.framework");
@@ -133,7 +136,8 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path testBinaryPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path testBinaryPath =
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s"));
 
     ProcessExecutor.Result otoolResult =
         workspace.runCommand("otool", "-L", testBinaryPath.toString());

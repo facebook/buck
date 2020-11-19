@@ -114,7 +114,8 @@ public class PythonSymlinkTreeTest {
 
     // The output path used by the buildable for the link tree.
     outputPath =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root")
+        BuildTargetPaths.getGenPath(
+                projectFilesystem.getBuckPaths(), buildTarget, "%s/symlink-tree-root")
             .getPath();
 
     graphBuilder = new TestActionGraphBuilder();

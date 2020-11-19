@@ -82,7 +82,8 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
     this.nativeLibsDirs = nativeLibsDirs;
     this.codeGenerator = codeGenerator;
     this.outputPath =
-        BuildTargetPaths.getGenPath(projectFilesystem, getBuildTarget(), OUTPUT_FORMAT);
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), getBuildTarget(), OUTPUT_FORMAT);
     this.withDownwardApi = withDownwardApi;
   }
 

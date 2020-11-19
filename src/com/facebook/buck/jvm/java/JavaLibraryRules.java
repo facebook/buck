@@ -60,6 +60,6 @@ public class JavaLibraryRules {
   }
 
   static RelPath getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.classes.txt");
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.classes.txt");
   }
 }

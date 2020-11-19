@@ -221,7 +221,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private RelPath getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
     return isScratchDir
         ? BuildTargetPaths.getScratchPath(getProjectFilesystem(), target, "__lib%s")
-        : BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "__lib%s");
+        : BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), target, "__lib%s");
   }
 
   @Override

@@ -64,7 +64,8 @@ public class HttpFileBinaryTest {
 
     Path expectedPath =
         filesysten.resolve(
-            BuildTargetPaths.getGenPath(filesysten, target, "%s").resolve("foo.exe"));
+            BuildTargetPaths.getGenPath(filesysten.getBuckPaths(), target, "%s")
+                .resolve("foo.exe"));
 
     Assert.assertEquals(
         ImmutableList.of(expectedPath.toString()),

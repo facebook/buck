@@ -304,7 +304,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
               // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
               // truly needed.
               RelPath output =
-                  BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
+                  BuildTargetPaths.getGenPath(
+                      getProjectFilesystem().getBuckPaths(), target, "%s.h.gch");
 
               CompilerDelegate compilerDelegate =
                   new CompilerDelegate(

@@ -127,14 +127,14 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -214,7 +214,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -254,7 +254,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -372,7 +372,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve("DemoAppWithAppleResource.app"));
@@ -402,7 +402,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve("DemoAppWithDylib.app"));
@@ -461,7 +461,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -486,7 +486,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -527,11 +527,11 @@ public class AppleBundleIntegrationTest {
 
     workspace.verify(
         RelPath.get("DemoAppWithFramework_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, appTarget, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), appTarget, "%s"));
 
     Path appPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), appTarget, "%s")
                 .resolve(appTarget.getShortName() + ".app"));
     assertTrue(Files.exists(appPath.resolve(appTarget.getShortName())));
     assertTrue(checkCodeSigning(appPath));
@@ -540,7 +540,7 @@ public class AppleBundleIntegrationTest {
         workspace.newBuildTarget("//:DemoFramework#iphoneos-arm64,no-debug,no-include-frameworks");
     Path frameworkPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, frameworkTarget, "%s")
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), frameworkTarget, "%s")
                 .resolve(frameworkTarget.getShortName() + ".framework"));
     assertFalse(checkCodeSigning(frameworkPath));
 
@@ -566,13 +566,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
     workspace.assertFilesEqual(
         RelPath.get("DemoApp.xcent.expected"),
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 AppleDescriptions.stripBundleSpecificFlavors(target)
                     .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
                 "%s")
@@ -581,7 +581,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -611,7 +611,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -641,7 +641,7 @@ public class AppleBundleIntegrationTest {
     workspace.assertFilesEqual(
         RelPath.get("DemoAppViaSubstitutions.xcent.expected"),
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 AppleDescriptions.stripBundleSpecificFlavors(target)
                     .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
                 "%s")
@@ -650,7 +650,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -695,14 +695,14 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -727,7 +727,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -747,7 +747,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     Path extensionPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".appex");
@@ -776,7 +776,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -805,7 +805,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
@@ -814,7 +814,7 @@ public class AppleBundleIntegrationTest {
             workspace
                 .getPath(
                     BuildTargetPaths.getGenPath(
-                        filesystem,
+                        filesystem.getBuckPaths(),
                         target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                         "%s"))
                 .resolve(target.getShortName() + ".app"));
@@ -851,7 +851,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target
                 .withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR)
                 .withAppendedFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor()),
@@ -861,9 +861,10 @@ public class AppleBundleIntegrationTest {
         workspace.newBuildTarget("//:DemoAppBinary#iphonesimulator-x86_64");
 
     RelPath binaryWithLinkerMapPath =
-        BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s");
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), binaryWithLinkerMap, "%s");
     RelPath linkMapPath =
-        BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s-LinkMap.txt");
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(), binaryWithLinkerMap, "%s-LinkMap.txt");
 
     assertThat(Files.exists(workspace.resolve(binaryWithLinkerMapPath)), equalTo(true));
     assertThat(Files.exists(workspace.resolve(linkMapPath)), equalTo(true));
@@ -873,7 +874,7 @@ public class AppleBundleIntegrationTest {
             .newBuildTarget("//:DemoAppBinary#iphonesimulator-x86_64")
             .withAppendedFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     RelPath binaryWithoutLinkerMapPath =
-        BuildTargetPaths.getGenPath(filesystem, binaryWithoutLinkerMap, "%s");
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), binaryWithoutLinkerMap, "%s");
     assertThat(Files.exists(workspace.resolve(binaryWithoutLinkerMapPath)), equalTo(false));
   }
 
@@ -891,7 +892,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
                 stripStyle.getFlavor(),
@@ -901,7 +902,7 @@ public class AppleBundleIntegrationTest {
     Path bundlePath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR,
                         stripStyle.getFlavor(),
@@ -947,7 +948,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
@@ -965,7 +966,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoAppWithPlatformBinary_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
@@ -1004,7 +1005,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
   }
@@ -1037,7 +1038,7 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(
                 AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1045,7 +1046,7 @@ public class AppleBundleIntegrationTest {
 
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(
                     AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
                     AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1066,13 +1067,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -1091,7 +1092,7 @@ public class AppleBundleIntegrationTest {
 
     RelPath outputPath =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s");
     Path appPath = outputPath.resolve(target.getShortName() + ".app");
@@ -1145,7 +1146,8 @@ public class AppleBundleIntegrationTest {
   private void assertFileInOutputContainsString(
       String needle, ProjectWorkspace workspace, BuildTarget target, String genPathFormat)
       throws IOException {
-    RelPath outputPath = BuildTargetPaths.getGenPath(filesystem, target, genPathFormat);
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, genPathFormat);
     Path path = workspace.getPath(outputPath);
     assertTrue(Files.exists(path));
     String contents = workspace.getFileContents(outputPath);
@@ -1222,13 +1224,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -1260,13 +1262,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
     workspace.assertFilesEqual(
         RelPath.get("DemoApp.xcent.expected"),
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 AppleDescriptions.stripBundleSpecificFlavors(target)
                     .withAppendedFlavors(AppleCodeSignPreparation.FLAVOR),
                 "%s")
@@ -1275,7 +1277,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -1302,7 +1304,7 @@ public class AppleBundleIntegrationTest {
     String productName = "BrandNewProduct";
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(productName + ".app");
@@ -1331,13 +1333,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -1359,13 +1361,13 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -1389,14 +1391,14 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1426,7 +1428,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1453,7 +1455,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1488,7 +1490,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1537,7 +1539,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     Path appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -1550,7 +1552,7 @@ public class AppleBundleIntegrationTest {
     result.assertSuccess();
     appPath =
         BuildTargetPaths.getGenPath(
-                filesystem,
+                filesystem.getBuckPaths(),
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
@@ -1575,7 +1577,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1604,7 +1606,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1633,7 +1635,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1662,7 +1664,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1691,7 +1693,7 @@ public class AppleBundleIntegrationTest {
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(
                         AppleDebugFormat.NONE.getFlavor(),
                         AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
@@ -1913,14 +1915,14 @@ public class AppleBundleIntegrationTest {
     workspace.verify(
         RelPath.get("DemoApp_output.expected"),
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
     Path appPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    filesystem.getBuckPaths(),
                     target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                     "%s")
                 .resolve(target.getShortName() + ".app"));
@@ -1943,7 +1945,7 @@ public class AppleBundleIntegrationTest {
 
     RelPath outputPath =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            filesystem.getBuckPaths(),
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s");
     Path appPath = outputPath.resolve(target.getShortName() + ".app");
@@ -1963,7 +1965,8 @@ public class AppleBundleIntegrationTest {
         BuildTargetFactory.newInstance(
             "//:DemoApp#iphonesimulator-x86_64,no-debug,no-include-frameworks");
     Path bundlePath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, bundleTarget, "%s/DemoApp.app"));
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), bundleTarget, "%s/DemoApp.app"));
     workspace.runBuckBuild(bundleTarget.toString()).assertSuccess();
 
     Path plistPath = bundlePath.resolve("Info.plist");
@@ -1990,7 +1993,8 @@ public class AppleBundleIntegrationTest {
             "//:DemoMacApp#macosx-x86_64,no-debug,no-include-frameworks");
     Path bundlePath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, bundleTarget, "%s/DemoMacApp.app"));
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), bundleTarget, "%s/DemoMacApp.app"));
     workspace.runBuckBuild(bundleTarget.toString()).assertSuccess();
 
     Path plistPath = bundlePath.resolve("Contents/Info.plist");
@@ -2018,7 +2022,7 @@ public class AppleBundleIntegrationTest {
       Path path =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                      filesystem,
+                      filesystem.getBuckPaths(),
                       AppleDescriptions.stripBundleSpecificFlavors(target)
                           .withAppendedFlavors(
                               AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
@@ -2058,7 +2062,7 @@ public class AppleBundleIntegrationTest {
       Path targetDirectoryPath =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                  filesystem,
+                  filesystem.getBuckPaths(),
                   AppleDescriptions.stripBundleSpecificFlavors(target)
                       .withAppendedFlavors(AppleProcessResources.FLAVOR),
                   "%s"));
@@ -2148,7 +2152,7 @@ public class AppleBundleIntegrationTest {
       Path infoPlistOutputDirectoryPath =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                  filesystem,
+                  filesystem.getBuckPaths(),
                   AppleDescriptions.stripBundleSpecificFlavors(target)
                       .withAppendedFlavors(AppleInfoPlist.FLAVOR),
                   "%s"));
@@ -2221,7 +2225,7 @@ public class AppleBundleIntegrationTest {
       Path infoPlistOutputDirectoryPath =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                  filesystem,
+                  filesystem.getBuckPaths(),
                   AppleDescriptions.stripBundleSpecificFlavors(target)
                       .withAppendedFlavors(AppleInfoPlist.FLAVOR),
                   "%s"));
@@ -2464,7 +2468,7 @@ public class AppleBundleIntegrationTest {
       Path path =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                  filesystem,
+                  filesystem.getBuckPaths(),
                   AppleDescriptions.stripBundleSpecificFlavors(target)
                       .withAppendedFlavors(AppleComputeNonProcessedResourcesContentHashes.FLAVOR),
                   "%s"));
@@ -2475,7 +2479,7 @@ public class AppleBundleIntegrationTest {
       Path path =
           workspace.getPath(
               BuildTargetPaths.getGenPath(
-                      filesystem,
+                      filesystem.getBuckPaths(),
                       AppleDescriptions.stripBundleSpecificFlavors(target)
                           .withAppendedFlavors(AppleProcessResources.FLAVOR),
                       "%s")

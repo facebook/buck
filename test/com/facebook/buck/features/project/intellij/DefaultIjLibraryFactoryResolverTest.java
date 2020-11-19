@@ -72,7 +72,8 @@ public class DefaultIjLibraryFactoryResolverTest {
         Optional.of(
             ExplicitBuildTargetSourcePath.of(
                 t,
-                BuildTargetPaths.getGenPath(filesystem, t, "lib__%s__output").resolve("foo.jar"))),
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), t, "lib__%s__output")
+                    .resolve("foo.jar"))),
         libraryFactoryResolver.getPathIfJavaLibrary(withSrc));
     assertEquals(1, targetsToBuild.size());
   }

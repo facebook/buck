@@ -242,7 +242,7 @@ public class BuildConfiguration {
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String configurationName) {
     // buck-out/gen/BUILD_TARGET_PATH.../BUILD_TARGET_SHORT_NAME-CONFIGURATION_NAME.xcconfig
     return BuildTargetPaths.getGenPath(
-        projectFilesystem, buildTarget, "%s-" + configurationName + ".xcconfig");
+        projectFilesystem.getBuckPaths(), buildTarget, "%s-" + configurationName + ".xcconfig");
   }
 
   @VisibleForTesting

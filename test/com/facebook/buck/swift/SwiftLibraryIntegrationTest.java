@@ -102,7 +102,8 @@ public class SwiftLibraryIntegrationTest {
     ProjectFilesystem projectFilesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpDir.getRoot());
     RelPath symlinkTreeRoot =
-        BuildTargetPaths.getGenPath(projectFilesystem, symlinkTarget, "%s/symlink-tree-root");
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), symlinkTarget, "%s/symlink-tree-root");
 
     // Setup the map representing the link tree.
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();

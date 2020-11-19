@@ -64,7 +64,8 @@ public class DefaultWorkerToolRule extends WriteFile
         buildTarget,
         projectFilesystem,
         "",
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/worker.file").getPath(),
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s/worker.file")
+            .getPath(),
         false);
     this.actualTool = tool;
     this.workerTool =

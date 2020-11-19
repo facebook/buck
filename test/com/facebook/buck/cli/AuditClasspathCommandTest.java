@@ -140,14 +140,14 @@ public class AuditClasspathCommandTest {
             Arrays.asList(
                 root.resolve(
                         BuildTargetPaths.getGenPath(
-                                params.getCells().getRootCell().getFilesystem(),
+                                params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                                 androidLibraryTarget,
                                 "lib__%s__output")
                             .resolve(androidLibraryTarget.getShortName() + ".jar"))
                     .toString(),
                 root.resolve(
                         BuildTargetPaths.getGenPath(
-                                params.getCells().getRootCell().getFilesystem(),
+                                params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                                 javaLibraryTarget,
                                 "lib__%s__output")
                             .resolve(javaLibraryTarget.getShortName() + ".jar"))
@@ -181,7 +181,7 @@ public class AuditClasspathCommandTest {
     expectedPaths.add(
         root.resolve(
                 BuildTargetPaths.getGenPath(
-                        params.getCells().getRootCell().getFilesystem(),
+                        params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                         testJavaCompiledJar,
                         "lib__%s__output")
                     .resolve(testJavaCompiledJar.getShortNameAndFlavorPostfix() + ".jar"))
@@ -338,21 +338,21 @@ public class AuditClasspathCommandTest {
             objectMapper.valueToTree(
                 root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             javaTarget,
                             "lib__%s__output")
                         .resolve(javaTarget.getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             androidTarget,
                             "lib__%s__output")
                         .resolve(androidTarget.getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             javaTarget,
                             "lib__%s__output")
                         .resolve(javaTarget.getShortName() + ".jar"))));
@@ -401,14 +401,14 @@ public class AuditClasspathCommandTest {
         ImmutableSortedSet.of(
             root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             androidLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(androidLibrary.getBuildTarget().getShortName() + ".jar"))
                 .toString(),
             root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             javaLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))
@@ -463,21 +463,21 @@ public class AuditClasspathCommandTest {
             objectMapper.valueToTree(
                 root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             javaLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             androidLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(androidLibrary.getBuildTarget().getShortName() + ".jar"))),
             objectMapper.valueToTree(
                 root.resolve(
                     BuildTargetPaths.getGenPath(
-                            params.getCells().getRootCell().getFilesystem(),
+                            params.getCells().getRootCell().getFilesystem().getBuckPaths(),
                             javaLibrary.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(javaLibrary.getBuildTarget().getShortName() + ".jar"))));

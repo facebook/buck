@@ -207,7 +207,8 @@ public class HaskellBinaryDescription
     executableBuilder.addArg(SourcePathArg.of(DefaultBuildTargetSourcePath.of(binaryTarget)));
 
     RelPath outputDir =
-        BuildTargetPaths.getGenPath(projectFilesystem, binaryTarget, "%s").getParent();
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), binaryTarget, "%s")
+            .getParent();
     Path outputPath = outputDir.resolve(binaryTarget.getShortName());
 
     AbsPath absBinaryDir = projectFilesystem.resolve(outputDir);

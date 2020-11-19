@@ -113,6 +113,6 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
   static RelPath moduleMapPath(
       ProjectFilesystem filesystem, BuildTarget target, String moduleName) {
     return BuildTargetPaths.getGenPath(
-        filesystem, target, "%s/" + moduleName + "/module.modulemap");
+        filesystem.getBuckPaths(), target, "%s/" + moduleName + "/module.modulemap");
   }
 }

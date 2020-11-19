@@ -154,7 +154,7 @@ public class ApkGenruleTest {
     // Verify all of the observers of the Genrule.
     Path expectedApkOutput =
         projectFilesystem.resolve(
-            BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")
+            BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
                 .resolve("sign_fb4a.apk"));
     assertEquals(
         expectedApkOutput,
@@ -210,7 +210,9 @@ public class ApkGenruleTest {
             .put(
                 "APK",
                 projectFilesystem
-                    .resolve(BuildTargetPaths.getGenPath(projectFilesystem, apkTarget, "%s.apk"))
+                    .resolve(
+                        BuildTargetPaths.getGenPath(
+                            projectFilesystem.getBuckPaths(), apkTarget, "%s.apk"))
                     .toString())
             .put("OUT", expectedApkOutput.toString())
             .build(),

@@ -138,7 +138,7 @@ public class WindowsClangCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app:log"),
                     "%s"))
             .resolve("log.txt");
@@ -153,7 +153,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_asm:log"),
                     "%s")
                 .resolve("log.txt"));
@@ -175,7 +175,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_asm:log"),
                     "%s")
                 .resolve("log.txt"));
@@ -191,7 +191,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//lib:lib-out"),
                     "%s")
                 .resolve("lib.lib"));
@@ -201,7 +201,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath2 =
         workspace2.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace2.getProjectFileSystem(),
+                    workspace2.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//lib:lib-out"),
                     "%s")
                 .resolve("lib.lib"));
@@ -215,7 +215,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//lib:dll-out"),
                     "%s")
                 .resolve("lib.dll"));
@@ -225,7 +225,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath2 =
         workspace2.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace2.getProjectFileSystem(),
+                    workspace2.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//lib:dll-out"),
                     "%s")
                 .resolve("lib.dll"));
@@ -239,7 +239,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_lib:exe-out"),
                     "%s")
                 .resolve("app.exe"));
@@ -249,7 +249,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath2 =
         workspace2.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace2.getProjectFileSystem(),
+                    workspace2.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_lib:exe-out"),
                     "%s")
                 .resolve("app.exe"));
@@ -293,7 +293,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath =
         workspace.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_xlib:exe-out"),
                     "%s")
                 .resolve("app.exe"));
@@ -303,7 +303,7 @@ public class WindowsClangCxxIntegrationTest {
     Path outputPath2 =
         workspace2.resolve(
             BuildTargetPaths.getGenPath(
-                    workspace2.getProjectFileSystem(),
+                    workspace2.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_xlib:exe-out"),
                     "%s")
                 .resolve("app.exe"));
@@ -318,7 +318,7 @@ public class WindowsClangCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_asm:exe-out"),
                     "%s"))
             .resolve("app_asm.exe");
@@ -329,7 +329,7 @@ public class WindowsClangCxxIntegrationTest {
         workspace2
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace2.getProjectFileSystem(),
+                    workspace2.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//app_asm:exe-out"),
                     "%s"))
             .resolve("app_asm.exe");
@@ -355,7 +355,7 @@ public class WindowsClangCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//implib_usage:log"),
                     "%s"))
             .resolve("log.txt");
@@ -375,7 +375,7 @@ public class WindowsClangCxxIntegrationTest {
         Files.exists(
             workspace.resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//implib_usage:app_debug#windows-x86_64"),
                     "%s.pdb"))));
     assertTrue(
@@ -383,7 +383,7 @@ public class WindowsClangCxxIntegrationTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
+                        workspace.getProjectFileSystem().getBuckPaths(),
                         BuildTargetFactory.newInstance(
                             "//implib:implib_debug#windows-x86_64,shared"),
                         "%s"))
@@ -398,7 +398,7 @@ public class WindowsClangCxxIntegrationTest {
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        workspace.getProjectFileSystem(),
+                        workspace.getProjectFileSystem().getBuckPaths(),
                         BuildTargetFactory.newInstance("//implib:implib_copy"),
                         "%s"))
                 .resolve("implib_copy.lib")));
@@ -420,7 +420,7 @@ public class WindowsClangCxxIntegrationTest {
         workspace
             .resolve(
                 BuildTargetPaths.getGenPath(
-                    workspace.getProjectFileSystem(),
+                    workspace.getProjectFileSystem().getBuckPaths(),
                     BuildTargetFactory.newInstance("//implib_prebuilt:log"),
                     "%s"))
             .resolve("log.txt");

@@ -504,9 +504,10 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     String expectOutputPath =
         BuildTargetPaths.getGenPath(
-                new FakeProjectFilesystem(), BuildTargetFactory.newInstance("//:foo"), "%s")
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:foo"), "%s")
             .toString();
     assertEquals(
         binary.getLinkRule().getSourcePathToOutput().toString(),
@@ -535,9 +536,10 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxBinary binary = binaryBuilder.build(graphBuilder, targetGraph);
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     String expectOutputPath =
         BuildTargetPaths.getGenPath(
-                new FakeProjectFilesystem(), BuildTargetFactory.newInstance("//:foo"), "%s")
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:foo"), "%s")
             .resolve("FooBarBaz")
             .toString();
     assertEquals(

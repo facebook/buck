@@ -140,7 +140,7 @@ public class AndroidBinaryTest {
             InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
     RelPath aaptProguardDir =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard");
+            androidBinary.getProjectFilesystem().getBuckPaths(), aaptPackageTarget, "%s/proguard");
 
     Path proguardOutputDir =
         androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
@@ -174,13 +174,13 @@ public class AndroidBinaryTest {
         /* proguardJvmArgs */ Optional.empty(),
         ImmutableMap.of(
             BuildTargetPaths.getGenPath(
-                    libraryOneRule.getProjectFilesystem(),
+                    libraryOneRule.getProjectFilesystem().getBuckPaths(),
                     libraryOneRule.getBuildTarget(),
                     "lib__%s__output")
                 .resolve(libraryOneRule.getBuildTarget().getShortName() + ".jar"),
             proguardInputsDir.resolve(
                 BuildTargetPaths.getGenPath(
-                        libraryOneRule.getProjectFilesystem(),
+                        libraryOneRule.getProjectFilesystem().getBuckPaths(),
                         libraryOneRule.getBuildTarget(),
                         "lib__%s__output")
                     .resolve(
@@ -191,7 +191,7 @@ public class AndroidBinaryTest {
                 .getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                            libraryTwoRule.getProjectFilesystem(),
+                            libraryTwoRule.getProjectFilesystem().getBuckPaths(),
                             libraryTwoRule.getBuildTarget(),
                             "lib__%s__output")
                         .resolve(
@@ -263,7 +263,9 @@ public class AndroidBinaryTest {
             .build(graphBuilder);
     assertEquals(
         BuildTargetPaths.getGenPath(
-            ruleInRootDirectory.getProjectFilesystem(), targetInRootDirectory, "%s.apk"),
+            ruleInRootDirectory.getProjectFilesystem().getBuckPaths(),
+            targetInRootDirectory,
+            "%s.apk"),
         pathResolver.getCellUnsafeRelPath(ruleInRootDirectory.getApkInfo().getApkPath()));
 
     BuildTarget targetInNonRootDirectory =
@@ -275,7 +277,9 @@ public class AndroidBinaryTest {
             .build(graphBuilder);
     assertEquals(
         BuildTargetPaths.getGenPath(
-            ruleInNonRootDirectory.getProjectFilesystem(), targetInNonRootDirectory, "%s.apk"),
+            ruleInNonRootDirectory.getProjectFilesystem().getBuckPaths(),
+            targetInNonRootDirectory,
+            "%s.apk"),
         pathResolver.getCellUnsafeRelPath(ruleInNonRootDirectory.getApkInfo().getApkPath()));
   }
 
@@ -294,7 +298,7 @@ public class AndroidBinaryTest {
         BuildTargetFactory.newInstance("//first-party/orca/lib-base:lib-base");
     RelPath proguardConfigDir =
         BuildTargetPaths.getGenPath(
-            rule.getProjectFilesystem(),
+            rule.getProjectFilesystem().getBuckPaths(),
             target.withFlavors(AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR),
             "__%s__proguard__/.proguard");
     Path proguardDir =
@@ -454,12 +458,12 @@ public class AndroidBinaryTest {
 
     RelPath dataPath =
         BuildTargetPaths.getGenPath(
-            projectFilesystem,
+            projectFilesystem.getBuckPaths(),
             resourcesFilter.getBuildTarget(),
             "%s/post_filter_resources_data.json");
     RelPath rJsonPath =
         BuildTargetPaths.getGenPath(
-            projectFilesystem, resourcesFilter.getBuildTarget(), "%s/R.json");
+            projectFilesystem.getBuckPaths(), resourcesFilter.getBuildTarget(), "%s/R.json");
     assertEquals(
         ImmutableList.of("bash", "-c", "cmd " + dataPath + " " + rJsonPath),
         ((BashStep) steps.get(0)).getShellCommand(null));

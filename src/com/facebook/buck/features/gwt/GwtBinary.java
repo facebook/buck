@@ -104,7 +104,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.withDownwardApi = withDownwardApi;
     this.outputFile =
         BuildTargetPaths.getGenPath(
-            projectFilesystem,
+            projectFilesystem.getBuckPaths(),
             buildTarget,
             "__gwt_binary_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".zip");
     this.modules = modules;

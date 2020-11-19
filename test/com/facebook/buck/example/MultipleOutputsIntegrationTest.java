@@ -75,7 +75,9 @@ public class MultipleOutputsIntegrationTest {
     String targetWithLabel = "//:sushi[maguro]";
     Path expectedPath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(), BuildTargetFactory.newInstance("//:sushi"), "%s")
+                workspace.getProjectFileSystem().getBuckPaths(),
+                BuildTargetFactory.newInstance("//:sushi"),
+                "%s")
             .resolve("maguro.txt");
 
     ProcessResult result = workspace.runBuckBuild(targetWithLabel, "--show-output").assertSuccess();
@@ -89,7 +91,7 @@ public class MultipleOutputsIntegrationTest {
     String targetWithDefaultOutputLabel = "//:i_ate_it";
     Path expectedPath =
         BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem(),
+                workspace.getProjectFileSystem().getBuckPaths(),
                 BuildTargetFactory.newInstance("//:i_ate_it"),
                 "%s")
             .resolve("out.txt");

@@ -46,12 +46,13 @@ public class DLibraryIntegrationTest {
     buildLog.assertTargetBuiltLocally("//:greeting");
     workspace.resetBuildLogFile();
 
+    final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessExecutor.Result result =
         workspace.runCommand(
             workspace
                 .resolve(
                     BuildTargetPaths.getGenPath(
-                        new FakeProjectFilesystem(),
+                        filesystem.getBuckPaths(),
                         BuildTargetFactory.newInstance("//:greet")
                             .withFlavors(DBinaryDescription.BINARY_FLAVOR),
                         "%s/greet"))

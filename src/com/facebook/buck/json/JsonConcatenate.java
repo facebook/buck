@@ -57,7 +57,9 @@ public class JsonConcatenate extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.inputs = inputs;
     this.outputDirectory =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), this.getBuildTarget(), outputDirectoryPrefix + "-%s");
+            getProjectFilesystem().getBuckPaths(),
+            this.getBuildTarget(),
+            outputDirectoryPrefix + "-%s");
     this.output = this.outputDirectory.resolve(outputName);
     this.stepShortName = stepShortName;
     this.stepDescription = stepDescription;

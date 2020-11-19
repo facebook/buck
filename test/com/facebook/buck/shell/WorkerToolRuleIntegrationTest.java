@@ -72,13 +72,13 @@ public class WorkerToolRuleIntegrationTest {
         .assertSuccess();
     workspace.verify(
         RelPath.get("test1_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s"));
     workspace.verify(
         RelPath.get("test2_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target2, "%s"));
     workspace.verify(
         RelPath.get("test3_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target3, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target3, "%s"));
   }
 
   /**
@@ -97,9 +97,10 @@ public class WorkerToolRuleIntegrationTest {
         .assertSuccess();
 
     String contents =
-        workspace.getFileContents(BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"))
+        workspace.getFileContents(
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s/output.txt"))
             + workspace.getFileContents(
-                BuildTargetPaths.getGenPath(filesystem, target2, "%s/output.txt"));
+                BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target2, "%s/output.txt"));
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(2));
   }
@@ -123,13 +124,13 @@ public class WorkerToolRuleIntegrationTest {
     workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
         workspace.getFileContents(
-            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s/output.txt"));
     workspace.replaceFileContents("test6.input", "1", "2");
     workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
     contents +=
         workspace.getFileContents(
-            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s/output.txt"));
 
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(1));
@@ -144,7 +145,7 @@ public class WorkerToolRuleIntegrationTest {
     workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
         workspace.getFileContents(
-            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s/output.txt"));
     workspace.replaceFileContents("test6.input", "1", "2");
     workspace.replaceFileContents("concurrent_tool.sh", "sleep 1", "sleep 2");
 
@@ -152,7 +153,7 @@ public class WorkerToolRuleIntegrationTest {
     workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
     contents +=
         workspace.getFileContents(
-            BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s/output.txt"));
 
     ImmutableSet<String> processIDs = ImmutableSet.copyOf(contents.trim().split("\\s+"));
     assertThat(processIDs.size(), Matchers.equalTo(2));
@@ -169,10 +170,10 @@ public class WorkerToolRuleIntegrationTest {
         .assertSuccess();
     workspace.verify(
         RelPath.get("test8_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target1, "%s"));
     workspace.verify(
         RelPath.get("test9_output.expected"),
-        BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
+        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target2, "%s"));
   }
 
   @Test

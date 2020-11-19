@@ -91,7 +91,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
             sanitizer,
             withDownwardApi));
     this.output =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + outputName);
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/" + outputName);
     if (precompiledHeaderRule.isPresent()) {
       Preconditions.checkState(
           preprocessDelegate.isPresent(),

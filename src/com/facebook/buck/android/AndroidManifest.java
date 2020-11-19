@@ -94,7 +94,7 @@ public class AndroidManifest extends AbstractBuildRule {
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
     this.pathToOutputFile =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
+            getProjectFilesystem().getBuckPaths(), buildTarget, "AndroidManifest__%s__.xml");
     this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, finder);
   }
 

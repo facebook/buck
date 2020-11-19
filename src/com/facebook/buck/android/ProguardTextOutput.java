@@ -83,7 +83,8 @@ class ProguardTextOutput extends AbstractBuildRule {
   }
 
   private RelPath getOutputPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s");
   }
 
   @Override
