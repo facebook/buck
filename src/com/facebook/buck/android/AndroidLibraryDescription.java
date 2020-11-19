@@ -168,6 +168,8 @@ public class AndroidLibraryDescription
           downwardApiConfig);
     }
 
+    // Even with Nullsafe plugin enabled we still want to use original javac options for RDot
+    JavacOptions rDotJavacOptions = javacOptions;
     if (Nullsafe.hasSupportedFlavor(flavors)) {
       javacOptions =
           Nullsafe.augmentJavacOptions(
@@ -191,7 +193,8 @@ public class AndroidLibraryDescription
             javacOptions,
             args,
             compilerFactory,
-            context.getCellPathResolver());
+            context.getCellPathResolver(),
+            rDotJavacOptions);
 
     if (Nullsafe.hasSupportedFlavor(flavors)) {
       return Nullsafe.create(

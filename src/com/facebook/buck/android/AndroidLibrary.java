@@ -61,10 +61,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       JavaBuckConfig javaBuckConfig,
       DownwardApiConfig downwardApiConfig,
       JavacFactory javacFactory,
-      JavacOptions javacOptions,
+      JavacOptions libraryJavacOptions,
       CoreArg args,
       ConfiguredCompilerFactory compilerFactory,
-      CellPathResolver cellPathResolver) {
+      CellPathResolver cellPathResolver,
+      JavacOptions rDotJavacOptions) {
     return new Builder(
         buildTarget,
         projectFilesystem,
@@ -74,10 +75,11 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         javaBuckConfig,
         downwardApiConfig,
         javacFactory,
-        javacOptions,
+        libraryJavacOptions,
         args,
         compilerFactory,
-        cellPathResolver);
+        cellPathResolver,
+        rDotJavacOptions);
   }
 
   @VisibleForTesting
@@ -174,11 +176,13 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         JavaBuckConfig javaBuckConfig,
         DownwardApiConfig downwardApiConfig,
         JavacFactory javacFactory,
-        JavacOptions javacOptions,
+        JavacOptions libraryJavacOptions,
         CoreArg args,
         ConfiguredCompilerFactory compilerFactory,
-        CellPathResolver cellPathResolver) {
+        CellPathResolver cellPathResolver,
+        JavacOptions rDotJavacOptions) {
       this.graphBuilder = graphBuilder;
+
       DefaultJavaLibraryRules.Builder delegateBuilder =
           new DefaultJavaLibraryRules.Builder(
               buildTarget,
@@ -237,7 +241,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
                   neverMarkAsUnusedDependency));
-      delegateBuilder.setJavacOptions(javacOptions);
+      delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 
       JavaLibraryDeps deps = Objects.requireNonNull(delegateBuilder.getDeps());
@@ -251,7 +255,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               projectFilesystem,
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
               javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
-              javacOptions,
+              rDotJavacOptions,
               DependencyMode.FIRST_ORDER,
               /* forceFinalResourceIds */ false,
               args.getResourceUnionPackage(),
