@@ -41,17 +41,15 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory {
 
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
-  @AddToRuleKey private final boolean withDownwardApi;
 
   public GroovycToJarStepFactory(
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
-    super(javacOptions);
+    super(javacOptions, withDownwardApi);
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
-    this.withDownwardApi = withDownwardApi;
   }
 
   @Override

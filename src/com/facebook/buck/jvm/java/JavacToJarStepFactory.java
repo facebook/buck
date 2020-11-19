@@ -47,17 +47,15 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
 
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
-  @AddToRuleKey private final boolean withDownwardApi;
 
   public JavacToJarStepFactory(
       Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClasspathProvider,
       boolean withDownwardApi) {
-    super(javacOptions);
+    super(javacOptions, withDownwardApi);
     this.javac = javac;
     this.extraClasspathProvider = extraClasspathProvider;
-    this.withDownwardApi = withDownwardApi;
   }
 
   public JavacPipelineState createPipelineState(

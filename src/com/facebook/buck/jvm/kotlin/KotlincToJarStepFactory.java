@@ -75,21 +75,6 @@ import java.util.stream.Collectors;
 
 public class KotlincToJarStepFactory extends CompileToJarStepFactory {
 
-  @AddToRuleKey private final Kotlinc kotlinc;
-  @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
-
-  @AddToRuleKey
-  private final ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins;
-
-  @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
-  @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
-  @AddToRuleKey private final Optional<String> jvmTarget;
-  @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
-  @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private final boolean withDownwardApi;
-
-  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
-
   private static final String PLUGIN = "-P";
   private static final String APT_MODE = "aptMode=";
   private static final String X_PLUGIN_ARG = "-Xplugin=";
@@ -114,6 +99,20 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
   private static final PathMatcher KOTLIN_PATH_MATCHER = FileExtensionMatcher.of("kt");
   private static final PathMatcher SRC_ZIP_MATCHER = GlobPatternMatcher.of("**.src.zip");
 
+  @AddToRuleKey private final Kotlinc kotlinc;
+  @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
+
+  @AddToRuleKey
+  private final ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins;
+
+  @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
+  @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
+  @AddToRuleKey private final Optional<String> jvmTarget;
+  @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
+  @AddToRuleKey private final Javac javac;
+
+  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
+
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<Path> kotlinHomeLibraries,
@@ -126,7 +125,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
       Javac javac,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
-    super(javacOptions);
+    super(javacOptions, withDownwardApi);
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraKotlincArguments = extraKotlincArguments;
@@ -136,7 +135,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
     this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClassPath;
     this.javac = javac;
-    this.withDownwardApi = withDownwardApi;
   }
 
   @Override

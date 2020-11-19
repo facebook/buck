@@ -48,9 +48,11 @@ import javax.annotation.Nullable;
 public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
   @AddToRuleKey protected final JavacOptions javacOptions;
+  @AddToRuleKey protected final boolean withDownwardApi;
 
-  protected CompileToJarStepFactory(JavacOptions javacOptions) {
+  protected CompileToJarStepFactory(JavacOptions javacOptions, boolean withDownwardApi) {
     this.javacOptions = javacOptions;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public final void createCompileToJarStep(

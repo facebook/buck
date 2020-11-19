@@ -58,7 +58,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private final boolean withDownwardApi;
 
   public ScalacToJarStepFactory(
       Tool scalac,
@@ -69,7 +68,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath,
       boolean withDownwardApi) {
-    super(javacOptions);
+    super(javacOptions, withDownwardApi);
     this.scalac = scalac;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
@@ -79,7 +78,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
             .collect(ImmutableSet.toImmutableSet());
     this.javac = javac;
     this.extraClasspathProvider = extraClassPath;
-    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
