@@ -221,6 +221,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java/classes:classes",
+        "//src/com/facebook/buck/jvm/java/nullsafe:config",
         "//src/com/facebook/buck/jvm/java/runner:runner",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",

@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.nullsafe.NullsafeConfig;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.versions.VersionPropagator;
@@ -69,6 +70,7 @@ public class JavaLibraryDescription
       ImmutableSet.of(
           InferJava.INFER_NULLSAFE,
           InferJava.INFER_JAVA_CAPTURE,
+          Nullsafe.NULLSAFEX,
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
@@ -232,6 +234,16 @@ public class JavaLibraryDescription
       }
     }
 
+    if (Nullsafe.hasSupportedFlavor(flavors)) {
+      javacOptions =
+          Nullsafe.augmentJavacOptions(
+              javacOptions,
+              buildTarget,
+              graphBuilder,
+              projectFilesystem,
+              NullsafeConfig.of(javaBuckConfig.getDelegate()));
+    }
+
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
@@ -247,6 +259,10 @@ public class JavaLibraryDescription
             .setJavacOptions(javacOptions)
             .setToolchainProvider(context.getToolchainProvider())
             .build();
+
+    if (Nullsafe.hasSupportedFlavor(flavors)) {
+      return Nullsafe.create(graphBuilder, defaultJavaLibraryRules.buildLibrary());
+    }
 
     if (JavaAbis.isAbiTarget(buildTarget)) {
       return defaultJavaLibraryRules.buildAbi();
@@ -283,6 +299,9 @@ public class JavaLibraryDescription
             p ->
                 UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
                     targetGraphOnlyDepsBuilder, buildTarget, p));
+
+    Nullsafe.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
   }
 
   public interface CoreArg

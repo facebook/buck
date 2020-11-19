@@ -84,6 +84,10 @@ abstract class JavacPluginProperties implements AddsToRuleKey {
     return new Builder();
   }
 
+  public static Builder builder(JavacPluginProperties properties) {
+    return new Builder().from(properties);
+  }
+
   static class Builder extends ImmutableJavacPluginProperties.Builder {
 
     public JavacPluginProperties.Builder addDep(BuildRule rule) {

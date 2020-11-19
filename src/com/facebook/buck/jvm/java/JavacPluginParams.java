@@ -129,6 +129,7 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
     }
 
     @Override
+    @Deprecated
     public JavacPluginParams build() {
       throw new UnsupportedOperationException(
           "Use build method with SourcePathResolverAdapter and AbsPath as params");

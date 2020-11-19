@@ -48,6 +48,8 @@ import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.Nullsafe;
+import com.facebook.buck.jvm.java.nullsafe.NullsafeConfig;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreFunctions;
@@ -166,6 +168,16 @@ public class AndroidLibraryDescription
           downwardApiConfig);
     }
 
+    if (Nullsafe.hasSupportedFlavor(flavors)) {
+      javacOptions =
+          Nullsafe.augmentJavacOptions(
+              javacOptions,
+              buildTarget,
+              context.getActionGraphBuilder(),
+              projectFilesystem,
+              NullsafeConfig.of(javaBuckConfig.getDelegate()));
+    }
+
     AndroidLibrary.Builder androidLibraryBuilder =
         AndroidLibrary.builder(
             buildTarget,
@@ -180,6 +192,10 @@ public class AndroidLibraryDescription
             args,
             compilerFactory,
             context.getCellPathResolver());
+
+    if (Nullsafe.hasSupportedFlavor(flavors)) {
+      return Nullsafe.create(context.getActionGraphBuilder(), androidLibraryBuilder.build());
+    }
 
     if (hasDummyRDotJavaFlavor) {
       return androidLibraryBuilder.buildDummyRDotJava();
@@ -200,7 +216,8 @@ public class AndroidLibraryDescription
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ONLY_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(InferJava.INFER_NULLSAFE))
-        || flavors.equals(ImmutableSet.of(InferJava.INFER_JAVA_CAPTURE));
+        || flavors.equals(ImmutableSet.of(InferJava.INFER_JAVA_CAPTURE))
+        || flavors.equals(ImmutableSet.of(Nullsafe.NULLSAFEX));
   }
 
   @Override
@@ -226,6 +243,8 @@ public class AndroidLibraryDescription
             p ->
                 UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
                     targetGraphOnlyDepsBuilder, buildTarget, p));
+    Nullsafe.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
   }
 
   public interface CoreArg
