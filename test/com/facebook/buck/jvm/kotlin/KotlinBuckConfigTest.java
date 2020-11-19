@@ -23,6 +23,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -40,8 +43,13 @@ import org.junit.Test;
 
 public class KotlinBuckConfigTest {
 
+  public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
+  private static final SourcePathResolverAdapter PATH_RESOLVER =
+      RULE_RESOLVER.getSourcePathResolver();
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  private ProjectFilesystem defaultFilesystem;
   private Path testDataDirectory;
 
   @Before
@@ -57,6 +65,7 @@ public class KotlinBuckConfigTest {
     tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar");
 
     testDataDirectory = tmp.getRoot().getPath();
+    defaultFilesystem = TestProjectFilesystems.createProjectFilesystem(testDataDirectory);
   }
 
   @Test
@@ -68,6 +77,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
@@ -89,6 +99,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
@@ -111,6 +122,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
@@ -133,6 +145,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
@@ -160,6 +173,7 @@ public class KotlinBuckConfigTest {
         TestProjectFilesystems.createProjectFilesystem(testDataDirectory.resolve("."));
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setFilesystem(filesystem)
             .setSections(
                 ImmutableMap.of(
@@ -184,6 +198,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(
                 ImmutableMap.of(
                     "kotlin",
@@ -195,7 +210,8 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    Path compilerJar = kotlinBuckConfig.getPathToCompilerJar();
+    Path compilerJar =
+        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
     assertEquals(kotlinRuntime, compilerJar);
   }
 
@@ -211,6 +227,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(
                 ImmutableMap.of(
                     "kotlin",
@@ -226,7 +243,8 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    Path compilerJar = kotlinBuckConfig.getPathToCompilerJar();
+    Path compilerJar =
+        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
     assertEquals(kotlinRuntime, compilerJar);
   }
 
@@ -239,6 +257,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(ImmutableMap.of("kotlin", ImmutableMap.of("external", "true")))
             .setEnvironment(
                 ImmutableMap.of(
@@ -249,7 +268,8 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    Path compilerJar = kotlinBuckConfig.getPathToCompilerJar();
+    Path compilerJar =
+        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
     Assert.assertThat(
         compilerJar.toString(), Matchers.containsString(testDataDirectory.toString()));
   }
@@ -266,6 +286,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(
                 ImmutableMap.of(
                     "kotlin",
@@ -277,7 +298,8 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    Path runtimeJar = kotlinBuckConfig.getPathToStdlibJar();
+    Path runtimeJar =
+        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath();
     assertEquals(kotlinRuntime, runtimeJar);
   }
 
@@ -293,6 +315,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
             .setSections(
                 ImmutableMap.of(
                     "kotlin",
@@ -309,7 +332,8 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    Path runtimeJar = kotlinBuckConfig.getPathToStdlibJar();
+    Path runtimeJar =
+        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath();
     assertEquals(kotlinRuntime, runtimeJar);
   }
 
@@ -318,7 +342,7 @@ public class KotlinBuckConfigTest {
 
     KotlinBuckConfig kotlinBuckConfig =
         FakeBuckConfig.builder()
-            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(testDataDirectory))
+            .setFilesystem(defaultFilesystem)
             .setSections(
                 ImmutableMap.of(
                     "kotlin",
@@ -328,7 +352,8 @@ public class KotlinBuckConfigTest {
             .build()
             .getView(KotlinBuckConfig.class);
 
-    Path runtimeJar = kotlinBuckConfig.getPathToStdlibJar();
+    Path runtimeJar =
+        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath();
     assertNotNull(runtimeJar);
     assertTrue(runtimeJar.endsWith("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar"));
   }

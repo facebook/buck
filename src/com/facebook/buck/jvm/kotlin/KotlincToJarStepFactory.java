@@ -111,11 +111,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
   @AddToRuleKey private final Javac javac;
 
-  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> kotlinHomeLibraries;
 
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
-      ImmutableSortedSet<Path> kotlinHomeLibraries,
+      ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
       ImmutableList<String> extraKotlincArguments,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableList<SourcePath> friendPaths,
@@ -199,6 +199,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(genOutputFolder));
 
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
+
       ImmutableSortedSet<Path> allClasspaths =
           ImmutableSortedSet.<Path>naturalOrder()
               .addAll(
@@ -206,10 +208,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
                       .map(AbsPath::getPath)
                       .iterator())
               .addAll(declaredClasspathEntries)
-              .addAll(kotlinHomeLibraries)
+              .addAll(
+                  RichStream.from(kotlinHomeLibraries)
+                      .map(x -> resolver.getAbsolutePath(x).getPath())
+                      .iterator())
               .build();
 
-      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       String friendPathsArg = getFriendsPath(resolver, friendPaths);
       String moduleName = getModuleName(invokingRule);
 

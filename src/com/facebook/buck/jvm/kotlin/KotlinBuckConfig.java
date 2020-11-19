@@ -19,9 +19,12 @@ package com.facebook.buck.jvm.kotlin;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -53,18 +56,18 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     } else {
       ImmutableSet<SourcePath> classpathEntries =
           ImmutableSet.of(
-              delegate.getPathSourcePath(getPathToStdlibJar()),
-              delegate.getPathSourcePath(getPathToReflectJar()),
-              delegate.getPathSourcePath(getPathToScriptRuntimeJar()),
-              delegate.getPathSourcePath(getPathToAnnotationsJar()),
-              delegate.getPathSourcePath(getPathToCompilerJar()));
+              getPathToStdlibJar(),
+              getPathToReflectJar(),
+              getPathToScriptRuntimeJar(),
+              getPathToAnnotationsJar(),
+              getPathToCompilerJar());
 
       return new JarBackedReflectedKotlinc(
           classpathEntries, getPathToAnnotationProcessingJar(), getPathToStdlibJar());
     }
   }
 
-  public ImmutableSortedSet<Path> getKotlinHomeLibraries() {
+  public ImmutableSortedSet<SourcePath> getKotlinHomeLibraries() {
     return ImmutableSortedSet.copyOf(
         ImmutableSortedSet.of(
             getPathToStdlibJar(),
@@ -97,24 +100,33 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     return new ExecutableFinder().getExecutable(compilerPath, delegate.getEnvironment());
   }
 
-  private Path getPathToJar(String jarName) {
+  private SourcePath getPathToJar(String jarName) {
     Path reflect = getKotlinHome().resolve(jarName + ".jar");
     if (Files.isRegularFile(reflect)) {
-      return reflect.normalize();
+      return getSourcePathFromAbsolutePath(reflect);
     }
 
     reflect = getKotlinHome().resolve(Paths.get("lib", jarName + ".jar"));
     if (Files.isRegularFile(reflect)) {
-      return reflect.normalize();
+      return getSourcePathFromAbsolutePath(reflect);
     }
 
     reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", jarName + ".jar"));
     if (Files.isRegularFile(reflect)) {
-      return reflect.normalize();
+      return getSourcePathFromAbsolutePath(reflect);
     }
 
     throw new HumanReadableException(
         "Could not resolve " + jarName + " JAR location (kotlin home:" + getKotlinHome() + ").");
+  }
+
+  private SourcePath getSourcePathFromAbsolutePath(Path path) {
+    Path normalizedPath = path.normalize();
+    Preconditions.checkArgument(normalizedPath.isAbsolute());
+    RelPath relPath =
+        ProjectFilesystemUtils.relativize(delegate.getFilesystem().getRootPath(), normalizedPath);
+
+    return delegate.getPathSourcePath(relPath.getPath());
   }
 
   /**
@@ -122,7 +134,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the Kotlin runtime jar path
    */
-  Path getPathToStdlibJar() {
+  SourcePath getPathToStdlibJar() {
     return getPathToJar("kotlin-stdlib");
   }
 
@@ -131,7 +143,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the Kotlin reflection jar path
    */
-  Path getPathToReflectJar() {
+  SourcePath getPathToReflectJar() {
     return getPathToJar("kotlin-reflect");
   }
 
@@ -140,7 +152,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the Kotlin script runtime jar path
    */
-  Path getPathToScriptRuntimeJar() {
+  SourcePath getPathToScriptRuntimeJar() {
     return getPathToJar("kotlin-script-runtime");
   }
 
@@ -149,7 +161,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the Kotlin compiler jar path
    */
-  Path getPathToCompilerJar() {
+  SourcePath getPathToCompilerJar() {
     return getPathToJar("kotlin-compiler");
   }
 
@@ -158,7 +170,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the trove4j jar path
    */
-  Path getPathToTrove4jJar() {
+  SourcePath getPathToTrove4jJar() {
     return getPathToJar("trove4j");
   }
 
@@ -167,7 +179,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the annotations jar path
    */
-  Path getPathToAnnotationsJar() {
+  SourcePath getPathToAnnotationsJar() {
     return getPathToJar("annotations-13.0");
   }
 
@@ -176,7 +188,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    *
    * @return the Kotlin annotation processing jar path
    */
-  Path getPathToAnnotationProcessingJar() {
+  SourcePath getPathToAnnotationProcessingJar() {
     return getPathToJar("kotlin-annotation-processing");
   }
 

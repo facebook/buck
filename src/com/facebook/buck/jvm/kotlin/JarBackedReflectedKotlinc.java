@@ -61,13 +61,13 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       };
 
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
-  private final Path annotationProcessingClassPath;
-  private final Path standardLibraryClasspath;
+  @AddToRuleKey private final SourcePath annotationProcessingClassPath;
+  @AddToRuleKey private final SourcePath standardLibraryClasspath;
 
   JarBackedReflectedKotlinc(
       ImmutableSet<SourcePath> compilerClassPath,
-      Path annotationProcessingClassPath,
-      Path standardLibraryClasspath) {
+      SourcePath annotationProcessingClassPath,
+      SourcePath standardLibraryClasspath) {
     this.compilerClassPath = compilerClassPath;
     this.annotationProcessingClassPath = annotationProcessingClassPath;
     this.standardLibraryClasspath = standardLibraryClasspath;
@@ -98,12 +98,12 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   @Override
   public Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return annotationProcessingClassPath;
+    return sourcePathResolverAdapter.getAbsolutePath(annotationProcessingClassPath).getPath();
   }
 
   @Override
   public Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return standardLibraryClasspath;
+    return sourcePathResolverAdapter.getAbsolutePath(standardLibraryClasspath).getPath();
   }
 
   @Override
@@ -182,7 +182,12 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
               SynchronizedToolProvider.getSystemToolClassLoader(),
               ImmutableList.copyOf(
                   compilerClassPath.stream()
-                      .map(p -> ((PathSourcePath) p).getRelativePath())
+                      .map(
+                          p ->
+                              context
+                                  .getRuleCellRoot()
+                                  .resolve(((PathSourcePath) p).getRelativePath())
+                                  .getPath())
                       .map(PATH_TO_URL)
                       .iterator()));
 
