@@ -114,7 +114,8 @@ public class Omnibus {
     } else {
       builder.append(Flavor.replaceInvalidCharacters(root.toString()));
     }
-    return base.withAppendedFlavors(InternalFlavor.of(builder.toString()));
+    return base.withAppendedFlavors(
+        InternalFlavor.of("omnibus-root"), InternalFlavor.of(builder.toString()));
   }
 
   /**
