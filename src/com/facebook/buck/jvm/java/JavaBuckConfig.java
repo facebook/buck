@@ -181,8 +181,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       return false;
     }
 
-    Javac.Source javacSource = getJavacSpec(targetConfiguration).getJavacSource();
-    return (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
+    ResolvedJavac.Source javacSource = getJavacSpec(targetConfiguration).getJavacSource();
+    return (javacSource == ResolvedJavac.Source.JAR || javacSource == ResolvedJavac.Source.JDK);
   }
 
   public boolean shouldDesugarInterfaceMethods() {

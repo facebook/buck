@@ -50,7 +50,7 @@ public class JavacStep extends IsolatedStep {
   private final ImmutableMap<String, RelPath> cellToPathMappings;
 
   public JavacStep(
-      Javac javac,
+      ResolvedJavac resolvedJavac,
       ResolvedJavacOptions javacOptions,
       BuildTarget invokingRule,
       BaseBuckPaths buckPaths,
@@ -62,7 +62,7 @@ public class JavacStep extends IsolatedStep {
       ImmutableMap<String, RelPath> cellToPathMappings) {
     this(
         new JavacPipelineState(
-            javac,
+            resolvedJavac,
             javacOptions,
             invokingRule,
             classpathChecker,
@@ -105,7 +105,7 @@ public class JavacStep extends IsolatedStep {
     String firstOrderStderr;
     Optional<String> returnedStderr;
     try {
-      Javac.Invocation invocation =
+      ResolvedJavac.Invocation invocation =
           pipeline.getJavacInvocation(buckPaths, context, cellToPathMappings);
       if (JavaAbis.isSourceAbiTarget(invokingRule)) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
@@ -158,14 +158,14 @@ public class JavacStep extends IsolatedStep {
   }
 
   @VisibleForTesting
-  Javac getJavac() {
-    return pipeline.getJavac();
+  ResolvedJavac getResolvedJavac() {
+    return pipeline.getResolvedJavac();
   }
 
   @Override
   public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     String description =
-        getJavac()
+        getResolvedJavac()
             .getDescription(
                 getOptions(context, getClasspathEntries()),
                 pipeline.getCompilerParameters().getSourceFilePaths(),
@@ -199,7 +199,7 @@ public class JavacStep extends IsolatedStep {
     } else if (pipeline.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";
     } else {
-      name = getJavac().getShortName();
+      name = getResolvedJavac().getShortName();
     }
 
     return name;

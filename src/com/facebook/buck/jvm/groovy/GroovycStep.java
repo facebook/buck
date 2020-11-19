@@ -23,9 +23,9 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.OptionsConsumer;
+import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -130,7 +130,7 @@ class GroovycStep extends IsolatedStep {
         rootCellRoot,
         FluentIterable.from(expandedSources)
             .transform(Object::toString)
-            .transform(Javac.ARGFILES_ESCAPER::apply),
+            .transform(ResolvedJavac.ARGFILES_ESCAPER::apply),
         pathToSrcsList);
   }
 

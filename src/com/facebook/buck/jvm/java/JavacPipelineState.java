@@ -52,7 +52,7 @@ public class JavacPipelineState implements RulePipelineState {
   private final CompilerParameters compilerParameters;
   private final ResolvedJavacOptions resolvedJavacOptions;
   private final BuildTarget invokingRule;
-  private final Javac javac;
+  private final ResolvedJavac resolvedJavac;
   private final ClasspathChecker classpathChecker;
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
@@ -62,10 +62,10 @@ public class JavacPipelineState implements RulePipelineState {
 
   @Nullable private CapturingPrintStream stdout;
   @Nullable private CapturingPrintStream stderr;
-  @Nullable private Javac.Invocation invocation;
+  @Nullable private ResolvedJavac.Invocation invocation;
 
   public JavacPipelineState(
-      Javac javac,
+      ResolvedJavac resolvedJavac,
       ResolvedJavacOptions resolvedJavacOptions,
       BuildTarget invokingRule,
       ClasspathChecker classpathChecker,
@@ -73,7 +73,7 @@ public class JavacPipelineState implements RulePipelineState {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi) {
-    this.javac = javac;
+    this.resolvedJavac = resolvedJavac;
     this.invokingRule = invokingRule;
     this.classpathChecker = classpathChecker;
     this.compilerParameters = compilerParameters;
@@ -88,7 +88,7 @@ public class JavacPipelineState implements RulePipelineState {
   }
 
   /** Get the invocation instance. */
-  public Javac.Invocation getJavacInvocation(
+  public ResolvedJavac.Invocation getJavacInvocation(
       BaseBuckPaths buckPaths,
       IsolatedExecutionContext context,
       ImmutableMap<String, RelPath> cellToPathMappings)
@@ -128,7 +128,7 @@ public class JavacPipelineState implements RulePipelineState {
               buckPaths);
 
       invocation =
-          getJavac()
+          getResolvedJavac()
               .newBuildInvocation(
                   javacExecutionContext,
                   invokingRule,
@@ -178,8 +178,8 @@ public class JavacPipelineState implements RulePipelineState {
     invocation = null;
   }
 
-  Javac getJavac() {
-    return javac;
+  ResolvedJavac getResolvedJavac() {
+    return resolvedJavac;
   }
 
   /**

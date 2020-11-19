@@ -16,69 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
-import com.facebook.buck.util.Escaper;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.util.function.Function;
-import javax.annotation.Nullable;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 
 /** Interface for a javac tool. */
 public interface Javac extends AddsToRuleKey {
-  /** An escaper for arguments written to @argfiles. */
-  Function<String, String> ARGFILES_ESCAPER = Escaper.javacEscaper();
 
-  /** Prepares an invocation of the compiler with the given parameters. */
-  Invocation newBuildInvocation(
-      JavacExecutionContext context,
-      BuildTarget invokingRule,
-      ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path workingDirectory,
-      boolean trackClassUsage,
-      boolean trackJavacPhaseEvents,
-      @Nullable JarParameters abiJarParameters,
-      @Nullable JarParameters libraryJarParameters,
-      AbiGenerationMode abiGenerationMode,
-      AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory);
-
-  String getDescription(
-      ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList);
-
-  String getShortName();
-
-  enum Source {
-    /** Shell out to the javac in the JDK */
-    EXTERNAL,
-    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
-    JAR,
-    /** Run javac in-process, loading it from the JRE in which Buck is running. */
-    JDK,
-  }
-
-  interface Invocation extends AutoCloseable {
-    /**
-     * Produces a source-only ABI jar. {@link #buildClasses} may not be called on an invocation on
-     * which this has been called.
-     */
-    int buildSourceOnlyAbiJar() throws InterruptedException;
-
-    /** Produces a source ABI jar. Must be called before {@link #buildClasses} */
-    int buildSourceAbiJar() throws InterruptedException;
-
-    int buildClasses() throws InterruptedException;
-
-    @Override
-    void close();
-  }
+  ResolvedJavac resolve(SourcePathResolverAdapter resolver);
 }

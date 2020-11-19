@@ -17,19 +17,26 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import javax.tools.JavaCompiler;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
+
   @Override
-  protected JavaCompiler createCompiler(JavacExecutionContext context) {
-    JavaCompiler compiler = SynchronizedToolProvider.getSystemJavaCompiler();
+  protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver) {
+    return new ResolvedJsr199Javac() {
 
-    if (compiler == null) {
-      throw new HumanReadableException(
-          "No system compiler found. Did you install the JRE instead of the JDK?");
-    }
+      @Override
+      protected JavaCompiler createCompiler(JavacExecutionContext context) {
+        JavaCompiler compiler = SynchronizedToolProvider.getSystemJavaCompiler();
+        if (compiler == null) {
+          throw new HumanReadableException(
+              "No system compiler found. Did you install the JRE instead of the JDK?");
+        }
 
-    return compiler;
+        return compiler;
+      }
+    };
   }
 }

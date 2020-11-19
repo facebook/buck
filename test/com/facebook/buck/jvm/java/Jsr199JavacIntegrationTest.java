@@ -28,10 +28,11 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.Javac.Invocation;
+import com.facebook.buck.jvm.java.ResolvedJavac.Invocation;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.step.TestExecutionContext;
@@ -81,7 +82,7 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   public void testGetDescription() throws IOException {
-    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     String pathToOutputDir = tmp.getRoot().resolve("out").toString();
 
     assertEquals(
@@ -107,13 +108,13 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   public void testGetShortName() throws IOException {
-    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     assertEquals("javac", javac.getShortName());
   }
 
   @Test
   public void testClassesFile() throws IOException, InterruptedException {
-    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
@@ -167,7 +168,7 @@ public class Jsr199JavacIntegrationTest {
     BuildRule rule = new FakeBuildRule("//:fake");
     graphBuilder.addToIndex(rule);
 
-    Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
+    Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
@@ -273,7 +274,8 @@ public class Jsr199JavacIntegrationTest {
             ImmutableList.of(fakeJavacJar.toUri().toURL()),
             mockClassLoader);
 
-    Jsr199Javac javac = createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
+    Jsr199Javac.ResolvedJsr199Javac javac =
+        createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =
@@ -319,8 +321,8 @@ public class Jsr199JavacIntegrationTest {
     assertTrue("mock Java compiler should throw", caught);
   }
 
-  private Jsr199Javac createJavac(boolean withSyntaxError, Optional<Path> javacJar)
-      throws IOException {
+  private Jsr199Javac.ResolvedJsr199Javac createJavac(
+      boolean withSyntaxError, Optional<Path> javacJar) throws IOException {
 
     Path exampleJava = tmp.newFile("Example.java").getPath();
     Files.write(
@@ -334,17 +336,18 @@ public class Jsr199JavacIntegrationTest {
     tmp.newFolder(pathToOutputDirectory.toString());
 
     Optional<SourcePath> jar = javacJar.map(p -> PathSourcePath.of(new FakeProjectFilesystem(), p));
+    SourcePathResolverAdapter sourcePathResolver =
+        new TestActionGraphBuilder().getSourcePathResolver();
     if (jar.isPresent()) {
       return new JarBackedJavac(
-          ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL,
-          ImmutableSet.of(jar.get()),
-          new TestActionGraphBuilder().getSourcePathResolver());
+              ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()))
+          .resolve(sourcePathResolver);
     }
 
-    return new JdkProvidedInMemoryJavac();
+    return new JdkProvidedInMemoryJavac().resolve(sourcePathResolver);
   }
 
-  private Jsr199Javac createJavac(boolean withSyntaxError) throws IOException {
+  private Jsr199Javac.ResolvedJsr199Javac createJavac(boolean withSyntaxError) throws IOException {
     return createJavac(withSyntaxError, Optional.empty());
   }
 
@@ -359,15 +362,22 @@ public class Jsr199JavacIntegrationTest {
   private static class JdkNotFoundJavac extends Jsr199Javac {
 
     @Override
-    protected JavaCompiler createCompiler(JavacExecutionContext context) {
-      throw new RuntimeException("JDK is not found");
+    protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver) {
+      return new ResolvedJsr199Javac() {
+
+        @Override
+        protected JavaCompiler createCompiler(JavacExecutionContext context) {
+          throw new RuntimeException("JDK is not found");
+        }
+      };
     }
   }
 
   @Test
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void jdkNotFound() {
-    Jsr199Javac javac = new JdkNotFoundJavac();
+    Jsr199Javac.ResolvedJsr199Javac javac =
+        new JdkNotFoundJavac().resolve(new TestActionGraphBuilder().getSourcePathResolver());
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
     JavacExecutionContext javacExecutionContext =

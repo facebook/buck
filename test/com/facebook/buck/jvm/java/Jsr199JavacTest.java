@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
@@ -34,9 +35,9 @@ public class Jsr199JavacTest extends EasyMockSupport {
 
   @Test
   public void testJavacCommand() {
-    Jsr199Javac firstOrder = createTestStep();
-    Jsr199Javac warn = createTestStep();
-    Jsr199Javac transitive = createTestStep();
+    Jsr199Javac.ResolvedJsr199Javac firstOrder = createTestStep();
+    Jsr199Javac.ResolvedJsr199Javac warn = createTestStep();
+    Jsr199Javac.ResolvedJsr199Javac transitive = createTestStep();
 
     assertEquals(
         String.format(
@@ -59,8 +60,9 @@ public class Jsr199JavacTest extends EasyMockSupport {
             PATH_TO_SRCS_LIST));
   }
 
-  private Jsr199Javac createTestStep() {
-    return new JdkProvidedInMemoryJavac();
+  private Jsr199Javac.ResolvedJsr199Javac createTestStep() {
+    return new JdkProvidedInMemoryJavac()
+        .resolve(new TestActionGraphBuilder().getSourcePathResolver());
   }
 
   private ImmutableList.Builder<String> getArgs() {

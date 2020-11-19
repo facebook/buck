@@ -68,7 +68,7 @@ public class ExternalJavacProvider implements JavacProvider {
   public static JavacProvider getProviderForSpec(JavacSpec spec) {
     String compilerClassName =
         spec.getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
-    Javac.Source javacSource = spec.getJavacSource();
+    ResolvedJavac.Source javacSource = spec.getJavacSource();
     switch (javacSource) {
       case EXTERNAL:
         Preconditions.checkState(spec.getJavacPath().isPresent());
@@ -85,7 +85,6 @@ public class ExternalJavacProvider implements JavacProvider {
   /** Creates an ExternalJavac. */
   @Override
   public Javac resolve(SourcePathRuleFinder ruleFinder) {
-    SourcePathResolverAdapter sourcePathResolver = ruleFinder.getSourcePathResolver();
     if (javacPath instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetPath = (BuildTargetSourcePath) javacPath;
       BuildRule rule = ruleFinder.getRule(buildTargetPath);
@@ -93,13 +92,10 @@ public class ExternalJavacProvider implements JavacProvider {
           rule instanceof BinaryBuildRule
               ? () -> ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel())
               : Suppliers.ofInstance(new NonHashingJavacTool(buildTargetPath)),
-          buildTargetPath.getTarget().toString(),
-          sourcePathResolver);
+          buildTargetPath.getTarget().toString());
     } else {
       return new ExternalJavac(
-          () -> createVersionedJavac((PathSourcePath) javacPath),
-          javacPath.toString(),
-          sourcePathResolver);
+          () -> createVersionedJavac((PathSourcePath) javacPath), javacPath.toString());
     }
   }
 

@@ -65,7 +65,9 @@ public class JavacSpecTest {
 
     SourcePath javacPath = FakeSourcePath.of(externalPath);
     specBuilder.setJavacPath(javacPath);
-    ExternalJavac javac = (ExternalJavac) getJavac();
+    ExternalJavac.ResolvedExternalJavac javac =
+        (ExternalJavac.ResolvedExternalJavac)
+            getJavac().resolve(graphBuilder.getSourcePathResolver());
 
     assertEquals(ImmutableList.of(externalPath.toString()), javac.getCommandPrefix());
   }
@@ -88,7 +90,9 @@ public class JavacSpecTest {
     String compilerClassName = "test.compiler";
     specBuilder.setJavacJarPath(javacJarPath).setCompilerClassName(compilerClassName);
 
-    JarBackedJavac javac = (JarBackedJavac) getJavac();
+    JarBackedJavac.ResolvedJarBackedJavac javac =
+        (JarBackedJavac.ResolvedJarBackedJavac)
+            getJavac().resolve(graphBuilder.getSourcePathResolver());
 
     assertEquals(compilerClassName, javac.getCompilerClassName());
   }

@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -134,6 +135,7 @@ public class DummyRDotJavaTest {
 
     AbsPath rootPath = filesystem.getRootPath();
     StepExecutionContext stepExecutionContext = TestExecutionContext.newInstance(rootPath);
+    SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
             .addAll(makeCleanDirDescription(rootPath, rDotJavaSrcFolder.getPath()))
@@ -145,12 +147,12 @@ public class DummyRDotJavaTest {
             .addAll(makeCleanDirDescription(rootPath, rDotJavaAnnotationFolder))
             .add(
                 new JavacStep(
-                        DEFAULT_JAVAC,
+                        DEFAULT_JAVAC.resolve(sourcePathResolver),
                         ResolvedJavacOptions.of(
                             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                                 .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
                                 .build(),
-                            graphBuilder.getSourcePathResolver(),
+                            sourcePathResolver,
                             rootPath),
                         dummyRDotJava.getBuildTarget(),
                         filesystem.getBuckPaths(),

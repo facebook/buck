@@ -19,18 +19,21 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
-import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
-/** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
-public class FakeJavac implements ResolvedJavac {
+/** Interface for a resolved javac tool. */
+public interface ResolvedJavac {
 
-  @Override
-  public ResolvedJavac.Invocation newBuildInvocation(
+  /** An escaper for arguments written to @argfiles. */
+  Function<String, String> ARGFILES_ESCAPER = Escaper.javacEscaper();
+
+  /** Prepares an invocation of the compiler with the given parameters. */
+  ResolvedJavac.Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
@@ -45,47 +48,41 @@ public class FakeJavac implements ResolvedJavac {
       @Nullable JarParameters libraryJarParameters,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
-    return new ResolvedJavac.Invocation() {
-      @Override
-      public int buildSourceOnlyAbiJar() {
-        throw new UnsupportedOperationException();
-      }
+      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory);
 
-      @Override
-      public int buildSourceAbiJar() {
-        throw new UnsupportedOperationException();
-      }
-
-      @Override
-      public int buildClasses() throws InterruptedException {
-        try {
-          return context
-              .getProcessExecutor()
-              .launchAndExecute(ProcessExecutorParams.ofCommand("javac"))
-              .getExitCode();
-        } catch (IOException e) {
-          return 1;
-        }
-      }
-
-      @Override
-      public void close() {
-        // Nothing to do
-      }
-    };
-  }
-
-  @Override
-  public String getDescription(
+  String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList) {
-    return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
+      Path pathToSrcsList);
+
+  /** Returns a short name of the tool */
+  String getShortName();
+
+  /** Enum that specify a type of java compiler. */
+  enum Source {
+    /** Shell out to the javac in the JDK */
+    EXTERNAL,
+    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
+    JAR,
+    /** Run javac in-process, loading it from the JRE in which Buck is running. */
+    JDK,
   }
 
-  @Override
-  public String getShortName() {
-    throw new UnsupportedOperationException();
+  /** Interface that defines invocation object created during java compilation. */
+  interface Invocation extends AutoCloseable {
+
+    /**
+     * Produces a source-only ABI jar. {@link #buildClasses} may not be called on an invocation on
+     * which this has been called.
+     */
+    int buildSourceOnlyAbiJar() throws InterruptedException;
+
+    /** Produces a source ABI jar. Must be called before {@link #buildClasses} */
+    int buildSourceAbiJar() throws InterruptedException;
+
+    int buildClasses() throws InterruptedException;
+
+    @Override
+    void close();
   }
 }

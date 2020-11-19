@@ -35,17 +35,18 @@ public abstract class JavacSpec {
     return ExternalJavacProvider.getProviderForSpec(this);
   }
 
-  public Javac.Source getJavacSource() {
+  /** Returns {@link ResolvedJavac.Source} */
+  public ResolvedJavac.Source getJavacSource() {
     if (getJavacPath().isPresent() && getJavacJarPath().isPresent()) {
       throw new HumanReadableException("Cannot set both javac and javacjar");
     }
 
     if (getJavacPath().isPresent()) {
-      return Javac.Source.EXTERNAL;
+      return ResolvedJavac.Source.EXTERNAL;
     } else if (getJavacJarPath().isPresent()) {
-      return Javac.Source.JAR;
+      return ResolvedJavac.Source.JAR;
     } else {
-      return Javac.Source.JDK;
+      return ResolvedJavac.Source.JDK;
     }
   }
 

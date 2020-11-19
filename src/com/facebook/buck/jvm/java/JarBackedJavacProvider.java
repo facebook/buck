@@ -30,6 +30,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
+
   @AddToRuleKey private final SourcePath javacJarPath;
   @AddToRuleKey private final String compilerClassName;
 
@@ -53,12 +54,7 @@ public class JarBackedJavacProvider implements JavacProvider, AddsToRuleKey {
         JavaLibrary compilerLibrary = (JavaLibrary) possibleRule.get();
         builder.addAll(compilerLibrary.getTransitiveClasspaths());
       }
-
-      ImmutableSortedSet<SourcePath> fullJavacClasspath = builder.build();
-
-      javac =
-          new JarBackedJavac(
-              compilerClassName, fullJavacClasspath, ruleFinder.getSourcePathResolver());
+      javac = new JarBackedJavac(compilerClassName, builder.build());
     }
 
     return javac;

@@ -173,6 +173,7 @@ java_immutables_library(
         "PluginFactory.java",
         "PluginLoaderJavaFileManager.java",
         "RemoveClassesPatternsMatcher.java",
+        "ResolvedJavac.java",
         "ResolvedJavacOptions.java",
         "ResolvedJavacPluginProperties.java",
         "ResourcesParameters.java",

@@ -74,7 +74,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     return new JavacPipelineState(
-        javac,
+        javac.resolve(resolver),
         ResolvedJavacOptions.of(buildTimeOptions, resolver, rootCellRoot),
         invokingRule,
         new ClasspathChecker(),
@@ -112,10 +112,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     addAnnotationGenFolderStep(invokingRule, projectFilesystem, steps, buildableContext);
 
     AbsPath rootPath = projectFilesystem.getRootPath();
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     steps.add(
         new JavacStep(
-            javac,
-            ResolvedJavacOptions.of(buildTimeOptions, context.getSourcePathResolver(), rootPath),
+            javac.resolve(sourcePathResolver),
+            ResolvedJavacOptions.of(buildTimeOptions, sourcePathResolver, rootPath),
             invokingRule,
             projectFilesystem.getBuckPaths(),
             new ClasspathChecker(),
@@ -217,13 +218,12 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       JavacOptions buildTimeOptions =
           javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
+      SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
       steps.add(
           new JavacStep(
-              javac,
+              javac.resolve(sourcePathResolver),
               ResolvedJavacOptions.of(
-                  buildTimeOptions,
-                  context.getSourcePathResolver(),
-                  projectFilesystem.getRootPath()),
+                  buildTimeOptions, sourcePathResolver, projectFilesystem.getRootPath()),
               invokingRule,
               projectFilesystem.getBuckPaths(),
               new ClasspathChecker(),

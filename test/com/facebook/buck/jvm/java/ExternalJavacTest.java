@@ -84,9 +84,9 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   @Test
   public void testJavacCommand() {
-    Javac firstOrder = createTestStep();
-    Javac warn = createTestStep();
-    Javac transitive = createTestStep();
+    ExternalJavac.ResolvedExternalJavac firstOrder = createTestStep();
+    ExternalJavac.ResolvedExternalJavac warn = createTestStep();
+    ExternalJavac.ResolvedExternalJavac transitive = createTestStep();
 
     assertEquals(
         filesystem.resolve("fakeJavac")
@@ -249,10 +249,10 @@ public class ExternalJavacTest extends EasyMockSupport {
         .add("-source", "6", "-target", "6", "-g", "-d", ".", "-classpath");
   }
 
-  private Javac createTestStep() {
-    return new ExternalJavac(
-        () -> new FakeTool(),
-        filesystem.resolve(Paths.get("fakeJavac")).toString(),
-        new TestActionGraphBuilder().getSourcePathResolver());
+  private ExternalJavac.ResolvedExternalJavac createTestStep() {
+    ExternalJavac externalJavac =
+        new ExternalJavac(
+            () -> new FakeTool(), filesystem.resolve(Paths.get("fakeJavac")).toString());
+    return externalJavac.resolve(new TestActionGraphBuilder().getSourcePathResolver());
   }
 }

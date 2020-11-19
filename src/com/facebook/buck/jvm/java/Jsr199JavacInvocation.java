@@ -76,7 +76,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
-class Jsr199JavacInvocation implements Javac.Invocation {
+/** Jsr199Javac invocation object created during java compilation. */
+class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   private static final Logger LOG = Logger.get(Jsr199JavacInvocation.class);
   private static final ListeningExecutorService threadPool =
@@ -162,7 +163,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           context.getRuleCellRoot(),
           FluentIterable.from(javaSourceFilePaths)
               .transform(Object::toString)
-              .transform(Javac.ARGFILES_ESCAPER::apply),
+              .transform(ResolvedJavac.ARGFILES_ESCAPER::apply),
           pathToSrcsList);
     } catch (IOException e) {
       context

@@ -43,145 +43,163 @@ import javax.annotation.Nullable;
 public class ExternalJavac implements Javac {
 
   @AddToRuleKey private final Supplier<Tool> javac;
-  private final ImmutableList<String> commandPrefix;
   private final String shortName;
 
-  public ExternalJavac(Supplier<Tool> javac, String shortName, SourcePathResolverAdapter resolver) {
+  public ExternalJavac(Supplier<Tool> javac, String shortName) {
     this.javac = MoreSuppliers.memoize(javac);
-    this.commandPrefix = this.javac.get().getCommandPrefix(resolver);
     this.shortName = shortName;
   }
 
-  @Override
-  public String getDescription(
-      ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList) {
-    StringBuilder builder = new StringBuilder(getShortName());
-    builder.append(" ");
-    Joiner.on(" ").appendTo(builder, options);
-    builder.append(" ");
-    builder.append("@").append(pathToSrcsList);
+  /** External resolved external javac tool. */
+  static class ResolvedExternalJavac implements ResolvedJavac {
 
-    return builder.toString();
-  }
+    private final String shortName;
+    private final ImmutableList<String> commandPrefix;
 
-  @Override
-  public String getShortName() {
-    return shortName;
-  }
+    ResolvedExternalJavac(String shortName, ImmutableList<String> commandPrefix) {
+      this.shortName = shortName;
+      this.commandPrefix = commandPrefix;
+    }
 
-  @VisibleForTesting
-  ImmutableList<String> getCommandPrefix() {
-    return commandPrefix;
-  }
+    @Override
+    public String getDescription(
+        ImmutableList<String> options,
+        ImmutableSortedSet<Path> javaSourceFilePaths,
+        Path pathToSrcsList) {
+      StringBuilder builder = new StringBuilder(getShortName());
+      builder.append(" ");
+      Joiner.on(" ").appendTo(builder, options);
+      builder.append(" ");
+      builder.append("@").append(pathToSrcsList);
 
-  @Override
-  public Invocation newBuildInvocation(
-      JavacExecutionContext context,
-      BuildTarget invokingRule,
-      ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path workingDirectory,
-      boolean trackClassUsage,
-      boolean trackJavacPhaseEvents,
-      @Nullable JarParameters abiJarParameters,
-      @Nullable JarParameters libraryJarParameters,
-      AbiGenerationMode abiGenerationMode,
-      AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
-    Preconditions.checkArgument(abiJarParameters == null);
-    Preconditions.checkArgument(libraryJarParameters == null);
+      return builder.toString();
+    }
 
-    return new Invocation() {
-      @Override
-      public int buildSourceOnlyAbiJar() {
-        throw new UnsupportedOperationException(
-            "Cannot build source-only ABI jar with external javac.");
-      }
+    @Override
+    public String getShortName() {
+      return shortName;
+    }
 
-      @Override
-      public int buildSourceAbiJar() {
-        throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
-      }
+    @VisibleForTesting
+    ImmutableList<String> getCommandPrefix() {
+      return commandPrefix;
+    }
 
-      @Override
-      public int buildClasses() throws InterruptedException {
-        Preconditions.checkArgument(
-            abiGenerationMode == AbiGenerationMode.CLASS,
-            "Cannot compile ABI jars with external javac");
-        ImmutableList<Path> expandedSources;
-        try {
-          expandedSources =
-              JavaPaths.extractArchivesAndGetPaths(
-                  context.getRuleCellRoot(), javaSourceFilePaths, workingDirectory);
-        } catch (IOException e) {
-          throw new HumanReadableException(
-              "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+    @Override
+    public ResolvedJavac.Invocation newBuildInvocation(
+        JavacExecutionContext context,
+        BuildTarget invokingRule,
+        ImmutableList<String> options,
+        ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
+        ImmutableList<JavacPluginJsr199Fields> javacPlugins,
+        ImmutableSortedSet<Path> javaSourceFilePaths,
+        Path pathToSrcsList,
+        Path workingDirectory,
+        boolean trackClassUsage,
+        boolean trackJavacPhaseEvents,
+        @Nullable JarParameters abiJarParameters,
+        @Nullable JarParameters libraryJarParameters,
+        AbiGenerationMode abiGenerationMode,
+        AbiGenerationMode abiCompatibilityMode,
+        @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
+      Preconditions.checkArgument(abiJarParameters == null);
+      Preconditions.checkArgument(libraryJarParameters == null);
+
+      return new ResolvedJavac.Invocation() {
+        @Override
+        public int buildSourceOnlyAbiJar() {
+          throw new UnsupportedOperationException(
+              "Cannot build source-only ABI jar with external javac.");
         }
 
-        // For consistency with javax.tools.JavaCompiler, if no sources are specified, then do
-        // nothing. Although it seems reasonable to treat this case as an error, we have a situation
-        // in KotlincToJarStepFactory where we need to categorically add a JavacStep in the event
-        // that an annotation processor for the kotlin_library() dynamically generates some .java
-        // files that need to be compiled. Often, the annotation processors will do no such thing
-        // and the JavacStep that was added will have no work to do.
-        if (expandedSources.isEmpty()) {
-          return 0;
+        @Override
+        public int buildSourceAbiJar() {
+          throw new UnsupportedOperationException(
+              "Cannot build source ABI jar with external javac.");
         }
 
-        ImmutableList.Builder<String> command = ImmutableList.builder();
-        command.addAll(commandPrefix);
+        @Override
+        public int buildClasses() throws InterruptedException {
+          Preconditions.checkArgument(
+              abiGenerationMode == AbiGenerationMode.CLASS,
+              "Cannot compile ABI jars with external javac");
+          ImmutableList<Path> expandedSources;
+          try {
+            expandedSources =
+                JavaPaths.extractArchivesAndGetPaths(
+                    context.getRuleCellRoot(), javaSourceFilePaths, workingDirectory);
+          } catch (IOException e) {
+            throw new HumanReadableException(
+                "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+          }
 
-        try {
-          FluentIterable<String> escapedPaths =
-              FluentIterable.from(expandedSources)
-                  .transform(Object::toString)
-                  .transform(ARGFILES_ESCAPER::apply);
-          FluentIterable<String> escapedArgs =
-              FluentIterable.from(options).transform(ARGFILES_ESCAPER::apply);
+          // For consistency with javax.tools.JavaCompiler, if no sources are specified, then do
+          // nothing. Although it seems reasonable to treat this case as an error, we have a
+          // situation
+          // in KotlincToJarStepFactory where we need to categorically add a JavacStep in the event
+          // that an annotation processor for the kotlin_library() dynamically generates some .java
+          // files that need to be compiled. Often, the annotation processors will do no such thing
+          // and the JavacStep that was added will have no work to do.
+          if (expandedSources.isEmpty()) {
+            return 0;
+          }
 
-          ProjectFilesystemUtils.writeLinesToPath(
-              context.getRuleCellRoot(),
-              Iterables.concat(escapedArgs, escapedPaths),
-              pathToSrcsList);
-          command.add("@" + pathToSrcsList);
-        } catch (IOException e) {
-          context
-              .getEventSink()
-              .reportThrowable(
-                  e,
-                  "Cannot write list of args/sources to compile to %s file! Terminating compilation.",
-                  pathToSrcsList);
-          return 1;
-        }
+          ImmutableList.Builder<String> command = ImmutableList.builder();
+          command.addAll(commandPrefix);
 
-        // Run the command
-        int exitCode = -1;
-        try {
-          ProcessExecutorParams params =
-              ProcessExecutorParams.builder()
-                  .setCommand(command.build())
-                  .setEnvironment(context.getEnvironment())
-                  .setDirectory(context.getRuleCellRoot().getPath())
-                  .build();
-          ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
-          exitCode = result.getExitCode();
-        } catch (IOException e) {
-          e.printStackTrace(context.getStdErr());
+          try {
+            FluentIterable<String> escapedPaths =
+                FluentIterable.from(expandedSources)
+                    .transform(Object::toString)
+                    .transform(ResolvedJavac.ARGFILES_ESCAPER::apply);
+            FluentIterable<String> escapedArgs =
+                FluentIterable.from(options).transform(ResolvedJavac.ARGFILES_ESCAPER::apply);
+
+            ProjectFilesystemUtils.writeLinesToPath(
+                context.getRuleCellRoot(),
+                Iterables.concat(escapedArgs, escapedPaths),
+                pathToSrcsList);
+            command.add("@" + pathToSrcsList);
+          } catch (IOException e) {
+            context
+                .getEventSink()
+                .reportThrowable(
+                    e,
+                    "Cannot write list of args/sources to compile to %s file! Terminating compilation.",
+                    pathToSrcsList);
+            return 1;
+          }
+
+          // Run the command
+          int exitCode = -1;
+          try {
+            ProcessExecutorParams params =
+                ProcessExecutorParams.builder()
+                    .setCommand(command.build())
+                    .setEnvironment(context.getEnvironment())
+                    .setDirectory(context.getRuleCellRoot().getPath())
+                    .build();
+            ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
+            exitCode = result.getExitCode();
+          } catch (IOException e) {
+            e.printStackTrace(context.getStdErr());
+            return exitCode;
+          }
+
           return exitCode;
         }
 
-        return exitCode;
-      }
+        @Override
+        public void close() {
+          // Nothing to do
+        }
+      };
+    }
+  }
 
-      @Override
-      public void close() {
-        // Nothing to do
-      }
-    };
+  @Override
+  public ResolvedExternalJavac resolve(SourcePathResolverAdapter resolver) {
+    ImmutableList<String> commandPrefix = javac.get().getCommandPrefix(resolver);
+    return new ResolvedExternalJavac(shortName, commandPrefix);
   }
 }

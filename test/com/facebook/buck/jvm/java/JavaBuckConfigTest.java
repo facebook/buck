@@ -385,10 +385,12 @@ public class JavaBuckConfigTest {
         FakeBuckConfig.builder().setFilesystem(defaultFilesystem).setSections(sections).build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
+    TestActionGraphBuilder ruleFinder = new TestActionGraphBuilder();
     assertEquals(
         javac,
         JavacFactoryHelper.createJavacFactory(javaConfig)
-            .create(new TestActionGraphBuilder(), null, UnconfiguredTargetConfiguration.INSTANCE)
+            .create(ruleFinder, null, UnconfiguredTargetConfiguration.INSTANCE)
+            .resolve(ruleFinder.getSourcePathResolver())
             .getShortName());
   }
 
@@ -402,7 +404,7 @@ public class JavaBuckConfigTest {
 
     assumeThat(
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
-        is(Javac.Source.JDK));
+        is(ResolvedJavac.Source.JDK));
     assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
@@ -432,7 +434,7 @@ public class JavaBuckConfigTest {
 
     assumeThat(
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
-        is(Javac.Source.EXTERNAL));
+        is(ResolvedJavac.Source.EXTERNAL));
 
     assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
@@ -453,7 +455,7 @@ public class JavaBuckConfigTest {
 
     assumeThat(
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
-        is(Javac.Source.EXTERNAL));
+        is(ResolvedJavac.Source.EXTERNAL));
     assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
@@ -471,7 +473,7 @@ public class JavaBuckConfigTest {
 
     assumeThat(
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
-        is(Javac.Source.JAR));
+        is(ResolvedJavac.Source.JAR));
 
     assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
@@ -482,7 +484,7 @@ public class JavaBuckConfigTest {
 
     assumeThat(
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
-        is(Javac.Source.JDK));
+        is(ResolvedJavac.Source.JDK));
 
     assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.base.Joiner;
@@ -30,57 +31,68 @@ import javax.tools.JavaCompiler;
 public abstract class Jsr199Javac implements Javac {
 
   @Override
-  public String getDescription(
-      ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList) {
-    StringBuilder builder = new StringBuilder("javac ");
-    Joiner.on(" ").appendTo(builder, options);
-    builder.append(" ");
-    builder.append("@").append(pathToSrcsList);
-
-    return builder.toString();
+  public final ResolvedJsr199Javac resolve(SourcePathResolverAdapter resolver) {
+    return create(resolver);
   }
 
-  @Override
-  public String getShortName() {
-    return "javac";
-  }
+  protected abstract ResolvedJsr199Javac create(SourcePathResolverAdapter resolver);
 
-  protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
+  /** Base class for a resolved javac in-process tool. */
+  abstract static class ResolvedJsr199Javac implements ResolvedJavac {
 
-  @Override
-  public Invocation newBuildInvocation(
-      JavacExecutionContext context,
-      BuildTarget invokingRule,
-      ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path workingDirectory,
-      boolean trackClassUsage,
-      boolean trackJavacPhaseEvents,
-      @Nullable JarParameters abiJarParameters,
-      @Nullable JarParameters libraryJarParameters,
-      AbiGenerationMode abiGenerationMode,
-      AbiGenerationMode abiCompatibilityMode,
-      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
-    return new Jsr199JavacInvocation(
-        () -> createCompiler(context),
-        context,
-        invokingRule,
-        options,
-        annotationProcessors,
-        javacPlugins,
-        javaSourceFilePaths,
-        pathToSrcsList,
-        trackClassUsage,
-        trackJavacPhaseEvents,
-        abiJarParameters,
-        libraryJarParameters,
-        abiGenerationMode,
-        abiCompatibilityMode,
-        ruleInfoFactory);
+    protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
+
+    @Override
+    public String getDescription(
+        ImmutableList<String> options,
+        ImmutableSortedSet<Path> javaSourceFilePaths,
+        Path pathToSrcsList) {
+      StringBuilder builder = new StringBuilder("javac ");
+      Joiner.on(" ").appendTo(builder, options);
+      builder.append(" ");
+      builder.append("@").append(pathToSrcsList);
+
+      return builder.toString();
+    }
+
+    @Override
+    public String getShortName() {
+      return "javac";
+    }
+
+    @Override
+    public ResolvedJavac.Invocation newBuildInvocation(
+        JavacExecutionContext context,
+        BuildTarget invokingRule,
+        ImmutableList<String> options,
+        ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
+        ImmutableList<JavacPluginJsr199Fields> javacPlugins,
+        ImmutableSortedSet<Path> javaSourceFilePaths,
+        Path pathToSrcsList,
+        Path workingDirectory,
+        boolean trackClassUsage,
+        boolean trackJavacPhaseEvents,
+        @Nullable JarParameters abiJarParameters,
+        @Nullable JarParameters libraryJarParameters,
+        AbiGenerationMode abiGenerationMode,
+        AbiGenerationMode abiCompatibilityMode,
+        @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
+      return new Jsr199JavacInvocation(
+          () -> createCompiler(context),
+          context,
+          invokingRule,
+          options,
+          annotationProcessors,
+          javacPlugins,
+          javaSourceFilePaths,
+          pathToSrcsList,
+          trackClassUsage,
+          trackJavacPhaseEvents,
+          abiJarParameters,
+          libraryJarParameters,
+          abiGenerationMode,
+          abiCompatibilityMode,
+          ruleInfoFactory);
+    }
   }
 }
