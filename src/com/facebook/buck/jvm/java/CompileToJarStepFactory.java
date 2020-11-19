@@ -46,8 +46,6 @@ import javax.annotation.Nullable;
 /** Provides a base implementation for post compile steps. */
 public abstract class CompileToJarStepFactory implements AddsToRuleKey {
 
-  protected CompileToJarStepFactory() {}
-
   public final void createCompileToJarStep(
       BuildContext context,
       ProjectFilesystem projectFilesystem,
