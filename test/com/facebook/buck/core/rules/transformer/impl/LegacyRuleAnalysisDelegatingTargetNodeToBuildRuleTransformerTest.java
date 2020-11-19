@@ -283,7 +283,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
     assertSame(target, rule.getBuildTarget());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(
-            target, BuildPaths.getGenDir(fakeFilesystem, target).resolve(output)),
+            target, BuildPaths.getGenDir(fakeFilesystem.getBuckPaths(), target).resolve(output)),
         rule.getSourcePathToOutput());
     assertEquals(ImmutableSortedSet.of(), rule.getBuildDeps());
 

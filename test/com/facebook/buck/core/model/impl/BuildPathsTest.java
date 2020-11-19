@@ -55,9 +55,10 @@ public class BuildPathsTest {
   @Test
   @Parameters(method = "getTargetsForTest")
   public void genPathFormat(BuildTarget target, ForwardRelativePath path) {
-    assertTrue(BuildPaths.getGenDir(filesystem, target).startsWith("buck-out/gen"));
+    assertTrue(BuildPaths.getGenDir(filesystem.getBuckPaths(), target).startsWith("buck-out/gen"));
     assertTrue(
-        BuildPaths.getGenDir(filesystem, target).endsWith(path.toPath(filesystem.getFileSystem())));
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), target)
+            .endsWith(path.toPath(filesystem.getFileSystem())));
   }
 
   @Test
@@ -103,10 +104,11 @@ public class BuildPathsTest {
     ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
         FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(false);
     Path hashedGenPath =
-        BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
+        BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths.getBuckPaths(), buildTarget)
             .resolve("a.out");
     Path legacyGenPath =
-        BuildPaths.getGenDir(filesystemWithoutTargetConfigHashInBuckPaths, buildTarget)
+        BuildPaths.getGenDir(
+                filesystemWithoutTargetConfigHashInBuckPaths.getBuckPaths(), buildTarget)
             .resolve("a.out");
 
     Path hash = Paths.get(TargetConfigurationHasher.hash(buildTarget.getTargetConfiguration()));
@@ -126,11 +128,12 @@ public class BuildPathsTest {
     ProjectFilesystem filesystemWithoutTargetConfigHashInBuckPaths =
         FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(false);
     Path hashedGenPath =
-        BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths, buildTarget)
+        BuildPaths.getGenDir(filesystemWithTargetConfigHashInBuckPaths.getBuckPaths(), buildTarget)
             .resolve("a.out")
             .toAbsolutePath();
     Path legacyGenPath =
-        BuildPaths.getGenDir(filesystemWithoutTargetConfigHashInBuckPaths, buildTarget)
+        BuildPaths.getGenDir(
+                filesystemWithoutTargetConfigHashInBuckPaths.getBuckPaths(), buildTarget)
             .resolve("a.out")
             .toAbsolutePath();
 

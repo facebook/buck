@@ -255,7 +255,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     assertSame(target, rule.getBuildTarget());
     assertEquals(
         ExplicitBuildTargetSourcePath.of(
-            target, BuildPaths.getGenDir(fakeFilesystem, target).resolve(output)),
+            target, BuildPaths.getGenDir(fakeFilesystem.getBuckPaths(), target).resolve(output)),
         rule.getSourcePathToOutput());
     assertEquals(ImmutableSet.of(), rule.getBuildDeps());
     assertEquals(rule.getType(), "fake_target_node");

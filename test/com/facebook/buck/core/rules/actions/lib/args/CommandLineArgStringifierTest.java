@@ -108,8 +108,10 @@ public class CommandLineArgStringifierTest {
         false);
 
     Path expectedPath =
-        BuildPaths.getGenDir(filesystem, target).resolve(Paths.get("foo", "bar.cpp"));
-    Path expectedShortPath = BuildPaths.getGenDir(filesystem, target).resolve(Paths.get("foo"));
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), target)
+            .resolve(Paths.get("foo", "bar.cpp"));
+    Path expectedShortPath =
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), target).resolve(Paths.get("foo"));
 
     assertEquals(
         expectedPath.toString(),

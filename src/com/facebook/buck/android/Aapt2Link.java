@@ -217,7 +217,7 @@ public class Aapt2Link extends AbstractBuildRule {
   }
 
   private RelPath getGenDir() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget());
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget());
   }
 
   private Path getArgsPath() {

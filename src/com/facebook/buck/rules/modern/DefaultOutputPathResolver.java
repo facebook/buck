@@ -28,7 +28,7 @@ public class DefaultOutputPathResolver implements OutputPathResolver {
 
   public DefaultOutputPathResolver(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     this.scratchRoot = BuildPaths.getScratchDir(projectFilesystem, buildTarget);
-    this.genRoot = BuildPaths.getGenDir(projectFilesystem, buildTarget);
+    this.genRoot = BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget);
   }
 
   @Override

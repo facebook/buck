@@ -100,7 +100,7 @@ public class CsharpLibraryDescription
 
   private Path getOutputPath(
       ProjectFilesystem filesystem, BuildTarget target, AbstractCsharpLibraryDescriptionArg args) {
-    return BuildPaths.getGenDir(filesystem, target).resolve(args.getDllName());
+    return BuildPaths.getGenDir(filesystem.getBuckPaths(), target).resolve(args.getDllName());
   }
 
   private ExplicitBuildTargetSourcePath getOutputSourcePath(

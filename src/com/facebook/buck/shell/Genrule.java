@@ -229,7 +229,7 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
     // would do, so it works.
     Path pathToSrcDirectory = BuildPaths.getScratchDir(filesystem, buildTarget).resolve("srcs");
     RelPath pathToTmpDirectory = BuildPaths.getScratchDir(filesystem, buildTarget);
-    RelPath pathToOutDirectory = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath pathToOutDirectory = BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget);
     RelPath pathToPublicOutDirectory =
         BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s");
 

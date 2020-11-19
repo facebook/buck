@@ -167,7 +167,8 @@ public class RunInfoTest {
       ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
       Artifact artifact2 = registry.declareArtifact(Paths.get("out.txt"), Location.BUILTIN);
       OutputArtifact artifact2Output = (OutputArtifact) artifact2.asSkylarkOutputArtifact();
-      Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
+      Path artifact2Path =
+          BuildPaths.getGenDir(filesystem.getBuckPaths(), target).resolve("out.txt");
 
       StarlarkThread environment = getEnv(mut);
       Dict<String, String> env =

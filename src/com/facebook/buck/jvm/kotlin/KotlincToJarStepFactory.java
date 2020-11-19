@@ -512,6 +512,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   public static RelPath getKaptAnnotationGenPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return BuildPaths.getGenDir(projectFilesystem, buildTarget).resolveRel("__generated__");
+    return BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
+        .resolveRel("__generated__");
   }
 }

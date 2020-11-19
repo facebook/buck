@@ -118,7 +118,8 @@ public class LegacyToolchainRuleIntegrationTest {
     Path expectedPath =
         workspace.resolve(
             BuildPaths.getGenDir(
-                    workspace.getProjectFileSystem(), BuildTargetFactory.newInstance("//:dummy"))
+                    workspace.getProjectFileSystem().getBuckPaths(),
+                    BuildTargetFactory.newInstance("//:dummy"))
                 .resolve("out.txt"));
     Path output = workspace.buildAndReturnOutput("//:dummy");
 

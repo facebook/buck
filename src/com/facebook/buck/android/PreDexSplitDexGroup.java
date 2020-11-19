@@ -313,25 +313,28 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   }
 
   public Path getPrimaryDexRoot() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget()).resolve("primary");
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
+        .resolve("primary");
   }
 
   public Path getReferencedResourcesPath() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget())
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
         .resolve("referenced_resources.txt");
   }
 
   public Path getPrimaryDexInputHashesPath() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget())
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
         .resolve("primary_dex_input_hashes.txt");
   }
 
   Path getSecondaryDexRoot() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget()).resolve("secondary");
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
+        .resolve("secondary");
   }
 
   public Path getMetadataTxtPath() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget()).resolve("metadata.txt");
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
+        .resolve("metadata.txt");
   }
 
   Path getOutputHashDirectory() {

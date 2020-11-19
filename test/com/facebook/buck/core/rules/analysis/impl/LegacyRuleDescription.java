@@ -164,7 +164,8 @@ public class LegacyRuleDescription
     ProjectFilesystem filesystem = context.getProjectFilesystem();
     SourcePath sourcePath =
         ExplicitBuildTargetSourcePath.of(
-            buildTarget, BuildPaths.getGenDir(filesystem, buildTarget).resolve("output"));
+            buildTarget,
+            BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget).resolve("output"));
     Artifact artifact = BuildTargetSourcePathToArtifactConverter.convert(filesystem, sourcePath);
 
     return ProviderInfoCollectionImpl.builder()

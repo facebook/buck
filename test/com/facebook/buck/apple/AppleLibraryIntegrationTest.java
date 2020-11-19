@@ -92,7 +92,7 @@ public class AppleLibraryIntegrationTest {
 
     Path diagnosticsPath =
         filesystem.getPathForRelativePath(
-            BuildPaths.getGenDir(filesystem, target)
+            BuildPaths.getGenDir(filesystem.getBuckPaths(), target)
                 .resolve(CxxDiagnosticsEnhancer.DIAGNOSTICS_JSON_FILENAME));
 
     assertTrue(Files.exists(diagnosticsPath));

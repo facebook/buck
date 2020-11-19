@@ -101,14 +101,19 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.vmArgs = ImmutableList.copyOf(vmArg);
     this.classPathOutput =
         ExplicitBuildTargetSourcePath.of(
-            buildTarget, BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("classname"));
+            buildTarget,
+            BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
+                .resolve("classname"));
     this.classPathFileOutput =
         ExplicitBuildTargetSourcePath.of(
             buildTarget,
-            BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("classpath-file"));
+            BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
+                .resolve("classpath-file"));
     this.jvmArgsOutput =
         ExplicitBuildTargetSourcePath.of(
-            buildTarget, BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("jvm-args"));
+            buildTarget,
+            BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
+                .resolve("jvm-args"));
   }
 
   @Override

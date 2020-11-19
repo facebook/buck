@@ -144,7 +144,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         depActionFunction);
 
     Path outpath = Paths.get("foo.output");
-    RelPath packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath packagePath = BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget);
 
     AtomicBoolean functionCalled = new AtomicBoolean();
     FakeAction.FakeActionExecuteLambda actionFunction =
@@ -216,7 +216,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     Path setTwoOutputTwo = Paths.get("foo.set2.output2");
     Path defaultOutput = Paths.get("default");
     Path defaultOutput2 = Paths.get("default2");
-    RelPath packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath packagePath = BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget);
 
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);

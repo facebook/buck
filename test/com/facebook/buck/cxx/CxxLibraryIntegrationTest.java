@@ -328,13 +328,14 @@ public class CxxLibraryIntegrationTest {
 
     RelPath publicGenDir =
         BuildPaths.getGenDir(
-            filesystem,
+            filesystem.getBuckPaths(),
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
     RelPath privateGenDir =
         BuildPaths.getGenDir(
-            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+            filesystem.getBuckPaths(),
+            BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
     assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
     assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
@@ -356,13 +357,14 @@ public class CxxLibraryIntegrationTest {
 
     RelPath publicGenDir =
         BuildPaths.getGenDir(
-            filesystem,
+            filesystem.getBuckPaths(),
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
     RelPath privateGenDir =
         BuildPaths.getGenDir(
-            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+            filesystem.getBuckPaths(),
+            BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
     assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
     assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
@@ -383,13 +385,14 @@ public class CxxLibraryIntegrationTest {
 
     RelPath publicGenDir =
         BuildPaths.getGenDir(
-            filesystem,
+            filesystem.getBuckPaths(),
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
     RelPath privateGenDir =
         BuildPaths.getGenDir(
-            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+            filesystem.getBuckPaths(),
+            BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
     assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
     assertFalse(
@@ -411,12 +414,13 @@ public class CxxLibraryIntegrationTest {
 
     RelPath publicGenDir =
         BuildPaths.getGenDir(
-            filesystem,
+            filesystem.getBuckPaths(),
             BuildTargetFactory.newInstance("//:foobar#header-mode-symlink-tree-only,headers"));
 
     RelPath privateGenDir =
         BuildPaths.getGenDir(
-            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+            filesystem.getBuckPaths(),
+            BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
     assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
     assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
@@ -443,13 +447,14 @@ public class CxxLibraryIntegrationTest {
 
     RelPath publicGenDir =
         BuildPaths.getGenDir(
-            filesystem,
+            filesystem.getBuckPaths(),
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
     RelPath privateGenDir =
         BuildPaths.getGenDir(
-            filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
+            filesystem.getBuckPaths(),
+            BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
     assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
     assertFalse(
@@ -507,7 +512,8 @@ public class CxxLibraryIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     RelPath genDir =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:foo#default,static"));
+        BuildPaths.getGenDir(
+            filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:foo#default,static"));
 
     AbsPath rootPath = tmp.getRoot();
     assertTrue(Files.exists(rootPath.resolve(genDir.resolve("libfoo-Z2_rLdsOWS.a")).getPath()));

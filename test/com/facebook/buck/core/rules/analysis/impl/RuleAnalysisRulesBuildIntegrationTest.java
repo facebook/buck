@@ -630,7 +630,8 @@ public class RuleAnalysisRulesBuildIntegrationTest {
                 ImmutableList.of(
                     tmp.getRoot()
                         .resolve(
-                            BuildPaths.getGenDir(workspace.getProjectFileSystem(), target)
+                            BuildPaths.getGenDir(
+                                    workspace.getProjectFileSystem().getBuckPaths(), target)
                                 .resolve("testable.sh"))
                         .toString(),
                     "foo",

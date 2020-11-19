@@ -127,13 +127,17 @@ public class WriteActionTest {
         ImmutableList.of(
             "1",
             "args",
-            BuildPaths.getGenDir(projectFilesystem, target).resolve("bar3").toString()),
+            BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), target)
+                .resolve("bar3")
+                .toString()),
         projectFilesystem.readLines(projectFilesystem.resolve(outputPath1)));
     assertEquals(
         ImmutableList.of(
             "1",
             "args",
-            BuildPaths.getGenDir(projectFilesystem, target).resolve("bar3").toString()),
+            BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), target)
+                .resolve("bar3")
+                .toString()),
         projectFilesystem.readLines(projectFilesystem.resolve(outputPath2)));
     assertTrue(outputPath1.endsWith(Paths.get("bar1")));
     assertTrue(outputPath2.endsWith(Paths.get("bar2")));

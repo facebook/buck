@@ -157,7 +157,7 @@ public class ArtifactFilesystemTest {
     OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact();
     declaredArtifact.materialize(key);
 
-    RelPath expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath expectedPath = BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget);
 
     assertFalse(filesystem.isDirectory(expectedPath));
 
@@ -182,7 +182,8 @@ public class ArtifactFilesystemTest {
 
     artifactFilesystem.writeContentsToPath("contents", artifact);
 
-    Path expectedBuildPath = BuildPaths.getGenDir(filesystem, buildTarget).resolve("out.txt");
+    Path expectedBuildPath =
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget).resolve("out.txt");
 
     assertTrue(filesystem.isFile(expectedBuildPath));
 

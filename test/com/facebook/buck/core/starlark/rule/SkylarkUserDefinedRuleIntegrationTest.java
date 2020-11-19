@@ -146,28 +146,35 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path exePath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:exe"))
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//foo:exe"))
             .resolve("bar")
             .resolve("exe.sh");
     Path textPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:text"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//foo:text"))
             .resolve("bar")
             .resolve("text.txt");
     Path withSpacesPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:with_spaces"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//foo:with_spaces"))
             .resolve("bar")
             .resolve("with spaces.txt");
     Path exeStringPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:exe_string_output"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance("//foo:exe_string_output"))
             .resolve("bar")
             .resolve("exe.sh");
     Path textStringPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:text_string_output"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance("//foo:text_string_output"))
             .resolve("bar")
             .resolve("text.txt");
     Path withSpacesStringPath =
         BuildPaths.getGenDir(
-                filesystem, BuildTargetFactory.newInstance("//foo:with_spaces_string_output"))
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance("//foo:with_spaces_string_output"))
             .resolve("bar")
             .resolve("with spaces.txt");
 
@@ -377,7 +384,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(
         "contents2",
         workspace.getFileContents(
-            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_sources"))
+            BuildPaths.getGenDir(
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_sources"))
                 .resolve("out2.txt")));
   }
 
@@ -392,7 +400,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(
         "contents2",
         workspace.getFileContents(
-            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_source"))
+            BuildPaths.getGenDir(
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_source"))
                 .resolve("out2.txt")));
   }
 
@@ -407,7 +416,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(
         "contents2",
         workspace.getFileContents(
-            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_dep"))
+            BuildPaths.getGenDir(
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_dep"))
                 .resolve("out2.txt")));
   }
 
@@ -421,7 +431,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     assertEquals(
         "contents2",
         workspace.getFileContents(
-            BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_deps"))
+            BuildPaths.getGenDir(
+                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_deps"))
                 .resolve("out2.txt")));
   }
 
@@ -541,7 +552,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
           String.format(
               "arg[%s]",
               BuildPaths.getGenDir(
-                      filesystem, BuildTargetFactory.newInstance("//foo:returning_one"))
+                      filesystem.getBuckPaths(),
+                      BuildTargetFactory.newInstance("//foo:returning_one"))
                   .resolve("out.txt")),
           "arg[--bar]",
           "arg[some]",
@@ -557,7 +569,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
           String.format(
               "arg[%s]",
               BuildPaths.getGenDir(
-                      filesystem, BuildTargetFactory.newInstance("//foo:returning_one_with_env"))
+                      filesystem.getBuckPaths(),
+                      BuildTargetFactory.newInstance("//foo:returning_one_with_env"))
                   .resolve("out.txt")),
           "arg[--bar]",
           "arg[some]",
@@ -618,7 +631,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path expectedLeafPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//foo:leaf"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//foo:leaf"))
             .resolve("leaf");
 
     workspace.runBuckBuild("//foo:leaf").assertSuccess();
@@ -647,7 +661,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     Path expectedLeafPath =
         BuildPaths.getGenDir(
-                filesystem,
+                filesystem.getBuckPaths(),
                 BuildTargetFactory.newInstance(
                     "//:file",
                     ConfigurationBuildTargetFactoryForTests.newConfiguration("//:red-p")))
@@ -662,7 +676,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
 
     workspace.runBuckBuild("//:with_contents").assertSuccess();
@@ -696,7 +711,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
 
     workspace.runBuckBuild("//:with_contents").assertSuccess();
@@ -730,13 +746,16 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath1 =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:write_string"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:write_string"))
             .resolve("out.txt");
     Path outputPath2 =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:copy_string"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:copy_string"))
             .resolve("out_string.txt");
     Path outputPath3 =
-        BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:copy_artifact"))
+        BuildPaths.getGenDir(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:copy_artifact"))
             .resolve("out_artifact.txt");
     String expected = "some contents";
 

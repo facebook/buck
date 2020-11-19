@@ -96,7 +96,7 @@ public class ActionWrapperDataFactoryTest {
     assertThat(action.getOutputs(), Matchers.hasSize(1));
     assertEquals(
         ExplicitBuildTargetSourcePath.of(
-            target, BuildPaths.getGenDir(filesystem, target).resolve("myoutput")),
+            target, BuildPaths.getGenDir(filesystem.getBuckPaths(), target).resolve("myoutput")),
         output.asBound().getSourcePath());
 
     assertSame(data.getKey(), buildArtifact.getActionDataKey());
@@ -116,7 +116,7 @@ public class ActionWrapperDataFactoryTest {
     ImmutableSortedSet<Artifact> inputs = ImmutableSortedSet.of();
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
 
-    RelPath expectedBasePath = BuildPaths.getGenDir(filesystem, target);
+    RelPath expectedBasePath = BuildPaths.getGenDir(filesystem.getBuckPaths(), target);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (srcs, inputs1, outputs1, executionContext) ->

@@ -272,14 +272,15 @@ public class HttpFileIntegrationTest {
             .getProjectFileSystem()
             .resolve(
                 BuildPaths.getGenDir(
-                        workspace.getProjectFileSystem(), BuildTargetFactory.newInstance(exeTarget))
+                        workspace.getProjectFileSystem().getBuckPaths(),
+                        BuildTargetFactory.newInstance(exeTarget))
                     .resolve("echo_executable.sh"));
     Path expectedNonExePath =
         workspace
             .getProjectFileSystem()
             .resolve(
                 BuildPaths.getGenDir(
-                        workspace.getProjectFileSystem(),
+                        workspace.getProjectFileSystem().getBuckPaths(),
                         BuildTargetFactory.newInstance(nonExeTarget))
                     .resolve("some_file.sh"));
 

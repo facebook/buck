@@ -82,7 +82,8 @@ public class ActionExecutionStepTest {
           assertEquals(
               ExplicitBuildTargetSourcePath.of(
                   buildTarget,
-                  BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output)),
+                  BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
+                      .resolve(output)),
               Iterables.getOnlyElement(outputs).asBound().getSourcePath());
           ctx.logError(new RuntimeException("message"), "my error %s", 1);
           ctx.postEvent(ConsoleEvent.info("my test info"));
@@ -147,7 +148,7 @@ public class ActionExecutionStepTest {
         new ActionExecutionStep(
             action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
 
-    RelPath packagePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
+    RelPath packagePath = BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget);
 
     assertFalse(projectFilesystem.exists(packagePath));
     assertEquals(
@@ -187,7 +188,8 @@ public class ActionExecutionStepTest {
         new ActionExecutionStep(
             action, new ArtifactFilesystem(projectFilesystem), WITH_DOWNWARD_API);
 
-    Path expectedPath = BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(output);
+    Path expectedPath =
+        BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget).resolve(output);
 
     projectFilesystem.mkdirs(expectedPath.getParent());
     projectFilesystem.writeContentsToPath("contents", expectedPath);

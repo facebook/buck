@@ -171,7 +171,7 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget())
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
         .resolve("__test_output__");
   }
 

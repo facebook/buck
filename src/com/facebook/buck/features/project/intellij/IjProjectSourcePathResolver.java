@@ -240,7 +240,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     // This matches the implementation in Filegroup which uses the name of the rule as the output
     // name for the exported files
     String filename = arg.getName();
-    return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve(filename));
+    return Optional.of(
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget).resolve(filename));
   }
 
   /** Calculate the output path for a RemoteFile rule */
@@ -327,7 +328,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     if (buildTarget
         .getFlavors()
         .contains(AndroidResourceDescription.RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve("res"));
+      return Optional.of(
+          BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget).resolve("res"));
     } else {
       return Optional.of(
           BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "__%s_text_symbols__")
@@ -393,6 +395,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
   private Optional<Path> getOutputPathForZipfile(
       ZipFileDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
     String filename = arg.getOut();
-    return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve(filename));
+    return Optional.of(
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget).resolve(filename));
   }
 }

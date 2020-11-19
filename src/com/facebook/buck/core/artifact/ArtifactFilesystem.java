@@ -144,7 +144,7 @@ public class ArtifactFilesystem {
     RichStream.from(outputs)
         .map(output -> output.getArtifact().asBound().asBuildArtifact())
         .filter(Objects::nonNull)
-        .map(ba -> BuildPaths.getGenDir(filesystem, ba.getSourcePath().getTarget()))
+        .map(ba -> BuildPaths.getGenDir(filesystem.getBuckPaths(), ba.getSourcePath().getTarget()))
         .distinct()
         .forEachThrowing(filesystem::mkdirs);
   }

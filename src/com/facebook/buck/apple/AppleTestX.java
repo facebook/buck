@@ -135,7 +135,8 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.appleConfigsOutputPaths =
         ExplicitBuildTargetSourcePath.of(
             buildTarget,
-            BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(APPLE_CONFIGS_PATH));
+            BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
+                .resolve(APPLE_CONFIGS_PATH));
   }
 
   @Override
