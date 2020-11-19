@@ -135,6 +135,11 @@ public class JavacOptionsTest {
     RelPath dummyRelPath = RelPath.get("buck-out/gen/lib/out");
     SourcePath dummySourcePath = PathSourcePath.of(filesystem, dummyRelPath);
 
+    JavacPluginPathParams pathParams =
+        ImmutableJavacPluginPathParams.builder()
+            .setSourcePathParams(ImmutableMap.of(dummyParam, dummySourcePath))
+            .build();
+
     JavacPluginProperties props =
         JavacPluginProperties.builder()
             .setType(Type.JAVAC_PLUGIN)
@@ -143,7 +148,7 @@ public class JavacOptionsTest {
             .setSupportsAbiGenerationFromSource(true)
             .addProcessorNames("ThePlugin")
             // !!! The important part is adding a SourcePath param
-            .setSourcePathParams(ImmutableMap.of(dummyParam, dummySourcePath))
+            .setPathParams(pathParams)
             .build();
 
     SourcePathResolverAdapter sourcePathResolver =
@@ -153,7 +158,7 @@ public class JavacOptionsTest {
         new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
 
     // Check that resolved options have the param SourcePath as RelPath
-    assertEquals(resolvedProps.getSourcePathParams().get(dummyParam), dummyRelPath);
+    assertEquals(resolvedProps.getPathParams().get(dummyParam), dummyRelPath);
 
     JavacPluginParams params =
         JavacPluginParams.builder()

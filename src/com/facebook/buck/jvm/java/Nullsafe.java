@@ -79,14 +79,20 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
       NullsafeConfig nullsafeConfig) {
     BuildTarget nullsafePluginTarget =
         nullsafeConfig.requirePlugin(buildTarget.getTargetConfiguration());
-
     JavacPlugin nullsafePlugin = (JavacPlugin) graphBuilder.requireRule(nullsafePluginTarget);
+
     JavacPluginProperties.Builder nullsafePluginPropsBuilder =
         JavacPluginProperties.builder(nullsafePlugin.getUnresolvedProperties());
+
+    ImmutableJavacPluginPathParams.Builder pathParams =
+        ImmutableJavacPluginPathParams.builder()
+            .from(nullsafePlugin.getUnresolvedProperties().getPathParams());
+
     nullsafeConfig
         .getSignatures(buildTarget.getTargetConfiguration())
-        .ifPresent(
-            sigs -> nullsafePluginPropsBuilder.putSourcePathParams("nullsafe.signatures", sigs));
+        .ifPresent(sigs -> pathParams.putSourcePathParams("nullsafe.signatures", sigs));
+
+    nullsafePluginPropsBuilder.setPathParams(pathParams.build());
 
     ResolvedJavacPluginProperties resolvedNullsafePluginProperties =
         new ResolvedJavacPluginProperties(
@@ -100,10 +106,12 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
             .addPluginProperties(resolvedNullsafePluginProperties)
             .build(graphBuilder.getSourcePathResolver(), projectFilesystem.getRootPath());
 
-    return JavacOptions.builder(javacOptions)
-        .setStandardJavacPluginParams(augmentedPluginParams)
-        .addExtraArguments("-XDcompilePolicy=byfile")
-        .build();
+    JavacOptions.Builder javacOptionsBuilder =
+        JavacOptions.builder(javacOptions)
+            .setStandardJavacPluginParams(augmentedPluginParams)
+            .addExtraArguments("-XDcompilePolicy=byfile");
+
+    return javacOptionsBuilder.build();
   }
 
   /** Helper method to add parse-time deps to target graph for nullsafex flavored targets. */

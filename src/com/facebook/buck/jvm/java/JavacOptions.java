@@ -302,8 +302,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
         optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
 
         // Add plugin's SourcePath params with RelPath's resolved relative to root
-        for (Map.Entry<String, RelPath> sourcePathParam :
-            properties.getSourcePathParams().entrySet()) {
+        for (Map.Entry<String, RelPath> sourcePathParam : properties.getPathParams().entrySet()) {
           optionsConsumer.addFlag(
               String.format(
                   "A%s=%s",

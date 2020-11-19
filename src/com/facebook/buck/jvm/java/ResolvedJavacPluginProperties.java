@@ -61,14 +61,14 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   @ExcludeFromRuleKey(
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
-  private final ImmutableMap<String, RelPath> sourcePathParams;
+  private final ImmutableMap<String, RelPath> pathParams;
 
   public ResolvedJavacPluginProperties(
       JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     this.inner = inner;
     this.classpathSupplier = new Memoizer<>();
     this.classpath = getClasspath(resolver, ruleCellRoot);
-    this.sourcePathParams = resolveSourcePathParams(inner, resolver, ruleCellRoot);
+    this.pathParams = resolveSourcePathParams(inner, resolver, ruleCellRoot);
   }
 
   public boolean getCanReuseClassLoader() {
@@ -99,15 +99,21 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
 
   private static ImmutableMap<String, RelPath> resolveSourcePathParams(
       JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath root) {
-    return inner.getSourcePathParams().entrySet().stream()
-        .collect(
-            ImmutableMap.toImmutableMap(
-                Map.Entry::getKey,
-                (entry) -> root.relativize(resolver.getAbsolutePath(entry.getValue()))));
+    ImmutableMap.Builder<String, RelPath> pathParams =
+        ImmutableMap.builderWithExpectedSize(inner.getPathParams().getSize());
+
+    for (Map.Entry<String, SourcePath> entry :
+        inner.getPathParams().getSourcePathParams().entrySet()) {
+      pathParams.put(entry.getKey(), root.relativize(resolver.getAbsolutePath(entry.getValue())));
+    }
+
+    pathParams.putAll(inner.getPathParams().getRelPathParams());
+
+    return pathParams.build();
   }
 
-  public ImmutableMap<String, RelPath> getSourcePathParams() {
-    return sourcePathParams;
+  public ImmutableMap<String, RelPath> getPathParams() {
+    return pathParams;
   }
 
   private URL toUrl(AbsPath absPath) {

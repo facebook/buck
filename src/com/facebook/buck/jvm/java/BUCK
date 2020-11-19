@@ -157,6 +157,7 @@ java_immutables_library(
         "JavacOptions.java",
         "JavacPluginJsr199Fields.java",
         "JavacPluginParams.java",
+        "JavacPluginPathParams.java",
         "JavacPluginProperties.java",
         "JavacProvider.java",
         "JavacSpec.java",
