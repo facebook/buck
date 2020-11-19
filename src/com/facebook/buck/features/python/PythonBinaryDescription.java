@@ -489,6 +489,17 @@ public class PythonBinaryDescription
           pythonBuckConfig.getPexExecutorTarget(buildTarget.getTargetConfiguration()),
           extraDepsBuilder);
     }
+
+    // Make sure we parse the dummy omnibus target if we're using omnibus linking.
+    if (constructorArg.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy())
+        == NativeLinkStrategy.MERGED) {
+      cxxBuckConfig
+          .getDummyOmnibusTarget()
+          .ifPresent(
+              target ->
+                  targetGraphOnlyDepsBuilder.add(
+                      target.configure(buildTarget.getTargetConfiguration())));
+    }
   }
 
   @Override

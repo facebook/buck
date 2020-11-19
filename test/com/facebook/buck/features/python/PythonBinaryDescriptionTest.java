@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -1069,6 +1070,9 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void deduplicateMergedLinkRoots() {
+    CxxLibraryBuilder dummyOmnibus =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dummy"));
+
     CxxLibraryBuilder cxxBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:cxx"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("cxx.c"))));
@@ -1081,16 +1085,32 @@ public class PythonBinaryDescriptionTest {
           }
         };
 
+    CxxBuckConfig cxxBuckConfig =
+        new CxxBuckConfig(FakeBuckConfig.empty()) {
+          @Override
+          public Optional<UnconfiguredBuildTarget> getDummyOmnibusTarget() {
+            return Optional.of(dummyOmnibus.getTarget().getUnconfiguredBuildTarget());
+          }
+        };
+
     PythonBinaryBuilder binary1Builder =
         PythonBinaryBuilder.create(
-                BuildTargetFactory.newInstance("//:bin1"), config, PythonTestUtils.PYTHON_PLATFORMS)
+                BuildTargetFactory.newInstance("//:bin1"),
+                config,
+                PythonTestUtils.PYTHON_PLATFORMS,
+                cxxBuckConfig,
+                CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()))
             .setDeduplicateMergedLinkRoots(true);
 
     PythonBinaryBuilder binary2Builder =
         PythonBinaryBuilder.create(
-                BuildTargetFactory.newInstance("//:bin2"), config, PythonTestUtils.PYTHON_PLATFORMS)
+                BuildTargetFactory.newInstance("//:bin2"),
+                config,
+                PythonTestUtils.PYTHON_PLATFORMS,
+                cxxBuckConfig,
+                CxxPlatformUtils.DEFAULT_PLATFORMS)
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxBuilder.getTarget()))
             .setDeduplicateMergedLinkRoots(true);
@@ -1098,7 +1118,10 @@ public class PythonBinaryDescriptionTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(
-                cxxBuilder.build(), binary1Builder.build(), binary2Builder.build()));
+                dummyOmnibus.build(),
+                cxxBuilder.build(),
+                binary1Builder.build(),
+                binary2Builder.build()));
 
     PythonBinary binary1 = (PythonBinary) graphBuilder.requireRule(binary1Builder.getTarget());
     List<SourcePath> binary1Libs = new ArrayList<>();

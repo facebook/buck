@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -51,12 +52,13 @@ public class PythonBinaryBuilder
   private PythonBinaryBuilder(
       BuildTarget target,
       PythonBuckConfig pythonBuckConfig,
-      ToolchainProviderBuilder toolchainProviderBuilder) {
+      ToolchainProviderBuilder toolchainProviderBuilder,
+      CxxBuckConfig cxxBuckConfig) {
     super(
         new PythonBinaryDescription(
             toolchainProviderBuilder.build(),
             pythonBuckConfig,
-            CxxPlatformUtils.DEFAULT_CONFIG,
+            cxxBuckConfig,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
@@ -66,6 +68,7 @@ public class PythonBinaryBuilder
       PythonBuckConfig pythonBuckConfig,
       ExecutableFinder executableFinder,
       FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxBuckConfig cxxBuckConfig,
       UnresolvedCxxPlatform defaultCxxPlatform,
       FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     this(
@@ -86,7 +89,8 @@ public class PythonBinaryBuilder
                     TestRuleKeyConfigurationFactory.create()))
             .withToolchain(
                 CxxPlatformsProvider.DEFAULT_NAME,
-                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms)));
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms)),
+        cxxBuckConfig);
   }
 
   public static PythonBinaryBuilder create(
@@ -97,6 +101,7 @@ public class PythonBinaryBuilder
         pythonBuckConfig,
         new ExecutableFinder(),
         pythonPlatforms,
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
@@ -112,6 +117,7 @@ public class PythonBinaryBuilder
         pythonBuckConfig,
         new ExecutableFinder(),
         pythonPlatforms,
+        CxxPlatformUtils.DEFAULT_CONFIG,
         defaultCxxPlatform,
         cxxPlatforms);
   }
@@ -125,8 +131,25 @@ public class PythonBinaryBuilder
         pythonBuckConfig,
         new ExecutableFinder(),
         pythonPlatforms,
+        CxxPlatformUtils.DEFAULT_CONFIG,
         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
+  public static PythonBinaryBuilder create(
+      BuildTarget target,
+      PythonBuckConfig pythonBuckConfig,
+      FlavorDomain<PythonPlatform> pythonPlatforms,
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
+    return new PythonBinaryBuilder(
+        target,
+        pythonBuckConfig,
+        new ExecutableFinder(),
+        pythonPlatforms,
+        cxxBuckConfig,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+        cxxPlatforms);
   }
 
   public static PythonBinaryBuilder create(
@@ -144,7 +167,8 @@ public class PythonBinaryBuilder
                 CxxPlatformsProvider.DEFAULT_NAME,
                 CxxPlatformsProvider.of(
                     CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
-                    CxxPlatformUtils.DEFAULT_PLATFORMS)));
+                    CxxPlatformUtils.DEFAULT_PLATFORMS)),
+        CxxPlatformUtils.DEFAULT_CONFIG);
   }
 
   public static PythonBinaryBuilder create(BuildTarget target) {

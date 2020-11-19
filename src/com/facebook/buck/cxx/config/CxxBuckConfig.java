@@ -481,6 +481,11 @@ public class CxxBuckConfig {
     return getLinkScheduleInfo();
   }
 
+  /** @return a target to use to generate the dummy omnibus links used by omnibus linking. */
+  public Optional<UnconfiguredBuildTarget> getDummyOmnibusTarget() {
+    return delegate.getUnconfiguredBuildTarget(cxxSection, "dummy_omnibus_target");
+  }
+
   /**
    * @return whether to deduplicate root link rules which are identically across multiple
    *     independent omnibus links.

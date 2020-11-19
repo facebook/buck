@@ -53,6 +53,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
@@ -586,6 +587,17 @@ public class PythonTestDescription
       Optionals.addIfPresent(
           pythonBuckConfig.getPexExecutorTarget(buildTarget.getTargetConfiguration()),
           extraDepsBuilder);
+    }
+
+    // Make sure we parse the dummy omnibus target if we're using omnibus linking.
+    if (constructorArg.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy())
+        == NativeLinkStrategy.MERGED) {
+      cxxBuckConfig
+          .getDummyOmnibusTarget()
+          .ifPresent(
+              target ->
+                  targetGraphOnlyDepsBuilder.add(
+                      target.configure(buildTarget.getTargetConfiguration())));
     }
   }
 
