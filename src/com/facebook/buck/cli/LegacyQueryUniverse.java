@@ -308,8 +308,8 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
               // `TargetNode.getParseDeps()` is expensive (as it's layers of `Sets.union()`), so we
               // avoid it when possible and parallelize it here via the executor.
-              ImmutableList<BuildTarget> parseDeps =
-                  ImmutableList.copyOf(targetNode.getParseDeps());
+              ImmutableSet<BuildTarget> parseDeps =
+                  ImmutableSet.copyOf(targetNode.getParseDepsFastWithDuplicates());
               graph.setEdges(buildTarget, parseDeps);
 
               List<ListenableFuture<Unit>> depsFutures = new ArrayList<>();

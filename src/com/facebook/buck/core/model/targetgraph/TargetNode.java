@@ -100,17 +100,23 @@ public interface TargetNode<T extends ConstructorArg>
   /** @return all targets which must be built before this one can be. */
   Set<BuildTarget> getBuildDeps();
 
+  Iterable<BuildTarget> getBuildDepsFastWithDuplicates();
+
   /**
    * @return all targets which must be present in the TargetGraph before this one can be transformed
    *     into a BuildRule.
    */
   Set<BuildTarget> getParseDeps();
 
+  Iterable<BuildTarget> getParseDepsFastWithDuplicates();
+
   /**
    * Dependencies that include build targets as well as configuration targets that this node depends
    * on.
    */
   Set<BuildTarget> getTotalDeps();
+
+  Iterable<BuildTarget> getTotalDepsFastWithDuplicates();
 
   Optional<VisibilityError> isVisibleTo(TargetNode<?> viewer);
 

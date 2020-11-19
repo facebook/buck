@@ -42,7 +42,7 @@ public class TargetGraphFactory {
     DirectedAcyclicGraph.Builder<TargetNode<?>> graph = DirectedAcyclicGraph.serialBuilder();
     for (TargetNode<?> node : map.values()) {
       graph.addNode(node);
-      for (BuildTarget dep : node.getBuildDeps()) {
+      for (BuildTarget dep : node.getTotalDeps()) {
         graph.addEdge(node, Objects.requireNonNull(map.get(dep), dep::toString));
       }
     }

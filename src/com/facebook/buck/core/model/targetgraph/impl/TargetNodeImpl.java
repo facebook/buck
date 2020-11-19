@@ -34,6 +34,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.util.Optional;
 import java.util.Set;
@@ -126,6 +127,11 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
     return Sets.union(getDeclaredDeps(), getExtraDeps());
   }
 
+  @Override
+  public Iterable<BuildTarget> getBuildDepsFastWithDuplicates() {
+    return Iterables.concat(getDeclaredDeps(), getExtraDeps());
+  }
+
   /**
    * @return all targets which must be present in the TargetGraph before this one can be transformed
    *     into a BuildRule.
@@ -136,8 +142,18 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   }
 
   @Override
+  public Iterable<BuildTarget> getParseDepsFastWithDuplicates() {
+    return Iterables.concat(getBuildDepsFastWithDuplicates(), getTargetGraphOnlyDeps());
+  }
+
+  @Override
   public Set<BuildTarget> getTotalDeps() {
     return Sets.union(getParseDeps(), getConfigurationDeps());
+  }
+
+  @Override
+  public Iterable<BuildTarget> getTotalDepsFastWithDuplicates() {
+    return Iterables.concat(getParseDepsFastWithDuplicates(), getConfigurationDeps());
   }
 
   @Override

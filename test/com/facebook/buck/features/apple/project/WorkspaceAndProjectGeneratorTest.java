@@ -19,6 +19,7 @@ package com.facebook.buck.features.apple.project;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -807,28 +808,15 @@ public class WorkspaceAndProjectGeneratorTest {
 
     XCScheme fooScheme = generator.getSchemeGenerators().get("FooScheme").getOutputScheme().get();
     XCScheme.BuildAction fooSchemeBuildAction = fooScheme.getBuildAction().get();
-    assertThat(fooSchemeBuildAction.getBuildActionEntries(), hasSize(6));
     assertThat(
-        fooSchemeBuildAction.getBuildActionEntries().get(0),
-        withNameAndBuildingFor("BarLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
-    assertThat(
-        fooSchemeBuildAction.getBuildActionEntries().get(1),
-        withNameAndBuildingFor("FooLib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
-    assertThat(
-        fooSchemeBuildAction.getBuildActionEntries().get(2),
-        withNameAndBuildingFor("FooBin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
-    assertThat(
-        fooSchemeBuildAction.getBuildActionEntries().get(3),
-        withNameAndBuildingFor(
-            "FooBinTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
-    assertThat(
-        fooSchemeBuildAction.getBuildActionEntries().get(4),
-        withNameAndBuildingFor("BazLib", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
-
-    assertThat(
-        fooSchemeBuildAction.getBuildActionEntries().get(5),
-        withNameAndBuildingFor(
-            "FooLibTest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)));
+        fooSchemeBuildAction.getBuildActionEntries(),
+        containsInAnyOrder(
+            withNameAndBuildingFor("BarLib", equalTo(BuildFor.DEFAULT)),
+            withNameAndBuildingFor("FooLib", equalTo(BuildFor.DEFAULT)),
+            withNameAndBuildingFor("FooBin", equalTo(BuildFor.DEFAULT)),
+            withNameAndBuildingFor("FooBinTest", equalTo(BuildFor.TEST_ONLY)),
+            withNameAndBuildingFor("BazLib", equalTo(BuildFor.TEST_ONLY)),
+            withNameAndBuildingFor("FooLibTest", equalTo(BuildFor.TEST_ONLY))));
   }
 
   @Test

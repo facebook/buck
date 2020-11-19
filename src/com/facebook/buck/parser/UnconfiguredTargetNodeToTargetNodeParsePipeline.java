@@ -147,7 +147,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     if (speculativeDepsTraversal) {
       executorService.submit(
           () -> {
-            for (BuildTarget depTarget : targetNode.get().getParseDeps()) {
+            for (BuildTarget depTarget : targetNode.get().getParseDepsFastWithDuplicates()) {
               Cell depCell = cell.getCell(depTarget.getCell());
               try {
                 if (depTarget.isFlavored()) {
