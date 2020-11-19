@@ -156,14 +156,14 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     }
   }
 
-  protected void addJarCreationSteps(
+  void addJarCreationSteps(
       CompilerParameters compilerParameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       JarParameters jarParameters) {
     // No source files, only resources
     if (compilerParameters.getSourceFilePaths().isEmpty()) {
-      createJarStep(jarParameters, steps);
+      steps.add(new JarDirectoryStep(jarParameters));
     }
     buildableContext.recordArtifact(jarParameters.getJarPath().getPath());
   }
@@ -207,11 +207,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
             withDownwardApi,
             buildCellRootPath));
 
-    createJarStep(libraryJarParameters, steps);
-  }
-
-  public void createJarStep(JarParameters parameters, Builder<IsolatedStep> steps) {
-    steps.add(new JarDirectoryStep(parameters));
+    steps.add(new JarDirectoryStep(libraryJarParameters));
   }
 
   /**

@@ -80,18 +80,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
         withDownwardApi);
   }
 
-  private static void addAnnotationGenFolderStep(
-      BuildTarget invokingTarget,
-      ProjectFilesystem filesystem,
-      Builder<IsolatedStep> steps,
-      BuildableContext buildableContext) {
-    RelPath annotationGenFolder =
-        CompilerOutputPaths.getAnnotationPath(invokingTarget, filesystem.getBuckPaths());
-
-    steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
-    buildableContext.recordArtifact(annotationGenFolder.getPath());
-  }
-
   @Override
   public void createCompileStep(
       BuildContext context,
@@ -162,6 +150,18 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
 
     jarParameters.ifPresent(
         parameters -> addJarCreationSteps(compilerParameters, steps, buildableContext, parameters));
+  }
+
+  private void addAnnotationGenFolderStep(
+      BuildTarget invokingTarget,
+      ProjectFilesystem filesystem,
+      Builder<IsolatedStep> steps,
+      BuildableContext buildableContext) {
+    RelPath annotationGenFolder =
+        CompilerOutputPaths.getAnnotationPath(invokingTarget, filesystem.getBuckPaths());
+
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
+    buildableContext.recordArtifact(annotationGenFolder.getPath());
   }
 
   @Override
@@ -245,15 +245,14 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
     }
   }
 
-  public void createPipelinedCompileStep(
+  private void createPipelinedCompileStep(
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       Builder<IsolatedStep> steps) {
-    boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
-    if (generatingCode && pipeline.isRunning()) {
+    if (hasAnnotationProcessing() && pipeline.isRunning()) {
       steps.add(
           SymlinkIsolatedStep.of(
               CompilerOutputPaths.getAnnotationPath(
