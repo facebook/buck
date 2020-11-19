@@ -125,9 +125,7 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
           "nullsafe.writeJsonReportToDir", genPath.resolveRel(REPORTS_JSON_DIR));
     }
 
-    nullsafePluginPropsBuilder
-        .setPathParams(pathParams.build())
-        .setSupportsAbiGenerationFromSource(false);
+    nullsafePluginPropsBuilder.setPathParams(pathParams.build());
 
     ResolvedJavacPluginProperties resolvedNullsafePluginProperties =
         new ResolvedJavacPluginProperties(
