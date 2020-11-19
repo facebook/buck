@@ -24,7 +24,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -42,7 +41,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
+public class JavacToJarStepFactory extends CompileToJarStepFactory {
 
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
