@@ -33,9 +33,9 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -57,14 +57,12 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
-  @AddToRuleKey private final Javac javac;
 
   public ScalacToJarStepFactory(
       Tool scalac,
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins,
-      Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath,
       boolean withDownwardApi) {
@@ -76,7 +74,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
         compilerPlugins.stream()
             .map(BuildRule::getSourcePathToOutput)
             .collect(ImmutableSet.toImmutableSet());
-    this.javac = javac;
     this.extraClasspathProvider = extraClassPath;
   }
 
@@ -89,7 +86,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
       CompilerParameters parameters,
       /* output params */
       Builder<IsolatedStep> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ResolvedJavac resolvedJavac) {
 
     ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
@@ -150,7 +148,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(javac, javacOptions, extraClasspathProvider, withDownwardApi)
+      new JavacToJarStepFactory(javacOptions, extraClasspathProvider, withDownwardApi)
           .createCompileStep(
               context,
               projectFilesystem,
@@ -158,7 +156,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
               invokingRule,
               javacParameters,
               steps,
-              buildableContext);
+              buildableContext,
+              resolvedJavac);
     }
   }
 }

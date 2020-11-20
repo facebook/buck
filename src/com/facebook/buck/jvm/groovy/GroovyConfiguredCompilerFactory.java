@@ -26,6 +26,8 @@ import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.google.common.collect.ImmutableCollection;
@@ -36,11 +38,15 @@ import javax.annotation.Nullable;
 public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final GroovyBuckConfig groovyBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final JavacFactory javacFactory;
 
   public GroovyConfiguredCompilerFactory(
-      GroovyBuckConfig groovyBuckConfig, DownwardApiConfig downwardApiConfig) {
+      GroovyBuckConfig groovyBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      JavacFactory javacFactory) {
     this.groovyBuckConfig = groovyBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.javacFactory = javacFactory;
   }
 
   @Override
@@ -57,6 +63,14 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         Optional.of(groovyArgs.getExtraGroovycArguments()),
         javacOptions,
         downwardApiConfig.isEnabledForGroovy());
+  }
+
+  @Override
+  public Javac getJavac(
+      BuildRuleResolver resolver,
+      @Nullable JvmLibraryArg arg,
+      TargetConfiguration toolchainTargetConfiguration) {
+    return javacFactory.create(resolver, arg, toolchainTargetConfiguration);
   }
 
   @Override

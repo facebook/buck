@@ -77,6 +77,8 @@ public class JarBuildStepsFactory
   private final BuildTarget libraryTarget;
 
   @AddToRuleKey private final CompileToJarStepFactory configuredCompiler;
+  @AddToRuleKey private final Javac javac;
+
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
   @AddToRuleKey private final ResourcesParameters resourcesParameters;
@@ -200,6 +202,7 @@ public class JarBuildStepsFactory
   public JarBuildStepsFactory(
       BuildTarget libraryTarget,
       CompileToJarStepFactory configuredCompiler,
+      Javac javac,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
       ResourcesParameters resourcesParameters,
@@ -215,6 +218,7 @@ public class JarBuildStepsFactory
       boolean withDownwardApi) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
+    this.javac = javac;
     this.srcs = srcs;
     this.resources = resources;
     this.resourcesParameters = resourcesParameters;
@@ -373,6 +377,8 @@ public class JarBuildStepsFactory
             isRequiredForSourceOnlyAbi,
             compilerOutputPaths);
 
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+
     configuredCompiler.createCompileToJarStep(
         context,
         filesystem,
@@ -386,7 +392,8 @@ public class JarBuildStepsFactory
         withDownwardApi,
         cellToPathMappings,
         resourcesMap,
-        buildCellRootPath);
+        buildCellRootPath,
+        resolvedJavac);
 
     return steps.build();
   }
@@ -488,6 +495,8 @@ public class JarBuildStepsFactory
             isRequiredForSourceOnlyAbi,
             compilerOutputPaths);
 
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+
     configuredCompiler.createCompileToJarStep(
         context,
         filesystem,
@@ -501,7 +510,8 @@ public class JarBuildStepsFactory
         withDownwardApi,
         cellToPathMappings,
         resourcesMap,
-        buildCellRootPath);
+        buildCellRootPath,
+        resolvedJavac);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         filesystem.getIgnoredPaths(),
@@ -744,6 +754,8 @@ public class JarBuildStepsFactory
             isRequiredForSourceOnlyAbi,
             compilerOutputPaths);
 
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+
     return javacToJarStepFactory.createPipelineState(
         firstRule,
         compilerParameters,
@@ -751,7 +763,8 @@ public class JarBuildStepsFactory
         libraryJarParameters,
         withDownwardApi,
         sourcePathResolver,
-        filesystem.getRootPath());
+        filesystem.getRootPath(),
+        resolvedJavac);
   }
 
   boolean hasAnnotationProcessing() {

@@ -36,11 +36,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -109,7 +109,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
-  @AddToRuleKey private final Javac javac;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> kotlinHomeLibraries;
 
@@ -121,8 +120,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
       Optional<String> jvmTarget,
-      ExtraClasspathProvider extraClassPath,
-      Javac javac,
+      ExtraClasspathProvider extraClasspathProvider,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
     super(javacOptions, withDownwardApi);
@@ -133,8 +131,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
     this.jvmTarget = jvmTarget;
-    this.extraClasspathProvider = extraClassPath;
-    this.javac = javac;
+    this.extraClasspathProvider = extraClasspathProvider;
   }
 
   @Override
@@ -146,7 +143,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
       CompilerParameters parameters,
       /* output params */
       Builder<IsolatedStep> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ResolvedJavac resolvedJavac) {
 
     AbsPath rootPath = projectFilesystem.getRootPath();
 
@@ -387,7 +385,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
             .setSourceFilePaths(javaSourceFiles)
             .build();
 
-    new JavacToJarStepFactory(javac, finalJavacOptions, extraClasspathProvider, withDownwardApi)
+    new JavacToJarStepFactory(finalJavacOptions, extraClasspathProvider, withDownwardApi)
         .createCompileStep(
             buildContext,
             projectFilesystem,
@@ -395,7 +393,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
             invokingRule,
             javacParameters,
             steps,
-            buildableContext);
+            buildableContext,
+            resolvedJavac);
   }
 
   /**

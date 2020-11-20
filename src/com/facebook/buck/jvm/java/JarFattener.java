@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -117,6 +118,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
+    Path buildCellRootPath = context.getBuildCellRootPath();
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     RelPath outputDir = getOutputDirectory();
@@ -125,8 +129,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         CompilerOutputPaths.getClassesDir(getBuildTarget(), filesystem.getBuckPaths());
     steps.addAll(
         MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputDir)));
+            BuildCellRelativePath.fromCellRelativePath(buildCellRootPath, filesystem, outputDir)));
 
     // Map of the system-specific shared library name to it's resource name as a string.
     ImmutableMap.Builder<String, String> sonameToResourceMapBuilder = ImmutableMap.builder();
@@ -136,13 +139,11 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  filesystem,
-                  fatJarDir.resolve(resource).getParent())));
+                  buildCellRootPath, filesystem, fatJarDir.resolve(resource).getParent())));
       steps.add(
           SymlinkFileStep.of(
               filesystem,
-              context.getSourcePathResolver().getAbsolutePath(entry.getValue()).getPath(),
+              sourcePathResolver.getAbsolutePath(entry.getValue()).getPath(),
               fatJarDir.resolve(resource)));
     }
     ImmutableMap<String, String> sonameToResourceMap = sonameToResourceMapBuilder.build();
@@ -167,13 +168,11 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                filesystem,
-                fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
+                buildCellRootPath, filesystem, fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
     steps.add(
         SymlinkFileStep.of(
             filesystem,
-            context.getSourcePathResolver().getAbsolutePath(innerJar).getPath(),
+            sourcePathResolver.getAbsolutePath(innerJar).getPath(),
             fatJarDir.resolve(FAT_JAR_INNER_JAR)));
 
     // Build the final fat JAR from the structure we've layed out above.  We first package the
@@ -202,13 +201,12 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
+                buildCellRootPath,
                 filesystem,
                 compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(
-            javac, javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
+        new JavacToJarStepFactory(javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
     ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     compileStepFactory.createCompileStep(
@@ -219,7 +217,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         getBuildTarget(),
         compilerParameters,
         isolatedSteps,
-        buildableContext);
+        buildableContext,
+        javac.resolve(sourcePathResolver));
     steps.addAll(isolatedSteps.build());
 
     steps.add(zipStep);

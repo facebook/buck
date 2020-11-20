@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibra
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -58,7 +59,9 @@ public class GroovyLibraryDescription
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.compilerFactory = new GroovyConfiguredCompilerFactory(groovyBuckConfig, downwardApiConfig);
+    this.compilerFactory =
+        new GroovyConfiguredCompilerFactory(
+            groovyBuckConfig, downwardApiConfig, JavacFactory.getDefault(toolchainProvider));
   }
 
   @Override

@@ -93,8 +93,8 @@ public class DummyRDotJavaTest {
             filesystem,
             graphBuilder,
             ImmutableSet.of(resourceRule1, resourceRule2),
-            new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
+            new JavacToJarStepFactory(ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
+            DEFAULT_JAVAC,
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
@@ -199,8 +199,8 @@ public class DummyRDotJavaTest {
             filesystem,
             ruleFinder,
             ImmutableSet.of(),
-            new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
+            new JavacToJarStepFactory(ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
+            DEFAULT_JAVAC,
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),

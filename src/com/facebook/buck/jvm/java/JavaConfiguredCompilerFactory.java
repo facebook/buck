@@ -99,7 +99,6 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
 
     return new JavacToJarStepFactory(
-        getJavac(buildRuleResolver, arg, targetConfiguration),
         javacOptions,
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         downwardApiConfig.isEnabledForJava());
@@ -112,7 +111,8 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         extraClasspathProviderSupplier.apply(toolchainProvider, toolchainTargetConfiguration));
   }
 
-  private Javac getJavac(
+  @Override
+  public Javac getJavac(
       BuildRuleResolver resolver,
       @Nullable JvmLibraryArg arg,
       TargetConfiguration toolchainTargetConfiguration) {

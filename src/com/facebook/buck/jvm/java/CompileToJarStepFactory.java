@@ -68,7 +68,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       boolean withDownwardApi,
       ImmutableMap<String, RelPath> cellToPathMappings,
       ImmutableMap<RelPath, RelPath> resourcesMap,
-      Path buildCellRootPath) {
+      Path buildCellRootPath,
+      ResolvedJavac resolvedJavac) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
     steps.addAll(
@@ -99,7 +100,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
           steps,
           buildableContext,
           withDownwardApi,
-          buildCellRootPath);
+          buildCellRootPath,
+          resolvedJavac);
     }
 
     if (jarParameters != null) {
@@ -180,7 +182,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
-      Path buildCellRootPath) {
+      Path buildCellRootPath,
+      ResolvedJavac resolvedJavac) {
     Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(
         libraryJarParameters != null
@@ -195,7 +198,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
         target,
         compilerParameters,
         steps,
-        buildableContext);
+        buildableContext,
+        resolvedJavac);
 
     steps.addAll(
         addPostprocessClassesCommands(
@@ -290,7 +294,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       CompilerParameters parameters,
       /* output params */
       Builder<IsolatedStep> steps,
-      BuildableContext buildableContext);
+      BuildableContext buildableContext,
+      ResolvedJavac resolvedJavac);
 
   boolean hasAnnotationProcessing() {
     return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();

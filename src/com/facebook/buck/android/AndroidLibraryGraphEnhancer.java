@@ -131,7 +131,7 @@ public class AndroidLibraryGraphEnhancer {
 
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(
-                      javac, filteredOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
+                      filteredOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
@@ -139,6 +139,7 @@ public class AndroidLibraryGraphEnhancer {
                   graphBuilder,
                   androidResourceDeps,
                   compileToJarStepFactory,
+                  javac,
                   forceFinalResourceIds,
                   resourceUnionPackage,
                   finalRName,

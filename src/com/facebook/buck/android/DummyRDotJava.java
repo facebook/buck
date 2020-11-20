@@ -43,6 +43,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -81,7 +82,8 @@ public class DummyRDotJava extends AbstractBuildRule
   private final RelPath outputJar;
   private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final ImmutableSortedSet<BuildRule> buildDeps;
-  @AddToRuleKey final JavacToJarStepFactory compileStepFactory;
+  @AddToRuleKey private final JavacToJarStepFactory compileStepFactory;
+  @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
   @AddToRuleKey private final Optional<String> finalRName;
@@ -100,6 +102,7 @@ public class DummyRDotJava extends AbstractBuildRule
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
+      Javac javac,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
@@ -111,6 +114,7 @@ public class DummyRDotJava extends AbstractBuildRule
         ruleFinder,
         androidResourceDeps,
         compileStepFactory,
+        javac,
         forceFinalResourceIds,
         unionPackage,
         finalRName,
@@ -125,6 +129,7 @@ public class DummyRDotJava extends AbstractBuildRule
       SourcePathRuleFinder ruleFinder,
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
+      Javac javac,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
@@ -142,6 +147,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.skipNonUnionRDotJava = skipNonUnionRDotJava;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;
+    this.javac = javac;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
@@ -169,13 +175,16 @@ public class DummyRDotJava extends AbstractBuildRule
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    Path buildCellRootPath = context.getBuildCellRootPath();
+
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     RelPath rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaSrcFolder)));
+                buildCellRootPath, getProjectFilesystem(), rDotJavaSrcFolder)));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -191,9 +200,7 @@ public class DummyRDotJava extends AbstractBuildRule
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  emptyRDotJava.getParent())));
+                  buildCellRootPath, getProjectFilesystem(), emptyRDotJava.getParent())));
       steps.add(
           WriteFileStep.of(
               getProjectFilesystem().getRootPath(),
@@ -205,7 +212,7 @@ public class DummyRDotJava extends AbstractBuildRule
       MergeAndroidResourcesStep mergeStep =
           MergeAndroidResourcesStep.createStepForDummyRDotJava(
               getProjectFilesystem(),
-              context.getSourcePathResolver(),
+              sourcePathResolver,
               androidResourceDeps,
               rDotJavaSrcFolder.getPath(),
               forceFinalResourceIds,
@@ -221,7 +228,7 @@ public class DummyRDotJava extends AbstractBuildRule
         MergeAndroidResourcesStep mergeFinalRStep =
             MergeAndroidResourcesStep.createStepForDummyRDotJava(
                 getProjectFilesystem(),
-                context.getSourcePathResolver(),
+                sourcePathResolver,
                 androidResourceDeps,
                 rDotJavaSrcFolder.getPath(),
                 /* forceFinalResourceIds */ true,
@@ -245,14 +252,14 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), rDotJavaClassesFolder)));
+                buildCellRootPath, getProjectFilesystem(), rDotJavaClassesFolder)));
 
     RelPath pathToJarOutputDir = outputJar.getParent();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), pathToJarOutputDir)));
+                buildCellRootPath, getProjectFilesystem(), pathToJarOutputDir)));
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
@@ -268,7 +275,7 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
+                buildCellRootPath,
                 getProjectFilesystem(),
                 compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
@@ -282,7 +289,8 @@ public class DummyRDotJava extends AbstractBuildRule
         getBuildTarget(),
         compilerParameters,
         isolatedSteps,
-        buildableContext);
+        buildableContext,
+        javac.resolve(sourcePathResolver));
     steps.addAll(isolatedSteps.build());
     buildableContext.recordArtifact(rDotJavaClassesFolder.getPath());
 
@@ -322,6 +330,7 @@ public class DummyRDotJava extends AbstractBuildRule
   }
 
   private class CheckDummyRJarNotEmptyStep implements Step {
+
     private final ImmutableSortedSet<Path> javaSourceFilePaths;
 
     CheckDummyRJarNotEmptyStep(ImmutableSortedSet<Path> javaSourceFilePaths) {

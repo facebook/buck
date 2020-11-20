@@ -37,6 +37,11 @@ public abstract class ConfiguredCompilerFactory {
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider);
 
+  public abstract Javac getJavac(
+      BuildRuleResolver resolver,
+      @Nullable JvmLibraryArg arg,
+      TargetConfiguration toolchainTargetConfiguration);
+
   public abstract Optional<ExtraClasspathProvider> getExtraClasspathProvider(
       ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration);
 

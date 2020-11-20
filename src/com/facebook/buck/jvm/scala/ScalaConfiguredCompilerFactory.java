@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
+
   private final ScalaBuckConfig scalaBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
@@ -87,7 +88,6 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         scalaBuckConfig.getCompilerFlags(),
         Objects.requireNonNull(arg).getExtraArguments(),
         buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins(targetConfiguration)),
-        getJavac(buildRuleResolver, arg, targetConfiguration),
         javacOptions,
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         downwardApiConfig.isEnabledForScala());
@@ -118,7 +118,8 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     depsConsumer.accept(scalaBuckConfig.getScalaLibraryTarget(targetConfiguration));
   }
 
-  private Javac getJavac(
+  @Override
+  public Javac getJavac(
       BuildRuleResolver resolver,
       @Nullable JvmLibraryArg arg,
       TargetConfiguration toolchainTargetConfiguration) {

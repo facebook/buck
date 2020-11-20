@@ -43,6 +43,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.MaybeRequiredForSourceOnlyAbiArg;
@@ -220,6 +221,7 @@ public class AndroidPrebuiltAarDescription
                     Iterables.concat(javaDeps, Collections.singleton(prebuiltJar))))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
     boolean withDownwardApi = downwardApiConfig.isEnabledForAndroid();
+    Javac javac = javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration());
     return new AndroidPrebuiltAar(
         buildTarget,
         projectFilesystem,
@@ -232,7 +234,6 @@ public class AndroidPrebuiltAarDescription
         /* prebuiltJar */ prebuiltJar,
         /* unzipRule */ unzipAar,
         new JavacToJarStepFactory(
-            javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration()),
             toolchainProvider
                 .getByName(
                     JavacOptionsProvider.DEFAULT_NAME,
@@ -241,6 +242,7 @@ public class AndroidPrebuiltAarDescription
                 .getJavacOptions(),
             ExtraClasspathProvider.EMPTY,
             withDownwardApi),
+        javac,
         /* exportedDeps */ javaDeps,
         args.getRequiredForSourceOnlyAbi(),
         args.getMavenCoords(),

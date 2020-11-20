@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +62,8 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory {
       CompilerParameters parameters,
       /* output params */
       Builder<IsolatedStep> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ResolvedJavac resolvedJavac) {
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();

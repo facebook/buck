@@ -45,16 +45,13 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
 
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
-  @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
-      Javac javac,
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClasspathProvider,
       boolean withDownwardApi) {
     super(javacOptions, withDownwardApi);
-    this.javac = javac;
     this.extraClasspathProvider = extraClasspathProvider;
   }
 
@@ -65,12 +62,13 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi,
       SourcePathResolverAdapter resolver,
-      AbsPath rootCellRoot) {
+      AbsPath rootCellRoot,
+      ResolvedJavac resolvedJavac) {
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
     return new JavacPipelineState(
-        javac.resolve(resolver),
+        resolvedJavac,
         ResolvedJavacOptions.of(buildTimeOptions, resolver, rootCellRoot),
         invokingRule,
         new ClasspathChecker(),
@@ -89,7 +87,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       CompilerParameters parameters,
       /* output params */
       Builder<IsolatedStep> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      ResolvedJavac resolvedJavac) {
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
@@ -99,7 +98,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     steps.add(
         new JavacStep(
-            javac.resolve(sourcePathResolver),
+            resolvedJavac,
             ResolvedJavacOptions.of(buildTimeOptions, sourcePathResolver, rootPath),
             invokingRule,
             projectFilesystem.getBuckPaths(),
@@ -185,7 +184,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
-      Path buildCellRootPath) {
+      Path buildCellRootPath,
+      ResolvedJavac resolvedJavac) {
     Preconditions.checkArgument(
         libraryJarParameters == null
             || libraryJarParameters
@@ -201,7 +201,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
         compilerParameters.getAbiGenerationMode().isSourceAbi()
             || (postprocessClassesCommands.isEmpty()
                 && javacOptions.getSpoolMode() == JavacOptions.SpoolMode.DIRECT_TO_JAR
-                && javac instanceof Jsr199Javac);
+                && resolvedJavac instanceof Jsr199Javac.ResolvedJsr199Javac);
 
     LOG.info(
         "Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
@@ -217,7 +217,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
       steps.add(
           new JavacStep(
-              javac.resolve(sourcePathResolver),
+              resolvedJavac,
               ResolvedJavacOptions.of(
                   buildTimeOptions, sourcePathResolver, projectFilesystem.getRootPath()),
               invokingRule,
@@ -241,7 +241,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
           steps,
           buildableContext,
           withDownwardApi,
-          buildCellRootPath);
+          buildCellRootPath,
+          resolvedJavac);
     }
   }
 

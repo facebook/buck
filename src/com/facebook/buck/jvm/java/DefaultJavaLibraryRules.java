@@ -595,6 +595,13 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
+  Javac getJavac() {
+    return getConfiguredCompilerFactory()
+        .getJavac(
+            getActionGraphBuilder(), getArgs(), getInitialBuildTarget().getTargetConfiguration());
+  }
+
+  @Value.Lazy
   CompileToJarStepFactory getConfiguredCompilerForSourceOnlyAbi(
       SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     return getConfiguredCompilerFactory()
@@ -642,6 +649,7 @@ public abstract class DefaultJavaLibraryRules {
     return new JarBuildStepsFactory(
         getLibraryTarget(),
         getConfiguredCompiler(),
+        getJavac(),
         getSrcs(),
         getResources(),
         getResourcesParameters(),
@@ -663,6 +671,7 @@ public abstract class DefaultJavaLibraryRules {
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(
             getSourcePathResolver(), getProjectFilesystem().getRootPath()),
+        getJavac(),
         getSrcs(),
         getResources(),
         getResourcesParameters(),

@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
@@ -57,6 +58,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
       CompileToJarStepFactory configuredCompiler,
+      Javac javac,
       Iterable<PrebuiltJar> exportedDeps,
       boolean requiredForSourceAbi,
       Optional<String> mavenCoords,
@@ -68,6 +70,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         new JarBuildStepsFactory(
             androidLibraryBuildTarget,
             configuredCompiler,
+            javac,
             /* srcs */ ImmutableSortedSet.of(),
             ImmutableSortedSet.of(),
             ResourcesParameters.of(),

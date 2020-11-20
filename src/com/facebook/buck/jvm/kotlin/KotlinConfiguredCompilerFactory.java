@@ -90,7 +90,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getTarget().map(target -> getKotlincCompatibleTarget(target)),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
-        getJavac(buildRuleResolver, args, targetConfiguration),
         javacOptions,
         downwardApiConfig.isEnabledForKotlin());
   }
@@ -102,7 +101,8 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         extraClasspathProviderSupplier.apply(toolchainProvider, toolchainTargetConfiguration));
   }
 
-  private Javac getJavac(
+  @Override
+  public Javac getJavac(
       BuildRuleResolver resolver,
       @Nullable JvmLibraryArg arg,
       TargetConfiguration toolchainTargetConfiguration) {
