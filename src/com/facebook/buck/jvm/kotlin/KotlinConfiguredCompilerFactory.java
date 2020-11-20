@@ -84,6 +84,8 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
+        kotlinBuckConfig.getPathToStdlibJar(),
+        kotlinBuckConfig.getPathToAnnotationProcessingJar(),
         kotlinArgs.getExtraKotlincArguments(),
         kotlinArgs.getKotlinCompilerPlugins(),
         getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),

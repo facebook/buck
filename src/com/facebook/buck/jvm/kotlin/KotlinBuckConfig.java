@@ -62,8 +62,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
               getPathToAnnotationsJar(),
               getPathToCompilerJar());
 
-      return new JarBackedReflectedKotlinc(
-          classpathEntries, getPathToAnnotationProcessingJar(), getPathToStdlibJar());
+      return new JarBackedReflectedKotlinc(classpathEntries);
     }
   }
 

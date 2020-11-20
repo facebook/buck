@@ -180,16 +180,6 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
-    throw new IllegalStateException("Not supported yet");
-  }
-
-  @Override
-  public Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
-    throw new IllegalStateException("Not supported yet");
-  }
-
-  @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return ImmutableMap.of();
   }

@@ -101,6 +101,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
+  @AddToRuleKey private final SourcePath standardLibraryClasspath;
+  @AddToRuleKey private final SourcePath annotationProcessingClassPath;
 
   @AddToRuleKey
   private final ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins;
@@ -115,6 +117,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
+      SourcePath standardLibraryClasspath,
+      SourcePath annotationProcessingClassPath,
       ImmutableList<String> extraKotlincArguments,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableList<SourcePath> friendPaths,
@@ -126,6 +130,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
     super(javacOptions, withDownwardApi);
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
+    this.standardLibraryClasspath = standardLibraryClasspath;
+    this.annotationProcessingClassPath = annotationProcessingClassPath;
     this.extraKotlincArguments = extraKotlincArguments;
     this.kotlinCompilerPlugins = kotlinCompilerPlugins;
     this.friendPaths = friendPaths;
@@ -248,12 +254,16 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
           apOptions.put(splitParam[0], splitParam[1]);
         }
 
+        SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+        Path annotationProcessorPath =
+            sourcePathResolver.getAbsolutePath(annotationProcessingClassPath).getPath();
+        Path standardLibraryPath =
+            sourcePathResolver.getAbsolutePath(standardLibraryClasspath).getPath();
+
         ImmutableList<String> kaptPluginOptions =
             ImmutableList.<String>builder()
-                .add(
-                    AP_CLASSPATH_ARG
-                        + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
-                .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(buildContext.getSourcePathResolver()))
+                .add(AP_CLASSPATH_ARG + annotationProcessorPath)
+                .add(AP_CLASSPATH_ARG + standardLibraryPath)
                 .addAll(apClassPaths)
                 .addAll(annotationProcessors)
                 .add(SOURCES_ARG + projectFilesystem.resolve(sourcesOutput))
@@ -270,9 +280,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
                 .build();
 
         annotationProcessingOptionsBuilder
-            .add(
-                X_PLUGIN_ARG
-                    + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
+            .add(X_PLUGIN_ARG + annotationProcessorPath)
             .add(PLUGIN)
             .add(KAPT3_PLUGIN + APT_MODE + "compile," + Joiner.on(",").join(kaptPluginOptions));
 

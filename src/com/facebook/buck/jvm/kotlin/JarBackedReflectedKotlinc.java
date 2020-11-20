@@ -61,16 +61,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       };
 
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
-  @AddToRuleKey private final SourcePath annotationProcessingClassPath;
-  @AddToRuleKey private final SourcePath standardLibraryClasspath;
 
-  JarBackedReflectedKotlinc(
-      ImmutableSet<SourcePath> compilerClassPath,
-      SourcePath annotationProcessingClassPath,
-      SourcePath standardLibraryClasspath) {
+  JarBackedReflectedKotlinc(ImmutableSet<SourcePath> compilerClassPath) {
     this.compilerClassPath = compilerClassPath;
-    this.annotationProcessingClassPath = annotationProcessingClassPath;
-    this.standardLibraryClasspath = standardLibraryClasspath;
   }
 
   @Override
@@ -94,16 +87,6 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   @Override
   public String getShortName() {
     return "kotlinc";
-  }
-
-  @Override
-  public Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return sourcePathResolverAdapter.getAbsolutePath(annotationProcessingClassPath).getPath();
-  }
-
-  @Override
-  public Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return sourcePathResolverAdapter.getAbsolutePath(standardLibraryClasspath).getPath();
   }
 
   @Override

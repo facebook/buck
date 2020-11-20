@@ -22,7 +22,6 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
@@ -55,10 +54,6 @@ public interface Kotlinc extends Tool {
       Path pathToSrcsList);
 
   String getShortName();
-
-  Path getAnnotationProcessorPath(SourcePathResolverAdapter sourcePathResolverAdapter);
-
-  Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter);
 
   default ImmutableList<Path> getExpandedSourcePaths(
       AbsPath ruleCellRoot,
