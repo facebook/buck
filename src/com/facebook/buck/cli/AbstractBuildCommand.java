@@ -112,6 +112,8 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
   private static final String SHOW_JSON_OUTPUT_LONG_ARG = "--show-json-output";
   private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
+  private static final String SHOW_ALL_OUTPUTS_LONG_ARG = "--show-all-outputs";
+  private static final String SHOW_ALL_OUTPUTS_FORMAT_LONG_ARG = "--show-all-outputs-format";
   private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
   private static final String LOCAL_BUILD_LONG_ARG = "--local";
   private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
@@ -121,6 +123,22 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   private final AtomicReference<Build> lastBuild = new AtomicReference<>(null);
   private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
       SettableFuture.create();
+
+  /** Enum with values for `--show-all-outputs` CLI parameter */
+  protected enum ShowAllOutputsFormat {
+    /* Format output as list with path relative to buck-out */
+    LIST,
+
+    /* Format output as JSON with path relative to buck-out */
+    JSON,
+
+    /* Format output as list with absolute paths */
+    FULL_LIST,
+
+    /* Format output as JSON with absolute paths */
+    FULL_JSON,
+  }
+
   @Argument protected List<String> arguments = new ArrayList<>();
 
   @Option(name = KEEP_GOING_LONG_ARG, usage = "Keep going when some targets can't be made.")
@@ -210,6 +228,33 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       name = OUTPUT_RULE_DEPS_TO_FILE_ARG,
       usage = "Serialize rule dependencies and execution time to the log directory")
   private boolean outputRuleDeps = false;
+
+  @Option(
+      name = SHOW_ALL_OUTPUTS_FORMAT_LONG_ARG,
+      usage =
+          "Indicates the output format that should be used when using the show all outputs functionality (default: list).\n"
+              + " list -  output paths are printed relative to the cell.\n"
+              + " full_list - output paths are printed as absolute paths.\n"
+              + " json - JSON format with relative paths\n"
+              + " full_json - JSON format with absolute paths.\n",
+      forbids = {
+        SHOW_OUTPUT_LONG_ARG,
+        SHOW_FULL_OUTPUT_LONG_ARG,
+        SHOW_JSON_OUTPUT_LONG_ARG,
+        SHOW_FULL_JSON_OUTPUT_LONG_ARG,
+      })
+  private ShowAllOutputsFormat showAllOutputsFormat = ShowAllOutputsFormat.LIST;
+
+  @Option(
+      name = SHOW_ALL_OUTPUTS_LONG_ARG,
+      usage = "Print the paths to all the outputs for each of the built rules.",
+      forbids = {
+        SHOW_OUTPUT_LONG_ARG,
+        SHOW_FULL_OUTPUT_LONG_ARG,
+        SHOW_JSON_OUTPUT_LONG_ARG,
+        SHOW_FULL_JSON_OUTPUT_LONG_ARG,
+      })
+  private boolean isShowAllOutputs = false;
 
   protected static ActionGraphAndBuilder createActionGraphAndResolver(
       CommandRunnerParams params,
