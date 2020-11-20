@@ -48,6 +48,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
@@ -158,7 +159,9 @@ public class KotlinTestDescription
         params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
         testsLibrary,
         Optional.of(
-            resolver -> kotlinBuckConfig.getKotlinc().getAdditionalClasspathEntries(resolver)),
+            resolver ->
+                ImmutableList.of(
+                    resolver.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath())),
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),

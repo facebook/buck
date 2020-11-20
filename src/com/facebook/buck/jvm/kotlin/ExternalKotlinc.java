@@ -190,12 +190,6 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   }
 
   @Override
-  public ImmutableList<Path> getAdditionalClasspathEntries(
-      SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return ImmutableList.of();
-  }
-
-  @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return ImmutableMap.of();
   }

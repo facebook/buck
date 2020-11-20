@@ -107,12 +107,6 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   }
 
   @Override
-  public ImmutableList<Path> getAdditionalClasspathEntries(
-      SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return ImmutableList.of(getStdlibPath(sourcePathResolverAdapter));
-  }
-
-  @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     throw new UnsupportedOperationException("In memory kotlinc may not be used externally");
   }

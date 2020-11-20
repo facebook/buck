@@ -60,9 +60,6 @@ public interface Kotlinc extends Tool {
 
   Path getStdlibPath(SourcePathResolverAdapter sourcePathResolverAdapter);
 
-  ImmutableList<Path> getAdditionalClasspathEntries(
-      SourcePathResolverAdapter sourcePathResolverAdapter);
-
   default ImmutableList<Path> getExpandedSourcePaths(
       AbsPath ruleCellRoot,
       ImmutableSet<Path> kotlinSourceFilePaths,
