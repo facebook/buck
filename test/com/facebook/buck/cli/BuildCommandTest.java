@@ -276,6 +276,239 @@ public class BuildCommandTest {
   }
 
   @Test
+  public void showAllOutputsWithDefaultAndAllOutputLabelsForRuleThatSupportsMultipleOutputs()
+      throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String labelString1 = "foo";
+    Path expected1 = Paths.get("path, timefordinner, foo");
+    String labelString2 = "bar";
+    Path expected2 = Paths.get("path, timefordinner, bar");
+    String labelString3 = "baz";
+    Path expected3 = Paths.get("path, timefordinner, baz");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(
+                new Pair(buildTargetName, ""),
+                new Pair(buildTargetName, labelString1),
+                new Pair(buildTargetName, labelString2),
+                new Pair(buildTargetName, labelString3)),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    OutputLabel.of(labelString1),
+                    ImmutableSet.of(expected1),
+                    OutputLabel.of(labelString2),
+                    ImmutableSet.of(expected2),
+                    OutputLabel.of(labelString3),
+                    ImmutableSet.of(expected3))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-all-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(
+            getExpectedShowOutputsLog(
+                ImmutableMap.of(
+                    "//foo:foo",
+                    expected,
+                    "//foo:foo[foo]",
+                    expected1,
+                    "//foo:foo[bar]",
+                    expected2,
+                    "//foo:foo[baz]",
+                    expected3))));
+  }
+
+  @Test
+  public void
+      showAllOutputsWithDefaultNotFirstAndAllOutputLabelsForRuleThatSupportsMultipleOutputs()
+          throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String labelString1 = "foo";
+    Path expected1 = Paths.get("path, timefordinner, foo");
+    String labelString2 = "bar";
+    Path expected2 = Paths.get("path, timefordinner, bar");
+    String labelString3 = "baz";
+    Path expected3 = Paths.get("path, timefordinner, baz");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(
+                new Pair(buildTargetName, labelString1),
+                new Pair(buildTargetName, ""),
+                new Pair(buildTargetName, labelString2),
+                new Pair(buildTargetName, labelString3)),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    OutputLabel.of(labelString1),
+                    ImmutableSet.of(expected1),
+                    OutputLabel.of(labelString2),
+                    ImmutableSet.of(expected2),
+                    OutputLabel.of(labelString3),
+                    ImmutableSet.of(expected3))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-all-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(
+            getExpectedShowOutputsLog(
+                ImmutableMap.of(
+                    "//foo:foo[foo]",
+                    expected1,
+                    "//foo:foo",
+                    expected,
+                    "//foo:foo[bar]",
+                    expected2,
+                    "//foo:foo[baz]",
+                    expected3))));
+  }
+
+  @Test
+  public void showAllOutputsWithOnlyDefaultForRuleThatSupportsMultipleOutputs() throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String labelString1 = "foo";
+    Path expected1 = Paths.get("path, timefordinner, foo");
+    String labelString2 = "bar";
+    Path expected2 = Paths.get("path, timefordinner, bar");
+    String labelString3 = "baz";
+    Path expected3 = Paths.get("path, timefordinner, baz");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    OutputLabel.of(labelString1),
+                    ImmutableSet.of(expected1),
+                    OutputLabel.of(labelString2),
+                    ImmutableSet.of(expected2),
+                    OutputLabel.of(labelString3),
+                    ImmutableSet.of(expected3))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-all-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(
+            getExpectedShowOutputsLog(
+                ImmutableMap.of(
+                    "//foo:foo",
+                    expected,
+                    "//foo:foo[foo]",
+                    expected1,
+                    "//foo:foo[bar]",
+                    expected2,
+                    "//foo:foo[baz]",
+                    expected3))));
+  }
+
+  @Test
+  public void showAllOutputsWithOneOutputLabelForRuleThatSupportsMultipleOutputs()
+      throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String labelString1 = "foo";
+    Path expected1 = Paths.get("path, timefordinner, foo");
+    String labelString2 = "bar";
+    Path expected2 = Paths.get("path, timefordinner, bar");
+    String labelString3 = "baz";
+    Path expected3 = Paths.get("path, timefordinner, baz");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, labelString3)),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    OutputLabel.of(labelString1),
+                    ImmutableSet.of(expected1),
+                    OutputLabel.of(labelString2),
+                    ImmutableSet.of(expected2),
+                    OutputLabel.of(labelString3),
+                    ImmutableSet.of(expected3))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-all-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[baz]", expected3))));
+  }
+
+  @Test
+  public void showAllOutputsWithSomeOutputLabelsForRuleThatSupportsMultipleOutputs()
+      throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String labelString1 = "foo";
+    Path expected1 = Paths.get("path, timefordinner, foo");
+    String labelString2 = "bar";
+    Path expected2 = Paths.get("path, timefordinner, bar");
+    String labelString3 = "baz";
+    Path expected3 = Paths.get("path, timefordinner, baz");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(
+                new Pair(buildTargetName, labelString2), new Pair(buildTargetName, labelString3)),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(
+                    OutputLabel.of(labelString1),
+                    ImmutableSet.of(expected1),
+                    OutputLabel.of(labelString2),
+                    ImmutableSet.of(expected2),
+                    OutputLabel.of(labelString3),
+                    ImmutableSet.of(expected3))),
+            true);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-all-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(
+            getExpectedShowOutputsLog(
+                ImmutableMap.of("//foo:foo[bar]", expected2, "//foo:foo[baz]", expected3))));
+  }
+
+  @Test
+  public void showAllOutputsWithoutOutputLabelForRuleThatDoesNotSupportMultipleOutputs()
+      throws Exception {
+    Path expected = Paths.get("path, timefordinner");
+    String buildTargetName = "//foo:foo";
+    BuildCommand.GraphsAndBuildTargets graphsAndBuildTargets =
+        getGraphsAndBuildTargets(
+            ImmutableSet.of(new Pair(buildTargetName, "")),
+            expected,
+            ImmutableMap.of(
+                buildTargetName,
+                ImmutableMap.of(OutputLabel.defaultLabel(), ImmutableSet.of(Paths.get("unused")))),
+            false);
+    CommandRunnerParams params = createTestParams(ImmutableSet.of(buildTargetName));
+
+    BuildCommand command = getCommand("--show-all-outputs");
+    command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    assertThat(
+        console.getTextWrittenToStdOut(),
+        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+  }
+
+  @Test
   public void showOutputWithoutOutputLabelForRuleThatSupportsMultipleOutputs() throws Exception {
     Path expected = Paths.get("path, timefordinner");
     String buildTargetName = "//foo:foo";

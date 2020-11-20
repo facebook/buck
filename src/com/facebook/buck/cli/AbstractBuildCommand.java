@@ -40,6 +40,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -86,6 +87,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
@@ -489,7 +491,17 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       linkBuildResultsToHashedBuckOut(params, graphsAndBuildTargets);
     }
     ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
-    if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
+
+    // Both showAllOutputs() and showOutput() paths check for rulekey, however, the code here is
+    // meant to set the showOutput() path as the fallback in the case that neither --show-output nor
+    // --show-all-outputs is explicitly stated but --show-rulekey is stated.
+    if (isShowAllOutputs()) {
+      showAllOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    } else if (isShowOutput()
+        || isShowListOutput()
+        || isShowJsonOutput()
+        || isShowOutputsPathAbsolute()
+        || isShowRuleKey()) {
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
@@ -738,44 +750,60 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       Optional<DefaultRuleKeyFactory> ruleKeyFactory,
       BuildTargetWithOutputs targetWithOutputs,
       Optional<Path> outputPath) {
-    String outputString =
-        String.format(
-            "%s%s%s\n",
-            targetWithOutputs,
-            isShowRuleKey() ? " " + ruleKeyFactory.get().build(rule) : "",
-            isShowListOutput() ? getOutputPathToShow(outputPath) : "");
-    return outputString;
+    return String.format(
+        "%s%s%s\n",
+        targetWithOutputs,
+        isShowRuleKey() ? " " + ruleKeyFactory.get().build(rule) : "",
+        isShowListOutput() ? getOutputPathToShow(outputPath) : "");
   }
 
-  private void showOutputs(
+  private Set<BuildTargetWithOutputs> computeTargetsToPrintForShowAllOutputs(
+      Set<BuildTargetWithOutputs> targetsWithOutputs, ActionGraphBuilder graphBuilder) {
+    ImmutableSet.Builder<BuildTargetWithOutputs> buildTargetsToCompute =
+        new ImmutableSet.Builder<>();
+    for (BuildTargetWithOutputs targetWithOutputs : targetsWithOutputs) {
+      BuildTarget buildTarget = targetWithOutputs.getBuildTarget();
+      BuildRule buildRule = graphBuilder.requireRule(buildTarget);
+      if (buildRule instanceof HasMultipleOutputs
+          && targetWithOutputs.getOutputLabel().isDefault()) {
+        HasMultipleOutputs multipleOutputsRule = (HasMultipleOutputs) buildRule;
+        for (OutputLabel label : multipleOutputsRule.getOutputLabels()) {
+          buildTargetsToCompute.add(BuildTargetWithOutputs.of(buildTarget, label));
+        }
+      } else {
+        buildTargetsToCompute.add(targetWithOutputs);
+      }
+    }
+    return buildTargetsToCompute.build();
+  }
+
+  private void printTargets(
+      Set<BuildTargetWithOutputs> buildTargetsToPrint,
       CommandRunnerParams params,
-      GraphsAndBuildTargets graphsAndBuildTargets,
-      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      ActionGraphBuilder graphBuilder,
+      Optional<DefaultRuleKeyFactory> ruleKeyFactory)
       throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<>();
-    ActionGraphBuilder graphBuilder =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    Optional<DefaultRuleKeyFactory> ruleKeyFactory =
-        checkAndReturnRuleKeyFactory(params, graphBuilder, ruleKeyCacheScope);
-    for (BuildTargetWithOutputs targetWithOutputs :
-        graphsAndBuildTargets.getBuildTargetWithOutputs()) {
-      BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
+    for (BuildTargetWithOutputs buildTargetToCompute : buildTargetsToPrint) {
+      BuildRule buildRule = graphBuilder.requireRule(buildTargetToCompute.getBuildTarget());
       params.getConsole().getStdOut().flush();
       Optional<Path> outputPath =
           getOutputPath(
-              rule,
-              targetWithOutputs.getOutputLabel(),
+              buildRule,
+              buildTargetToCompute.getOutputLabel(),
               graphBuilder.getSourcePathResolver(),
               params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
               params.getCells().getRootCell().getFilesystem());
-      if (isShowOutputsPathJsonFormat()) {
-        addOutputForJson(sortedJsonOutputs, targetWithOutputs, outputPath);
+      if (isShowJsonOutput()) {
+        addOutputForJson(sortedJsonOutputs, buildTargetToCompute, outputPath);
       } else {
-        String outputString = addOutputForList(rule, ruleKeyFactory, targetWithOutputs, outputPath);
+        String outputString =
+            addOutputForList(buildRule, ruleKeyFactory, buildTargetToCompute, outputPath);
         params.getConsole().getStdOut().printf(outputString);
       }
     }
-    if (isShowOutputsPathJsonFormat()) {
+    if (isShowJsonOutput()) {
+      // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
       String output = stringWriter.getBuffer().toString();
@@ -783,20 +811,68 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     }
   }
 
-  private boolean isShowListOutput() {
-    return showOutput || showFullOutput;
+  private void showOutputs(
+      CommandRunnerParams params,
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      throws IOException {
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    Optional<DefaultRuleKeyFactory> ruleKeyFactory =
+        checkAndReturnRuleKeyFactory(params, graphBuilder, ruleKeyCacheScope);
+    printTargets(
+        graphsAndBuildTargets.getBuildTargetWithOutputs(), params, graphBuilder, ruleKeyFactory);
+  }
+
+  private void showAllOutputs(
+      CommandRunnerParams params,
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      throws IOException {
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    Optional<DefaultRuleKeyFactory> ruleKeyFactory =
+        checkAndReturnRuleKeyFactory(params, graphBuilder, ruleKeyCacheScope);
+    Set<BuildTargetWithOutputs> buildTargetsToPrint =
+        computeTargetsToPrintForShowAllOutputs(
+            graphsAndBuildTargets.getBuildTargetWithOutputs(), graphBuilder);
+    printTargets(buildTargetsToPrint, params, graphBuilder, ruleKeyFactory);
   }
 
   private boolean isShowRuleKey() {
     return showRuleKey;
   }
 
-  private boolean isShowOutputsPathAbsolute() {
-    return showFullOutput || showFullJsonOutput;
+  private boolean isShowListOutput() {
+    return showOutput
+        || showFullOutput
+        || (isShowAllOutputs()
+            && (showAllOutputsFormat.equals(ShowAllOutputsFormat.LIST)
+                || showAllOutputsFormat.equals(ShowAllOutputsFormat.FULL_LIST)));
   }
 
-  private boolean isShowOutputsPathJsonFormat() {
-    return showJsonOutput || showFullJsonOutput;
+  private boolean isShowAllOutputs() {
+    return isShowAllOutputs;
+  }
+
+  private boolean isShowOutput() {
+    return showOutput;
+  }
+
+  private boolean isShowOutputsPathAbsolute() {
+    return showFullOutput
+        || showFullJsonOutput
+        || (isShowAllOutputs()
+            && (showAllOutputsFormat.equals(ShowAllOutputsFormat.FULL_JSON)
+                || showAllOutputsFormat.equals(ShowAllOutputsFormat.FULL_LIST)));
+  }
+
+  private boolean isShowJsonOutput() {
+    return showJsonOutput
+        || showFullJsonOutput
+        || (isShowAllOutputs()
+            && (showAllOutputsFormat.equals(ShowAllOutputsFormat.JSON)
+                || showAllOutputsFormat.equals(ShowAllOutputsFormat.FULL_JSON)));
   }
 
   private String getOutputPathToShow(Optional<Path> path) {
