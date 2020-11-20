@@ -31,7 +31,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -41,7 +40,6 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.fs.RmStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -152,7 +150,6 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of(
-          RmStep.of(BuildCellRelativePath.of(outputPathResolver.resolvePath(OUTPUT_PATH))),
           new AbstractExecutionStep("write-source-db") {
 
             private final RelPath output = outputPathResolver.resolvePath(OUTPUT_PATH);
@@ -165,8 +162,7 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
             public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               try (OutputStream stream =
                   new BufferedOutputStream(
-                      Files.newOutputStream(
-                          context.getBuildCellRootPath().resolve(output.getPath())))) {
+                      Files.newOutputStream(filesystem.resolve(output.getPath())))) {
                 PythonSourceDatabaseEntry.serialize(
                     resolvedSources,
                     resolvedDependencies,
