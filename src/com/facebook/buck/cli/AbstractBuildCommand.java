@@ -691,69 +691,104 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     }
   }
 
-  private void showOutputs(
+  private Optional<DefaultRuleKeyFactory> checkAndReturnRuleKeyFactory(
       CommandRunnerParams params,
-      GraphsAndBuildTargets graphsAndBuildTargets,
-      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
-      throws IOException {
-    TreeMap<String, String> sortedJsonOutputs = new TreeMap<>();
+      ActionGraphBuilder actionGraphBuilder,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope) {
     Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
-    ActionGraphBuilder graphBuilder =
-        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
-    if (showRuleKey) {
+    if (isShowRuleKey()) {
       RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getRuleKeyConfiguration());
       ruleKeyFactory =
           Optional.of(
               new DefaultRuleKeyFactory(
                   fieldLoader,
                   params.getFileHashCache(),
-                  graphBuilder,
+                  actionGraphBuilder,
                   ruleKeyCacheScope.getCache(),
                   Optional.empty()));
     }
+    return ruleKeyFactory;
+  }
+
+  private Optional<Path> getOutputPath(
+      BuildRule rule,
+      OutputLabel outputLabel,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
+      boolean buckOutCompatLink,
+      ProjectFilesystem fileSystem) {
+    Optional<Path> outputPath =
+        PathUtils.getUserFacingOutputPath(
+                sourcePathResolverAdapter, rule, buckOutCompatLink, outputLabel)
+            .map(
+                path -> isShowOutputsPathAbsolute() ? path : fileSystem.relativize(path).getPath());
+
+    return outputPath;
+  }
+
+  private void addOutputForJson(
+      Map<String, String> sortedJsonOutputs,
+      BuildTargetWithOutputs targetWithOutputs,
+      Optional<Path> outputPath) {
+    sortedJsonOutputs.put(
+        targetWithOutputs.toString(), outputPath.map(Object::toString).orElse(""));
+  }
+
+  private String addOutputForList(
+      BuildRule rule,
+      Optional<DefaultRuleKeyFactory> ruleKeyFactory,
+      BuildTargetWithOutputs targetWithOutputs,
+      Optional<Path> outputPath) {
+    String outputString =
+        String.format(
+            "%s%s%s\n",
+            targetWithOutputs,
+            isShowRuleKey() ? " " + ruleKeyFactory.get().build(rule) : "",
+            isShowListOutput() ? getOutputPathToShow(outputPath) : "");
+    return outputString;
+  }
+
+  private void showOutputs(
+      CommandRunnerParams params,
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      throws IOException {
+    TreeMap<String, String> sortedJsonOutputs = new TreeMap<>();
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    Optional<DefaultRuleKeyFactory> ruleKeyFactory =
+        checkAndReturnRuleKeyFactory(params, graphBuilder, ruleKeyCacheScope);
     for (BuildTargetWithOutputs targetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(targetWithOutputs.getBuildTarget());
-      Optional<Path> outputPath =
-          PathUtils.getUserFacingOutputPath(
-                  graphBuilder.getSourcePathResolver(),
-                  rule,
-                  params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
-                  targetWithOutputs.getOutputLabel())
-              .map(
-                  path ->
-                      isShowOutputsPathAbsolute()
-                          ? path
-                          : params
-                              .getCells()
-                              .getRootCell()
-                              .getFilesystem()
-                              .relativize(path)
-                              .getPath());
-
       params.getConsole().getStdOut().flush();
+      Optional<Path> outputPath =
+          getOutputPath(
+              rule,
+              targetWithOutputs.getOutputLabel(),
+              graphBuilder.getSourcePathResolver(),
+              params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
+              params.getCells().getRootCell().getFilesystem());
       if (isShowOutputsPathJsonFormat()) {
-        sortedJsonOutputs.put(
-            targetWithOutputs.toString(), outputPath.map(Object::toString).orElse(""));
+        addOutputForJson(sortedJsonOutputs, targetWithOutputs, outputPath);
       } else {
-        params
-            .getConsole()
-            .getStdOut()
-            .printf(
-                "%s%s%s\n",
-                targetWithOutputs,
-                showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
-                showOutput || showFullOutput ? getOutputPathToShow(outputPath) : "");
+        String outputString = addOutputForList(rule, ruleKeyFactory, targetWithOutputs, outputPath);
+        params.getConsole().getStdOut().printf(outputString);
       }
     }
-
     if (isShowOutputsPathJsonFormat()) {
-      // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
       String output = stringWriter.getBuffer().toString();
       params.getConsole().getStdOut().println(output);
     }
+  }
+
+  private boolean isShowListOutput() {
+    return showOutput || showFullOutput;
+  }
+
+  private boolean isShowRuleKey() {
+    return showRuleKey;
   }
 
   private boolean isShowOutputsPathAbsolute() {
