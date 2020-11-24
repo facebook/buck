@@ -243,12 +243,12 @@ public class ConfiguredQueryCommand
     Preconditions.checkState(
         !attributesByResultOptional.isPresent(), "We should be printing with JSON instead");
 
-    queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
+    printListImpl(queryResult, this::toPresentationForm, printStream);
   }
 
   private void printListOutput(
       Multimap<String, ConfiguredQueryTarget> queryResultMap, PrintStream printStream) {
-    queryResultMap.values().stream().map(this::toPresentationForm).forEach(printStream::println);
+    printListImpl(queryResultMap.values(), this::toPresentationForm, printStream);
   }
 
   private void printJsonOutput(

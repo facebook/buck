@@ -45,11 +45,13 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -360,5 +362,25 @@ public abstract class AbstractQueryCommand<
   /** Formats a `QueryFileTarget` for printing - relativizing its absolute paths */
   protected String toPresentationForm(QueryFileTarget queryFileTarget) {
     return queryFileTarget.getPath().getRelativePath().toString();
+  }
+
+  /** Print list with proper buffering. */
+  protected static <T> void printListImpl(
+      Collection<T> list, Function<T, String> presentation, PrintStream printStream) {
+    StringBuilder sb = new StringBuilder();
+    int bufferLines = 0;
+    for (T t : list) {
+      if (bufferLines == 10000) {
+        printStream.print(sb);
+        sb.setLength(0);
+        bufferLines = 0;
+      }
+
+      sb.append(presentation.apply(t)).append(System.lineSeparator());
+      bufferLines += 1;
+    }
+    printStream.print(sb);
+    // Not sure `flush` is needed, but better be safe
+    printStream.flush();
   }
 }

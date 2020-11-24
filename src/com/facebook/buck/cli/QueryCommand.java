@@ -301,10 +301,10 @@ public class QueryCommand
    */
   private void printList(
       Multimap<String, ConfiguredQueryTarget> targetsAndDependencies, PrintStream printStream) {
-    ImmutableSortedSet.copyOf(ConfiguredQueryTarget::compare, targetsAndDependencies.values())
-        .stream()
-        .map(this::toPresentationForm)
-        .forEach(printStream::println);
+    printListImpl(
+        ImmutableSortedSet.copyOf(ConfiguredQueryTarget::compare, targetsAndDependencies.values()),
+        this::toPresentationForm,
+        printStream);
   }
 
   /**
@@ -314,7 +314,7 @@ public class QueryCommand
    * @param printStream print stream for output
    */
   private void printList(Set<ConfiguredQueryTarget> targets, PrintStream printStream) {
-    targets.stream().map(this::toPresentationForm).forEach(printStream::println);
+    printListImpl(targets, this::toPresentationForm, printStream);
   }
 
   /**
