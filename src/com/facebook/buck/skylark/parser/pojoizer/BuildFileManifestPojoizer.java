@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser.pojoizer;
 
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
+import com.facebook.buck.skylark.function.select.SelectorList;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -108,15 +109,14 @@ public class BuildFileManifestPojoizer {
       return convertMapToPojo((Map<?, ?>) obj);
     } else if (obj instanceof Set<?>) {
       return convertSetToPojo((Set<?>) obj);
-    } else if (obj instanceof com.google.devtools.build.lib.packages.SelectorList) {
-      com.google.devtools.build.lib.packages.SelectorList skylarkSelectorList =
-          (com.google.devtools.build.lib.packages.SelectorList) obj;
+    } else if (obj instanceof SelectorList) {
+      SelectorList skylarkSelectorList = (SelectorList) obj;
       // recursively convert list elements
       ImmutableList<Object> elements = convertListToPojo(skylarkSelectorList.getElements());
       return ListWithSelects.of(elements, skylarkSelectorList.getType());
-    } else if (obj instanceof com.google.devtools.build.lib.packages.SelectorValue) {
-      com.google.devtools.build.lib.packages.SelectorValue skylarkSelectorValue =
-          (com.google.devtools.build.lib.packages.SelectorValue) obj;
+    } else if (obj instanceof com.facebook.buck.skylark.function.select.SelectorValue) {
+      com.facebook.buck.skylark.function.select.SelectorValue skylarkSelectorValue =
+          (com.facebook.buck.skylark.function.select.SelectorValue) obj;
       // recursively convert dictionary elements
       @SuppressWarnings("unchecked")
       TwoArraysImmutableHashMap<String, Object> dictionary =

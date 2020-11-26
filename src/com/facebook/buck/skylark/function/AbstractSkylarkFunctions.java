@@ -17,11 +17,11 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.skylark.function.select.SelectorList;
+import com.facebook.buck.skylark.function.select.SelectorValue;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
-import com.google.devtools.build.lib.packages.SelectorList;
-import com.google.devtools.build.lib.packages.SelectorValue;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;

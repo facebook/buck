@@ -6,6 +6,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/parser/syntax:syntax",
+        "//src/com/facebook/buck/skylark/function/select:select",
         "//src/com/facebook/buck/util/collect:collect",
         "//third-party/java/guava:guava",
     ],
