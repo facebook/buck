@@ -26,7 +26,8 @@ import java.util.Set;
  * Represents the stage of buck where the {@link
  * com.facebook.buck.core.model.targetgraph.TargetGraph} is analyzed and converted into its
  * corresponding {@link RuleAnalysisResult} graph, which consists of a {@link
- * com.google.devtools.build.lib.packages.Provider} graph and a {@link ActionAnalysisData} graph.
+ * com.facebook.buck.skylark.function.packages.Provider} graph and a {@link ActionAnalysisData}
+ * graph.
  */
 public interface RuleAnalysisGraph {
 

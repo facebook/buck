@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * A context that will be supplied to a {@link com.facebook.buck.core.description.Description}'s
  * rule implementation so that the rule analysis can be performed. This context will be used to
- * create the rule's {@link com.google.devtools.build.lib.packages.Provider}, and register
+ * create the rule's {@link com.facebook.buck.skylark.function.packages.Provider}, and register
  * corresponding Actions. Actions will be {@link com.facebook.buck.core.rules.BuildRule}s for now,
  * but we will eventually migrate to some other representation of the set of {@link
  * com.facebook.buck.step.Step}.
@@ -39,9 +39,9 @@ import java.util.Map;
  * href="https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/analysis/RuleContext.java">RuleContext</a>}
  *
  * <p>This will contain information on the configurations of the current rule, information about
- * it's transitive dependencies via {@link com.google.devtools.build.lib.packages.Provider}s and
- * their corresponding {@link com.google.devtools.build.lib.packages.Info}s. It will also offer ways
- * to register {@link com.facebook.buck.step.Step}s.
+ * it's transitive dependencies via {@link com.facebook.buck.skylark.function.packages.Provider}s
+ * and their corresponding {@link com.facebook.buck.skylark.function.packages.Info}s. It will also
+ * offer ways to register {@link com.facebook.buck.step.Step}s.
  */
 public interface RuleAnalysisContext extends DependencyOnlyRuleAnalysisContext {
 

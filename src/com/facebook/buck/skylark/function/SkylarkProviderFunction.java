@@ -16,8 +16,8 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.devtools.build.lib.packages.Provider;
-import com.google.devtools.build.lib.packages.StarlarkProvider;
+import com.facebook.buck.skylark.function.packages.Provider;
+import com.facebook.buck.skylark.function.packages.StarlarkProvider;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Sequence;

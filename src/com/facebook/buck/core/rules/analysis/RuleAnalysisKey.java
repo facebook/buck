@@ -25,7 +25,7 @@ import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 
 /**
  * The key of a computation of the {@link com.facebook.buck.core.model.targetgraph.TargetGraph} to
- * its corresponding {@link com.google.devtools.build.lib.packages.Provider}s and {@link
+ * its corresponding {@link com.facebook.buck.skylark.function.packages.Provider}s and {@link
  * ActionAnalysisData}.
  *
  * <p>This key will be used to indicate which rule's analysis we are currently interested in.

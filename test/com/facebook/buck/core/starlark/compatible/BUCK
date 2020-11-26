@@ -7,6 +7,7 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/starlark/compatible:compatible",
+        "//src/com/facebook/buck/skylark/function/packages:packages",
         "//test/com/facebook/buck/core/starlark/testutil:testutil",
         "//third-party/java/junit:junit",
     ],

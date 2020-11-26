@@ -740,8 +740,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /**
-   * Call {@link com.google.devtools.build.lib.packages.StarlarkExportable#export(Label, String)} on
-   * any objects that are assigned to
+   * Call {@link com.facebook.buck.skylark.function.packages.StarlarkExportable#export(Label,
+   * String)} on any objects that are assigned to
    *
    * <p>This is primarily used to make sure that {@link SkylarkUserDefinedRule} and {@link
    * com.facebook.buck.core.rules.providers.impl.UserDefinedProvider} instances set their name

@@ -43,7 +43,7 @@ import com.google.common.collect.Iterables;
  *
  * <p>This represents the stage of Buck where the {@link
  * com.facebook.buck.core.model.targetgraph.TargetGraph} is transformed into the {@link
- * com.google.devtools.build.lib.packages.Provider} graph, along with the registered Actions.
+ * com.facebook.buck.skylark.function.packages.Provider} graph, along with the registered Actions.
  */
 public class RuleAnalysisComputation
     implements GraphComputation<RuleAnalysisKey, RuleAnalysisResult> {

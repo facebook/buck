@@ -30,13 +30,13 @@ public interface Provider<T extends ProviderInfo<T>> extends StarlarkValue {
 
   /**
    * Returns a serializable representation of this {@link
-   * com.google.devtools.build.lib.packages.Provider}.
+   * com.facebook.buck.skylark.function.packages.Provider}.
    */
   Key<T> getKey();
 
   /**
-   * Returns a name of this {@link com.google.devtools.build.lib.packages.Provider} that should be
-   * used in error messages.
+   * Returns a name of this {@link com.facebook.buck.skylark.function.packages.Provider} that should
+   * be used in error messages.
    */
   @Override
   String toString();

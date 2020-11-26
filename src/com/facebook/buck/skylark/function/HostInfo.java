@@ -16,13 +16,13 @@
 
 package com.facebook.buck.skylark.function;
 
+import com.facebook.buck.skylark.function.packages.Info;
+import com.facebook.buck.skylark.function.packages.StarlarkInfo;
+import com.facebook.buck.skylark.function.packages.StructProvider;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.packages.Info;
-import com.google.devtools.build.lib.packages.StarlarkInfo;
-import com.google.devtools.build.lib.packages.StructProvider;
 import java.util.function.Supplier;
 
 /** A factory for {@code host_info} built-in function available */

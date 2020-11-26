@@ -1,0 +1,12 @@
+java_library(
+    name = "packages",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        # TODO(nga): we don't need to depend on protobuf
+        "//third-party/java/protobuf:protobuf",
+    ],
+)

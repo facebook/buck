@@ -76,7 +76,7 @@ public interface ActionRegistry {
    *
    * <p>This will materialize the declared {@link Artifact}s and bind them to the action. These
    * {@link Artifact}s that can be passed via {@link
-   * com.google.devtools.build.lib.packages.Provider}s to be consumed.
+   * com.facebook.buck.skylark.function.packages.Provider}s to be consumed.
    *
    * @param action the {@link Action} to create an {@link ActionWrapperData} for and registers it
    * @return the assigned unique ID for this {@link Action}
