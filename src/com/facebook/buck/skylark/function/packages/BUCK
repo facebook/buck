@@ -6,6 +6,7 @@ java_library(
         "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+        "//src/com/facebook/buck/util/types:types",
         # TODO(nga): we don't need to depend on protobuf
         "//third-party/java/protobuf:protobuf",
     ],

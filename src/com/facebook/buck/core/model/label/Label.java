@@ -41,7 +41,6 @@ import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
-import com.google.devtools.build.lib.util.StringUtilities;
 import com.google.devtools.build.skyframe.SkyFunctionName;
 import com.google.devtools.build.skyframe.SkyKey;
 import java.io.Serializable;
@@ -153,8 +152,7 @@ public final class Label
     }
     String error = RepositoryName.validate(repo);
     if (error != null) {
-      throw new LabelSyntaxException(
-          "invalid repository name '" + StringUtilities.sanitizeControlChars(repo) + "': " + error);
+      throw new LabelSyntaxException("invalid repository name '" + repo + "': " + error);
     }
     try {
       LabelValidator.PackageAndTarget labelParts = LabelValidator.parseAbsoluteLabel(absName);
@@ -228,7 +226,7 @@ public final class Label
       throws LabelSyntaxException {
     String error = LabelValidator.validateTargetName(name);
     if (error != null) {
-      error = "invalid target name '" + StringUtilities.sanitizeControlChars(name) + "': " + error;
+      error = "invalid target name '" + name + "': " + error;
       if (packageIdentifier.getPackageFragment().getPathString().endsWith("/" + name)) {
         error += " (perhaps you meant \":" + name + "\"?)";
       }

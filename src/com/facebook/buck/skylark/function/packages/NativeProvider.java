@@ -29,12 +29,12 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
+import com.facebook.buck.util.types.Pair;
 import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
 import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
-import com.google.devtools.build.lib.util.Pair;
 import javax.annotation.Nullable;
 
 /**
@@ -141,13 +141,14 @@ public abstract class NativeProvider<V extends Info> implements StarlarkValue, P
   }
 
   public static Pair<String, String> getSerializedRepresentationForNativeKey(NativeKey key) {
-    return Pair.of(key.name, key.aClass.getName());
+    return new Pair<>(key.name, key.aClass.getName());
   }
 
   public static NativeKey getNativeKeyFromSerializedRepresentation(Pair<String, String> serialized)
       throws ClassNotFoundException {
-    Class<? extends Provider> aClass = Class.forName(serialized.second).asSubclass(Provider.class);
-    return new NativeKey(serialized.first, aClass);
+    Class<? extends Provider> aClass =
+        Class.forName(serialized.getSecond()).asSubclass(Provider.class);
+    return new NativeKey(serialized.getFirst(), aClass);
   }
 
   /**

@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
 import com.google.devtools.build.lib.skyframe.serialization.autocodec.SerializationConstant;
-import com.google.devtools.build.lib.util.FileType;
 import com.google.devtools.build.lib.vfs.OsPathPolicy;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -58,8 +57,7 @@ import javax.annotation.Nullable;
  *
  * <p>Mac and Windows path fragments are case insensitive.
  */
-public final class PathFragment
-    implements Comparable<PathFragment>, FileType.HasFileType, CommandLineItem {
+public final class PathFragment implements Comparable<PathFragment>, CommandLineItem {
   private static final OsPathPolicy OS = OsPathPolicy.getFilePathOs();
 
   @SerializationConstant public static final PathFragment EMPTY_FRAGMENT = new PathFragment("", 0);
@@ -732,11 +730,6 @@ public final class PathFragment
           path,
           startingWithPath);
     }
-  }
-
-  @Override
-  public String filePathForFileTypeMatcher() {
-    return normalizedPath;
   }
 
   @Override

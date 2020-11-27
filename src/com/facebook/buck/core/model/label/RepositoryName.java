@@ -34,9 +34,6 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.devtools.build.lib.util.Pair;
-import com.google.devtools.build.lib.util.StringCanonicalizer;
-import com.google.devtools.build.lib.util.StringUtilities;
 import com.google.devtools.build.lib.vfs.OsPathPolicy;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -98,14 +95,10 @@ public final class RepositoryName implements Serializable {
                 public RepositoryName load(String name) throws LabelSyntaxException {
                   String errorMessage = validate(name);
                   if (errorMessage != null) {
-                    errorMessage =
-                        "invalid repository name '"
-                            + StringUtilities.sanitizeControlChars(name)
-                            + "': "
-                            + errorMessage;
+                    errorMessage = "invalid repository name '" + name + "': " + errorMessage;
                     throw new LabelSyntaxException(errorMessage);
                   }
-                  return new RepositoryName(StringCanonicalizer.intern(name));
+                  return new RepositoryName(name.intern());
                 }
               });
 
@@ -141,37 +134,6 @@ public final class RepositoryName implements Serializable {
       return repositoryNameCache.get("@" + name);
     } catch (ExecutionException e) {
       throw new IllegalArgumentException(e.getMessage());
-    }
-  }
-
-  /**
-   * Extracts the repository name from a PathFragment that was created with {@code
-   * PackageIdentifier.getSourceRoot}.
-   *
-   * @return a {@code Pair} of the extracted repository name and the path fragment with stripped of
-   *     "external/"-prefix and repository name, or null if none was found or the repository name
-   *     was invalid.
-   */
-  public static Pair<RepositoryName, PathFragment> fromPathFragment(
-      PathFragment path, boolean siblingRepositoryLayout) {
-    if (path.segmentCount() < 2) {
-      return null;
-    }
-
-    PathFragment prefix =
-        siblingRepositoryLayout
-            ? LabelConstants.EXPERIMENTAL_EXTERNAL_PATH_PREFIX
-            : LabelConstants.EXTERNAL_PATH_PREFIX;
-    if (!path.startsWith(prefix)) {
-      return null;
-    }
-
-    try {
-      RepositoryName repoName = RepositoryName.create("@" + path.getSegment(1));
-      PathFragment subPath = path.subFragment(2);
-      return Pair.of(repoName, subPath);
-    } catch (LabelSyntaxException e) {
-      return null;
     }
   }
 
