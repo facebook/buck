@@ -31,7 +31,6 @@ public class GlobalCliOptions {
   public static final String NUM_THREADS_LONG_ARG = "--num-threads";
   public static final String CONFIG_LONG_ARG = "--config";
   public static final String CONFIG_FILE_LONG_ARG = "--config-file";
-  public static final String SKYLARK_PROFILE_LONG_ARG = "--skylark-profile-output";
   public static final String VERBOSE_LONG_ARG = "--verbose";
   public static final String VERBOSE_SHORT_ARG = "-v";
   public static final String HOST_PLATFORM_LONG_ARG = "--host-platform";
@@ -60,7 +59,6 @@ public class GlobalCliOptions {
           CONFIG_LONG_ARG,
           CONFIG_FILE_LONG_ARG,
           VERBOSE_LONG_ARG,
-          SKYLARK_PROFILE_LONG_ARG,
           TARGET_PLATFORMS_LONG_ARG,
           REUSE_CURRENT_CONFIG_ARG,
           ONCALL_ARG,

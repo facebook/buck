@@ -20,9 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.profiler.Profiler;
-import com.google.devtools.build.lib.profiler.ProfilerTask;
-import com.google.devtools.build.lib.profiler.SilentCloseable;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Location;
@@ -169,48 +166,43 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
     // this is the effectively the same as bazel's {@BuiltInCallable}
-    try (SilentCloseable c =
-        Profiler.instance().profile(ProfilerTask.STARLARK_BUILTIN_FN, methodDescriptor.getName())) {
-      Object[] javaArguments = getArgumentVector(thread, methodDescriptor, positional, named);
+    Object[] javaArguments = getArgumentVector(thread, methodDescriptor, positional, named);
 
-      // TODO: deal with Optionals and some java/skylark object coercing
-      ImmutableList<Object> argsForReflectionBuilder = ImmutableList.copyOf(javaArguments);
+    // TODO: deal with Optionals and some java/skylark object coercing
+    ImmutableList<Object> argsForReflectionBuilder = ImmutableList.copyOf(javaArguments);
 
-      // The below is adapted from bazel's MethodDescriptor.call, but for method handles
-      try {
-        Object result = method.invokeWithArguments(argsForReflectionBuilder);
-        if (method.type().returnType().equals(Void.TYPE)) {
+    // The below is adapted from bazel's MethodDescriptor.call, but for method handles
+    try {
+      Object result = method.invokeWithArguments(argsForReflectionBuilder);
+      if (method.type().returnType().equals(Void.TYPE)) {
+        return Starlark.NONE;
+      }
+      if (result == null) {
+        if (methodDescriptor.isAllowReturnNones()) {
           return Starlark.NONE;
-        }
-        if (result == null) {
-          if (methodDescriptor.isAllowReturnNones()) {
-            return Starlark.NONE;
-          } else {
-            throw new EvalException(
-                "method invocation returned None, please file a bug report: "
-                    + getName()
-                    + "(...)");
-          }
-        }
-        if (!Starlark.valid(result)) {
-          throw new EvalException(
-              String.format(
-                  "method '%s' returns an object of invalid type %s",
-                  getName(), result.getClass().getName()));
-        }
-        return result;
-      } catch (WrongMethodTypeException e) {
-        throw new EvalException("Method invocation failed: " + e);
-      } catch (Throwable e) {
-        if (e.getCause() instanceof EvalException) {
-          throw (EvalException) e.getCause();
-        } else if (e.getCause() != null) {
-          Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
-          throw new EvalException(null, "method invocation failed: " + e, e.getCause());
         } else {
-          // This is unlikely to happen
-          throw new EvalException("method invocation failed: " + e);
+          throw new EvalException(
+              "method invocation returned None, please file a bug report: " + getName() + "(...)");
         }
+      }
+      if (!Starlark.valid(result)) {
+        throw new EvalException(
+            String.format(
+                "method '%s' returns an object of invalid type %s",
+                getName(), result.getClass().getName()));
+      }
+      return result;
+    } catch (WrongMethodTypeException e) {
+      throw new EvalException("Method invocation failed: " + e);
+    } catch (Throwable e) {
+      if (e.getCause() instanceof EvalException) {
+        throw (EvalException) e.getCause();
+      } else if (e.getCause() != null) {
+        Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
+        throw new EvalException(null, "method invocation failed: " + e, e.getCause());
+      } else {
+        // This is unlikely to happen
+        throw new EvalException("method invocation failed: " + e);
       }
     }
   }

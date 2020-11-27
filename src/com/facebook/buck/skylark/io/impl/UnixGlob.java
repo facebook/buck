@@ -45,9 +45,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
-import com.google.devtools.build.lib.profiler.Profiler;
-import com.google.devtools.build.lib.profiler.ProfilerTask;
-import com.google.devtools.build.lib.profiler.SilentCloseable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
@@ -441,8 +438,7 @@ final class UnixGlob {
           new Runnable() {
             @Override
             public void run() {
-              try (SilentCloseable c =
-                  Profiler.instance().profile(ProfilerTask.VFS_GLOB, base.toString())) {
+              try {
                 reallyGlob(base, baseIsDir, idx, context);
               } catch (IOException e) {
                 ioException.set(e);

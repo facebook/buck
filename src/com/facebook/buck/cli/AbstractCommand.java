@@ -66,27 +66,17 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.devtools.build.lib.clock.Clock;
-import com.google.devtools.build.lib.clock.JavaClock;
-import com.google.devtools.build.lib.profiler.Profiler;
-import com.google.devtools.build.lib.profiler.Profiler.Format;
-import com.google.devtools.build.lib.profiler.ProfilerTask;
-import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -134,15 +124,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   void addConfigFile(String filePath) {
     configOverrides.add(new CommandConfigOverride.File(filePath));
   }
-
-  @Option(
-      name = GlobalCliOptions.SKYLARK_PROFILE_LONG_ARG,
-      usage =
-          "Experimental. Path to a file where Skylark profile information should be written into."
-              + " The output is in Chrome Tracing format and can be viewed in chrome://tracing tab",
-      metaVar = "PATH")
-  @Nullable
-  private String skylarkProfile;
 
   @Option(name = GlobalCliOptions.TARGET_PLATFORMS_LONG_ARG, usage = "Target platforms.")
   private List<String> targetPlatforms = new ArrayList<>();
@@ -287,39 +268,9 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         }
       }
     }
-    try (Closeable closeable = prepareExecutionContext(params);
-        Closeable bazelProfiler = prepareBazelProfiler()) {
+    try (Closeable closeable = prepareExecutionContext(params)) {
       return runWithoutHelp(params);
     }
-  }
-
-  private Closeable prepareBazelProfiler() {
-    if (skylarkProfile != null) {
-      Clock clock = new JavaClock();
-      try {
-        OutputStream outputStream =
-            new BufferedOutputStream(Files.newOutputStream(Paths.get(skylarkProfile)));
-
-        Profiler.instance()
-            .start(
-                ImmutableSet.copyOf(ProfilerTask.values()),
-                outputStream,
-                Format.JSON_TRACE_FILE_FORMAT,
-                "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
-                "buck",
-                UUID.nameUUIDFromBytes(new byte[0]),
-                false,
-                clock,
-                clock.nanoTime(),
-                false,
-                false,
-                false);
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            "Cannot initialize Skylark profiler for " + skylarkProfile, e);
-      }
-    }
-    return () -> Profiler.instance().stop();
   }
 
   protected Closeable prepareExecutionContext(CommandRunnerParams params) {
