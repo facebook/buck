@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.label.PackageIdentifier;
+import com.facebook.buck.core.model.label.PathFragment;
 import com.facebook.buck.core.model.label.RepositoryName;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
@@ -45,7 +46,6 @@ import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

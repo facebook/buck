@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.filesystem;
 
-import com.google.devtools.build.lib.vfs.PathFragment;
+import com.facebook.buck.core.model.label.PathFragment;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;

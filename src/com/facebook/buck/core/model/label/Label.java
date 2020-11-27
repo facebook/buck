@@ -42,7 +42,6 @@ import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
 import com.google.devtools.build.lib.util.StringUtilities;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import com.google.devtools.build.skyframe.SkyFunctionName;
 import com.google.devtools.build.skyframe.SkyKey;
 import java.io.Serializable;
@@ -74,7 +73,7 @@ public final class Label
    * Package names that aren't made relative to the current repository because they mean special
    * things to Bazel.
    */
-  public static final ImmutableSet<PathFragment> ABSOLUTE_PACKAGE_NAMES =
+  private static final ImmutableSet<PathFragment> ABSOLUTE_PACKAGE_NAMES =
       ImmutableSet.of(
           // Used for select
           PathFragment.create("conditions"),
@@ -203,19 +202,6 @@ public final class Label
   }
 
   /**
-   * Factory for Labels from separate components.
-   *
-   * @param packageName The name of the package. The package name does <b>not</b> include {@code
-   *     //}. Must be valid according to {@link LabelValidator#validatePackageName}.
-   * @param targetName The name of the target within the package. Must be valid according to {@link
-   *     LabelValidator#validateTargetName}.
-   * @throws LabelSyntaxException if either of the arguments was invalid.
-   */
-  public static Label create(String packageName, String targetName) throws LabelSyntaxException {
-    return create(validatePackageName(packageName, targetName), targetName);
-  }
-
-  /**
    * Similar factory to above, but takes a package identifier to allow external repository labels to
    * be created.
    */
@@ -232,43 +218,6 @@ public final class Label
    */
   public static Label createUnvalidated(PackageIdentifier packageIdentifier, String name) {
     return LABEL_INTERNER.intern(new Label(packageIdentifier, name));
-  }
-
-  /**
-   * Resolves a relative label using a workspace-relative path to the current working directory. The
-   * method handles these cases:
-   *
-   * <ul>
-   *   <li>The label is absolute.
-   *   <li>The label starts with a colon.
-   *   <li>The label consists of a relative path, a colon, and a local part.
-   *   <li>The label consists only of a local part.
-   * </ul>
-   *
-   * <p>Note that this method does not support any of the special syntactic constructs otherwise
-   * supported on the command line, like ":all", "/...", and so on.
-   *
-   * <p>It would be cleaner to use the TargetPatternEvaluator for this resolution, but that is not
-   * possible, because it is sometimes necessary to resolve a relative label before the package path
-   * is setup (maybe not anymore...)
-   *
-   * @throws LabelSyntaxException if the resulting label is not valid
-   */
-  public static Label parseCommandLineLabel(String label, PathFragment workspaceRelativePath)
-      throws LabelSyntaxException {
-    Preconditions.checkArgument(!workspaceRelativePath.isAbsolute());
-    if (LabelValidator.isAbsolute(label)) {
-      return parseAbsolute(label, ImmutableMap.of());
-    }
-    int index = label.indexOf(':');
-    if (index < 0) {
-      index = 0;
-      label = ":" + label;
-    }
-    PathFragment path = workspaceRelativePath.getRelative(label.substring(0, index));
-    // Use the String, String constructor, to make sure that the package name goes through the
-    // validity check.
-    return create(path.getPathString(), label.substring(index + 1));
   }
 
   /**
@@ -291,12 +240,6 @@ public final class Label
       name = name.substring(0, name.length() - 2);
     }
     return name;
-  }
-
-  private static PackageIdentifier validatePackageName(String packageIdentifier, String name)
-      throws LabelSyntaxException {
-    return validatePackageName(
-        packageIdentifier, name, /* repo= */ null, /* repositoryMapping= */ null);
   }
 
   /**
@@ -388,7 +331,7 @@ public final class Label
    * this label will be under the exec root, in particular, it won't work for rules in external
    * repositories.
    */
-  public PathFragment getPackageFragment() {
+  private PathFragment getPackageFragment() {
     return packageIdentifier.getPackageFragment();
   }
 

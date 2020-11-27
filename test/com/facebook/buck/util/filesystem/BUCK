@@ -4,6 +4,7 @@ java_test(
     name = "filesystem",
     srcs = glob(["*Test.java"]),
     deps = [
+        "//src/com/facebook/buck/core/model/label:label",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/filesystem:filesystem",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
