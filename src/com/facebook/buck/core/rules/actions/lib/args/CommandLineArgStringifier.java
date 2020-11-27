@@ -19,7 +19,7 @@ package com.facebook.buck.core.rules.actions.lib.args;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.artifact.OutputArtifact;
-import com.google.devtools.build.lib.actions.CommandLineItem;
+import com.facebook.buck.core.model.label.CommandLineItem;
 
 /** Helper methods to convert / validate objects that are command line arguments for actions */
 public class CommandLineArgStringifier {

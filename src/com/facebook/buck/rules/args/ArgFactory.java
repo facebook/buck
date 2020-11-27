@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.google.devtools.build.lib.actions.CommandLineItem;
+import com.facebook.buck.core.model.label.CommandLineItem;
 
 /**
  * Simple factory class to convert objects from {@link
