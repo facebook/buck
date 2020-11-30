@@ -19,11 +19,16 @@ package com.facebook.buck.intellij.ideabuck.inspection;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckElementFactory;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListMaker;
+import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
+import com.facebook.buck.intellij.ideabuck.logging.EventLoggerFactoryProvider;
+import com.facebook.buck.intellij.ideabuck.logging.Keys;
+import com.google.common.collect.ImmutableMap;
 import com.intellij.codeInspection.LocalQuickFix;
 import com.intellij.codeInspection.ProblemDescriptor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.Navigatable;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
@@ -38,14 +43,17 @@ public class BuckInsertTargetToVisibilityQuickFix implements LocalQuickFix {
   @NotNull private final BuckTargetPattern mTargetToAdd;
   @NotNull private final BuckTargetPattern mTargetWithVisibility;
   @NotNull private final BuckListMaker mVisibilityList;
+  @NotNull private final VirtualFile mTargetToAddFile;
 
   public BuckInsertTargetToVisibilityQuickFix(
       @NotNull BuckTargetPattern targetToAdd,
       @NotNull BuckTargetPattern targetWithVisibility,
-      @NotNull BuckListMaker visibilityList) {
+      @NotNull BuckListMaker visibilityList,
+      @NotNull VirtualFile targetToAddFile) {
     mTargetToAdd = targetToAdd;
     mTargetWithVisibility = targetWithVisibility;
     mVisibilityList = visibilityList;
+    mTargetToAddFile = targetToAddFile;
   }
 
   @Nls(capitalization = Nls.Capitalization.Sentence)
@@ -64,10 +72,30 @@ public class BuckInsertTargetToVisibilityQuickFix implements LocalQuickFix {
 
   @Override
   public void applyFix(@NotNull Project project, @NotNull ProblemDescriptor problemDescriptor) {
+    VirtualFile buckFile = mVisibilityList.getContainingFile().getVirtualFile();
+    String buckFilePath = buckFile == null ? "null" : buckFile.getCanonicalPath();
+    EventLogger buckEventLogger =
+        EventLoggerFactoryProvider.getInstance()
+            .getBuckEventLogger(Keys.FILE_QUICKFIX)
+            .withEventAction(this.getClass().getSimpleName())
+            .withProjectFiles(project, mTargetToAddFile);
     String listMakerContent = getListMakerWithTargetText(project);
     if (listMakerContent == null) {
+      buckEventLogger
+          .withExtraData(
+              ImmutableMap.of(
+                  Keys.ERROR,
+                  "Visibility list cannot be found",
+                  Keys.BUCK_FILE,
+                  buckFilePath,
+                  Keys.TARGET_TO_ADD,
+                  mTargetToAdd.toString(),
+                  Keys.TARGET,
+                  mTargetWithVisibility.toString()))
+          .log();
       return;
     }
+
     PsiElement navigationElement = mVisibilityList.getNavigationElement();
     if (navigationElement instanceof Navigatable
         && ((Navigatable) navigationElement).canNavigate()) {
@@ -78,6 +106,16 @@ public class BuckInsertTargetToVisibilityQuickFix implements LocalQuickFix {
     mVisibilityList.replace(
         BuckElementFactory.createElement(
             project, "[" + listMakerContent + "]", BuckListMaker.class));
+    buckEventLogger
+        .withExtraData(
+            ImmutableMap.of(
+                Keys.BUCK_FILE,
+                buckFilePath,
+                Keys.TARGET_TO_ADD,
+                mTargetToAdd.toString(),
+                Keys.TARGET,
+                mTargetWithVisibility.toString()))
+        .log();
   }
 
   @Nullable

@@ -107,7 +107,10 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
             DEP_VISIBILITY_FIX_DESCRIPTION,
             DEP_VISIBILITY_FIX_HIGHLIGHT_TYPE,
             new BuckInsertTargetToVisibilityQuickFix(
-                parentTargetPattern, depTargetPattern, buckListMaker));
+                parentTargetPattern,
+                depTargetPattern,
+                buckListMaker,
+                buckString.getContainingFile().getVirtualFile()));
       }
     }
 

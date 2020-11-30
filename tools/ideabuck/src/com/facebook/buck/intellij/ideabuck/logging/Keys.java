@@ -21,9 +21,11 @@ public class Keys {
   private Keys() {}
   // Event types
   public static String MENU_ITEM = "menu.item";
+  public static String FILE_QUICKFIX = "file.quickfix";
 
   // Extra data keys
   public static String BUCK_FILE = "buck_file";
   public static String ERROR = "error_message";
+  public static String TARGET_TO_ADD = "target_to_add";
   public static String TARGET = "target";
 }
