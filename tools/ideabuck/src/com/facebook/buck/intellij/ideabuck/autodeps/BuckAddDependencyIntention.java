@@ -21,6 +21,8 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler.Callback;
+import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
+import com.facebook.buck.intellij.ideabuck.logging.Keys;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
 import com.google.gson.JsonElement;
 import com.intellij.notification.Notification;
@@ -37,6 +39,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.swing.event.HyperlinkEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -101,7 +104,7 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
 
   /** Queries buck for targets that own the editSourceFile and the importSourceFile. */
   @Override
-  protected void queryBuckForTargets(Editor editor) {
+  protected void queryBuckForTargets(Editor editor, EventLogger buckEventLogger) {
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     String editPath = editSourceFile.getPath();
     String importPath = importSourceFile.getPath();
@@ -129,7 +132,7 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
                         TargetMetadataTransformer.transformImportedTarget(project, targetMetadata));
                   }
                 }
-                updateDependencies(editor, editTargets, importTargets);
+                updateDependencies(editor, editTargets, importTargets, buckEventLogger);
               }
 
               @Override
@@ -138,12 +141,13 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
                   String stderr,
                   @Nullable Integer exitCode,
                   @Nullable Throwable throwable) {
-                BuckNotification.getInstance(project)
-                    .showWarningBalloon(
-                        "Could not determine owners for "
-                            + editSourceFile
-                            + " and/or "
-                            + importSourceFile);
+                String message =
+                    "Could not determine owners for "
+                        + editSourceFile
+                        + " and/or "
+                        + importSourceFile;
+                logFail(message, buckEventLogger);
+                BuckNotification.getInstance(project).showWarningBalloon(message);
               }
             });
     handler
@@ -175,7 +179,10 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
   }
 
   private void updateDependencies(
-      Editor editor, List<TargetMetadata> editTargets, List<TargetMetadata> importTargets) {
+      Editor editor,
+      List<TargetMetadata> editTargets,
+      List<TargetMetadata> importTargets,
+      EventLogger buckEventLogger) {
     TargetMetadata editTargetMetadata =
         getTargetMetaDataFromList(
             editTargets,
@@ -185,6 +192,9 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
                 + editBuildFile.getPath()
                 + "</a>");
     if (editTargetMetadata == null) {
+      logFail(
+          "Could not determine Buck owner for edit source file " + editSourceTarget,
+          buckEventLogger);
       return;
     }
     TargetMetadata importTargetMetadata =
@@ -196,6 +206,9 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
                 + importBuildFile.getPath()
                 + "</a></html>");
     if (importTargetMetadata == null) {
+      logFail(
+          "Could not determine Buck owner for import source file " + importSourceTarget,
+          buckEventLogger);
       return;
     }
     editTarget = editTargetMetadata.target;
@@ -208,10 +221,13 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
               + "</a> is not visible to <a href='editTarget'>"
               + editTarget
               + "</a></html>";
+      logFail(
+          "Import target " + importTarget + " not visible to edit target " + editTarget,
+          buckEventLogger);
       BuckNotification.getInstance(project).showErrorBalloon(message, this::hyperlinkActivated);
       return;
     }
-    if (!tryToAddBuckDependency(editTargetMetadata)) {
+    if (!tryToAddBuckDependency(editTargetMetadata, buckEventLogger)) {
       return;
     }
     ModuleRootModificationUtil.updateModel(
@@ -231,7 +247,17 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
                     + " on "
                     + importModule.getName());
           }
+          buckEventLogger.withExtraData(getExtraLoggingData()).log();
         }));
     invokeAddImport(editor);
+  }
+
+  @Override
+  Map<String, String> getExtraLoggingData() {
+    Map<String, String> data = super.getExtraLoggingData();
+    if (importModule != null) {
+      data.put(Keys.MODULE, importModule.getName());
+    }
+    return data;
   }
 }

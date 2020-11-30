@@ -18,7 +18,11 @@ package com.facebook.buck.intellij.ideabuck.autodeps;
 
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
+import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
+import com.facebook.buck.intellij.ideabuck.logging.EventLoggerFactoryProvider;
+import com.facebook.buck.intellij.ideabuck.logging.Keys;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,6 +46,7 @@ import com.intellij.psi.PsiReference;
 import com.intellij.util.IncorrectOperationException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.event.HyperlinkEvent;
@@ -98,15 +103,20 @@ public abstract class AbstractBuckAddDependencyIntention extends BaseIntentionAc
   @Override
   public void invoke(@NotNull Project project, Editor editor, PsiFile psiFile)
       throws IncorrectOperationException {
+    EventLogger buckEventLogger =
+        EventLoggerFactoryProvider.getInstance()
+            .getBuckEventLogger(Keys.FILE_QUICKFIX)
+            .withEventAction(this.getClass().getSimpleName())
+            .withProjectFiles(project, editSourceFile);
     // will run buck query in the background, no need to block the ui for that
     ApplicationManager.getApplication()
         .executeOnPooledThread(
             () -> {
-              queryBuckForTargets(editor);
+              queryBuckForTargets(editor, buckEventLogger);
             });
   }
 
-  abstract void queryBuckForTargets(Editor editor);
+  abstract void queryBuckForTargets(Editor editor, EventLogger buckEventLogger);
 
   List<TargetMetadata> parseJson(JsonElement jsonElement, BuckTargetLocator buckTargetLocator) {
     Type type = new TypeToken<Map<String, JsonObject>>() {}.getType();
@@ -172,7 +182,7 @@ public abstract class AbstractBuckAddDependencyIntention extends BaseIntentionAc
     return targetMetadataList.get(0);
   }
 
-  boolean tryToAddBuckDependency(TargetMetadata editTargetMetadata) {
+  boolean tryToAddBuckDependency(TargetMetadata editTargetMetadata, EventLogger buckEventLogger) {
     if (!editTargetMetadata.hasDependencyOn(importTarget)) {
       if (!BuckDeps.modifyTargetToAddDependency(
           editBuildFile, editTarget.toString(), importTarget.toString())) {
@@ -182,6 +192,12 @@ public abstract class AbstractBuckAddDependencyIntention extends BaseIntentionAc
                 + "</a> to add dependency on <a href='importTarget'>"
                 + importTarget
                 + "</a></html>";
+        logFail(
+            "Could not modify build rule for edit target "
+                + editTarget
+                + " to add dependency on importTarget "
+                + importTarget,
+            buckEventLogger);
         BuckNotification.getInstance(project).showErrorBalloon(message, this::hyperlinkActivated);
         return false;
       }
@@ -221,5 +237,30 @@ public abstract class AbstractBuckAddDependencyIntention extends BaseIntentionAc
   @Override
   public Priority getPriority() {
     return Priority.TOP;
+  }
+
+  void logFail(String message, EventLogger buckEventLogger) {
+    Map<String, String> data = getExtraLoggingData();
+    String className =
+        (psiClass == null || psiClass.getQualifiedName() == null)
+            ? "null"
+            : psiClass.getQualifiedName();
+    Map<String, String> extraData =
+        ImmutableMap.<String, String>builder()
+            .putAll(data)
+            .putAll(ImmutableMap.of(Keys.ERROR, message, Keys.CLASS_NAME, className))
+            .build();
+    buckEventLogger.withExtraData(extraData).log();
+  }
+
+  Map<String, String> getExtraLoggingData() {
+    Map<String, String> data = new HashMap<>();
+    if (editTarget != null) {
+      data.put(Keys.EDIT_TARGET, editTarget.toString());
+    }
+    if (importTarget != null) {
+      data.put(Keys.IMPORT_TARGET, importTarget.toString());
+    }
+    return data;
   }
 }

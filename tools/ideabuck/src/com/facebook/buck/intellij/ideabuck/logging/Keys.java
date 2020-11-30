@@ -28,4 +28,9 @@ public class Keys {
   public static String ERROR = "error_message";
   public static String TARGET_TO_ADD = "target_to_add";
   public static String TARGET = "target";
+  public static String CLASS_NAME = "class_name";
+  public static String EDIT_TARGET = "edit_target";
+  public static String IMPORT_TARGET = "import_target";
+  public static String MODULE = "module";
+  public static String LIBRARY = "library";
 }

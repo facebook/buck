@@ -20,6 +20,8 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.facebook.buck.intellij.ideabuck.build.BuckJsonCommandHandler;
+import com.facebook.buck.intellij.ideabuck.logging.EventLogger;
+import com.facebook.buck.intellij.ideabuck.logging.Keys;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
 import com.google.gson.JsonElement;
 import com.intellij.notification.Notification;
@@ -32,6 +34,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.util.IncorrectOperationException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.swing.event.HyperlinkEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -75,7 +78,7 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
 
   /** Queries buck for targets that own the editSourceFile. */
   @Override
-  protected void queryBuckForTargets(Editor editor) {
+  protected void queryBuckForTargets(Editor editor, EventLogger buckEventLogger) {
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     String editPath = editSourceFile.getPath();
     BuckJsonCommandHandler<List<TargetMetadata>> handler =
@@ -102,7 +105,7 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
                 importMetadata.target = buckTargetLocator.resolve(importSourceTarget);
                 importTargets.add(
                     TargetMetadataTransformer.transformImportedTarget(project, importMetadata));
-                updateDependencies(editor, editTargets, importTargets);
+                updateDependencies(editor, editTargets, importTargets, buckEventLogger);
               }
 
               @Override
@@ -111,8 +114,9 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
                   String stderr,
                   @Nullable Integer exitCode,
                   @Nullable Throwable throwable) {
-                BuckNotification.getInstance(project)
-                    .showWarningBalloon("Could not determine owners for " + editSourceFile);
+                String message = "Could not determine owners for " + editSourceFile;
+                logFail(message, buckEventLogger);
+                BuckNotification.getInstance(project).showWarningBalloon(message);
               }
             });
     handler
@@ -132,7 +136,10 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
   }
 
   private void updateDependencies(
-      Editor editor, List<TargetMetadata> editTargets, List<TargetMetadata> importTargets) {
+      Editor editor,
+      List<TargetMetadata> editTargets,
+      List<TargetMetadata> importTargets,
+      EventLogger buckEventLogger) {
     TargetMetadata editTargetMetadata =
         getTargetMetaDataFromList(
             editTargets,
@@ -142,6 +149,8 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
                 + editBuildFile.getPath()
                 + "</a>");
     if (editTargetMetadata == null) {
+      logFail(
+          "Could not determine owner for edit source file " + editSourceTarget, buckEventLogger);
       return;
     }
     // No error message here, since at this point importTargets should have the library as target.
@@ -151,7 +160,7 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
     }
     editTarget = editTargetMetadata.target;
     importTarget = importTargetMetadata.target;
-    if (!tryToAddBuckDependency(editTargetMetadata)) {
+    if (!tryToAddBuckDependency(editTargetMetadata, buckEventLogger)) {
       return;
     }
     ModuleRootModificationUtil.updateModel(
@@ -171,7 +180,17 @@ public class BuckAddLibraryDependencyIntention extends AbstractBuckAddDependency
                     + " on "
                     + importLibrary.getName());
           }
+          buckEventLogger.withExtraData(getExtraLoggingData()).log();
         }));
     invokeAddImport(editor);
+  }
+
+  @Override
+  Map<String, String> getExtraLoggingData() {
+    Map<String, String> data = super.getExtraLoggingData();
+    if (importLibrary != null) {
+      data.put(Keys.LIBRARY, importLibrary.getName());
+    }
+    return data;
   }
 }
