@@ -30,9 +30,6 @@
 package com.facebook.buck.skylark.function.packages;
 
 import com.facebook.buck.util.types.Pair;
-import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
 import javax.annotation.Nullable;
@@ -51,7 +48,6 @@ import javax.annotation.Nullable;
  *
  * @deprecated use {@link BuiltinProvider} instead.
  */
-@Immutable
 @Deprecated
 public abstract class NativeProvider<V extends Info> implements StarlarkValue, Provider {
   private final String name;
@@ -156,14 +152,11 @@ public abstract class NativeProvider<V extends Info> implements StarlarkValue, P
    *
    * <p>Just a wrapper around its class.
    */
-  @AutoCodec
-  @Immutable
   // TODO(cparsons): Move this class, as NativeProvider is deprecated.
   public static final class NativeKey extends Key {
     private final String name;
     private final Class<? extends Provider> aClass;
 
-    @VisibleForSerialization
     NativeKey(String name, Class<? extends Provider> aClass) {
       this.name = name;
       this.aClass = aClass;

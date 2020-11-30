@@ -29,7 +29,6 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
-import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
@@ -47,7 +46,6 @@ import javax.annotation.Nullable;
  * should be annotated with {@link StarlarkMethod} with {@link StarlarkMethod#selfCall} set to true,
  * and with {@link StarlarkConstructor} for the info type it constructs.
  */
-@Immutable
 public abstract class BuiltinProvider<T extends Info> implements Provider {
   private final NativeProvider.NativeKey key;
   private final String name;

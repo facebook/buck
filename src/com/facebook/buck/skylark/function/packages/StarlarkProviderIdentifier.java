@@ -32,7 +32,7 @@ package com.facebook.buck.skylark.function.packages;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Interner;
-import com.google.devtools.build.lib.concurrent.BlazeInterners;
+import com.google.common.collect.Interners;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -41,8 +41,7 @@ import javax.annotation.Nullable;
  * StarlarkProvider}) or a "legacy" string identifier.
  */
 public final class StarlarkProviderIdentifier {
-  private static final Interner<StarlarkProviderIdentifier> interner =
-      BlazeInterners.newWeakInterner();
+  private static final Interner<StarlarkProviderIdentifier> interner = Interners.newWeakInterner();
 
   @Nullable private final String legacyId;
   @Nullable private final Provider.Key key;

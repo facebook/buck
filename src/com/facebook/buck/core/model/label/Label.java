@@ -34,9 +34,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
-import com.google.devtools.build.lib.concurrent.BlazeInterners;
-import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
-import com.google.devtools.build.lib.concurrent.ThreadSafety.ThreadSafe;
+import com.google.common.collect.Interners;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -63,8 +61,6 @@ import net.starlark.java.annot.StarlarkMethod;
     name = "Label",
     category = StarlarkDocumentationCategory.BUILTIN,
     doc = "A BUILD target identifier.")
-@Immutable
-@ThreadSafe
 public final class Label
     implements Comparable<Label>, Serializable, StarlarkValue, SkyKey, CommandLineItem {
 
@@ -84,7 +80,7 @@ public final class Label
   public static final SkyFunctionName TRANSITIVE_TRAVERSAL =
       SkyFunctionName.createHermetic("TRANSITIVE_TRAVERSAL");
 
-  private static final Interner<Label> LABEL_INTERNER = BlazeInterners.newWeakInterner();
+  private static final Interner<Label> LABEL_INTERNER = Interners.newWeakInterner();
 
   /**
    * Factory for Labels from absolute string form. e.g.

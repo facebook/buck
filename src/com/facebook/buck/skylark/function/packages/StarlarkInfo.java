@@ -34,7 +34,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.collect.nestedset.Depset;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -50,8 +49,6 @@ import javax.annotation.Nullable;
 
 /** An Info (provider instance) for providers defined in Starlark. */
 public final class StarlarkInfo extends StructImpl implements HasBinary, ClassObject {
-
-  public static final Depset.ElementType TYPE = Depset.ElementType.of(StarlarkInfo.class);
 
   // For a n-element info, the table contains n key strings, sorted,
   // followed by the n corresponding legal Starlark values.

@@ -29,15 +29,11 @@
 // limitations under the License.
 package com.facebook.buck.remoteexecution.util;
 
-import com.google.devtools.build.lib.concurrent.ThreadSafety.ThreadSafe;
-
 /** A keyed store of locks. */
-@ThreadSafe
 interface KeyedLocker<K> {
   /**
    * Used to yield access to the implicit locks granted by {@link #writeLock} or {@link #readLock}.
    */
-  @ThreadSafe
   interface AutoUnlocker extends AutoCloseable {
     /** Exception used to indicate illegal use of {@link AutoUnlocker#close}. */
     class IllegalUnlockException extends RuntimeException {

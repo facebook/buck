@@ -29,7 +29,6 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
-import com.google.devtools.build.lib.concurrent.ThreadSafety.Immutable;
 import com.google.devtools.build.lib.skylarkbuildapi.core.ProviderApi;
 import com.google.devtools.build.lib.syntax.Location;
 
@@ -47,7 +46,6 @@ import com.google.devtools.build.lib.syntax.Location;
  * <p>Prefer to use {@link Key} as a serializable identifier of {@link Provider}. In particular,
  * {@link Key} should be used in all data structures exposed to Skyframe.
  */
-@Immutable
 public interface Provider extends ProviderApi {
 
   /**

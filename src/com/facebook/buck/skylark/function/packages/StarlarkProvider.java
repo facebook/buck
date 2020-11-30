@@ -30,10 +30,9 @@
 
 package com.facebook.buck.skylark.function.packages;
 
+import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
@@ -252,7 +251,6 @@ public final class StarlarkProvider
    * A serializable representation of Starlark-defined {@link StarlarkProvider} that uniquely
    * identifies all {@link StarlarkProvider}s that are exposed to SkyFrame.
    */
-  @AutoCodec
   public static class Key extends Provider.Key {
     private final Label extensionLabel;
     private final String exportedName;

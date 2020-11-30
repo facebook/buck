@@ -32,8 +32,6 @@ package com.facebook.buck.skylark.function.select;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.collect.nestedset.Depset;
-import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.HasBinary;
@@ -75,7 +73,6 @@ public final class SelectorList implements StarlarkValue, HasBinary {
   private final Class<?> type;
   private final List<Object> elements;
 
-  @AutoCodec.VisibleForSerialization
   SelectorList(Class<?> type, List<Object> elements) {
     this.type = type;
     this.elements = elements;
@@ -167,9 +164,9 @@ public final class SelectorList implements StarlarkValue, HasBinary {
 
   private static String getTypeName(Object x) {
     if (x instanceof SelectorList) {
-      return "select of " + Depset.ElementType.of(((SelectorList) x).getType());
+      return "select of " + Starlark.classType(((SelectorList) x).getType());
     } else if (x instanceof SelectorValue) {
-      return "select of " + Depset.ElementType.of(((SelectorValue) x).getType());
+      return "select of " + Starlark.classType(((SelectorValue) x).getType());
     } else {
       return Starlark.type(x);
     }
