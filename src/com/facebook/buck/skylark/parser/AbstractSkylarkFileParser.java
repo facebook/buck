@@ -255,9 +255,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return PackageContext.of(
         globber,
         options.getRawConfig(),
-        PackageIdentifier.create(
-            RepositoryName.createFromValidStrippedName(options.getCellName()),
-            PathFragment.createAlreadyNormalized(basePath.toString())),
+        options.getCellName(),
         basePath,
         eventHandler,
         implicitlyLoadedSymbols);

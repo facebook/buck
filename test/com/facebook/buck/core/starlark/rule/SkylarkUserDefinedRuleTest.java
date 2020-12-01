@@ -19,10 +19,9 @@ package com.facebook.buck.core.starlark.rule;
 import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
-import com.facebook.buck.core.model.label.PackageIdentifier;
-import com.facebook.buck.core.model.label.PathFragment;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
@@ -52,6 +51,7 @@ import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
@@ -131,8 +131,7 @@ public class SkylarkUserDefinedRuleTest {
                   throw new UnsupportedOperationException();
                 },
                 ImmutableMap.of(),
-                PackageIdentifier.create(
-                    "@repo", PathFragment.create("some_package").getChild("subdir")),
+                CanonicalCellName.unsafeOf(Optional.of("repo")),
                 ForwardRelativePath.of("some_package/subdir"),
                 eventHandler,
                 ImmutableMap.of()));

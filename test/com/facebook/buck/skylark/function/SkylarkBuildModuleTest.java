@@ -20,10 +20,8 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.label.PackageIdentifier;
-import com.facebook.buck.core.model.label.PathFragment;
-import com.facebook.buck.core.model.label.RepositoryName;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -114,7 +112,7 @@ public class SkylarkBuildModuleTest {
             PackageContext.of(
                 NativeGlobber.create(root),
                 rawConfig,
-                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("my/package")),
+                CanonicalCellName.rootCell(),
                 ForwardRelativePath.of("my/package"),
                 eventHandler,
                 ImmutableMap.of()))

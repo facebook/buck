@@ -20,10 +20,8 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.label.PackageIdentifier;
-import com.facebook.buck.core.model.label.PathFragment;
-import com.facebook.buck.core.model.label.RepositoryName;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -176,7 +174,7 @@ public class GlobTest {
             PackageContext.of(
                 NativeGlobber.create(root),
                 ImmutableMap.of(),
-                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
+                CanonicalCellName.rootCell(),
                 ForwardRelativePath.of("pkg"),
                 eventHandler,
                 ImmutableMap.of()))
