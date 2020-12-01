@@ -54,6 +54,7 @@ public abstract class BuckCommandHandler {
   private final GeneralCommandLine commandLine;
   private final Object processStateLock = new Object();
   private static final Pattern CHARACTER_DIGITS_PATTERN = Pattern.compile("(?s).*[A-Z0-9a-z]+.*");
+  private static final String WAITING_FOR_BUCK_DAEMON = "Waiting for Buck Daemon to become free";
   private final boolean doStartNotify;
   private volatile boolean isCancelled;
 
@@ -336,6 +337,9 @@ public abstract class BuckCommandHandler {
       for (String line : lines) {
         // Check if the line has at least one character or digit
         if (CHARACTER_DIGITS_PATTERN.matcher(line).matches()) {
+          if (line.equals(WAITING_FOR_BUCK_DAEMON)) {
+            onBuckDaemonBusy();
+          }
           stderr.append(line);
         }
       }
@@ -348,6 +352,8 @@ public abstract class BuckCommandHandler {
   protected abstract boolean beforeCommand();
 
   protected abstract void afterCommand();
+
+  protected void onBuckDaemonBusy() {}
 
   public OSProcessHandler getHandler() {
     return handler;

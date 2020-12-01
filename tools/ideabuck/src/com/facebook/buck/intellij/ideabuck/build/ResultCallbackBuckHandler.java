@@ -22,9 +22,12 @@ import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 public class ResultCallbackBuckHandler extends BuckCommandHandler {
   private final Consumer<String> futureCallback;
+
+  @Nullable private Runnable onBuckDaemonBusyCallback;
   private StringBuilder stdout;
 
   /** @deprecated Use {@link ResultCallbackBuckHandler(Project, BuckCommand, Consumer<String>)}. */
@@ -46,6 +49,10 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
     this.stdout = new StringBuilder();
   }
 
+  public void setOnBuckDaemonBusyCallback(@Nullable Runnable onBuckDaemonBusyCallback) {
+    this.onBuckDaemonBusyCallback = onBuckDaemonBusyCallback;
+  }
+
   @Override
   protected void notifyLines(Key outputType, Iterable<String> lines) {
     super.notifyLines(outputType, lines);
@@ -65,6 +72,13 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
   protected void afterCommand() {
     if (!isCancelled()) {
       futureCallback.accept(stdout.toString());
+    }
+  }
+
+  @Override
+  protected void onBuckDaemonBusy() {
+    if (onBuckDaemonBusyCallback != null) {
+      onBuckDaemonBusyCallback.run();
     }
   }
 }
