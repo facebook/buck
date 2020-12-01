@@ -453,7 +453,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
             params,
             /* context */ ImmutableMap.of(),
             /* options */ ImmutableSet.of(),
-            stdin,
+            stdin.map(ProcessExecutor.Stdin::of),
             timeoutMS,
             /* timeoutHandler */ Optional.empty());
     ExitCode exitCode =

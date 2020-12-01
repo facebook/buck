@@ -22,14 +22,16 @@ import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonEncoding;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Optional;
 
 public class PexStep extends IsolatedShellStep {
 
@@ -89,24 +91,38 @@ public class PexStep extends IsolatedShellStep {
    * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  public Optional<String> getStdin() throws IOException {
-    // Convert the map of paths to a map of strings before converting to JSON.
-    ImmutableMap.Builder<String, String> modulesBuilder = ImmutableMap.builder();
-    components.forEachModule((dest, src) -> modulesBuilder.put(dest.toString(), src.toString()));
-    ImmutableMap.Builder<String, String> resourcesBuilder = ImmutableMap.builder();
-    components.forEachResource(
-        (dest, src) -> resourcesBuilder.put(dest.toString(), src.toString()));
-    ImmutableMap.Builder<String, String> nativeLibrariesBuilder = ImmutableMap.builder();
-    components.forEachNativeLibrary(
-        (dest, src) -> nativeLibrariesBuilder.put(dest.toString(), src.toString()));
-    return Optional.of(
-        ObjectMappers.WRITER.writeValueAsString(
-            ImmutableMap.of(
-                "modules", modulesBuilder.build(),
-                "resources", resourcesBuilder.build(),
-                "nativeLibraries", nativeLibrariesBuilder.build(),
-                // prebuiltLibraries key kept for compatibility
-                "prebuiltLibraries", ImmutableList.<String>of())));
+  public void writeStdin(OutputStream stream) throws IOException {
+    try (JsonGenerator generator = new JsonFactory().createGenerator(stream, JsonEncoding.UTF8)) {
+      generator.writeStartObject();
+
+      generator.writeFieldName("modules");
+      generator.writeStartObject();
+      // Convert the map of paths to a map of strings before converting to JSON.
+      components.forEachModule(
+          (dest, src) -> generator.writeStringField(dest.toString(), src.toString()));
+      generator.writeEndObject();
+
+      generator.writeFieldName("resources");
+      generator.writeStartObject();
+      // Convert the map of paths to a map of strings before converting to JSON.
+      components.forEachResource(
+          (dest, src) -> generator.writeStringField(dest.toString(), src.toString()));
+      generator.writeEndObject();
+
+      generator.writeFieldName("nativeLibraries");
+      generator.writeStartObject();
+      // Convert the map of paths to a map of strings before converting to JSON.
+      components.forEachNativeLibrary(
+          (dest, src) -> generator.writeStringField(dest.toString(), src.toString()));
+      generator.writeEndObject();
+
+      // prebuiltLibraries key kept for compatibility
+      generator.writeFieldName("prebuiltLibraries");
+      generator.writeStartArray();
+      generator.writeEndArray();
+
+      generator.writeEndObject();
+    }
   }
 
   @Override

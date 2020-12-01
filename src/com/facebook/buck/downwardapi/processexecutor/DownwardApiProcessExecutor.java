@@ -410,7 +410,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   public DownwardApiExecutionResult execute(
       LaunchedProcess launchedProcess,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {

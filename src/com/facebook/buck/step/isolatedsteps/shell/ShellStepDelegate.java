@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
@@ -94,7 +95,7 @@ public class ShellStepDelegate {
       RelPath buildCellRootPath,
       ImmutableList<String> command,
       ImmutableMap<String, String> environmentVariables,
-      Optional<String> stdin,
+      Optional<ProcessExecutor.Stdin> stdin,
       Optional<Long> timeout,
       Optional<Consumer<Process>> timeoutHandler,
       boolean shouldPrintStdOut,
@@ -199,7 +200,7 @@ public class ShellStepDelegate {
   public ProcessExecutor.Result launchAndInteractWithProcess(
       IsolatedExecutionContext context,
       ProcessExecutorParams params,
-      Optional<String> stdin,
+      Optional<ProcessExecutor.Stdin> stdin,
       Optional<Long> timeout,
       Optional<Consumer<Process>> timeoutHandler,
       boolean shouldPrintStdOut,
@@ -251,9 +252,8 @@ public class ShellStepDelegate {
     return endTime - startTime;
   }
 
-  public Optional<String> getStdin() throws IOException {
-    return Optional.empty();
-  }
+  @SuppressWarnings("unused")
+  public void writeStdin(OutputStream stream) throws IOException {}
 
   /**
    * Returns a description of the shell command args associated with this {@code IsolatedShellStep}.

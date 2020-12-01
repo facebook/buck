@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +72,7 @@ public abstract class ShellStep implements Step {
             context.getRuleCellRoot(), context.getBuildCellRootPath()),
         getShellCommand(context),
         getEnvironmentVariables(context.getPlatform()),
-        getStdin(),
+        Optional.of(this::writeStdin),
         getTimeout(),
         getTimeoutHandler(context),
         shouldPrintStdout(context.getVerbosity()),
@@ -96,7 +97,9 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   ProcessExecutor.Result launchAndInteractWithProcess(
-      StepExecutionContext context, ProcessExecutorParams params, Optional<String> stdin)
+      StepExecutionContext context,
+      ProcessExecutorParams params,
+      Optional<ProcessExecutor.Stdin> stdin)
       throws InterruptedException, IOException {
     return shellStepDelegate.launchAndInteractWithProcess(
         context,
@@ -136,8 +139,8 @@ public abstract class ShellStep implements Step {
     return getShellCommand(context);
   }
 
-  protected Optional<String> getStdin() throws IOException {
-    return shellStepDelegate.getStdin();
+  private void writeStdin(OutputStream stream) throws IOException {
+    shellStepDelegate.writeStdin(stream);
   }
 
   /** Implementations of this method should not have any observable side-effects. */

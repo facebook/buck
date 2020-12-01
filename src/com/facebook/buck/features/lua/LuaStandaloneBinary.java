@@ -40,8 +40,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** Builds a Lua executable into a standalone package using a given packager tool. */
 public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
@@ -113,26 +113,22 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
             withDownwardApi) {
 
           @Override
-          public Optional<String> getStdin() {
-            try {
-              return Optional.of(
-                  ObjectMappers.WRITER.writeValueAsString(
-                      ImmutableMap.of(
-                          "modules",
-                          Maps.transformValues(
-                              components.getModules(),
-                              Functions.compose(Object::toString, resolver::getAbsolutePath)),
-                          "pythonModules",
-                          Maps.transformValues(
-                              components.getPythonModules(),
-                              Functions.compose(Object::toString, resolver::getAbsolutePath)),
-                          "nativeLibraries",
-                          Maps.transformValues(
-                              components.getNativeLibraries(),
-                              Functions.compose(Object::toString, resolver::getAbsolutePath)))));
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
+          public void writeStdin(OutputStream stream) throws IOException {
+            ObjectMappers.WRITER.writeValue(
+                stream,
+                ImmutableMap.of(
+                    "modules",
+                    Maps.transformValues(
+                        components.getModules(),
+                        Functions.compose(Object::toString, resolver::getAbsolutePath)),
+                    "pythonModules",
+                    Maps.transformValues(
+                        components.getPythonModules(),
+                        Functions.compose(Object::toString, resolver::getAbsolutePath)),
+                    "nativeLibraries",
+                    Maps.transformValues(
+                        components.getNativeLibraries(),
+                        Functions.compose(Object::toString, resolver::getAbsolutePath))));
           }
 
           @Override

@@ -42,6 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -209,7 +210,11 @@ public class PexStepTest {
             PRELOAD_LIBRARIES,
             false);
 
-    Map<String, Object> args = ObjectMappers.readValue(step.getStdin().orElse(""), Map.class);
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    step.writeStdin(outputStream);
+    Map<String, Object> args =
+        ObjectMappers.readValue(
+            new String(outputStream.toByteArray(), StandardCharsets.UTF_8), Map.class);
     Assert.assertTrue(file1.isAbsolute());
     Assert.assertTrue(file2.isAbsolute());
     Assert.assertTrue(childFile.isAbsolute());

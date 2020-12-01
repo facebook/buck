@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Optional;
@@ -213,7 +212,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   public Result execute(
       LaunchedProcess launchedProcess,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
@@ -227,7 +226,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private Result getExecutionResult(
       LaunchedProcess launchedProcess,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
@@ -267,9 +266,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       // If a stdin string was specific, then write that first.  This shouldn't cause
       // deadlocks, as the stdout/stderr consumers are running in separate threads.
       if (stdin.isPresent()) {
-        try (OutputStreamWriter stdinWriter = new OutputStreamWriter(process.getOutputStream())) {
-          stdinWriter.write(stdin.get());
-        }
+        stdin.get().writeTo(process.getOutputStream());
+        process.getOutputStream().close();
       }
 
       // Wait for the process to complete.  If a timeout was given, we wait up to the timeout

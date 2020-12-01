@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -78,7 +79,7 @@ public abstract class IsolatedShellStep extends IsolatedStep {
         cellPath,
         getShellCommand(context),
         getEnvironmentVariables(context.getPlatform()),
-        getStdin(),
+        Optional.of(this::writeStdin),
         getTimeout(),
         getTimeoutHandler(context),
         shouldPrintStdout(context.getVerbosity()),
@@ -111,7 +112,7 @@ public abstract class IsolatedShellStep extends IsolatedStep {
   ProcessExecutor.Result launchAndInteractWithProcess(
       IsolatedExecutionContext context,
       ProcessExecutorParams params,
-      Optional<String> stdin,
+      Optional<ProcessExecutor.Stdin> stdin,
       Optional<Long> timeout,
       Optional<Consumer<Process>> timeoutHandler,
       boolean shouldPrintStdOut,
@@ -165,8 +166,8 @@ public abstract class IsolatedShellStep extends IsolatedStep {
     return getShellCommand(context);
   }
 
-  public Optional<String> getStdin() throws IOException {
-    return delegate.getStdin();
+  public void writeStdin(OutputStream stream) throws IOException {
+    delegate.writeStdin(stream);
   }
 
   @Override

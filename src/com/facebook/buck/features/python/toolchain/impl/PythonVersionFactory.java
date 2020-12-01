@@ -68,7 +68,7 @@ public class PythonVersionFactory {
               EnumSet.of(
                   ProcessExecutor.Option.EXPECTING_STD_OUT,
                   ProcessExecutor.Option.EXPECTING_STD_ERR),
-              Optional.of(versionId),
+              Optional.of(ProcessExecutor.Stdin.of(versionId)),
               /* timeOutMs */ Optional.empty(),
               /* timeoutHandler */ Optional.empty());
       return extractPythonVersion(pythonPath, versionResult);

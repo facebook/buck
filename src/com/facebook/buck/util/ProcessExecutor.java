@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -70,7 +71,7 @@ public interface ProcessExecutor {
   default Result launchAndExecute(
       ProcessExecutorParams params,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
@@ -81,7 +82,7 @@ public interface ProcessExecutor {
       ProcessExecutorParams params,
       ImmutableMap<String, String> context,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
@@ -114,7 +115,7 @@ public interface ProcessExecutor {
   Result execute(
       LaunchedProcess launchedProcess,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException;
@@ -243,6 +244,16 @@ public interface ProcessExecutor {
           MoreStrings.truncatePretty(getCommand().toString()),
           MoreStrings.truncatePretty(getStdout().orElse("")),
           MoreStrings.truncatePretty(getStderr().orElse("")));
+    }
+  }
+
+  /** Callback passed by callers to write input to a launched process. */
+  interface Stdin {
+    void writeTo(OutputStream stdin) throws IOException;
+
+    /** @return a {@Stdin} wrapping a constant {@link String} */
+    static Stdin of(String input) {
+      return stdin -> stdin.write(input.getBytes(StandardCharsets.UTF_8));
     }
   }
 }

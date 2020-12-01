@@ -75,9 +75,10 @@ class RegisterDebugSymbolsStep implements Step {
             params,
             ImmutableSet.of(),
             Optional.of(
-                String.format(
-                    "target create %s\ntarget symbols add %s",
-                    resolver.getAbsolutePath(binary), filesystem.resolve(dsymPath))),
+                ProcessExecutor.Stdin.of(
+                    String.format(
+                        "target create %s\ntarget symbols add %s",
+                        resolver.getAbsolutePath(binary), filesystem.resolve(dsymPath)))),
             Optional.empty(),
             Optional.empty()));
   }

@@ -29,6 +29,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -122,8 +124,10 @@ public class ShellStepTest {
           }
 
           @Override
-          public Optional<String> getStdin() {
-            return stdin;
+          public void writeStdin(OutputStream stream) throws IOException {
+            if (stdin.isPresent()) {
+              stream.write(stdin.get().getBytes(StandardCharsets.UTF_8));
+            }
           }
 
           @Override
@@ -305,7 +309,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
     StepExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params, stdin);
+    command.launchAndInteractWithProcess(context, params, stdin.map(ProcessExecutor.Stdin::of));
     assertEquals(stdin.get(), process.getOutput());
   }
 
@@ -324,7 +328,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
     StepExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params, stdin);
+    command.launchAndInteractWithProcess(context, params, stdin.map(ProcessExecutor.Stdin::of));
     assertEquals("", process.getOutput());
   }
 }

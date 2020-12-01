@@ -66,7 +66,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
   public Result launchAndExecute(
       ProcessExecutorParams params,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
@@ -79,7 +79,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
       ProcessExecutorParams params,
       ImmutableMap<String, String> context,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {

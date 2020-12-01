@@ -123,7 +123,9 @@ public class InstallCommandIntegrationTest {
         executor.launchAndExecute(
             ProcessExecutorParams.builder().addCommand(lldbCommand).build(),
             ImmutableSet.of(),
-            Optional.of("b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n"),
+            Optional.of(
+                ProcessExecutor.Stdin.of(
+                    "b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n")),
             Optional.empty(),
             Optional.empty());
     assertThat(lldbResult.getExitCode(), equalTo(0));
@@ -162,7 +164,9 @@ public class InstallCommandIntegrationTest {
         executor.launchAndExecute(
             ProcessExecutorParams.builder().addCommand(lldbCommand2).build(),
             ImmutableSet.of(),
-            Optional.of("b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n"),
+            Optional.of(
+                ProcessExecutor.Stdin.of(
+                    "b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n")),
             Optional.empty(),
             Optional.empty());
     assertThat(lldbResult.getExitCode(), equalTo(0));
@@ -285,7 +289,9 @@ public class InstallCommandIntegrationTest {
         executor.launchAndExecute(
             ProcessExecutorParams.builder().addCommand(lldbCommand).build(),
             ImmutableSet.of(),
-            Optional.of("b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n"),
+            Optional.of(
+                ProcessExecutor.Stdin.of(
+                    "b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n")),
             Optional.empty(),
             Optional.empty());
     assertThat(lldbResult.getExitCode(), equalTo(0));
@@ -324,7 +330,9 @@ public class InstallCommandIntegrationTest {
         executor.launchAndExecute(
             ProcessExecutorParams.builder().addCommand(lldbCommand2).build(),
             ImmutableSet.of(),
-            Optional.of("b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n"),
+            Optional.of(
+                ProcessExecutor.Stdin.of(
+                    "b application:didFinishLaunchingWithOptions:\nb\nexit\nY\n")),
             Optional.empty(),
             Optional.empty());
     assertThat(lldbResult.getExitCode(), equalTo(0));

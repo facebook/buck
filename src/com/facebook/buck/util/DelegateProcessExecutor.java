@@ -56,7 +56,7 @@ public abstract class DelegateProcessExecutor implements ProcessExecutor {
   public Result execute(
       LaunchedProcess launchedProcess,
       Set<Option> options,
-      Optional<String> stdin,
+      Optional<Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
