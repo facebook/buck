@@ -363,7 +363,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Preconditions.checkArgument(
         buildTarget.equals(JavaAbis.getSourceAbiJar(libraryTarget))
             || buildTarget.equals(JavaAbis.getSourceOnlyAbiJar(libraryTarget)));
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     ImmutableSortedSet<Path> compileTimeClasspathPaths =
@@ -401,7 +400,43 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
 
     Path buildCellRootPath = context.getBuildCellRootPath();
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+    T extraParams = createExtraParams(context, rootPath);
 
+    return getBuildStepsForAbiJar(
+        FilesystemParams.of(filesystem),
+        buildableContext,
+        buildTarget,
+        compileTimeClasspathPaths,
+        javaSrcs,
+        fullJarInfos,
+        abiJarInfos,
+        compilerOutputPaths,
+        resourcesMap,
+        cellToPathMappings,
+        abiJarParameters,
+        libraryJarParameters,
+        buildCellRootPath,
+        resolvedJavac,
+        extraParams);
+  }
+
+  private ImmutableList<IsolatedStep> getBuildStepsForAbiJar(
+      FilesystemParams filesystemParams,
+      RecordArtifactVerifier buildableContext,
+      BuildTarget buildTarget,
+      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<Path> javaSrcs,
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
+      CompilerOutputPaths compilerOutputPaths,
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      ImmutableMap<String, RelPath> cellToPathMappings,
+      JarParameters abiJarParameters,
+      JarParameters libraryJarParameters,
+      Path buildCellRootPath,
+      ResolvedJavac resolvedJavac,
+      T extraParams) {
     CompilerParameters compilerParameters =
         getCompilerParameters(
             compileTimeClasspathPaths,
@@ -416,10 +451,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             isRequiredForSourceOnlyAbi,
             compilerOutputPaths);
 
-    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
-
+    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
     configuredCompiler.createCompileToJarStep(
-        FilesystemParams.of(filesystem),
+        filesystemParams,
         buildTarget,
         compilerParameters,
         ImmutableList.of(),
@@ -432,8 +466,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         resourcesMap,
         buildCellRootPath,
         resolvedJavac,
-        createExtraParams(context, rootPath));
-
+        extraParams);
     return steps.build();
   }
 
@@ -461,7 +494,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state) {
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -475,9 +507,23 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CellPathResolverUtils.getCellToPathMappings(
             filesystem.getRootPath(), context.getCellPathResolver());
 
+    FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
+
+    return getPipelinedBuildStepsForAbiJar(
+        buildTarget, filesystemParams, buildableContext, state, resourcesMap, cellToPathMappings);
+  }
+
+  private ImmutableList<IsolatedStep> getPipelinedBuildStepsForAbiJar(
+      BuildTarget buildTarget,
+      FilesystemParams filesystemParams,
+      RecordArtifactVerifier buildableContext,
+      JavacPipelineState state,
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
+    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
-            FilesystemParams.of(filesystem),
+            filesystemParams,
             cellToPathMappings,
             buildTarget,
             state,
@@ -534,6 +580,48 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     Path buildCellRootPath = context.getBuildCellRootPath();
 
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+    Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, baseBuckPaths);
+    T extraParams = createExtraParams(context, rootPath);
+
+    addBuildStepsForLibraryJar(
+        FilesystemParams.of(filesystem),
+        buildableContext,
+        buildTarget,
+        steps,
+        compileTimeClasspathPaths,
+        javaSrcs,
+        fullJarInfos,
+        abiJarInfos,
+        compilerOutputPaths,
+        resourcesMap,
+        cellToPathMappings,
+        libraryJarParameters,
+        buildCellRootPath,
+        resolvedJavac,
+        pathToClassHashes,
+        pathToClasses,
+        extraParams);
+  }
+
+  private void addBuildStepsForLibraryJar(
+      FilesystemParams filesystemParams,
+      RecordArtifactVerifier buildableContext,
+      BuildTarget buildTarget,
+      ImmutableList.Builder<IsolatedStep> steps,
+      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<Path> javaSrcs,
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
+      CompilerOutputPaths compilerOutputPaths,
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      ImmutableMap<String, RelPath> cellToPathMappings,
+      JarParameters libraryJarParameters,
+      Path buildCellRootPath,
+      ResolvedJavac resolvedJavac,
+      RelPath pathToClassHashes,
+      Optional<RelPath> pathToClasses,
+      T extraParams) {
     CompilerParameters compilerParameters =
         getCompilerParameters(
             compileTimeClasspathPaths,
@@ -548,9 +636,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             isRequiredForSourceOnlyAbi,
             compilerOutputPaths);
 
-    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
-
-    FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
     configuredCompiler.createCompileToJarStep(
         filesystemParams,
         buildTarget,
@@ -565,14 +650,16 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         resourcesMap,
         buildCellRootPath,
         resolvedJavac,
-        createExtraParams(context, rootPath));
+        extraParams);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystemParams.getIgnoredPaths(),
-        steps,
-        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystemParams.getBaseBuckPaths()))
-            .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
-        pathToClassHashes);
+        filesystemParams.getIgnoredPaths(), steps, pathToClasses, pathToClassHashes);
+  }
+
+  private Optional<RelPath> getPathToClasses(
+      BuildContext context, BuildTarget buildTarget, BaseBuckPaths baseBuckPaths) {
+    return Optional.ofNullable(getSourcePathToOutput(buildTarget, baseBuckPaths))
+        .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath));
   }
 
   /** Adds pipeline build steps for library jar */
@@ -596,7 +683,30 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CellPathResolverUtils.getCellToPathMappings(
             filesystem.getRootPath(), context.getCellPathResolver());
 
+    Optional<RelPath> pathToClasses =
+        getPathToClasses(context, libraryTarget, filesystem.getBuckPaths());
+
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
+    addPipelinedBuildStepsForLibraryJar(
+        filesystemParams,
+        buildableContext,
+        state,
+        pathToClassHashes,
+        pathToClasses,
+        steps,
+        resourcesMap,
+        cellToPathMappings);
+  }
+
+  private void addPipelinedBuildStepsForLibraryJar(
+      FilesystemParams filesystemParams,
+      RecordArtifactVerifier buildableContext,
+      JavacPipelineState state,
+      RelPath pathToClassHashes,
+      Optional<RelPath> pathToClasses,
+      ImmutableList.Builder<IsolatedStep> steps,
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystemParams,
@@ -609,12 +719,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             resourcesMap);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystemParams.getIgnoredPaths(),
-        steps,
-        Optional.ofNullable(
-                getSourcePathToOutput(libraryTarget, filesystemParams.getBaseBuckPaths()))
-            .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
-        pathToClassHashes);
+        filesystemParams.getIgnoredPaths(), steps, pathToClasses, pathToClassHashes);
   }
 
   private static CompilerParameters getCompilerParameters(
@@ -652,21 +757,17 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   private ImmutableSortedSet<Path> getJavaSrcs(
       ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
-    ImmutableSortedSet<Path> javaSrcs =
-        srcs.stream()
-            .map(src -> filesystem.relativize(sourcePathResolver.getAbsolutePath(src)).getPath())
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    return javaSrcs;
+    return srcs.stream()
+        .map(src -> filesystem.relativize(sourcePathResolver.getAbsolutePath(src)).getPath())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
   private ImmutableSortedSet<Path> getCompileTimeClasspathPaths(
       SourcePathResolverAdapter sourcePathResolver) {
-    ImmutableSortedSet<Path> compileTimeClasspathPaths =
-        sourcePathResolver.getAllAbsolutePaths(dependencyInfos.getCompileTimeClasspathSourcePaths())
-            .stream()
-            .map(PathWrapper::getPath)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
-    return compileTimeClasspathPaths;
+    return sourcePathResolver
+        .getAllAbsolutePaths(dependencyInfos.getCompileTimeClasspathSourcePaths()).stream()
+        .map(PathWrapper::getPath)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
   }
 
   private Optional<JarParameters> getLibraryJarParameters(
