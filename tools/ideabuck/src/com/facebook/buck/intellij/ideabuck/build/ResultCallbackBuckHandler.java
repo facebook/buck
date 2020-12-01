@@ -63,6 +63,8 @@ public class ResultCallbackBuckHandler extends BuckCommandHandler {
 
   @Override
   protected void afterCommand() {
-    futureCallback.accept(stdout.toString());
+    if (!isCancelled()) {
+      futureCallback.accept(stdout.toString());
+    }
   }
 }

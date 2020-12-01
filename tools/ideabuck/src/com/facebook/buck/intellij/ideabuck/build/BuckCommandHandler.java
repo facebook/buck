@@ -55,6 +55,7 @@ public abstract class BuckCommandHandler {
   private final Object processStateLock = new Object();
   private static final Pattern CHARACTER_DIGITS_PATTERN = Pattern.compile("(?s).*[A-Z0-9a-z]+.*");
   private final boolean doStartNotify;
+  private volatile boolean isCancelled;
 
   @SuppressWarnings({"FieldAccessedSynchronizedAndUnsynchronized"})
   private Process process;
@@ -163,7 +164,13 @@ public abstract class BuckCommandHandler {
 
   /** Stop process */
   public synchronized void stop() {
-    process.destroy();
+    handler.destroyProcess();
+  }
+
+  /** Cancel process */
+  public synchronized void cancel() {
+    stop();
+    isCancelled = true;
   }
 
   /** @return true if process is started. */
@@ -344,5 +351,9 @@ public abstract class BuckCommandHandler {
 
   public OSProcessHandler getHandler() {
     return handler;
+  }
+
+  public boolean isCancelled() {
+    return isCancelled;
   }
 }
