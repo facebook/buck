@@ -54,7 +54,6 @@ from six import PY3, iteritems, itervalues, string_types
 # Python 2.6, 2.7, use iterator filter from Python 3
 from six.moves import builtins, filter
 
-from .deterministic_set import DeterministicSet
 from .glob_internal import glob_internal
 from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
@@ -987,15 +986,6 @@ def flatten_dicts(*args, **_):
     :return: a single dict containing the flattened list
     """
     return flatten_list_of_dicts(args)
-
-
-@provide_for_build
-def depset(elements, build_env=None):
-    """Creates an instance of sets with deterministic iteration order.
-    :param elements: the list of elements constituting the returned depset.
-    :rtype: DeterministicSet
-    """
-    return DeterministicSet(elements)
 
 
 def rule(attrs=None, test=False, build_env=None, **kwargs):

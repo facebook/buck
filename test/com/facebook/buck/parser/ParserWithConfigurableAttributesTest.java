@@ -1736,29 +1736,6 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   @Test
-  public void depsetCanBeUsedForSpecifyingDeps() throws Exception {
-    tempDir.newFolder("foo");
-    tempDir.newFolder("bar");
-
-    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
-    Files.write(
-        testFooBuckFile.getPath(),
-        "java_library(name = 'foo', visibility=['PUBLIC'])\n".getBytes(UTF_8));
-
-    AbsPath testBarBuckFile = tempDir.newFile("bar/BUCK");
-    Files.write(
-        testBarBuckFile.getPath(),
-        ("java_library(name = 'bar',\n" + "  deps = depset(['//foo:foo']))\n").getBytes(UTF_8));
-
-    // Fetch //bar:bar#src to put it in cache.
-    BuildTarget barTarget =
-        BuildTargetFactory.newInstance("//bar", "bar", InternalFlavor.of("src"));
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(barTarget);
-
-    parser.buildTargetGraph(parsingContext, buildTargets);
-  }
-
-  @Test
   public void targetWithSourceFileChangesHash() throws Exception {
     tempDir.newFolder("foo");
 
