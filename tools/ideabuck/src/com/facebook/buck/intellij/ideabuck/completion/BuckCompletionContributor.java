@@ -102,7 +102,6 @@ public class BuckCompletionContributor extends CompletionContributor {
           "python_binary",
           "python_library",
           "python_test",
-          "include_defs",
           "robolectric_test",
           "keystore");
 
