@@ -127,12 +127,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExpo
     ImmutableList<String> names = Objects.requireNonNull(this.getSignature()).getParameterNames();
 
     ParseContext parseContext = ParseContext.getParseContext(thread, getName());
-    String basePath =
-        parseContext
-            .getPackageContext()
-            .getPackageIdentifier()
-            .getPackageFragment()
-            .getPathString();
+    ForwardRelativePath basePath = parseContext.getPackageContext().getBasePath();
     ImmutableList<String> visibility = ImmutableList.of();
     ImmutableList<String> withinView = ImmutableList.of();
     TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =
@@ -163,12 +158,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExpo
       i++;
     }
     parseContext.recordRule(
-        RecordedRule.of(
-            ForwardRelativePath.of(basePath),
-            this.getName(),
-            visibility,
-            withinView,
-            builder.build()));
+        RecordedRule.of(basePath, this.getName(), visibility, withinView, builder.build()));
     return Starlark.NONE;
   }
 
