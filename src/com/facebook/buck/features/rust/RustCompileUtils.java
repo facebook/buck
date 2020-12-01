@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.CxxLocationMacroExpander;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
@@ -269,7 +270,12 @@ public class RustCompileUtils {
     linkerArgs.addAll(linkerInputs);
 
     String relocModel;
-    if (crateType.isPic()) {
+    // PDC PIC type for shared linking means we're targeting Windows
+    // where PIC relocation model should always be used.
+    // So here it's just a tricky way to check that target platform is Windows,
+    // it doesn't mean we should generate non-PIC.
+    if (crateType.isPic()
+        || rustPlatform.getCxxPlatform().getPicTypeForSharedLinking() == PicType.PDC) {
       relocModel = "pic";
     } else {
       relocModel = "static";
