@@ -20,7 +20,6 @@ import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -210,9 +209,12 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSet.of();
   }
 
-  private RelPath getClassPathFile() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/classpath-file");
+  private Path getClassPathFile() {
+    return getProjectFilesystem()
+        .resolve(
+            BuildTargetPaths.getGenPath(
+                getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/classpath-file"))
+        .getPath();
   }
 
   private JUnitStep getJUnitStep(
@@ -241,7 +243,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setTargetJavaVersion(targetJavaVersion)
             .setTestType(testType)
             .setDirectoryForTestResults(outDir)
-            .setClasspathFile(getClassPathFile().getPath())
+            .setClasspathFile(getClassPathFile())
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
             .setCodeCoverageEnabled(options.isCodeCoverageEnabled())
             .setInclNoLocationClassesEnabled(options.isInclNoLocationClassesEnabled())
