@@ -1,9 +1,42 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 
 from tools import impl
 
+EVENT_TYPE_MSG = '{"eventType": "LOG_EVENT"}'
+EVENT_MSG_1 = '{"log_level": "WARN", "message": "Hello from fbcc", "logger_name": "FBCC_MAKE_LOG"}'
+EVENT_MSG_2 = '{"log_level": "WARN", "message": "Hello again from fbcc", "logger_name": "FBCC_MAKE_LOG"}'
+
+# establish communication protocol
+if "BUCK_EVENT_PIPE" in os.environ:
+    with open(os.environ["BUCK_EVENT_PIPE"], "w") as event_pipe:
+        event_pipe.write("j")
+        event_pipe.write("\n")
+        event_pipe.flush()
+
+# send the first event
+if "BUCK_EVENT_PIPE" in os.environ:
+    with open(os.environ["BUCK_EVENT_PIPE"], "w") as event_pipe:
+        event_pipe.write(str(len(EVENT_TYPE_MSG)))
+        event_pipe.write("\n")
+        event_pipe.write(EVENT_TYPE_MSG)
+        event_pipe.write(str(len(EVENT_MSG_1)))
+        event_pipe.write("\n")
+        event_pipe.write(EVENT_MSG_1)
+        event_pipe.flush()
+
+# send the second event
+if "BUCK_EVENT_PIPE" in os.environ:
+    with open(os.environ["BUCK_EVENT_PIPE"], "w") as event_pipe:
+        event_pipe.write(str(len(EVENT_TYPE_MSG)))
+        event_pipe.write("\n")
+        event_pipe.write(EVENT_TYPE_MSG)
+        event_pipe.write(str(len(EVENT_MSG_2)))
+        event_pipe.write("\n")
+        event_pipe.write(EVENT_MSG_2)
+        event_pipe.flush()
 
 parser = impl.argparser()
 # We just need to know the input file, the output location and the depfile location

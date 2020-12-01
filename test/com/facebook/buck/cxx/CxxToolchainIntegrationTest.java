@@ -17,29 +17,37 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class CxxToolchainIntegrationTest {
+
+  @Rule public TestLogSink testToolLogSink = new TestLogSink("FBCC_MAKE_LOG");
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -62,6 +70,32 @@ public class CxxToolchainIntegrationTest {
                 + "object: compile output: also not a real cpp%n"
                 + "ranlib applied.%n"),
         workspace.getFileContents(output));
+  }
+
+  @Test
+  public void testDownwardLoggingIntegration() throws IOException {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_toolchain", tmp);
+
+    workspace.addBuckConfigLocalOption("cxx#good", "toolchain_target", "//toolchain:good");
+    workspace.addBuckConfigLocalOption("python", "package_style", "inplace");
+    workspace.addBuckConfigLocalOption("downward_api", "cxx_enabled", "true");
+    workspace.setUp();
+
+    ProcessResult processResult = workspace.runBuckBuild("//:binary#good");
+    processResult.assertSuccess();
+
+    List<LogRecord> records = testToolLogSink.getRecords();
+    LogRecord firstLogRecord = records.iterator().next();
+    assertThat(firstLogRecord.getLevel(), equalTo(Level.WARNING));
+    assertThat(firstLogRecord, TestLogSink.logRecordWithMessage(containsString("Hello from fbcc")));
+
+    LogRecord secondLogRecord = Iterables.getLast(records);
+    assertThat(secondLogRecord.getLevel(), equalTo(Level.WARNING));
+    assertThat(
+        secondLogRecord, TestLogSink.logRecordWithMessage(containsString("Hello again from fbcc")));
   }
 
   @Test
@@ -96,7 +130,8 @@ public class CxxToolchainIntegrationTest {
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget allTarget : buildLog.getAllTargets()) {
-      BuildRuleSuccessType successType = buildLog.getLogEntry(allTarget).getSuccessType().get();
+      BuildRuleSuccessType successType =
+          buildLog.getLogEntry(allTarget).getSuccessType().orElseThrow(IllegalStateException::new);
       successTypeCounter
           .computeIfAbsent(successType, ignored -> new AtomicInteger())
           .incrementAndGet();
