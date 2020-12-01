@@ -25,9 +25,10 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -72,8 +73,8 @@ public class PexStepTest {
                   .putComponents(
                       TARGET,
                       new PythonMappedComponents.Resolved(
-                          ImmutableSortedMap.of(
-                              Paths.get("m"), AbsPath.of(Paths.get("/src/m").toAbsolutePath()))))
+                          new TestActionGraphBuilder().getSourcePathResolver(),
+                          ImmutableSortedMap.of(Paths.get("m"), FakeSourcePath.of("/src/m"))))
                   .putComponents(
                       TARGET,
                       new PythonModuleDirComponents.Resolved(
@@ -89,8 +90,8 @@ public class PexStepTest {
                   .putComponents(
                       TARGET,
                       new PythonMappedComponents.Resolved(
-                          ImmutableSortedMap.of(
-                              Paths.get("r"), AbsPath.of(Paths.get("/src/r").toAbsolutePath()))))
+                          new TestActionGraphBuilder().getSourcePathResolver(),
+                          ImmutableSortedMap.of(Paths.get("r"), FakeSourcePath.of("/src/r"))))
                   .build())
           .setNativeLibraries(
               ImmutablePythonResolvedComponentsGroup.builder()
@@ -98,9 +99,8 @@ public class PexStepTest {
                   .putComponents(
                       TARGET,
                       new PythonMappedComponents.Resolved(
-                          ImmutableSortedMap.of(
-                              Paths.get("n.so"),
-                              AbsPath.of(Paths.get("/src/n.so").toAbsolutePath()))))
+                          new TestActionGraphBuilder().getSourcePathResolver(),
+                          ImmutableSortedMap.of(Paths.get("n.so"), FakeSourcePath.of("/src/n.so"))))
                   .build())
           .build();
   private final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
@@ -198,9 +198,9 @@ public class PexStepTest {
                             ImmutableMultimap.of(
                                 TARGET,
                                 new PythonMappedComponents.Resolved(
+                                    new TestActionGraphBuilder().getSourcePathResolver(),
                                     ImmutableSortedMap.of(
-                                        Paths.get("m"),
-                                        AbsPath.of(Paths.get("/src/m").toAbsolutePath()))),
+                                        Paths.get("m"), FakeSourcePath.of("/src/m"))),
                                 TARGET,
                                 new PythonModuleDirComponents.Resolved(realDir1),
                                 TARGET,

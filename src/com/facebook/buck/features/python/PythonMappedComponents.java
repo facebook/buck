@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.impl.SymlinkMap;
 import com.facebook.buck.core.rules.impl.Symlinks;
@@ -68,7 +67,7 @@ public abstract class PythonMappedComponents implements PythonComponents {
 
   @Override
   public Resolved resolvePythonComponents(SourcePathResolverAdapter resolver) {
-    return new Resolved(resolver.getMappedPaths(getComponents()));
+    return new Resolved(resolver, getComponents());
   }
 
   /**
@@ -78,16 +77,18 @@ public abstract class PythonMappedComponents implements PythonComponents {
    */
   public static class Resolved implements PythonComponents.Resolved {
 
-    private final ImmutableMap<Path, AbsPath> resolved;
+    private final SourcePathResolverAdapter resolver;
+    private final ImmutableMap<Path, SourcePath> components;
 
-    public Resolved(ImmutableMap<Path, AbsPath> resolved) {
-      this.resolved = resolved;
+    public Resolved(SourcePathResolverAdapter resolver, ImmutableMap<Path, SourcePath> components) {
+      this.resolver = resolver;
+      this.components = components;
     }
 
     @Override
     public void forEachPythonComponent(ComponentConsumer consumer) throws IOException {
-      for (Map.Entry<Path, AbsPath> ent : resolved.entrySet()) {
-        consumer.accept(ent.getKey(), ent.getValue().getPath());
+      for (Map.Entry<Path, SourcePath> ent : components.entrySet()) {
+        consumer.accept(ent.getKey(), resolver.getAbsolutePath(ent.getValue()).getPath());
       }
     }
   }

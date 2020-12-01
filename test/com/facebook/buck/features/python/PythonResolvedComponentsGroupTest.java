@@ -20,9 +20,10 @@ import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Jimfs;
@@ -64,11 +65,13 @@ public class PythonResolvedComponentsGroupTest {
             .putComponents(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
-                    ImmutableMap.of(Paths.get("foo"), AbsPath.of(foo1))))
+                    new TestActionGraphBuilder().getSourcePathResolver(),
+                    ImmutableMap.of(Paths.get("foo"), FakeSourcePath.of(foo1))))
             .putComponents(
                 BuildTargetFactory.newInstance("//:target2"),
                 new PythonMappedComponents.Resolved(
-                    ImmutableMap.of(Paths.get("foo"), AbsPath.of(foo2))))
+                    new TestActionGraphBuilder().getSourcePathResolver(),
+                    ImmutableMap.of(Paths.get("foo"), FakeSourcePath.of(foo2))))
             .build();
     components.forEachModule(Optional.empty(), (dst, src) -> {});
   }
@@ -81,13 +84,17 @@ public class PythonResolvedComponentsGroupTest {
             .putComponents(
                 BuildTargetFactory.newInstance("//:target1"),
                 new PythonMappedComponents.Resolved(
+                    new TestActionGraphBuilder().getSourcePathResolver(),
                     ImmutableMap.of(
-                        Paths.get("foo"), AbsPath.of(Paths.get("target/foo").toAbsolutePath()))))
+                        Paths.get("foo"),
+                        FakeSourcePath.of(Paths.get("target/foo").toAbsolutePath()))))
             .putComponents(
                 BuildTargetFactory.newInstance("//:target2"),
                 new PythonMappedComponents.Resolved(
+                    new TestActionGraphBuilder().getSourcePathResolver(),
                     ImmutableMap.of(
-                        Paths.get("foo"), AbsPath.of(Paths.get("target/foo").toAbsolutePath()))))
+                        Paths.get("foo"),
+                        FakeSourcePath.of(Paths.get("target/foo").toAbsolutePath()))))
             .build();
     // Use an ImmutableMap to verify we don't propagate duplicate entries for the duplicate module.
     ImmutableMap.Builder<Path, Path> builder = ImmutableMap.builder();
@@ -105,19 +112,21 @@ public class PythonResolvedComponentsGroupTest {
             .putComponents(
                 target1,
                 new PythonMappedComponents.Resolved(
+                    new TestActionGraphBuilder().getSourcePathResolver(),
                     ImmutableMap.of(
                         Paths.get("foo/src.py"),
-                            AbsPath.of(Paths.get("target1/src.py").toAbsolutePath()),
+                            FakeSourcePath.of(Paths.get("target1/src.py").toAbsolutePath()),
                         Paths.get("src.py"),
-                            AbsPath.of(Paths.get("target1/src.py").toAbsolutePath()))))
+                            FakeSourcePath.of(Paths.get("target1/src.py").toAbsolutePath()))))
             .putComponents(
                 target2,
                 new PythonMappedComponents.Resolved(
+                    new TestActionGraphBuilder().getSourcePathResolver(),
                     ImmutableMap.of(
                         Paths.get("bar/src.py"),
-                        AbsPath.of(Paths.get("target2/src.py").toAbsolutePath()),
+                        FakeSourcePath.of(Paths.get("target2/src.py").toAbsolutePath()),
                         Paths.get("bar/__init__.py"),
-                        AbsPath.of(Paths.get("target2/__init__.py").toAbsolutePath()))))
+                        FakeSourcePath.of(Paths.get("target2/__init__.py").toAbsolutePath()))))
             .build();
     Map<Path, Path> modules = new HashMap<>();
     components.forEachModule(Optional.of(Paths.get("default/__init__.py")), modules::put);
