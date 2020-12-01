@@ -34,7 +34,6 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.devtools.build.lib.vfs.OsPathPolicy;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -47,7 +46,6 @@ import java.util.regex.Pattern;
 public final class RepositoryName implements Serializable {
   static final String DEFAULT_REPOSITORY = "";
   public static final RepositoryName DEFAULT;
-  public static final RepositoryName MAIN;
   private static final Pattern VALID_REPO_NAME = Pattern.compile("@[\\w\\-.]*");
 
   /** Helper for serializing {@link RepositoryName}. */
@@ -105,7 +103,6 @@ public final class RepositoryName implements Serializable {
   static {
     try {
       DEFAULT = RepositoryName.create(RepositoryName.DEFAULT_REPOSITORY);
-      MAIN = RepositoryName.create("@");
     } catch (LabelSyntaxException e) {
       throw new IllegalStateException(e);
     }

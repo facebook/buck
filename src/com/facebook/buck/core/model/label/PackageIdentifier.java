@@ -60,56 +60,6 @@ public final class PackageIdentifier implements Comparable<PackageIdentifier>, S
     return INTERNER.intern(new PackageIdentifier(repository, pkgName));
   }
 
-  public static final PackageIdentifier EMPTY_PACKAGE_ID =
-      createInMainRepo(PathFragment.EMPTY_FRAGMENT);
-
-  public static PackageIdentifier createInMainRepo(String name) {
-    return createInMainRepo(PathFragment.create(name));
-  }
-
-  public static PackageIdentifier createInMainRepo(PathFragment name) {
-    return create(RepositoryName.MAIN, name);
-  }
-
-  /**
-   * Tries to infer the package identifier from the given exec path. This method does not perform
-   * any I/O, but looks solely at the structure of the exec path. The resulting identifier may
-   * actually be a subdirectory of a package rather than a package, e.g.:
-   *
-   * <pre><code>
-   * + WORKSPACE
-   * + foo/BUILD
-   * + foo/bar/bar.java
-   * </code></pre>
-   *
-   * In this case, this method returns a package identifier for foo/bar, even though that is not a
-   * package. Callers need to look up the actual package if needed.
-   *
-   * @throws LabelSyntaxException if the exec path seems to be for an external repository that does
-   *     not have a valid repository name (see {@link RepositoryName#create})
-   */
-  public static PackageIdentifier discoverFromExecPath(
-      PathFragment execPath, boolean forFiles, boolean siblingRepositoryLayout) {
-    Preconditions.checkArgument(!execPath.isAbsolute(), execPath);
-    PathFragment tofind =
-        forFiles
-            ? Preconditions.checkNotNull(
-                execPath.getParentDirectory(), "Must pass in files, not root directory")
-            : execPath;
-    PathFragment prefix =
-        siblingRepositoryLayout
-            ? LabelConstants.EXPERIMENTAL_EXTERNAL_PATH_PREFIX
-            : LabelConstants.EXTERNAL_PATH_PREFIX;
-    if (tofind.startsWith(prefix)) {
-      // Using the path prefix can be either "external" or "..", depending on whether the sibling
-      // repository layout is used.
-      RepositoryName repository = RepositoryName.createFromValidStrippedName(tofind.getSegment(1));
-      return PackageIdentifier.create(repository, tofind.subFragment(2));
-    } else {
-      return PackageIdentifier.createInMainRepo(tofind);
-    }
-  }
-
   /**
    * The identifier for this repository. This is either "" or prefixed with an "@", e.g., "@myrepo".
    */
@@ -175,18 +125,6 @@ public final class PackageIdentifier implements Comparable<PackageIdentifier>, S
 
   public PathFragment getPackageFragment() {
     return pkgName;
-  }
-
-  /**
-   * Returns a relative path to the source code for this package. Returns pkgName if this is in the
-   * main repository or external/[repository name]/[pkgName] if not.
-   */
-  public PathFragment getSourceRoot() {
-    return repository.getSourceRoot().getRelative(pkgName);
-  }
-
-  public PathFragment getExecPath(boolean siblingRepositoryLayout) {
-    return repository.getExecPath(siblingRepositoryLayout).getRelative(pkgName);
   }
 
   /**

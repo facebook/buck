@@ -31,8 +31,6 @@ package com.facebook.buck.core.model.label;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.actions.CommandLineItem;
-import com.google.devtools.build.lib.vfs.OsPathPolicy;
 import java.util.Set;
 import javax.annotation.Nullable;
 
