@@ -75,7 +75,7 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             .setEnableProfiling(enableProfiling)
             .setProjectRoot(cell.getFilesystem().getRootPath())
             .setCellRoots(cell.getCellPathResolver().getCellPathsByRootCellExternalName())
-            .setCellName(cell.getCanonicalName().getName())
+            .setCellName(cell.getCanonicalName())
             .setPythonInterpreter(pythonInterpreterProvider.getOrFail())
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(false)

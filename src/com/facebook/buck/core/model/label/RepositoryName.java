@@ -30,14 +30,11 @@
 
 package com.facebook.buck.core.model.label;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Pattern;
@@ -47,42 +44,6 @@ public final class RepositoryName implements Serializable {
   static final String DEFAULT_REPOSITORY = "";
   public static final RepositoryName DEFAULT;
   private static final Pattern VALID_REPO_NAME = Pattern.compile("@[\\w\\-.]*");
-
-  /** Helper for serializing {@link RepositoryName}. */
-  private static final class SerializationProxy implements Serializable {
-    private RepositoryName repositoryName;
-
-    private SerializationProxy(RepositoryName repositoryName) {
-      this.repositoryName = repositoryName;
-    }
-
-    private void writeObject(ObjectOutputStream out) throws IOException {
-      out.writeObject(repositoryName.toString());
-    }
-
-    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-      try {
-        repositoryName = RepositoryName.create((String) in.readObject());
-      } catch (LabelSyntaxException e) {
-        throw new IOException("Error serializing repository name: " + e.getMessage());
-      }
-    }
-
-    @SuppressWarnings("unused")
-    private void readObjectNoData() throws ObjectStreamException {}
-
-    private Object readResolve() {
-      return repositoryName;
-    }
-  }
-
-  private void readObject(@SuppressWarnings("unused") ObjectInputStream in) throws IOException {
-    throw new IOException("Serialization is allowed only by proxy");
-  }
-
-  private Object writeReplace() {
-    return new SerializationProxy(this);
-  }
 
   private static final LoadingCache<String, RepositoryName> repositoryNameCache =
       CacheBuilder.newBuilder()
@@ -126,9 +87,9 @@ public final class RepositoryName implements Serializable {
    * Creates a RepositoryName from a known-valid string (not @-prefixed). Generally this is a
    * directory that has been created via getSourceRoot() or getPathUnderExecRoot().
    */
-  public static RepositoryName createFromValidStrippedName(String name) {
+  public static RepositoryName createFromValidStrippedName(CanonicalCellName name) {
     try {
-      return repositoryNameCache.get("@" + name);
+      return repositoryNameCache.get("@" + name.getName());
     } catch (ExecutionException e) {
       throw new IllegalArgumentException(e.getMessage());
     }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.options;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
@@ -55,8 +56,8 @@ public abstract class ProjectBuildFileParserOptions {
   public abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
 
   @Value.Default
-  public String getCellName() {
-    return "";
+  public CanonicalCellName getCellName() {
+    return CanonicalCellName.rootCell();
   }
 
   @Value.Default
