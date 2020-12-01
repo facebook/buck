@@ -16,9 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -26,19 +24,20 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
-import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.rules.modern.CellNameResolverSerialization;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -50,39 +49,34 @@ import javax.annotation.Nullable;
  * com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder}
  */
 public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
-  @AddToRuleKey private final Optional<String> buildozerPath;
-  @AddToRuleKey private final boolean onlyPrintCommands;
-  @AddToRuleKey private final boolean doUltralightChecking;
+
+  @AddToRuleKey final Optional<String> buildozerPath;
+  @AddToRuleKey final boolean onlyPrintCommands;
+  @AddToRuleKey final boolean doUltralightChecking;
 
   @ExcludeFromRuleKey(
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
-  private final ImmutableList<DependencyAndExportedDeps> deps;
+  final ImmutableList<DependencyAndExportedDeps> deps;
 
   @ExcludeFromRuleKey(
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
-  private final ImmutableList<DependencyAndExportedDeps> providedDeps;
+  final ImmutableList<DependencyAndExportedDeps> providedDeps;
 
   @ExcludeFromRuleKey(
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
-  private final ImmutableList<String> exportedDeps;
+  final ImmutableList<String> exportedDeps;
 
-  @ExcludeFromRuleKey(
-      serialization = CellNameResolverSerialization.class,
-      inputs = IgnoredFieldInputs.class)
-  private final CellNameResolver cellNameResolver;
-
-  public UnusedDependenciesFinderFactory(
+  UnusedDependenciesFinderFactory(
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       boolean doUltralightChecking,
       ActionGraphBuilder actionGraphBuilder,
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> providedDeps,
-      ImmutableList<String> exportedDeps,
-      CellPathResolver cellPathResolver) {
+      ImmutableList<String> exportedDeps) {
     this.buildozerPath = buildozerPath;
     this.onlyPrintCommands = onlyPrintCommands;
     this.deps = getDependencies(actionGraphBuilder, actionGraphBuilder.getAllRules(deps));
@@ -90,7 +84,6 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         getDependencies(actionGraphBuilder, actionGraphBuilder.getAllRules(providedDeps));
     this.exportedDeps = exportedDeps;
     this.doUltralightChecking = doUltralightChecking;
-    this.cellNameResolver = cellPathResolver.getCellNameResolver();
   }
 
   private ImmutableList<DependencyAndExportedDeps> getDependencies(
@@ -154,6 +147,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   /** Holder for a build target string and the source paths of its output. */
   static class BuildTargetAndSourcePaths implements AddsToRuleKey {
+
     @AddToRuleKey private final String buildTarget;
     @AddToRuleKey private final @Nullable SourcePath fullJarSourcePath;
     @AddToRuleKey private final @Nullable SourcePath abiSourcePath;
@@ -170,6 +164,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   /** Recursive hierarchy of a single build target and its exported deps. */
   static class DependencyAndExportedDeps implements AddsToRuleKey {
+
     @AddToRuleKey private final BuildTargetAndSourcePaths dependency;
     @AddToRuleKey private final ImmutableList<DependencyAndExportedDeps> exportedDeps;
 
@@ -181,65 +176,127 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     }
   }
 
-  /** Creates a new {@link UnusedDependenciesFinder} instance. */
-  public UnusedDependenciesFinder create(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem,
-      SourcePathResolverAdapter resolver,
-      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
-      CellPathResolver cellPathResolver) {
+  /** Parameters that used for {@link UnusedDependenciesFinder} creation. */
+  @BuckStyleValue
+  abstract static class UnusedDependenciesParams {
 
-    Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
+    abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> getDeps();
+
+    abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath>
+        getProvidedDeps();
+
+    abstract BaseBuckPaths getBuckPaths();
+
+    abstract AbsPath getRootPath();
+
+    abstract ImmutableMap<String, RelPath> getCellToPathMappings();
+
+    abstract BuildTarget getBuildTarget();
+
+    abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
+
+    abstract ImmutableList<String> getExportedDeps();
+
+    abstract Optional<String> getBuildozerPath();
+
+    abstract ImmutableSet<Optional<String>> getKnownCellNames();
+
+    abstract boolean isOnlyPrintCommands();
+
+    abstract boolean isDoUltralightChecking();
+
+    /** Creates {@link UnusedDependenciesParams} */
+    static UnusedDependenciesParams of(
+        ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> deps,
+        ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> providedDeps,
+        BaseBuckPaths buckPaths,
+        AbsPath rootPath,
+        ImmutableMap<String, RelPath> cellToPathMappings,
+        BuildTarget buildTarget,
+        JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
+        ImmutableList<String> exportedDeps,
+        Optional<String> buildozerPath,
+        ImmutableSet<Optional<String>> knownCellNames,
+        boolean onlyPrintCommands,
+        boolean doUltralightChecking) {
+      return ImmutableUnusedDependenciesParams.ofImpl(
+          deps,
+          providedDeps,
+          buckPaths,
+          rootPath,
+          cellToPathMappings,
+          buildTarget,
+          unusedDependenciesAction,
+          exportedDeps,
+          buildozerPath,
+          knownCellNames,
+          onlyPrintCommands,
+          doUltralightChecking);
+    }
+  }
+
+  /** Creates {@link UnusedDependenciesFinder} */
+  static UnusedDependenciesFinder create(
+      UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams) {
+
+    AbsPath rootPath = unusedDependenciesParams.getRootPath();
+    BuildTarget buildTarget = unusedDependenciesParams.getBuildTarget();
+    Path depFilePath =
+        CompilerOutputPaths.getDepFilePath(buildTarget, unusedDependenciesParams.getBuckPaths());
 
     return UnusedDependenciesFinder.of(
         buildTarget,
-        convert(deps, resolver, filesystem),
-        convert(providedDeps, resolver, filesystem),
-        exportedDeps,
-        unusedDependenciesAction,
-        buildozerPath,
-        onlyPrintCommands,
-        cellNameResolver,
-        CellPathResolverUtils.getCellToPathMappings(filesystem.getRootPath(), cellPathResolver),
-        filesystem.relativize(filesystem.resolve(depFilePath)),
-        doUltralightChecking);
+        unusedDependenciesParams.getDeps(),
+        unusedDependenciesParams.getProvidedDeps(),
+        unusedDependenciesParams.getExportedDeps(),
+        unusedDependenciesParams.getUnusedDependenciesAction(),
+        unusedDependenciesParams.getBuildozerPath(),
+        unusedDependenciesParams.isOnlyPrintCommands(),
+        unusedDependenciesParams.getKnownCellNames(),
+        unusedDependenciesParams.getCellToPathMappings(),
+        rootPath.relativize(rootPath.resolve(depFilePath)),
+        unusedDependenciesParams.isDoUltralightChecking());
   }
 
-  private ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> convert(
+  /**
+   * Converts {@link DependencyAndExportedDeps} list with {@link SourcePath} to resolved list of
+   * {@link UnusedDependenciesFinder.DependencyAndExportedDepsPath}
+   */
+  ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> convert(
       ImmutableList<DependencyAndExportedDeps> list,
       SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem) {
+      AbsPath projectRootPath) {
     return list.stream()
-        .map(dep -> convert(dep, resolver, filesystem))
+        .map(dep -> convert(dep, resolver, projectRootPath))
         .collect(ImmutableList.toImmutableList());
   }
 
   private UnusedDependenciesFinder.DependencyAndExportedDepsPath convert(
       DependencyAndExportedDeps dependencyAndExportedDeps,
       SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem) {
+      AbsPath projectRootPath) {
     return new UnusedDependenciesFinder.DependencyAndExportedDepsPath(
-        convert(dependencyAndExportedDeps.dependency, resolver, filesystem),
+        convert(dependencyAndExportedDeps.dependency, resolver, projectRootPath),
         dependencyAndExportedDeps.exportedDeps.stream()
-            .map(d -> convert(d, resolver, filesystem))
+            .map(d -> convert(d, resolver, projectRootPath))
             .collect(ImmutableList.toImmutableList()));
   }
 
   private UnusedDependenciesFinder.BuildTargetAndPaths convert(
       BuildTargetAndSourcePaths buildTargetAndSourcePaths,
       SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem) {
+      AbsPath projectRootPath) {
     return new UnusedDependenciesFinder.BuildTargetAndPaths(
         buildTargetAndSourcePaths.buildTarget,
-        toRelativePath(buildTargetAndSourcePaths.fullJarSourcePath, resolver, filesystem),
-        toRelativePath(buildTargetAndSourcePaths.abiSourcePath, resolver, filesystem));
+        toRelativePath(buildTargetAndSourcePaths.fullJarSourcePath, resolver, projectRootPath),
+        toRelativePath(buildTargetAndSourcePaths.abiSourcePath, resolver, projectRootPath));
   }
 
   private RelPath toRelativePath(
-      SourcePath sourcePath, SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
+      SourcePath sourcePath, SourcePathResolverAdapter resolver, AbsPath rootPath) {
     if (sourcePath == null) {
       return null;
     }
-    return filesystem.relativize(resolver.getAbsolutePath(sourcePath));
+    return rootPath.relativize(resolver.getAbsolutePath(sourcePath));
   }
 }

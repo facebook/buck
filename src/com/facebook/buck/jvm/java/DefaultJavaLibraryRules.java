@@ -500,8 +500,7 @@ public abstract class DefaultJavaLibraryRules {
               javaLibraryDeps.getProvidedDepTargets(),
               Objects.requireNonNull(javaLibraryDeps.getExportedDepTargets()).stream()
                   .map(bt -> bt.getUnconfiguredBuildTarget().toString())
-                  .collect(ImmutableList.toImmutableList()),
-              getCellPathResolver()));
+                  .collect(ImmutableList.toImmutableList())));
     }
     return Optional.empty();
   }

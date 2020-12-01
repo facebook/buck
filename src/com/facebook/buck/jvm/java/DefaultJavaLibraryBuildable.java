@@ -18,6 +18,9 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -41,6 +44,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -131,7 +135,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         steps);
 
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
-        buildContext, outputPathResolver, filesystem, steps);
+        buildContext, filesystem, outputPathResolver, steps);
 
     return ImmutableList.copyOf(steps.build()); // upcast to list of Steps
   }
@@ -143,6 +147,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       JavacPipelineState state,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
+
     ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
@@ -154,42 +159,65 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         steps);
 
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
-        buildContext, outputPathResolver, filesystem, steps);
+        buildContext, filesystem, outputPathResolver, steps);
 
     return ImmutableList.copyOf(steps.build()); // upcast to list of Steps
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
       BuildContext buildContext,
-      OutputPathResolver outputPathResolver,
       ProjectFilesystem filesystem,
+      OutputPathResolver outputPathResolver,
       ImmutableList.Builder<IsolatedStep> steps) {
 
-    unusedDependenciesFinderFactory.ifPresent(
-        factory ->
-            steps.add(
-                getUnusedDependenciesStep(
-                    factory,
-                    filesystem,
-                    buildContext.getSourcePathResolver(),
-                    buildContext.getCellPathResolver())));
-    steps.add(getMakeMissingOutputsStep(outputPathResolver));
+    if (unusedDependenciesFinderFactory.isPresent()) {
+      UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
+
+      AbsPath rootPath = filesystem.getRootPath();
+      CellPathResolver cellPathResolver = buildContext.getCellPathResolver();
+      SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+
+      ImmutableMap<String, RelPath> cellToPathMappings =
+          CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
+
+      CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
+
+      UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams =
+          UnusedDependenciesFinderFactory.UnusedDependenciesParams.of(
+              factory.convert(factory.deps, sourcePathResolver, rootPath),
+              factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
+              filesystem.getBuckPaths(),
+              rootPath,
+              cellToPathMappings,
+              buildTarget,
+              unusedDependenciesAction,
+              factory.exportedDeps,
+              factory.buildozerPath,
+              cellNameResolver.getKnownCells().keySet(),
+              factory.onlyPrintCommands,
+              factory.doUltralightChecking);
+
+      addUnusedDependencyStep(unusedDependenciesParams, steps);
+    }
+
+    RelPath rootOutput = outputPathResolver.resolvePath(rootOutputPath);
+    RelPath pathToClassHashes = outputPathResolver.resolvePath(pathToClassHashesOutputPath);
+    RelPath annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath);
+    addMakeMissingOutputsStep(steps, rootOutput, pathToClassHashes, annotationsPath);
   }
 
-  private IsolatedStep getUnusedDependenciesStep(
-      UnusedDependenciesFinderFactory factory,
-      ProjectFilesystem filesystem,
-      SourcePathResolverAdapter sourcePathResolver,
-      CellPathResolver cellPathResolver) {
-    return factory.create(
-        buildTarget, filesystem, sourcePathResolver, unusedDependenciesAction, cellPathResolver);
+  private void addUnusedDependencyStep(
+      UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableList.Builder<IsolatedStep> steps) {
+    steps.add(UnusedDependenciesFinderFactory.create(unusedDependenciesParams));
   }
 
-  private IsolatedStep getMakeMissingOutputsStep(OutputPathResolver outputPathResolver) {
-    return new MakeMissingOutputsStep(
-        outputPathResolver.resolvePath(rootOutputPath),
-        outputPathResolver.resolvePath(pathToClassHashesOutputPath),
-        outputPathResolver.resolvePath(annotationsOutputPath));
+  private void addMakeMissingOutputsStep(
+      ImmutableList.Builder<IsolatedStep> steps,
+      RelPath rootOutput,
+      RelPath pathToClassHashes,
+      RelPath annotationsPath) {
+    steps.add(new MakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath));
   }
 
   public boolean useDependencyFileRuleKeys() {

@@ -18,7 +18,9 @@ package com.facebook.buck.step.isolatedsteps.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.CellPathExtractor;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.cell.nameresolver.DefaultCellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,8 +41,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,7 +77,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public abstract boolean isOnlyPrintCommands();
 
-  public abstract CellNameResolver getCellNameResolver();
+  public abstract ImmutableSet<Optional<String>> getKnownCellsNames();
 
   public abstract ImmutableMap<String, RelPath> getCellToPathMappings();
 
@@ -89,7 +93,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
-      CellNameResolver cellNameResolver,
+      ImmutableSet<Optional<String>> knownCellNames,
       ImmutableMap<String, RelPath> cellToPathMappings,
       RelPath depFile,
       boolean doUltralightChecking) {
@@ -101,7 +105,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
         unusedDependenciesAction,
         buildozerPath,
         onlyPrintCommands,
-        cellNameResolver,
+        knownCellNames,
         cellToPathMappings,
         depFile,
         doUltralightChecking);
@@ -132,6 +136,14 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     } else {
       return StepExecutionResults.SUCCESS;
     }
+  }
+
+  private CellNameResolver getCellNameResolver() {
+    Map<Optional<String>, CanonicalCellName> knownCells =
+        getKnownCellsNames().stream()
+            .collect(
+                Collectors.toMap(Function.identity(), cellName -> CanonicalCellName.of(cellName)));
+    return DefaultCellNameResolver.of(knownCells);
   }
 
   private ImmutableSet<AbsPath> loadUsedJarPaths(
@@ -315,6 +327,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   /** A handler that processes messages about unused dependencies. */
   interface MessageHandler {
+
     void processMessage(String message);
 
     Optional<String> getFinalMessage();
@@ -324,6 +337,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   /** Consolidates all messages and provide concatenated message. */
   static class ConcatenatingMessageHandler implements MessageHandler {
+
     private final StringBuilder messageBuilder = new StringBuilder();
 
     @Override
@@ -373,6 +387,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   /** Recursive hierarchy of a single build target and its exported deps. */
   public static class DependencyAndExportedDepsPath {
+
     private final BuildTargetAndPaths dependency;
     private final ImmutableList<DependencyAndExportedDepsPath> exportedDeps;
 
@@ -385,6 +400,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   /** Holder for a build target string and the source paths of its output. */
   public static class BuildTargetAndPaths {
+
     private final String buildTarget;
     private final @Nullable RelPath fullJarPath;
     private final @Nullable RelPath abiPath;
