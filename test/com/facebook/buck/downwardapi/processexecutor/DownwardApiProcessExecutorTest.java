@@ -91,7 +91,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -387,7 +386,7 @@ public class DownwardApiProcessExecutorTest {
                 stringContainsInOrder("Named pipe", namedPipeReader.getName(), "is closed"))));
   }
 
-  @Test(timeout = 10_000)
+  @Test
   public void generalUnhandledException() throws IOException, InterruptedException {
     NamedPipeReader namedPipe = new TestNamedPipeWithException(namedPipeReader);
     String namedPipeName = namedPipe.getName();
@@ -695,12 +694,6 @@ public class DownwardApiProcessExecutorTest {
     downwardProtocol.write(
         EventTypeMessage.newBuilder().setEventType(eventType).build(), message, outputStream);
     return outputStream.toString(StandardCharsets.UTF_8.name());
-  }
-
-  private String getLogMessagesAsSingleString(TestLogSink logSink) {
-    return logSink.getRecords().stream()
-        .map(LogRecord::getMessage)
-        .collect(Collectors.joining(System.lineSeparator()));
   }
 
   private static class TestNamedPipeWithException implements NamedPipeReader, NamedPipeServer {

@@ -21,6 +21,7 @@ import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.posix.POSIXServerNamedPipeReader;
 import java.io.IOException;
@@ -35,7 +36,7 @@ import javax.annotation.Nullable;
 
 /** {@link POSIXServerNamedPipeReader} specific to Downward API. */
 public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeReader
-    implements DownwardNamedPipeServer {
+    implements NamedPipeServer, SupportsDownwardProtocol {
 
   private static final long SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;

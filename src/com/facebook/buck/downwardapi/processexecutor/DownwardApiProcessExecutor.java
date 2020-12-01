@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
+import com.facebook.buck.downwardapi.namedpipes.SupportsDownwardProtocol;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
@@ -389,11 +390,18 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
           namedPipe instanceof NamedPipeServer,
           "DownwardApiProcessExecutor's named pipe must be a server!");
       NamedPipeServer namedPipeServer = (NamedPipeServer) namedPipe;
+      maybeSetProtocol(namedPipeServer);
       try {
         namedPipeServer.prepareToClose(done);
       } catch (IOException e) {
         LOG.error(e, "Failed to prepare to close named pipe. Canceling handler");
         running.map(future -> future.cancel(true));
+      }
+    }
+
+    private void maybeSetProtocol(NamedPipeServer namedPipeServer) {
+      if (namedPipeServer instanceof SupportsDownwardProtocol) {
+        ((SupportsDownwardProtocol) namedPipeServer).setProtocol(downwardProtocol);
       }
     }
   }

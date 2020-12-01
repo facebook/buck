@@ -17,11 +17,10 @@
 package com.facebook.buck.downwardapi.namedpipes;
 
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
-import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import javax.annotation.Nullable;
 
-/** {@link NamedPipeServer} specific to Downward API. */
-public interface DownwardNamedPipeServer extends NamedPipeServer {
+/** If supports Downward API protocol. */
+public interface SupportsDownwardProtocol {
 
   void setProtocol(DownwardProtocol downwardProtocol);
 
