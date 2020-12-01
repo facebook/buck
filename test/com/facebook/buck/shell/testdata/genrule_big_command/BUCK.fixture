@@ -1,4 +1,4 @@
-include_defs("//DEFS")
+load(":defs.bzl", "joinlines")
 
 STRING_SIZE = 1000
 
