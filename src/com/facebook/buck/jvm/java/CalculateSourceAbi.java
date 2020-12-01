@@ -66,7 +66,7 @@ public class CalculateSourceAbi
   public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      JarBuildStepsFactory jarBuildStepsFactory,
+      JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder) {
     super(
         buildTarget,
@@ -88,7 +88,7 @@ public class CalculateSourceAbi
     @CustomFieldBehavior(DefaultFieldSerialization.class)
     private final BuildTarget buildTarget;
 
-    @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
+    @AddToRuleKey private final JarBuildStepsFactory<?> jarBuildStepsFactory;
 
     @AddToRuleKey private final PublicOutputPath rootOutputPath;
     @AddToRuleKey private final PublicOutputPath annotationsOutputPath;
@@ -96,7 +96,7 @@ public class CalculateSourceAbi
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
-        JarBuildStepsFactory jarBuildStepsFactory) {
+        JarBuildStepsFactory<?> jarBuildStepsFactory) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
 

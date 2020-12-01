@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -73,7 +74,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class KotlincToJarStepFactory extends CompileToJarStepFactory {
+/** Factory that creates Kotlin related compile build steps. */
+public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
 
   private static final String PLUGIN = "-P";
   private static final String APT_MODE = "aptMode=";
@@ -142,17 +144,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
 
   @Override
   public void createCompileStep(
-      BuildContext buildContext,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      ResolvedJavac resolvedJavac) {
+      ResolvedJavac resolvedJavac,
+      BuildContextAwareExtraParams extraParams) {
 
     AbsPath rootPath = projectFilesystem.getRootPath();
+    BuildContext buildContext = extraParams.getBuildContext();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
@@ -202,8 +205,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(sourcesOutput));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(genOutputFolder));
-
-      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableSortedSet<Path> allClasspaths =
           ImmutableSortedSet.<Path>naturalOrder()
@@ -393,16 +394,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory {
             .setSourceFilePaths(javaSourceFiles)
             .build();
 
-    new JavacToJarStepFactory(finalJavacOptions, extraClasspathProvider, withDownwardApi)
-        .createCompileStep(
-            buildContext,
-            projectFilesystem,
-            cellToPathMappings,
-            invokingRule,
-            javacParameters,
-            steps,
-            buildableContext,
-            resolvedJavac);
+    JavacToJarStepFactory javacToJarStepFactory =
+        new JavacToJarStepFactory(finalJavacOptions, extraClasspathProvider, withDownwardApi);
+
+    javacToJarStepFactory.createCompileStep(
+        projectFilesystem,
+        cellToPathMappings,
+        invokingRule,
+        javacParameters,
+        steps,
+        buildableContext,
+        resolvedJavac,
+        javacToJarStepFactory.createExtraParams(resolver, rootPath));
   }
 
   /**

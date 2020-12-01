@@ -494,6 +494,7 @@ java_library_with_plugins(
 java_immutables_library(
     name = "steps",
     srcs = [
+        "BuildContextAwareExtraParams.java",
         "CalculateClassAbiStep.java",
         "ClasspathChecker.java",
         "CompileToJarStepFactory.java",
@@ -503,6 +504,7 @@ java_immutables_library(
         "JUnitJvmArgs.java",
         "JUnitStep.java",
         "JacocoConstants.java",
+        "JavaExtraParams.java",
         "JavacPipelineState.java",
         "JavacStep.java",
         "JavacToJarStepFactory.java",

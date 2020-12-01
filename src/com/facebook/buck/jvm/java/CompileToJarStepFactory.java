@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -45,7 +44,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Provides a base implementation for post compile steps. */
-public abstract class CompileToJarStepFactory implements AddsToRuleKey {
+public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.ExtraParams>
+    implements AddsToRuleKey {
 
   @AddToRuleKey protected final JavacOptions javacOptions;
   @AddToRuleKey protected final boolean withDownwardApi;
@@ -56,7 +56,6 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   }
 
   public final void createCompileToJarStep(
-      BuildContext context,
       ProjectFilesystem projectFilesystem,
       BuildTarget target,
       CompilerParameters compilerParameters,
@@ -69,7 +68,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       ImmutableMap<String, RelPath> cellToPathMappings,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       Path buildCellRootPath,
-      ResolvedJavac resolvedJavac) {
+      ResolvedJavac resolvedJavac,
+      T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
     steps.addAll(
@@ -91,7 +91,6 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       createCompileToJarStepImpl(
           projectFilesystem,
           cellToPathMappings,
-          context,
           target,
           compilerParameters,
           postprocessClassesCommands,
@@ -101,7 +100,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
           buildableContext,
           withDownwardApi,
           buildCellRootPath,
-          resolvedJavac);
+          resolvedJavac,
+          extraParams);
     }
 
     if (jarParameters != null) {
@@ -173,7 +173,6 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   protected void createCompileToJarStepImpl(
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildContext context,
       BuildTarget target,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
@@ -183,7 +182,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       BuildableContext buildableContext,
       boolean withDownwardApi,
       Path buildCellRootPath,
-      ResolvedJavac resolvedJavac) {
+      ResolvedJavac resolvedJavac,
+      T extraParams) {
     Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(
         libraryJarParameters != null
@@ -192,14 +192,14 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
                 .contains(compilerParameters.getOutputPaths().getClassesDir()));
 
     createCompileStep(
-        context,
         projectFilesystem,
         cellToPathMappings,
         target,
         compilerParameters,
         steps,
         buildableContext,
-        resolvedJavac);
+        resolvedJavac,
+        extraParams);
 
     steps.addAll(
         addPostprocessClassesCommands(
@@ -287,17 +287,46 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
   }
 
   public abstract void createCompileStep(
-      BuildContext context,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      ResolvedJavac resolvedJavac);
+      ResolvedJavac resolvedJavac,
+      T extraParams);
 
   boolean hasAnnotationProcessing() {
     return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
+
+  public boolean supportsCompilationDaemon() {
+    return false;
+  }
+
+  /** Returns an extra params type. */
+  @SuppressWarnings("unchecked")
+  public Class<T> getExtraParamsType() {
+    if (supportsCompilationDaemon()) {
+      return (Class<T>) JavaExtraParams.class;
+    }
+    return (Class<T>) BuildContextAwareExtraParams.class;
+  }
+
+  /**
+   * Extra params marker interface.
+   *
+   * <p>{@link CompileToJarStepFactory} has 4 subclasses for each JVM language : Java, Kotlin, Scala
+   * and Groovy. Want to get rid of {@link com.facebook.buck.core.build.context.BuildContext}
+   * parameter for Java implementation (required for JavaCD) and that is why {@link ExtraParams} has
+   * been introduced with 2 implementations:
+   *
+   * <ul>
+   *   <li>BuildContextAwareExtraParams (used for Kotlin, Scala and Groovy)
+   *   <li>JavaExtraParams (used for Java)
+   * </ul>
+   *
+   * Eventually we would need to get rid of BuildContext for other JVM languages.
+   */
+  protected interface ExtraParams {}
 }

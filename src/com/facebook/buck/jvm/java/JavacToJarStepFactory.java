@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -41,7 +40,8 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavacToJarStepFactory extends CompileToJarStepFactory {
+/** Factory that creates Java related compile build steps. */
+public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraParams> {
 
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
@@ -61,15 +61,12 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi,
-      SourcePathResolverAdapter resolver,
-      AbsPath rootCellRoot,
-      ResolvedJavac resolvedJavac) {
-    JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
+      ResolvedJavac resolvedJavac,
+      JavaExtraParams javaExtraParams) {
 
     return new JavacPipelineState(
         resolvedJavac,
-        ResolvedJavacOptions.of(buildTimeOptions, resolver, rootCellRoot),
+        javaExtraParams.getResolvedJavacOptions(),
         invokingRule,
         new ClasspathChecker(),
         compilerParameters,
@@ -80,26 +77,22 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
 
   @Override
   public void createCompileStep(
-      BuildContext context,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      ResolvedJavac resolvedJavac) {
-    JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
+      ResolvedJavac resolvedJavac,
+      JavaExtraParams extraParams) {
 
     addAnnotationGenFolderStep(invokingRule, projectFilesystem, steps, buildableContext);
 
-    AbsPath rootPath = projectFilesystem.getRootPath();
-    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
     steps.add(
         new JavacStep(
             resolvedJavac,
-            ResolvedJavacOptions.of(buildTimeOptions, sourcePathResolver, rootPath),
+            resolvedJavacOptions,
             invokingRule,
             projectFilesystem.getBuckPaths(),
             new ClasspathChecker(),
@@ -165,27 +158,24 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
 
   @Override
   protected Optional<String> getBootClasspath() {
-    JavacOptions buildTimeOptions =
-        javacOptions.withBootclasspathFromContext(extraClasspathProvider);
-    return buildTimeOptions.getBootclasspath();
+    return getBuildTimeOptions().getBootclasspath();
   }
 
   @Override
   public void createCompileToJarStepImpl(
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildContext context,
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
       Path buildCellRootPath,
-      ResolvedJavac resolvedJavac) {
+      ResolvedJavac resolvedJavac,
+      JavaExtraParams extraParams) {
     Preconditions.checkArgument(
         libraryJarParameters == null
             || libraryJarParameters
@@ -211,15 +201,11 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
         postprocessClassesCommands.toString());
 
     if (isSpoolingToJarEnabled) {
-      JavacOptions buildTimeOptions =
-          javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
-      SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
       steps.add(
           new JavacStep(
               resolvedJavac,
-              ResolvedJavacOptions.of(
-                  buildTimeOptions, sourcePathResolver, projectFilesystem.getRootPath()),
+              extraParams.getResolvedJavacOptions(),
               invokingRule,
               projectFilesystem.getBuckPaths(),
               new ClasspathChecker(),
@@ -232,7 +218,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
       super.createCompileToJarStepImpl(
           projectFilesystem,
           cellToPathMappings,
-          context,
           invokingRule,
           compilerParameters,
           postprocessClassesCommands,
@@ -242,7 +227,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
           buildableContext,
           withDownwardApi,
           buildCellRootPath,
-          resolvedJavac);
+          resolvedJavac,
+          extraParams);
     }
   }
 
@@ -267,5 +253,22 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory {
   @VisibleForTesting
   public JavacOptions getJavacOptions() {
     return javacOptions;
+  }
+
+  private JavacOptions getBuildTimeOptions() {
+    return javacOptions.withBootclasspathFromContext(extraClasspathProvider);
+  }
+
+  /** Creates {@link JavaExtraParams}. */
+  public JavaExtraParams createExtraParams(SourcePathResolverAdapter resolver, AbsPath rootPath) {
+    JavacOptions buildTimeOptions = getBuildTimeOptions();
+    ResolvedJavacOptions resolvedJavacOptions =
+        ResolvedJavacOptions.of(buildTimeOptions, resolver, rootPath);
+    return JavaExtraParams.of(resolvedJavacOptions);
+  }
+
+  @Override
+  public boolean supportsCompilationDaemon() {
+    return true;
   }
 }

@@ -56,7 +56,7 @@ public abstract class DefaultJavaLibraryRules {
     DefaultJavaLibrary newInstance(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
-        JarBuildStepsFactory jarBuildStepsFactory,
+        JarBuildStepsFactory<?> jarBuildStepsFactory,
         SourcePathRuleFinder ruleFinder,
         Optional<SourcePath> proguardConfig,
         SortedSet<BuildRule> firstOrderPackageableDeps,
@@ -516,7 +516,7 @@ public abstract class DefaultJavaLibraryRules {
       return null;
     }
 
-    JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
+    JarBuildStepsFactory<?> jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
 
     BuildTarget sourceAbiTarget = JavaAbis.getSourceOnlyAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
@@ -534,7 +534,7 @@ public abstract class DefaultJavaLibraryRules {
       return null;
     }
 
-    JarBuildStepsFactory jarBuildStepsFactory = getJarBuildStepsFactory();
+    JarBuildStepsFactory<?> jarBuildStepsFactory = getJarBuildStepsFactory();
 
     BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
@@ -584,7 +584,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  CompileToJarStepFactory getConfiguredCompiler() {
+  CompileToJarStepFactory<?> getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
         .configure(
             getArgs(),
@@ -602,7 +602,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  CompileToJarStepFactory getConfiguredCompilerForSourceOnlyAbi(
+  CompileToJarStepFactory<?> getConfiguredCompilerForSourceOnlyAbi(
       SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     return getConfiguredCompilerFactory()
         .configure(
@@ -644,9 +644,9 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  JarBuildStepsFactory getJarBuildStepsFactory() {
+  JarBuildStepsFactory<?> getJarBuildStepsFactory() {
     DefaultJavaLibraryClasspaths classpaths = getClasspaths();
-    return new JarBuildStepsFactory(
+    return JarBuildStepsFactory.of(
         getLibraryTarget(),
         getConfiguredCompiler(),
         getJavac(),
@@ -666,8 +666,8 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  JarBuildStepsFactory getJarBuildStepsFactoryForSourceOnlyAbi() {
-    return new JarBuildStepsFactory(
+  JarBuildStepsFactory<?> getJarBuildStepsFactoryForSourceOnlyAbi() {
+    return JarBuildStepsFactory.of(
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(
             getSourcePathResolver(), getProjectFilesystem().getRootPath()),

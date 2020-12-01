@@ -51,7 +51,7 @@ import javax.annotation.Nullable;
 class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineState> {
 
   @AddToRuleKey private final int buckJavaVersion = JavaVersion.getMajorVersion();
-  @AddToRuleKey private final JarBuildStepsFactory jarBuildStepsFactory;
+  @AddToRuleKey private final JarBuildStepsFactory<?> jarBuildStepsFactory;
   @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
   @AddToRuleKey private final Optional<NonHashableSourcePathContainer> sourceAbiOutput;
 
@@ -69,7 +69,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
-      JarBuildStepsFactory jarBuildStepsFactory,
+      JarBuildStepsFactory<?> jarBuildStepsFactory,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi) {

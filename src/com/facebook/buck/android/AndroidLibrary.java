@@ -86,7 +86,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   AndroidLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      JarBuildStepsFactory jarBuildStepsFactory,
+      JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> fullJarDeclaredDeps,

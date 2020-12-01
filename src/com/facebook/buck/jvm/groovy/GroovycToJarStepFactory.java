@@ -17,13 +17,13 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -38,7 +38,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** Factory that creates Groovy related compile build steps. */
-class GroovycToJarStepFactory extends CompileToJarStepFactory {
+class GroovycToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
 
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
@@ -55,22 +55,22 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory {
 
   @Override
   public void createCompileStep(
-      BuildContext buildContext,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      ResolvedJavac resolvedJavac) {
+      ResolvedJavac resolvedJavac,
+      BuildContextAwareExtraParams extraParams) {
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
 
-    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolver =
+        extraParams.getBuildContext().getSourcePathResolver();
     ImmutableList<String> commandPrefix = groovyc.getCommandPrefix(sourcePathResolver);
 
     steps.add(

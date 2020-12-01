@@ -59,7 +59,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
     super(
         buildTarget,
         projectFilesystem,
-        new JarBuildStepsFactory(
+        JarBuildStepsFactory.of(
             buildTarget,
             new JavacToJarStepFactory(javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi),
             javac,

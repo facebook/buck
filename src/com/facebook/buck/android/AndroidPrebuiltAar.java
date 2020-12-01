@@ -57,7 +57,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
-      CompileToJarStepFactory configuredCompiler,
+      CompileToJarStepFactory<?> configuredCompiler,
       Javac javac,
       Iterable<PrebuiltJar> exportedDeps,
       boolean requiredForSourceAbi,
@@ -67,7 +67,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
-        new JarBuildStepsFactory(
+        JarBuildStepsFactory.of(
             androidLibraryBuildTarget,
             configuredCompiler,
             javac,

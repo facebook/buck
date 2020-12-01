@@ -157,7 +157,7 @@ public class DefaultJavaLibrary
   protected DefaultJavaLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      JarBuildStepsFactory jarBuildStepsFactory,
+      JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> firstOrderPackageableDeps,

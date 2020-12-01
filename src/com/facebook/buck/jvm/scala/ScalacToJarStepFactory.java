@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -47,7 +48,8 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
-public class ScalacToJarStepFactory extends CompileToJarStepFactory {
+/** Factory that creates Scala related compile build steps. */
+public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
 
   private static final PathMatcher JAVA_PATH_MATCHER = FileExtensionMatcher.of("java");
   private static final PathMatcher SCALA_PATH_MATCHER = FileExtensionMatcher.of("scala");
@@ -79,24 +81,25 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
 
   @Override
   public void createCompileStep(
-      BuildContext context,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
-      /* output params */
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      ResolvedJavac resolvedJavac) {
+      ResolvedJavac resolvedJavac,
+      BuildContextAwareExtraParams extraParams) {
 
     ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
-    if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
-      AbsPath rootPath = projectFilesystem.getRootPath();
+    AbsPath rootPath = projectFilesystem.getRootPath();
+    BuildContext context = extraParams.getBuildContext();
+    SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 
-      SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+    if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
+
       ImmutableList<String> commandPrefix = scalac.getCommandPrefix(sourcePathResolver);
       ImmutableMap<String, String> environment = scalac.getEnvironment(sourcePathResolver);
 
@@ -148,16 +151,19 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory {
                       .build())
               .setSourceFilePaths(javaSourceFiles)
               .build();
-      new JavacToJarStepFactory(javacOptions, extraClasspathProvider, withDownwardApi)
-          .createCompileStep(
-              context,
-              projectFilesystem,
-              cellToPathMappings,
-              invokingRule,
-              javacParameters,
-              steps,
-              buildableContext,
-              resolvedJavac);
+
+      JavacToJarStepFactory javacToJarStepFactory =
+          new JavacToJarStepFactory(javacOptions, extraClasspathProvider, withDownwardApi);
+
+      javacToJarStepFactory.createCompileStep(
+          projectFilesystem,
+          cellToPathMappings,
+          invokingRule,
+          javacParameters,
+          steps,
+          buildableContext,
+          resolvedJavac,
+          javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath));
     }
   }
 }

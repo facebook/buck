@@ -67,7 +67,8 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public class JarBuildStepsFactory
+/** Jar (java-archive) Build steps factory. */
+public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
 
   private static final Path[] METADATA_DIRS =
@@ -76,7 +77,8 @@ public class JarBuildStepsFactory
   @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget libraryTarget;
 
-  @AddToRuleKey private final CompileToJarStepFactory configuredCompiler;
+  @AddToRuleKey private final CompileToJarStepFactory<T> configuredCompiler;
+
   @AddToRuleKey private final Javac javac;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
@@ -100,6 +102,43 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @AddToRuleKey private final boolean withDownwardApi;
+
+  /** Creates {@link JarBuildStepsFactory} */
+  public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
+      BuildTarget libraryTarget,
+      CompileToJarStepFactory<T> configuredCompiler,
+      Javac javac,
+      ImmutableSortedSet<SourcePath> srcs,
+      ImmutableSortedSet<SourcePath> resources,
+      ResourcesParameters resourcesParameters,
+      Optional<SourcePath> manifestFile,
+      ImmutableList<String> postprocessClassesCommands,
+      boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
+      RemoveClassesPatternsMatcher classesToRemoveFromJar,
+      AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      ImmutableList<JavaDependencyInfo> dependencyInfos,
+      boolean isRequiredForSourceOnlyAbi,
+      boolean withDownwardApi) {
+    return new JarBuildStepsFactory<>(
+        libraryTarget,
+        configuredCompiler,
+        javac,
+        srcs,
+        resources,
+        resourcesParameters,
+        manifestFile,
+        postprocessClassesCommands,
+        trackClassUsage,
+        trackJavacPhaseEvents,
+        classesToRemoveFromJar,
+        abiGenerationMode,
+        abiCompatibilityMode,
+        dependencyInfos,
+        isRequiredForSourceOnlyAbi,
+        withDownwardApi);
+  }
 
   /** Contains information about a Java classpath dependency. */
   public static class JavaDependencyInfo implements AddsToRuleKey {
@@ -199,9 +238,9 @@ public class JarBuildStepsFactory
     }
   }
 
-  public JarBuildStepsFactory(
+  private JarBuildStepsFactory(
       BuildTarget libraryTarget,
-      CompileToJarStepFactory configuredCompiler,
+      CompileToJarStepFactory<T> configuredCompiler,
       Javac javac,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
@@ -380,7 +419,6 @@ public class JarBuildStepsFactory
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
 
     configuredCompiler.createCompileToJarStep(
-        context,
         filesystem,
         buildTarget,
         compilerParameters,
@@ -393,9 +431,24 @@ public class JarBuildStepsFactory
         cellToPathMappings,
         resourcesMap,
         buildCellRootPath,
-        resolvedJavac);
+        resolvedJavac,
+        createExtraParams(context, rootPath));
 
     return steps.build();
+  }
+
+  private T createExtraParams(BuildContext context, AbsPath rootPath) {
+    CompileToJarStepFactory.ExtraParams extraParams;
+    if (configuredCompiler.supportsCompilationDaemon()) {
+      JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
+      extraParams =
+          javacToJarStepFactory.createExtraParams(context.getSourcePathResolver(), rootPath);
+    } else {
+      extraParams = BuildContextAwareExtraParams.of(context);
+    }
+
+    Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
+    return extraParamsType.cast(extraParams);
   }
 
   /**
@@ -498,7 +551,6 @@ public class JarBuildStepsFactory
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
 
     configuredCompiler.createCompileToJarStep(
-        context,
         filesystem,
         buildTarget,
         compilerParameters,
@@ -511,7 +563,8 @@ public class JarBuildStepsFactory
         cellToPathMappings,
         resourcesMap,
         buildCellRootPath,
-        resolvedJavac);
+        resolvedJavac,
+        createExtraParams(context, rootPath));
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         filesystem.getIgnoredPaths(),
@@ -762,9 +815,8 @@ public class JarBuildStepsFactory
         abiJarParameters,
         libraryJarParameters,
         withDownwardApi,
-        sourcePathResolver,
-        filesystem.getRootPath(),
-        resolvedJavac);
+        resolvedJavac,
+        javacToJarStepFactory.createExtraParams(sourcePathResolver, filesystem.getRootPath()));
   }
 
   boolean hasAnnotationProcessing() {
