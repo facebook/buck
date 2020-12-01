@@ -212,7 +212,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     AbsPath rootPath = filesystem.getRootPath();
     ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     compileStepFactory.createCompileStep(
-        filesystem,
+        FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
         getBuildTarget(),
         compilerParameters,

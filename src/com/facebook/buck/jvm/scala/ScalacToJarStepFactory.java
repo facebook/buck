@@ -28,12 +28,12 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavac;
@@ -81,7 +81,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
 
   @Override
   public void createCompileStep(
-      ProjectFilesystem projectFilesystem,
+      FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
@@ -94,7 +94,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
-    AbsPath rootPath = projectFilesystem.getRootPath();
+    AbsPath rootPath = filesystemParams.getRootPath();
     BuildContext context = extraParams.getBuildContext();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 
@@ -156,7 +156,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
           new JavacToJarStepFactory(javacOptions, extraClasspathProvider, withDownwardApi);
 
       javacToJarStepFactory.createCompileStep(
-          projectFilesystem,
+          filesystemParams,
           cellToPathMappings,
           invokingRule,
           javacParameters,

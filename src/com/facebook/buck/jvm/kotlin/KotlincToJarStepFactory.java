@@ -33,11 +33,11 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacPluginParams;
@@ -145,7 +145,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
   @Override
   public void createCompileStep(
-      ProjectFilesystem projectFilesystem,
+      FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
@@ -154,9 +154,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       ResolvedJavac resolvedJavac,
       BuildContextAwareExtraParams extraParams) {
 
-    AbsPath rootPath = projectFilesystem.getRootPath();
-    BaseBuckPaths buckPaths = projectFilesystem.getBuckPaths();
-    ImmutableSet<PathMatcher> ignoredPaths = projectFilesystem.getIgnoredPaths();
+    AbsPath rootPath = filesystemParams.getRootPath();
+    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
+    ImmutableSet<PathMatcher> ignoredPaths = filesystemParams.getIgnoredPaths();
 
     BuildContext buildContext = extraParams.getBuildContext();
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
@@ -394,7 +394,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         new JavacToJarStepFactory(finalJavacOptions, extraClasspathProvider, withDownwardApi);
 
     javacToJarStepFactory.createCompileStep(
-        projectFilesystem,
+        filesystemParams,
         cellToPathMappings,
         invokingRule,
         javacParameters,

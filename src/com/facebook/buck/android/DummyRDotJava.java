@@ -43,6 +43,7 @@ import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -180,12 +181,13 @@ public class DummyRDotJava extends AbstractBuildRule
     Path buildCellRootPath = context.getBuildCellRootPath();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    RelPath rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
+    ProjectFilesystem filesystem = getProjectFilesystem();
+    RelPath rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), filesystem);
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildCellRootPath, getProjectFilesystem(), rDotJavaSrcFolder)));
+                buildCellRootPath, filesystem, rDotJavaSrcFolder)));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     ImmutableSortedSet<Path> javaSourceFilePaths;
@@ -201,10 +203,10 @@ public class DummyRDotJava extends AbstractBuildRule
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  buildCellRootPath, getProjectFilesystem(), emptyRDotJava.getParent())));
+                  buildCellRootPath, filesystem, emptyRDotJava.getParent())));
       steps.add(
           WriteFileStep.of(
-              getProjectFilesystem().getRootPath(),
+              filesystem.getRootPath(),
               "package com.facebook;\n public class R {}\n",
               emptyRDotJava,
               /* executable */ false));
@@ -212,7 +214,7 @@ public class DummyRDotJava extends AbstractBuildRule
     } else {
       MergeAndroidResourcesStep mergeStep =
           MergeAndroidResourcesStep.createStepForDummyRDotJava(
-              getProjectFilesystem(),
+              filesystem,
               sourcePathResolver,
               androidResourceDeps,
               rDotJavaSrcFolder.getPath(),
@@ -228,7 +230,7 @@ public class DummyRDotJava extends AbstractBuildRule
       } else {
         MergeAndroidResourcesStep mergeFinalRStep =
             MergeAndroidResourcesStep.createStepForDummyRDotJava(
-                getProjectFilesystem(),
+                filesystem,
                 sourcePathResolver,
                 androidResourceDeps,
                 rDotJavaSrcFolder.getPath(),
@@ -253,21 +255,20 @@ public class DummyRDotJava extends AbstractBuildRule
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildCellRootPath, getProjectFilesystem(), rDotJavaClassesFolder)));
+                buildCellRootPath, filesystem, rDotJavaClassesFolder)));
 
     RelPath pathToJarOutputDir = outputJar.getParent();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildCellRootPath, getProjectFilesystem(), pathToJarOutputDir)));
+                buildCellRootPath, filesystem, pathToJarOutputDir)));
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths)
-            .setOutputPaths(
-                CompilerOutputPaths.of(getBuildTarget(), getProjectFilesystem().getBuckPaths()))
+            .setOutputPaths(CompilerOutputPaths.of(getBuildTarget(), filesystem.getBuckPaths()))
             .build();
 
     Preconditions.checkState(
@@ -277,15 +278,15 @@ public class DummyRDotJava extends AbstractBuildRule
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildCellRootPath,
-                getProjectFilesystem(),
+                filesystem,
                 compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
-    AbsPath rootPath = getProjectFilesystem().getRootPath();
+    AbsPath rootPath = filesystem.getRootPath();
 
     // Compile the .java files.
     ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     compileStepFactory.createCompileStep(
-        getProjectFilesystem(),
+        FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
         getBuildTarget(),
         compilerParameters,

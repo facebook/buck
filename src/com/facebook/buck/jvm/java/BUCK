@@ -500,6 +500,7 @@ java_immutables_library(
         "CompileToJarStepFactory.java",
         "CopyResourcesStep.java",
         "DiffAbisStep.java",
+        "FilesystemParams.java",
         "GenerateCodeCoverageReportStep.java",
         "JUnitJvmArgs.java",
         "JUnitStep.java",

@@ -419,7 +419,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
 
     configuredCompiler.createCompileToJarStep(
-        filesystem,
+        FilesystemParams.of(filesystem),
         buildTarget,
         compilerParameters,
         ImmutableList.of(),
@@ -477,7 +477,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
-            filesystem,
+            FilesystemParams.of(filesystem),
             cellToPathMappings,
             buildTarget,
             state,
@@ -550,8 +550,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
 
+    FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
     configuredCompiler.createCompileToJarStep(
-        filesystem,
+        filesystemParams,
         buildTarget,
         compilerParameters,
         postprocessClassesCommands,
@@ -567,9 +568,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         createExtraParams(context, rootPath));
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystem.getIgnoredPaths(),
+        filesystemParams.getIgnoredPaths(),
         steps,
-        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem.getBuckPaths()))
+        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystemParams.getBaseBuckPaths()))
             .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
   }
@@ -595,9 +596,10 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CellPathResolverUtils.getCellToPathMappings(
             filesystem.getRootPath(), context.getCellPathResolver());
 
+    FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
     ((JavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
-            filesystem,
+            filesystemParams,
             cellToPathMappings,
             libraryTarget,
             state,
@@ -607,9 +609,10 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             resourcesMap);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystem.getIgnoredPaths(),
+        filesystemParams.getIgnoredPaths(),
         steps,
-        Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem.getBuckPaths()))
+        Optional.ofNullable(
+                getSourcePathToOutput(libraryTarget, filesystemParams.getBaseBuckPaths()))
             .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
   }

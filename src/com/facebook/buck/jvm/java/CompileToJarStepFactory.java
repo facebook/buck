@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -57,7 +56,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   public final void createCompileToJarStep(
-      ProjectFilesystem projectFilesystem,
+      FilesystemParams filesystemParams,
       BuildTarget target,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
@@ -73,8 +72,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
-    AbsPath rootPath = projectFilesystem.getRootPath();
-    BaseBuckPaths buckPaths = projectFilesystem.getBuckPaths();
+    AbsPath rootPath = filesystemParams.getRootPath();
+    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
 
     steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, rootPath, compilerParameters));
 
@@ -91,7 +90,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
       // This adds the javac command, along with any supporting commands.
       createCompileToJarStepImpl(
-          projectFilesystem,
+          filesystemParams,
           cellToPathMappings,
           target,
           compilerParameters,
@@ -173,7 +172,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   protected void createCompileToJarStepImpl(
-      ProjectFilesystem projectFilesystem,
+      FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget target,
       CompilerParameters compilerParameters,
@@ -193,10 +192,10 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
                 .getEntriesToJar()
                 .contains(compilerParameters.getOutputPaths().getClassesDir()));
 
-    AbsPath rootPath = projectFilesystem.getRootPath();
+    AbsPath rootPath = filesystemParams.getRootPath();
 
     createCompileStep(
-        projectFilesystem,
+        filesystemParams,
         cellToPathMappings,
         target,
         compilerParameters,
@@ -289,7 +288,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   public abstract void createCompileStep(
-      ProjectFilesystem projectFilesystem,
+      FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTarget invokingRule,
       CompilerParameters parameters,
