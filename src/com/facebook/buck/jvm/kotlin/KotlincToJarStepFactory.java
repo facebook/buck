@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
@@ -154,6 +155,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       BuildContextAwareExtraParams extraParams) {
 
     AbsPath rootPath = projectFilesystem.getRootPath();
+    BaseBuckPaths buckPaths = projectFilesystem.getBuckPaths();
+    ImmutableSet<PathMatcher> ignoredPaths = projectFilesystem.getIgnoredPaths();
+
     BuildContext buildContext = extraParams.getBuildContext();
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
@@ -173,29 +177,22 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     // Only invoke kotlinc if we have kotlin or src zip files.
     if (hasKotlinSources) {
       RelPath stubsOutput =
-          BuildTargetPaths.getAnnotationPath(
-              projectFilesystem.getBuckPaths(), invokingRule, "__%s_stubs__");
+          BuildTargetPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_stubs__");
       RelPath sourcesOutput =
-          BuildTargetPaths.getAnnotationPath(
-              projectFilesystem.getBuckPaths(), invokingRule, "__%s_sources__");
+          BuildTargetPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_sources__");
       RelPath classesOutput =
-          BuildTargetPaths.getAnnotationPath(
-              projectFilesystem.getBuckPaths(), invokingRule, "__%s_classes__");
+          BuildTargetPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_classes__");
       RelPath kaptGeneratedOutput =
-          BuildTargetPaths.getAnnotationPath(
-              projectFilesystem.getBuckPaths(), invokingRule, "__%s_kapt_generated__");
+          BuildTargetPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_kapt_generated__");
       RelPath kotlincPluginGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
-              projectFilesystem.getBuckPaths(), invokingRule, "__%s_kotlinc_plugin_generated__");
-      RelPath annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
+              buckPaths, invokingRule, "__%s_kotlinc_plugin_generated__");
+      RelPath annotationGenFolder = getKaptAnnotationGenPath(buckPaths, invokingRule);
       RelPath genOutputFolder =
-          BuildTargetPaths.getGenPath(
-              projectFilesystem.getBuckPaths(), invokingRule, "__%s_gen_sources__");
+          BuildTargetPaths.getGenPath(buckPaths, invokingRule, "__%s_gen_sources__");
       RelPath genOutput =
           BuildTargetPaths.getGenPath(
-              projectFilesystem.getBuckPaths(),
-              invokingRule,
-              "__%s_gen_sources__/generated" + SRC_ZIP);
+              buckPaths, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
 
       // Javac requires that the root directory for generated sources already exist.
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(stubsOutput));
@@ -267,14 +264,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                 .add(AP_CLASSPATH_ARG + standardLibraryPath)
                 .addAll(apClassPaths)
                 .addAll(annotationProcessors)
-                .add(SOURCES_ARG + projectFilesystem.resolve(sourcesOutput))
-                .add(CLASSES_ARG + projectFilesystem.resolve(classesOutput))
-                .add(STUBS_ARG + projectFilesystem.resolve(stubsOutput))
+                .add(SOURCES_ARG + rootPath.resolve(sourcesOutput))
+                .add(CLASSES_ARG + rootPath.resolve(classesOutput))
+                .add(STUBS_ARG + rootPath.resolve(stubsOutput))
                 .add(
                     AP_OPTIONS
                         + encodeKaptApOptions(
-                            apOptions.build(),
-                            projectFilesystem.resolve(kaptGeneratedOutput).toString()))
+                            apOptions.build(), rootPath.resolve(kaptGeneratedOutput).toString()))
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
                 .add(CORRECT_ERROR_TYPES + "true")
@@ -299,7 +295,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
             ZipIsolatedStep.of(
                 rootPath,
                 genOutput.getPath(),
-                projectFilesystem.getIgnoredPaths(),
+                ignoredPaths,
                 ImmutableSet.of(),
                 false,
                 ZipCompressionLevel.DEFAULT,
@@ -321,7 +317,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
               .add(friendPathsArg)
               .addAll(
                   getKotlinCompilerPluginsArgs(
-                      resolver, projectFilesystem.resolve(kotlincPluginGeneratedOutput).toString()))
+                      resolver, rootPath.resolve(kotlincPluginGeneratedOutput).toString()))
               .addAll(annotationProcessingOptionsBuilder.build())
               .add(MODULE_NAME)
               .add(moduleName)
@@ -384,7 +380,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
             .from(parameters)
             .setClasspathEntries(
                 ImmutableSortedSet.<Path>naturalOrder()
-                    .add(projectFilesystem.resolve(outputDirectory).getPath())
+                    .add(rootPath.resolve(outputDirectory).getPath())
                     .addAll(
                         RichStream.from(extraClasspathProvider.getExtraClasspath())
                             .map(AbsPath::getPath)
@@ -514,9 +510,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         + invokingRule.getShortName();
   }
 
-  public static RelPath getKaptAnnotationGenPath(
-      ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return BuildPaths.getGenDir(projectFilesystem.getBuckPaths(), buildTarget)
-        .resolveRel("__generated__");
+  public static RelPath getKaptAnnotationGenPath(BaseBuckPaths buckPaths, BuildTarget buildTarget) {
+    return BuildPaths.getGenDir(buckPaths, buildTarget).resolveRel("__generated__");
   }
 }

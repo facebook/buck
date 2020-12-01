@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.shell.BashStep;
@@ -72,9 +73,10 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
-    steps.addAll(
-        getCompilerSetupIsolatedSteps(
-            resourcesMap, projectFilesystem.getRootPath(), compilerParameters));
+    AbsPath rootPath = projectFilesystem.getRootPath();
+    BaseBuckPaths buckPaths = projectFilesystem.getBuckPaths();
+
+    steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, rootPath, compilerParameters));
 
     JarParameters jarParameters =
         abiJarParameters != null ? abiJarParameters : libraryJarParameters;
@@ -85,7 +87,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(projectFilesystem, target, compilerParameters, buildableContext);
+      recordDepFileIfNecessary(target, compilerParameters, buildableContext, buckPaths);
 
       // This adds the javac command, along with any supporting commands.
       createCompileToJarStepImpl(
@@ -148,12 +150,12 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   protected void recordDepFileIfNecessary(
-      ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       CompilerParameters compilerParameters,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      BaseBuckPaths buckPaths) {
     if (compilerParameters.shouldTrackClassUsage()) {
-      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
+      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, buckPaths);
       buildableContext.recordArtifact(depFilePath);
     }
   }
@@ -191,6 +193,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
                 .getEntriesToJar()
                 .contains(compilerParameters.getOutputPaths().getClassesDir()));
 
+    AbsPath rootPath = projectFilesystem.getRootPath();
+
     createCompileStep(
         projectFilesystem,
         cellToPathMappings,
@@ -203,7 +207,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
     steps.addAll(
         addPostprocessClassesCommands(
-            projectFilesystem,
+            rootPath,
             postprocessClassesCommands,
             compilerParameters.getOutputPaths().getClassesDir(),
             compilerParameters.getClasspathEntries(),
@@ -234,7 +238,6 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
    * buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule should be at
    * buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
    *
-   * @param filesystem the project filesystem.
    * @param postprocessClassesCommands the list of commands to post-process .class files.
    * @param outputDirectory the directory that will contain all the javac output.
    * @param declaredClasspathEntries the list of classpath entries.
@@ -242,7 +245,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
    */
   @VisibleForTesting
   static ImmutableList<IsolatedStep> addPostprocessClassesCommands(
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
       List<String> postprocessClassesCommands,
       RelPath outputDirectory,
       ImmutableSortedSet<Path> declaredClasspathEntries,
@@ -255,9 +258,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
     ImmutableList.Builder<IsolatedStep> commands = new ImmutableList.Builder<>();
     ImmutableMap<String, String> envVars =
-        getEnvs(filesystem, declaredClasspathEntries, bootClasspath);
+        getEnvs(rootPath, declaredClasspathEntries, bootClasspath);
 
-    AbsPath rootPath = filesystem.getRootPath();
     RelPath cellPath = ProjectFilesystemUtils.relativize(rootPath, buildCellRootPath);
     for (String postprocessClassesCommand : postprocessClassesCommands) {
       String bashCommand = postprocessClassesCommand + " " + outputDirectory;
@@ -274,13 +276,13 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   private static ImmutableMap<String, String> getEnvs(
-      ProjectFilesystem filesystem,
+      AbsPath rootPath,
       ImmutableSortedSet<Path> declaredClasspathEntries,
       Optional<String> bootClasspath) {
     ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
     envVarBuilder.put(
         "COMPILATION_CLASSPATH",
-        Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, filesystem::resolve)));
+        Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, rootPath::resolve)));
 
     bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
     return envVarBuilder.build();

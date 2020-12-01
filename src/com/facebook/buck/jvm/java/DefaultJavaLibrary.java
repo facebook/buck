@@ -190,7 +190,8 @@ public class DefaultJavaLibrary
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(
-            jarBuildStepsFactory.getSourcePathToOutput(buildTarget, projectFilesystem));
+            jarBuildStepsFactory.getSourcePathToOutput(
+                buildTarget, projectFilesystem.getBuckPaths()));
     this.sourcePathForGeneratedAnnotationPath =
         Optional.ofNullable(
             jarBuildStepsFactory.getSourcePathToGeneratedAnnotationPath(

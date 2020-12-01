@@ -57,7 +57,7 @@ public class CompileToJarStepFactoryTest {
     ImmutableList.Builder<IsolatedStep> commands = ImmutableList.builder();
     commands.addAll(
         CompileToJarStepFactory.addPostprocessClassesCommands(
-            new FakeProjectFilesystem(),
+            new FakeProjectFilesystem().getRootPath(),
             postprocessClassesCommands,
             outputDirectory,
             classpathEntries,

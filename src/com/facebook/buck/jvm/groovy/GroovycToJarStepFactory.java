@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -63,6 +64,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareE
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
       BuildContextAwareExtraParams extraParams) {
+    AbsPath rootPath = projectFilesystem.getRootPath();
 
     ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
@@ -77,8 +79,7 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareE
         new GroovycStep(
             commandPrefix,
             extraArguments,
-            ResolvedJavacOptions.of(
-                javacOptions, sourcePathResolver, projectFilesystem.getRootPath()),
+            ResolvedJavacOptions.of(javacOptions, sourcePathResolver, rootPath),
             outputDirectory.getPath(),
             sourceFilePaths,
             pathToSrcsList,

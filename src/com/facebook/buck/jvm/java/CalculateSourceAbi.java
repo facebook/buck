@@ -77,7 +77,8 @@ public class CalculateSourceAbi
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
         Objects.requireNonNull(
-            jarBuildStepsFactory.getSourcePathToOutput(getBuildTarget(), getProjectFilesystem()));
+            jarBuildStepsFactory.getSourcePathToOutput(
+                getBuildTarget(), getProjectFilesystem().getBuckPaths()));
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
   }
 

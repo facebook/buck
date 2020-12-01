@@ -211,7 +211,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         && IjKotlinHelper.requiresKapt(targetNode.getConstructorArg())) {
       return Optional.of(
           KotlincToJarStepFactory.getKaptAnnotationGenPath(
-                  projectFilesystem, targetNode.getBuildTarget())
+                  projectFilesystem.getBuckPaths(), targetNode.getBuildTarget())
               .getPath());
     }
     return Optional.empty();

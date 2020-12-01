@@ -291,8 +291,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   @Nullable
-  public SourcePath getSourcePathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return getOutputJarPath(buildTarget, filesystem)
+  public SourcePath getSourcePathToOutput(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
+    return getOutputJarPath(buildTarget, buckPaths)
         .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
         .orElse(null);
   }
@@ -569,7 +569,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     JavaLibraryRules.addAccumulateClassNamesStep(
         filesystem.getIgnoredPaths(),
         steps,
-        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem))
+        Optional.ofNullable(getSourcePathToOutput(buildTarget, filesystem.getBuckPaths()))
             .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
   }
@@ -609,7 +609,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     JavaLibraryRules.addAccumulateClassNamesStep(
         filesystem.getIgnoredPaths(),
         steps,
-        Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem))
+        Optional.ofNullable(getSourcePathToOutput(libraryTarget, filesystem.getBuckPaths()))
             .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath)),
         pathToClassHashes);
   }
@@ -696,7 +696,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Optional<RelPath> manifestRelFile =
         manifestFile.map(
             sourcePath -> sourcePathResolver.getCellUnsafeRelPath(filesystem, sourcePath));
-    return getOutputJarPath(buildTarget, filesystem)
+    return getOutputJarPath(buildTarget, filesystem.getBuckPaths())
         .map(
             output ->
                 JarParameters.builder()
@@ -721,16 +721,15 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
-  private Optional<Path> getOutputJarPath(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  private Optional<Path> getOutputJarPath(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
     if (!producesJar()) {
       return Optional.empty();
     }
 
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
-      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem.getBuckPaths()));
+      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, buckPaths));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(
-          CompilerOutputPaths.getOutputJarPath(buildTarget, filesystem.getBuckPaths()));
+      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTarget, buckPaths));
     } else {
       throw new IllegalArgumentException();
     }
