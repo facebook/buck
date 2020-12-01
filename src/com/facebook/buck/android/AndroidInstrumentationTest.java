@@ -43,6 +43,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
@@ -103,6 +104,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final boolean withDownwardApi;
   private final OptionalInt javaForTestsVersion;
 
+  private final ImmutableMap<String, Arg> env;
+
   @Nullable private InstrumentationStep externalInstrumentationTestStep;
 
   protected AndroidInstrumentationTest(
@@ -110,6 +113,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       ProjectFilesystem projectFilesystem,
       AndroidPlatformTarget androidPlatformTarget,
       BuildRuleParams params,
+      ImmutableMap<String, Arg> env,
       HasInstallableApk apk,
       Set<String> labels,
       Set<String> contacts,
@@ -134,6 +138,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.toolsCommonJar = toolsCommonJar;
     this.withDownwardApi = withDownwardApi;
     this.javaForTestsVersion = javaForTestsVersion;
+    this.env = env;
   }
 
   private static AndroidDevice getSingleDevice(AndroidDevicesHelper adbHelper) {
@@ -203,19 +208,19 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       TestReportingCallback testReportingCallback) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     Path pathToTestOutput = getPathToTestOutputDirectory();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput)));
-    steps.add(new ApkInstallStep(buildContext.getSourcePathResolver(), apk));
+    steps.add(new ApkInstallStep(sourcePathResolver, apk));
     getApkUnderTest(apk)
         .ifPresent(
             apkUnderTest -> {
               steps.add(
                   new ApkInstallStep(
-                      buildContext.getSourcePathResolver(),
-                      ((AndroidInstrumentationApk) apk).getApkUnderTest()));
+                      sourcePathResolver, ((AndroidInstrumentationApk) apk).getApkUnderTest()));
             });
 
     AndroidDevicesHelper adb = executionContext.getAndroidDevicesHelper().get();
@@ -239,6 +244,12 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             false));
 
     return steps.build();
+  }
+
+  private ImmutableMap<String, String> getEnv(SourcePathResolverAdapter pathResolver) {
+    return new ImmutableMap.Builder<String, String>()
+        .putAll(Arg.stringify(env, pathResolver))
+        .build();
   }
 
   @VisibleForTesting
@@ -461,6 +472,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                 .getSourcePathResolver()
                 .getAbsolutePath(apk.getApkInfo().getApkPath())
                 .getPath());
+    ImmutableMap<String, String> envs = getEnv(buildContext.getSourcePathResolver());
     externalInstrumentationTestStep =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
@@ -502,6 +514,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         .setLabels(getLabels())
         .setContacts(getContacts())
         .setRequiredPaths(requiredPaths)
+        .setEnv(envs)
         .build();
   }
 
