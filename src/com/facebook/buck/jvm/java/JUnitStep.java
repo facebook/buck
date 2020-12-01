@@ -77,7 +77,7 @@ public class JUnitStep extends ShellStep {
         MoreSuppliers.memoize(
             () -> {
               try {
-                return filesystem.createTempFile("classpath-argfile", "");
+                return filesystem.resolve(filesystem.createTempFile("classpath-argfile", ""));
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }
