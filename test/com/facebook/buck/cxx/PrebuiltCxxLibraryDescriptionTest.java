@@ -376,11 +376,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     GenruleBuilder genruleBuilder =
         GenruleBuilder.newGenruleBuilder(genTarget).setOut("libtest.so");
 
-    PrebuiltCxxLibraryBuilder builder =
-        new PrebuiltCxxLibraryBuilder(
-            TARGET.withAppendedFlavors(
-                PrebuiltCxxLibraryDescription.Type.SHARED.getFlavor(),
-                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
+    PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(TARGET);
     builder.setSoname("test");
     builder.setStaticLib(DefaultBuildTargetSourcePath.of(genTarget));
 
@@ -390,7 +386,8 @@ public class PrebuiltCxxLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     BuildRule genrule = genruleBuilder.build(graphBuilder, filesystem, targetGraph);
-    BuildRule lib = builder.build(graphBuilder, filesystem, targetGraph);
+    PrebuiltCxxLibrary lib =
+        (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
 
     ImmutableSortedSet<BuildTarget> implicit = builder.build().getExtraDeps();
     assertEquals(ImmutableSortedSet.of(genTarget), implicit);

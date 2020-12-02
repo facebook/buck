@@ -18,7 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -27,11 +28,13 @@ import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.util.Optional;
 
-public abstract class PrebuiltCxxLibrary extends NoopBuildRule implements AbstractCxxLibraryGroup {
+public abstract class PrebuiltCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements AbstractCxxLibraryGroup {
   private final PlatformMappedCache<NativeLinkable> linkableCache = new PlatformMappedCache<>();
 
-  PrebuiltCxxLibrary(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-    super(buildTarget, projectFilesystem);
+  PrebuiltCxxLibrary(
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
+    super(buildTarget, projectFilesystem, params);
   }
 
   @Override
