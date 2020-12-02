@@ -123,6 +123,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -812,7 +813,14 @@ class CachingBuildRuleBuilder {
               : buildTimestampsMillis.getSecond() - buildTimestampsMillis.getFirst();
       buildCacheArtifactUploader.uploadToCache(success, buildTimeMs).get();
     } catch (Throwable t) {
-      eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
+      if (t instanceof ExecutionException) {
+        eventBus.post(
+            ConsoleEvent.warning(
+                "Error uploading to cache for %s, with exception message: %s",
+                rule, t.getMessage()));
+      } else {
+        eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
+      }
     }
   }
 
