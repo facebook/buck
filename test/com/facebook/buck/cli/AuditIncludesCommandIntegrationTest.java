@@ -54,8 +54,6 @@ public class AuditIncludesCommandIntegrationTest {
                 + newLine
                 + workspace.getPath("BUCK")
                 + newLine
-                + workspace.getPath("build_defs")
-                + newLine
                 + workspace.getPath("java_rules.bzl")
                 + newLine));
   }
@@ -73,12 +71,7 @@ public class AuditIncludesCommandIntegrationTest {
     try (PrintStream sink = new PrintStream(expectedOutput);
         JsonGenerator generator = ObjectMappers.createGenerator(sink).useDefaultPrettyPrinter()) {
       ObjectMappers.WRITER.writeValue(
-          generator,
-          new Path[] {
-            workspace.getPath("BUCK"),
-            workspace.getPath("build_defs"),
-            workspace.getPath("java_rules.bzl")
-          });
+          generator, new Path[] {workspace.getPath("BUCK"), workspace.getPath("java_rules.bzl")});
     }
     assertEquals(expectedOutput.toString(), result.getStdout());
   }
@@ -100,9 +93,9 @@ public class AuditIncludesCommandIntegrationTest {
                 + newLine
                 + workspace.getPath("BUCK")
                 + newLine
-                + workspace.getPath("build_defs")
+                + workspace.getPath("build_defs.bzl")
                 + newLine
-                + workspace.getPath("included_build_defs")
+                + workspace.getPath("included_build_defs.bzl")
                 + newLine
                 + workspace.getPath("included_java_rules.bzl")
                 + newLine
