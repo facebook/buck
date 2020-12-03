@@ -37,10 +37,14 @@ public interface JavaCompileStepsBuilderFactory {
   /** Returns specific implementation of {@link JavaCompileStepsBuilderFactory}. */
   static <T extends CompileToJarStepFactory.ExtraParams> JavaCompileStepsBuilderFactory getFactory(
       CompileToJarStepFactory<T> configuredCompiler) {
+    DefaultJavaCompileStepsBuilderFactory<T> defaultJavaCompileStepsBuilderFactory =
+        new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
+
     if (configuredCompiler.supportsCompilationDaemon()) {
       // TODO : msemko@ return JavaCDStepsBuilderFactory when it is ready.
-      return new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
+      return defaultJavaCompileStepsBuilderFactory;
     }
-    return new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
+
+    return defaultJavaCompileStepsBuilderFactory;
   }
 }
