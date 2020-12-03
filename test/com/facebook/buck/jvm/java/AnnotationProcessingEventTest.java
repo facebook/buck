@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -30,8 +29,8 @@ public class AnnotationProcessingEventTest {
 
   @Test
   public void testEquals() {
-    BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
-    BuildTarget targetTwo = BuildTargetFactory.newInstance("//fake:rule2");
+    String target = BuildTargetFactory.newInstance("//fake:rule").getFullyQualifiedName();
+    String targetTwo = BuildTargetFactory.newInstance("//fake:rule2").getFullyQualifiedName();
     String annotationProcessorName = "com.facebook.FakeProcessor";
     String annotationProcessorName2 = "com.facebook.FakeProcessor2";
 

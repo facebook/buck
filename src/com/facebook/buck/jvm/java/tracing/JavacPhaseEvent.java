@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
@@ -25,6 +24,7 @@ import java.util.Map;
 
 /** Base class for events about the phases of compilation within javac. */
 public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdvanceEvent {
+
   public enum Phase {
     /** Parsing a single source file. Filename will be in the args. */
     PARSE(Constants.PARSE),
@@ -92,6 +92,7 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
   }
 
   public static class Constants {
+
     public static final String PARSE = "parse";
     public static final String ENTER = "enter";
     public static final String ANNOTATION_PROCESSING = "annotation processing";
@@ -102,20 +103,20 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
     public static final String EVENT_CATEGORY_NAME = "javac";
   }
 
-  private final BuildTarget buildTarget;
+  private final String buildTargetFulyQualifiedName;
   private final Phase phase;
   private final ImmutableMap<String, String> args;
 
   protected JavacPhaseEvent(
-      EventKey eventKey, BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
+      EventKey eventKey, String buildTargetName, Phase phase, ImmutableMap<String, String> args) {
     super(eventKey);
-    this.buildTarget = buildTarget;
+    this.buildTargetFulyQualifiedName = buildTargetName;
     this.phase = phase;
     this.args = args;
   }
 
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
+  public String getBuildTargetFulyQualifiedName() {
+    return buildTargetFulyQualifiedName;
   }
 
   public Phase getPhase() {
@@ -128,7 +129,7 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
 
   @Override
   protected String getValueString() {
-    return buildTarget.toString();
+    return buildTargetFulyQualifiedName.toString();
   }
 
   @Override
@@ -148,8 +149,8 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
   }
 
   public static Started started(
-      BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
-    return new Started(buildTarget, phase, args);
+      String buildTargetName, Phase phase, ImmutableMap<String, String> args) {
+    return new Started(buildTargetName, phase, args);
   }
 
   public static Finished finished(Started startedEvent, ImmutableMap<String, String> args) {
@@ -157,8 +158,9 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
   }
 
   public static class Started extends JavacPhaseEvent {
-    public Started(BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
-      super(EventKey.unique(), buildTarget, phase, args);
+
+    public Started(String buildTargetName, Phase phase, ImmutableMap<String, String> args) {
+      super(EventKey.unique(), buildTargetName, phase, args);
     }
 
     @Override
@@ -173,9 +175,13 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
   }
 
   public static class Finished extends JavacPhaseEvent {
+
     public Finished(JavacPhaseEvent.Started startedEvent, ImmutableMap<String, String> args) {
       super(
-          startedEvent.getEventKey(), startedEvent.getBuildTarget(), startedEvent.getPhase(), args);
+          startedEvent.getEventKey(),
+          startedEvent.getBuildTargetFulyQualifiedName(),
+          startedEvent.getPhase(),
+          args);
     }
 
     @Override

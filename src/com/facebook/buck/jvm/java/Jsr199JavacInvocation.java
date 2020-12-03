@@ -330,10 +330,13 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       targetEvent.close();
 
       // Now start tracking the full jar
-      Objects.requireNonNull(tracingBridge).setBuildTarget(libraryTarget);
-      Objects.requireNonNull(phaseEventLogger).setBuildTarget(libraryTarget);
+      Objects.requireNonNull(tracingBridge)
+          .setBuildTargetName(libraryTarget.getFullyQualifiedName());
+      Objects.requireNonNull(phaseEventLogger)
+          .setBuildTargetFullyQualifiedName(libraryTarget.getFullyQualifiedName());
       targetEvent =
-          new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), libraryTarget.toString());
+          new JavacEventSinkScopedSimplePerfEvent(
+              context.getEventSink(), libraryTarget.getFullyQualifiedName());
     }
 
     public int buildClasses() throws InterruptedException {
@@ -417,11 +420,13 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
             executor.submit(
                 () -> {
                   threadName.set(Thread.currentThread().getName());
-                  tracingBridge = new Jsr199TracingBridge(context.getEventSink(), invokingRule);
+                  tracingBridge =
+                      new Jsr199TracingBridge(
+                          context.getEventSink(), invokingRule.getFullyQualifiedName());
                   BuckTracing.setCurrentThreadTracingInterface(tracingBridge);
                   targetEvent =
                       new JavacEventSinkScopedSimplePerfEvent(
-                          context.getEventSink(), invokingRule.toString());
+                          context.getEventSink(), invokingRule.getFullyQualifiedName());
                   try {
                     boolean success = false;
                     try {
@@ -478,8 +483,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                           "The compiler crashed attempting to generate a source-only ABI: %s.\n"
                               + "Try building %s instead and fixing any errors that are emitted.\n"
                               + "If there are none, file an issue, with the crash trace from the log.\n",
-                          invokingRule,
-                          libraryTarget);
+                          invokingRule.getFullyQualifiedName(),
+                          libraryTarget.getFullyQualifiedName());
                     } else {
                       throw new BuckUncheckedExecutionException(
                           e.getCause() != null ? e.getCause() : e, "When running javac");
@@ -598,7 +603,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                     abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
           }
 
-          phaseEventLogger = new JavacPhaseEventLogger(invokingRule, context.getEventSink());
+          phaseEventLogger =
+              new JavacPhaseEventLogger(
+                  invokingRule.getFullyQualifiedName(), context.getEventSink());
           TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(phaseEventLogger);
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
           // in some unusual situations
@@ -616,7 +623,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                   context.getEventSink(),
                   compiler.getClass().getClassLoader(),
                   context.getClassLoaderCache(),
-                  invokingRule);
+                  invokingRule.getFullyQualifiedName());
           addCloseable(processorFactory);
 
           javacTask.setProcessors(processorFactory.createProcessors(annotationProcessors));

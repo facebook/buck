@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.jvm.java.JavacEventSink;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
@@ -26,16 +25,16 @@ import javax.annotation.Nullable;
 public class JavacPhaseEventLogger {
   private static final ImmutableMap<String, String> EMPTY_MAP = ImmutableMap.of();
 
-  private BuildTarget buildTarget;
+  private String buildTargetFullyQualifiedName;
   private final JavacEventSink eventSink;
 
-  public JavacPhaseEventLogger(BuildTarget buildTarget, JavacEventSink eventSink) {
-    this.buildTarget = buildTarget;
+  public JavacPhaseEventLogger(String buildTargetName, JavacEventSink eventSink) {
+    this.buildTargetFullyQualifiedName = buildTargetName;
     this.eventSink = eventSink;
   }
 
-  public void setBuildTarget(BuildTarget buildTarget) {
-    this.buildTarget = buildTarget;
+  public void setBuildTargetFullyQualifiedName(String buildTargetFullyQualifiedName) {
+    this.buildTargetFullyQualifiedName = buildTargetFullyQualifiedName;
   }
 
   public void beginParse(@Nullable String filename) {
@@ -106,11 +105,11 @@ public class JavacPhaseEventLogger {
   }
 
   private void postStartedEvent(JavacPhaseEvent.Phase phase, ImmutableMap<String, String> args) {
-    eventSink.reportJavacPhaseStarted(buildTarget, phase.toString(), args);
+    eventSink.reportJavacPhaseStarted(buildTargetFullyQualifiedName, phase.toString(), args);
   }
 
   private void postFinishedEvent(JavacPhaseEvent.Phase phase, ImmutableMap<String, String> args) {
-    eventSink.reportJavacPhaseFinished(buildTarget, phase.toString(), args);
+    eventSink.reportJavacPhaseFinished(buildTargetFullyQualifiedName, phase.toString(), args);
   }
 
   private ImmutableMap<String, String> getRoundNumberArgs(int roundNumber) {

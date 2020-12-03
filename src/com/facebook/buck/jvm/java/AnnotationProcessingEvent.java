@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
@@ -36,7 +35,7 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
     PROCESS,
   }
 
-  private final BuildTarget buildTarget;
+  private final String buildTargetFullyQualifiedName;
   private final String annotationProcessorName;
   private final Operation operation;
   private final int round;
@@ -44,21 +43,21 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
 
   protected AnnotationProcessingEvent(
       EventKey eventKey,
-      BuildTarget buildTarget,
+      String buildTargetName,
       String annotationProcessorName,
       Operation operation,
       int round,
       boolean isLastRound) {
     super(eventKey);
-    this.buildTarget = buildTarget;
+    this.buildTargetFullyQualifiedName = buildTargetName;
     this.annotationProcessorName = annotationProcessorName;
     this.operation = operation;
     this.round = round;
     this.isLastRound = isLastRound;
   }
 
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
+  public String getBuildTargetFullyQualifiedName() {
+    return buildTargetFullyQualifiedName;
   }
 
   public Operation getOperation() {
@@ -75,7 +74,7 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
 
   @Override
   protected String getValueString() {
-    return buildTarget.toString();
+    return buildTargetFullyQualifiedName.toString();
   }
 
   @Override
@@ -97,12 +96,12 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
   }
 
   public static Started started(
-      BuildTarget buildTarget,
+      String buildTargetName,
       String annotationProcessorName,
       Operation operation,
       int round,
       boolean isLastRound) {
-    return new Started(buildTarget, annotationProcessorName, operation, round, isLastRound);
+    return new Started(buildTargetName, annotationProcessorName, operation, round, isLastRound);
   }
 
   public static Finished finished(Started started) {
@@ -110,13 +109,20 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
   }
 
   public static class Started extends AnnotationProcessingEvent {
+
     public Started(
-        BuildTarget buildTarget,
+        String buildTargetName,
         String annotationProcessorName,
         Operation operation,
         int round,
         boolean isLastRound) {
-      super(EventKey.unique(), buildTarget, annotationProcessorName, operation, round, isLastRound);
+      super(
+          EventKey.unique(),
+          buildTargetName,
+          annotationProcessorName,
+          operation,
+          round,
+          isLastRound);
     }
 
     @Override
@@ -134,10 +140,11 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
   }
 
   public static class Finished extends AnnotationProcessingEvent {
+
     public Finished(AnnotationProcessingEvent.Started started) {
       super(
           started.getEventKey(),
-          started.getBuildTarget(),
+          started.getBuildTargetFullyQualifiedName(),
           started.getCategory(),
           started.getOperation(),
           started.getRound(),
@@ -146,12 +153,12 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
 
     public Finished(
         EventKey eventKey,
-        BuildTarget buildTarget,
+        String buildTargetName,
         String annotationProcessorName,
         Operation operation,
         int round,
         boolean isLastRound) {
-      super(eventKey, buildTarget, annotationProcessorName, operation, round, isLastRound);
+      super(eventKey, buildTargetName, annotationProcessorName, operation, round, isLastRound);
     }
 
     @Override

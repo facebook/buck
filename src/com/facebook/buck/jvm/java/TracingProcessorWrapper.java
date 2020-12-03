@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.string.AsciiBoxStringBuilder;
 import com.google.common.base.Throwables;
 import java.util.ArrayList;
@@ -39,18 +38,18 @@ import javax.lang.model.element.TypeElement;
 class TracingProcessorWrapper implements Processor {
   private final JavacEventSink eventSink;
   private final Processor innerProcessor;
-  private final BuildTarget buildTarget;
+  private final String buildTargetName;
   private final String annotationProcessorName;
 
   private int roundNumber = 0;
   private boolean isLastRound = false;
 
   public TracingProcessorWrapper(
-      JavacEventSink eventSink, BuildTarget buildTarget, Processor processor) {
+      JavacEventSink eventSink, String buildTargetName, Processor processor) {
     this.eventSink = eventSink;
-    this.buildTarget = buildTarget;
-    innerProcessor = processor;
-    annotationProcessorName = innerProcessor.getClass().getName();
+    this.buildTargetName = buildTargetName;
+    this.innerProcessor = processor;
+    this.annotationProcessorName = innerProcessor.getClass().getName();
   }
 
   @Override
@@ -169,15 +168,15 @@ class TracingProcessorWrapper implements Processor {
     private AnnotationProcessingEvent.Started begin(AnnotationProcessingEvent.Operation operation) {
       AnnotationProcessingEvent.Started started =
           AnnotationProcessingEvent.started(
-              buildTarget, annotationProcessorName, operation, roundNumber, isLastRound);
+              buildTargetName, annotationProcessorName, operation, roundNumber, isLastRound);
       eventSink.reportAnnotationProcessingEventStarted(
-          buildTarget, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
+          buildTargetName, annotationProcessorName, operation.toString(), roundNumber, isLastRound);
       return started;
     }
 
     private void end(AnnotationProcessingEvent.Started started) {
       eventSink.reportAnnotationProcessingEventFinished(
-          started.getBuildTarget(),
+          started.getBuildTargetFullyQualifiedName(),
           started.getCategory(),
           started.getOperation().toString(),
           started.getRound(),

@@ -453,15 +453,16 @@ public class ChromeTraceBuildListenerTest {
             criticalPathEventListener,
             new FileOutputStreamFactory());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//fake:rule");
+    String target = buildTarget.getFullyQualifiedName();
 
-    FakeBuildRule rule = new FakeBuildRule(target, ImmutableSortedSet.of());
+    FakeBuildRule rule = new FakeBuildRule(buildTarget, ImmutableSortedSet.of());
     RuleKey ruleKey = new RuleKey("abc123");
     String stepShortName = "fakeStep";
     String stepDescription = "I'm a Fake Step!";
     UUID stepUuid = UUID.randomUUID();
 
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(target);
+    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(buildTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock, buildId);
@@ -581,9 +582,9 @@ public class ChromeTraceBuildListenerTest {
     eventBus.post(
         ExternalTestRunEvent.started(true, TestSelectorList.EMPTY, false, ImmutableSet.of()));
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example:app");
-    eventBus.post(ExternalTestSpecCalculationEvent.started(buildTarget));
-    eventBus.post(ExternalTestSpecCalculationEvent.finished(buildTarget));
+    BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//example:app");
+    eventBus.post(ExternalTestSpecCalculationEvent.started(buildTarget2));
+    eventBus.post(ExternalTestSpecCalculationEvent.finished(buildTarget2));
 
     eventBus.post(ExternalTestRunEvent.finished(ImmutableSet.of(), ExitCode.SUCCESS));
 

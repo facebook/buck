@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -33,17 +32,17 @@ class AnnotationProcessorFactory implements AutoCloseable {
   private final ClassLoader compilerClassLoader;
   private final ClassLoaderCache globalClassLoaderCache;
   private final ClassLoaderCache localClassLoaderCache = new ClassLoaderCache();
-  private final BuildTarget target;
+  private final String buildTargetName;
 
   AnnotationProcessorFactory(
       JavacEventSink eventSink,
       ClassLoader compilerClassLoader,
       ClassLoaderCache globalClassLoaderCache,
-      BuildTarget target) {
+      String buildTargetName) {
     this.eventSink = eventSink;
     this.compilerClassLoader = compilerClassLoader;
     this.globalClassLoaderCache = globalClassLoaderCache;
-    this.target = target;
+    this.buildTargetName = buildTargetName;
   }
 
   @Override
@@ -66,14 +65,11 @@ class AnnotationProcessorFactory implements AutoCloseable {
   private Processor createProcessor(ClassLoader classLoader, String name) {
     try {
       Class<? extends Processor> aClass = classLoader.loadClass(name).asSubclass(Processor.class);
-      return new TracingProcessorWrapper(eventSink, target, aClass.newInstance());
+      return new TracingProcessorWrapper(eventSink, buildTargetName, aClass.newInstance());
     } catch (ReflectiveOperationException e) {
       // If this happens, then the build is really in trouble. Better warn the user.
       throw new HumanReadableException(
-          e,
-          "%s: javac unable to load annotation processor: %s",
-          target.getFullyQualifiedName(),
-          name);
+          e, "%s: javac unable to load annotation processor: %s", buildTargetName, name);
     }
   }
 

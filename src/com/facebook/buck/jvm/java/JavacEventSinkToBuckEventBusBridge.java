@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
@@ -39,17 +38,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
+
   private final IsolatedEventBus eventBus;
-  private final LoadingCache<BuildTarget, BuckTracingEventBusBridge> buckTracingBridgeCache =
+  private final LoadingCache<String, BuckTracingEventBusBridge> buckTracingBridgeCache =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<BuildTarget, BuckTracingEventBusBridge>() {
+              new CacheLoader<String, BuckTracingEventBusBridge>() {
                 @Override
-                public BuckTracingEventBusBridge load(BuildTarget target) {
+                public BuckTracingEventBusBridge load(String target) {
                   return new BuckTracingEventBusBridge(eventBus, target);
                 }
               });
-  private final Map<Pair<BuildTarget, JavacPhaseEvent.Phase>, JavacPhaseEvent.Started>
+  private final Map<Pair<String, JavacPhaseEvent.Phase>, JavacPhaseEvent.Started>
       currentJavacPhaseEvents = new ConcurrentHashMap<>();
 
   private final Map<String, EventKey> startedAnnotationProcessingEvents = new ConcurrentHashMap<>();
@@ -70,9 +70,9 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   }
 
   private BuckTracingEventBusBridge getBuckTracingEventBusBridgeForBuildTarget(
-      BuildTarget buildTarget) {
+      String buildTargetName) {
     try {
-      return buckTracingBridgeCache.get(buildTarget);
+      return buckTracingBridgeCache.get(buildTargetName);
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
@@ -80,26 +80,27 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   @Override
   public void reportCompilerPluginStarted(
-      BuildTarget buildTarget,
+      String buildTargetName,
       String pluginName,
       String durationName,
       ImmutableMap<String, String> args) {
-    getBuckTracingEventBusBridgeForBuildTarget(buildTarget).begin(pluginName, durationName, args);
+    getBuckTracingEventBusBridgeForBuildTarget(buildTargetName)
+        .begin(pluginName, durationName, args);
   }
 
   @Override
   public void reportCompilerPluginFinished(
-      BuildTarget buildTarget, ImmutableMap<String, String> args) {
-    getBuckTracingEventBusBridgeForBuildTarget(buildTarget).end(args);
+      String buildTargetName, ImmutableMap<String, String> args) {
+    getBuckTracingEventBusBridgeForBuildTarget(buildTargetName).end(args);
   }
 
   @Override
   public void reportJavacPhaseStarted(
-      BuildTarget buildTarget, String phaseAsString, ImmutableMap<String, String> args) {
+      String buildTargetName, String phaseAsString, ImmutableMap<String, String> args) {
     JavacPhaseEvent.Phase phase = JavacPhaseEvent.Phase.fromString(phaseAsString);
-    JavacPhaseEvent.Started startedEvent = JavacPhaseEvent.started(buildTarget, phase, args);
+    JavacPhaseEvent.Started startedEvent = JavacPhaseEvent.started(buildTargetName, phase, args);
 
-    Pair<BuildTarget, JavacPhaseEvent.Phase> key = new Pair<>(buildTarget, phase);
+    Pair<String, JavacPhaseEvent.Phase> key = new Pair<>(buildTargetName, phase);
     Assertions.assertCondition(currentJavacPhaseEvents.get(key) == null);
     currentJavacPhaseEvents.put(key, startedEvent);
 
@@ -108,9 +109,9 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   @Override
   public void reportJavacPhaseFinished(
-      BuildTarget buildTarget, String phaseAsString, ImmutableMap<String, String> args) {
-    Pair<BuildTarget, JavacPhaseEvent.Phase> key =
-        new Pair<>(buildTarget, JavacPhaseEvent.Phase.fromString(phaseAsString));
+      String buildTargetName, String phaseAsString, ImmutableMap<String, String> args) {
+    Pair<String, JavacPhaseEvent.Phase> key =
+        new Pair<>(buildTargetName, JavacPhaseEvent.Phase.fromString(phaseAsString));
     JavacPhaseEvent.Finished finishedEvent =
         JavacPhaseEvent.finished(Assertions.assertNotNull(currentJavacPhaseEvents.get(key)), args);
     currentJavacPhaseEvents.remove(key);
@@ -120,28 +121,28 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   @Override
   public void reportAnnotationProcessingEventStarted(
-      BuildTarget buildTarget,
+      String buildTargetName,
       String annotationProcessorName,
       String operationAsString,
       int round,
       boolean isLastRound) {
     AnnotationProcessingEvent.Started started =
         AnnotationProcessingEvent.started(
-            buildTarget,
+            buildTargetName,
             annotationProcessorName,
             AnnotationProcessingEvent.Operation.valueOf(operationAsString),
             round,
             isLastRound);
     startedAnnotationProcessingEvents.put(
         getKeyForAnnotationProcessingEvent(
-            buildTarget, annotationProcessorName, operationAsString, round, isLastRound),
+            buildTargetName, annotationProcessorName, operationAsString, round, isLastRound),
         started.getEventKey());
     eventBus.post(started);
   }
 
   @Override
   public void reportAnnotationProcessingEventFinished(
-      BuildTarget buildTarget,
+      String buildTargetName,
       String annotationProcessorName,
       String operationAsString,
       int round,
@@ -149,11 +150,11 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
     EventKey startedEventKey =
         startedAnnotationProcessingEvents.get(
             getKeyForAnnotationProcessingEvent(
-                buildTarget, annotationProcessorName, operationAsString, round, isLastRound));
+                buildTargetName, annotationProcessorName, operationAsString, round, isLastRound));
     AnnotationProcessingEvent.Finished finished =
         new AnnotationProcessingEvent.Finished(
             Objects.requireNonNull(startedEventKey),
-            buildTarget,
+            buildTargetName,
             annotationProcessorName,
             Operation.valueOf(operationAsString),
             round,
@@ -162,14 +163,13 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   }
 
   private String getKeyForAnnotationProcessingEvent(
-      BuildTarget buildTarget,
+      String buildTargetName,
       String annotationProcessorName,
       String operationAsString,
       int round,
       boolean isLastRound) {
     return Joiner.on(":")
-        .join(
-            buildTarget.toString(), annotationProcessorName, operationAsString, round, isLastRound);
+        .join(buildTargetName, annotationProcessorName, operationAsString, round, isLastRound);
   }
 
   @Override

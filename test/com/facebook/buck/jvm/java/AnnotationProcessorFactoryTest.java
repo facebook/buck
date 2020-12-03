@@ -20,7 +20,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -56,7 +55,7 @@ public class AnnotationProcessorFactoryTest {
     SourcePath classpath = FakeSourcePath.of("some/path/to.jar");
     ClassLoader baseClassLoader = SynchronizedToolProvider.getSystemToolClassLoader();
     ClassLoaderCache classLoaderCache = new ClassLoaderCache();
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:test");
+    String buildTarget = BuildTargetFactory.newInstance("//:test").getFullyQualifiedName();
     SourcePathResolverAdapter sourcePathResolver =
         new TestActionGraphBuilder().getSourcePathResolver();
     AbsPath rootPath = new FakeProjectFilesystem().getRootPath();

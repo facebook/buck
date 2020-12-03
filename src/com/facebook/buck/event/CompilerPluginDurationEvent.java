@@ -16,33 +16,33 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
 /** Base class for events being reported by plugins to in-process compilers such as JSR199 javac. */
 public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
     implements WorkAdvanceEvent {
-  private final BuildTarget buildTarget;
+
+  private final String buildTargetFullyQualifiedName;
   private final String pluginName;
   private final String durationName;
   private final ImmutableMap<String, String> args;
 
   protected CompilerPluginDurationEvent(
       EventKey eventKey,
-      BuildTarget buildTarget,
+      String buildTargetName,
       String pluginName,
       String durationName,
       ImmutableMap<String, String> args) {
     super(eventKey);
-    this.buildTarget = buildTarget;
+    this.buildTargetFullyQualifiedName = buildTargetName;
     this.pluginName = pluginName;
     this.durationName = durationName;
     this.args = args;
   }
 
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
+  public String getBuildTargetFullyQualifiedName() {
+    return buildTargetFullyQualifiedName;
   }
 
   public String getPluginName() {
@@ -79,11 +79,11 @@ public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
   }
 
   public static Started started(
-      BuildTarget buildTarget,
+      String buildTargetName,
       String pluginName,
       String durationName,
       ImmutableMap<String, String> args) {
-    return new Started(buildTarget, pluginName, durationName, args);
+    return new Started(buildTargetName, pluginName, durationName, args);
   }
 
   public static Finished finished(Started startedEvent, ImmutableMap<String, String> args) {
@@ -91,12 +91,13 @@ public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
   }
 
   public static class Started extends CompilerPluginDurationEvent {
+
     public Started(
-        BuildTarget buildTarget,
+        String buildTargetName,
         String pluginName,
         String durationName,
         ImmutableMap<String, String> args) {
-      super(EventKey.unique(), buildTarget, pluginName, durationName, args);
+      super(EventKey.unique(), buildTargetName, pluginName, durationName, args);
     }
 
     @Override
@@ -111,11 +112,12 @@ public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
   }
 
   public static class Finished extends CompilerPluginDurationEvent {
+
     public Finished(
         CompilerPluginDurationEvent.Started startedEvent, ImmutableMap<String, String> args) {
       super(
           startedEvent.getEventKey(),
-          startedEvent.getBuildTarget(),
+          startedEvent.getBuildTargetFullyQualifiedName(),
           startedEvent.getPluginName(),
           startedEvent.getDurationName(),
           args);

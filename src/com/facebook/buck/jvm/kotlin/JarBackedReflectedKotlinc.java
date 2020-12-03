@@ -123,7 +123,8 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
     try {
       BuckTracing.setCurrentThreadTracingInterface(
-          new BuckTracingEventBusBridge(context.getIsolatedEventBus(), invokingRule));
+          new BuckTracingEventBusBridge(
+              context.getIsolatedEventBus(), invokingRule.getFullyQualifiedName()));
 
       Object compilerShim = loadCompilerShim(context);
 
