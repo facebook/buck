@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -31,17 +30,17 @@ abstract class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleI
 
   abstract ImmutableList<BaseJavaAbiInfo> getAbiJarInfos();
 
-  abstract BuildTarget getBuildTarget();
+  abstract String getFullyQualifiedBuildTargetName();
 
   abstract boolean isRuleIsRequiredForSourceOnlyAbi();
 
   public static DefaultSourceOnlyAbiRuleInfoFactory of(
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
-      BuildTarget buildTarget,
+      String fullyQualifiedBuildTargetName,
       boolean ruleIsRequiredForSourceOnlyAbi) {
     return ImmutableDefaultSourceOnlyAbiRuleInfoFactory.ofImpl(
-        fullJarInfos, abiJarInfos, buildTarget, ruleIsRequiredForSourceOnlyAbi);
+        fullJarInfos, abiJarInfos, fullyQualifiedBuildTargetName, ruleIsRequiredForSourceOnlyAbi);
   }
 
   @Override
@@ -50,7 +49,7 @@ abstract class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleI
         getFullJarInfos(),
         getAbiJarInfos(),
         fileManager,
-        getBuildTarget(),
+        getFullyQualifiedBuildTargetName(),
         isRuleIsRequiredForSourceOnlyAbi());
   }
 }

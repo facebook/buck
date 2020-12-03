@@ -443,13 +443,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             javaSrcs,
             fullJarInfos,
             abiJarInfos,
-            buildTarget,
             trackClassUsage,
             trackJavacPhaseEvents,
             abiGenerationMode,
             abiCompatibilityMode,
             isRequiredForSourceOnlyAbi,
-            compilerOutputPaths);
+            compilerOutputPaths,
+            buildTarget.getFullyQualifiedName());
 
     ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
     configuredCompiler.createCompileToJarStep(
@@ -628,13 +628,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             javaSrcs,
             fullJarInfos,
             abiJarInfos,
-            buildTarget,
             trackClassUsage,
             trackJavacPhaseEvents,
             abiGenerationMode,
             abiCompatibilityMode,
             isRequiredForSourceOnlyAbi,
-            compilerOutputPaths);
+            compilerOutputPaths,
+            buildTarget.getFullyQualifiedName());
 
     configuredCompiler.createCompileToJarStep(
         filesystemParams,
@@ -727,13 +727,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableSortedSet<Path> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
-      BuildTarget buildTarget,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
       boolean isRequiredForSourceOnlyAbi,
-      CompilerOutputPaths compilerOutputPaths) {
+      CompilerOutputPaths compilerOutputPaths,
+      String fullyQualifiedName) {
     return CompilerParameters.builder()
         .setClasspathEntries(compileTimeClasspathPaths)
         .setSourceFilePaths(javaSrcs)
@@ -744,7 +744,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         .setAbiCompatibilityMode(abiCompatibilityMode)
         .setSourceOnlyAbiRuleInfoFactory(
             DefaultSourceOnlyAbiRuleInfoFactory.of(
-                fullJarInfos, abiJarInfos, buildTarget, isRequiredForSourceOnlyAbi))
+                fullJarInfos, abiJarInfos, fullyQualifiedName, isRequiredForSourceOnlyAbi))
         .build();
   }
 
@@ -902,13 +902,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             javaSrcs,
             fullJarInfos,
             abiJarInfos,
-            firstRule,
             trackClassUsage,
             trackJavacPhaseEvents,
             abiGenerationMode,
             abiCompatibilityMode,
             isRequiredForSourceOnlyAbi,
-            compilerOutputPaths);
+            compilerOutputPaths,
+            firstRule.getFullyQualifiedName());
 
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
 

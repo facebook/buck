@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
@@ -42,7 +41,7 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
 
   private final ImmutableList<BaseJavaAbiInfo> fullJarInfos;
   private final ImmutableList<BaseJavaAbiInfo> abiJarInfos;
-  private final BuildTarget buildTarget;
+  private final String fullyQualifiedBuildTargetName;
   private final boolean ruleIsRequiredForSourceOnlyAbi;
 
   private final Map<String, Set<String>> packagesContents = new HashMap<>();
@@ -52,11 +51,11 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfo,
       JavaFileManager fileManager,
-      BuildTarget buildTarget,
+      String fullyQualifiedBuildTargetName,
       boolean ruleIsRequiredForSourceOnlyAbi) {
     this.fullJarInfos = fullJarInfos;
     this.abiJarInfos = abiJarInfo;
-    this.buildTarget = buildTarget;
+    this.fullyQualifiedBuildTargetName = fullyQualifiedBuildTargetName;
     this.ruleIsRequiredForSourceOnlyAbi = ruleIsRequiredForSourceOnlyAbi;
     this.fileManager = fileManager;
   }
@@ -67,7 +66,7 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
 
   @Override
   public String getRuleName() {
-    return buildTarget.toString();
+    return fullyQualifiedBuildTargetName;
   }
 
   @Override
