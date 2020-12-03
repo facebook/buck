@@ -128,13 +128,6 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
       return super.build();
     }
 
-    @Override
-    @Deprecated
-    public JavacPluginParams build() {
-      throw new UnsupportedOperationException(
-          "Use build method with SourcePathResolverAdapter and AbsPath as params");
-    }
-
     public Builder setLegacyAnnotationProcessorNames(Collection<String> annotationProcessors) {
       legacyAnnotationProcessorNames = ImmutableSet.copyOf(annotationProcessors);
       return this;

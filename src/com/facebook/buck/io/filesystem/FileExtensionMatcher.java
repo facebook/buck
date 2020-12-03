@@ -76,6 +76,10 @@ public class FileExtensionMatcher implements PathMatcher {
     return getGlob();
   }
 
+  public String getExtension() {
+    return extension;
+  }
+
   /** @return The matcher for paths that have {@code extension} as an extension. */
   public static FileExtensionMatcher of(String extension) {
     return new FileExtensionMatcher(extension);

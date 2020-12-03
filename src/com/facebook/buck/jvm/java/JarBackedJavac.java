@@ -21,7 +21,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -46,7 +45,7 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   /** Resolved jar backed (loaded from a jar specified in .buckconfig.) javac tool. */
-  static class ResolvedJarBackedJavac extends Jsr199Javac.ResolvedJsr199Javac {
+  public static class ResolvedJarBackedJavac extends Jsr199Javac.ResolvedJsr199Javac {
 
     private final ImmutableSortedSet<AbsPath> resolvedClasspath;
     private final String compilerClassName;
@@ -75,13 +74,11 @@ public class JarBackedJavac extends Jsr199Javac {
       }
     }
 
-    @VisibleForTesting
-    Iterable<AbsPath> getClasspath() {
+    public Iterable<AbsPath> getClasspath() {
       return resolvedClasspath;
     }
 
-    @VisibleForTesting
-    String getCompilerClassName() {
+    public String getCompilerClassName() {
       return compilerClassName;
     }
 

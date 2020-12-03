@@ -64,6 +64,10 @@ public class ExactPathMatcher implements PathMatcher {
     return path.toString();
   }
 
+  public RelPath getPath() {
+    return path;
+  }
+
   @Override
   public ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities) {
     String pathGlob = getGlob();
@@ -78,6 +82,11 @@ public class ExactPathMatcher implements PathMatcher {
 
   /** @return The matcher for paths that are exactly the same as {@code path}. */
   public static ExactPathMatcher of(String path) {
-    return new ExactPathMatcher(RelPath.get(path));
+    return of(RelPath.get(path));
+  }
+
+  /** @return The matcher for paths that are exactly the same as {@code path}. */
+  public static ExactPathMatcher of(RelPath path) {
+    return new ExactPathMatcher(path);
   }
 }

@@ -27,7 +27,6 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -51,12 +50,12 @@ public class ExternalJavac implements Javac {
   }
 
   /** External resolved external javac tool. */
-  static class ResolvedExternalJavac implements ResolvedJavac {
+  public static class ResolvedExternalJavac implements ResolvedJavac {
 
     private final String shortName;
     private final ImmutableList<String> commandPrefix;
 
-    ResolvedExternalJavac(String shortName, ImmutableList<String> commandPrefix) {
+    public ResolvedExternalJavac(String shortName, ImmutableList<String> commandPrefix) {
       this.shortName = shortName;
       this.commandPrefix = commandPrefix;
     }
@@ -80,8 +79,7 @@ public class ExternalJavac implements Javac {
       return shortName;
     }
 
-    @VisibleForTesting
-    ImmutableList<String> getCommandPrefix() {
+    public ImmutableList<String> getCommandPrefix() {
       return commandPrefix;
     }
 

@@ -25,6 +25,11 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
 
   @Override
   protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver) {
+    return createJsr199Javac();
+  }
+
+  /** Creates in memory javac */
+  public static ResolvedJsr199Javac createJsr199Javac() {
     return new ResolvedJsr199Javac() {
 
       @Override
@@ -34,7 +39,6 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
           throw new HumanReadableException(
               "No system compiler found. Did you install the JRE instead of the JDK?");
         }
-
         return compiler;
       }
     };

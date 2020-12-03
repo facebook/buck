@@ -47,4 +47,9 @@ public class DefaultBaseJavaAbiInfo implements BaseJavaAbiInfo {
   public void setContentPaths(@Nullable ImmutableSet<Path> contentPaths) {
     this.contentPaths = contentPaths;
   }
+
+  @Nullable
+  public ImmutableSet<Path> getContentPaths() {
+    return contentPaths;
+  }
 }

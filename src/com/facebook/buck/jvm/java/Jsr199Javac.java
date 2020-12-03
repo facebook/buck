@@ -38,7 +38,7 @@ public abstract class Jsr199Javac implements Javac {
   protected abstract ResolvedJsr199Javac create(SourcePathResolverAdapter resolver);
 
   /** Base class for a resolved javac in-process tool. */
-  abstract static class ResolvedJsr199Javac implements ResolvedJavac {
+  public abstract static class ResolvedJsr199Javac implements ResolvedJavac {
 
     protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
 

@@ -32,27 +32,27 @@ import java.util.stream.Collectors;
 @BuckStyleValue
 public abstract class ResolvedJavacOptions {
 
-  abstract Optional<String> getBootclasspath();
+  public abstract Optional<String> getBootclasspath();
 
-  abstract Optional<List<AbsPath>> getBootclasspathList();
+  public abstract Optional<List<AbsPath>> getBootclasspathList();
 
-  abstract JavacLanguageLevelOptions getLanguageLevelOptions();
+  public abstract JavacLanguageLevelOptions getLanguageLevelOptions();
 
-  abstract boolean isDebug();
+  public abstract boolean isDebug();
 
-  abstract boolean isVerbose();
+  public abstract boolean isVerbose();
 
-  abstract JavacPluginParams getJavaAnnotationProcessorParams();
+  public abstract JavacPluginParams getJavaAnnotationProcessorParams();
 
-  abstract JavacPluginParams getStandardJavacPluginParams();
+  public abstract JavacPluginParams getStandardJavacPluginParams();
 
-  abstract List<String> getExtraArguments();
+  public abstract List<String> getExtraArguments();
 
-  abstract ImmutableList<JavacPluginJsr199Fields> getAnnotationProcessors();
+  public abstract ImmutableList<JavacPluginJsr199Fields> getAnnotationProcessors();
 
-  abstract ImmutableList<JavacPluginJsr199Fields> getJavaPlugins();
+  public abstract ImmutableList<JavacPluginJsr199Fields> getJavaPlugins();
 
-  abstract boolean isJavaAnnotationProcessorParamsPresent();
+  public abstract boolean isJavaAnnotationProcessorParamsPresent();
 
   /** Creates {@link ResolvedJavacOptions} */
   public static ResolvedJavacOptions of(

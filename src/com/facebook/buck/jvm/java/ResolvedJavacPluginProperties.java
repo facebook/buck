@@ -145,7 +145,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
 
   /** Get the javac plugin fields. */
   public JavacPluginJsr199Fields getJavacPluginJsr199Fields(AbsPath root) {
-    return ImmutableJavacPluginJsr199Fields.ofImpl(
+    return JavacPluginJsr199Fields.of(
         getCanReuseClassLoader(),
         getProcessorNames(),
         ImmutableList.copyOf(toURLArray(getClasspath(), root)));

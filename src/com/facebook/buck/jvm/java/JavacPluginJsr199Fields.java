@@ -32,4 +32,12 @@ public abstract class JavacPluginJsr199Fields {
   public abstract ImmutableSortedSet<String> getProcessorNames();
 
   public abstract ImmutableList<URL> getClasspath();
+
+  /** Creates {@link JavacPluginJsr199Fields} */
+  public static JavacPluginJsr199Fields of(
+      boolean canReuseClassLoader,
+      ImmutableSortedSet<String> processorNames,
+      ImmutableList<URL> classpath) {
+    return ImmutableJavacPluginJsr199Fields.ofImpl(canReuseClassLoader, processorNames, classpath);
+  }
 }

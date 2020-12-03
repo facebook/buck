@@ -68,4 +68,8 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey, Predicate<Ob
       return shouldRemoveClass((String) o);
     }
   }
+
+  public ImmutableList<Pattern> getPatterns() {
+    return patterns;
+  }
 }
