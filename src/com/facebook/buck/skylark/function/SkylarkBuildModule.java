@@ -83,7 +83,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       useStarlarkThread = true)
   public String repositoryName(StarlarkThread env) throws EvalException {
     ParseContext parseContext = ParseContext.getParseContext(env, "repository_name");
-    return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
+    return "@" + parseContext.getPackageContext().getCellName();
   }
 
   /** {@code rule_exists} */
