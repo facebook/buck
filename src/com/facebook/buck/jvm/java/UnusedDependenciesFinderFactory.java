@@ -188,7 +188,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       DependencyAndExportedDeps dependencyAndExportedDeps,
       SourcePathResolverAdapter resolver,
       AbsPath projectRootPath) {
-    return new UnusedDependenciesFinder.DependencyAndExportedDepsPath(
+    return UnusedDependenciesFinder.DependencyAndExportedDepsPath.of(
         convert(dependencyAndExportedDeps.dependency, resolver, projectRootPath),
         dependencyAndExportedDeps.exportedDeps.stream()
             .map(d -> convert(d, resolver, projectRootPath))
@@ -199,7 +199,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       BuildTargetAndSourcePaths buildTargetAndSourcePaths,
       SourcePathResolverAdapter resolver,
       AbsPath projectRootPath) {
-    return new UnusedDependenciesFinder.BuildTargetAndPaths(
+    return UnusedDependenciesFinder.BuildTargetAndPaths.of(
         buildTargetAndSourcePaths.buildTarget,
         toRelativePath(buildTargetAndSourcePaths.fullJarSourcePath, resolver, projectRootPath),
         toRelativePath(buildTargetAndSourcePaths.abiSourcePath, resolver, projectRootPath));

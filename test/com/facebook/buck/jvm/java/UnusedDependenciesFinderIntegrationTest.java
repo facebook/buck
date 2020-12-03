@@ -16,14 +16,16 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,14 +53,13 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.containsString(
-            "Target //:bar_with_dep is declared with unused targets in deps: \n"
-                + "buck//third-party/java/jsr:jsr305\n"
-                + "\n"
-                + "Please remove them. You may be able to use the following commands: \n"
-                + "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep\n"
-                + "\n"
-                + "If you are sure that these targets are required, then you may add them as `runtime_deps` instead and they will no longer be detected as unused.\n"));
+        containsString(
+            String.format(
+                "Target //:bar_with_dep is declared with unused targets in deps: %n"
+                    + "buck//third-party/java/jsr:jsr305%n%n"
+                    + "Please remove them. You may be able to use the following commands: %n"
+                    + "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep%n%n"
+                    + "If you are sure that these targets are required, then you may add them as `runtime_deps` instead and they will no longer be detected as unused.%n")));
   }
 
   @Test
@@ -70,10 +71,9 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
-                "Target //:bar_with_dep is declared with unused targets in deps:"),
-            Matchers.containsString(
+        allOf(
+            containsString("Target //:bar_with_dep is declared with unused targets in deps:"),
+            containsString(
                 "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep")));
   }
 
@@ -91,10 +91,9 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
-                "Target //:bar_with_dep is declared with unused targets in deps:"),
-            Matchers.containsString(
+        allOf(
+            containsString("Target //:bar_with_dep is declared with unused targets in deps:"),
+            containsString(
                 "/some/path/buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep")));
   }
 
@@ -119,11 +118,11 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:bar_with_transitive_exported_dep is declared with unused targets in deps:"),
-            Matchers.containsString("//:blargh"),
-            Matchers.not(Matchers.containsString("buildozer 'remove deps //:meh'"))));
+            containsString("//:blargh"),
+            not(containsString("buildozer 'remove deps //:meh'"))));
   }
 
   @Test
@@ -144,10 +143,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            containsString("buck//third-party/java/jsr:jsr305")));
   }
 
   @Test
@@ -158,10 +157,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:bar_with_dep_and_fail_option is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            containsString("buck//third-party/java/jsr:jsr305")));
   }
 
   @Test
@@ -176,9 +175,9 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.not(
-                Matchers.containsString(
+        allOf(
+            not(
+                containsString(
                     "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:"))));
   }
 
@@ -194,8 +193,8 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.not(
-            Matchers.containsString(
+        not(
+            containsString(
                 "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:")));
   }
 
@@ -211,10 +210,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:bar_with_dep_and_fail_option is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            containsString("buck//third-party/java/jsr:jsr305")));
   }
 
   @Test
@@ -229,10 +228,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:bar_with_dep_and_warn_option is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            containsString("buck//third-party/java/jsr:jsr305")));
   }
 
   @Test
@@ -245,9 +244,7 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.not(
-            Matchers.containsString(
-                "Target //:bar_with_dep is declared with unused targets in deps:")));
+        not(containsString("Target //:bar_with_dep is declared with unused targets in deps:")));
   }
 
   @Test
@@ -259,10 +256,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:bar_with_provided_dep is declared with unused targets in provided_deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            containsString("buck//third-party/java/jsr:jsr305")));
   }
 
   @Test
@@ -338,10 +335,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:barmeh_with_unused_dep is declared with unused targets in deps:"),
-            Matchers.containsString(
+            containsString(
                 "buildozer 'remove deps //:dep_with_exported_dep' //:barmeh_with_unused_dep")));
   }
 
@@ -357,10 +354,10 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "Target //:barmeh_with_unused_dep_as_already_exported is declared with unused targets in deps:"),
-            Matchers.containsString(
+            containsString(
                 "buildozer 'remove deps //:dep_with_exported_dep' //:barmeh_with_unused_dep_as_already_exported")));
   }
 
@@ -402,11 +399,11 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
+        allOf(
+            containsString(
                 "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep"),
-            Matchers.not(
-                Matchers.containsString(
+            not(
+                containsString(
                     "Target //:bar_with_dep is declared with unused targets in deps: "))));
   }
 }
