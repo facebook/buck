@@ -1,8 +1,13 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
 PACKAGE_FINDER_SRCS = [
     "JavaPackageFinder.java",
 ]
 
-java_library(
+java_immutables_library(
     name = "core",
     srcs = glob(
         ["*.java"],
@@ -11,6 +16,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/util:util",

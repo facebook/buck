@@ -19,8 +19,10 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.google.common.base.Preconditions;
 import java.nio.file.FileSystem;
@@ -47,46 +49,35 @@ public abstract class CompilerOutputPaths {
 
   /** Creates {@link CompilerOutputPaths} */
   public static CompilerOutputPaths of(BuildTarget target, BaseBuckPaths buckPath) {
+    return of(BuildTargetValue.of(target, buckPath), buckPath);
+  }
+
+  /** Creates {@link CompilerOutputPaths} */
+  public static CompilerOutputPaths of(BuildTargetValue target, BaseBuckPaths buckPath) {
     FileSystem fileSystem = buckPath.getFileSystem();
-    boolean includeTargetConfigHash = buckPath.shouldIncludeTargetConfigHash();
     RelPath genDir = buckPath.getGenDir();
     RelPath scratchDir = buckPath.getScratchDir();
     RelPath annotationDir = buckPath.getAnnotationDir();
 
-    RelPath genRoot =
-        BuildTargetPaths.getRelativePath(
-            target, "lib__%s__output", fileSystem, includeTargetConfigHash, genDir);
-    RelPath scratchRoot =
-        BuildTargetPaths.getRelativePath(
-            target, "lib__%s__scratch", fileSystem, includeTargetConfigHash, scratchDir);
+    RelPath genRoot = getRelativePath(target, "lib__%s__output", fileSystem, genDir);
+    RelPath scratchRoot = getRelativePath(target, "lib__%s__scratch", fileSystem, scratchDir);
 
     return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolveRel("classes"))
         .setOutputJarDirPath(genRoot.getPath())
         .setAbiJarPath(
-            hasAbiJar(target)
+            target.hasAbiJar()
                 ? Optional.of(genRoot.resolve(String.format("%s-abi.jar", target.getShortName())))
                 : Optional.empty())
         .setOutputJarPath(
-            isLibraryJar(target)
+            target.isLibraryJar()
                 ? Optional.of(
                     genRoot.resolve(String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
                 : Optional.empty())
-        .setAnnotationPath(
-            BuildTargetPaths.getRelativePath(
-                target, "__%s_gen__", fileSystem, includeTargetConfigHash, annotationDir))
-        .setPathToSourcesList(
-            BuildTargetPaths.getRelativePath(
-                    target, "__%s__srcs", fileSystem, includeTargetConfigHash, genDir)
-                .getPath())
+        .setAnnotationPath(getRelativePath(target, "__%s_gen__", fileSystem, annotationDir))
+        .setPathToSourcesList(getRelativePath(target, "__%s__srcs", fileSystem, genDir).getPath())
         .setWorkingDirectory(
-            BuildTargetPaths.getRelativePath(
-                    target,
-                    "lib__%s__working_directory",
-                    fileSystem,
-                    includeTargetConfigHash,
-                    genDir)
-                .getPath())
+            getRelativePath(target, "lib__%s__working_directory", fileSystem, genDir).getPath())
         .build();
   }
 
@@ -114,11 +105,20 @@ public abstract class CompilerOutputPaths {
     return CompilerOutputPaths.of(target, buckPaths).getOutputJarPath().get();
   }
 
-  private static boolean isLibraryJar(BuildTarget target) {
-    return JavaAbis.isLibraryTarget(target);
-  }
-
   private static boolean hasAbiJar(BuildTarget target) {
     return JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target);
+  }
+
+  private static RelPath getRelativePath(
+      BuildTargetValue target, String format, FileSystem fileSystem, RelPath directory) {
+    return directory.resolve(getBasePath(target, format).toRelPath(fileSystem));
+  }
+
+  private static ForwardRelativePath getBasePath(BuildTargetValue target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+    return target
+        .getBasePathForBaseName()
+        .resolve(BuildTargetPaths.formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
   }
 }

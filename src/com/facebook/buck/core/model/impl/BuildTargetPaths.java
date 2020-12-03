@@ -163,7 +163,20 @@ public class BuildTargetPaths {
     return configHashPath.resolve(target.getCellRelativeBasePath().getPath());
   }
 
-  private static String formatLastSegment(String format, String arg) {
+  /**
+   * Returns a formatted string using the specified format string and a given argument. In case of
+   * windows platform back slashes would be replaced with forward slashes before applying string
+   * formatting.
+   *
+   * @param format {@link String#format} string for the path name. It should contain one "%s", which
+   *     will be filled in with the rule's short name. It should not start with a slash.
+   * @param arg an argument referenced by the format specifier in the format string.
+   * @return A formatted string
+   */
+  public static String formatLastSegment(String format, String arg) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+
     if (Platform.detect() == Platform.WINDOWS) {
       // TODO(nga): prohibit backslashes in format
       format = format.replace('\\', '/');
