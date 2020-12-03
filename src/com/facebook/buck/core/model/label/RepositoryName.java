@@ -42,7 +42,6 @@ import java.util.regex.Pattern;
 /** A human-readable name for the repository. */
 public final class RepositoryName implements Serializable {
   static final String DEFAULT_REPOSITORY = "";
-  public static final RepositoryName DEFAULT;
   private static final Pattern VALID_REPO_NAME = Pattern.compile("@[\\w\\-.]*");
 
   private static final LoadingCache<String, RepositoryName> repositoryNameCache =
@@ -60,14 +59,6 @@ public final class RepositoryName implements Serializable {
                   return new RepositoryName(name.intern());
                 }
               });
-
-  static {
-    try {
-      DEFAULT = RepositoryName.create(RepositoryName.DEFAULT_REPOSITORY);
-    } catch (LabelSyntaxException e) {
-      throw new IllegalStateException(e);
-    }
-  }
 
   /**
    * Makes sure that name is a valid repository name and creates a new RepositoryName using it.
