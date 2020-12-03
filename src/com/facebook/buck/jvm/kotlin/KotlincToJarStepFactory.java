@@ -102,6 +102,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   private static final PathMatcher KOTLIN_PATH_MATCHER = FileExtensionMatcher.of("kt");
   private static final PathMatcher SRC_ZIP_MATCHER = GlobPatternMatcher.of("**.src.zip");
 
+  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
   @AddToRuleKey private final SourcePath standardLibraryClasspath;
@@ -130,7 +131,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       ExtraClasspathProvider extraClasspathProvider,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
-    super(javacOptions, withDownwardApi);
+    super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    this.javacOptions = javacOptions;
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.standardLibraryClasspath = standardLibraryClasspath;

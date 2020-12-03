@@ -47,12 +47,12 @@ import javax.annotation.Nullable;
 public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.ExtraParams>
     implements AddsToRuleKey {
 
-  @AddToRuleKey protected final JavacOptions javacOptions;
+  @AddToRuleKey private final boolean hasAnnotationProcessing;
   @AddToRuleKey protected final boolean withDownwardApi;
 
-  protected CompileToJarStepFactory(JavacOptions javacOptions, boolean withDownwardApi) {
-    this.javacOptions = javacOptions;
+  protected CompileToJarStepFactory(boolean hasAnnotationProcessing, boolean withDownwardApi) {
     this.withDownwardApi = withDownwardApi;
+    this.hasAnnotationProcessing = hasAnnotationProcessing;
   }
 
   public final void createCompileToJarStep(
@@ -297,7 +297,11 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       ResolvedJavac resolvedJavac,
       T extraParams);
 
-  boolean hasAnnotationProcessing() {
+  public boolean hasAnnotationProcessing() {
+    return hasAnnotationProcessing;
+  }
+
+  protected static boolean hasAnnotationProcessing(JavacOptions javacOptions) {
     return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 

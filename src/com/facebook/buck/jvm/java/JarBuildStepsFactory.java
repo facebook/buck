@@ -346,7 +346,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   public boolean useRulePipelining() {
-    return configuredCompiler instanceof JavacToJarStepFactory
+    return configuredCompiler instanceof BaseJavacToJarStepFactory
         && abiGenerationMode.isSourceAbi()
         && abiGenerationMode.usesDependencies();
   }
@@ -478,8 +478,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     CompileToJarStepFactory.ExtraParams extraParams;
     if (configuredCompiler.supportsCompilationDaemon()) {
       JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
-      extraParams =
-          javacToJarStepFactory.createExtraParams(context.getSourcePathResolver(), rootPath);
+      SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
+      extraParams = javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath);
     } else {
       extraParams = BuildContextAwareExtraParams.of(context);
     }
@@ -530,7 +530,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings) {
     ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
-    ((JavacToJarStepFactory) configuredCompiler)
+    ((BaseJavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystemParams,
             cellToPathMappings,
@@ -720,7 +720,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue) {
-    ((JavacToJarStepFactory) configuredCompiler)
+    ((BaseJavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystemParams,
             cellToPathMappings,

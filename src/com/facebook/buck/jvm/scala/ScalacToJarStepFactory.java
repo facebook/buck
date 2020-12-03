@@ -54,6 +54,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
   private static final PathMatcher JAVA_PATH_MATCHER = FileExtensionMatcher.of("java");
   private static final PathMatcher SCALA_PATH_MATCHER = FileExtensionMatcher.of("scala");
 
+  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final Tool scalac;
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
@@ -68,7 +69,8 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath,
       boolean withDownwardApi) {
-    super(javacOptions, withDownwardApi);
+    super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    this.javacOptions = javacOptions;
     this.scalac = scalac;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;

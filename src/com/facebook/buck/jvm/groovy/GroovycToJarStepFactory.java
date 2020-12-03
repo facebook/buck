@@ -43,13 +43,15 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareE
 
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
+  @AddToRuleKey private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions,
       boolean withDownwardApi) {
-    super(javacOptions, withDownwardApi);
+    super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
+    this.javacOptions = javacOptions;
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
   }
