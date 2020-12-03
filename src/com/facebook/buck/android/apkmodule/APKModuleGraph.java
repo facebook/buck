@@ -347,6 +347,10 @@ public class APKModuleGraph implements AddsToRuleKey {
     return (module == null || !module.hasResources()) ? rootAPKModuleSupplier.get() : module;
   }
 
+  public Optional<List<BuildTarget>> getBlacklistedModules() {
+    return blacklistedModules;
+  }
+
   /**
    * Group the classes in the input jars into a multimap based on the APKModule they belong to
    *

@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -53,6 +54,7 @@ public class WriteAppModuleMetadataStep implements Step {
   public static final String TARGETS_SECTION_HEADER = "TARGETS";
   public static final String DEPS_SECTION_HEADER = "DEPS";
   public static final String LIBRARIES_SECTION_HEADER = "LIBRARIES";
+  public static final String BLACKLIST_SECTION_HEADER = "BLACKLIST";
   public static final String MODULE_INDENTATION = "  ";
   public static final String ITEM_INDENTATION = "    ";
 
@@ -141,6 +143,10 @@ public class WriteAppModuleMetadataStep implements Step {
       }
       metadataLines.add(TARGETS_SECTION_HEADER);
       writeModuleToStringsMultimap(orderedModuleToTargetsMap, metadataLines);
+      if (apkModuleGraph.getBlacklistedModules().isPresent()) {
+        metadataLines.add(BLACKLIST_SECTION_HEADER);
+        writeBuildTargetList(apkModuleGraph.getBlacklistedModules().get(), metadataLines);
+      }
       metadataLines.add(DEPS_SECTION_HEADER);
       writeModuleToModulesMap(moduleToDepsMap, metadataLines);
 
@@ -194,6 +200,12 @@ public class WriteAppModuleMetadataStep implements Step {
       for (APKModule item : entry.getValue()) {
         dest.add(ITEM_INDENTATION + item.getName());
       }
+    }
+  }
+
+  private void writeBuildTargetList(List<BuildTarget> buildTargets, Collection<String> dest) {
+    for (BuildTarget target : buildTargets) {
+      dest.add(MODULE_INDENTATION + target.getFullyQualifiedName());
     }
   }
 }
