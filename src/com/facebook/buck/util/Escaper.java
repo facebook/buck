@@ -23,6 +23,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.function.Function;
 
@@ -51,6 +52,38 @@ public final class Escaper {
       @Override
       public String quote(String str) {
         return '"' + str.replace("\\", "\\\\") + '"';
+      }
+    },
+    DOUBLE_WINDOWS_ARGFILE {
+      @Override
+      public String quote(String str) {
+        // Implementation of proper Windows quoting from:
+        // https://docs.microsoft.com/en-us/archive/blogs/twistylittlepassagesallalike/everyone-quotes-command-line-arguments-the-wrong-way
+        StringBuilder builder = new StringBuilder();
+        builder.append('"');
+        for (int i = 0; ; ++i) {
+          int numBackslashes = 0;
+          while (i < str.length() && str.charAt(i) == '\\') {
+            ++i;
+            ++numBackslashes;
+          }
+
+          if (i == str.length()) {
+            builder.append(String.join("", Collections.nCopies(2 * numBackslashes, "\\")));
+            break;
+          }
+
+          char ch = str.charAt(i);
+          if (ch == '"') {
+            builder.append(String.join("", Collections.nCopies(2 * numBackslashes + 1, "\\")));
+            builder.append(ch);
+          } else {
+            builder.append(String.join("", Collections.nCopies(numBackslashes, "\\")));
+            builder.append(ch);
+          }
+        }
+        builder.append('"');
+        return builder.toString();
       }
     };
 
@@ -132,7 +165,9 @@ public final class Escaper {
    * will be processed recursively.
    */
   public static final Function<String, String> ARGFILE_ESCAPER =
-      escaper(Quoter.DOUBLE, CharMatcher.anyOf("\"\\").or(CharMatcher.whitespace()));
+      escaper(
+          Platform.detect() == Platform.WINDOWS ? Quoter.DOUBLE_WINDOWS_ARGFILE : Quoter.DOUBLE,
+          CharMatcher.anyOf("\"\\").or(CharMatcher.whitespace()));
 
   /**
    * Quotes a string to be passed to the shell, if necessary. This works for the appropriate shell

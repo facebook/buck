@@ -109,6 +109,21 @@ public class EscaperTest {
   }
 
   @Test
+  public void testQuoteForWindowsArgfile() {
+    assumeThat(File.separatorChar, equalTo('\\'));
+
+    assertEquals(
+        Escaper.ARGFILE_ESCAPER.apply("/myCompilerFlag:C:\\some\\path\\"),
+        "\"/myCompilerFlag:C:\\some\\path\\\\\"");
+    assertEquals(
+        Escaper.ARGFILE_ESCAPER.apply("/myCompilerFlag:C:\\so me\\path\\"),
+        "\"/myCompilerFlag:C:\\so me\\path\\\\\"");
+    assertEquals(
+        Escaper.ARGFILE_ESCAPER.apply("/otherFlag:C:\\some\\\"pathwithquotes\"\\"),
+        "\"/otherFlag:C:\\some\\\\\\\"pathwithquotes\\\"\\\\\"");
+  }
+
+  @Test
   public void testEscapePathForCIncludeStringUnix() {
     assumeThat(File.separatorChar, equalTo('/'));
 
