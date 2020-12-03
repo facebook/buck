@@ -26,6 +26,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
@@ -135,7 +136,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(target, compilerParameters, buildableContext, buckPaths);
+      recordDepFileIfNecessary(
+          BuildTargetValue.of(target, buckPaths), compilerParameters, buildableContext, buckPaths);
 
       // This adds the javac command, along with any supporting commands.
       createPipelinedCompileStep(buckPaths, cellToPathMappings, pipeline, target, steps);

@@ -24,6 +24,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
@@ -85,8 +86,9 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(target, buckPaths);
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(target, compilerParameters, buildableContext, buckPaths);
+      recordDepFileIfNecessary(buildTargetValue, compilerParameters, buildableContext, buckPaths);
 
       // This adds the javac command, along with any supporting commands.
       createCompileToJarStepImpl(
@@ -149,12 +151,12 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   protected void recordDepFileIfNecessary(
-      BuildTarget buildTarget,
+      BuildTargetValue buildTargetValue,
       CompilerParameters compilerParameters,
       BuildableContext buildableContext,
       BaseBuckPaths buckPaths) {
     if (compilerParameters.shouldTrackClassUsage()) {
-      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, buckPaths);
+      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTargetValue, buckPaths);
       buildableContext.recordArtifact(depFilePath);
     }
   }
