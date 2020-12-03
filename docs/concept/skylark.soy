@@ -191,61 +191,6 @@ default_build_file_syntax = PYTHON_DSL
       design justifications available in the <a href="https://github.com/bazelbuild/starlark/blob/master/design.md">specification's repository</a>.
       </p>
 
-      <h3>include_defs</h3>
-
-      <p>
-        The {call buck.function_link}{param name: 'include_defs' /}{/call} function 
-        is not supported in Skylark because it can contaminate the
-        symbol table of the execution environment and make automated
-        refactoring more difficult. 
-
-      <p>
-        To replace an invocation such as
-      </p>
-
-<p>
-<pre>
-{literal}
-include_defs("//tools/my_macro.bzl") 
-{/literal}
-</pre>
-</p>
-
-      <p>
-        you should:
-      </p>
-
-        <ol>
-          <li>
-            find all symbols defined in the <code>my_macro.bzl</code> file 
-            that are <em>actually used</em> by the including file, say, for 
-            example, <code>foo</code> and <code>bar</code>.
-          </li>
-
-          <li>
-            replace the <code>include_defs</code> invocation with an 
-            equivalent {call buck.function_link}{param name: 'load' /}{/call} 
-            invocation that <em>explicitly</em> imports the needed symbols:
-<p>
-<pre>
-{literal}
-load("&#x2F;&#x2F;tools:my_macro.bzl", "foo", "bar")
-{/literal}
-</pre>
-</p>
-
-          </li>
-        </ol>
-
-      <p>
-        <b>Note:</b> The {call buck.function_link}{param name: 'load' /}{/call} function 
-        uses the {call buck.build_target_pattern /} syntax
-        as though <pre>export_file(name="my_macro.bzl")</pre> were defined in
-        a <code>tools</code> package {call buck.build_file/}. This means that instead
-        of using the <code>&#x2F;&#x2F;package/extension.bzl</code> syntax expected by {call buck.fn_include_defs/}, 
-        you should use the <code>&#x2F;&#x2F;package:extension.bzl</code> syntax expected by {call buck.fn_load/}. 
-      </p>
-
       <h3>Environment variables</h3>
       <p>
         For Skylark, replace environment variables with equivalent

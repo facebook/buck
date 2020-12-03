@@ -1305,24 +1305,6 @@ artifact_cache_size_limit = 52428800
 
 {call buckconfig.entry}
   {param section: 'buildfile' /}
-  {param name: 'includes' /}
-  {param example_value: '//core/DEFS' /}
-  {param description}
-  <p>
-  This sets a list of paths to files that will be automatically included by every build file.
-  This is equivalent to calling {call buck.fn_include_defs /} in every build file.
-  </p>
-
-  <p>
-  <strong>NOTE:</strong> We recommend that you do not use this property.
-  This property can make your builds difficult to maintain and debug,
-  and it will be deprecated in a future release of Buck.
-  </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'buildfile' /}
   {param name: 'name' /}
   {param example_value: 'BUILD' /}
   {param description}
@@ -4102,7 +4084,7 @@ Pkg.Revision = 13.1.3345770
     can be useful if your team has a common set of macros that should be loaded, and one desires
     a fast-feedback way to make sure that Buck's native rules are not inadvertently used. If set,
     native rules can only be accessed via the 'native' object within an extension file that is
-    evaluated with {call buck.fn_load /} or {call buck.fn_include_defs /}.
+    evaluated with {call buck.fn_load /}.
     This flag is disabled by default (native rules can be used in build files).
   {/param}
 {/call}
