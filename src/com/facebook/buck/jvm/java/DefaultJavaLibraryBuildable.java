@@ -31,7 +31,9 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -181,15 +183,16 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
           CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
 
       CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
+      BaseBuckPaths buckPaths = filesystem.getBuckPaths();
 
       UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams =
           UnusedDependenciesFinderFactory.UnusedDependenciesParams.of(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
-              filesystem.getBuckPaths(),
+              buckPaths,
               rootPath,
               cellToPathMappings,
-              buildTarget,
+              BuildTargetValue.of(buildTarget, buckPaths),
               unusedDependenciesAction,
               factory.exportedDeps,
               factory.buildozerPath,

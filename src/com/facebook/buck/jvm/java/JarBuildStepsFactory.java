@@ -821,7 +821,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     return DefaultClassUsageFileReader.loadFromFile(
         filesystem.getRootPath(),
         cellPathResolver,
-        filesystem.getPathForRelativePath(getDepFileRelativePath(filesystem, buildTarget)),
+        filesystem.getPathForRelativePath(
+            CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths())),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
@@ -846,10 +847,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     }
     return Optional.of(
         CompilerOutputPaths.getAnnotationPath(buildTarget, filesystem.getBuckPaths()).getPath());
-  }
-
-  private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    return CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths());
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(

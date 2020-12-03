@@ -83,6 +83,11 @@ public abstract class CompilerOutputPaths {
 
   /** Returns a path to a file that contains dependencies used in the compilation */
   public static Path getDepFilePath(BuildTarget target, BaseBuckPaths buckPath) {
+    return getDepFilePath(BuildTargetValue.of(target, buckPath), buckPath);
+  }
+
+  /** Returns a path to a file that contains dependencies used in the compilation */
+  public static Path getDepFilePath(BuildTargetValue target, BaseBuckPaths buckPath) {
     return CompilerOutputPaths.of(target, buckPath)
         .getOutputJarDirPath()
         .resolve("used-classes.json");

@@ -23,7 +23,6 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.DefaultCellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -63,7 +62,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   private static final Logger LOG = Logger.get(UnusedDependenciesFinder.class);
 
-  public abstract BuildTarget getBuildTarget();
+  public abstract String getFullyQualifiedBuildTargetName();
 
   public abstract ImmutableList<DependencyAndExportedDepsPath> getDeps();
 
@@ -86,7 +85,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   public abstract boolean doUltralightChecking();
 
   public static ImmutableUnusedDependenciesFinder of(
-      BuildTarget buildTarget,
+      String fullyQualifiedBuildTargetName,
       ImmutableList<DependencyAndExportedDepsPath> deps,
       ImmutableList<DependencyAndExportedDepsPath> providedDeps,
       ImmutableList<String> exportedDeps,
@@ -98,7 +97,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       RelPath depFile,
       boolean doUltralightChecking) {
     return ImmutableUnusedDependenciesFinder.ofImpl(
-        buildTarget,
+        fullyQualifiedBuildTargetName,
         deps,
         providedDeps,
         exportedDeps,
@@ -263,7 +262,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       MessageHandler messageHandler,
       String dependencyType,
       ImmutableSet<String> unusedDependencies) {
-    BuildTarget buildTarget = getBuildTarget();
+    String buildTarget = getFullyQualifiedBuildTargetName();
     String commandTemplate = "%s 'remove %s %s' %s";
     String commands =
         Joiner.on('\n')
@@ -298,10 +297,11 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   private void logDiagnosticsIfNeeded(MessageHandler messageHandler, Set<AbsPath> usedJars) {
     if (messageHandler.encounteredMessage() && LOG.isLoggable(Level.INFO)) {
-      LOG.info("Target: %s, usedJars:\n%s\n", getBuildTarget(), Joiner.on('\n').join(usedJars));
+      String buildTarget = getFullyQualifiedBuildTargetName();
+      LOG.info("Target: %s, usedJars:\n%s\n", buildTarget, Joiner.on('\n').join(usedJars));
       LOG.info(
           "Target: %s, deps are:\n%s\nProvided deps are:\n%s\n",
-          getBuildTarget(),
+          buildTarget,
           Joiner.on('\n')
               .join(
                   getDeps().stream()
@@ -322,7 +322,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   @Override
   public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-    return String.format("Find unused dependencies for %s", getBuildTarget());
+    return String.format("Find unused dependencies for %s", getFullyQualifiedBuildTargetName());
   }
 
   /** A handler that processes messages about unused dependencies. */

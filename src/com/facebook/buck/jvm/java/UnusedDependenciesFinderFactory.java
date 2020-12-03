@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -191,7 +192,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
     abstract ImmutableMap<String, RelPath> getCellToPathMappings();
 
-    abstract BuildTarget getBuildTarget();
+    abstract BuildTargetValue getBuildTargetValue();
 
     abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
 
@@ -212,7 +213,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         BaseBuckPaths buckPaths,
         AbsPath rootPath,
         ImmutableMap<String, RelPath> cellToPathMappings,
-        BuildTarget buildTarget,
+        BuildTargetValue buildTargetValue,
         JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
         ImmutableList<String> exportedDeps,
         Optional<String> buildozerPath,
@@ -225,7 +226,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
           buckPaths,
           rootPath,
           cellToPathMappings,
-          buildTarget,
+          buildTargetValue,
           unusedDependenciesAction,
           exportedDeps,
           buildozerPath,
@@ -240,12 +241,14 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams) {
 
     AbsPath rootPath = unusedDependenciesParams.getRootPath();
-    BuildTarget buildTarget = unusedDependenciesParams.getBuildTarget();
+    BuildTargetValue buildTargetValue = unusedDependenciesParams.getBuildTargetValue();
     Path depFilePath =
-        CompilerOutputPaths.getDepFilePath(buildTarget, unusedDependenciesParams.getBuckPaths());
+        CompilerOutputPaths.getDepFilePath(
+            buildTargetValue, unusedDependenciesParams.getBuckPaths());
+    RelPath depFile = rootPath.relativize(rootPath.resolve(depFilePath));
 
     return UnusedDependenciesFinder.of(
-        buildTarget,
+        buildTargetValue.getFullyQualifiedName(),
         unusedDependenciesParams.getDeps(),
         unusedDependenciesParams.getProvidedDeps(),
         unusedDependenciesParams.getExportedDeps(),
@@ -254,7 +257,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         unusedDependenciesParams.isOnlyPrintCommands(),
         unusedDependenciesParams.getKnownCellNames(),
         unusedDependenciesParams.getCellToPathMappings(),
-        rootPath.relativize(rootPath.resolve(depFilePath)),
+        depFile,
         unusedDependenciesParams.isDoUltralightChecking());
   }
 
