@@ -34,29 +34,30 @@ import java.util.Optional;
 @BuckStyleValue
 public abstract class UnusedDependenciesParams {
 
-  abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> getDeps();
+  public abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> getDeps();
 
-  abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> getProvidedDeps();
+  public abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath>
+      getProvidedDeps();
 
-  abstract BaseBuckPaths getBuckPaths();
+  public abstract BaseBuckPaths getBuckPaths();
 
-  abstract AbsPath getRootPath();
+  public abstract AbsPath getRootPath();
 
-  abstract ImmutableMap<String, RelPath> getCellToPathMappings();
+  public abstract ImmutableMap<String, RelPath> getCellToPathMappings();
 
-  abstract BuildTargetValue getBuildTargetValue();
+  public abstract BuildTargetValue getBuildTargetValue();
 
-  abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
+  public abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
 
-  abstract ImmutableList<String> getExportedDeps();
+  public abstract ImmutableList<String> getExportedDeps();
 
-  abstract Optional<String> getBuildozerPath();
+  public abstract Optional<String> getBuildozerPath();
 
-  abstract ImmutableSet<Optional<String>> getKnownCellNames();
+  public abstract ImmutableSet<Optional<String>> getKnownCellNames();
 
-  abstract boolean isOnlyPrintCommands();
+  public abstract boolean isOnlyPrintCommands();
 
-  abstract boolean isDoUltralightChecking();
+  public abstract boolean isDoUltralightChecking();
 
   /** Creates {@link UnusedDependenciesParams} */
   public static UnusedDependenciesParams of(

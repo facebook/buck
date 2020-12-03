@@ -23,7 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
  * com.facebook.buck.core.build.context.BuildContext}
  */
 @BuckStyleValue
-abstract class JavaExtraParams implements CompileToJarStepFactory.ExtraParams {
+public abstract class JavaExtraParams implements CompileToJarStepFactory.ExtraParams {
 
   abstract ResolvedJavacOptions getResolvedJavacOptions();
 

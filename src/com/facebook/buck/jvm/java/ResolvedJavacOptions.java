@@ -72,7 +72,7 @@ public abstract class ResolvedJavacOptions {
         javacOptions.getJavaAnnotationProcessorParams();
     JavacPluginParams standardJavacPluginParams = javacOptions.getStandardJavacPluginParams();
 
-    return ImmutableResolvedJavacOptions.ofImpl(
+    return of(
         javacOptions.getBootclasspath(),
         bootclasspathList,
         languageLevelOptions,
@@ -84,6 +84,33 @@ public abstract class ResolvedJavacOptions {
         extractJavacPluginJsr199Fields(javaAnnotationProcessorParams, ruleCellRoot),
         extractJavacPluginJsr199Fields(standardJavacPluginParams, ruleCellRoot),
         !javaAnnotationProcessorParams.isEmpty());
+  }
+
+  /** Creates {@link ResolvedJavacOptions} */
+  public static ResolvedJavacOptions of(
+      Optional<String> bootclasspath,
+      Optional<List<AbsPath>> bootclasspathList,
+      JavacLanguageLevelOptions languageLevelOptions,
+      boolean debug,
+      boolean verbose,
+      JavacPluginParams javaAnnotationProcessorParams,
+      JavacPluginParams standardJavacPluginParams,
+      List<String> extraArguments,
+      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> javaPlugins,
+      boolean javaAnnotationProcessorParamsPresent) {
+    return ImmutableResolvedJavacOptions.ofImpl(
+        bootclasspath,
+        bootclasspathList,
+        languageLevelOptions,
+        debug,
+        verbose,
+        javaAnnotationProcessorParams,
+        standardJavacPluginParams,
+        extraArguments,
+        annotationProcessors,
+        javaPlugins,
+        javaAnnotationProcessorParamsPresent);
   }
 
   private static ImmutableList<JavacPluginJsr199Fields> extractJavacPluginJsr199Fields(
