@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -30,7 +29,6 @@ public interface JavaLibraryJarPipelineStepsBuilder extends JavaCompileStepsBuil
 
   void addPipelinedBuildStepsForLibraryJar(
       BuildTargetValue libraryTarget,
-      ImmutableList<String> postprocessClassesCommands,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       JavacPipelineState state,

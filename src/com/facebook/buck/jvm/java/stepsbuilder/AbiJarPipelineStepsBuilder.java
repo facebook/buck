@@ -21,14 +21,12 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Builder that creates abi jar pipeline steps. */
 public interface AbiJarPipelineStepsBuilder extends JavaCompileStepsBuilder {
 
   void addPipelinedBuildStepsForAbiJar(
-      ImmutableList<String> postprocessClassesCommands,
       BuildTargetValue buildTargetValue,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,

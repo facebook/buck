@@ -469,8 +469,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
 
+    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForAbiJar(
-        postprocessClassesCommands,
         BuildTargetValue.of(buildTarget, filesystemParams.getBaseBuckPaths()),
         filesystemParams,
         buildableContext,
@@ -590,9 +590,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     BuildTargetValue libraryTargetValue =
         BuildTargetValue.of(libraryTarget, filesystemParams.getBaseBuckPaths());
+    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForLibraryJar(
         libraryTargetValue,
-        postprocessClassesCommands,
         filesystemParams,
         buildableContext,
         state,

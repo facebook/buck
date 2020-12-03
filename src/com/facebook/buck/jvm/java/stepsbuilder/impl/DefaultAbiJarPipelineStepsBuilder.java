@@ -24,8 +24,6 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -41,21 +39,18 @@ class DefaultAbiJarPipelineStepsBuilder<T extends CompileToJarStepFactory.ExtraP
 
   @Override
   public void addPipelinedBuildStepsForAbiJar(
-      ImmutableList<String> postprocessClassesCommands,
       BuildTargetValue buildTargetValue,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       JavacPipelineState state,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings) {
-    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     ((BaseJavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystemParams,
             cellToPathMappings,
             buildTargetValue,
             state,
-            postprocessClassesCommands,
             stepsBuilder,
             buildableContext,
             resourcesMap);

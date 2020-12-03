@@ -105,11 +105,9 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue,
       JavacPipelineState pipeline,
-      ImmutableList<String> postprocessClassesCommands,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       ImmutableMap<RelPath, RelPath> resourcesMap) {
-    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();

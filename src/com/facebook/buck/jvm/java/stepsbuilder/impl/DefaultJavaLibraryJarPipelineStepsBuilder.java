@@ -25,8 +25,6 @@ import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -44,7 +42,6 @@ class DefaultJavaLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactor
   @Override
   public void addPipelinedBuildStepsForLibraryJar(
       BuildTargetValue libraryTarget,
-      ImmutableList<String> postprocessClassesCommands,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       JavacPipelineState state,
@@ -52,14 +49,12 @@ class DefaultJavaLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactor
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings,
       Optional<RelPath> pathToClasses) {
-    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     ((BaseJavacToJarStepFactory) configuredCompiler)
         .createPipelinedCompileToJarStep(
             filesystemParams,
             cellToPathMappings,
             libraryTarget,
             state,
-            postprocessClassesCommands,
             stepsBuilder,
             buildableContext,
             resourcesMap);
