@@ -234,10 +234,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         ImmutableList<String> apClassPaths =
             ImmutableList.copyOf(
                 javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
-                    .map(
-                        resolvedJavacPluginProperties ->
-                            resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
-                                buildContext.getSourcePathResolver(), rootPath))
+                    .map(p -> p.getJavacPluginJsr199Fields(rootPath))
                     .map(JavacPluginJsr199Fields::getClasspath)
                     .flatMap(List::stream)
                     .map(url -> AP_CLASSPATH_ARG + urlToFile(url))

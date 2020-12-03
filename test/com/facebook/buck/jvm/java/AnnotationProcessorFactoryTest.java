@@ -60,7 +60,7 @@ public class AnnotationProcessorFactoryTest {
         new TestActionGraphBuilder().getSourcePathResolver();
     AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
     ResolvedJavacPluginProperties processorGroup =
-        new ResolvedJavacPluginProperties(
+        ResolvedJavacPluginProperties.of(
             JavacPluginProperties.builder()
                 .setType(Type.ANNOTATION_PROCESSOR)
                 .addClasspathEntries(classpath)
@@ -76,8 +76,7 @@ public class AnnotationProcessorFactoryTest {
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget);
         AnnotationProcessorFactory factory2 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget)) {
-      JavacPluginJsr199Fields fields =
-          processorGroup.getJavacPluginJsr199Fields(sourcePathResolver, rootPath);
+      JavacPluginJsr199Fields fields = processorGroup.getJavacPluginJsr199Fields(rootPath);
       ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(fields);
       ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(fields);
       return classLoader1 == classLoader2;

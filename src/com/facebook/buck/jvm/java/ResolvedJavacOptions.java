@@ -81,17 +81,15 @@ public abstract class ResolvedJavacOptions {
         javaAnnotationProcessorParams,
         standardJavacPluginParams,
         javacOptions.getExtraArguments(),
-        extractJavacPluginJsr199Fields(resolver, javaAnnotationProcessorParams, ruleCellRoot),
-        extractJavacPluginJsr199Fields(resolver, standardJavacPluginParams, ruleCellRoot),
+        extractJavacPluginJsr199Fields(javaAnnotationProcessorParams, ruleCellRoot),
+        extractJavacPluginJsr199Fields(standardJavacPluginParams, ruleCellRoot),
         !javaAnnotationProcessorParams.isEmpty());
   }
 
   private static ImmutableList<JavacPluginJsr199Fields> extractJavacPluginJsr199Fields(
-      SourcePathResolverAdapter resolver,
-      JavacPluginParams javacPluginParams,
-      AbsPath ruleCellRoot) {
+      JavacPluginParams javacPluginParams, AbsPath ruleCellRoot) {
     return javacPluginParams.getPluginProperties().stream()
-        .map(properties -> properties.getJavacPluginJsr199Fields(resolver, ruleCellRoot))
+        .map(p -> p.getJavacPluginJsr199Fields(ruleCellRoot))
         .collect(ImmutableList.toImmutableList());
   }
 

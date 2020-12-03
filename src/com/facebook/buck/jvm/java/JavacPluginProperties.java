@@ -83,7 +83,7 @@ abstract class JavacPluginProperties implements AddsToRuleKey {
 
   public ResolvedJavacPluginProperties resolve(
       SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
-    return new ResolvedJavacPluginProperties(this, resolver, ruleCellRoot);
+    return ResolvedJavacPluginProperties.of(this, resolver, ruleCellRoot);
   }
 
   public static Builder builder() {

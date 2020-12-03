@@ -117,7 +117,7 @@ public class JavacOptionsTest {
         new TestActionGraphBuilder().getSourcePathResolver();
     AbsPath rootPath = filesystem.getRootPath();
     ResolvedJavacPluginProperties resolvedProps =
-        new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
+        ResolvedJavacPluginProperties.of(props, sourcePathResolver, rootPath);
 
     JavacPluginParams params =
         JavacPluginParams.builder()
@@ -155,7 +155,7 @@ public class JavacOptionsTest {
         new TestActionGraphBuilder().getSourcePathResolver();
     AbsPath rootPath = filesystem.getRootPath();
     ResolvedJavacPluginProperties resolvedProps =
-        new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
+        ResolvedJavacPluginProperties.of(props, sourcePathResolver, rootPath);
 
     // Check that resolved options have the param SourcePath as RelPath
     assertEquals(resolvedProps.getPathParams().get(dummyParam), dummyRelPath);
@@ -201,7 +201,7 @@ public class JavacOptionsTest {
         new TestActionGraphBuilder().getSourcePathResolver();
     AbsPath rootPath = filesystem.getRootPath();
     ResolvedJavacPluginProperties resolvedProps =
-        new ResolvedJavacPluginProperties(props, sourcePathResolver, rootPath);
+        ResolvedJavacPluginProperties.of(props, sourcePathResolver, rootPath);
 
     JavacPluginParams params =
         JavacPluginParams.builder()

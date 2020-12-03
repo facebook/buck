@@ -55,7 +55,7 @@ public class PluginFactoryTest {
     SourcePathResolverAdapter sourcePathResolver =
         new TestActionGraphBuilder().getSourcePathResolver();
     ResolvedJavacPluginProperties controlPluginGroup =
-        new ResolvedJavacPluginProperties(
+        ResolvedJavacPluginProperties.of(
             JavacPluginProperties.builder()
                 .setType(Type.JAVAC_PLUGIN)
                 .addClasspathEntries(controlClasspath)
@@ -68,7 +68,7 @@ public class PluginFactoryTest {
             rootPath);
 
     ResolvedJavacPluginProperties variablePluginGroup =
-        new ResolvedJavacPluginProperties(
+        ResolvedJavacPluginProperties.of(
             JavacPluginProperties.builder()
                 .setType(Type.JAVAC_PLUGIN)
                 .addClasspathEntries(variableClasspath)
@@ -84,8 +84,8 @@ public class PluginFactoryTest {
         PluginFactory factory2 = new PluginFactory(baseClassLoader, classLoaderCache)) {
       ImmutableList<JavacPluginJsr199Fields> pluginGroups =
           ImmutableList.of(
-              controlPluginGroup.getJavacPluginJsr199Fields(sourcePathResolver, rootPath),
-              variablePluginGroup.getJavacPluginJsr199Fields(sourcePathResolver, rootPath));
+              controlPluginGroup.getJavacPluginJsr199Fields(rootPath),
+              variablePluginGroup.getJavacPluginJsr199Fields(rootPath));
       ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroups(pluginGroups);
       ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroups(pluginGroups);
       return classLoader1 == classLoader2;

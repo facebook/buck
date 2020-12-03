@@ -20,38 +20,37 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
-import com.facebook.buck.util.Memoizer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/** Resolved JavacPluginProperties used in {@link JavacPipelineState} */
 public class ResolvedJavacPluginProperties implements AddsToRuleKey {
 
   @AddToRuleKey private final JavacPluginProperties inner;
-
-  @CustomFieldBehavior(EmptyMemoizerDeserialization.class)
-  private final Memoizer<ImmutableList<RelPath>> classpathSupplier;
+  @AddToRuleKey private final boolean canReuseClassLoader;
+  @AddToRuleKey private final boolean doesNotAffectAbi;
+  @AddToRuleKey private final boolean supportsAbiGenerationFromSource;
+  @AddToRuleKey private final ImmutableSortedSet<String> processorNames;
 
   @ExcludeFromRuleKey(
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
-  private ImmutableList<RelPath> classpath;
+  private final ImmutableList<RelPath> classpath;
 
   /**
    * All dependencies are already encoded in {@code inner} props, therefore we can exclude this
@@ -64,59 +63,125 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   private final ImmutableMap<String, RelPath> pathParams;
 
   public ResolvedJavacPluginProperties(
-      JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+      JavacPluginProperties inner,
+      boolean canReuseClassLoader,
+      boolean doesNotAffectAbi,
+      boolean supportsAbiGenerationFromSource,
+      ImmutableSortedSet<String> processorNames,
+      ImmutableList<RelPath> classpath,
+      ImmutableMap<String, RelPath> pathParams) {
     this.inner = inner;
-    this.classpathSupplier = new Memoizer<>();
-    this.classpath = getClasspath(resolver, ruleCellRoot);
-    this.pathParams = resolveSourcePathParams(inner, resolver, ruleCellRoot);
+    this.canReuseClassLoader = canReuseClassLoader;
+    this.doesNotAffectAbi = doesNotAffectAbi;
+    this.supportsAbiGenerationFromSource = supportsAbiGenerationFromSource;
+    this.processorNames = processorNames;
+    this.classpath = classpath;
+    this.pathParams = pathParams;
+  }
+
+  /** Creates {@link ResolvedJavacPluginProperties} */
+  public static ResolvedJavacPluginProperties of(
+      JavacPluginProperties properties, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+    return new ResolvedJavacPluginProperties(
+        properties,
+        properties.getCanReuseClassLoader(),
+        properties.getDoesNotAffectAbi(),
+        properties.getSupportsAbiGenerationFromSource(),
+        properties.getProcessorNames(),
+        toRelPathList(resolver, ruleCellRoot, properties.getClasspathEntries()),
+        resolveSourcePathParams(resolver, ruleCellRoot, properties.getPathParams()));
+  }
+
+  /** Transforms given sorted set of {@link SourcePath} items into a list of {@link RelPath}. */
+  private static ImmutableList<RelPath> toRelPathList(
+      SourcePathResolverAdapter resolver,
+      AbsPath ruleCellRoot,
+      ImmutableSortedSet<SourcePath> sortedSet) {
+    return sortedSet.stream()
+        .map(resolver::getAbsolutePath)
+        .map(ruleCellRoot::relativize)
+        .collect(ImmutableList.toImmutableList());
   }
 
   public boolean getCanReuseClassLoader() {
-    return inner.getCanReuseClassLoader();
+    return canReuseClassLoader;
   }
 
   public boolean getDoesNotAffectAbi() {
-    return inner.getDoesNotAffectAbi();
+    return doesNotAffectAbi;
   }
 
   public boolean getSupportAbiGenerationFromSource() {
-    return inner.getSupportsAbiGenerationFromSource();
+    return supportsAbiGenerationFromSource;
   }
 
   public ImmutableSortedSet<String> getProcessorNames() {
-    return inner.getProcessorNames();
+    return processorNames;
   }
 
   /** Get the classpath for the plugin. */
-  public ImmutableList<RelPath> getClasspath(SourcePathResolverAdapter resolver, AbsPath root) {
-    return classpathSupplier.get(
-        () ->
-            inner.getClasspathEntries().stream()
-                .map(resolver::getAbsolutePath)
-                .map(root::relativize)
-                .collect(ImmutableList.toImmutableList()));
+  public ImmutableList<RelPath> getClasspath() {
+    return classpath;
   }
 
   private static ImmutableMap<String, RelPath> resolveSourcePathParams(
-      JavacPluginProperties inner, SourcePathResolverAdapter resolver, AbsPath root) {
-    ImmutableMap.Builder<String, RelPath> pathParams =
-        ImmutableMap.builderWithExpectedSize(inner.getPathParams().getSize());
+      SourcePathResolverAdapter resolver, AbsPath root, JavacPluginPathParams pathParams) {
+    ImmutableMap.Builder<String, RelPath> resolvedPathParams =
+        ImmutableMap.builderWithExpectedSize(pathParams.getSize());
 
-    for (Map.Entry<String, SourcePath> entry :
-        inner.getPathParams().getSourcePathParams().entrySet()) {
-      pathParams.put(entry.getKey(), root.relativize(resolver.getAbsolutePath(entry.getValue())));
+    for (Map.Entry<String, SourcePath> entry : pathParams.getSourcePathParams().entrySet()) {
+      resolvedPathParams.put(
+          entry.getKey(), root.relativize(resolver.getAbsolutePath(entry.getValue())));
     }
 
-    pathParams.putAll(inner.getPathParams().getRelPathParams());
+    resolvedPathParams.putAll(pathParams.getRelPathParams());
 
-    return pathParams.build();
+    return resolvedPathParams.build();
   }
 
   public ImmutableMap<String, RelPath> getPathParams() {
     return pathParams;
   }
 
-  private URL toUrl(AbsPath absPath) {
+  /** Get the javac plugin fields. */
+  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(AbsPath root) {
+    return ImmutableJavacPluginJsr199Fields.ofImpl(
+        getCanReuseClassLoader(),
+        getProcessorNames(),
+        ImmutableList.copyOf(toURLArray(getClasspath(), root)));
+  }
+
+  private static URL[] toURLArray(ImmutableList<RelPath> list, AbsPath root) {
+    return list.stream()
+        .map(root::resolve)
+        .map(AbsPath::normalize)
+        .map(ResolvedJavacPluginProperties::toUrl)
+        .toArray(URL[]::new);
+  }
+
+  public static String getJoinedClasspath(
+      ImmutableList<ResolvedJavacPluginProperties> resolvedProperties, AbsPath root) {
+    return resolvedProperties.stream()
+        .flatMap(p -> p.classpath.stream())
+        .distinct()
+        .map(root::resolve)
+        .map(AbsPath::normalize)
+        .map(ResolvedJavacPluginProperties::toUrl)
+        .map(ResolvedJavacPluginProperties::toURI)
+        .map(Paths::get)
+        .map(Path::toString)
+        .collect(Collectors.joining(File.pathSeparator));
+  }
+
+  private static URI toURI(URL url) {
+    try {
+      return url.toURI();
+    } catch (URISyntaxException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private static URL toUrl(AbsPath absPath) {
     try {
       return absPath.toUri().toURL();
     } catch (MalformedURLException e) {
@@ -124,46 +189,5 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
       // We'd need to be unfortunate to get here. Bubble up a runtime exception.
       throw new RuntimeException(e);
     }
-  }
-
-  public ImmutableSortedSet<SourcePath> getInputs() {
-    return inner.getInputs();
-  }
-
-  /** Get the javac plugin fields. */
-  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(
-      SourcePathResolverAdapter resolver, AbsPath root) {
-    return ImmutableJavacPluginJsr199Fields.ofImpl(
-        getCanReuseClassLoader(),
-        getProcessorNames(),
-        ImmutableList.copyOf(toURLArray(getClasspath(resolver, root), root)));
-  }
-
-  public static String getJoinedClasspath(
-      ImmutableList<ResolvedJavacPluginProperties> resolvedProperties, AbsPath root) {
-    return resolvedProperties.stream()
-        .map(p -> p.toURLArray(p.classpath, root))
-        .flatMap(Arrays::stream)
-        .distinct()
-        .map(
-            url -> {
-              try {
-                return url.toURI();
-              } catch (URISyntaxException e) {
-                throw new RuntimeException(e);
-              }
-            })
-        .map(Paths::get)
-        .map(Path::toString)
-        .collect(Collectors.joining(File.pathSeparator));
-  }
-
-  /** Get the classpath for the plugin. */
-  private URL[] toURLArray(ImmutableList<RelPath> classpath, AbsPath root) {
-    return classpath.stream()
-        .map(root::resolve)
-        .map(AbsPath::normalize)
-        .map(this::toUrl)
-        .toArray(size -> new URL[size]);
   }
 }

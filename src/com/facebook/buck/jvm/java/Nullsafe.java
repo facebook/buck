@@ -128,7 +128,7 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
     nullsafePluginPropsBuilder.setPathParams(pathParams.build());
 
     ResolvedJavacPluginProperties resolvedNullsafePluginProperties =
-        new ResolvedJavacPluginProperties(
+        ResolvedJavacPluginProperties.of(
             nullsafePluginPropsBuilder.build(),
             graphBuilder.getSourcePathResolver(),
             projectFilesystem.getRootPath());

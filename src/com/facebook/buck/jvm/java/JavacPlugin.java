@@ -37,7 +37,7 @@ abstract class JavacPlugin extends NoopBuildRuleWithDeclaredAndExtraDeps {
     super(buildTarget, projectFilesystem, params);
     this.properties = properties;
     this.resolvedProperties =
-        new ResolvedJavacPluginProperties(properties, resolver, projectFilesystem.getRootPath());
+        ResolvedJavacPluginProperties.of(properties, resolver, projectFilesystem.getRootPath());
   }
 
   public JavacPluginProperties getUnresolvedProperties() {
