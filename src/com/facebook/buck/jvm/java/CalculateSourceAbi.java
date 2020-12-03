@@ -36,6 +36,9 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
@@ -113,12 +116,16 @@ public class CalculateSourceAbi
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.copyOf(
-          jarBuildStepsFactory.getBuildStepsForAbiJar(
-              buildContext,
-              filesystem,
-              ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-              buildTarget));
+      AbiJarStepsBuilder stepsBuilder =
+          JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+              .getAbiJarBuilder();
+      jarBuildStepsFactory.addBuildStepsForAbiJar(
+          buildContext,
+          filesystem,
+          ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+          buildTarget,
+          stepsBuilder);
+      return stepsBuilder.build();
     }
 
     @Override
@@ -128,13 +135,17 @@ public class CalculateSourceAbi
         JavacPipelineState state,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.copyOf(
-          jarBuildStepsFactory.getPipelinedBuildStepsForAbiJar(
-              buildTarget,
-              buildContext,
-              filesystem,
-              ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-              state));
+      AbiJarPipelineStepsBuilder stepsBuilder =
+          JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+              .getPipelineAbiJarBuilder();
+      jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
+          buildTarget,
+          buildContext,
+          filesystem,
+          ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+          state,
+          stepsBuilder);
+      return stepsBuilder.build();
     }
   }
 

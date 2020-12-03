@@ -24,7 +24,7 @@ import javax.tools.JavaFileManager;
 
 /** Default factory for SourceOnlyAbiRuleInfos. */
 @BuckStyleValue
-abstract class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleInfoFactory {
+public abstract class DefaultSourceOnlyAbiRuleInfoFactory implements SourceOnlyAbiRuleInfoFactory {
 
   abstract ImmutableList<BaseJavaAbiInfo> getFullJarInfos();
 

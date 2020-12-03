@@ -29,18 +29,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -175,90 +169,6 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
       this.dependency = dependency;
       this.exportedDeps = exportedDeps;
     }
-  }
-
-  /** Parameters that used for {@link UnusedDependenciesFinder} creation. */
-  @BuckStyleValue
-  abstract static class UnusedDependenciesParams {
-
-    abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> getDeps();
-
-    abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath>
-        getProvidedDeps();
-
-    abstract BaseBuckPaths getBuckPaths();
-
-    abstract AbsPath getRootPath();
-
-    abstract ImmutableMap<String, RelPath> getCellToPathMappings();
-
-    abstract BuildTargetValue getBuildTargetValue();
-
-    abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
-
-    abstract ImmutableList<String> getExportedDeps();
-
-    abstract Optional<String> getBuildozerPath();
-
-    abstract ImmutableSet<Optional<String>> getKnownCellNames();
-
-    abstract boolean isOnlyPrintCommands();
-
-    abstract boolean isDoUltralightChecking();
-
-    /** Creates {@link UnusedDependenciesParams} */
-    static UnusedDependenciesParams of(
-        ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> deps,
-        ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> providedDeps,
-        BaseBuckPaths buckPaths,
-        AbsPath rootPath,
-        ImmutableMap<String, RelPath> cellToPathMappings,
-        BuildTargetValue buildTargetValue,
-        JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
-        ImmutableList<String> exportedDeps,
-        Optional<String> buildozerPath,
-        ImmutableSet<Optional<String>> knownCellNames,
-        boolean onlyPrintCommands,
-        boolean doUltralightChecking) {
-      return ImmutableUnusedDependenciesParams.ofImpl(
-          deps,
-          providedDeps,
-          buckPaths,
-          rootPath,
-          cellToPathMappings,
-          buildTargetValue,
-          unusedDependenciesAction,
-          exportedDeps,
-          buildozerPath,
-          knownCellNames,
-          onlyPrintCommands,
-          doUltralightChecking);
-    }
-  }
-
-  /** Creates {@link UnusedDependenciesFinder} */
-  static UnusedDependenciesFinder create(
-      UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams) {
-
-    AbsPath rootPath = unusedDependenciesParams.getRootPath();
-    BuildTargetValue buildTargetValue = unusedDependenciesParams.getBuildTargetValue();
-    Path depFilePath =
-        CompilerOutputPaths.getDepFilePath(
-            buildTargetValue, unusedDependenciesParams.getBuckPaths());
-    RelPath depFile = rootPath.relativize(rootPath.resolve(depFilePath));
-
-    return UnusedDependenciesFinder.of(
-        buildTargetValue.getFullyQualifiedName(),
-        unusedDependenciesParams.getDeps(),
-        unusedDependenciesParams.getProvidedDeps(),
-        unusedDependenciesParams.getExportedDeps(),
-        unusedDependenciesParams.getUnusedDependenciesAction(),
-        unusedDependenciesParams.getBuildozerPath(),
-        unusedDependenciesParams.isOnlyPrintCommands(),
-        unusedDependenciesParams.getKnownCellNames(),
-        unusedDependenciesParams.getCellToPathMappings(),
-        depFile,
-        unusedDependenciesParams.isDoUltralightChecking());
   }
 
   /**

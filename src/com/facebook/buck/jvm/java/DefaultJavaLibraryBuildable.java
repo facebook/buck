@@ -35,6 +35,12 @@ import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.stepsbuilder.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -43,8 +49,6 @@ import com.facebook.buck.rules.modern.PipelinedBuildable;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -126,7 +130,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
+
+    JavaLibraryJarStepsBuilder stepsBuilder =
+        JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+            .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
         buildContext,
@@ -134,12 +141,12 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
         buildTarget,
         outputPathResolver.resolvePath(pathToClassHashesOutputPath),
-        steps);
+        stepsBuilder);
 
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
-        buildContext, filesystem, outputPathResolver, steps);
+        buildContext, filesystem, outputPathResolver, stepsBuilder);
 
-    return ImmutableList.copyOf(steps.build()); // upcast to list of Steps
+    return stepsBuilder.build();
   }
 
   @Override
@@ -150,7 +157,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
+    JavaLibraryJarPipelineStepsBuilder stepsBuilder =
+        JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+            .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
         buildContext,
@@ -158,19 +167,19 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
         state,
         outputPathResolver.resolvePath(pathToClassHashesOutputPath),
-        steps);
+        stepsBuilder);
 
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
-        buildContext, filesystem, outputPathResolver, steps);
+        buildContext, filesystem, outputPathResolver, stepsBuilder);
 
-    return ImmutableList.copyOf(steps.build()); // upcast to list of Steps
+    return stepsBuilder.build();
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
-      ImmutableList.Builder<IsolatedStep> steps) {
+      JavaCompileStepsBuilder stepsBuilder) {
 
     if (unusedDependenciesFinderFactory.isPresent()) {
       UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
@@ -185,8 +194,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
       BaseBuckPaths buckPaths = filesystem.getBuckPaths();
 
-      UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams =
-          UnusedDependenciesFinderFactory.UnusedDependenciesParams.of(
+      UnusedDependenciesParams unusedDependenciesParams =
+          UnusedDependenciesParams.of(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
               buckPaths,
@@ -200,27 +209,18 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
               factory.onlyPrintCommands,
               factory.doUltralightChecking);
 
-      addUnusedDependencyStep(unusedDependenciesParams, steps);
+      addUnusedDependencyStep(unusedDependenciesParams, stepsBuilder);
     }
 
     RelPath rootOutput = outputPathResolver.resolvePath(rootOutputPath);
     RelPath pathToClassHashes = outputPathResolver.resolvePath(pathToClassHashesOutputPath);
     RelPath annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath);
-    addMakeMissingOutputsStep(steps, rootOutput, pathToClassHashes, annotationsPath);
+    stepsBuilder.addMakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath);
   }
 
   private void addUnusedDependencyStep(
-      UnusedDependenciesFinderFactory.UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableList.Builder<IsolatedStep> steps) {
-    steps.add(UnusedDependenciesFinderFactory.create(unusedDependenciesParams));
-  }
-
-  private void addMakeMissingOutputsStep(
-      ImmutableList.Builder<IsolatedStep> steps,
-      RelPath rootOutput,
-      RelPath pathToClassHashes,
-      RelPath annotationsPath) {
-    steps.add(new MakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath));
+      UnusedDependenciesParams unusedDependenciesParams, JavaCompileStepsBuilder stepsBuilder) {
+    stepsBuilder.addUnusedDependencyStep(unusedDependenciesParams);
   }
 
   public boolean useDependencyFileRuleKeys() {

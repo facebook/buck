@@ -39,13 +39,13 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** Factory that creates Groovy related compile build steps. */
-class GroovycToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
+class GroovyToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
 
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
   @AddToRuleKey private final JavacOptions javacOptions;
 
-  public GroovycToJarStepFactory(
+  public GroovyToJarStepFactory(
       Tool groovyc,
       Optional<ImmutableList<String>> extraArguments,
       JavacOptions javacOptions,

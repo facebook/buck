@@ -333,5 +333,5 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
    *
    * Eventually we would need to get rid of BuildContext for other JVM languages.
    */
-  protected interface ExtraParams {}
+  public interface ExtraParams {}
 }

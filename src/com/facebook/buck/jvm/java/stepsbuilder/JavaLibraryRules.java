@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+package com.facebook.buck.jvm.java.stepsbuilder;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.DefaultSourceOnlyAbiRuleInfoFactory;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.AccumulateClassNamesStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,7 +44,8 @@ public class JavaLibraryRules {
   /** Utility class: do not instantiate. */
   private JavaLibraryRules() {}
 
-  static void addAccumulateClassNamesStep(
+  /** Adds accumulate class names step to the builder */
+  public static void addAccumulateClassNamesStep(
       ImmutableSet<PathMatcher> ignorePaths,
       ImmutableList.Builder<IsolatedStep> steps,
       Optional<RelPath> pathToClasses,
@@ -52,14 +60,47 @@ public class JavaLibraryRules {
     steps.add(accumulateClassNamesStep);
   }
 
-  static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
-      throws IOException {
+  /** Reads and return java compilation data from disc. */
+  public static JavaLibrary.Data initializeFromDisk(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) throws IOException {
     List<String> lines =
         filesystem.readLines(getPathToClassHashes(buildTarget, filesystem).getPath());
     return new JavaLibrary.Data(AccumulateClassNamesStep.parseClassHashes(lines));
   }
 
-  static RelPath getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  /** Returns a path to class hashes */
+  public static RelPath getPathToClassHashes(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.classes.txt");
+  }
+
+  /** Creates {@link CompilerParameters} */
+  public static CompilerParameters getCompilerParameters(
+      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<Path> javaSrcs,
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
+      String fullyQualifiedBuildTargetName,
+      boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
+      AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      boolean isRequiredForSourceOnlyAbi,
+      CompilerOutputPaths compilerOutputPaths) {
+    return CompilerParameters.builder()
+        .setClasspathEntries(compileTimeClasspathPaths)
+        .setSourceFilePaths(javaSrcs)
+        .setOutputPaths(compilerOutputPaths)
+        .setShouldTrackClassUsage(trackClassUsage)
+        .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)
+        .setAbiGenerationMode(abiGenerationMode)
+        .setAbiCompatibilityMode(abiCompatibilityMode)
+        .setSourceOnlyAbiRuleInfoFactory(
+            DefaultSourceOnlyAbiRuleInfoFactory.of(
+                fullJarInfos,
+                abiJarInfos,
+                fullyQualifiedBuildTargetName,
+                isRequiredForSourceOnlyAbi))
+        .build();
   }
 }

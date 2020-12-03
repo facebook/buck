@@ -47,11 +47,15 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -351,15 +355,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         && abiGenerationMode.usesDependencies();
   }
 
-  /**
-   * Returns build steps for ABI jar as list of {@link
-   * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
-   */
-  public ImmutableList<IsolatedStep> getBuildStepsForAbiJar(
+  /** Adds build steps for ABI jar. */
+  public void addBuildStepsForAbiJar(
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
-      BuildTarget buildTarget) {
+      BuildTarget buildTarget,
+      AbiJarStepsBuilder stepsBuilder) {
     Preconditions.checkState(producesJar());
     Preconditions.checkArgument(
         buildTarget.equals(JavaAbis.getSourceAbiJar(libraryTarget))
@@ -407,7 +409,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
     T extraParams = createExtraParams(context, rootPath);
 
-    return getBuildStepsForAbiJar(
+    stepsBuilder.addBuildStepsForAbiJar(
+        abiCompatibilityMode,
+        abiGenerationMode,
+        isRequiredForSourceOnlyAbi,
+        trackClassUsage,
+        trackJavacPhaseEvents,
+        withDownwardApi,
         FilesystemParams.of(filesystem),
         buildableContext,
         buildTargetValue,
@@ -415,7 +423,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         javaSrcs,
         fullJarInfos,
         abiJarInfos,
-        compilerOutputPaths,
         resourcesMap,
         cellToPathMappings,
         abiJarParameters,
@@ -423,55 +430,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         buildCellRootPath,
         resolvedJavac,
         extraParams);
-  }
-
-  private ImmutableList<IsolatedStep> getBuildStepsForAbiJar(
-      FilesystemParams filesystemParams,
-      RecordArtifactVerifier buildableContext,
-      BuildTargetValue buildTargetValue,
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
-      ImmutableSortedSet<Path> javaSrcs,
-      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
-      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
-      CompilerOutputPaths compilerOutputPaths,
-      ImmutableMap<RelPath, RelPath> resourcesMap,
-      ImmutableMap<String, RelPath> cellToPathMappings,
-      JarParameters abiJarParameters,
-      JarParameters libraryJarParameters,
-      Path buildCellRootPath,
-      ResolvedJavac resolvedJavac,
-      T extraParams) {
-    CompilerParameters compilerParameters =
-        getCompilerParameters(
-            compileTimeClasspathPaths,
-            javaSrcs,
-            fullJarInfos,
-            abiJarInfos,
-            trackClassUsage,
-            trackJavacPhaseEvents,
-            abiGenerationMode,
-            abiCompatibilityMode,
-            isRequiredForSourceOnlyAbi,
-            compilerOutputPaths,
-            buildTargetValue.getFullyQualifiedName());
-
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
-    configuredCompiler.createCompileToJarStep(
-        filesystemParams,
-        buildTargetValue,
-        compilerParameters,
-        ImmutableList.of(),
-        abiJarParameters,
-        libraryJarParameters,
-        steps,
-        buildableContext,
-        withDownwardApi,
-        cellToPathMappings,
-        resourcesMap,
-        buildCellRootPath,
-        resolvedJavac,
-        extraParams);
-    return steps.build();
   }
 
   private T createExtraParams(BuildContext context, AbsPath rootPath) {
@@ -488,16 +446,14 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     return extraParamsType.cast(extraParams);
   }
 
-  /**
-   * Returns pipeline build steps for ABI jar as list of {@link
-   * com.facebook.buck.step.isolatedsteps.IsolatedStep}s.
-   */
-  public ImmutableList<IsolatedStep> getPipelinedBuildStepsForAbiJar(
+  /** Adds pipeline build steps for ABI jar. */
+  public void addPipelinedBuildStepsForAbiJar(
       BuildTarget buildTarget,
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
-      JavacPipelineState state) {
+      JavacPipelineState state,
+      AbiJarPipelineStepsBuilder stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -513,34 +469,14 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
 
-    return getPipelinedBuildStepsForAbiJar(
-        BuildTargetValue.of(buildTarget, filesystem.getBuckPaths()),
+    stepsBuilder.addPipelinedBuildStepsForAbiJar(
+        postprocessClassesCommands,
+        BuildTargetValue.of(buildTarget, filesystemParams.getBaseBuckPaths()),
         filesystemParams,
         buildableContext,
         state,
         resourcesMap,
         cellToPathMappings);
-  }
-
-  private ImmutableList<IsolatedStep> getPipelinedBuildStepsForAbiJar(
-      BuildTargetValue buildTargetValue,
-      FilesystemParams filesystemParams,
-      RecordArtifactVerifier buildableContext,
-      JavacPipelineState state,
-      ImmutableMap<RelPath, RelPath> resourcesMap,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
-    ImmutableList.Builder<IsolatedStep> steps = ImmutableList.builder();
-    ((BaseJavacToJarStepFactory) configuredCompiler)
-        .createPipelinedCompileToJarStep(
-            filesystemParams,
-            cellToPathMappings,
-            buildTargetValue,
-            state,
-            postprocessClassesCommands,
-            steps,
-            buildableContext,
-            resourcesMap);
-    return steps.build();
   }
 
   /** Adds build steps for library jar */
@@ -550,7 +486,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
       RelPath pathToClassHashes,
-      ImmutableList.Builder<IsolatedStep> steps) {
+      JavaLibraryJarStepsBuilder stepsBuilder) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
@@ -595,76 +531,29 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, baseBuckPaths);
     T extraParams = createExtraParams(context, rootPath);
 
-    addBuildStepsForLibraryJar(
+    stepsBuilder.addBuildStepsForLibraryJar(
+        abiCompatibilityMode,
+        abiGenerationMode,
+        isRequiredForSourceOnlyAbi,
+        postprocessClassesCommands,
+        trackClassUsage,
+        trackJavacPhaseEvents,
+        withDownwardApi,
         FilesystemParams.of(filesystem),
         buildableContext,
         buildTargetValue,
-        steps,
+        pathToClassHashes,
         compileTimeClasspathPaths,
         javaSrcs,
         fullJarInfos,
         abiJarInfos,
-        compilerOutputPaths,
         resourcesMap,
         cellToPathMappings,
         libraryJarParameters,
         buildCellRootPath,
-        resolvedJavac,
-        pathToClassHashes,
         pathToClasses,
-        extraParams);
-  }
-
-  private void addBuildStepsForLibraryJar(
-      FilesystemParams filesystemParams,
-      RecordArtifactVerifier buildableContext,
-      BuildTargetValue buildTargetValue,
-      ImmutableList.Builder<IsolatedStep> steps,
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
-      ImmutableSortedSet<Path> javaSrcs,
-      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
-      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
-      CompilerOutputPaths compilerOutputPaths,
-      ImmutableMap<RelPath, RelPath> resourcesMap,
-      ImmutableMap<String, RelPath> cellToPathMappings,
-      JarParameters libraryJarParameters,
-      Path buildCellRootPath,
-      ResolvedJavac resolvedJavac,
-      RelPath pathToClassHashes,
-      Optional<RelPath> pathToClasses,
-      T extraParams) {
-    CompilerParameters compilerParameters =
-        getCompilerParameters(
-            compileTimeClasspathPaths,
-            javaSrcs,
-            fullJarInfos,
-            abiJarInfos,
-            trackClassUsage,
-            trackJavacPhaseEvents,
-            abiGenerationMode,
-            abiCompatibilityMode,
-            isRequiredForSourceOnlyAbi,
-            compilerOutputPaths,
-            buildTargetValue.getFullyQualifiedName());
-
-    configuredCompiler.createCompileToJarStep(
-        filesystemParams,
-        buildTargetValue,
-        compilerParameters,
-        postprocessClassesCommands,
-        null,
-        libraryJarParameters,
-        steps,
-        buildableContext,
-        withDownwardApi,
-        cellToPathMappings,
-        resourcesMap,
-        buildCellRootPath,
         resolvedJavac,
         extraParams);
-
-    JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystemParams.getIgnoredPaths(), steps, pathToClasses, pathToClassHashes);
   }
 
   private Optional<RelPath> getPathToClasses(
@@ -680,7 +569,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
       RelPath pathToClassHashes,
-      ImmutableList.Builder<IsolatedStep> steps) {
+      JavaLibraryJarPipelineStepsBuilder stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -698,67 +587,19 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getPathToClasses(context, libraryTarget, filesystem.getBuckPaths());
 
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
-    addPipelinedBuildStepsForLibraryJar(
+
+    BuildTargetValue libraryTargetValue =
+        BuildTargetValue.of(libraryTarget, filesystemParams.getBaseBuckPaths());
+    stepsBuilder.addPipelinedBuildStepsForLibraryJar(
+        libraryTargetValue,
+        postprocessClassesCommands,
         filesystemParams,
         buildableContext,
         state,
         pathToClassHashes,
-        pathToClasses,
-        steps,
         resourcesMap,
         cellToPathMappings,
-        BuildTargetValue.of(libraryTarget, filesystemParams.getBaseBuckPaths()));
-  }
-
-  private void addPipelinedBuildStepsForLibraryJar(
-      FilesystemParams filesystemParams,
-      RecordArtifactVerifier buildableContext,
-      JavacPipelineState state,
-      RelPath pathToClassHashes,
-      Optional<RelPath> pathToClasses,
-      ImmutableList.Builder<IsolatedStep> steps,
-      ImmutableMap<RelPath, RelPath> resourcesMap,
-      ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTargetValue buildTargetValue) {
-    ((BaseJavacToJarStepFactory) configuredCompiler)
-        .createPipelinedCompileToJarStep(
-            filesystemParams,
-            cellToPathMappings,
-            buildTargetValue,
-            state,
-            postprocessClassesCommands,
-            steps,
-            buildableContext,
-            resourcesMap);
-
-    JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystemParams.getIgnoredPaths(), steps, pathToClasses, pathToClassHashes);
-  }
-
-  private static CompilerParameters getCompilerParameters(
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
-      ImmutableSortedSet<Path> javaSrcs,
-      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
-      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
-      boolean trackClassUsage,
-      boolean trackJavacPhaseEvents,
-      AbiGenerationMode abiGenerationMode,
-      AbiGenerationMode abiCompatibilityMode,
-      boolean isRequiredForSourceOnlyAbi,
-      CompilerOutputPaths compilerOutputPaths,
-      String fullyQualifiedName) {
-    return CompilerParameters.builder()
-        .setClasspathEntries(compileTimeClasspathPaths)
-        .setSourceFilePaths(javaSrcs)
-        .setOutputPaths(compilerOutputPaths)
-        .setShouldTrackClassUsage(trackClassUsage)
-        .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)
-        .setAbiGenerationMode(abiGenerationMode)
-        .setAbiCompatibilityMode(abiCompatibilityMode)
-        .setSourceOnlyAbiRuleInfoFactory(
-            DefaultSourceOnlyAbiRuleInfoFactory.of(
-                fullJarInfos, abiJarInfos, fullyQualifiedName, isRequiredForSourceOnlyAbi))
-        .build();
+        pathToClasses);
   }
 
   private BaseJavaAbiInfo toBaseJavaAbiInfo(JavaDependencyInfo info) {
@@ -869,12 +710,16 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
     for (JavaDependencyInfo depInfo : dependencyInfos.infos) {
       SourcePath sourcePath = depInfo.compileTimeJar;
-      BuildRule rule = ruleFinder.getRule(sourcePath).get();
+      BuildRule rule = ruleFinder.getRule(sourcePath).orElseThrow(IllegalStateException::new);
       AbsPath path = pathResolver.getAbsolutePath(sourcePath);
-      if (rule instanceof HasJavaAbi && ((HasJavaAbi) rule).getAbiJar().isPresent()) {
-        BuildTarget buildTarget = ((HasJavaAbi) rule).getAbiJar().get();
-        pathToSourcePathMapBuilder.put(
-            path.getPath(), DefaultBuildTargetSourcePath.of(buildTarget));
+      if (rule instanceof HasJavaAbi) {
+        HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
+        Optional<BuildTarget> abiJar = hasJavaAbi.getAbiJar();
+        abiJar.ifPresent(
+            buildTarget -> {
+              pathToSourcePathMapBuilder.put(
+                  path.getPath(), DefaultBuildTargetSourcePath.of(buildTarget));
+            });
       }
     }
     return pathToSourcePathMapBuilder.build();
@@ -912,18 +757,18 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
 
     CompilerParameters compilerParameters =
-        getCompilerParameters(
+        JavaLibraryRules.getCompilerParameters(
             compileTimeClasspathPaths,
             javaSrcs,
             fullJarInfos,
             abiJarInfos,
+            buildTarget.getFullyQualifiedName(),
             trackClassUsage,
             trackJavacPhaseEvents,
             abiGenerationMode,
             abiCompatibilityMode,
             isRequiredForSourceOnlyAbi,
-            compilerOutputPaths,
-            buildTarget.getFullyQualifiedName());
+            compilerOutputPaths);
 
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
 
@@ -939,5 +784,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   boolean hasAnnotationProcessing() {
     return configuredCompiler.hasAnnotationProcessing();
+  }
+
+  public CompileToJarStepFactory<T> getConfiguredCompiler() {
+    return configuredCompiler;
   }
 }

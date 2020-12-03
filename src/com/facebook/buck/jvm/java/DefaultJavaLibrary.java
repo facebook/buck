@@ -45,6 +45,7 @@ import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
@@ -115,10 +116,10 @@ public class DefaultJavaLibrary
   private final ImmutableSortedSet<BuildTarget> tests;
   private final JavaAbiInfo javaAbiInfo;
 
-  @Nullable private CalculateSourceAbi sourceAbi;
+  @Nullable private final CalculateSourceAbi sourceAbi;
   private final boolean isDesugarEnabled;
   private final boolean isInterfaceMethodsDesugarEnabled;
-  private SourcePathRuleFinder ruleFinder;
+  private final SourcePathRuleFinder ruleFinder;
   private final Optional<SourcePath> sourcePathForOutputJar;
   private final Optional<SourcePath> sourcePathForGeneratedAnnotationPath;
 
@@ -340,9 +341,7 @@ public class DefaultJavaLibrary
 
     // Add ourselves to the classpath if there's a jar to be built.
     Optional<SourcePath> sourcePathForOutputJar = sourcePathForOutputJar();
-    if (sourcePathForOutputJar.isPresent()) {
-      builder.add(sourcePathForOutputJar.get());
-    }
+    sourcePathForOutputJar.ifPresent(builder::add);
 
     return builder.build();
   }
@@ -378,11 +377,7 @@ public class DefaultJavaLibrary
     javaClassHashesProvider.invalidate();
   }
 
-  /**
-   * Instructs this rule to report the ABI it has on disk as its current ABI.
-   *
-   * @param pathResolver
-   */
+  /** Instructs this rule to report the ABI it has on disk as its current ABI. */
   @Override
   public JavaLibrary.Data initializeFromDisk(SourcePathResolverAdapter pathResolver)
       throws IOException {
@@ -452,9 +447,8 @@ public class DefaultJavaLibrary
     if (output != null) {
       collector.addClasspathEntry(this, output);
     }
-    if (proguardConfig.isPresent()) {
-      collector.addProguardConfig(getBuildTarget(), proguardConfig.get());
-    }
+    proguardConfig.ifPresent(
+        sourcePath -> collector.addProguardConfig(getBuildTarget(), sourcePath));
   }
 
   @Override

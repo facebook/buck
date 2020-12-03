@@ -59,7 +59,7 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
     GroovyLibraryDescription.CoreArg groovyArgs = (CoreArg) Objects.requireNonNull(args);
 
-    return new GroovycToJarStepFactory(
+    return new GroovyToJarStepFactory(
         groovyBuckConfig.getGroovyc(targetConfiguration),
         Optional.of(groovyArgs.getExtraGroovycArguments()),
         javacOptions,
