@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.base.Joiner;
@@ -63,7 +63,7 @@ public abstract class Jsr199Javac implements Javac {
     @Override
     public ResolvedJavac.Invocation newBuildInvocation(
         JavacExecutionContext context,
-        BuildTarget invokingRule,
+        BuildTargetValue invokingRule,
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,

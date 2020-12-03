@@ -19,11 +19,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -51,7 +51,7 @@ public class JavacPipelineState implements RulePipelineState {
 
   private final CompilerParameters compilerParameters;
   private final ResolvedJavacOptions resolvedJavacOptions;
-  private final BuildTarget invokingRule;
+  private final BuildTargetValue invokingRule;
   private final ResolvedJavac resolvedJavac;
   private final ClasspathChecker classpathChecker;
   @Nullable private final JarParameters abiJarParameters;
@@ -67,7 +67,7 @@ public class JavacPipelineState implements RulePipelineState {
   public JavacPipelineState(
       ResolvedJavac resolvedJavac,
       ResolvedJavacOptions resolvedJavacOptions,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,

@@ -21,13 +21,11 @@ import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
@@ -56,7 +54,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
   }
 
   public JavacPipelineState createPipelineState(
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
@@ -79,7 +77,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
   public void createCompileStep(
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       CompilerParameters parameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
@@ -108,7 +106,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
   public void createPipelinedCompileToJarStep(
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTarget target,
+      BuildTargetValue buildTargetValue,
       JavacPipelineState pipeline,
       ImmutableList<String> postprocessClassesCommands,
       Builder<IsolatedStep> steps,
@@ -120,14 +118,14 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
     AbsPath rootPath = filesystemParams.getRootPath();
 
-    addAnnotationGenFolderStep(target, steps, buildableContext, buckPaths);
+    addAnnotationGenFolderStep(buildTargetValue, steps, buildableContext, buckPaths);
 
     if (!pipeline.isRunning()) {
       steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, rootPath, compilerParameters));
     }
 
     Optional<JarParameters> jarParameters =
-        JavaAbis.isLibraryTarget(target)
+        buildTargetValue.isLibraryJar()
             ? pipeline.getLibraryJarParameters()
             : pipeline.getAbiJarParameters();
 
@@ -136,11 +134,10 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(
-          BuildTargetValue.of(target, buckPaths), compilerParameters, buildableContext, buckPaths);
+      recordDepFileIfNecessary(buildTargetValue, compilerParameters, buildableContext, buckPaths);
 
       // This adds the javac command, along with any supporting commands.
-      createPipelinedCompileStep(buckPaths, cellToPathMappings, pipeline, target, steps);
+      createPipelinedCompileStep(buckPaths, cellToPathMappings, pipeline, buildTargetValue, steps);
     }
 
     jarParameters.ifPresent(
@@ -148,7 +145,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
   }
 
   private void addAnnotationGenFolderStep(
-      BuildTarget invokingTarget,
+      BuildTargetValue invokingTarget,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       BaseBuckPaths buckPaths) {
@@ -167,7 +164,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
   public void createCompileToJarStepImpl(
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
@@ -199,7 +196,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
 
     LOG.info(
         "Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
-        invokingRule.getBaseName(),
+        invokingRule.getFullyQualifiedName(),
         (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
         spoolMode,
         postprocessClassesCommands.toString());
@@ -239,13 +236,14 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraPara
       BaseBuckPaths buckPaths,
       ImmutableMap<String, RelPath> cellToPathMappings,
       JavacPipelineState pipeline,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       Builder<IsolatedStep> steps) {
     if (hasAnnotationProcessing() && pipeline.isRunning()) {
+
       steps.add(
           SymlinkIsolatedStep.of(
               CompilerOutputPaths.getAnnotationPath(
-                  JavaAbis.getSourceAbiJar(invokingRule), buckPaths),
+                  BuildTargetValue.sourceAbiTarget(invokingRule), buckPaths),
               CompilerOutputPaths.getAnnotationPath(invokingRule, buckPaths)));
     }
 

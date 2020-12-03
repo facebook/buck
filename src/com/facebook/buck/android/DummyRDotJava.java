@@ -36,7 +36,9 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -182,7 +184,8 @@ public class DummyRDotJava extends AbstractBuildRule
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProjectFilesystem filesystem = getProjectFilesystem();
-    RelPath rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), filesystem);
+    BuildTarget buildTarget = getBuildTarget();
+    RelPath rDotJavaSrcFolder = getRDotJavaSrcFolder(buildTarget, filesystem);
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -264,11 +267,13 @@ public class DummyRDotJava extends AbstractBuildRule
             BuildCellRelativePath.fromCellRelativePath(
                 buildCellRootPath, filesystem, pathToJarOutputDir)));
 
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, buckPaths);
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths)
-            .setOutputPaths(CompilerOutputPaths.of(getBuildTarget(), filesystem.getBuckPaths()))
+            .setOutputPaths(CompilerOutputPaths.of(buildTargetValue, buckPaths))
             .build();
 
     Preconditions.checkState(
@@ -288,7 +293,7 @@ public class DummyRDotJava extends AbstractBuildRule
     compileStepFactory.createCompileStep(
         FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
-        getBuildTarget(),
+        buildTargetValue,
         compilerParameters,
         isolatedSteps,
         buildableContext,

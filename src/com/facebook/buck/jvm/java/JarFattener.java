@@ -36,7 +36,9 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -126,8 +128,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     RelPath outputDir = getOutputDirectory();
     ProjectFilesystem filesystem = getProjectFilesystem();
-    RelPath fatJarDir =
-        CompilerOutputPaths.getClassesDir(getBuildTarget(), filesystem.getBuckPaths());
+    BuildTarget buildTarget = getBuildTarget();
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    RelPath fatJarDir = CompilerOutputPaths.getClassesDir(buildTarget, buckPaths);
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(buildCellRootPath, filesystem, outputDir)));
@@ -190,11 +193,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ZipCompressionLevel.NONE,
             fatJarDir.getPath());
 
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, buckPaths);
+
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
-            .setOutputPaths(CompilerOutputPaths.of(getBuildTarget(), filesystem.getBuckPaths()))
+            .setOutputPaths(CompilerOutputPaths.of(buildTargetValue, buckPaths))
             .build();
 
     Preconditions.checkState(compilerParameters.getOutputPaths().getClassesDir().equals(fatJarDir));
@@ -214,7 +219,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     compileStepFactory.createCompileStep(
         FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
-        getBuildTarget(),
+        buildTargetValue,
         compilerParameters,
         isolatedSteps,
         buildableContext,

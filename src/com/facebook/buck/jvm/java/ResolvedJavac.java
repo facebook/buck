@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.Escaper;
@@ -35,7 +35,7 @@ public interface ResolvedJavac {
   /** Prepares an invocation of the compiler with the given parameters. */
   ResolvedJavac.Invocation newBuildInvocation(
       JavacExecutionContext context,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,

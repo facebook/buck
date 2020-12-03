@@ -21,11 +21,11 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.MoreSuppliers;
@@ -103,7 +103,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
   @Override
   public int buildWithClasspath(
       IsolatedExecutionContext context,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
@@ -119,7 +119,8 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
     } catch (Throwable throwable) {
       throwable.printStackTrace();
       throw new HumanReadableException(
-          "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+          "Unable to expand sources for %s into %s",
+          invokingRule.getFullyQualifiedName(), workingDirectory);
     }
 
     ImmutableList<String> command =

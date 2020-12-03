@@ -35,8 +35,10 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
@@ -105,28 +107,20 @@ public class DummyRDotJavaTest {
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
 
-    RelPath rDotJavaSrcFolder =
-        DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJava.getBuildTarget(), filesystem);
-    RelPath rDotJavaBinFolder =
-        CompilerOutputPaths.getClassesDir(
-            dummyRDotJava.getBuildTarget(), filesystem.getBuckPaths());
-    RelPath rDotJavaOutputFolder =
-        DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
+    BuildTarget target = dummyRDotJava.getBuildTarget();
+    RelPath rDotJavaSrcFolder = DummyRDotJava.getRDotJavaSrcFolder(target, filesystem);
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    RelPath rDotJavaBinFolder = CompilerOutputPaths.getClassesDir(target, buckPaths);
+    RelPath rDotJavaOutputFolder = DummyRDotJava.getPathToOutputDir(target, filesystem);
     Path rDotJavaAnnotationFolder =
-        CompilerOutputPaths.getAnnotationPath(
-                dummyRDotJava.getBuildTarget(), filesystem.getBuckPaths())
-            .getPath();
+        CompilerOutputPaths.getAnnotationPath(target, buckPaths).getPath();
 
     String rDotJavaOutputJar =
         MorePaths.pathWithPlatformSeparators(
             String.format(
-                "%s/%s.jar",
-                rDotJavaOutputFolder,
-                dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
+                "%s/%s.jar", rDotJavaOutputFolder, target.getShortNameAndFlavorPostfix()));
     String genFolder =
-        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s")
-            .getParent()
-            .toString();
+        BuildTargetPaths.getGenPath(buckPaths, buildTarget, "%s").getParent().toString();
 
     List<String> sortedSymbolsFiles =
         Stream.of(resourceRule1, resourceRule2)
@@ -156,14 +150,13 @@ public class DummyRDotJavaTest {
                                 .build(),
                             sourcePathResolver,
                             rootPath),
-                        dummyRDotJava.getBuildTarget(),
-                        filesystem.getBuckPaths(),
+                        BuildTargetValue.of(target, buckPaths),
+                        buckPaths,
                         new ClasspathChecker(),
                         CompilerParameters.builder()
                             .setOutputPaths(
                                 CompilerOutputPaths.of(
-                                    dummyRDotJava.getBuildTarget(),
-                                    dummyRDotJava.getProjectFilesystem().getBuckPaths()))
+                                    target, dummyRDotJava.getProjectFilesystem().getBuckPaths()))
                             .setSourceFilePaths(javaSourceFiles)
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),

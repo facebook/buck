@@ -19,12 +19,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.SourceVersionUtils;
@@ -89,8 +88,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   private final Supplier<JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
-  private final BuildTarget invokingRule;
-  private final BuildTarget libraryTarget;
+  private final BuildTargetValue invokingRule;
+  private final BuildTargetValue libraryTarget;
   private final AbiGenerationMode abiCompatibilityMode;
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
@@ -109,7 +108,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
   public Jsr199JavacInvocation(
       Supplier<JavaCompiler> compilerConstructor,
       JavacExecutionContext context,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
@@ -126,9 +125,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     this.context = context;
     this.invokingRule = invokingRule;
     this.libraryTarget =
-        JavaAbis.isLibraryTarget(invokingRule)
-            ? invokingRule
-            : JavaAbis.getLibraryTarget(invokingRule);
+        invokingRule.isLibraryJar() ? invokingRule : BuildTargetValue.libraryTarget(invokingRule);
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
     this.annotationProcessors = annotationProcessors;
@@ -246,10 +243,10 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
             }
           });
 
-      BuildTarget abiTarget =
+      BuildTargetValue abiTarget =
           buildSourceOnlyAbi
-              ? JavaAbis.getSourceOnlyAbiJar(libraryTarget)
-              : JavaAbis.getSourceAbiJar(libraryTarget);
+              ? BuildTargetValue.sourceOnlyAbiTarget(libraryTarget)
+              : BuildTargetValue.sourceAbiTarget(libraryTarget);
       JarParameters jarParameters = Objects.requireNonNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
       javacTask.addPostEnterCallback(
@@ -293,7 +290,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                 abiResult.set(1);
               }
 
-              if (JavaAbis.isSourceAbiTarget(invokingRule)) {
+              if (invokingRule.isSourceAbi()) {
                 switchToFullJarIfRequested();
               }
             } catch (IOException e) {

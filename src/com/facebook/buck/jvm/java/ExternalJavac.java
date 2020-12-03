@@ -17,11 +17,11 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.MoreSuppliers;
@@ -88,7 +88,7 @@ public class ExternalJavac implements Javac {
     @Override
     public ResolvedJavac.Invocation newBuildInvocation(
         JavacExecutionContext context,
-        BuildTarget invokingRule,
+        BuildTargetValue invokingRule,
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,
@@ -130,7 +130,8 @@ public class ExternalJavac implements Javac {
                     context.getRuleCellRoot(), javaSourceFilePaths, workingDirectory);
           } catch (IOException e) {
             throw new HumanReadableException(
-                "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+                "Unable to expand sources for %s into %s",
+                invokingRule.getFullyQualifiedName(), workingDirectory);
           }
 
           // For consistency with javax.tools.JavaCompiler, if no sources are specified, then do

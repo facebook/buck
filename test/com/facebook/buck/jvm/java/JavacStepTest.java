@@ -26,7 +26,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -36,8 +35,10 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
@@ -58,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -77,11 +79,24 @@ public class JavacStepTest {
     }
   }
 
+  private ProjectFilesystem fakeFilesystem;
+  private BuckPaths buckPaths;
+  private BuildTargetValue target;
+  private FakeJavac fakeJavac;
+  private SourcePathResolverAdapter sourcePathResolver;
+
+  @Before
+  public void setUp() throws Exception {
+    fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    buckPaths = fakeFilesystem.getBuckPaths();
+    target = BuildTargetValue.of(BuildTargetFactory.newInstance("//foo:bar"), buckPaths);
+    fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
+    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+  }
+
   @Test
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
-    FakeJavac fakeJavac = new FakeJavac();
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -94,17 +109,15 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            fakeFilesystem.getBuckPaths(),
+            buckPaths,
             classpathChecker,
             CompilerParameters.builder()
-                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
             null,
             null,
@@ -133,9 +146,6 @@ public class JavacStepTest {
 
   @Test
   public void failedCompileSendsStdoutAndStderrToConsole() throws Exception {
-    FakeJavac fakeJavac = new FakeJavac();
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -148,17 +158,15 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            fakeFilesystem.getBuckPaths(),
+            buckPaths,
             classpathChecker,
             CompilerParameters.builder()
-                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
             null,
             null,
@@ -213,9 +221,6 @@ public class JavacStepTest {
 
   @Test
   public void existingBootclasspathDirSucceeds() throws Exception {
-    FakeJavac fakeJavac = new FakeJavac();
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -229,17 +234,15 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            fakeFilesystem.getBuckPaths(),
+            buckPaths,
             classpathChecker,
             CompilerParameters.builder()
-                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
             null,
             null,
@@ -267,9 +270,6 @@ public class JavacStepTest {
 
   @Test
   public void bootclasspathResolvedToAbsolutePath() {
-    FakeJavac fakeJavac = new FakeJavac();
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -283,17 +283,15 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            fakeFilesystem.getBuckPaths(),
+            buckPaths,
             classpathChecker,
             CompilerParameters.builder()
-                .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
+                .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
             null,
             null,
@@ -327,9 +325,6 @@ public class JavacStepTest {
 
   @Test
   public void missingBootclasspathDirFailsWithError() throws Exception {
-    FakeJavac fakeJavac = new FakeJavac();
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
             .setLanguageLevelOptions(
@@ -343,8 +338,6 @@ public class JavacStepTest {
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    SourcePathResolverAdapter sourcePathResolver = buildRuleResolver.getSourcePathResolver();
     JavacStep step =
         new JavacStep(
             fakeJavac,

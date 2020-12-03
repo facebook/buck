@@ -29,9 +29,11 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.ResolvedJavac.Invocation;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -117,6 +119,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
@@ -127,13 +130,13 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            projectFilesystem.getBuckPaths());
+            buckPaths);
 
     int exitCode =
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                BuildTargetFactory.newInstance("//some:example"),
+                BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -171,6 +174,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
@@ -181,13 +185,13 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            projectFilesystem.getBuckPaths());
+            buckPaths);
 
     int exitCode =
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                BuildTargetFactory.newInstance("//some:example"),
+                BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -278,6 +282,7 @@ public class Jsr199JavacIntegrationTest {
         createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
@@ -288,7 +293,7 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            projectFilesystem.getBuckPaths());
+            buckPaths);
 
     boolean caught = false;
 
@@ -296,7 +301,7 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              BuildTargetFactory.newInstance("//some:example"),
+              BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
               ImmutableList.of(),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -380,6 +385,7 @@ public class Jsr199JavacIntegrationTest {
         new JdkNotFoundJavac().resolve(new TestActionGraphBuilder().getSourcePathResolver());
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     ProjectFilesystem projectFilesystem = createProjectFilesystem();
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
@@ -390,12 +396,12 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            projectFilesystem.getBuckPaths());
+            buckPaths);
 
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            BuildTargetFactory.newInstance("//some:example"),
+            BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),

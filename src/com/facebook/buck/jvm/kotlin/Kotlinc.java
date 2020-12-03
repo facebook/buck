@@ -21,8 +21,8 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +39,7 @@ public interface Kotlinc extends Tool {
 
   int buildWithClasspath(
       IsolatedExecutionContext context,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       ImmutableList<String> options,
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,

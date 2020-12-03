@@ -101,17 +101,47 @@ public abstract class CompilerOutputPaths {
     return CompilerOutputPaths.of(target, buckPaths).getAnnotationPath();
   }
 
+  public static RelPath getAnnotationPath(BuildTargetValue target, BaseBuckPaths buckPaths) {
+    return CompilerOutputPaths.of(target, buckPaths).getAnnotationPath();
+  }
+
   public static Path getAbiJarPath(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
     Preconditions.checkArgument(hasAbiJar(buildTarget));
     return CompilerOutputPaths.of(buildTarget, buckPaths).getAbiJarPath().get();
+  }
+
+  public static Path getAbiJarPath(BuildTargetValue buildTargetValue, BaseBuckPaths buckPaths) {
+    Preconditions.checkArgument(buildTargetValue.hasAbiJar());
+    return CompilerOutputPaths.of(buildTargetValue, buckPaths).getAbiJarPath().get();
   }
 
   public static Path getOutputJarPath(BuildTarget target, BaseBuckPaths buckPaths) {
     return CompilerOutputPaths.of(target, buckPaths).getOutputJarPath().get();
   }
 
+  public static Path getOutputJarPath(BuildTargetValue buildTargetValue, BaseBuckPaths buckPaths) {
+    return CompilerOutputPaths.of(buildTargetValue, buckPaths).getOutputJarPath().get();
+  }
+
   private static boolean hasAbiJar(BuildTarget target) {
     return JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target);
+  }
+
+  /** Returns annotation path for the given {@code target} and {@code format} */
+  public static RelPath getAnnotationPath(
+      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getAnnotationDir());
+  }
+
+  /** Returns `gen` directory path for the given {@code target} and {@code format} */
+  public static RelPath getGenPath(
+      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+
+    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getGenDir());
   }
 
   private static RelPath getRelativePath(

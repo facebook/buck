@@ -18,14 +18,13 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -44,7 +43,7 @@ import javax.annotation.Nullable;
 public class JavacStep extends IsolatedStep {
 
   private final JavacPipelineState pipeline;
-  private final BuildTarget invokingRule;
+  private final BuildTargetValue invokingRule;
   private final boolean ownsPipelineObject;
   private final BaseBuckPaths buckPaths;
   private final ImmutableMap<String, RelPath> cellToPathMappings;
@@ -52,7 +51,7 @@ public class JavacStep extends IsolatedStep {
   public JavacStep(
       ResolvedJavac resolvedJavac,
       ResolvedJavacOptions javacOptions,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       BaseBuckPaths buckPaths,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
@@ -78,7 +77,7 @@ public class JavacStep extends IsolatedStep {
 
   public JavacStep(
       JavacPipelineState pipeline,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       BaseBuckPaths buckPaths,
       ImmutableMap<String, RelPath> cellToPathMappings) {
     this(pipeline, invokingRule, false, buckPaths, cellToPathMappings);
@@ -86,7 +85,7 @@ public class JavacStep extends IsolatedStep {
 
   private JavacStep(
       JavacPipelineState pipeline,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       boolean ownsPipelineObject,
       BaseBuckPaths buckPaths,
       ImmutableMap<String, RelPath> cellToPathMappings) {
@@ -107,9 +106,9 @@ public class JavacStep extends IsolatedStep {
     try {
       ResolvedJavac.Invocation invocation =
           pipeline.getJavacInvocation(buckPaths, context, cellToPathMappings);
-      if (JavaAbis.isSourceAbiTarget(invokingRule)) {
+      if (invokingRule.isSourceAbi()) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
-      } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
+      } else if (invokingRule.isSourceOnlyAbi()) {
         declaredDepsBuildResult = invocation.buildSourceOnlyAbiJar();
       } else {
         declaredDepsBuildResult = invocation.buildClasses();
@@ -171,7 +170,7 @@ public class JavacStep extends IsolatedStep {
                 pipeline.getCompilerParameters().getSourceFilePaths(),
                 pipeline.getCompilerParameters().getOutputPaths().getPathToSourcesList());
 
-    if (JavaAbis.isLibraryTarget(invokingRule) && pipeline.getLibraryJarParameters().isPresent()) {
+    if (invokingRule.isLibraryJar() && pipeline.getLibraryJarParameters().isPresent()) {
       JarParameters jarParameters = pipeline.getLibraryJarParameters().get();
       Optional<RelPath> manifestFile = jarParameters.getManifestFile();
       ImmutableSortedSet<RelPath> entriesToJar = jarParameters.getEntriesToJar();
@@ -192,9 +191,9 @@ public class JavacStep extends IsolatedStep {
   @Override
   public String getShortName() {
     String name;
-    if (JavaAbis.isSourceAbiTarget(invokingRule)) {
+    if (invokingRule.isSourceAbi()) {
       return "source_abi";
-    } else if (JavaAbis.isSourceOnlyAbiTarget(invokingRule)) {
+    } else if (invokingRule.isSourceOnlyAbi()) {
       return "source_only_abi";
     } else if (pipeline.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";

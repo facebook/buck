@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
@@ -58,7 +57,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
   public final void createCompileToJarStep(
       FilesystemParams filesystemParams,
-      BuildTarget target,
+      BuildTargetValue buildTargetValue,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
@@ -86,7 +85,6 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(target, buckPaths);
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       recordDepFileIfNecessary(buildTargetValue, compilerParameters, buildableContext, buckPaths);
 
@@ -94,7 +92,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       createCompileToJarStepImpl(
           filesystemParams,
           cellToPathMappings,
-          target,
+          buildTargetValue,
           compilerParameters,
           postprocessClassesCommands,
           abiJarParameters,
@@ -176,7 +174,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   protected void createCompileToJarStepImpl(
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTarget target,
+      BuildTargetValue target,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
@@ -292,7 +290,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   public abstract void createCompileStep(
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTarget invokingRule,
+      BuildTargetValue invokingRule,
       CompilerParameters parameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
