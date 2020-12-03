@@ -474,7 +474,7 @@ public class DaemonIntegrationTest {
             ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
 
     primary.runBuckCommand("build", ":rule").assertSuccess();
-    Files.write(secondary.getPath("included_by_primary.py"), new byte[] {});
+    Files.write(secondary.getPath("included_by_primary.bzl"), new byte[] {});
     primary.runBuckCommand("build", ":rule").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 

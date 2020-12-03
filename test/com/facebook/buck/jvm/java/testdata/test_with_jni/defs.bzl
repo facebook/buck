@@ -1,4 +1,6 @@
-import os
+# @nolint
+with allow_unsafe_import():
+    import os
 
 def create_cpp_flags():
     # Hack until Buck can provide the JDK include path automatically.

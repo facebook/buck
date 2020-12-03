@@ -1,3 +1,5 @@
+load("other//:defs.bzl", "from_other")
+
 genrule(
     name = "rule",
     out = "rule",

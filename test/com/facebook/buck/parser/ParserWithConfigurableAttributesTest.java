@@ -238,20 +238,20 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("java", "com", "facebook");
 
     defaultIncludeFile = tempDir.newFile("java/com/facebook/defaultIncludeFile").toRealPath();
-    Files.write(defaultIncludeFile.getPath(), "\n".getBytes(UTF_8));
+    Files.write(defaultIncludeFile.getPath(), "FOO = 1\n".getBytes(UTF_8));
 
     includedByIncludeFile = tempDir.newFile("java/com/facebook/includedByIncludeFile").toRealPath();
-    Files.write(includedByIncludeFile.getPath(), "\n".getBytes(UTF_8));
+    Files.write(includedByIncludeFile.getPath(), "BAR = 2\n".getBytes(UTF_8));
 
     includedByBuildFile = tempDir.newFile("java/com/facebook/includedByBuildFile").toRealPath();
     Files.write(
         includedByBuildFile.getPath(),
-        "include_defs('//java/com/facebook/includedByIncludeFile')\n".getBytes(UTF_8));
+        "load('//:java/com/facebook/includedByIncludeFile', 'BAR')\n".getBytes(UTF_8));
 
     testBuildFile = tempDir.newFile("java/com/facebook/BUCK").toRealPath();
     Files.write(
         testBuildFile.getPath(),
-        ("include_defs('//java/com/facebook/includedByBuildFile')\n"
+        ("load('//:java/com/facebook/includedByBuildFile', 'BAR')\n"
                 + "java_library(name = 'foo')\n"
                 + "java_library(name = 'bar')\n"
                 + "genrule(name = 'baz', out = '.')\n")
@@ -483,10 +483,13 @@ public class ParserWithConfigurableAttributesTest {
         "def foo(name): native.export_file(name=name)\n".getBytes(UTF_8),
         StandardOpenOption.APPEND);
     Files.write(
+        testBuildFile.getPath(),
+        "load('//:java/com/facebook/includedByBuildFile', 'foo')\n".getBytes(UTF_8));
+    Files.write(
         testBuildFile.getPath(), "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
     parser.getTargetNodeAssertCompatible(
         parsingContext,
-        BuildTargetFactory.newInstance("//java/com/facebook:foo"),
+        BuildTargetFactory.newInstance("//java/com/facebook:BUCK"),
         DependencyStack.root());
   }
 

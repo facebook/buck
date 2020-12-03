@@ -1,0 +1,1 @@
+MY_CONSTANT = 1

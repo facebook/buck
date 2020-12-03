@@ -503,29 +503,14 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void buildFilesCanIncludeDefsFromOtherCells() throws IOException {
+  public void buildFilesCanLoadFromOtherCells() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
-    ProjectWorkspace root = createWorkspace("inter-cell/include-defs/root");
-    ProjectWorkspace other = createWorkspace("inter-cell/include-defs/other");
+    ProjectWorkspace root = createWorkspace("inter-cell/load/root");
+    ProjectWorkspace other = createWorkspace("inter-cell/load/other");
     registerCell(root, "other", other);
     registerCell(root, "root", root);
     registerCell(other, "root", root);
-
-    root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
-  }
-
-  @Test
-  public void buildFilesCanIncludeDefsFromOtherCellsUsingImplicitIncludes() throws IOException {
-    assumeThat(Platform.detect(), is(not(WINDOWS)));
-
-    ProjectWorkspace root = createWorkspace("inter-cell/includes/root");
-    ProjectWorkspace other = createWorkspace("inter-cell/includes/other");
-    registerCell(root, "other", other);
-    registerCell(root, "root", root);
-    registerCell(other, "root", root);
-    TestDataHelper.overrideBuckconfig(
-        root, ImmutableMap.of("buildfile", ImmutableMap.of("includes", "other//DEFS")));
 
     root.runBuckBuild("//:rule", "other//:rule").assertSuccess();
   }
