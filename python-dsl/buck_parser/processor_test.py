@@ -171,28 +171,24 @@ class BuckTest(unittest.TestCase):
         """
         Test that consecutive includes can't see each others globals.
 
-        If a build file includes two include defs, one after another, verify
+        If a build file includes two loads, one after another, verify
         that the first's globals don't pollute the second's (e.g. the second
         cannot implicitly reference globals from the first without including
         it itself).
         """
 
-        # Setup the includes defs.  The first one defines a variable that the
+        # Setup the loads.  The first one defines a variable that the
         # second one (incorrectly) implicitly references.
-        include_def1 = ProjectFile(
-            self.project_root, path="inc_def1", contents=("FOO = 1",)
-        )
-        include_def2 = ProjectFile(
-            self.project_root, path="inc_def2", contents=("BAR = FOO",)
-        )
-        self.write_files(include_def1, include_def2)
+        load1 = ProjectFile(self.project_root, path="inc_def1", contents=("FOO = 1",))
+        load2 = ProjectFile(self.project_root, path="inc_def2", contents=("BAR = FOO",))
+        self.write_files(load1, load2)
 
         # Construct a processor using the above as default includes, and verify
         # that the second one can't use the first's globals.
         build_file = ProjectFile(self.project_root, path="BUCK", contents="")
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
-            includes=[include_def1.name, include_def2.name]
+            includes=[load1.name, load2.name]
         )
         self.assertRaises(
             NameError,
@@ -211,8 +207,8 @@ class BuckTest(unittest.TestCase):
             self.project_root,
             path="BUCK",
             contents=(
-                "include_defs({0!r})".format(include_def1.name),
-                "include_defs({0!r})".format(include_def2.name),
+                "load({0!r}, {1!r})".format(load1.load_name, "FOO"),
+                "load({0!r}, {1!r})".format(load2.load_name, "BAR"),
             ),
         )
         self.write_file(build_file)
@@ -227,30 +223,28 @@ class BuckTest(unittest.TestCase):
             None,
         )
 
-    def test_lazy_include_defs(self):
+    def test_lazy_load(self):
         """
         Tests bug reported in https://github.com/facebook/buck/issues/182.
 
-        If a include def references another include def via a lazy include_defs
-        call is some defined function, verify that it can correctly access the
-        latter's globals after the import.
+        If load references another load via a lazy load call is some
+        defined function, verify that it can correctly access the latter's
+        globals after the import.
         """
 
-        # Setup the includes defs.  The first one defines a variable that the
-        # second one references after a local 'include_defs' call.
-        include_def1 = ProjectFile(
-            self.project_root, path="inc_def1", contents=("FOO = 1",)
-        )
-        include_def2 = ProjectFile(
+        # Setup the load.  The first one defines a variable that the
+        # second one references after a local 'load' call.
+        load1 = ProjectFile(self.project_root, path="load1", contents=("FOO = 1",))
+        load2 = ProjectFile(
             self.project_root,
-            path="inc_def2",
+            path="load2",
             contents=(
                 "def test():",
-                "    include_defs({0!r})".format(include_def1.name),
+                "    load({0!r}, {1!r})".format(load1.load_name, "FOO"),
                 "    FOO",
             ),
         )
-        self.write_files(include_def1, include_def2)
+        self.write_files(load1, load2)
 
         # Construct a processor using the above as default includes, and verify
         # that the function 'test' can use 'FOO' after including the first
@@ -258,7 +252,7 @@ class BuckTest(unittest.TestCase):
         build_file = ProjectFile(self.project_root, path="BUCK", contents=("test()",))
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor(
-            includes=[include_def1.name, include_def2.name]
+            includes=[load1.name, load2.name]
         )
         build_file_processor.process(
             build_file.root, build_file.prefix, build_file.path, [], None
@@ -272,8 +266,8 @@ class BuckTest(unittest.TestCase):
             self.project_root,
             path="BUCK",
             contents=(
-                "include_defs({0!r})".format(include_def1.name),
-                "include_defs({0!r})".format(include_def2.name),
+                "load({0!r}, {1!r})".format(load1.load_name, "FOO"),
+                "load({0!r}, {1!r})".format(load2.load_name, "test"),
                 "test()",
             ),
         )
@@ -285,20 +279,16 @@ class BuckTest(unittest.TestCase):
 
     def test_private_globals_are_ignored(self):
         """
-        Verify globals prefixed with '_' don't get imported via 'include_defs'.
+        Verify globals prefixed with '_' don't get imported via 'load'.
         """
 
-        include_def = ProjectFile(
-            self.project_root, path="inc_def1", contents=("_FOO = 1",)
-        )
-        self.write_file(include_def)
+        load = ProjectFile(self.project_root, path="inc_def1", contents=("_FOO = 1",))
+        self.write_file(load)
 
         # Test we don't get private module attributes from default includes.
         build_file = ProjectFile(self.project_root, path="BUCK", contents=("_FOO",))
         self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor(
-            includes=[include_def.name]
-        )
+        build_file_processor = self.create_build_file_processor(includes=[load.name])
         self.assertRaises(
             NameError,
             build_file_processor.process,
@@ -313,7 +303,7 @@ class BuckTest(unittest.TestCase):
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
-            contents=("include_defs({0!r})".format(include_def.name), "_FOO"),
+            contents=("include_defs({0!r})".format(load.name), "_FOO"),
         )
         self.write_file(build_file)
         build_file_processor = self.create_build_file_processor()
@@ -329,7 +319,7 @@ class BuckTest(unittest.TestCase):
 
     def test_implicit_includes_apply_to_explicit_includes(self):
         """
-        Verify that implict includes are applied to explicit includes.
+        Verify that implicit includes are applied to explicit includes.
         """
 
         # Setup an implicit include that defines a variable, another include
@@ -343,7 +333,7 @@ class BuckTest(unittest.TestCase):
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
-            contents=("include_defs({0!r})".format(explicit_inc.name),),
+            contents=("load({0!r}, {1!r})".format(implicit_inc.load_name, "FOO"),),
         )
         self.write_files(implicit_inc, explicit_inc, build_file)
 
@@ -404,23 +394,25 @@ class BuckTest(unittest.TestCase):
     def test_do_not_override_overridden_builtins(self):
         """
         We want to ensure that if you override something like java_binary, and then use
-        include_defs to get another file, you don't end up clobbering your override.
+        load to get another file, you don't end up clobbering your override.
         """
 
         # Override java_library and have it automatically add a dep
         build_defs = ProjectFile(
             self.project_root,
-            path="BUILD_DEFS",
+            path="build_defs.bzl",
             contents=(
                 # While not strictly needed for this test, we want to make sure we are overriding
                 # a provided method and not just defining it ourselves.
                 "old_get_base_path = get_base_path",
                 "def get_base_path(*args, **kwargs):",
                 "  raise ValueError()",
-                'include_defs("//OTHER_DEFS")',
+                'load("//:other_defs.bzl", "FOO")',
             ),
         )
-        other_defs = ProjectFile(self.project_root, path="OTHER_DEFS", contents=())
+        other_defs = ProjectFile(
+            self.project_root, path="other_defs.bzl", contents=("FOO = 1")
+        )
         build_file = ProjectFile(
             self.project_root, path="BUCK", contents=("get_base_path()",)
         )
@@ -1223,83 +1215,6 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, [], None
             )
 
-    def test_modules_are_not_copied_unless_specified(self):
-        """
-        Test that modules are not copied by 'include_defs' unless specified in '__all__'.
-        """
-
-        include_def = ProjectFile(
-            self.project_root,
-            path="inc_def",
-            contents=(
-                "with allow_unsafe_import():",
-                "    import math",
-                "    def math_pi():",
-                "        return math.pi",
-            ),
-        )
-        self.write_files(include_def)
-
-        # Module math should not be accessible
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                "include_defs({0!r})".format(include_def.name),
-                "assert(round(math.pi, 2) == 3.14)",
-            ),
-        )
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor()
-        self.assertRaises(
-            NameError,
-            build_file_processor.process,
-            build_file.root,
-            build_file.prefix,
-            build_file.path,
-            [],
-            None,
-        )
-
-        # Confirm that math_pi() works
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                "include_defs({0!r})".format(include_def.name),
-                "assert(round(math_pi(), 2) == 3.14)",
-            ),
-        )
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, [], None
-        )
-
-        # If specified in '__all__', math should be accessible
-        include_def = ProjectFile(
-            self.project_root,
-            path="inc_def",
-            contents=(
-                '__all__ = ["math"]',
-                "with allow_unsafe_import():",
-                "    import math",
-            ),
-        )
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                "include_defs({0!r})".format(include_def.name),
-                "assert(round(math.pi, 2) == 3.14)",
-            ),
-        )
-        self.write_files(include_def, build_file)
-        build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, [], None
-        )
-
     def test_os_getenv(self):
         """
         Verify that calling `os.getenv()` records the environment variable.
@@ -1757,14 +1672,14 @@ class BuckTest(unittest.TestCase):
 
     def test_values_from_namespaced_includes_accessible_only_via_namespace(self):
         defs_file = ProjectFile(
-            root=self.project_root, path="DEFS", contents=("value = 2",)
+            root=self.project_root, path="defs.bzl", contents=("value = 2",)
         )
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
             contents=(
-                'include_defs("//DEFS", "defs")',
-                'foo_rule(name="foo" + str(defs.value), srcs=[])',
+                'load("//:defs.bzl", "value")',
+                'foo_rule(name="foo" + str(value), srcs=[])',
             ),
         )
         self.write_files(defs_file, build_file)
@@ -1775,24 +1690,6 @@ class BuckTest(unittest.TestCase):
             [x for x in result if x.get("name", "") == "foo2"],
             "result should contain rule with name derived from a value in namespaced defs",
         )
-        # should not be in global scope
-        self.write_file(
-            ProjectFile(
-                self.project_root,
-                path="BUCK_fail",
-                contents=(
-                    'include_defs("//DEFS", "defs")',
-                    'foo_rule(name="foo" + str(value), srcs=[])',
-                ),
-            )
-        )
-        with processor.with_builtins(builtins.__dict__):
-            self.assertRaises(
-                NameError,
-                lambda: processor.process(
-                    self.project_root, None, "BUCK_fail", [], None
-                ),
-            )
 
     def test_json_encoding_skips_None(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
@@ -1930,9 +1827,9 @@ foo_rule(
             decoded_result["values"][0].get("options", {}),
         )
 
-    def test_file_parsed_as_build_file_and_include_def(self):
+    def test_file_parsed_as_build_file_and_load(self):
         """
-        Test that paths can be parsed as both build files and include defs.
+        Test that paths can be parsed as both build files and load.
         """
 
         # Setup a build file, foo, and another build file bar which includes
@@ -1941,7 +1838,7 @@ foo_rule(
         bar = ProjectFile(
             self.project_root,
             path="bar",
-            contents=("include_defs({0!r})".format(foo.name)),
+            contents=("load({0!r}, {1!r})".format(foo.load_name, "FOO")),
         )
         self.write_files(foo, bar)
 

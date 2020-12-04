@@ -100,7 +100,7 @@ NATIVE_FUNCTIONS = []  # type: List[Callable]
 DEFAULT_WATCHMAN_QUERY_TIMEOUT = 60.0  # type: float
 
 # Globals that should not be copied from one module into another
-_HIDDEN_GLOBALS = {"include_defs", "load"}  # type: Set[str]
+_HIDDEN_GLOBALS = {"load"}  # type: Set[str]
 
 ORIGINAL_IMPORT = builtins.__import__
 
@@ -1185,7 +1185,6 @@ class BuildFileProcessor(object):
     def _create_default_globals(self, is_build_file, is_implicit_include):
         # type: (bool) -> Dict[str, Callable]
         default_globals = {
-            "include_defs": functools.partial(self._include_defs, is_implicit_include),
             "load_symbols": self._load_symbols,
             "add_build_file_dep": self._add_build_file_dep,
             "read_config": self._read_config,
@@ -1384,7 +1383,7 @@ class BuildFileProcessor(object):
         match = re.match(r"^([A-Za-z0-9_]*)//(.*)$", name)
         if match is None:
             raise ValueError(
-                "include_defs argument {} should be in the form of "
+                "load argument {} should be in the form of "
                 "//path or cellname//path".format(name)
             )
         cell_name = match.group(1)
@@ -1393,7 +1392,7 @@ class BuildFileProcessor(object):
             cell_root = self._cell_roots.get(cell_name)
             if cell_root is None:
                 raise KeyError(
-                    "include_defs argument {} references an unknown cell named {} "
+                    "load argument {} references an unknown cell named {} "
                     "known cells: {!r}".format(name, cell_name, self._cell_roots)
                 )
             return BuildInclude(
@@ -1582,38 +1581,6 @@ class BuildFileProcessor(object):
         frame = get_caller_frame(skip=[__name__])
         filename = inspect.getframeinfo(frame).filename
         return is_in_dir(filename, self._project_root)
-
-    def _include_defs(self, is_implicit_include, name, namespace=None):
-        # type: (bool, str, Optional[str]) -> None
-        """Pull the named include into the current caller's context.
-
-        This method is meant to be installed into the globals of any files or
-        includes that we process.
-        """
-        # Grab the current build context from the top of the stack.
-        build_env = self._current_build_env
-
-        # Resolve the named include to its path and process it to get its
-        # build context and module.
-        build_include = self._resolve_include(name)
-        inner_env, mod = self._process_include(build_include, is_implicit_include)
-
-        # Look up the caller's stack frame and merge the include's globals
-        # into it's symbol table.
-        frame = get_caller_frame(skip=["_functools", __name__])
-        if namespace is not None:
-            # If using a fresh namespace, create a fresh module to populate.
-            fresh_module = imp.new_module(namespace)
-            fresh_module.__file__ = mod.__file__
-            self._merge_globals(mod, fresh_module.__dict__)
-            frame.f_globals[namespace] = fresh_module
-        else:
-            self._merge_globals(mod, frame.f_globals)
-
-        # Pull in the include's accounting of its own referenced includes
-        # into the current build context.
-        build_env.includes.add(build_include.path)
-        build_env.merge(inner_env)
 
     def _load_symbols(self, symbols):
         """
