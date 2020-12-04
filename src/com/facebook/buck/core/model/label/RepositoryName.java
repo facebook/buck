@@ -162,34 +162,6 @@ public final class RepositoryName implements Serializable {
   }
 
   /**
-   * Returns the relative path to the repository source. Returns "" for the main repository and
-   * external/[repository name] for external repositories.
-   */
-  public PathFragment getSourceRoot() {
-    return isDefault() || isMain()
-        ? PathFragment.EMPTY_FRAGMENT
-        : LabelConstants.EXTERNAL_REPOSITORY_LOCATION.getRelative(strippedName());
-  }
-
-  /**
-   * Returns the runfiles/execRoot path for this repository. If we don't know the name of this repo
-   * (i.e., it is in the main repository), return an empty path fragment.
-   *
-   * <p>If --experimental_sibling_repository_layout is true, return "$execroot/../repo" (sibling of
-   * __main__), instead of "$execroot/external/repo".
-   */
-  public PathFragment getExecPath(boolean siblingRepositoryLayout) {
-    if (isDefault() || isMain()) {
-      return PathFragment.EMPTY_FRAGMENT;
-    }
-    PathFragment prefix =
-        siblingRepositoryLayout
-            ? LabelConstants.EXPERIMENTAL_EXTERNAL_PATH_PREFIX
-            : LabelConstants.EXTERNAL_PATH_PREFIX;
-    return prefix.getRelative(strippedName());
-  }
-
-  /**
    * Returns the repository name, with leading "{@literal @}" (or "" for the default repository).
    */
   @Override

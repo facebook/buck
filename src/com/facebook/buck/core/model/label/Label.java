@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
 import com.google.devtools.build.skyframe.SkyFunctionName;
@@ -293,28 +292,6 @@ public final class Label
               + "<pre class=language-python>Label(\"//pkg/foo:abc\").package == \"pkg/foo\"</pre>")
   public String getPackageName() {
     return packageIdentifier.getPackageFragment().getPathString();
-  }
-
-  /**
-   * Returns the execution root for the workspace, relative to the execroot (e.g., for label
-   * {@code @repo//pkg:b}, it will returns {@code external/repo/pkg} and for label {@code //pkg:a},
-   * it will returns an empty string.
-   */
-  @StarlarkMethod(
-      name = "workspace_root",
-      structField = true,
-      doc =
-          "Returns the execution root for the workspace of this label, relative to the execroot. "
-              + "For instance:<br>"
-              + "<pre class=language-python>Label(\"@repo//pkg/foo:abc\").workspace_root =="
-              + " \"external/repo\"</pre>",
-      useStarlarkSemantics = true)
-  public String getWorkspaceRoot(StarlarkSemantics semantics) {
-    if (semantics.experimentalSiblingRepositoryLayout()) {
-      return packageIdentifier.getRepository().getExecPath(true).toString();
-    } else {
-      return packageIdentifier.getRepository().getSourceRoot().toString();
-    }
   }
 
   /**
