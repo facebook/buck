@@ -125,11 +125,6 @@ public class BuildFileManifestPojoizer {
                   convertMapToPojo(skylarkSelectorValue.getDictionary());
       return SelectorValue.of(
           ImmutableMap.copyOf(dictionary), skylarkSelectorValue.getNoMatchError());
-    } else if (obj instanceof com.google.devtools.build.lib.collect.nestedset.Depset) {
-      com.google.devtools.build.lib.collect.nestedset.Depset skylarkNestedSet =
-          (com.google.devtools.build.lib.collect.nestedset.Depset) obj;
-      // recursively convert set elements
-      return convertToPojo(skylarkNestedSet.toList());
     } else if (obj instanceof Optional<?>) {
       // TODO(nga): how Optional can appear here? It is not a valid Starlark value.
       //   Remove and fix tests UDR tests.

@@ -1,6 +1,6 @@
 java_library(
     name = "test-library",
-    srcs = depset(["Foo.java"]),
+    srcs = ["Foo.java"],
     visibility = [
         "PUBLIC",
     ],
