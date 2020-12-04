@@ -32,8 +32,6 @@ package com.facebook.buck.core.model.label;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.windows.WindowsShortPath;
-import com.google.devtools.build.lib.windows.jni.WindowsFileOperations;
 import java.io.IOException;
 
 /** Implementation for Windows. */
