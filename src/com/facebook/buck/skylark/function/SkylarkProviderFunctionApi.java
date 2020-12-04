@@ -16,11 +16,11 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.devtools.build.lib.skylarkbuildapi.core.ProviderApi;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkGlobalLibrary;
@@ -74,5 +74,5 @@ public interface SkylarkProviderFunctionApi {
             defaultValue = "None")
       },
       useStarlarkThread = true)
-  ProviderApi provider(String doc, Object fields, StarlarkThread thread) throws EvalException;
+  StarlarkValue provider(String doc, Object fields, StarlarkThread thread) throws EvalException;
 }

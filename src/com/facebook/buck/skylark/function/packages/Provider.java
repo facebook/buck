@@ -29,8 +29,8 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
-import com.google.devtools.build.lib.skylarkbuildapi.core.ProviderApi;
 import com.google.devtools.build.lib.syntax.Location;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Declared Provider (a constructor for {@link Info}).
@@ -46,7 +46,7 @@ import com.google.devtools.build.lib.syntax.Location;
  * <p>Prefer to use {@link Key} as a serializable identifier of {@link Provider}. In particular,
  * {@link Key} should be used in all data structures exposed to Skyframe.
  */
-public interface Provider extends ProviderApi {
+public interface Provider extends StarlarkValue {
 
   /**
    * Has this {@link Provider} been exported? All native providers are always exported. Starlark

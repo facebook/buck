@@ -30,7 +30,6 @@
 
 package com.facebook.buck.skylark.function.packages;
 
-import com.google.devtools.build.lib.skylarkbuildapi.core.ProviderApi;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -104,7 +103,7 @@ public interface StructApi extends StarlarkValue {
 
   /** Callable Provider for new struct objects. */
   @StarlarkBuiltin(name = "Provider", documented = false, doc = "")
-  interface StructProviderApi extends ProviderApi {
+  interface StructProviderApi extends StarlarkValue {
 
     @StarlarkMethod(
         name = "struct",
