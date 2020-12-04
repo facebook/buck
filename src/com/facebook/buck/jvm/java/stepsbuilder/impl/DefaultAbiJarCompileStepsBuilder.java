@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /** Default implementation of {@link com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder} */
 class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
@@ -59,8 +60,8 @@ class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraPa
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      JarParameters abiJarParameters,
-      JarParameters libraryJarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       Path buildCellRootPath,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams) {

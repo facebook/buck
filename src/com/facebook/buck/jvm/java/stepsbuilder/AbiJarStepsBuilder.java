@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /** Builder that creates abi jar steps. */
 public interface AbiJarStepsBuilder extends JavaCompileStepsBuilder {
@@ -49,8 +50,8 @@ public interface AbiJarStepsBuilder extends JavaCompileStepsBuilder {
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings,
-      JarParameters abiJarParameters,
-      JarParameters libraryJarParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
       Path buildCellRootPath,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams);
