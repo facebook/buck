@@ -22,33 +22,41 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 
 /**
  * Factory that creates {@link JavaCompileStepsBuilder } builders instances applicable to JavaCD.
  */
 public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory {
 
+  // TODO msemko: remove delegate when all builders are ready.
+  private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
+
+  public JavaCDStepsBuilderFactory(DefaultJavaCompileStepsBuilderFactory<?> delegate) {
+    this.delegate = delegate;
+  }
+
   /** Creates an appropriate {@link JavaLibraryJarStepsBuilder} instance. */
   @Override
   public JavaLibraryJarStepsBuilder getLibraryJarBuilder() {
-    throw new UnsupportedOperationException();
+    return delegate.getLibraryJarBuilder();
   }
 
   /** Creates an appropriate {@link JavaLibraryJarPipelineStepsBuilder} instance. */
   @Override
   public JavaLibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
-    throw new UnsupportedOperationException();
+    return delegate.getPipelineLibraryJarBuilder();
   }
 
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance. */
   @Override
   public AbiJarStepsBuilder getAbiJarBuilder() {
-    throw new UnsupportedOperationException();
+    return delegate.getAbiJarBuilder();
   }
 
   /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance. */
   @Override
   public AbiJarPipelineStepsBuilder getPipelineAbiJarBuilder() {
-    throw new UnsupportedOperationException();
+    return delegate.getPipelineAbiJarBuilder();
   }
 }
