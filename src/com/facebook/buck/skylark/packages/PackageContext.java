@@ -17,16 +17,12 @@
 package com.facebook.buck.skylark.packages;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.model.label.PackageIdentifier;
-import com.facebook.buck.core.model.label.PathFragment;
-import com.facebook.buck.core.model.label.RepositoryName;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.EventHandler;
 import java.util.Map;
-import org.immutables.value.Value;
 
 /** Exposes package information to Skylark functions. */
 @BuckStyleValue
@@ -39,14 +35,6 @@ public abstract class PackageContext {
    * through a {@code --config} command line option.
    */
   public abstract ImmutableMap<String, ImmutableMap<String, String>> getRawConfig();
-
-  /** Returns a package identifier of the build file that is being parsed. */
-  @Value.Derived
-  public PackageIdentifier getPackageIdentifier() {
-    return PackageIdentifier.create(
-        RepositoryName.createFromValidStrippedName(getCellName()),
-        PathFragment.createAlreadyNormalized(getBasePath().toString()));
-  }
 
   /** Returns a cell name of the build file that is being parsed. */
   public abstract CanonicalCellName getCellName();
