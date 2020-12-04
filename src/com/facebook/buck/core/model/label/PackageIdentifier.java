@@ -128,14 +128,6 @@ public final class PackageIdentifier implements Comparable<PackageIdentifier>, S
   }
 
   /**
-   * Returns the runfiles/execRoot path for this repository (relative to the x.runfiles/main-repo/
-   * directory).
-   */
-  public PathFragment getRunfilesPath() {
-    return repository.getRunfilesPath().getRelative(pkgName);
-  }
-
-  /**
    * Returns the name of this package.
    *
    * <p>There are certain places that expect the path fragment as the package name ('foo/bar') as a

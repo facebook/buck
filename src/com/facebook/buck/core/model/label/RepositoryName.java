@@ -172,15 +172,6 @@ public final class RepositoryName implements Serializable {
   }
 
   /**
-   * Returns the relative path to the repository's source for derived artifacts. This behavior is
-   * currently the same for source artifacts, but we create a new method name to keep call sites
-   * readable and not misleading.
-   */
-  public PathFragment getDerivedArtifactSourceRoot() {
-    return getSourceRoot();
-  }
-
-  /**
    * Returns the runfiles/execRoot path for this repository. If we don't know the name of this repo
    * (i.e., it is in the main repository), return an empty path fragment.
    *
@@ -196,14 +187,6 @@ public final class RepositoryName implements Serializable {
             ? LabelConstants.EXPERIMENTAL_EXTERNAL_PATH_PREFIX
             : LabelConstants.EXTERNAL_PATH_PREFIX;
     return prefix.getRelative(strippedName());
-  }
-
-  /** Returns the runfiles path relative to the x.runfiles/main-repo directory. */
-  // TODO(kchodorow): remove once execroot is reorg-ed.
-  public PathFragment getRunfilesPath() {
-    return isDefault() || isMain()
-        ? PathFragment.EMPTY_FRAGMENT
-        : PathFragment.create("..").getRelative(strippedName());
   }
 
   /**
