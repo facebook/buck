@@ -457,15 +457,15 @@ public class DaemonIntegrationTest {
   }
 
   @Test
-  public void crossCellIncludeDefChangesInvalidateBuckTargets() throws Exception {
+  public void crossCellLoadChangesInvalidateBuckTargets() throws Exception {
     ProjectWorkspace primary =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
-            this, "crosscell_include_defs/primary", tmp.newFolder("primary"));
+            this, "crosscell_load/primary", tmp.newFolder("primary"));
     primary.setUp();
 
     ProjectWorkspace secondary =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
-            this, "crosscell_include_defs/secondary", tmp.newFolder("secondary"));
+            this, "crosscell_load/secondary", tmp.newFolder("secondary"));
     secondary.setUp();
     TestDataHelper.overrideBuckconfig(
         primary,
