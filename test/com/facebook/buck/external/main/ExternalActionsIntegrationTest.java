@@ -34,6 +34,7 @@ import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.external.parser.ExternalArgsParser;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.TestLogSink;
@@ -57,6 +58,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.LogRecord;
 import org.junit.After;
 import org.junit.Before;
@@ -156,6 +158,9 @@ public class ExternalActionsIntegrationTest {
     StepEvent.Started expectedStepStartEvent =
         StepEvent.started("console_event_step", "console event: sneaky", UUID.randomUUID());
     StepEvent.Finished expectedStepFinishEvent = StepEvent.finished(expectedStepStartEvent, 0);
+
+    waitTillEventsProcessed();
+
     List<String> actualStepEventLogs = eventBusListener.getStepEventLogMessages();
     assertThat(actualStepEventLogs, hasSize(4));
     assertThat(actualStepEventLogs.get(0), equalTo(expectedStepStartEvent.toLogMessage()));
@@ -192,6 +197,11 @@ public class ExternalActionsIntegrationTest {
 
     String logMessagesFromLogEvent = getLogMessagesAsSingleString(logEventLogSink).get();
     assertThat(logMessagesFromLogEvent, containsString("beaky"));
+  }
+
+  private void waitTillEventsProcessed() throws InterruptedException {
+    ExecutorServiceUtils.waitTillAllTasksCompleted(
+        (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL);
   }
 
   @Test

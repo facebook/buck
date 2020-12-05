@@ -107,7 +107,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   @VisibleForTesting static final String HANDLER_THREAD_POOL_NAME = "DownwardApiHandler";
 
   @VisibleForTesting
-  static final ExecutorService HANDLER_THREAD_POOL =
+  public static final ExecutorService HANDLER_THREAD_POOL =
       MostExecutors.newSingleThreadExecutor(HANDLER_THREAD_POOL_NAME);
 
   private static final ThreadPoolExecutor DOWNWARD_API_READER_THREAD_POOL =

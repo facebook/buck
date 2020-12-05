@@ -56,6 +56,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
+import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
@@ -228,13 +229,7 @@ public class DownwardApiProcessExecutorTest {
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
 
-    int attempt = 0;
-    ThreadPoolExecutor handlerThreadPool =
-        (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL;
-    while (handlerThreadPool.getActiveCount() > 0 && ++attempt < 10) {
-      Thread.sleep(100L);
-      LOG.info("Waiting till handler pool process all events tasks. Attempt: " + attempt);
-    }
+    waitTillEventsProcessed();
     Map<Integer, BuckEvent> events = listener.events;
     assertEquals(6, events.size());
 
@@ -307,6 +302,11 @@ public class DownwardApiProcessExecutorTest {
                         "in the thread: " + DownwardApiProcessExecutor.HANDLER_THREAD_POOL_NAME);
               }
             }));
+  }
+
+  private void waitTillEventsProcessed() throws InterruptedException {
+    ExecutorServiceUtils.waitTillAllTasksCompleted(
+        (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL);
   }
 
   @Test
