@@ -96,6 +96,11 @@ public class JUnitStep extends ShellStep {
     return "junit";
   }
 
+  /** Returns the test runner classpath file path */
+  public Path getTestRunnerClassFile() {
+    return junitJvmArgs.getTestRunnerClasspath();
+  }
+
   /** Returns the classpath argfile for Java 9+ invocations. */
   public Path getClasspathArgfile() {
     return classpathArgfile.get();

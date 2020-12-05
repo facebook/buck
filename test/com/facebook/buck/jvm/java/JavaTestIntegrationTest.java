@@ -440,6 +440,13 @@ public class JavaTestIntegrationTest {
             .resolve("mid_test#testsjar.jar")
             .toString());
 
+    // The testrunner file path should be required.
+    ImmutableList<String> testrunnerFilePath =
+        requiredPaths.stream()
+            .filter(path -> path.contains("testrunner"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, testrunnerFilePath.size());
+
     // The classpath arg file should use relative paths.
     ImmutableList<String> classpathArgfile =
         requiredPaths.stream()

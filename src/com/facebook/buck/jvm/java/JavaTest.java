@@ -582,6 +582,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setContacts(getContacts())
         .addAllRequiredPaths(getRuntimeClasspath(buildContext))
         .addRequiredPaths(externalJunitStep.getClasspathArgfile())
+        .addRequiredPaths(externalJunitStep.getTestRunnerClassFile())
         .build();
   }
 
