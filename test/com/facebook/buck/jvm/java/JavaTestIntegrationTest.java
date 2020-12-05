@@ -447,6 +447,13 @@ public class JavaTestIntegrationTest {
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, testrunnerFilePath.size());
 
+    // The java file path should be required.
+    ImmutableList<String> javaFilePath =
+        requiredPaths.stream()
+            .filter(path -> path.equals("java"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, javaFilePath.size());
+
     // The classpath arg file should use relative paths.
     ImmutableList<String> classpathArgfile =
         requiredPaths.stream()

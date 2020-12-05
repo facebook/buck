@@ -572,17 +572,19 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Optional.empty(),
             getClassNamesForSources(buildContext.getSourcePathResolver()),
             withDownwardApi);
+    ImmutableList<String> command = externalJunitStep.getShellCommandInternal(executionContext);
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("junit")
-        .setCommand(externalJunitStep.getShellCommandInternal(executionContext))
+        .setCommand(command)
         .setEnv(externalJunitStep.getEnvironmentVariables(executionContext.getPlatform()))
         .setLabels(getLabels())
         .setContacts(getContacts())
         .addAllRequiredPaths(getRuntimeClasspath(buildContext))
         .addRequiredPaths(externalJunitStep.getClasspathArgfile())
         .addRequiredPaths(externalJunitStep.getTestRunnerClassFile())
+        .addRequiredPaths(getProjectFilesystem().getPath(command.get(0)))
         .build();
   }
 
