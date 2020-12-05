@@ -44,6 +44,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -602,10 +603,17 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             new AbstractExecutionStep("write classpath file") {
               @Override
               public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-                ImmutableSet<Path> classpathEntries = getRuntimeClasspath(buildContext);
+                ImmutableSet<Path> relativeClasspathEntries =
+                    getRuntimeClasspath(buildContext).stream()
+                        .map(
+                            path ->
+                                ProjectFilesystemUtils.relativize(
+                                        getProjectFilesystem().getRootPath(), path)
+                                    .getPath())
+                        .collect(ImmutableSet.toImmutableSet());
                 getProjectFilesystem()
                     .writeLinesToPath(
-                        Iterables.transform(classpathEntries, Object::toString),
+                        Iterables.transform(relativeClasspathEntries, Object::toString),
                         getClassPathFile());
                 return StepExecutionResults.SUCCESS;
               }

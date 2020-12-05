@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Verbosity;
@@ -276,7 +277,11 @@ abstract class JUnitJvmArgs {
     builder.append(System.lineSeparator());
     builder.append('"');
 
-    builder.append(escapePathForArgfile(getTestRunnerClasspath().toString()));
+    builder.append(
+        escapePathForArgfile(
+            ProjectFilesystemUtils.relativize(filesystem.getRootPath(), getTestRunnerClasspath())
+                .getPath()
+                .toString()));
 
     for (String classpathEntry : filesystem.readLines(getClasspathFile())) {
       builder.append(File.pathSeparatorChar);

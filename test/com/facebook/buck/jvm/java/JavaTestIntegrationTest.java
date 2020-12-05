@@ -411,7 +411,7 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("test", "external_runner", "false");
-    workspace.runBuckCommand("test", "//:top");
+    workspace.runBuckCommand("test", "//:top", "-c", "test.java_for_tests_version=11");
     Path specOutput =
         workspace.getPath(
             workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
@@ -439,6 +439,20 @@ public class JavaTestIntegrationTest {
             .getGenPath(BuildTargetFactory.newInstance("//:mid_test#testsjar"), "lib__%s__output")
             .resolve("mid_test#testsjar.jar")
             .toString());
+
+    // The classpath arg file should use relative paths.
+    ImmutableList<String> classpathArgfile =
+        requiredPaths.stream()
+            .filter(path -> path.contains("classpath-argfile"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, classpathArgfile.size());
+    Path classpathArgFilePath = Paths.get(classpathArgfile.get(0));
+    for (String line : workspace.getProjectFileSystem().readLines(classpathArgFilePath)) {
+      // Last line ends with a quote
+      line = line.endsWith("\"") ? line.substring(0, line.length() - 1) : line;
+      assertTrue(
+          line.equals("-classpath") || line.contains("ant-out") || !Paths.get(line).isAbsolute());
+    }
   }
 
   @Test
