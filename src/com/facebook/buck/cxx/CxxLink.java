@@ -264,6 +264,10 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       this.debugStrategy = debugSymbolLinkStrategy;
     }
 
+    public boolean isLinkerMapEnabled() {
+      return this.linkerMapPath.isPresent();
+    }
+
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context,
@@ -431,6 +435,10 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   @Override
   public boolean isCacheable() {
     return cacheable;
+  }
+
+  public boolean isLinkerMapEnabled() {
+    return getBuildable().isLinkerMapEnabled();
   }
 
   public Optional<Path> getLinkerMapPath() {

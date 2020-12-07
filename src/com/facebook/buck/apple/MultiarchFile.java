@@ -30,7 +30,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
-import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.DefaultShellStep;
@@ -115,12 +114,10 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         if (rule instanceof CxxBinary) {
           rule = ((CxxBinary) rule).getLinkRule();
         }
-        if (rule instanceof CxxLink
-            && !rule.getBuildTarget()
-                .getFlavors()
-                .contains(LinkerMapMode.NO_LINKER_MAP.getFlavor())) {
-          Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
-          if (maybeLinkerMapPath.isPresent()) {
+        if (rule instanceof CxxLink) {
+          CxxLink cxxLink = ((CxxLink) rule);
+          if (cxxLink.isLinkerMapEnabled()) {
+            Optional<Path> maybeLinkerMapPath = cxxLink.getLinkerMapPath();
             Path source = maybeLinkerMapPath.get();
             Path dest = linkMapDir.resolve(source.getFileName());
             steps.add(CopyStep.forFile(source, dest));

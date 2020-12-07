@@ -27,3 +27,11 @@ apple_binary(
     ],
     entitlements_file = "entitlements.plist",
 )
+
+apple_binary(
+    name = "TestAppWithoutAssembly",
+    srcs = [
+        "main_without_assembly.c",
+    ],
+    info_plist = "Info.plist",
+)
