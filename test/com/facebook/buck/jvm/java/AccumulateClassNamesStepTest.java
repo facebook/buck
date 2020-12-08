@@ -17,7 +17,9 @@
 package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -166,6 +168,39 @@ public class AccumulateClassNamesStepTest {
     assertEquals(
         SHA1_HASHCODE_FOR_EMPTY_STRING,
         parsedClassHashes.get("com/example/Foo$something with spaces$1"));
+  }
+
+  @Test
+  public void testCalculateClassHashesIgnoresClassNames() throws IOException {
+    // Create a JAR file.
+    String name = "example.jar";
+    File jarFile = tmp.newFile(name);
+    try (JarOutputStream out =
+        new JarOutputStream(new BufferedOutputStream(new FileOutputStream(jarFile)))) {
+      out.putNextEntry(new ZipEntry("com/example/Foo.class"));
+      out.closeEntry();
+      out.putNextEntry(new ZipEntry("com/example/Bar.class"));
+      out.closeEntry();
+      out.putNextEntry(new ZipEntry("com/example/not_a_class.png"));
+      out.closeEntry();
+      out.putNextEntry(new ZipEntry("com/example/subpackage/Baz.class"));
+      out.closeEntry();
+    }
+
+    StepExecutionContext executionContext = TestExecutionContext.newInstance(ruleCellRoot);
+    // Create the AccumulateClassNamesStep and execute it.
+    Optional<ImmutableSortedMap<String, HashCode>> classNamesToHashes =
+        AccumulateClassNamesStep.calculateClassHashes(
+            executionContext,
+            ruleCellRoot,
+            ImmutableSet.of(),
+            ImmutableSet.of("com/example/Foo"),
+            RelPath.get(name));
+
+    assertTrue(classNamesToHashes.isPresent());
+    assertEquals(
+        ImmutableSet.of("com/example/Bar", "com/example/subpackage/Baz"),
+        classNamesToHashes.get().keySet());
   }
 
   private void executeStep(IsolatedStep step) throws IOException, InterruptedException {

@@ -518,6 +518,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     AbsPath rootPath = projectFilesystem.getRootPath();
     ImmutableSet<PathMatcher> ignoredPaths = projectFilesystem.getIgnoredPaths();
 
+    // Java 9 adds module info, which we don't need on Android as we don't run with the Java 9+
+    // runtime, and we need to ignore these classes so we don't get clashes between different jars.
+    ImmutableSet<String> ignoredClassNames = ImmutableSet.of("META-INF/versions/9/module-info");
+
     ImmutableMap.Builder<String, HashCode> builder = ImmutableMap.builder();
     steps.add(
         new AbstractExecutionStep("collect_all_class_names") {
@@ -527,7 +531,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             for (Path path : classPathEntriesToDex) {
               Optional<ImmutableSortedMap<String, HashCode>> hashes =
                   AccumulateClassNamesStep.calculateClassHashes(
-                      context, rootPath, ignoredPaths, RelPath.of(path));
+                      context, rootPath, ignoredPaths, ignoredClassNames, RelPath.of(path));
               if (!hashes.isPresent()) {
                 return StepExecutionResults.ERROR;
               }

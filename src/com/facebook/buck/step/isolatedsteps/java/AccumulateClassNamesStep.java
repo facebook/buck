@@ -85,7 +85,11 @@ public class AccumulateClassNamesStep extends IsolatedStep {
     if (pathToJarOrClassesDirectory.isPresent()) {
       Optional<ImmutableSortedMap<String, HashCode>> classNamesOptional =
           calculateClassHashes(
-              context, context.getRuleCellRoot(), ignoredPaths, pathToJarOrClassesDirectory.get());
+              context,
+              context.getRuleCellRoot(),
+              ignoredPaths,
+              ImmutableSet.of(),
+              pathToJarOrClassesDirectory.get());
       if (classNamesOptional.isPresent()) {
         classNames = classNamesOptional.get();
       } else {
@@ -121,6 +125,7 @@ public class AccumulateClassNamesStep extends IsolatedStep {
       IsolatedExecutionContext context,
       AbsPath rootPath,
       ImmutableSet<PathMatcher> ignoredPaths,
+      ImmutableSet<String> ignoredClassNames,
       RelPath path) {
     Map<String, HashCode> classNames = new HashMap<>();
 
@@ -135,6 +140,10 @@ public class AccumulateClassNamesStep extends IsolatedStep {
             }
 
             String key = FileLikes.getFileNameWithoutClassSuffix(fileLike);
+            if (ignoredClassNames.contains(key)) {
+              return;
+            }
+
             ByteSource input =
                 new ByteSource() {
                   @Override
