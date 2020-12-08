@@ -357,4 +357,44 @@ public class EdenProjectFilesystemDelegateTest {
     assertEquals(
         edenDelegateWithFileSystem.computeSha1(link), edenDelegateWithWatchman.computeSha1(link));
   }
+
+  @Test
+  public void testGetSha1HahserFromConfig() {
+    Config configWithUseWatchman =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    assertEquals(
+        EdenProjectFilesystemDelegate.Sha1Hasher.WATCHMAN,
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseWatchman));
+
+    Config configWithWatchmanSHA1 =
+        ConfigBuilder.createFromText("[eden]", "sha1_hasher = watchman");
+    assertEquals(
+        EdenProjectFilesystemDelegate.Sha1Hasher.WATCHMAN,
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithWatchmanSHA1));
+
+    Config configWithUseXattr =
+        ConfigBuilder.createFromText("[eden]", "[eden]", "use_xattr = true");
+    assertEquals(
+        EdenProjectFilesystemDelegate.Sha1Hasher.XATTR,
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseXattr));
+
+    Config configWithXattrSHA1 = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
+    assertEquals(
+        EdenProjectFilesystemDelegate.Sha1Hasher.XATTR,
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithXattrSHA1));
+
+    Config configWithUseThrift =
+        ConfigBuilder.createFromText(
+            "[eden]", "use_watchman_content_sha1 = false", "[eden]", "use_xattr = false");
+    assertEquals(
+        EdenProjectFilesystemDelegate.Sha1Hasher.EDEN_THRIFT,
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseThrift));
+
+    Config configWithThriftSHA1 =
+        ConfigBuilder.createFromText("[eden]", "sha1_hasher = eden_thrift");
+    assertEquals(
+        EdenProjectFilesystemDelegate.Sha1Hasher.EDEN_THRIFT,
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithThriftSHA1));
+  }
 }

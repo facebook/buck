@@ -54,6 +54,14 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private static final Logger LOG = Logger.get(EdenProjectFilesystemDelegate.class);
 
+  /** Method to get sha1 for a path. */
+  @VisibleForTesting
+  enum Sha1Hasher {
+    XATTR,
+    WATCHMAN,
+    EDEN_THRIFT
+  }
+
   /**
    * Config option in the {@code [eden]} section of {@code .buckconfig} to disable going through
    * Eden's Thrift API to get the SHA-1 of a file. This defaults to {@code false}. This should be
@@ -64,6 +72,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private static final String BUCKCONFIG_USE_XATTR_FOR_SHA1 = "use_xattr";
 
   private static final String BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1 = "use_watchman_content_sha1";
+
+  private static final String BUCKCONFIG_SHA1_HASHER = "sha1_hasher";
 
   private static final String WATCHMAN_CONTENT_SHA1_FIELD = "content.sha1hex";
   private static final long DEFAULT_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
@@ -78,13 +88,35 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private final boolean disableSha1FastPath;
 
-  private final boolean useXattr;
-
-  private final boolean useWatchmanContentSha1;
+  private final Sha1Hasher sha1Hasher;
 
   private final SyncCookieState syncCookieState = new SyncCookieState();
 
   private final EdenWatchmanDelayInit edenWatchmanDelayInit = new EdenWatchmanDelayInit();
+
+  @VisibleForTesting
+  static Sha1Hasher getSha1HasherFromConfig(Config config) {
+    Optional<Boolean> use_xattr_for_sha1 = config.getBoolean("eden", BUCKCONFIG_USE_XATTR_FOR_SHA1);
+    if (use_xattr_for_sha1.isPresent() && use_xattr_for_sha1.get()) {
+      return Sha1Hasher.XATTR;
+    }
+
+    Optional<Boolean> use_watchman_for_sha1 =
+        config.getBoolean("eden", BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1);
+    if (use_watchman_for_sha1.isPresent() && use_watchman_for_sha1.get()) {
+      return Sha1Hasher.WATCHMAN;
+    }
+
+    if (use_xattr_for_sha1.isPresent()
+        && !use_xattr_for_sha1.get()
+        && use_watchman_for_sha1.isPresent()
+        && !use_watchman_for_sha1.get()) {
+      return Sha1Hasher.EDEN_THRIFT;
+    }
+    return config
+        .getEnum("eden", BUCKCONFIG_SHA1_HASHER, Sha1Hasher.class)
+        .orElse(Sha1Hasher.XATTR);
+  }
 
   public EdenProjectFilesystemDelegate(
       EdenMount mount, ProjectFilesystemDelegate delegate, Config config) {
@@ -92,28 +124,23 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
         mount,
         delegate,
         config.getBooleanValue("eden", BUCKCONFIG_DISABLE_SHA1_FAST_PATH, false),
-        config.getBooleanValue("eden", BUCKCONFIG_USE_XATTR_FOR_SHA1, false),
-        config.getBooleanValue("eden", BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1, false));
+        getSha1HasherFromConfig(config));
   }
 
   @VisibleForTesting
   EdenProjectFilesystemDelegate(EdenMount mount, ProjectFilesystemDelegate delegate) {
-    this(
-        mount, delegate, /* disableSha1FastPath */ false, /* useXattr */
-        false, /* useWatchmanContentSha1 */ false);
+    this(mount, delegate, /* disableSha1FastPath */ false, Sha1Hasher.EDEN_THRIFT);
   }
 
   private EdenProjectFilesystemDelegate(
       EdenMount mount,
       ProjectFilesystemDelegate delegate,
       boolean disableSha1FastPath,
-      boolean useXattr,
-      boolean useWatchmanContentSha1) {
+      Sha1Hasher sha1Hasher) {
     this.mount = mount;
     this.delegate = delegate;
     this.disableSha1FastPath = disableSha1FastPath;
-    this.useXattr = useXattr;
-    this.useWatchmanContentSha1 = useWatchmanContentSha1;
+    this.sha1Hasher = sha1Hasher;
   }
 
   @Override
@@ -138,13 +165,19 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
       return delegate.computeSha1(path.getPath());
     }
 
-    Optional<Sha1HashCode> ret;
-    if (useXattr) {
-      ret = computeSha1ViaXAttr(path);
-    } else if (useWatchmanContentSha1) {
-      ret = computeSha1ViaWatchman(path, retryWithRealPathIfEdenError);
-    } else {
-      ret = computeSha1ViaThrift(path, retryWithRealPathIfEdenError);
+    Optional<Sha1HashCode> ret = Optional.empty();
+    switch (this.sha1Hasher) {
+      case XATTR:
+        ret = computeSha1ViaXAttr(path);
+        break;
+      case WATCHMAN:
+        ret = computeSha1ViaWatchman(path, retryWithRealPathIfEdenError);
+        break;
+      case EDEN_THRIFT:
+        ret = computeSha1ViaThrift(path, retryWithRealPathIfEdenError);
+        break;
+      default:
+        throw new AssertionError("unreachable");
     }
 
     return ret.isPresent() ? ret.get() : delegate.computeSha1(path.getPath());
