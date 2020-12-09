@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -54,7 +55,7 @@ public interface AbiJarStepsBuilder extends JavaCompileStepsBuilder {
       ImmutableMap<String, RelPath> cellToPathMappings,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
-      Path buildCellRootPath,
+      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams);
 }

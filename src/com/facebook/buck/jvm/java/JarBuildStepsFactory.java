@@ -399,7 +399,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     JarParameters libraryJarParameters =
         getLibraryJarParameters(context, filesystem, classesDir).orElse(null);
 
-    Path buildCellRootPath = context.getBuildCellRootPath();
+    AbsPath buildCellRootPath = AbsPath.of(context.getBuildCellRootPath());
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
     T extraParams = createExtraParams(context, rootPath);
 
@@ -523,7 +523,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getLibraryJarParameters(context, filesystem, compilerOutputPaths.getClassesDir())
             .orElse(null);
 
-    Path buildCellRootPath = context.getBuildCellRootPath();
+    AbsPath buildCellRootPath = AbsPath.of(context.getBuildCellRootPath());
 
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
     Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, baseBuckPaths);

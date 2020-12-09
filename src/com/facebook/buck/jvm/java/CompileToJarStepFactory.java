@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -67,7 +66,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       boolean withDownwardApi,
       ImmutableMap<String, RelPath> cellToPathMappings,
       ImmutableMap<RelPath, RelPath> resourcesMap,
-      Path buildCellRootPath,
+      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
@@ -174,7 +173,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
-      Path buildCellRootPath,
+      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       T extraParams) {
     Preconditions.checkArgument(abiJarParameters == null);
@@ -243,7 +242,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       ImmutableSortedSet<RelPath> declaredClasspathEntries,
       Optional<String> bootClasspath,
       boolean withDownwardApi,
-      Path buildCellRootPath) {
+      AbsPath buildCellRootPath) {
     if (postprocessClassesCommands.isEmpty()) {
       return ImmutableList.of();
     }

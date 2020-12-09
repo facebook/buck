@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -62,7 +63,7 @@ public class CompileToJarStepFactoryTest {
             classpathEntries,
             Optional.of(androidBootClassPath),
             false,
-            executionContext.getBuildCellRootPath()));
+            AbsPath.of(executionContext.getBuildCellRootPath())));
 
     ImmutableList<IsolatedStep> steps = commands.build();
     assertEquals(2, steps.size());

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -27,7 +28,6 @@ import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -166,7 +166,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
-      Path buildCellRootPath,
+      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       JavaExtraParams extraParams) {
     Preconditions.checkArgument(
