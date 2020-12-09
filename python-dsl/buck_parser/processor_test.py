@@ -299,24 +299,6 @@ class BuckTest(unittest.TestCase):
             None,
         )
 
-        # Test we don't get private module attributes from explicit includes.
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=("include_defs({0!r})".format(load.name), "_FOO"),
-        )
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor()
-        self.assertRaises(
-            NameError,
-            build_file_processor.process,
-            build_file.root,
-            build_file.prefix,
-            build_file.path,
-            [],
-            None,
-        )
-
     def test_implicit_includes_apply_to_explicit_includes(self):
         """
         Verify that implicit includes are applied to explicit includes.
@@ -344,51 +326,6 @@ class BuckTest(unittest.TestCase):
         )
         build_file_processor.process(
             build_file.root, build_file.prefix, build_file.path, [], None
-        )
-
-    def test_all_list_is_respected(self):
-        """
-        Verify that the `__all__` list in included files can be used to narrow
-        what gets pulled in.
-        """
-
-        include_def = ProjectFile(
-            self.project_root, path="inc_def1", contents=("__all__ = []", "FOO = 1")
-        )
-        self.write_file(include_def)
-
-        # Test we don't get non-whitelisted attributes from default includes.
-        build_file = ProjectFile(self.project_root, path="BUCK", contents=("FOO",))
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor(
-            includes=[include_def.name]
-        )
-        self.assertRaises(
-            NameError,
-            build_file_processor.process,
-            build_file.root,
-            build_file.prefix,
-            build_file.path,
-            [],
-            None,
-        )
-
-        # Test we don't get non-whitelisted attributes from explicit includes.
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=("include_defs({0!r})".format(include_def.name), "FOO"),
-        )
-        self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor()
-        self.assertRaises(
-            NameError,
-            build_file_processor.process,
-            build_file.root,
-            build_file.prefix,
-            build_file.path,
-            [],
-            None,
         )
 
     def test_do_not_override_overridden_builtins(self):
@@ -1855,23 +1792,19 @@ foo_rule(
 
         # Setup the includes defs.  The second just includes the first one via
         # the `load()` function.
-        include_def1 = ProjectFile(
-            self.project_root, path="inc_def1", contents=("foo = 42")
-        )
-        include_def2 = ProjectFile(
+        load1 = ProjectFile(self.project_root, path="inc_def1", contents=("foo = 42"))
+        load2 = ProjectFile(
             self.project_root,
             path="inc_def2",
-            contents=("load({0!r}, 'foo')".format(include_def1.load_name),),
+            contents=("load({0!r}, 'foo')".format(load1.load_name),),
         )
-        self.write_files(include_def1, include_def2)
+        self.write_files(load1, load2)
 
         # Construct a processor using the above as default includes, and run
         # it to verify nothing crashes.
         build_file = ProjectFile(self.project_root, path="BUCK", contents="")
         self.write_file(build_file)
-        build_file_processor = self.create_build_file_processor(
-            includes=[include_def2.name]
-        )
+        build_file_processor = self.create_build_file_processor(includes=[load2.name])
         build_file_processor.process(
             build_file.root, build_file.prefix, build_file.path, [], None
         )
