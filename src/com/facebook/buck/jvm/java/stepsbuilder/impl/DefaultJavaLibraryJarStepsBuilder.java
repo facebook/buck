@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 
 /** Default implementation of {@link JavaLibraryJarStepsBuilder} */
 class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
-    extends DefaultJavaStepsBuilderBase<T> implements JavaLibraryJarStepsBuilder {
+    extends DefaultJavaLibraryCompileStepsBuilder<T> implements JavaLibraryJarStepsBuilder {
 
   DefaultJavaLibraryJarStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
     super(configuredCompiler);

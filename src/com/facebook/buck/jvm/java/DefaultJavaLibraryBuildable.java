@@ -35,7 +35,7 @@ import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
@@ -181,7 +181,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
-      JavaCompileStepsBuilder stepsBuilder) {
+      JavaLibraryCompileStepsBuilder stepsBuilder) {
 
     if (unusedDependenciesFinderFactory.isPresent()) {
       UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
@@ -221,7 +221,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   private void addUnusedDependencyStep(
-      UnusedDependenciesParams unusedDependenciesParams, JavaCompileStepsBuilder stepsBuilder) {
+      UnusedDependenciesParams unusedDependenciesParams,
+      JavaLibraryCompileStepsBuilder stepsBuilder) {
     stepsBuilder.addUnusedDependencyStep(unusedDependenciesParams);
   }
 

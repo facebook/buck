@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 /** Builder that creates library jar pipeline steps. */
-public interface JavaLibraryJarPipelineStepsBuilder extends JavaCompileStepsBuilder {
+public interface JavaLibraryJarPipelineStepsBuilder extends JavaLibraryCompileStepsBuilder {
 
   void addPipelinedBuildStepsForLibraryJar(
       BuildTargetValue libraryTarget,

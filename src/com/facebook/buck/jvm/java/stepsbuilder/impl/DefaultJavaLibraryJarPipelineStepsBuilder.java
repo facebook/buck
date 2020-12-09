@@ -33,7 +33,7 @@ import java.util.Optional;
  * com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder}
  */
 class DefaultJavaLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
-    extends DefaultJavaStepsBuilderBase<T> implements JavaLibraryJarPipelineStepsBuilder {
+    extends DefaultJavaLibraryCompileStepsBuilder<T> implements JavaLibraryJarPipelineStepsBuilder {
 
   DefaultJavaLibraryJarPipelineStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
     super(configuredCompiler);

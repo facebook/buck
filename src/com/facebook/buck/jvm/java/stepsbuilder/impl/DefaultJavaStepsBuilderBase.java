@@ -16,12 +16,9 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.UnusedDependenciesParams;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.google.common.collect.ImmutableList;
 
 /** Creates a list of {@link IsolatedStep} that is ready for in process execute. */
@@ -36,18 +33,7 @@ abstract class DefaultJavaStepsBuilderBase<T extends CompileToJarStepFactory.Ext
   }
 
   @Override
-  public void addUnusedDependencyStep(UnusedDependenciesParams unusedDependenciesParams) {
-    stepsBuilder.add(UnusedDependenciesParams.createFinder(unusedDependenciesParams));
-  }
-
-  @Override
-  public void addMakeMissingOutputsStep(
-      RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath) {
-    stepsBuilder.add(new MakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath));
-  }
-
-  @Override
-  public ImmutableList<IsolatedStep> buildIsolatedSteps() {
+  public final ImmutableList<IsolatedStep> buildIsolatedSteps() {
     return stepsBuilder.build();
   }
 }

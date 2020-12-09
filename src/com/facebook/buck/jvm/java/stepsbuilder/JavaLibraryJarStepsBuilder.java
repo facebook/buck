@@ -33,7 +33,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Builder that creates library jar steps. */
-public interface JavaLibraryJarStepsBuilder extends JavaCompileStepsBuilder {
+public interface JavaLibraryJarStepsBuilder extends JavaLibraryCompileStepsBuilder {
 
   void addBuildStepsForLibraryJar(
       AbiGenerationMode abiCompatibilityMode,

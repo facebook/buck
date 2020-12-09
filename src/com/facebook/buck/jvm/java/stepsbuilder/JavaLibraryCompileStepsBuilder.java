@@ -16,16 +16,13 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder;
 
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.core.filesystems.RelPath;
 
-/** Builder for java compilation steps. */
-public interface JavaCompileStepsBuilder {
+/** Interface that expose base method for java library steps builder. */
+public interface JavaLibraryCompileStepsBuilder extends JavaCompileStepsBuilder {
 
-  ImmutableList<IsolatedStep> buildIsolatedSteps();
+  void addUnusedDependencyStep(UnusedDependenciesParams unusedDependenciesParams);
 
-  default ImmutableList<Step> build() {
-    return ImmutableList.copyOf(buildIsolatedSteps()); // upcast to Steps
-  }
+  void addMakeMissingOutputsStep(
+      RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath);
 }
