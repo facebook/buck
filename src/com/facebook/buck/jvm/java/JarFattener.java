@@ -220,6 +220,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
         buildTargetValue,
+        CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
         compilerParameters,
         isolatedSteps,
         buildableContext,

@@ -89,10 +89,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
   private final Supplier<JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
   private final BuildTargetValue invokingRule;
-  private final BuildTargetValue libraryTarget;
-  private final RelPath libraryOutputJarDirPath;
-  private final RelPath sourceAbiOutputJarDirPath;
-  private final RelPath sourceOnlyAbiOutputJarDirPath;
+  private final CompilerOutputPathsValue compilerOutputPathsValue;
   private final AbiGenerationMode abiCompatibilityMode;
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
@@ -112,9 +109,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       Supplier<JavaCompiler> compilerConstructor,
       JavacExecutionContext context,
       BuildTargetValue invokingRule,
-      RelPath libraryOutputJarDirPath,
-      RelPath sourceAbiOutputJarDirPath,
-      RelPath sourceOnlyAbiOutputJarDirPath,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
@@ -130,11 +125,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     this.compilerConstructor = compilerConstructor;
     this.context = context;
     this.invokingRule = invokingRule;
-    this.libraryTarget =
-        invokingRule.isLibraryJar() ? invokingRule : BuildTargetValue.libraryTarget(invokingRule);
-    this.libraryOutputJarDirPath = libraryOutputJarDirPath;
-    this.sourceAbiOutputJarDirPath = sourceAbiOutputJarDirPath;
-    this.sourceOnlyAbiOutputJarDirPath = sourceOnlyAbiOutputJarDirPath;
+    this.compilerOutputPathsValue = compilerOutputPathsValue;
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
     this.annotationProcessors = annotationProcessors;
@@ -151,12 +142,16 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   @Override
   public int buildSourceOnlyAbiJar() throws InterruptedException {
-    return getWorker().buildSourceOnlyAbiJar(sourceOnlyAbiOutputJarDirPath);
+    return getWorker()
+        .buildSourceOnlyAbiJar(
+            compilerOutputPathsValue.getSourceOnlyAbiCompilerOutputPath().getOutputJarDirPath());
   }
 
   @Override
   public int buildSourceAbiJar() throws InterruptedException {
-    return getWorker().buildSourceAbiJar(sourceAbiOutputJarDirPath);
+    return getWorker()
+        .buildSourceAbiJar(
+            compilerOutputPathsValue.getSourceAbiCompilerOutputPath().getOutputJarDirPath());
   }
 
   @Override
@@ -333,13 +328,14 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       targetEvent.close();
 
       // Now start tracking the full jar
-      Objects.requireNonNull(tracingBridge)
-          .setBuildTargetName(libraryTarget.getFullyQualifiedName());
+      String libraryTargetFullyQualifiedName =
+          compilerOutputPathsValue.getLibraryTargetFullyQualifiedName();
+      Objects.requireNonNull(tracingBridge).setBuildTargetName(libraryTargetFullyQualifiedName);
       Objects.requireNonNull(phaseEventLogger)
-          .setBuildTargetFullyQualifiedName(libraryTarget.getFullyQualifiedName());
+          .setBuildTargetFullyQualifiedName(libraryTargetFullyQualifiedName);
       targetEvent =
           new JavacEventSinkScopedSimplePerfEvent(
-              context.getEventSink(), libraryTarget.getFullyQualifiedName());
+              context.getEventSink(), libraryTargetFullyQualifiedName);
     }
 
     public int buildClasses() throws InterruptedException {
@@ -457,7 +453,10 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                         new DefaultClassUsageFileWriter()
                             .writeFile(
                                 classUsageTracker,
-                                CompilerOutputPaths.getDepFilePath(libraryOutputJarDirPath),
+                                CompilerOutputPaths.getDepFilePath(
+                                    compilerOutputPathsValue
+                                        .getLibraryCompilerOutputPath()
+                                        .getOutputJarDirPath()),
                                 context.getRuleCellRoot(),
                                 context.getConfiguredBuckOut(),
                                 context.getCellToMapMappings());
@@ -486,7 +485,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                               + "Try building %s instead and fixing any errors that are emitted.\n"
                               + "If there are none, file an issue, with the crash trace from the log.\n",
                           invokingRule.getFullyQualifiedName(),
-                          libraryTarget.getFullyQualifiedName());
+                          compilerOutputPathsValue.getLibraryTargetFullyQualifiedName());
                     } else {
                       throw new BuckUncheckedExecutionException(
                           e.getCause() != null ? e.getCause() : e, "When running javac");

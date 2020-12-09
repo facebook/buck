@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
@@ -44,6 +45,7 @@ public interface AbiJarStepsBuilder extends JavaCompileStepsBuilder {
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,

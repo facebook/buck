@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
@@ -45,6 +46,7 @@ class DefaultJavaLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactor
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       JavacPipelineState state,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       RelPath pathToClassHashes,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<String, RelPath> cellToPathMappings,
@@ -55,6 +57,7 @@ class DefaultJavaLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactor
             cellToPathMappings,
             libraryTarget,
             state,
+            compilerOutputPathsValue,
             stepsBuilder,
             buildableContext,
             resourcesMap);

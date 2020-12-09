@@ -413,6 +413,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         FilesystemParams.of(filesystem),
         buildableContext,
         buildTargetValue,
+        CompilerOutputPathsValue.of(baseBuckPaths, buildTargetValue),
         compileTimeClasspathPaths,
         javaSrcs,
         fullJarInfos,
@@ -464,8 +465,11 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
 
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
+    BaseBuckPaths baseBuckPaths = filesystemParams.getBaseBuckPaths();
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, baseBuckPaths);
     stepsBuilder.addPipelinedBuildStepsForAbiJar(
-        BuildTargetValue.of(buildTarget, filesystemParams.getBaseBuckPaths()),
+        buildTargetValue,
+        CompilerOutputPathsValue.of(baseBuckPaths, buildTargetValue),
         filesystemParams,
         buildableContext,
         state,
@@ -537,6 +541,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         FilesystemParams.of(filesystem),
         buildableContext,
         buildTargetValue,
+        CompilerOutputPathsValue.of(baseBuckPaths, buildTargetValue),
         pathToClassHashes,
         compileTimeClasspathPaths,
         javaSrcs,
@@ -583,14 +588,15 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
 
-    BuildTargetValue libraryTargetValue =
-        BuildTargetValue.of(libraryTarget, filesystemParams.getBaseBuckPaths());
+    BaseBuckPaths baseBuckPaths = filesystemParams.getBaseBuckPaths();
+    BuildTargetValue libraryTargetValue = BuildTargetValue.of(libraryTarget, baseBuckPaths);
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForLibraryJar(
         libraryTargetValue,
         filesystemParams,
         buildableContext,
         state,
+        CompilerOutputPathsValue.of(baseBuckPaths, libraryTargetValue),
         pathToClassHashes,
         resourcesMap,
         cellToPathMappings,

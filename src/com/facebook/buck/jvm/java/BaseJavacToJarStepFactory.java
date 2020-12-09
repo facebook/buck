@@ -74,6 +74,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
@@ -81,10 +82,8 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       JavaExtraParams extraParams) {
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
-    addAnnotationGenFolderStep(
-        steps,
-        buildableContext,
-        CompilerOutputPaths.of(invokingRule, buckPaths).getAnnotationPath());
+    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(invokingRule);
+    addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
     ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
     steps.add(
@@ -92,7 +91,8 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
             resolvedJavac,
             resolvedJavacOptions,
             invokingRule,
-            buckPaths,
+            buckPaths.getConfiguredBuckOut(),
+            compilerOutputPathsValue,
             new ClasspathChecker(),
             parameters,
             null,
@@ -107,6 +107,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue,
       JavacPipelineState pipeline,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       ImmutableMap<RelPath, RelPath> resourcesMap) {
@@ -114,10 +115,8 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
 
-    addAnnotationGenFolderStep(
-        steps,
-        buildableContext,
-        CompilerOutputPaths.of(buildTargetValue, buckPaths).getAnnotationPath());
+    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(buildTargetValue);
+    addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
     if (!pipeline.isRunning()) {
       steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
@@ -133,10 +132,17 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(buildTargetValue, compilerParameters, buildableContext, buckPaths);
+      recordDepFileIfNecessary(
+          compilerOutputPathsValue, buildTargetValue, compilerParameters, buildableContext);
 
       // This adds the javac command, along with any supporting commands.
-      createPipelinedCompileStep(buckPaths, cellToPathMappings, pipeline, buildTargetValue, steps);
+      createPipelinedCompileStep(
+          buckPaths.getConfiguredBuckOut(),
+          compilerOutputPathsValue,
+          cellToPathMappings,
+          pipeline,
+          buildTargetValue,
+          steps);
     }
 
     jarParameters.ifPresent(
@@ -156,6 +162,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
@@ -200,7 +207,8 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
               resolvedJavac,
               extraParams.getResolvedJavacOptions(),
               invokingRule,
-              buckPaths,
+              buckPaths.getConfiguredBuckOut(),
+              compilerOutputPathsValue,
               new ClasspathChecker(),
               compilerParameters,
               abiJarParameters,
@@ -212,6 +220,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
           filesystemParams,
           cellToPathMappings,
           invokingRule,
+          compilerOutputPathsValue,
           compilerParameters,
           postprocessClassesCommands,
           null,
@@ -226,21 +235,27 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   }
 
   private void createPipelinedCompileStep(
-      BaseBuckPaths buckPaths,
+      RelPath configuredBuckOut,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<String, RelPath> cellToPathMappings,
       JavacPipelineState pipeline,
       BuildTargetValue invokingRule,
       ImmutableList.Builder<IsolatedStep> steps) {
     if (hasAnnotationProcessing() && pipeline.isRunning()) {
-
+      CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(invokingRule);
       steps.add(
           SymlinkIsolatedStep.of(
-              CompilerOutputPaths.of(BuildTargetValue.sourceAbiTarget(invokingRule), buckPaths)
-                  .getAnnotationPath(),
-              CompilerOutputPaths.of(invokingRule, buckPaths).getAnnotationPath()));
+              compilerOutputPathsValue.getSourceAbiCompilerOutputPath().getAnnotationPath(),
+              outputPath.getAnnotationPath()));
     }
 
-    steps.add(new JavacStep(pipeline, invokingRule, buckPaths, cellToPathMappings));
+    steps.add(
+        new JavacStep(
+            pipeline,
+            invokingRule,
+            configuredBuckOut,
+            compilerOutputPathsValue,
+            cellToPathMappings));
   }
 
   @Override

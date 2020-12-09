@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -79,11 +80,19 @@ public class Jsr199JavacIntegrationTest {
 
   private RelPath pathToSrcsList;
   private AbsPath pathToSrcsListAbsPath;
+  private BuildTarget buildTarget;
+  private BuildTargetValue buildTargetValue;
+  private ProjectFilesystem projectFilesystem;
 
   @Before
   public void setUp() {
     pathToSrcsList = RelPath.get("srcs_list");
     pathToSrcsListAbsPath = tmp.getRoot().resolve(pathToSrcsList);
+    buildTarget = BuildTargetFactory.newInstance("//some:example");
+
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
+    buildTargetValue = BuildTargetValue.of(buildTarget, buckPaths);
   }
 
   @Test
@@ -122,7 +131,7 @@ public class Jsr199JavacIntegrationTest {
   public void testClassesFile() throws IOException, InterruptedException {
     Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
-    ProjectFilesystem projectFilesystem = createProjectFilesystem();
+
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
@@ -140,10 +149,8 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
-                RelPath.get("lib_dep_out.txt"),
-                RelPath.get("source_abi_dep_out.txt"),
-                RelPath.get("source_only_abi_dep_out.txt"),
+                buildTargetValue,
+                CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -181,7 +188,6 @@ public class Jsr199JavacIntegrationTest {
 
     Jsr199Javac.ResolvedJsr199Javac javac = createJavac(/* withSyntaxError */ false);
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
-    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
@@ -199,10 +205,8 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
-                RelPath.get("lib_dep_out.txt"),
-                RelPath.get("source_abi_dep_out.txt"),
-                RelPath.get("source_only_abi_dep_out.txt"),
+                buildTargetValue,
+                CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -293,7 +297,6 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac.ResolvedJsr199Javac javac =
         createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
-    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
@@ -313,10 +316,8 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
-              RelPath.get("lib_dep_out.txt"),
-              RelPath.get("source_abi_dep_out.txt"),
-              RelPath.get("source_only_abi_dep_out.txt"),
+              buildTargetValue,
+              CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
               ImmutableList.of(),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -371,10 +372,6 @@ public class Jsr199JavacIntegrationTest {
     return createJavac(withSyntaxError, Optional.empty());
   }
 
-  private ProjectFilesystem createProjectFilesystem() {
-    return TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-  }
-
   /**
    * Behaves like {@link com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac} when JDK is not
    * present
@@ -399,7 +396,6 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac.ResolvedJsr199Javac javac =
         new JdkNotFoundJavac().resolve(new TestActionGraphBuilder().getSourcePathResolver());
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
-    ProjectFilesystem projectFilesystem = createProjectFilesystem();
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
@@ -416,10 +412,8 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
-            RelPath.get("lib_dep_out.txt"),
-            RelPath.get("source_abi_dep_out.txt"),
-            RelPath.get("source_only_abi_dep_out.txt"),
+            buildTargetValue,
+            CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),

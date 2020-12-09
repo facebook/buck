@@ -114,7 +114,8 @@ public class JavacStepTest {
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buckPaths,
+            buckPaths.getConfiguredBuckOut(),
+            CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
@@ -163,7 +164,8 @@ public class JavacStepTest {
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buckPaths,
+            buckPaths.getConfiguredBuckOut(),
+            CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
@@ -239,7 +241,8 @@ public class JavacStepTest {
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buckPaths,
+            buckPaths.getConfiguredBuckOut(),
+            CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
@@ -288,7 +291,8 @@ public class JavacStepTest {
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            buckPaths,
+            buckPaths.getConfiguredBuckOut(),
+            CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
@@ -343,7 +347,8 @@ public class JavacStepTest {
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
             target,
-            fakeFilesystem.getBuckPaths(),
+            fakeFilesystem.getBuckPaths().getConfiguredBuckOut(),
+            CompilerOutputPathsValue.of(fakeFilesystem.getBuckPaths(), target),
             classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))

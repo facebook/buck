@@ -41,6 +41,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -132,6 +133,7 @@ public class DummyRDotJavaTest {
     AbsPath rootPath = filesystem.getRootPath();
     StepExecutionContext stepExecutionContext = TestExecutionContext.newInstance(rootPath);
     SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(target, buckPaths);
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
             .addAll(makeCleanDirDescription(rootPath, rDotJavaSrcFolder.getPath()))
@@ -150,8 +152,9 @@ public class DummyRDotJavaTest {
                                 .build(),
                             sourcePathResolver,
                             rootPath),
-                        BuildTargetValue.of(target, buckPaths),
-                        buckPaths,
+                        buildTargetValue,
+                        buckPaths.getConfiguredBuckOut(),
+                        CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
                         new ClasspathChecker(),
                         CompilerParameters.builder()
                             .setOutputPaths(

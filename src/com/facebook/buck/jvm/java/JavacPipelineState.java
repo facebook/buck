@@ -89,9 +89,7 @@ public class JavacPipelineState implements RulePipelineState {
 
   /** Get the invocation instance. */
   public ResolvedJavac.Invocation getJavacInvocation(
-      RelPath libraryOutputJarDirPath,
-      RelPath sourceAbiOutputJarDirPath,
-      RelPath sourceOnlyAbiOutputJarDirPath,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       IsolatedExecutionContext context,
       ImmutableMap<String, RelPath> cellToPathMappings,
       RelPath configuredBuckOut)
@@ -135,9 +133,7 @@ public class JavacPipelineState implements RulePipelineState {
               .newBuildInvocation(
                   javacExecutionContext,
                   invokingRule,
-                  libraryOutputJarDirPath,
-                  sourceAbiOutputJarDirPath,
-                  sourceOnlyAbiOutputJarDirPath,
+                  compilerOutputPathsValue,
                   getOptions(context, compilerParameters.getClasspathEntries()),
                   resolvedJavacOptions.getAnnotationProcessors(),
                   resolvedJavacOptions.getJavaPlugins(),

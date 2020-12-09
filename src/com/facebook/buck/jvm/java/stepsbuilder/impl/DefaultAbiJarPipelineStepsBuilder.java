@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
@@ -40,6 +41,7 @@ class DefaultAbiJarPipelineStepsBuilder<T extends CompileToJarStepFactory.ExtraP
   @Override
   public void addPipelinedBuildStepsForAbiJar(
       BuildTargetValue buildTargetValue,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       JavacPipelineState state,
@@ -51,6 +53,7 @@ class DefaultAbiJarPipelineStepsBuilder<T extends CompileToJarStepFactory.ExtraP
             cellToPathMappings,
             buildTargetValue,
             state,
+            compilerOutputPathsValue,
             stepsBuilder,
             buildableContext,
             resourcesMap);

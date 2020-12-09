@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.google.common.collect.ImmutableMap;
@@ -28,6 +29,7 @@ public interface AbiJarPipelineStepsBuilder extends JavaCompileStepsBuilder {
 
   void addPipelinedBuildStepsForAbiJar(
       BuildTargetValue buildTargetValue,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       JavacPipelineState state,

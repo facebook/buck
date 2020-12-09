@@ -22,6 +22,7 @@ import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JarParameters;
@@ -56,6 +57,7 @@ class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraP
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       RelPath pathToClassHashes,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
@@ -87,6 +89,7 @@ class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraP
     configuredCompiler.createCompileToJarStep(
         filesystemParams,
         buildTargetValue,
+        compilerOutputPathsValue,
         compilerParameters,
         postprocessClassesCommands,
         null,

@@ -44,6 +44,7 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JarParameters;
@@ -294,6 +295,7 @@ public class DummyRDotJava extends AbstractBuildRule
         FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
         buildTargetValue,
+        CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
         compilerParameters,
         isolatedSteps,
         buildableContext,

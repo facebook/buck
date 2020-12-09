@@ -35,6 +35,7 @@ import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.FilesystemParams;
@@ -150,6 +151,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
@@ -401,6 +403,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         filesystemParams,
         cellToPathMappings,
         invokingRule,
+        compilerOutputPathsValue,
         javacParameters,
         steps,
         buildableContext,

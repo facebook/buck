@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.FilesystemParams;
@@ -86,6 +87,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
@@ -166,6 +168,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
           filesystemParams,
           cellToPathMappings,
           invokingRule,
+          compilerOutputPathsValue,
           javacParameters,
           steps,
           buildableContext,

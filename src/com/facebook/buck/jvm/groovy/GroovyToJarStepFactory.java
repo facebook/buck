@@ -25,6 +25,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -61,6 +62,7 @@ class GroovyToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareEx
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,

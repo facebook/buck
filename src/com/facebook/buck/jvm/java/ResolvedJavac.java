@@ -37,9 +37,7 @@ public interface ResolvedJavac {
   ResolvedJavac.Invocation newBuildInvocation(
       JavacExecutionContext context,
       BuildTargetValue invokingRule,
-      RelPath libraryOutputJarDirPath,
-      RelPath sourceAbiOutputJarDirPath,
-      RelPath sourceOnlyAbiOutputJarDirPath,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,

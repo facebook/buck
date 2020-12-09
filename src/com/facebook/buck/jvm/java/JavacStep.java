@@ -23,7 +23,6 @@ import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -44,18 +43,17 @@ public class JavacStep extends IsolatedStep {
 
   private final JavacPipelineState pipeline;
   private final BuildTargetValue invokingRule;
+  private final RelPath configuredBuckOut;
   private final boolean ownsPipelineObject;
-  private final BaseBuckPaths buckPaths;
   private final ImmutableMap<String, RelPath> cellToPathMappings;
-  private final RelPath libraryOutputJarDirPath;
-  private final RelPath sourceOutputJarPath;
-  private final RelPath sourceOnlyOutputJarPath;
+  private final CompilerOutputPathsValue compilerOutputPathsValue;
 
   public JavacStep(
       ResolvedJavac resolvedJavac,
       ResolvedJavacOptions javacOptions,
       BuildTargetValue invokingRule,
-      BaseBuckPaths buckPaths,
+      RelPath configuredBuckOut,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
@@ -73,42 +71,40 @@ public class JavacStep extends IsolatedStep {
             libraryJarParameters,
             withDownwardApi),
         invokingRule,
+        configuredBuckOut,
         true,
-        buckPaths,
+        compilerOutputPathsValue,
         cellToPathMappings);
   }
 
   public JavacStep(
       JavacPipelineState pipeline,
       BuildTargetValue invokingRule,
-      BaseBuckPaths buckPaths,
+      RelPath configuredBuckOut,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<String, RelPath> cellToPathMappings) {
-    this(pipeline, invokingRule, false, buckPaths, cellToPathMappings);
+    this(
+        pipeline,
+        invokingRule,
+        configuredBuckOut,
+        false,
+        compilerOutputPathsValue,
+        cellToPathMappings);
   }
 
   private JavacStep(
       JavacPipelineState pipeline,
       BuildTargetValue invokingRule,
+      RelPath configuredBuckOut,
       boolean ownsPipelineObject,
-      BaseBuckPaths buckPaths,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<String, RelPath> cellToPathMappings) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
+    this.configuredBuckOut = configuredBuckOut;
     this.ownsPipelineObject = ownsPipelineObject;
-    this.buckPaths = buckPaths;
     this.cellToPathMappings = cellToPathMappings;
-
-    BuildTargetValue libraryTarget =
-        invokingRule.isLibraryJar() ? invokingRule : BuildTargetValue.libraryTarget(invokingRule);
-
-    this.libraryOutputJarDirPath =
-        CompilerOutputPaths.of(libraryTarget, buckPaths).getOutputJarDirPath();
-    this.sourceOutputJarPath =
-        CompilerOutputPaths.of(BuildTargetValue.sourceAbiTarget(libraryTarget), buckPaths)
-            .getOutputJarDirPath();
-    this.sourceOnlyOutputJarPath =
-        CompilerOutputPaths.of(BuildTargetValue.sourceOnlyAbiTarget(libraryTarget), buckPaths)
-            .getOutputJarDirPath();
+    this.compilerOutputPathsValue = compilerOutputPathsValue;
   }
 
   @Override
@@ -121,12 +117,7 @@ public class JavacStep extends IsolatedStep {
     try {
       ResolvedJavac.Invocation invocation =
           pipeline.getJavacInvocation(
-              libraryOutputJarDirPath,
-              sourceOutputJarPath,
-              sourceOnlyOutputJarPath,
-              context,
-              cellToPathMappings,
-              buckPaths.getConfiguredBuckOut());
+              compilerOutputPathsValue, context, cellToPathMappings, configuredBuckOut);
       if (invokingRule.isSourceAbi()) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else if (invokingRule.isSourceOnlyAbi()) {

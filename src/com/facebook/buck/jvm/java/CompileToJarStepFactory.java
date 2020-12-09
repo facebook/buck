@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.shell.BashStep;
@@ -58,6 +57,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   public final void createCompileToJarStep(
       FilesystemParams filesystemParams,
       BuildTargetValue buildTargetValue,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
@@ -72,8 +72,6 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
-    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
-
     steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
 
     JarParameters jarParameters =
@@ -85,13 +83,15 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      recordDepFileIfNecessary(buildTargetValue, compilerParameters, buildableContext, buckPaths);
+      recordDepFileIfNecessary(
+          compilerOutputPathsValue, buildTargetValue, compilerParameters, buildableContext);
 
       // This adds the javac command, along with any supporting commands.
       createCompileToJarStepImpl(
           filesystemParams,
           cellToPathMappings,
           buildTargetValue,
+          compilerOutputPathsValue,
           compilerParameters,
           postprocessClassesCommands,
           abiJarParameters,
@@ -138,14 +138,13 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   protected void recordDepFileIfNecessary(
+      CompilerOutputPathsValue compilerOutputPathsValue,
       BuildTargetValue buildTargetValue,
       CompilerParameters compilerParameters,
-      BuildableContext buildableContext,
-      BaseBuckPaths buckPaths) {
+      BuildableContext buildableContext) {
     if (compilerParameters.shouldTrackClassUsage()) {
-      RelPath depFilePath =
-          CompilerOutputPaths.getDepFilePath(
-              CompilerOutputPaths.of(buildTargetValue, buckPaths).getOutputJarDirPath());
+      CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(buildTargetValue);
+      RelPath depFilePath = CompilerOutputPaths.getDepFilePath(outputPath.getOutputJarDirPath());
       buildableContext.recordArtifact(depFilePath.getPath());
     }
   }
@@ -166,6 +165,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue target,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
       ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
@@ -189,6 +189,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
         filesystemParams,
         cellToPathMappings,
         target,
+        compilerOutputPathsValue,
         compilerParameters,
         steps,
         buildableContext,
@@ -282,6 +283,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       FilesystemParams filesystemParams,
       ImmutableMap<String, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
+      CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
