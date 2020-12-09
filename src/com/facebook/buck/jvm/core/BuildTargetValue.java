@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import java.util.Optional;
@@ -79,14 +78,7 @@ public abstract class BuildTargetValue {
     return ImmutableBuildTargetValue.ofImpl(
         getType(buildTarget),
         buildTarget.getFullyQualifiedName(),
-        Optional.of(
-            BuildTargetValueExtraParams.of(
-                buildTarget.getCellRelativeBasePath().getPath(),
-                buildTarget.isFlavored(),
-                BuildTargetPaths.getBasePathForBaseName(
-                    baseBuckPaths.shouldIncludeTargetConfigHash(), buildTarget),
-                buildTarget.getShortNameAndFlavorPostfix(),
-                buildTarget.getShortName())));
+        Optional.of(BuildTargetValueExtraParams.of(buildTarget, baseBuckPaths)));
   }
 
   private static Type getType(BuildTarget buildTarget) {
