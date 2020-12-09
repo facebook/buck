@@ -166,7 +166,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
-    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
+    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList().getPath();
 
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     boolean hasKotlinSources =
@@ -346,7 +346,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
               kotlinc,
               extraArguments.build(),
               ImmutableList.of(VERBOSE),
-              Optional.of(parameters.getOutputPaths().getWorkingDirectory()),
+              Optional.of(parameters.getOutputPaths().getWorkingDirectory().getPath()),
               withDownwardApi));
 
       steps.addAll(postKotlinCompilationSteps.build());

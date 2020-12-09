@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
@@ -95,7 +96,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
   private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
   private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
-  private final Path pathToSrcsList;
+  private final RelPath pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
@@ -113,7 +114,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
+      RelPath pathToSrcsList,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
@@ -156,12 +157,13 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     // for buck user to have a list of all .java files to be compiled
     // since we do not print them out to console in case of error
     try {
+      AbsPath ruleCellRoot = context.getRuleCellRoot();
       ProjectFilesystemUtils.writeLinesToPath(
-          context.getRuleCellRoot(),
+          ruleCellRoot,
           FluentIterable.from(javaSourceFilePaths)
               .transform(Object::toString)
               .transform(ResolvedJavac.ARGFILES_ESCAPER::apply),
-          pathToSrcsList);
+          pathToSrcsList.getPath());
     } catch (IOException e) {
       context
           .getEventSink()

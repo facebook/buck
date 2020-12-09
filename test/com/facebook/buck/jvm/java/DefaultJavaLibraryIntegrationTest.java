@@ -152,7 +152,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path outputPath =
         CompilerOutputPaths.of(target, workspace.getProjectFileSystem().getBuckPaths())
             .getOutputJarPath()
-            .get();
+            .get()
+            .getPath();
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:

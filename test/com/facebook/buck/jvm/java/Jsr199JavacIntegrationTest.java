@@ -21,6 +21,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -75,11 +77,13 @@ public class Jsr199JavacIntegrationTest {
       ImmutableSortedSet.of(Paths.get("Example.java"));
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private Path pathToSrcsList;
+  private RelPath pathToSrcsList;
+  private AbsPath pathToSrcsListAbsPath;
 
   @Before
   public void setUp() {
-    pathToSrcsList = tmp.getRoot().resolve("srcs_list").getPath();
+    pathToSrcsList = RelPath.get("srcs_list");
+    pathToSrcsListAbsPath = tmp.getRoot().resolve(pathToSrcsList);
   }
 
   @Test
@@ -142,7 +146,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                Paths.get("working"),
+                RelPath.get("working"),
                 false,
                 false,
                 null,
@@ -153,11 +157,12 @@ public class Jsr199JavacIntegrationTest {
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
-    assertTrue(Files.exists(pathToSrcsList));
-    assertTrue(Files.isRegularFile(pathToSrcsList));
+    assertTrue(Files.exists(pathToSrcsListAbsPath.getPath()));
+    assertTrue(Files.isRegularFile(pathToSrcsListAbsPath.getPath()));
     assertEquals(
         "Example.java",
-        new String(Files.readAllBytes(pathToSrcsList), StandardCharsets.UTF_8).trim());
+        new String(Files.readAllBytes(pathToSrcsListAbsPath.getPath()), StandardCharsets.UTF_8)
+            .trim());
   }
 
   /**
@@ -197,7 +202,7 @@ public class Jsr199JavacIntegrationTest {
                 ImmutableList.of(),
                 SOURCE_PATHS,
                 pathToSrcsList,
-                Paths.get("working"),
+                RelPath.get("working"),
                 false,
                 false,
                 null,
@@ -208,11 +213,12 @@ public class Jsr199JavacIntegrationTest {
             .buildClasses();
     assertEquals("javac should exit with code 0.", exitCode, 0);
 
-    assertTrue(Files.exists(pathToSrcsList));
-    assertTrue(Files.isRegularFile(pathToSrcsList));
+    assertTrue(Files.exists(pathToSrcsListAbsPath.getPath()));
+    assertTrue(Files.isRegularFile(pathToSrcsListAbsPath.getPath()));
     assertEquals(
         "Example.java",
-        new String(Files.readAllBytes(pathToSrcsList), StandardCharsets.UTF_8).trim());
+        new String(Files.readAllBytes(pathToSrcsListAbsPath.getPath()), StandardCharsets.UTF_8)
+            .trim());
   }
 
   public static final class MockJavac implements JavaCompiler {
@@ -307,7 +313,7 @@ public class Jsr199JavacIntegrationTest {
               ImmutableList.of(),
               SOURCE_PATHS,
               pathToSrcsList,
-              Paths.get("working"),
+              RelPath.get("working"),
               false,
               false,
               null,
@@ -407,7 +413,7 @@ public class Jsr199JavacIntegrationTest {
             ImmutableList.of(),
             SOURCE_PATHS,
             pathToSrcsList,
-            Paths.get("working"),
+            RelPath.get("working"),
             false,
             false,
             null,

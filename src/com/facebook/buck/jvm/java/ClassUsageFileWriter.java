@@ -19,12 +19,11 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 
 public interface ClassUsageFileWriter {
   void writeFile(
       ClassUsageTracker tracker,
-      Path relativePath,
+      RelPath relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
       ImmutableMap<String, RelPath> cellToPathMappings);

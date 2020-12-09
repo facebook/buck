@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -40,8 +41,8 @@ public interface ResolvedJavac {
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path workingDirectory,
+      RelPath pathToSrcsList,
+      RelPath workingDirectory,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
@@ -53,7 +54,7 @@ public interface ResolvedJavac {
   String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList);
+      RelPath pathToSrcsList);
 
   /** Returns a short name of the tool */
   String getShortName();

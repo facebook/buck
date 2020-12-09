@@ -35,15 +35,19 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
   @Override
   public void writeFile(
       ClassUsageTracker tracker,
-      Path relativePath,
+      RelPath relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
       ImmutableMap<String, RelPath> cellToPathMappings) {
     ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
-      Path parent = relativePath.getParent();
+      AbsPath parent = rootPath.resolve(relativePath).getParent();
+      Path parentRelativePath = rootPath.relativize(parent).getPath();
+
       Preconditions.checkState(
-          ProjectFilesystemUtils.exists(rootPath, parent), "directory must exist: %s", parent);
+          ProjectFilesystemUtils.exists(rootPath, parentRelativePath),
+          "directory must exist: %s",
+          parent);
       ObjectMappers.WRITER.writeValue(
           rootPath.resolve(relativePath).toFile(),
           relativizeMap(classUsageMap, rootPath, configuredBuckOut, cellToPathMappings));

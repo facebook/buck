@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -111,12 +110,11 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
-    AbsPath rootPath = filesystemParams.getRootPath();
 
     addAnnotationGenFolderStep(buildTargetValue, steps, buildableContext, buckPaths);
 
     if (!pipeline.isRunning()) {
-      steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, rootPath, compilerParameters));
+      steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
     }
 
     Optional<JarParameters> jarParameters =

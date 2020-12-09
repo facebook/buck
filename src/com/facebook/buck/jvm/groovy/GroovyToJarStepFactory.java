@@ -71,7 +71,7 @@ class GroovyToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareEx
     ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
-    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
+    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList().getPath();
 
     SourcePathResolverAdapter sourcePathResolver =
         extraParams.getBuildContext().getSourcePathResolver();

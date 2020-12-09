@@ -72,10 +72,9 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
-    AbsPath rootPath = filesystemParams.getRootPath();
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
 
-    steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, rootPath, compilerParameters));
+    steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
 
     JarParameters jarParameters =
         abiJarParameters != null ? abiJarParameters : libraryJarParameters;
@@ -112,9 +111,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
   /** Returns Compiler Setup steps */
   protected ImmutableList<IsolatedStep> getCompilerSetupIsolatedSteps(
-      ImmutableMap<RelPath, RelPath> resourcesMap,
-      AbsPath rootCellRoot,
-      CompilerParameters compilerParameters) {
+      ImmutableMap<RelPath, RelPath> resourcesMap, CompilerParameters compilerParameters) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
     CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
@@ -123,25 +120,17 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getClassesDir()));
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getAnnotationPath()));
-    steps.add(MkdirIsolatedStep.of(getRelPath(rootCellRoot, outputPaths.getOutputJarDirPath())));
+    steps.add(MkdirIsolatedStep.of(outputPaths.getOutputJarDirPath()));
 
     // If there are resources, then link them to the appropriate place in the classes directory.
     steps.addAll(CopyResourcesStep.of(resourcesMap));
 
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
-      steps.add(
-          MkdirIsolatedStep.of(
-              getRelPath(rootCellRoot, outputPaths.getPathToSourcesList().getParent())));
-      steps.addAll(
-          MakeCleanDirectoryIsolatedStep.of(
-              getRelPath(rootCellRoot, outputPaths.getWorkingDirectory())));
+      steps.add(MkdirIsolatedStep.of(outputPaths.getPathToSourcesList().getParent()));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getWorkingDirectory()));
     }
 
     return steps.build();
-  }
-
-  private RelPath getRelPath(AbsPath rootCellRoot, Path path) {
-    return rootCellRoot.relativize(rootCellRoot.resolve(path));
   }
 
   protected void addJarSetupSteps(JarParameters jarParameters, Builder<IsolatedStep> steps) {
@@ -154,8 +143,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       BuildableContext buildableContext,
       BaseBuckPaths buckPaths) {
     if (compilerParameters.shouldTrackClassUsage()) {
-      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTargetValue, buckPaths);
-      buildableContext.recordArtifact(depFilePath);
+      RelPath depFilePath = CompilerOutputPaths.getDepFilePath(buildTargetValue, buckPaths);
+      buildableContext.recordArtifact(depFilePath.getPath());
     }
   }
 

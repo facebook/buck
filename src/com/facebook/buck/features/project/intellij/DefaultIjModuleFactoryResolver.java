@@ -228,7 +228,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
     Path compilerOutputPath =
         CompilerOutputPaths.getOutputJarPath(
-            buildTargetPatchedCell, projectFilesystem.getBuckPaths());
+                buildTargetPatchedCell, projectFilesystem.getBuckPaths())
+            .getPath();
     return Optional.of(compilerOutputPath);
   }
 

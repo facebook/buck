@@ -77,7 +77,7 @@ public class DefaultClassUsageFileWriterTest {
     filesystem.createParentDirs(outputOne);
     writerOne.writeFile(
         trackerOne,
-        outputOne.getPath(),
+        filesystem.relativize(outputOne),
         filesystem.getRootPath(),
         filesystem.getBuckPaths().getConfiguredBuckOut(),
         ImmutableMap.of());
@@ -95,7 +95,7 @@ public class DefaultClassUsageFileWriterTest {
     filesystem.createParentDirs(outputTwo);
     writerTwo.writeFile(
         trackerTwo,
-        outputTwo.getPath(),
+        filesystem.relativize(outputTwo),
         filesystem.getRootPath(),
         filesystem.getBuckPaths().getConfiguredBuckOut(),
         ImmutableMap.of());
@@ -137,7 +137,7 @@ public class DefaultClassUsageFileWriterTest {
     homeFs.createParentDirs(outputOne);
     writer.writeFile(
         trackerOne,
-        outputOne.getPath(),
+        homeFs.relativize(outputOne),
         rootPath,
         homeFs.getBuckPaths().getConfiguredBuckOut(),
         CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver));

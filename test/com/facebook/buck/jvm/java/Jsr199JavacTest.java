@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -29,7 +30,7 @@ import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 public class Jsr199JavacTest extends EasyMockSupport {
-  private static final Path PATH_TO_SRCS_LIST = Paths.get("srcs_list");
+  private static final RelPath PATH_TO_SRCS_LIST = RelPath.get("srcs_list");
   public static final ImmutableSortedSet<Path> SOURCE_FILES =
       ImmutableSortedSet.of(Paths.get("foobar.java"));
 

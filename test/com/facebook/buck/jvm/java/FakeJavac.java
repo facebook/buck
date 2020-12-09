@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -37,8 +38,8 @@ public class FakeJavac implements ResolvedJavac {
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList,
-      Path workingDirectory,
+      RelPath pathToSrcsList,
+      RelPath workingDirectory,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       @Nullable JarParameters abiJarParameters,
@@ -80,7 +81,7 @@ public class FakeJavac implements ResolvedJavac {
   public String getDescription(
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
-      Path pathToSrcsList) {
+      RelPath pathToSrcsList) {
     return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
   }
 

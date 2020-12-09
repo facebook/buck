@@ -51,7 +51,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -196,9 +195,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
       BaseBuckPaths buckPaths = filesystem.getBuckPaths();
 
-      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, buckPaths);
-      RelPath depFile = rootPath.relativize(rootPath.resolve(depFilePath));
-
+      RelPath depFile = CompilerOutputPaths.getDepFilePath(buildTarget, buckPaths);
       UnusedDependenciesParams unusedDependenciesParams =
           UnusedDependenciesParams.of(
               factory.convert(factory.deps, sourcePathResolver, rootPath),

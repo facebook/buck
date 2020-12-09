@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -46,7 +47,7 @@ public abstract class Jsr199Javac implements Javac {
     public String getDescription(
         ImmutableList<String> options,
         ImmutableSortedSet<Path> javaSourceFilePaths,
-        Path pathToSrcsList) {
+        RelPath pathToSrcsList) {
       StringBuilder builder = new StringBuilder("javac ");
       Joiner.on(" ").appendTo(builder, options);
       builder.append(" ");
@@ -68,8 +69,8 @@ public abstract class Jsr199Javac implements Javac {
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,
         ImmutableSortedSet<Path> javaSourceFilePaths,
-        Path pathToSrcsList,
-        Path workingDirectory,
+        RelPath pathToSrcsList,
+        RelPath workingDirectory,
         boolean trackClassUsage,
         boolean trackJavacPhaseEvents,
         @Nullable JarParameters abiJarParameters,

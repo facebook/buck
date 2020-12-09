@@ -386,22 +386,18 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, baseBuckPaths);
     CompilerOutputPaths compilerOutputPaths =
         CompilerOutputPaths.of(buildTargetValue, baseBuckPaths);
+    RelPath classesDir = compilerOutputPaths.getClassesDir();
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
-            context,
-            filesystem,
-            compilerOutputPaths.getClassesDir().getPath(),
-            resourcesParameters,
-            buildTarget);
+            context, filesystem, classesDir.getPath(), resourcesParameters, buildTarget);
 
     ImmutableMap<String, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver());
 
     JarParameters abiJarParameters =
-        getAbiJarParameters(buildTargetValue, context, filesystem, compilerOutputPaths)
-            .orElse(null);
+        getAbiJarParameters(buildTargetValue, context, filesystem, classesDir).orElse(null);
     JarParameters libraryJarParameters =
-        getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
+        getLibraryJarParameters(context, filesystem, classesDir).orElse(null);
 
     Path buildCellRootPath = context.getBuildCellRootPath();
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
@@ -521,7 +517,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver());
 
     JarParameters libraryJarParameters =
-        getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
+        getLibraryJarParameters(context, filesystem, compilerOutputPaths.getClassesDir())
+            .orElse(null);
 
     Path buildCellRootPath = context.getBuildCellRootPath();
 
@@ -624,31 +621,30 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   private Optional<JarParameters> getLibraryJarParameters(
-      BuildContext context, ProjectFilesystem filesystem, CompilerOutputPaths compilerOutputPaths) {
+      BuildContext context, ProjectFilesystem filesystem, RelPath classesDir) {
     BuildTargetValue buildTargetValue =
         BuildTargetValue.of(libraryTarget, filesystem.getBuckPaths());
-    return getJarParameters(context, filesystem, buildTargetValue, compilerOutputPaths);
+    return getJarParameters(context, filesystem, buildTargetValue, classesDir);
   }
 
   private Optional<JarParameters> getAbiJarParameters(
       BuildTargetValue buildTargetValue,
       BuildContext context,
       ProjectFilesystem filesystem,
-      CompilerOutputPaths compilerOutputPaths) {
+      RelPath classesDir) {
     if (buildTargetValue.isLibraryJar()) {
       return Optional.empty();
     }
     Preconditions.checkState(buildTargetValue.hasAbiJar());
-    return getJarParameters(context, filesystem, buildTargetValue, compilerOutputPaths);
+    return getJarParameters(context, filesystem, buildTargetValue, classesDir);
   }
 
   private Optional<JarParameters> getJarParameters(
       BuildContext context,
       ProjectFilesystem filesystem,
       BuildTargetValue buildTarget,
-      CompilerOutputPaths compilerOutputPaths) {
+      RelPath classesDir) {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    RelPath classesDir = compilerOutputPaths.getClassesDir();
     ImmutableSortedSet<RelPath> entriesToJar =
         ImmutableSortedSet.orderedBy(RelPath.comparator()).add(classesDir).build();
     Optional<RelPath> manifestRelFile =
@@ -660,7 +656,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
                 JarParameters.builder()
                     .setEntriesToJar(entriesToJar)
                     .setManifestFile(manifestRelFile)
-                    .setJarPath(RelPath.of(output))
+                    .setJarPath(output)
                     .setRemoveEntryPredicate(classesToRemoveFromJar)
                     .build());
   }
@@ -680,7 +676,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
-  private Optional<Path> getOutputJarPath(
+  private Optional<RelPath> getOutputJarPath(
       BuildTargetValue buildTargetValue, BaseBuckPaths buckPaths) {
     if (!producesJar()) {
       return Optional.empty();
@@ -750,10 +746,12 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     CompilerOutputPaths compilerOutputPaths =
         CompilerOutputPaths.of(buildTargetValue, baseBuckPaths);
     JarParameters abiJarParameters =
-        getAbiJarParameters(buildTargetValue, context, filesystem, compilerOutputPaths)
+        getAbiJarParameters(
+                buildTargetValue, context, filesystem, compilerOutputPaths.getClassesDir())
             .orElse(null);
     JarParameters libraryJarParameters =
-        getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
+        getLibraryJarParameters(context, filesystem, compilerOutputPaths.getClassesDir())
+            .orElse(null);
 
     AbsPath rootPath = filesystem.getRootPath();
 

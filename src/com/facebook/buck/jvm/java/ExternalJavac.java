@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -64,7 +65,7 @@ public class ExternalJavac implements Javac {
     public String getDescription(
         ImmutableList<String> options,
         ImmutableSortedSet<Path> javaSourceFilePaths,
-        Path pathToSrcsList) {
+        RelPath pathToSrcsList) {
       StringBuilder builder = new StringBuilder(getShortName());
       builder.append(" ");
       Joiner.on(" ").appendTo(builder, options);
@@ -91,8 +92,8 @@ public class ExternalJavac implements Javac {
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,
         ImmutableSortedSet<Path> javaSourceFilePaths,
-        Path pathToSrcsList,
-        Path workingDirectory,
+        RelPath pathToSrcsList,
+        RelPath workingDirectory,
         boolean trackClassUsage,
         boolean trackJavacPhaseEvents,
         @Nullable JarParameters abiJarParameters,
@@ -125,7 +126,7 @@ public class ExternalJavac implements Javac {
           try {
             expandedSources =
                 JavaPaths.extractArchivesAndGetPaths(
-                    context.getRuleCellRoot(), javaSourceFilePaths, workingDirectory);
+                    context.getRuleCellRoot(), javaSourceFilePaths, workingDirectory.getPath());
           } catch (IOException e) {
             throw new HumanReadableException(
                 "Unable to expand sources for %s into %s",
@@ -157,7 +158,7 @@ public class ExternalJavac implements Javac {
             ProjectFilesystemUtils.writeLinesToPath(
                 context.getRuleCellRoot(),
                 Iterables.concat(escapedArgs, escapedPaths),
-                pathToSrcsList);
+                pathToSrcsList.getPath());
             command.add("@" + pathToSrcsList);
           } catch (IOException e) {
             context
