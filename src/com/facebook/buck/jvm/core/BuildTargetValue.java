@@ -18,9 +18,9 @@ package com.facebook.buck.jvm.core;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -39,22 +39,9 @@ public abstract class BuildTargetValue {
 
   public abstract Type getType();
 
-  // TODO msemko needed only for Kotlin
-  public abstract ForwardRelativePath getBasePathForBaseName();
-
-  // TODO msemko needed only for Kotlin
-  public abstract String getShortNameAndFlavorPostfix();
-
-  // TODO msemko needed only for Kotlin
-  public abstract String getShortName();
-
   public abstract String getFullyQualifiedName();
 
-  // TODO msemko needed only for Kotlin
-  public abstract ForwardRelativePath getCellRelativeBasePath();
-
-  // TODO msemko needed only for Kotlin
-  public abstract boolean isFlavored();
+  public abstract Optional<BuildTargetValueExtraParams> getExtraParams();
 
   @Value.Derived
   public boolean hasAbiJar() {
@@ -82,35 +69,24 @@ public abstract class BuildTargetValue {
   }
 
   /** Creates {@link BuildTargetValue} */
-  public static BuildTargetValue of(BuildTarget buildTarget, BaseBuckPaths baseBuckPaths) {
-    return of(
-        getType(buildTarget),
-        BuildTargetPaths.getBasePathForBaseName(
-            baseBuckPaths.shouldIncludeTargetConfigHash(), buildTarget),
-        buildTarget.getShortNameAndFlavorPostfix(),
-        buildTarget.getShortName(),
-        buildTarget.getFullyQualifiedName(),
-        buildTarget.getCellRelativeBasePath().getPath(),
-        buildTarget.isFlavored());
+  public static BuildTargetValue of(BuildTarget buildTarget) {
+    return of(getType(buildTarget), buildTarget.getFullyQualifiedName());
   }
 
   /** Creates {@link BuildTargetValue} */
-  public static BuildTargetValue of(
-      Type type,
-      ForwardRelativePath basePathForBaseName,
-      String shortNameAndFlavorPostfix,
-      String shortName,
-      String fullyQualifiedName,
-      ForwardRelativePath cellRelativeBasePath,
-      boolean isFlavored) {
+  public static BuildTargetValue withExtraParams(
+      BuildTarget buildTarget, BaseBuckPaths baseBuckPaths) {
     return ImmutableBuildTargetValue.ofImpl(
-        type,
-        basePathForBaseName,
-        shortNameAndFlavorPostfix,
-        shortName,
-        fullyQualifiedName,
-        cellRelativeBasePath,
-        isFlavored);
+        getType(buildTarget),
+        buildTarget.getFullyQualifiedName(),
+        Optional.of(
+            BuildTargetValueExtraParams.of(
+                buildTarget.getCellRelativeBasePath().getPath(),
+                buildTarget.isFlavored(),
+                BuildTargetPaths.getBasePathForBaseName(
+                    baseBuckPaths.shouldIncludeTargetConfigHash(), buildTarget),
+                buildTarget.getShortNameAndFlavorPostfix(),
+                buildTarget.getShortName())));
   }
 
   private static Type getType(BuildTarget buildTarget) {
@@ -127,5 +103,10 @@ public abstract class BuildTargetValue {
     }
 
     throw new IllegalStateException(buildTarget + " doesn't supported");
+  }
+
+  /** Creates {@link BuildTargetValue} */
+  public static BuildTargetValue of(Type type, String fullyQualifiedName) {
+    return ImmutableBuildTargetValue.ofImpl(type, fullyQualifiedName, Optional.empty());
   }
 }

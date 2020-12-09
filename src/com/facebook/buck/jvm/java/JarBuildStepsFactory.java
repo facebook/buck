@@ -383,7 +383,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .map(this::toBaseJavaAbiInfo)
             .collect(ImmutableList.toImmutableList());
 
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, baseBuckPaths);
+    BuildTargetValue buildTargetValue =
+        BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
     CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, baseBuckPaths);
     RelPath classesDir = compilerOutputPaths.getClassesDir();
     ImmutableMap<RelPath, RelPath> resourcesMap =
@@ -465,7 +466,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     BaseBuckPaths baseBuckPaths = filesystemParams.getBaseBuckPaths();
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, baseBuckPaths);
+    BuildTargetValue buildTargetValue =
+        BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
     stepsBuilder.addPipelinedBuildStepsForAbiJar(
         buildTargetValue,
         CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
@@ -504,7 +506,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .map(this::toBaseJavaAbiInfo)
             .collect(ImmutableList.toImmutableList());
 
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, baseBuckPaths);
+    BuildTargetValue buildTargetValue =
+        BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
     CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, baseBuckPaths);
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
@@ -587,7 +590,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
 
     BaseBuckPaths baseBuckPaths = filesystemParams.getBaseBuckPaths();
-    BuildTargetValue libraryTargetValue = BuildTargetValue.of(libraryTarget, baseBuckPaths);
+    BuildTargetValue libraryTargetValue =
+        BuildTargetValue.withExtraParams(libraryTarget, baseBuckPaths);
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForLibraryJar(
         libraryTargetValue,
@@ -749,7 +753,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .map(this::toBaseJavaAbiInfo)
             .collect(ImmutableList.toImmutableList());
 
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, baseBuckPaths);
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
     CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, baseBuckPaths);
     JarParameters abiJarParameters =
         getAbiJarParameters(buildTarget, context, filesystem, compilerOutputPaths.getClassesDir())

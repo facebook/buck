@@ -91,8 +91,7 @@ public class Jsr199JavacIntegrationTest {
     buildTarget = BuildTargetFactory.newInstance("//some:example");
 
     projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
-    buildTargetValue = BuildTargetValue.of(buildTarget, buckPaths);
+    buildTargetValue = BuildTargetValue.of(buildTarget);
   }
 
   @Test

@@ -69,6 +69,7 @@ public abstract class CompilerOutputPathsValue {
 
   /** Creates {@link CompilerOutputPathsValue} */
   public static CompilerOutputPathsValue of(BaseBuckPaths baseBuckPaths, BuildTarget buildTarget) {
+
     BuildTarget libraryTarget =
         JavaAbis.isLibraryTarget(buildTarget)
             ? buildTarget

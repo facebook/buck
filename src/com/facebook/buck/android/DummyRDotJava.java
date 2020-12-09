@@ -269,7 +269,7 @@ public class DummyRDotJava extends AbstractBuildRule
                 buildCellRootPath, filesystem, pathToJarOutputDir)));
 
     BuckPaths buckPaths = filesystem.getBuckPaths();
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, buckPaths);
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())

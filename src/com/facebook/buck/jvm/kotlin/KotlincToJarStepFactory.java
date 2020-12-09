@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.kotlin;
 
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -34,6 +35,7 @@ import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
@@ -159,6 +161,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
       BuildContextAwareExtraParams extraParams) {
+
+    checkArgument(
+        invokingRule.getExtraParams().isPresent(),
+        "Kotlin compilation to jar factory has to have build target extra params");
 
     AbsPath rootPath = filesystemParams.getRootPath();
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
@@ -508,34 +514,35 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   }
 
   private String getModuleName(BuildTargetValue invokingRule) {
-    return invokingRule.getCellRelativeBasePath().toString().replace('/', '.')
+    BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(invokingRule);
+    return extraParams.getCellRelativeBasePath().toString().replace('/', '.')
         + "."
-        + invokingRule.getShortName();
+        + extraParams.getShortName();
   }
 
   public static RelPath getKaptAnnotationGenPath(BaseBuckPaths buckPaths, BuildTarget buildTarget) {
-    return getKaptAnnotationGenPath(buckPaths, BuildTargetValue.of(buildTarget, buckPaths));
+    return getKaptAnnotationGenPath(
+        buckPaths, BuildTargetValue.withExtraParams(buildTarget, buckPaths));
   }
 
   private static RelPath getKaptAnnotationGenPath(
       BaseBuckPaths buckPaths, BuildTargetValue buildTargetValue) {
-    String format = buildTargetValue.isFlavored() ? "%s" : "%s__";
+    BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(buildTargetValue);
+    String format = extraParams.isFlavored() ? "%s" : "%s__";
     return getGenPath(buckPaths, buildTargetValue, format).resolveRel("__generated__");
   }
 
   /** Returns annotation path for the given {@code target} and {@code format} */
   public static RelPath getAnnotationPath(
       BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
+    checkArgument(!format.startsWith("/"), "format string should not start with a slash");
     return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getAnnotationDir());
   }
 
   /** Returns `gen` directory path for the given {@code target} and {@code format} */
   public static RelPath getGenPath(
       BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
+    checkArgument(!format.startsWith("/"), "format string should not start with a slash");
 
     return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getGenDir());
   }
@@ -546,10 +553,21 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   }
 
   private static ForwardRelativePath getBasePath(BuildTargetValue target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
-    return target
+    checkArgument(!format.startsWith("/"), "format string should not start with a slash");
+    BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(target);
+    return extraParams
         .getBasePathForBaseName()
-        .resolve(BuildTargetPaths.formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
+        .resolve(
+            BuildTargetPaths.formatLastSegment(format, extraParams.getShortNameAndFlavorPostfix()));
+  }
+
+  private static BuildTargetValueExtraParams getBuildTargetValueExtraParams(
+      BuildTargetValue invokingRule) {
+    return invokingRule
+        .getExtraParams()
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Kotlin compilation to jar factory has to have build target extra params"));
   }
 }

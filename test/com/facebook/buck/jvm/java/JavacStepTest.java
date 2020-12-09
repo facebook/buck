@@ -92,7 +92,7 @@ public class JavacStepTest {
     fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     buckPaths = fakeFilesystem.getBuckPaths();
     target = BuildTargetFactory.newInstance("//foo:bar");
-    buildTargetValue = BuildTargetValue.of(target, buckPaths);
+    buildTargetValue = BuildTargetValue.of(target);
     fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolver = buildRuleResolver.getSourcePathResolver();

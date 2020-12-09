@@ -193,7 +193,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ZipCompressionLevel.NONE,
             fatJarDir.getPath());
 
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget, buckPaths);
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()

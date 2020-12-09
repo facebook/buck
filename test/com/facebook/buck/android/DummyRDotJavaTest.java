@@ -133,7 +133,7 @@ public class DummyRDotJavaTest {
     AbsPath rootPath = filesystem.getRootPath();
     StepExecutionContext stepExecutionContext = TestExecutionContext.newInstance(rootPath);
     SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
-    BuildTargetValue buildTargetValue = BuildTargetValue.of(target, buckPaths);
+    BuildTargetValue buildTargetValue = BuildTargetValue.of(target);
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
             .addAll(makeCleanDirDescription(rootPath, rDotJavaSrcFolder.getPath()))
