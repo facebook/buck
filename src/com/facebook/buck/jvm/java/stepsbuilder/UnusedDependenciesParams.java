@@ -16,18 +16,13 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Parameters that used for {@link UnusedDependenciesFinder} creation. */
@@ -39,13 +34,9 @@ public abstract class UnusedDependenciesParams {
   public abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath>
       getProvidedDeps();
 
-  public abstract BaseBuckPaths getBuckPaths();
+  public abstract String getFullyQualifiedName();
 
-  public abstract AbsPath getRootPath();
-
-  public abstract ImmutableMap<String, RelPath> getCellToPathMappings();
-
-  public abstract BuildTargetValue getBuildTargetValue();
+  public abstract RelPath getDepFile();
 
   public abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
 
@@ -63,10 +54,8 @@ public abstract class UnusedDependenciesParams {
   public static UnusedDependenciesParams of(
       ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> deps,
       ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> providedDeps,
-      BaseBuckPaths buckPaths,
-      AbsPath rootPath,
-      ImmutableMap<String, RelPath> cellToPathMappings,
-      BuildTargetValue buildTargetValue,
+      String fullyQualifiedName,
+      RelPath depFile,
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
       ImmutableList<String> exportedDeps,
       Optional<String> buildozerPath,
@@ -76,10 +65,8 @@ public abstract class UnusedDependenciesParams {
     return ImmutableUnusedDependenciesParams.ofImpl(
         deps,
         providedDeps,
-        buckPaths,
-        rootPath,
-        cellToPathMappings,
-        buildTargetValue,
+        fullyQualifiedName,
+        depFile,
         unusedDependenciesAction,
         exportedDeps,
         buildozerPath,
@@ -90,17 +77,10 @@ public abstract class UnusedDependenciesParams {
 
   /** Creates {@link UnusedDependenciesFinder} */
   public static UnusedDependenciesFinder createFinder(
-      UnusedDependenciesParams unusedDependenciesParams) {
-
-    AbsPath rootPath = unusedDependenciesParams.getRootPath();
-    BuildTargetValue buildTargetValue = unusedDependenciesParams.getBuildTargetValue();
-    Path depFilePath =
-        CompilerOutputPaths.getDepFilePath(
-            buildTargetValue, unusedDependenciesParams.getBuckPaths());
-    RelPath depFile = rootPath.relativize(rootPath.resolve(depFilePath));
-
+      UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
     return UnusedDependenciesFinder.of(
-        buildTargetValue.getFullyQualifiedName(),
+        unusedDependenciesParams.getFullyQualifiedName(),
         unusedDependenciesParams.getDeps(),
         unusedDependenciesParams.getProvidedDeps(),
         unusedDependenciesParams.getExportedDeps(),
@@ -108,8 +88,8 @@ public abstract class UnusedDependenciesParams {
         unusedDependenciesParams.getBuildozerPath(),
         unusedDependenciesParams.isOnlyPrintCommands(),
         unusedDependenciesParams.getKnownCellNames(),
-        unusedDependenciesParams.getCellToPathMappings(),
-        depFile,
+        cellToPathMappings,
+        unusedDependenciesParams.getDepFile(),
         unusedDependenciesParams.isDoUltralightChecking());
   }
 }

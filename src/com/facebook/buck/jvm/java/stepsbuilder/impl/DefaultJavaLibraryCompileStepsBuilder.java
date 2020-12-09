@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.UnusedDependenciesParams;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
+import com.google.common.collect.ImmutableMap;
 
 /** Default implementation of {@link JavaLibraryCompileStepsBuilder}. */
 abstract class DefaultJavaLibraryCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
@@ -31,8 +32,11 @@ abstract class DefaultJavaLibraryCompileStepsBuilder<T extends CompileToJarStepF
   }
 
   @Override
-  public void addUnusedDependencyStep(UnusedDependenciesParams unusedDependenciesParams) {
-    stepsBuilder.add(UnusedDependenciesParams.createFinder(unusedDependenciesParams));
+  public void addUnusedDependencyStep(
+      UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableMap<String, RelPath> cellToPathMappings) {
+    stepsBuilder.add(
+        UnusedDependenciesParams.createFinder(unusedDependenciesParams, cellToPathMappings));
   }
 
   @Override

@@ -17,11 +17,14 @@
 package com.facebook.buck.jvm.java.stepsbuilder;
 
 import com.facebook.buck.core.filesystems.RelPath;
+import com.google.common.collect.ImmutableMap;
 
 /** Interface that expose base method for java library steps builder. */
 public interface JavaLibraryCompileStepsBuilder extends JavaCompileStepsBuilder {
 
-  void addUnusedDependencyStep(UnusedDependenciesParams unusedDependenciesParams);
+  void addUnusedDependencyStep(
+      UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableMap<String, RelPath> cellToPathMappings);
 
   void addMakeMissingOutputsStep(
       RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath);

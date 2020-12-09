@@ -33,7 +33,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
@@ -52,6 +51,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -196,14 +196,15 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
       BaseBuckPaths buckPaths = filesystem.getBuckPaths();
 
+      Path depFilePath = CompilerOutputPaths.getDepFilePath(buildTarget, buckPaths);
+      RelPath depFile = rootPath.relativize(rootPath.resolve(depFilePath));
+
       UnusedDependenciesParams unusedDependenciesParams =
           UnusedDependenciesParams.of(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
-              buckPaths,
-              rootPath,
-              cellToPathMappings,
-              BuildTargetValue.of(buildTarget, buckPaths),
+              buildTarget.getFullyQualifiedName(),
+              depFile,
               unusedDependenciesAction,
               factory.exportedDeps,
               factory.buildozerPath,
@@ -211,7 +212,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
               factory.onlyPrintCommands,
               factory.doUltralightChecking);
 
-      addUnusedDependencyStep(unusedDependenciesParams, stepsBuilder);
+      addUnusedDependencyStep(unusedDependenciesParams, cellToPathMappings, stepsBuilder);
     }
 
     RelPath rootOutput = outputPathResolver.resolvePath(rootOutputPath);
@@ -222,8 +223,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   private void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableMap<String, RelPath> cellToPathMappings,
       JavaLibraryCompileStepsBuilder stepsBuilder) {
-    stepsBuilder.addUnusedDependencyStep(unusedDependenciesParams);
+    stepsBuilder.addUnusedDependencyStep(unusedDependenciesParams, cellToPathMappings);
   }
 
   public boolean useDependencyFileRuleKeys() {
