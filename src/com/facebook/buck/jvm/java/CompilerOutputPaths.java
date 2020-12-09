@@ -19,11 +19,9 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.jvm.core.JavaAbis;
 import java.nio.file.FileSystem;
 import java.util.Optional;
 
@@ -47,72 +45,51 @@ public abstract class CompilerOutputPaths {
 
   /** Creates {@link CompilerOutputPaths} */
   public static CompilerOutputPaths of(BuildTarget target, BaseBuckPaths buckPath) {
-    return of(BuildTargetValue.of(target, buckPath), buckPath);
-  }
-
-  /** Creates {@link CompilerOutputPaths} */
-  public static CompilerOutputPaths of(BuildTargetValue target, BaseBuckPaths buckPath) {
+    boolean shouldIncludeTargetConfigHash = buckPath.shouldIncludeTargetConfigHash();
     FileSystem fileSystem = buckPath.getFileSystem();
     RelPath genDir = buckPath.getGenDir();
     RelPath scratchDir = buckPath.getScratchDir();
     RelPath annotationDir = buckPath.getAnnotationDir();
 
-    RelPath genRoot = getRelativePath(target, "lib__%s__output", fileSystem, genDir);
-    RelPath scratchRoot = getRelativePath(target, "lib__%s__scratch", fileSystem, scratchDir);
+    RelPath genRoot =
+        BuildTargetPaths.getRelativePath(
+            target, "lib__%s__output", fileSystem, shouldIncludeTargetConfigHash, genDir);
+    RelPath scratchRoot =
+        BuildTargetPaths.getRelativePath(
+            target, "lib__%s__scratch", fileSystem, shouldIncludeTargetConfigHash, scratchDir);
 
     return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolveRel("classes"))
         .setOutputJarDirPath(genRoot)
         .setAbiJarPath(
-            target.hasAbiJar()
+            JavaAbis.hasAbi(target)
                 ? Optional.of(
                     genRoot.resolveRel(String.format("%s-abi.jar", target.getShortName())))
                 : Optional.empty())
         .setOutputJarPath(
-            target.isLibraryJar()
+            JavaAbis.isLibraryTarget(target)
                 ? Optional.of(
                     genRoot.resolveRel(
                         String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
                 : Optional.empty())
-        .setAnnotationPath(getRelativePath(target, "__%s_gen__", fileSystem, annotationDir))
-        .setPathToSourcesList(getRelativePath(target, "__%s__srcs", fileSystem, genDir))
+        .setAnnotationPath(
+            BuildTargetPaths.getRelativePath(
+                target, "__%s_gen__", fileSystem, shouldIncludeTargetConfigHash, annotationDir))
+        .setPathToSourcesList(
+            BuildTargetPaths.getRelativePath(
+                target, "__%s__srcs", fileSystem, shouldIncludeTargetConfigHash, genDir))
         .setWorkingDirectory(
-            getRelativePath(target, "lib__%s__working_directory", fileSystem, genDir))
+            BuildTargetPaths.getRelativePath(
+                target,
+                "lib__%s__working_directory",
+                fileSystem,
+                shouldIncludeTargetConfigHash,
+                genDir))
         .build();
   }
 
   /** Returns a path to a file that contains dependencies used in the compilation */
   public static RelPath getDepFilePath(RelPath outputJarDirPath) {
     return outputJarDirPath.resolveRel("used-classes.json");
-  }
-
-  /** Returns annotation path for the given {@code target} and {@code format} */
-  public static RelPath getAnnotationPath(
-      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
-    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getAnnotationDir());
-  }
-
-  /** Returns `gen` directory path for the given {@code target} and {@code format} */
-  public static RelPath getGenPath(
-      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
-
-    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getGenDir());
-  }
-
-  private static RelPath getRelativePath(
-      BuildTargetValue target, String format, FileSystem fileSystem, RelPath directory) {
-    return directory.resolve(getBasePath(target, format).toRelPath(fileSystem));
-  }
-
-  private static ForwardRelativePath getBasePath(BuildTargetValue target, String format) {
-    Preconditions.checkArgument(
-        !format.startsWith("/"), "format string should not start with a slash");
-    return target
-        .getBasePathForBaseName()
-        .resolve(BuildTargetPaths.formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
   }
 }

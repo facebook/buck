@@ -154,7 +154,7 @@ public class DummyRDotJavaTest {
                             rootPath),
                         buildTargetValue,
                         buckPaths.getConfiguredBuckOut(),
-                        CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
+                        CompilerOutputPathsValue.of(buckPaths, target),
                         new ClasspathChecker(),
                         CompilerParameters.builder()
                             .setOutputPaths(

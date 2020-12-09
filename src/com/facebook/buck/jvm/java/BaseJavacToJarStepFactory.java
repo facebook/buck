@@ -82,7 +82,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       JavaExtraParams extraParams) {
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
-    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(invokingRule);
+    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(invokingRule.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
     ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
@@ -115,7 +115,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
 
-    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(buildTargetValue);
+    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(buildTargetValue.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
     if (!pipeline.isRunning()) {
@@ -242,7 +242,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       BuildTargetValue invokingRule,
       ImmutableList.Builder<IsolatedStep> steps) {
     if (hasAnnotationProcessing() && pipeline.isRunning()) {
-      CompilerOutputPaths outputPath = compilerOutputPathsValue.getByBuildTarget(invokingRule);
+      CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(invokingRule.getType());
       steps.add(
           SymlinkIsolatedStep.of(
               compilerOutputPathsValue.getSourceAbiCompilerOutputPath().getAnnotationPath(),

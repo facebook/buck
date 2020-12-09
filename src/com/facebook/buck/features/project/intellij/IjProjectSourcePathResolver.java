@@ -287,7 +287,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
         return Optional.empty();
       }
     }
-    if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
+    if (JavaAbis.hasAbi(buildTarget)) {
       return Optional.of(
           CompilerOutputPaths.of(buildTarget, projectFilesystem.getBuckPaths())
               .getAbiJarPath()

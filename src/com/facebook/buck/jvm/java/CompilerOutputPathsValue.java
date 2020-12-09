@@ -16,9 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.core.JavaAbis;
 
 /**
  * Value object that contains {@link CompilerOutputPaths} for library, source abi and source only
@@ -35,20 +37,21 @@ public abstract class CompilerOutputPathsValue {
 
   abstract CompilerOutputPaths getSourceOnlyAbiCompilerOutputPath();
 
-  CompilerOutputPaths getByBuildTarget(BuildTargetValue buildTargetValue) {
-    if (buildTargetValue.isLibraryJar()) {
-      return getLibraryCompilerOutputPath();
-    }
+  /** Returns {@link CompilerOutputPaths} by given {@code type} */
+  public CompilerOutputPaths getByType(BuildTargetValue.Type type) {
+    switch (type) {
+      case LIBRARY:
+        return getLibraryCompilerOutputPath();
 
-    if (buildTargetValue.isSourceAbi()) {
-      return getSourceAbiCompilerOutputPath();
-    }
+      case SOURCE_ABI:
+        return getSourceAbiCompilerOutputPath();
 
-    if (buildTargetValue.isSourceOnlyAbi()) {
-      return getSourceOnlyAbiCompilerOutputPath();
-    }
+      case SOURCE_ONLY_ABI:
+        return getSourceOnlyAbiCompilerOutputPath();
 
-    throw new IllegalStateException(buildTargetValue + " is not supported");
+      default:
+        throw new IllegalStateException(type + " is not supported");
+    }
   }
 
   /** Creates {@link CompilerOutputPathsValue} */
@@ -65,19 +68,18 @@ public abstract class CompilerOutputPathsValue {
   }
 
   /** Creates {@link CompilerOutputPathsValue} */
-  public static CompilerOutputPathsValue of(
-      BaseBuckPaths baseBuckPaths, BuildTargetValue buildTargetValue) {
-    BuildTargetValue libraryTarget =
-        buildTargetValue.isLibraryJar()
-            ? buildTargetValue
-            : BuildTargetValue.libraryTarget(buildTargetValue);
+  public static CompilerOutputPathsValue of(BaseBuckPaths baseBuckPaths, BuildTarget buildTarget) {
+    BuildTarget libraryTarget =
+        JavaAbis.isLibraryTarget(buildTarget)
+            ? buildTarget
+            : JavaAbis.getLibraryTarget(buildTarget);
 
     CompilerOutputPaths libraryCompilerOutputPaths =
         CompilerOutputPaths.of(libraryTarget, baseBuckPaths);
     CompilerOutputPaths sourceAbiCompilerOutputPaths =
-        CompilerOutputPaths.of(BuildTargetValue.sourceAbiTarget(libraryTarget), baseBuckPaths);
+        CompilerOutputPaths.of(JavaAbis.getSourceAbiJar(libraryTarget), baseBuckPaths);
     CompilerOutputPaths sourceOnlyAbiCompilerOutputPaths =
-        CompilerOutputPaths.of(BuildTargetValue.sourceOnlyAbiTarget(libraryTarget), baseBuckPaths);
+        CompilerOutputPaths.of(JavaAbis.getSourceOnlyAbiJar(libraryTarget), baseBuckPaths);
     CompilerOutputPathsValue compilerOutputPathsValue =
         of(
             libraryTarget.getFullyQualifiedName(),

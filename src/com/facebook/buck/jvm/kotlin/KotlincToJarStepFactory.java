@@ -23,6 +23,8 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -34,7 +36,6 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -65,6 +66,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -180,23 +182,17 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
     // Only invoke kotlinc if we have kotlin or src zip files.
     if (hasKotlinSources) {
-      RelPath stubsOutput =
-          CompilerOutputPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_stubs__");
-      RelPath sourcesOutput =
-          CompilerOutputPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_sources__");
-      RelPath classesOutput =
-          CompilerOutputPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_classes__");
+      RelPath stubsOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_stubs__");
+      RelPath sourcesOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_sources__");
+      RelPath classesOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_classes__");
       RelPath kaptGeneratedOutput =
-          CompilerOutputPaths.getAnnotationPath(buckPaths, invokingRule, "__%s_kapt_generated__");
+          getAnnotationPath(buckPaths, invokingRule, "__%s_kapt_generated__");
       RelPath kotlincPluginGeneratedOutput =
-          CompilerOutputPaths.getAnnotationPath(
-              buckPaths, invokingRule, "__%s_kotlinc_plugin_generated__");
+          getAnnotationPath(buckPaths, invokingRule, "__%s_kotlinc_plugin_generated__");
       RelPath annotationGenFolder = getKaptAnnotationGenPath(buckPaths, invokingRule);
-      RelPath genOutputFolder =
-          CompilerOutputPaths.getGenPath(buckPaths, invokingRule, "__%s_gen_sources__");
+      RelPath genOutputFolder = getGenPath(buckPaths, invokingRule, "__%s_gen_sources__");
       RelPath genOutput =
-          CompilerOutputPaths.getGenPath(
-              buckPaths, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
+          getGenPath(buckPaths, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
 
       // Javac requires that the root directory for generated sources already exist.
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(stubsOutput));
@@ -524,7 +520,36 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   private static RelPath getKaptAnnotationGenPath(
       BaseBuckPaths buckPaths, BuildTargetValue buildTargetValue) {
     String format = buildTargetValue.isFlavored() ? "%s" : "%s__";
-    RelPath genPath = CompilerOutputPaths.getGenPath(buckPaths, buildTargetValue, format);
-    return genPath.resolveRel("__generated__");
+    return getGenPath(buckPaths, buildTargetValue, format).resolveRel("__generated__");
+  }
+
+  /** Returns annotation path for the given {@code target} and {@code format} */
+  public static RelPath getAnnotationPath(
+      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getAnnotationDir());
+  }
+
+  /** Returns `gen` directory path for the given {@code target} and {@code format} */
+  public static RelPath getGenPath(
+      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+
+    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getGenDir());
+  }
+
+  private static RelPath getRelativePath(
+      BuildTargetValue target, String format, FileSystem fileSystem, RelPath directory) {
+    return directory.resolve(getBasePath(target, format).toRelPath(fileSystem));
+  }
+
+  private static ForwardRelativePath getBasePath(BuildTargetValue target, String format) {
+    Preconditions.checkArgument(
+        !format.startsWith("/"), "format string should not start with a slash");
+    return target
+        .getBasePathForBaseName()
+        .resolve(BuildTargetPaths.formatLastSegment(format, target.getShortNameAndFlavorPostfix()));
   }
 }

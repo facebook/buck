@@ -274,7 +274,7 @@ public class DummyRDotJava extends AbstractBuildRule
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths)
-            .setOutputPaths(CompilerOutputPaths.of(buildTargetValue, buckPaths))
+            .setOutputPaths(CompilerOutputPaths.of(buildTarget, buckPaths))
             .build();
 
     Preconditions.checkState(
@@ -295,7 +295,7 @@ public class DummyRDotJava extends AbstractBuildRule
         FilesystemParams.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
         buildTargetValue,
-        CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
+        CompilerOutputPathsValue.of(buckPaths, buildTarget),
         compilerParameters,
         isolatedSteps,
         buildableContext,

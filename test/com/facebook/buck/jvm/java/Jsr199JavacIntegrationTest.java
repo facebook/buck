@@ -150,7 +150,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 buildTargetValue,
-                CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
+                CompilerOutputPathsValue.of(buckPaths, buildTarget),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -206,7 +206,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 buildTargetValue,
-                CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
+                CompilerOutputPathsValue.of(buckPaths, buildTarget),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -317,7 +317,7 @@ public class Jsr199JavacIntegrationTest {
           .newBuildInvocation(
               javacExecutionContext,
               buildTargetValue,
-              CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
+              CompilerOutputPathsValue.of(buckPaths, buildTarget),
               ImmutableList.of(),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -413,7 +413,7 @@ public class Jsr199JavacIntegrationTest {
         javac.newBuildInvocation(
             javacExecutionContext,
             buildTargetValue,
-            CompilerOutputPathsValue.of(buckPaths, buildTargetValue),
+            CompilerOutputPathsValue.of(buckPaths, buildTarget),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),

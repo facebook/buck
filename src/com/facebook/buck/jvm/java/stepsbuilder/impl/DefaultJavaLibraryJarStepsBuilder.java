@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.FilesystemParams;
@@ -83,7 +82,7 @@ class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraP
             abiGenerationMode,
             abiCompatibilityMode,
             isRequiredForSourceOnlyAbi,
-            CompilerOutputPaths.of(buildTargetValue, filesystemParams.getBaseBuckPaths()));
+            compilerOutputPathsValue.getByType(buildTargetValue.getType()));
 
     Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
     configuredCompiler.createCompileToJarStep(

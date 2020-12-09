@@ -56,6 +56,10 @@ public class JavaAbis {
     return target.getFlavors().contains(SOURCE_ABI_FLAVOR);
   }
 
+  public static boolean hasAbi(BuildTarget target) {
+    return isSourceAbiTarget(target) || isSourceOnlyAbiTarget(target);
+  }
+
   public static BuildTarget getSourceOnlyAbiJar(BuildTarget libraryTarget) {
     Preconditions.checkArgument(isLibraryTarget(libraryTarget));
     return libraryTarget.withAppendedFlavors(SOURCE_ONLY_ABI_FLAVOR);

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -81,7 +82,8 @@ public class JavacStepTest {
 
   private ProjectFilesystem fakeFilesystem;
   private BuckPaths buckPaths;
-  private BuildTargetValue target;
+  private BuildTarget target;
+  private BuildTargetValue buildTargetValue;
   private FakeJavac fakeJavac;
   private SourcePathResolverAdapter sourcePathResolver;
 
@@ -89,7 +91,8 @@ public class JavacStepTest {
   public void setUp() throws Exception {
     fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     buckPaths = fakeFilesystem.getBuckPaths();
-    target = BuildTargetValue.of(BuildTargetFactory.newInstance("//foo:bar"), buckPaths);
+    target = BuildTargetFactory.newInstance("//foo:bar");
+    buildTargetValue = BuildTargetValue.of(target, buckPaths);
     fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolver = buildRuleResolver.getSourcePathResolver();
@@ -113,7 +116,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
-            target,
+            buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
@@ -163,7 +166,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
-            target,
+            buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
@@ -240,7 +243,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
-            target,
+            buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
@@ -290,7 +293,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
-            target,
+            buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
             classpathChecker,
@@ -346,7 +349,7 @@ public class JavacStepTest {
         new JavacStep(
             fakeJavac,
             ResolvedJavacOptions.of(javacOptions, sourcePathResolver, fakeFilesystem.getRootPath()),
-            target,
+            buildTargetValue,
             fakeFilesystem.getBuckPaths().getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(fakeFilesystem.getBuckPaths(), target),
             classpathChecker,
