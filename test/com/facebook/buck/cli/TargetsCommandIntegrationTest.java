@@ -427,36 +427,44 @@ public class TargetsCommandIntegrationTest {
             "//:annotation_processor",
             "//:annotation_processor_lib "
                 + resolvePath.apply(
-                    CompilerOutputPaths.getOutputJarPath(
+                    CompilerOutputPaths.of(
                             BuildTargetFactory.newInstance("//:annotation_processor_lib"),
                             filesystem.getBuckPaths())
+                        .getOutputJarPath()
+                        .get()
                         .toString()),
             "//:test-library",
             "//:test-library-with-processing "
                 + resolvePath.apply(
-                    CompilerOutputPaths.getAnnotationPath(
+                    CompilerOutputPaths.of(
                             BuildTargetFactory.newInstance("//:test-library-with-processing"),
                             filesystem.getBuckPaths())
+                        .getAnnotationPath()
                         .toString()),
             "//:test-library-with-processing-with-srcs "
                 + resolvePath.apply(
-                    CompilerOutputPaths.getOutputJarPath(
+                    CompilerOutputPaths.of(
                             BuildTargetFactory.newInstance(
                                 "//:test-library-with-processing-with-srcs"),
                             filesystem.getBuckPaths())
+                        .getOutputJarPath()
+                        .get()
                         .toString())
                 + " "
                 + resolvePath.apply(
-                    CompilerOutputPaths.getAnnotationPath(
+                    CompilerOutputPaths.of(
                             BuildTargetFactory.newInstance(
                                 "//:test-library-with-processing-with-srcs"),
                             filesystem.getBuckPaths())
+                        .getAnnotationPath()
                         .toString()),
             "//:test-library-with-srcs "
                 + resolvePath.apply(
-                    CompilerOutputPaths.getOutputJarPath(
+                    CompilerOutputPaths.of(
                             BuildTargetFactory.newInstance("//:test-library-with-srcs"),
                             filesystem.getBuckPaths())
+                        .getOutputJarPath()
+                        .get()
                         .toString())),
         result.getStdout().trim());
   }
@@ -533,11 +541,13 @@ public class TargetsCommandIntegrationTest {
                         .toString()),
             "//:java_lib "
                 + MorePaths.pathWithPlatformSeparators(
-                    CompilerOutputPaths.getOutputJarPath(javaLibTarget, filesystem.getBuckPaths()))
+                    CompilerOutputPaths.of(javaLibTarget, filesystem.getBuckPaths())
+                        .getOutputJarPath()
+                        .get())
                 + " "
                 + MorePaths.pathWithPlatformSeparators(
-                    CompilerOutputPaths.getAnnotationPath(
-                        javaLibTarget, filesystem.getBuckPaths())),
+                    CompilerOutputPaths.of(javaLibTarget, filesystem.getBuckPaths())
+                        .getAnnotationPath()),
             "//:plugin",
             "//:test "
                 + MorePaths.pathWithPlatformSeparators(

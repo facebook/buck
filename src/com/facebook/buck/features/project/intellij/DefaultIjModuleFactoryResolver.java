@@ -199,8 +199,8 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
       return Optional.empty();
     }
     return Optional.of(
-        CompilerOutputPaths.getAnnotationPath(
-                targetNode.getBuildTarget(), projectFilesystem.getBuckPaths())
+        CompilerOutputPaths.of(targetNode.getBuildTarget(), projectFilesystem.getBuckPaths())
+            .getAnnotationPath()
             .getPath());
   }
 
@@ -227,8 +227,9 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         buildTargetPatchCell(buildTarget, projectFilesystem.getBuckPaths().getCellName());
 
     Path compilerOutputPath =
-        CompilerOutputPaths.getOutputJarPath(
-                buildTargetPatchedCell, projectFilesystem.getBuckPaths())
+        CompilerOutputPaths.of(buildTargetPatchedCell, projectFilesystem.getBuckPaths())
+            .getOutputJarPath()
+            .get()
             .getPath();
     return Optional.of(compilerOutputPath);
   }

@@ -668,11 +668,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       CellPathResolver cellPathResolver,
       BuildTarget buildTarget) {
     Preconditions.checkState(useDependencyFileRuleKeys());
+    BaseBuckPaths buckPath = filesystem.getBuckPaths();
     return DefaultClassUsageFileReader.loadFromFile(
         filesystem.getRootPath(),
         cellPathResolver,
         filesystem.getPathForRelativePath(
-            CompilerOutputPaths.getDepFilePath(buildTarget, filesystem.getBuckPaths())),
+            CompilerOutputPaths.getDepFilePath(
+                CompilerOutputPaths.of(BuildTargetValue.of(buildTarget, buckPath), buckPath))),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
@@ -683,9 +685,11 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     }
 
     if (buildTargetValue.hasAbiJar()) {
-      return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTargetValue, buckPaths));
+      Preconditions.checkArgument(buildTargetValue.hasAbiJar());
+      return Optional.of(CompilerOutputPaths.of(buildTargetValue, buckPaths).getAbiJarPath().get());
     } else if (buildTargetValue.isLibraryJar()) {
-      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTargetValue, buckPaths));
+      return Optional.of(
+          CompilerOutputPaths.of(buildTargetValue, buckPaths).getOutputJarPath().get());
     } else {
       throw new IllegalArgumentException();
     }
@@ -697,7 +701,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       return Optional.empty();
     }
     return Optional.of(
-        CompilerOutputPaths.getAnnotationPath(buildTarget, filesystem.getBuckPaths()).getPath());
+        CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths())
+            .getAnnotationPath()
+            .getPath());
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(

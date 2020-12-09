@@ -81,7 +81,10 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       JavaExtraParams extraParams) {
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
-    addAnnotationGenFolderStep(invokingRule, steps, buildableContext, buckPaths);
+    addAnnotationGenFolderStep(
+        steps,
+        buildableContext,
+        CompilerOutputPaths.of(invokingRule, buckPaths).getAnnotationPath());
 
     ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
     steps.add(
@@ -111,7 +114,10 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
     BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
 
-    addAnnotationGenFolderStep(buildTargetValue, steps, buildableContext, buckPaths);
+    addAnnotationGenFolderStep(
+        steps,
+        buildableContext,
+        CompilerOutputPaths.of(buildTargetValue, buckPaths).getAnnotationPath());
 
     if (!pipeline.isRunning()) {
       steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
@@ -138,12 +144,9 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   }
 
   private void addAnnotationGenFolderStep(
-      BuildTargetValue invokingTarget,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      BaseBuckPaths buckPaths) {
-    RelPath annotationGenFolder = CompilerOutputPaths.getAnnotationPath(invokingTarget, buckPaths);
-
+      RelPath annotationGenFolder) {
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
     buildableContext.recordArtifact(annotationGenFolder.getPath());
   }
@@ -232,9 +235,9 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
       steps.add(
           SymlinkIsolatedStep.of(
-              CompilerOutputPaths.getAnnotationPath(
-                  BuildTargetValue.sourceAbiTarget(invokingRule), buckPaths),
-              CompilerOutputPaths.getAnnotationPath(invokingRule, buckPaths)));
+              CompilerOutputPaths.of(BuildTargetValue.sourceAbiTarget(invokingRule), buckPaths)
+                  .getAnnotationPath(),
+              CompilerOutputPaths.of(invokingRule, buckPaths).getAnnotationPath()));
     }
 
     steps.add(new JavacStep(pipeline, invokingRule, buckPaths, cellToPathMappings));

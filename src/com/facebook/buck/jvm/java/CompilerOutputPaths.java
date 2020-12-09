@@ -23,7 +23,6 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.core.JavaAbis;
 import com.google.common.base.Preconditions;
 import java.nio.file.FileSystem;
 import java.util.Optional;
@@ -83,50 +82,8 @@ public abstract class CompilerOutputPaths {
   }
 
   /** Returns a path to a file that contains dependencies used in the compilation */
-  public static RelPath getDepFilePath(BuildTarget target, BaseBuckPaths buckPath) {
-    return getDepFilePath(BuildTargetValue.of(target, buckPath), buckPath);
-  }
-
-  /** Returns a path to a file that contains dependencies used in the compilation */
-  public static RelPath getDepFilePath(BuildTargetValue target, BaseBuckPaths buckPath) {
-    return CompilerOutputPaths.of(target, buckPath)
-        .getOutputJarDirPath()
-        .resolveRel("used-classes.json");
-  }
-
-  public static RelPath getClassesDir(BuildTarget target, BaseBuckPaths buckPaths) {
-    return CompilerOutputPaths.of(target, buckPaths).getClassesDir();
-  }
-
-  public static RelPath getAnnotationPath(BuildTarget target, BaseBuckPaths buckPaths) {
-    return CompilerOutputPaths.of(target, buckPaths).getAnnotationPath();
-  }
-
-  public static RelPath getAnnotationPath(BuildTargetValue target, BaseBuckPaths buckPaths) {
-    return CompilerOutputPaths.of(target, buckPaths).getAnnotationPath();
-  }
-
-  public static RelPath getAbiJarPath(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
-    Preconditions.checkArgument(hasAbiJar(buildTarget));
-    return CompilerOutputPaths.of(buildTarget, buckPaths).getAbiJarPath().get();
-  }
-
-  public static RelPath getAbiJarPath(BuildTargetValue buildTargetValue, BaseBuckPaths buckPaths) {
-    Preconditions.checkArgument(buildTargetValue.hasAbiJar());
-    return CompilerOutputPaths.of(buildTargetValue, buckPaths).getAbiJarPath().get();
-  }
-
-  public static RelPath getOutputJarPath(BuildTarget target, BaseBuckPaths buckPaths) {
-    return CompilerOutputPaths.of(target, buckPaths).getOutputJarPath().get();
-  }
-
-  public static RelPath getOutputJarPath(
-      BuildTargetValue buildTargetValue, BaseBuckPaths buckPaths) {
-    return CompilerOutputPaths.of(buildTargetValue, buckPaths).getOutputJarPath().get();
-  }
-
-  private static boolean hasAbiJar(BuildTarget target) {
-    return JavaAbis.isSourceAbiTarget(target) || JavaAbis.isSourceOnlyAbiTarget(target);
+  public static RelPath getDepFilePath(CompilerOutputPaths compilerOutputPaths) {
+    return compilerOutputPaths.getOutputJarDirPath().resolveRel("used-classes.json");
   }
 
   /** Returns annotation path for the given {@code target} and {@code format} */

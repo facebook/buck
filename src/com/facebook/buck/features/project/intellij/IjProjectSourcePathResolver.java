@@ -289,11 +289,15 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     }
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
       return Optional.of(
-          CompilerOutputPaths.getAbiJarPath(buildTarget, projectFilesystem.getBuckPaths())
+          CompilerOutputPaths.of(buildTarget, projectFilesystem.getBuckPaths())
+              .getAbiJarPath()
+              .get()
               .getPath());
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
       return Optional.of(
-          CompilerOutputPaths.getOutputJarPath(buildTarget, projectFilesystem.getBuckPaths())
+          CompilerOutputPaths.of(buildTarget, projectFilesystem.getBuckPaths())
+              .getOutputJarPath()
+              .get()
               .getPath());
     } else {
       return Optional.empty();
