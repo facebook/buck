@@ -162,12 +162,16 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       ResolvedJavac resolvedJavac,
       BuildContextAwareExtraParams extraParams) {
 
-    checkArgument(
-        invokingRule.getExtraParams().isPresent(),
-        "Kotlin compilation to jar factory has to have build target extra params");
+    BuildTargetValueExtraParams buildTargetValueExtraParams =
+        invokingRule
+            .getExtraParams()
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Kotlin compilation to jar factory has to have build target extra params"));
 
     AbsPath rootPath = filesystemParams.getRootPath();
-    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
+    BaseBuckPaths buckPaths = buildTargetValueExtraParams.getBaseBuckPaths();
     ImmutableSet<PathMatcher> ignoredPaths = filesystemParams.getIgnoredPaths();
 
     BuildContext buildContext = extraParams.getBuildContext();
