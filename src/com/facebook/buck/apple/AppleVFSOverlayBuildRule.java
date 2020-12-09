@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
@@ -57,40 +56,17 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBuildRule.Impl> {
 
-  private final SourcePath symlinkTreePath;
-  private final String placeholderPathString;
-
   AppleVFSOverlayBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathRuleFinder finder,
-      SourcePath symlinkTreePath,
-      String placeholderPathString) {
+      SourcePath underlyingModulemapPath,
+      RelPath exportedHeadersWithModulemapPath) {
     super(
         buildTarget,
         filesystem,
         finder,
-        new Impl(symlinkTreePath, buildTarget.getShortName(), placeholderPathString));
-    this.symlinkTreePath = symlinkTreePath;
-    this.placeholderPathString = placeholderPathString;
-  }
-
-  public SourcePath getSymlinkTreePath() {
-    return symlinkTreePath;
-  }
-
-  public String getPlaceholderPath() {
-    return placeholderPathString;
-  }
-
-  /** Generates a consistent fake placeholder search path relative to the build target. */
-  public static Path getPlaceHolderPath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
-    Path constructedPath =
-        Paths.get(
-            buildTarget.getUnflavoredBuildTarget().getCellRelativeBasePath().getPath().toString(),
-            buildTarget.getShortName(),
-            "FAKE_PLACEHOLDER_SEARCH_PATH");
-    return filesystem.getPathForRelativePath(constructedPath);
+        new Impl(underlyingModulemapPath, exportedHeadersWithModulemapPath));
   }
 
   @Override
@@ -109,20 +85,22 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
 
     private static final Logger LOG = Logger.get(AppleVFSOverlayBuildRule.Impl.class);
 
-    @AddToRuleKey private final SourcePath symlinkTreePath;
+    @AddToRuleKey private final SourcePath underlyingModulemapPath;
+    @AddToRuleKey private final String exportedHeadersWithModulemapPath;
     @AddToRuleKey private final OutputPath yamlPath;
-    @AddToRuleKey private final String buildTargetName;
-    @AddToRuleKey private final String placeholderPathString;
 
     // TODO: (andyyhope): swap to compiler-invocation relative paths
     @CustomFieldBehavior(RemoteExecutionEnabled.class)
     private final boolean remoteExecutionEnabled = false;
 
-    Impl(SourcePath symlinkTreePath, String buildTargetName, String placeholderPathString) {
-      this.symlinkTreePath = symlinkTreePath;
-      this.yamlPath = new OutputPath("overlay.yaml");
-      this.buildTargetName = buildTargetName;
-      this.placeholderPathString = placeholderPathString;
+    Impl(SourcePath underlyingModulemapPath, RelPath exportedHeadersWithModulemapPath) {
+      this.underlyingModulemapPath = underlyingModulemapPath;
+      this.exportedHeadersWithModulemapPath = exportedHeadersWithModulemapPath.toString();
+
+      // the filename of the overlay is important, if we use the same
+      // name as Xcode then the flag is skipped when serializing debug info
+      // https://github.com/apple/swift/blob/af8cf15e22661a91086930d03a033e3917feb4f2/lib/Serialization/Serialization.cpp#L992-L1006
+      this.yamlPath = new OutputPath("unextended-module-overlay.yaml");
     }
 
     @Override
@@ -139,25 +117,23 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
             public StepExecutionResult execute(StepExecutionContext context) throws IOException {
               ImmutableSortedMap.Builder<Path, Path> vfsBuilder = ImmutableSortedMap.naturalOrder();
 
-              AbsPath underlyingAbsPath =
-                  buildContext.getSourcePathResolver().getAbsolutePath(symlinkTreePath);
+              AbsPath underlyingModulemapAbsPath =
+                  buildContext.getSourcePathResolver().getAbsolutePath(underlyingModulemapPath);
+              AbsPath exportedModulemapAbsPath =
+                  filesystem.resolve(exportedHeadersWithModulemapPath);
 
               SimpleFileVisitor<Path> fileVisitor =
                   new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                         throws IOException {
-                      String keySuffix =
-                          String.format("%s/", underlyingAbsPath.getPath().toString());
-
-                      Path key =
-                          Paths.get(placeholderPathString, file.toString().replace(keySuffix, ""));
-                      // TODO: (andyyhope): swap to compiler-invocation relative paths
-                      vfsBuilder.put(key, file);
+                      Path relPath = underlyingModulemapAbsPath.getPath().relativize(file);
+                      Path exportedPath = exportedModulemapAbsPath.getPath().resolve(relPath);
+                      vfsBuilder.put(exportedPath, file);
                       return FileVisitResult.CONTINUE;
                     }
                   };
-              Files.walkFileTree(underlyingAbsPath.getPath(), fileVisitor);
+              Files.walkFileTree(underlyingModulemapAbsPath.getPath(), fileVisitor);
               VFSOverlay vfsOverlay = new VFSOverlay(vfsBuilder.build());
               try {
                 String render = vfsOverlay.render();

@@ -161,9 +161,7 @@ public class AppleLibraryDescription
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
         AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_UNDERLYING_MODULE(AppleDescriptions.SWIFT_UNDERLYING_MODULE_FLAVOR),
-    SWIFT_UNDERLYING_VFS_OVERLAY(AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR),
-    SWIFT_DEPENDENT_VFS_OVERLAY(AppleDescriptions.SWIFT_DEPENDENT_VFS_OVERLAY_FLAVOR),
-    ;
+    SWIFT_UNDERLYING_VFS_OVERLAY(AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR);
 
     private final Flavor flavor;
 
@@ -301,69 +299,43 @@ public class AppleLibraryDescription
                     .orElseThrow(IllegalArgumentException::new)
                     .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
-            BuildTarget nonVfsUnderlyingTarget =
+            BuildTarget underlyingModuleTarget =
                 buildTarget.withFlavors(
                     cxxPlatform.getFlavor(), Type.SWIFT_UNDERLYING_MODULE.getFlavor());
+            HeaderSymlinkTreeWithModuleMap underlyingModuleRule =
+                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(underlyingModuleTarget);
 
-            HeaderSymlinkTreeWithModuleMap symlinkTreeRule =
-                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(nonVfsUnderlyingTarget);
-
-            Path placeholderPath =
-                AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
+            // We can't require the rule here as it would end up with a circular dependency:
+            //    #header-mode-symlink-tree-with-modulemap,headers ->
+            //    #apple-swift-objc-generated-header ->
+            //    #apple-swift-compile ->
+            //    #apple-swift-underlying-vfs-overlay ->
+            //    #header-mode-symlink-tree-with-modulemap,headers
+            // Instead we construct the path as a string from the target. We don't actually require
+            // the path to exist yet to generate the VFS overlay, so there is no race condition.
+            BuildTarget exportedHeadersWithModulemapTarget =
+                buildTarget
+                    .withoutFlavors(LIBRARY_TYPE.getFlavors())
+                    .withAppendedFlavors(
+                        cxxPlatform.getFlavor(),
+                        CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
+            RelPath exportedHeadersWithModulemapPath =
+                BuildTargetPaths.getGenPath(
+                    projectFilesystem.getBuckPaths(), exportedHeadersWithModulemapTarget, "%s");
 
             AppleVFSOverlayBuildRule vfsRule =
                 new AppleVFSOverlayBuildRule(
                     buildTarget,
                     projectFilesystem,
                     graphBuilder,
-                    symlinkTreeRule.getRootSourcePath(),
-                    placeholderPath.toString());
+                    underlyingModuleRule.getRootSourcePath(),
+                    exportedHeadersWithModulemapPath);
             return Optional.of(vfsRule);
           } else if (type.getValue().equals(Type.SWIFT_UNDERLYING_MODULE)) {
             return Optional.of(
                 createUnderlyingModuleSymlinkTreeBuildRule(
                     buildTarget, projectFilesystem, graphBuilder, args));
-          } else if (type.getValue().equals(Type.SWIFT_DEPENDENT_VFS_OVERLAY)) {
-            CxxPlatform cxxPlatform =
-                cxxPlatforms
-                    .getValue(buildTarget)
-                    .orElseThrow(IllegalArgumentException::new)
-                    .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-
-            Path placeholderPath =
-                AppleVFSOverlayBuildRule.getPlaceHolderPath(projectFilesystem, buildTarget);
-
-            boolean shouldCreatePrivateHeaderSymlinks =
-                args.getXcodePrivateHeadersSymlinks()
-                    .orElse(cxxPlatform.getPrivateHeadersSymlinksEnabled());
-
-            HeaderMode headerMode =
-                args.isModular()
-                    ? HeaderMode.SYMLINK_TREE_WITH_MODULEMAP
-                    : CxxDescriptionEnhancer.getHeaderModeForPlatform(
-                        graphBuilder,
-                        buildTarget.getTargetConfiguration(),
-                        cxxPlatform,
-                        shouldCreatePrivateHeaderSymlinks);
-
-            BuildTarget headerModeSymlinkTarget =
-                buildTarget.withFlavors(
-                    cxxPlatform.getFlavor(),
-                    Type.EXPORTED_HEADERS.getFlavor(),
-                    headerMode.getFlavor());
-
-            HeaderSymlinkTree headerSymlinkRule =
-                (HeaderSymlinkTree) graphBuilder.requireRule(headerModeSymlinkTarget);
-
-            AppleVFSOverlayBuildRule vfsRule =
-                new AppleVFSOverlayBuildRule(
-                    buildTarget,
-                    projectFilesystem,
-                    graphBuilder,
-                    headerSymlinkRule.getRootSourcePath(),
-                    placeholderPath.toString());
-
-            return Optional.of(vfsRule);
           } else if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             CxxPlatform cxxPlatform =
                 cxxPlatforms
@@ -418,11 +390,7 @@ public class AppleLibraryDescription
                         () ->
                             AppleLibraryDescriptionSwiftEnhancer
                                 .getPreprocessorInputsForAppleLibrary(
-                                    buildTarget,
-                                    graphBuilder,
-                                    cxxPlatform,
-                                    args,
-                                    appleConfig.shouldUseVFSOverlays()));
+                                    buildTarget, graphBuilder, cxxPlatform, args));
 
             if (type.getValue().equals(Type.SWIFT_COMPILE)) {
               return Optional.of(
@@ -992,12 +960,39 @@ public class AppleLibraryDescription
             if (!args.isModular()) {
               return Optional.empty();
             }
+
+            BuildTarget swiftCompileTarget =
+                baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_MODULE.getFlavor());
+            HeaderSymlinkTreeWithModuleMap modulemap =
+                (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(swiftCompileTarget);
+
+            if (modulemap.getLinks().size() == 0) {
+              return Optional.empty();
+            }
+
             if (appleConfig.shouldUseVFSOverlays()) {
               BuildTarget underlyingVfsTarget =
                   baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_VFS_OVERLAY.getFlavor());
 
               AppleVFSOverlayBuildRule vfsOverlayRule =
                   (AppleVFSOverlayBuildRule) graphBuilder.requireRule(underlyingVfsTarget);
+
+              // The VFS overlay masks the exported modulemap with the underlying one.
+              // This requires us to import the exported modulemap path to overlay correctly.
+              // We cannot require the rule here as that would be a circular dependency, so we
+              // generate the path and add as a string arg instead.
+              BuildTarget exportedHeadersWithModulemapTarget =
+                  baseTarget.withAppendedFlavors(
+                      CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                      HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
+              RelPath exportedHeadersWithModulemapPath =
+                  BuildTargetPaths.getGenPath(
+                      graphBuilder
+                          .getSourcePathResolver()
+                          .getFilesystem(vfsOverlayRule.getSourcePathToOutput())
+                          .getBuckPaths(),
+                      exportedHeadersWithModulemapTarget,
+                      "%s");
 
               ImmutableMultimap.Builder<CxxSource.Type, Arg> argBuilder =
                   ImmutableMultimap.builder();
@@ -1007,26 +1002,17 @@ public class AppleLibraryDescription
                   StringArg.of("-ivfsoverlay"),
                   SourcePathArg.of(vfsOverlayRule.getSourcePathToOutput()),
                   StringArg.of("-I"),
-                  StringArg.of(vfsOverlayRule.getPlaceholderPath()));
+                  StringArg.of(exportedHeadersWithModulemapPath.toString()));
 
               CxxPreprocessorInput.Builder inputBuilder = CxxPreprocessorInput.builder();
               inputBuilder.setPreprocessorFlags(argBuilder.build());
 
-              CxxPreprocessorInput input = inputBuilder.build();
-              return Optional.of(input).map(metadataClass::cast);
+              return Optional.of(inputBuilder.build()).map(metadataClass::cast);
             } else {
-              BuildTarget swiftCompileTarget =
-                  baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_MODULE.getFlavor());
-              HeaderSymlinkTreeWithModuleMap modulemap =
-                  (HeaderSymlinkTreeWithModuleMap) graphBuilder.requireRule(swiftCompileTarget);
-              if (modulemap.getLinks().size() > 0) {
-                CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-                builder.addIncludes(
-                    CxxSymlinkTreeHeaders.from(modulemap, CxxPreprocessables.IncludeType.LOCAL));
-                return Optional.of(builder.build()).map(metadataClass::cast);
-              } else {
-                return Optional.empty();
-              }
+              CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
+              builder.addIncludes(
+                  CxxSymlinkTreeHeaders.from(modulemap, CxxPreprocessables.IncludeType.LOCAL));
+              return Optional.of(builder.build()).map(metadataClass::cast);
             }
           }
       }
