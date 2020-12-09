@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BuckCellSettingsProvider">
+    <option name="cells">
+      <list>
+        <BuckCell>
+          <option name="name" value="buck" />
+          <option name="root" value="$PROJECT_DIR$" />
+        </BuckCell>
+        <BuckCell>
+          <option name="name" value="bazel_skylib" />
+          <option name="root" value="$PROJECT_DIR$/third-party/skylark/bazel-skylib" />
+          <option name="buildFileName" value="BUILD" />
+        </BuckCell>
+      </list>
+    </option>
+  </component>
+</project>
