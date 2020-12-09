@@ -462,16 +462,14 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CellPathResolverUtils.getCellToPathMappings(
             filesystem.getRootPath(), context.getCellPathResolver());
 
-    FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
-
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
-    BaseBuckPaths baseBuckPaths = filesystemParams.getBaseBuckPaths();
+    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
     BuildTargetValue buildTargetValue =
         BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
     stepsBuilder.addPipelinedBuildStepsForAbiJar(
         buildTargetValue,
         CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
-        filesystemParams,
+        FilesystemParams.of(filesystem),
         buildableContext,
         state,
         resourcesMap,
@@ -587,15 +585,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Optional<RelPath> pathToClasses =
         getPathToClasses(context, libraryTarget, filesystem.getBuckPaths());
 
-    FilesystemParams filesystemParams = FilesystemParams.of(filesystem);
-
-    BaseBuckPaths baseBuckPaths = filesystemParams.getBaseBuckPaths();
+    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
     BuildTargetValue libraryTargetValue =
         BuildTargetValue.withExtraParams(libraryTarget, baseBuckPaths);
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForLibraryJar(
         libraryTargetValue,
-        filesystemParams,
+        FilesystemParams.of(filesystem),
         buildableContext,
         state,
         CompilerOutputPathsValue.of(baseBuckPaths, libraryTarget),

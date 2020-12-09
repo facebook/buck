@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
@@ -81,7 +80,6 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       ResolvedJavac resolvedJavac,
       JavaExtraParams extraParams) {
 
-    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
     CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(invokingRule.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
@@ -91,7 +89,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
             resolvedJavac,
             resolvedJavacOptions,
             invokingRule,
-            buckPaths.getConfiguredBuckOut(),
+            filesystemParams.getConfiguredBuckOut(),
             compilerOutputPathsValue,
             new ClasspathChecker(),
             parameters,
@@ -112,8 +110,6 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       BuildableContext buildableContext,
       ImmutableMap<RelPath, RelPath> resourcesMap) {
     CompilerParameters compilerParameters = pipeline.getCompilerParameters();
-
-    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
 
     CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(buildTargetValue.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
@@ -137,7 +133,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
       // This adds the javac command, along with any supporting commands.
       createPipelinedCompileStep(
-          buckPaths.getConfiguredBuckOut(),
+          filesystemParams.getConfiguredBuckOut(),
           compilerOutputPathsValue,
           cellToPathMappings,
           pipeline,
@@ -173,8 +169,6 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       Path buildCellRootPath,
       ResolvedJavac resolvedJavac,
       JavaExtraParams extraParams) {
-    BaseBuckPaths buckPaths = filesystemParams.getBaseBuckPaths();
-
     Preconditions.checkArgument(
         libraryJarParameters == null
             || libraryJarParameters
@@ -207,7 +201,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
               resolvedJavac,
               extraParams.getResolvedJavacOptions(),
               invokingRule,
-              buckPaths.getConfiguredBuckOut(),
+              filesystemParams.getConfiguredBuckOut(),
               compilerOutputPathsValue,
               new ClasspathChecker(),
               compilerParameters,

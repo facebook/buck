@@ -17,8 +17,10 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
@@ -31,19 +33,27 @@ public abstract class FilesystemParams {
 
   public abstract BaseBuckPaths getBaseBuckPaths();
 
+  public abstract RelPath getConfiguredBuckOut();
+
   public abstract ImmutableSet<PathMatcher> getIgnoredPaths();
 
   /** Creates {@link FilesystemParams} */
   public static FilesystemParams of(
-      AbsPath rootPath, BaseBuckPaths baseBuckPaths, ImmutableSet<PathMatcher> ignoredPaths) {
-    return ImmutableFilesystemParams.ofImpl(rootPath, baseBuckPaths, ignoredPaths);
+      AbsPath rootPath,
+      BaseBuckPaths baseBuckPaths,
+      RelPath configuredBuckOut,
+      ImmutableSet<PathMatcher> ignoredPaths) {
+    return ImmutableFilesystemParams.ofImpl(
+        rootPath, baseBuckPaths, configuredBuckOut, ignoredPaths);
   }
 
   /** Creates {@link FilesystemParams} */
   public static FilesystemParams of(ProjectFilesystem projectFilesystem) {
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     return of(
         projectFilesystem.getRootPath(),
-        projectFilesystem.getBuckPaths(),
+        buckPaths,
+        buckPaths.getConfiguredBuckOut(),
         projectFilesystem.getIgnoredPaths());
   }
 }
