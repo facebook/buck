@@ -38,7 +38,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
@@ -117,7 +117,8 @@ public class CalculateSourceAbi
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       AbiJarStepsBuilder stepsBuilder =
-          JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+          JavaCompileStepsBuilderFactoryCreator.createFactory(
+                  jarBuildStepsFactory.getConfiguredCompiler())
               .getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
@@ -136,7 +137,8 @@ public class CalculateSourceAbi
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       AbiJarPipelineStepsBuilder stepsBuilder =
-          JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+          JavaCompileStepsBuilderFactoryCreator.createFactory(
+                  jarBuildStepsFactory.getConfiguredCompiler())
               .getPipelineAbiJarBuilder();
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,

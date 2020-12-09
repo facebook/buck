@@ -1,0 +1,14 @@
+java_library(
+    name = "creator",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/jvm/java:steps",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/impl:impl",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd:javacd",
+    ],
+)

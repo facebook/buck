@@ -36,11 +36,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.UnusedDependenciesParams;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -132,7 +132,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       BuildCellRelativePathFactory buildCellPathFactory) {
 
     JavaLibraryJarStepsBuilder stepsBuilder =
-        JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+        JavaCompileStepsBuilderFactoryCreator.createFactory(
+                jarBuildStepsFactory.getConfiguredCompiler())
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -158,7 +159,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       BuildCellRelativePathFactory buildCellPathFactory) {
 
     JavaLibraryJarPipelineStepsBuilder stepsBuilder =
-        JavaCompileStepsBuilderFactory.getFactory(jarBuildStepsFactory.getConfiguredCompiler())
+        JavaCompileStepsBuilderFactoryCreator.createFactory(
+                jarBuildStepsFactory.getConfiguredCompiler())
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(

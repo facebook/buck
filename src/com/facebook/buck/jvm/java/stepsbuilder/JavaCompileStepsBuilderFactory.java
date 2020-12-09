@@ -16,9 +16,6 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder;
 
-import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
-
 /** Factory that creates {@link JavaCompileStepsBuilder} instances */
 public interface JavaCompileStepsBuilderFactory {
 
@@ -33,18 +30,4 @@ public interface JavaCompileStepsBuilderFactory {
 
   /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance */
   AbiJarPipelineStepsBuilder getPipelineAbiJarBuilder();
-
-  /** Returns specific implementation of {@link JavaCompileStepsBuilderFactory}. */
-  static <T extends CompileToJarStepFactory.ExtraParams> JavaCompileStepsBuilderFactory getFactory(
-      CompileToJarStepFactory<T> configuredCompiler) {
-    DefaultJavaCompileStepsBuilderFactory<T> defaultJavaCompileStepsBuilderFactory =
-        new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
-
-    if (configuredCompiler.supportsCompilationDaemon()) {
-      // TODO : msemko@ return JavaCDStepsBuilderFactory when it is ready.
-      return defaultJavaCompileStepsBuilderFactory;
-    }
-
-    return defaultJavaCompileStepsBuilderFactory;
-  }
 }
