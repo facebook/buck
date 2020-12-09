@@ -126,7 +126,8 @@ public class JavacPipelineState implements RulePipelineState {
               context.getRuleCellRoot(),
               firstOrderContext.getEnvironment(),
               processExecutor,
-              buckPaths);
+              buckPaths,
+              buckPaths.getConfiguredBuckOut());
 
       invocation =
           getResolvedJavac()

@@ -46,4 +46,6 @@ public interface JavacExecutionContext {
   ProcessExecutor getProcessExecutor();
 
   BaseBuckPaths getBaseBuckPaths();
+
+  RelPath getConfiguredBuckOut();
 }
