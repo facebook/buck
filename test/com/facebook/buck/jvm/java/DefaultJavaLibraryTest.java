@@ -124,12 +124,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-
     testJavaBuckConfig = getJavaBuckConfigWithCompilationMode();
-
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
-
     annotationScenarioGenPath =
         filesystem
             .resolve(
@@ -200,7 +197,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           String.format(
               "Expected " + classpathType + ":\n%s\nIs not equal to the real one in:\n%s.",
               expectedClasspath,
-              params));
+              realClasspath));
     }
   }
 
@@ -313,9 +310,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildTarget target = validJavaLibrary.createTarget();
     BuildRule rule = validJavaLibrary.createRule(target);
     AbsPath classpath = resolveClasspathPath(rule);
+    AbsPath root = AbsPath.get(tmp.getRoot().getAbsolutePath());
+    RelPath relClasspath = root.relativize(classpath);
 
     ImmutableList<String> parameters =
-        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(classpath.getPath()));
+        scenario.buildAndGetCompileParameters(
+            ImmutableSortedSet.orderedBy(RelPath.comparator()).add(relClasspath).build());
 
     assertHasClasspath(parameters, classpath.toString());
     assertEquals(
@@ -556,9 +556,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     DefaultJavaLibrary libraryTwoRule =
         (DefaultJavaLibrary) graphBuilder.requireRule(libraryTwoTarget);
 
+    SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
     List<Step> steps =
         libraryTwoRule.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            FakeBuildContext.withSourcePathResolver(sourcePathResolver),
             new FakeBuildableContext());
 
     ImmutableList<JavacStep> javacSteps =
@@ -572,14 +573,15 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       expectedRule = libraryOneRule;
     }
     String expectedName = expectedRule.getFullyQualifiedName();
+    SourcePath sourcePathToOutput = expectedRule.getSourcePathToOutput();
+    ProjectFilesystem filesystem = sourcePathResolver.getFilesystem(sourcePathToOutput);
+    ImmutableSortedSet<RelPath> classpathEntries = javacStep.getClasspathEntries();
+    ImmutableSet<AbsPath> classpathEntriesAbsPaths =
+        classpathEntries.stream().map(filesystem::resolve).collect(ImmutableSet.toImmutableSet());
     assertEquals(
         "The classpath for the javac step to compile //:libtwo should contain only " + expectedName,
-        ImmutableSet.of(
-            graphBuilder
-                .getSourcePathResolver()
-                .getAbsolutePath(expectedRule.getSourcePathToOutput())
-                .getPath()),
-        javacStep.getClasspathEntries());
+        ImmutableSet.of(sourcePathResolver.getAbsolutePath(sourcePathToOutput)),
+        classpathEntriesAbsPaths);
   }
 
   @Test
@@ -1679,7 +1681,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
 
     public ImmutableList<String> buildAndGetCompileParameters(
-        ImmutableSortedSet<Path> buildClasspath) throws IOException, NoSuchBuildTargetException {
+        ImmutableSortedSet<RelPath> buildClasspath) throws IOException, NoSuchBuildTargetException {
       ProjectFilesystem projectFilesystem =
           TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
       DefaultJavaLibrary javaLibrary = createJavaLibraryRule(projectFilesystem);

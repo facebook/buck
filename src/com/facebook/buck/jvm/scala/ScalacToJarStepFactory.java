@@ -92,7 +92,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
       ResolvedJavac resolvedJavac,
       BuildContextAwareExtraParams extraParams) {
 
-    ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<RelPath> classpathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
@@ -124,7 +124,12 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
                       RichStream.from(extraClasspathProvider.getExtraClasspath())
                           .map(AbsPath::getPath)
                           .iterator())
-                  .addAll(classpathEntries)
+                  .addAll(
+                      RichStream.from(classpathEntries)
+                          .map(rootPath::resolve)
+                          .map(AbsPath::normalize)
+                          .map(AbsPath::getPath)
+                          .iterator())
                   .build(),
               rootPath,
               ProjectFilesystemUtils.relativize(rootPath, context.getBuildCellRootPath()),
@@ -143,11 +148,11 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
           CompilerParameters.builder()
               .from(parameters)
               .setClasspathEntries(
-                  ImmutableSortedSet.<Path>naturalOrder()
-                      .add(outputDirectory.getPath())
+                  ImmutableSortedSet.orderedBy(RelPath.comparator())
+                      .add(outputDirectory)
                       .addAll(
                           RichStream.from(extraClasspathProvider.getExtraClasspath())
-                              .map(AbsPath::getPath)
+                              .map(rootPath::relativize)
                               .iterator())
                       .addAll(classpathEntries)
                       .build())

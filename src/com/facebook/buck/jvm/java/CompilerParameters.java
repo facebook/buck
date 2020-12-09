@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -32,7 +33,7 @@ public abstract class CompilerParameters {
   }
 
   @Value.Default
-  public ImmutableSortedSet<Path> getClasspathEntries() {
+  public ImmutableSortedSet<RelPath> getClasspathEntries() {
     return ImmutableSortedSet.of();
   }
 

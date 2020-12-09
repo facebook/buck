@@ -213,13 +213,13 @@ public class JavacStep extends IsolatedStep {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      IsolatedExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      IsolatedExecutionContext context, ImmutableSortedSet<RelPath> buildClasspathEntries) {
     return pipeline.getOptions(context, buildClasspathEntries);
   }
 
   /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
-  ImmutableSortedSet<Path> getClasspathEntries() {
+  ImmutableSortedSet<RelPath> getClasspathEntries() {
     return pipeline.getCompilerParameters().getClasspathEntries();
   }
 

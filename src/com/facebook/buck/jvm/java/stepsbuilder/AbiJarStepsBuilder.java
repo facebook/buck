@@ -44,7 +44,7 @@ public interface AbiJarStepsBuilder extends JavaCompileStepsBuilder {
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,

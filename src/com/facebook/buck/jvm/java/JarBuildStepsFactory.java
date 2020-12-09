@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -65,7 +64,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -368,8 +366,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             || buildTarget.equals(JavaAbis.getSourceOnlyAbiJar(libraryTarget)));
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    ImmutableSortedSet<Path> compileTimeClasspathPaths =
-        getCompileTimeClasspathPaths(sourcePathResolver);
+    ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
+        getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     AbsPath rootPath = filesystem.getRootPath();
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
@@ -490,8 +488,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    ImmutableSortedSet<Path> compileTimeClasspathPaths =
-        getCompileTimeClasspathPaths(sourcePathResolver);
+    ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
+        getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     AbsPath rootPath = filesystem.getRootPath();
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
@@ -616,12 +614,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  private ImmutableSortedSet<Path> getCompileTimeClasspathPaths(
-      SourcePathResolverAdapter sourcePathResolver) {
+  private ImmutableSortedSet<RelPath> getCompileTimeClasspathPaths(
+      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
+    AbsPath rootPath = filesystem.getRootPath();
     return sourcePathResolver
         .getAllAbsolutePaths(dependencyInfos.getCompileTimeClasspathSourcePaths()).stream()
-        .map(PathWrapper::getPath)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+        .map(rootPath::relativize)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
   private Optional<JarParameters> getLibraryJarParameters(
@@ -731,8 +730,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    ImmutableSortedSet<Path> compileTimeClasspathPaths =
-        getCompileTimeClasspathPaths(sourcePathResolver);
+    ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
+        getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
     ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
@@ -755,6 +754,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .orElse(null);
     JarParameters libraryJarParameters =
         getLibraryJarParameters(context, filesystem, compilerOutputPaths).orElse(null);
+
+    AbsPath rootPath = filesystem.getRootPath();
 
     CompilerParameters compilerParameters =
         JavaLibraryRules.getCompilerParameters(
@@ -779,7 +780,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         libraryJarParameters,
         withDownwardApi,
         resolvedJavac,
-        javacToJarStepFactory.createExtraParams(sourcePathResolver, filesystem.getRootPath()));
+        javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath));
   }
 
   boolean hasAnnotationProcessing() {

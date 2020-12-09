@@ -163,7 +163,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     BuildContext buildContext = extraParams.getBuildContext();
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
-    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
@@ -211,7 +211,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                   RichStream.from(extraClasspathProvider.getExtraClasspath())
                       .map(AbsPath::getPath)
                       .iterator())
-              .addAll(declaredClasspathEntries)
+              .addAll(
+                  RichStream.from(declaredClasspathEntries)
+                      .map(rootPath::resolve)
+                      .map(AbsPath::normalize)
+                      .map(AbsPath::getPath)
+                      .iterator())
               .addAll(
                   RichStream.from(kotlinHomeLibraries)
                       .map(x -> resolver.getAbsolutePath(x).getPath())
@@ -378,11 +383,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         CompilerParameters.builder()
             .from(parameters)
             .setClasspathEntries(
-                ImmutableSortedSet.<Path>naturalOrder()
-                    .add(rootPath.resolve(outputDirectory).getPath())
+                ImmutableSortedSet.orderedBy(RelPath.comparator())
+                    .add(outputDirectory)
                     .addAll(
                         RichStream.from(extraClasspathProvider.getExtraClasspath())
-                            .map(AbsPath::getPath)
+                            .map(rootPath::relativize)
                             .iterator())
                     .addAll(declaredClasspathEntries)
                     .build())

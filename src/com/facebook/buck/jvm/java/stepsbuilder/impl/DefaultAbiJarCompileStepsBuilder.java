@@ -54,7 +54,7 @@ class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraPa
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,

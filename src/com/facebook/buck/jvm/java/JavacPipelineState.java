@@ -27,6 +27,7 @@ import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -189,7 +190,7 @@ public class JavacPipelineState implements RulePipelineState {
    * @return list of String command-line options.
    */
   ImmutableList<String> getOptions(
-      IsolatedExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      IsolatedExecutionContext context, ImmutableSortedSet<RelPath> buildClasspathEntries) {
     CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
     return getOptions(
         outputPaths.getClassesDir(),
@@ -202,7 +203,7 @@ public class JavacPipelineState implements RulePipelineState {
       RelPath outputDirectory,
       Path generatedCodeDirectory,
       IsolatedExecutionContext context,
-      ImmutableSortedSet<Path> buildClasspathEntries) {
+      ImmutableSortedSet<RelPath> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AbsPath ruleCellRoot = context.getRuleCellRoot();
@@ -249,7 +250,13 @@ public class JavacPipelineState implements RulePipelineState {
 
     // Build up and set the classpath.
     if (!buildClasspathEntries.isEmpty()) {
-      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
+      String classpath =
+          Joiner.on(File.pathSeparator)
+              .join(
+                  RichStream.from(buildClasspathEntries)
+                      .map(ruleCellRoot::resolve)
+                      .map(AbsPath::normalize)
+                      .iterator());
       builder.add("-classpath", classpath);
     } else {
       builder.add("-classpath", "''");

@@ -21,6 +21,7 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -40,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Groovy compile step. */
@@ -51,7 +53,7 @@ class GroovycStep extends IsolatedStep {
   private final Path outputDirectory;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final Path pathToSrcsList;
-  private final ImmutableSortedSet<Path> declaredClasspathEntries;
+  private final ImmutableSortedSet<RelPath> declaredClasspathEntries;
   private final boolean withDownwardApi;
 
   GroovycStep(
@@ -61,7 +63,7 @@ class GroovycStep extends IsolatedStep {
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       Path pathToSrcsList,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
+      ImmutableSortedSet<RelPath> declaredClasspathEntries,
       boolean withDownwardApi) {
     this.commandPrefix = commandPrefix;
     this.extraArguments = extraArguments;
@@ -109,7 +111,11 @@ class GroovycStep extends IsolatedStep {
     command.addAll(commandPrefix);
 
     String classpath =
-        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, Object::toString));
+        Joiner.on(File.pathSeparator)
+            .join(
+                transform(
+                    declaredClasspathEntries,
+                    path -> Objects.toString(ruleCellRoot.resolve(path).normalize())));
     command
         .add("-cp")
         .add(classpath.isEmpty() ? "''" : classpath)

@@ -57,7 +57,7 @@ class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraP
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
       RelPath pathToClassHashes,
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,

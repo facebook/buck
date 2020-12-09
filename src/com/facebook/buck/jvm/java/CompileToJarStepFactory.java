@@ -247,7 +247,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       AbsPath rootPath,
       List<String> postprocessClassesCommands,
       RelPath outputDirectory,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
+      ImmutableSortedSet<RelPath> declaredClasspathEntries,
       Optional<String> bootClasspath,
       boolean withDownwardApi,
       Path buildCellRootPath) {
@@ -276,7 +276,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
   private static ImmutableMap<String, String> getEnvs(
       AbsPath rootPath,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
+      ImmutableSortedSet<RelPath> declaredClasspathEntries,
       Optional<String> bootClasspath) {
     ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
     envVarBuilder.put(

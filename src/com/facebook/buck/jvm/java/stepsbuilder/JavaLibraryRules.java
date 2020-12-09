@@ -76,7 +76,7 @@ public class JavaLibraryRules {
 
   /** Creates {@link CompilerParameters} */
   public static CompilerParameters getCompilerParameters(
-      ImmutableSortedSet<Path> compileTimeClasspathPaths,
+      ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<Path> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
