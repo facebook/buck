@@ -82,8 +82,8 @@ public abstract class CompilerOutputPaths {
   }
 
   /** Returns a path to a file that contains dependencies used in the compilation */
-  public static RelPath getDepFilePath(CompilerOutputPaths compilerOutputPaths) {
-    return compilerOutputPaths.getOutputJarDirPath().resolveRel("used-classes.json");
+  public static RelPath getDepFilePath(RelPath outputJarDirPath) {
+    return outputJarDirPath.resolveRel("used-classes.json");
   }
 
   /** Returns annotation path for the given {@code target} and {@code format} */

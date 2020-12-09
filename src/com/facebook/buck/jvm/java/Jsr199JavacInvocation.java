@@ -22,7 +22,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -91,6 +90,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
   private final JavacExecutionContext context;
   private final BuildTargetValue invokingRule;
   private final BuildTargetValue libraryTarget;
+  private final RelPath libraryOutputJarDirPath;
+  private final RelPath sourceAbiOutputJarDirPath;
+  private final RelPath sourceOnlyAbiOutputJarDirPath;
   private final AbiGenerationMode abiCompatibilityMode;
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
@@ -110,6 +112,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       Supplier<JavaCompiler> compilerConstructor,
       JavacExecutionContext context,
       BuildTargetValue invokingRule,
+      RelPath libraryOutputJarDirPath,
+      RelPath sourceAbiOutputJarDirPath,
+      RelPath sourceOnlyAbiOutputJarDirPath,
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
@@ -127,6 +132,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     this.invokingRule = invokingRule;
     this.libraryTarget =
         invokingRule.isLibraryJar() ? invokingRule : BuildTargetValue.libraryTarget(invokingRule);
+    this.libraryOutputJarDirPath = libraryOutputJarDirPath;
+    this.sourceAbiOutputJarDirPath = sourceAbiOutputJarDirPath;
+    this.sourceOnlyAbiOutputJarDirPath = sourceOnlyAbiOutputJarDirPath;
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
     this.annotationProcessors = annotationProcessors;
@@ -143,12 +151,12 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   @Override
   public int buildSourceOnlyAbiJar() throws InterruptedException {
-    return getWorker().buildSourceOnlyAbiJar();
+    return getWorker().buildSourceOnlyAbiJar(sourceOnlyAbiOutputJarDirPath);
   }
 
   @Override
   public int buildSourceAbiJar() throws InterruptedException {
-    return getWorker().buildSourceAbiJar();
+    return getWorker().buildSourceAbiJar(sourceAbiOutputJarDirPath);
   }
 
   @Override
@@ -220,15 +228,16 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
     }
 
-    public int buildSourceOnlyAbiJar() throws InterruptedException {
-      return buildAbiJar(true);
+    public int buildSourceOnlyAbiJar(RelPath outputJarDirPath) throws InterruptedException {
+      return buildAbiJar(true, outputJarDirPath);
     }
 
-    public int buildSourceAbiJar() throws InterruptedException {
-      return buildAbiJar(false);
+    public int buildSourceAbiJar(RelPath outputJarDirPath) throws InterruptedException {
+      return buildAbiJar(false, outputJarDirPath);
     }
 
-    private int buildAbiJar(boolean buildSourceOnlyAbi) throws InterruptedException {
+    private int buildAbiJar(boolean buildSourceOnlyAbi, RelPath outputJarDirPath)
+        throws InterruptedException {
       SettableFuture<Integer> abiResult = SettableFuture.create();
       Futures.addCallback(
           compilerResult,
@@ -245,10 +254,6 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
             }
           });
 
-      BuildTargetValue abiTarget =
-          buildSourceOnlyAbi
-              ? BuildTargetValue.sourceOnlyAbiTarget(libraryTarget)
-              : BuildTargetValue.sourceAbiTarget(libraryTarget);
       JarParameters jarParameters = Objects.requireNonNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
       javacTask.addPostEnterCallback(
@@ -277,12 +282,10 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
               debugLogDiagnostics();
               if (buildSuccessful()) {
                 if (classUsageTracker != null) {
-                  BaseBuckPaths baseBuckPaths = context.getBaseBuckPaths();
                   new DefaultClassUsageFileWriter()
                       .writeFile(
                           classUsageTracker,
-                          CompilerOutputPaths.getDepFilePath(
-                              CompilerOutputPaths.of(abiTarget, baseBuckPaths)),
+                          CompilerOutputPaths.getDepFilePath(outputJarDirPath),
                           context.getRuleCellRoot(),
                           context.getConfiguredBuckOut(),
                           context.getCellToMapMappings());
@@ -451,12 +454,10 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
                     if (success && buildSuccessful()) {
                       if (classUsageTracker != null) {
-                        BaseBuckPaths baseBuckPaths = context.getBaseBuckPaths();
                         new DefaultClassUsageFileWriter()
                             .writeFile(
                                 classUsageTracker,
-                                CompilerOutputPaths.getDepFilePath(
-                                    CompilerOutputPaths.of(libraryTarget, baseBuckPaths)),
+                                CompilerOutputPaths.getDepFilePath(libraryOutputJarDirPath),
                                 context.getRuleCellRoot(),
                                 context.getConfiguredBuckOut(),
                                 context.getCellToMapMappings());

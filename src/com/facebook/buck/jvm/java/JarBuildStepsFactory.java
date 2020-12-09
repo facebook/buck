@@ -674,7 +674,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         cellPathResolver,
         filesystem.getPathForRelativePath(
             CompilerOutputPaths.getDepFilePath(
-                CompilerOutputPaths.of(BuildTargetValue.of(buildTarget, buckPath), buckPath))),
+                CompilerOutputPaths.of(BuildTargetValue.of(buildTarget, buckPath), buckPath)
+                    .getOutputJarDirPath())),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 

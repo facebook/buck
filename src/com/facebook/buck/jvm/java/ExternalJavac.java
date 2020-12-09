@@ -88,6 +88,9 @@ public class ExternalJavac implements Javac {
     public ResolvedJavac.Invocation newBuildInvocation(
         JavacExecutionContext context,
         BuildTargetValue invokingRule,
+        RelPath libraryOutputJarDirPath,
+        RelPath sourceAbiOutputJarDirPath,
+        RelPath sourceOnlyAbiOutputJarDirPath,
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,

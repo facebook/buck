@@ -22,7 +22,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
@@ -90,9 +89,12 @@ public class JavacPipelineState implements RulePipelineState {
 
   /** Get the invocation instance. */
   public ResolvedJavac.Invocation getJavacInvocation(
-      BaseBuckPaths buckPaths,
+      RelPath libraryOutputJarDirPath,
+      RelPath sourceAbiOutputJarDirPath,
+      RelPath sourceOnlyAbiOutputJarDirPath,
       IsolatedExecutionContext context,
-      ImmutableMap<String, RelPath> cellToPathMappings)
+      ImmutableMap<String, RelPath> cellToPathMappings,
+      RelPath configuredBuckOut)
       throws IOException {
     if (invocation == null) {
       resolvedJavacOptions.validateClasspath(classpathChecker::validateClasspath);
@@ -126,14 +128,16 @@ public class JavacPipelineState implements RulePipelineState {
               context.getRuleCellRoot(),
               firstOrderContext.getEnvironment(),
               processExecutor,
-              buckPaths,
-              buckPaths.getConfiguredBuckOut());
+              configuredBuckOut);
 
       invocation =
           getResolvedJavac()
               .newBuildInvocation(
                   javacExecutionContext,
                   invokingRule,
+                  libraryOutputJarDirPath,
+                  sourceAbiOutputJarDirPath,
+                  sourceOnlyAbiOutputJarDirPath,
                   getOptions(context, compilerParameters.getClasspathEntries()),
                   resolvedJavacOptions.getAnnotationProcessors(),
                   resolvedJavacOptions.getJavaPlugins(),

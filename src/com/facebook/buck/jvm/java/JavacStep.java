@@ -47,6 +47,9 @@ public class JavacStep extends IsolatedStep {
   private final boolean ownsPipelineObject;
   private final BaseBuckPaths buckPaths;
   private final ImmutableMap<String, RelPath> cellToPathMappings;
+  private final RelPath libraryOutputJarDirPath;
+  private final RelPath sourceOutputJarPath;
+  private final RelPath sourceOnlyOutputJarPath;
 
   public JavacStep(
       ResolvedJavac resolvedJavac,
@@ -94,6 +97,18 @@ public class JavacStep extends IsolatedStep {
     this.ownsPipelineObject = ownsPipelineObject;
     this.buckPaths = buckPaths;
     this.cellToPathMappings = cellToPathMappings;
+
+    BuildTargetValue libraryTarget =
+        invokingRule.isLibraryJar() ? invokingRule : BuildTargetValue.libraryTarget(invokingRule);
+
+    this.libraryOutputJarDirPath =
+        CompilerOutputPaths.of(libraryTarget, buckPaths).getOutputJarDirPath();
+    this.sourceOutputJarPath =
+        CompilerOutputPaths.of(BuildTargetValue.sourceAbiTarget(libraryTarget), buckPaths)
+            .getOutputJarDirPath();
+    this.sourceOnlyOutputJarPath =
+        CompilerOutputPaths.of(BuildTargetValue.sourceOnlyAbiTarget(libraryTarget), buckPaths)
+            .getOutputJarDirPath();
   }
 
   @Override
@@ -105,7 +120,13 @@ public class JavacStep extends IsolatedStep {
     Optional<String> returnedStderr;
     try {
       ResolvedJavac.Invocation invocation =
-          pipeline.getJavacInvocation(buckPaths, context, cellToPathMappings);
+          pipeline.getJavacInvocation(
+              libraryOutputJarDirPath,
+              sourceOutputJarPath,
+              sourceOnlyOutputJarPath,
+              context,
+              cellToPathMappings,
+              buckPaths.getConfiguredBuckOut());
       if (invokingRule.isSourceAbi()) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
       } else if (invokingRule.isSourceOnlyAbi()) {

@@ -134,7 +134,6 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            buckPaths,
             buckPaths.getConfiguredBuckOut());
 
     int exitCode =
@@ -142,6 +141,9 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
+                RelPath.get("lib_dep_out.txt"),
+                RelPath.get("source_abi_dep_out.txt"),
+                RelPath.get("source_only_abi_dep_out.txt"),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -191,7 +193,6 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            buckPaths,
             buckPaths.getConfiguredBuckOut());
 
     int exitCode =
@@ -199,6 +200,9 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
+                RelPath.get("lib_dep_out.txt"),
+                RelPath.get("source_abi_dep_out.txt"),
+                RelPath.get("source_only_abi_dep_out.txt"),
                 ImmutableList.of(),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -301,7 +305,6 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            buckPaths,
             buckPaths.getConfiguredBuckOut());
 
     boolean caught = false;
@@ -311,6 +314,9 @@ public class Jsr199JavacIntegrationTest {
           .newBuildInvocation(
               javacExecutionContext,
               BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
+              RelPath.get("lib_dep_out.txt"),
+              RelPath.get("source_abi_dep_out.txt"),
+              RelPath.get("source_only_abi_dep_out.txt"),
               ImmutableList.of(),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -405,13 +411,15 @@ public class Jsr199JavacIntegrationTest {
             projectFilesystem.getRootPath(),
             executionContext.getEnvironment(),
             executionContext.getProcessExecutor(),
-            buckPaths,
             buckPaths.getConfiguredBuckOut());
 
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
             BuildTargetValue.of(BuildTargetFactory.newInstance("//some:example"), buckPaths),
+            RelPath.get("lib_dep_out.txt"),
+            RelPath.get("source_abi_dep_out.txt"),
+            RelPath.get("source_only_abi_dep_out.txt"),
             ImmutableList.of(),
             ImmutableList.of(),
             ImmutableList.of(),

@@ -196,7 +196,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       BaseBuckPaths buckPaths = filesystem.getBuckPaths();
 
       RelPath depFile =
-          CompilerOutputPaths.getDepFilePath(CompilerOutputPaths.of(buildTarget, buckPaths));
+          CompilerOutputPaths.getDepFilePath(
+              CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
       UnusedDependenciesParams unusedDependenciesParams =
           UnusedDependenciesParams.of(
               factory.convert(factory.deps, sourcePathResolver, rootPath),

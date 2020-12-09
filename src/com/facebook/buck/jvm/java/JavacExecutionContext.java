@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
@@ -44,8 +43,6 @@ public interface JavacExecutionContext {
   ImmutableMap<String, String> getEnvironment();
 
   ProcessExecutor getProcessExecutor();
-
-  BaseBuckPaths getBaseBuckPaths();
 
   RelPath getConfiguredBuckOut();
 }

@@ -144,7 +144,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       BaseBuckPaths buckPaths) {
     if (compilerParameters.shouldTrackClassUsage()) {
       RelPath depFilePath =
-          CompilerOutputPaths.getDepFilePath(CompilerOutputPaths.of(buildTargetValue, buckPaths));
+          CompilerOutputPaths.getDepFilePath(
+              CompilerOutputPaths.of(buildTargetValue, buckPaths).getOutputJarDirPath());
       buildableContext.recordArtifact(depFilePath.getPath());
     }
   }
