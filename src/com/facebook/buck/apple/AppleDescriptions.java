@@ -601,7 +601,7 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
       AppleCxxPlatform appleCxxPlatform,
       Predicate<BuildTarget> filter,
       boolean withDownwardApi) {
@@ -626,7 +626,7 @@ public class AppleDescriptions {
           new SceneKitAssets(
               sceneKitAssetsBuildTarget,
               projectFilesystem,
-              params.withoutDeclaredDeps().withoutExtraDeps(),
+              graphBuilder,
               appleCxxPlatform,
               sceneKitAssetsArgs.stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
@@ -873,7 +873,7 @@ public class AppleDescriptions {
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            params,
+            graphBuilder,
             appleCxxPlatform,
             filter,
             withDownwardApi);

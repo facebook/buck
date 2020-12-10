@@ -26,8 +26,11 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -45,8 +48,10 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.SortedSet;
 
-public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+/** Copies scene assets. */
+public class SceneKitAssets extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = InternalFlavor.of("scenekit-assets");
 
@@ -60,16 +65,18 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final Path outputDir;
 
+  private BuildableSupport.DepsSupplier depsSupplier;
+
   @AddToRuleKey private final boolean withDownwardApi;
 
   SceneKitAssets(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
       AppleCxxPlatform appleCxxPlatform,
       ImmutableSet<SourcePath> sceneKitAssetsPaths,
       boolean withDownwardApi) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.sceneKitAssetsPaths = sceneKitAssetsPaths;
     this.withDownwardApi = withDownwardApi;
     String outputDirString =
@@ -79,6 +86,7 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.copySceneKitAssets = appleCxxPlatform.getCopySceneKitAssets();
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
   }
 
   @Override
@@ -142,5 +150,15 @@ public class SceneKitAssets extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputDir);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return depsSupplier.get();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 }
