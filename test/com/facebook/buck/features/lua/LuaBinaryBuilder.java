@@ -40,8 +40,8 @@ public class LuaBinaryBuilder
 
   public LuaBinaryBuilder(
       BuildTarget target,
-      LuaPlatform defaultPlatform,
-      FlavorDomain<LuaPlatform> luaPlatforms,
+      UnresolvedLuaPlatform defaultPlatform,
+      FlavorDomain<UnresolvedLuaPlatform> luaPlatforms,
       CxxBuckConfig cxxBuckConfig,
       FlavorDomain<PythonPlatform> pythonPlatforms) {
     this(
@@ -59,7 +59,7 @@ public class LuaBinaryBuilder
         target);
   }
 
-  public LuaBinaryBuilder(BuildTarget target, LuaPlatform luaPlatform) {
+  public LuaBinaryBuilder(BuildTarget target, UnresolvedLuaPlatform luaPlatform) {
     this(
         target,
         luaPlatform,
@@ -68,8 +68,12 @@ public class LuaBinaryBuilder
         PythonTestUtils.PYTHON_PLATFORMS);
   }
 
+  public LuaBinaryBuilder(BuildTarget target, LuaPlatform luaPlatform) {
+    this(target, new StaticUnresolvedLuaPlatform(luaPlatform));
+  }
+
   public LuaBinaryBuilder(BuildTarget target) {
-    this(target, LuaTestUtils.DEFAULT_PLATFORM);
+    this(target, LuaTestUtils.DEFAULT_UNRESOLVED_PLATFORM);
   }
 
   public LuaBinaryBuilder setMainModule(String mainModule) {

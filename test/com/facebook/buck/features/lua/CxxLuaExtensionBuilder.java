@@ -45,7 +45,7 @@ public class CxxLuaExtensionBuilder
     super(description, target);
   }
 
-  public CxxLuaExtensionBuilder(BuildTarget target, LuaPlatform luaPlatform) {
+  public CxxLuaExtensionBuilder(BuildTarget target, UnresolvedLuaPlatform luaPlatform) {
     this(
         new CxxLuaExtensionDescription(
             new ToolchainProviderBuilder()
@@ -60,7 +60,7 @@ public class CxxLuaExtensionBuilder
   }
 
   public CxxLuaExtensionBuilder(BuildTarget target) {
-    this(target, LuaTestUtils.DEFAULT_PLATFORM);
+    this(target, LuaTestUtils.DEFAULT_UNRESOLVED_PLATFORM);
   }
 
   public CxxLuaExtensionBuilder setBaseModule(String baseModule) {

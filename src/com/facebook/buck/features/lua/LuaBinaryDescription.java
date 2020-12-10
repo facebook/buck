@@ -67,7 +67,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.MoreMaps;
-import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -152,14 +151,6 @@ public class LuaBinaryDescription
       BuildTarget target, ProjectFilesystem filesystem, LuaPlatform luaPlatform) {
     return BuildTargetPaths.getGenPath(
         filesystem.getBuckPaths(), target, "%s" + luaPlatform.getExtension());
-  }
-
-  private Iterable<BuildTarget> getNativeStarterDepTargets(LuaPlatform luaPlatform) {
-    Optional<BuildTarget> nativeStarterLibrary = luaPlatform.getNativeStarterLibrary();
-    return nativeStarterLibrary.isPresent()
-        ? ImmutableSet.of(nativeStarterLibrary.get())
-        : RichStream.from(luaPlatform.getLuaCxxLibraryTarget())
-            .collect(ImmutableSet.toImmutableSet());
   }
 
   private Starter getStarter(
@@ -735,16 +726,17 @@ public class LuaBinaryDescription
   }
 
   // Return the C/C++ platform to build against.
-  private LuaPlatform getPlatform(BuildTarget target, AbstractLuaBinaryDescriptionArg arg) {
+  private UnresolvedLuaPlatform getPlatform(
+      BuildTarget target, AbstractLuaBinaryDescriptionArg arg) {
     LuaPlatformsProvider luaPlatformsProvider =
         toolchainProvider.getByName(
             LuaPlatformsProvider.DEFAULT_NAME,
             target.getTargetConfiguration(),
             LuaPlatformsProvider.class);
 
-    FlavorDomain<LuaPlatform> luaPlatforms = luaPlatformsProvider.getLuaPlatforms();
+    FlavorDomain<UnresolvedLuaPlatform> luaPlatforms = luaPlatformsProvider.getLuaPlatforms();
 
-    Optional<LuaPlatform> flavorPlatform = luaPlatforms.getValue(target);
+    Optional<UnresolvedLuaPlatform> flavorPlatform = luaPlatforms.getValue(target);
     if (flavorPlatform.isPresent()) {
       return flavorPlatform.get();
     }
@@ -763,7 +755,8 @@ public class LuaBinaryDescription
       BuildRuleParams params,
       LuaBinaryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    LuaPlatform luaPlatform = getPlatform(buildTarget, args);
+    LuaPlatform luaPlatform =
+        getPlatform(buildTarget, args).resolve(graphBuilder, buildTarget.getTargetConfiguration());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
@@ -830,12 +823,9 @@ public class LuaBinaryDescription
       AbstractLuaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    LuaPlatform luaPlatform = getPlatform(buildTarget, constructorArg);
-    if (luaPlatform.getPackageStyle() == LuaPlatform.PackageStyle.STANDALONE) {
-      extraDepsBuilder.addAll(
-          luaPlatform.getPackager().getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    }
-    extraDepsBuilder.addAll(getNativeStarterDepTargets(luaPlatform));
+    UnresolvedLuaPlatform luaPlatform = getPlatform(buildTarget, constructorArg);
+    targetGraphOnlyDepsBuilder.addAll(
+        luaPlatform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     // Make sure we parse the dummy omnibus target if we're using omnibus linking.
     if (luaPlatform.getNativeLinkStrategy() == NativeLinkStrategy.MERGED) {

@@ -25,9 +25,9 @@ public interface LuaPlatformsProvider extends Toolchain {
 
   String DEFAULT_NAME = "lua-platforms";
 
-  LuaPlatform getDefaultLuaPlatform();
+  UnresolvedLuaPlatform getDefaultLuaPlatform();
 
-  FlavorDomain<LuaPlatform> getLuaPlatforms();
+  FlavorDomain<UnresolvedLuaPlatform> getLuaPlatforms();
 
   @Override
   default String getName() {

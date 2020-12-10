@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -50,7 +49,6 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
@@ -292,19 +290,25 @@ public class CxxLuaExtensionDescription
       BuildRuleParams params,
       CxxLuaExtensionDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    FlavorDomain<LuaPlatform> luaPlatforms =
+    FlavorDomain<UnresolvedLuaPlatform> luaPlatforms =
         getLuaPlatformsProvider(buildTarget.getTargetConfiguration()).getLuaPlatforms();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
-    Optional<Map.Entry<Flavor, LuaPlatform>> platform = luaPlatforms.getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, UnresolvedLuaPlatform>> platform =
+        luaPlatforms.getFlavorAndValue(buildTarget);
 
     // If a C/C++ platform is specified, then build an extension with it.
     if (platform.isPresent()) {
       return createExtensionBuildRule(
-          buildTarget, projectFilesystem, graphBuilder, cellRoots, platform.get().getValue(), args);
+          buildTarget,
+          projectFilesystem,
+          graphBuilder,
+          cellRoots,
+          platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+          args);
     }
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
@@ -344,7 +348,9 @@ public class CxxLuaExtensionDescription
                       projectFilesystem,
                       graphBuilder,
                       cellRoots,
-                      luaPlatforms.getValue(cxxPlatform.getFlavor()),
+                      luaPlatforms
+                          .getValue(cxxPlatform.getFlavor())
+                          .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                       args,
                       includePrivateLinkerFlags);
               NativeLinkableInput linkableInput =
@@ -391,18 +397,11 @@ public class CxxLuaExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    for (LuaPlatform luaPlatform :
+    for (UnresolvedLuaPlatform luaPlatform :
         getLuaPlatformsProvider(buildTarget.getTargetConfiguration())
             .getLuaPlatforms()
             .getValues()) {
-
-      // Add deps from lua C/C++ library.
-      Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
-
-      // Get any parse time deps from the C/C++ platforms.
-      targetGraphOnlyDepsBuilder.addAll(
-          CxxPlatforms.getParseTimeDeps(
-              buildTarget.getTargetConfiguration(), luaPlatform.getCxxPlatform()));
+      extraDepsBuilder.addAll(luaPlatform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
   }
 

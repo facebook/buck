@@ -272,7 +272,8 @@ public class LuaBinaryDescriptionTest {
                         .withToolchain(
                             LuaPlatformsProvider.DEFAULT_NAME,
                             ImmutableLuaPlatformsProvider.ofImpl(
-                                LuaTestUtils.DEFAULT_PLATFORM, LuaTestUtils.DEFAULT_PLATFORMS))
+                                LuaTestUtils.DEFAULT_UNRESOLVED_PLATFORM,
+                                LuaTestUtils.DEFAULT_PLATFORMS))
                         .withToolchain(
                             PythonPlatformsProvider.DEFAULT_NAME,
                             PythonPlatformsProvider.of(pythonPlatforms))
@@ -468,8 +469,9 @@ public class LuaBinaryDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     extensionBuilder.setBaseModule("hello");
 
-    LuaPlatform platform =
-        LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED);
+    UnresolvedLuaPlatform platform =
+        new StaticUnresolvedLuaPlatform(
+            LuaTestUtils.DEFAULT_PLATFORM.withNativeLinkStrategy(NativeLinkStrategy.MERGED));
     LuaBinaryBuilder binaryBuilder =
         new LuaBinaryBuilder(
             BuildTargetFactory.newInstance("//:bin"),

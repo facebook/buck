@@ -35,6 +35,9 @@ public class LuaTestUtils {
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .build();
 
-  public static final FlavorDomain<LuaPlatform> DEFAULT_PLATFORMS =
-      FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, DEFAULT_PLATFORM);
+  public static final UnresolvedLuaPlatform DEFAULT_UNRESOLVED_PLATFORM =
+      new StaticUnresolvedLuaPlatform(DEFAULT_PLATFORM);
+
+  public static final FlavorDomain<UnresolvedLuaPlatform> DEFAULT_PLATFORMS =
+      FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, DEFAULT_UNRESOLVED_PLATFORM);
 }

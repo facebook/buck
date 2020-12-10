@@ -146,8 +146,8 @@ public class LuaBinaryIntegrationTest {
     LuaPlatform platform =
         getLuaBuckConfig()
             .getPlatform(
-                UnconfiguredTargetConfiguration.INSTANCE,
-                CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(DefaultCxxPlatforms.FLAVOR));
+                CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(DefaultCxxPlatforms.FLAVOR))
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(platform.getStarterType(), Matchers.equalTo(Optional.of(starterType)));
     assertThat(platform.getNativeLinkStrategy(), Matchers.equalTo(nativeLinkStrategy));
   }
