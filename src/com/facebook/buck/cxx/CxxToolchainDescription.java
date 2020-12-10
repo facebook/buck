@@ -297,6 +297,8 @@ public class CxxToolchainDescription
         args.getArchiverFlags().stream()
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList()));
+    cxxPlatform.setArchiveContents(args.getArchiveContents());
+    cxxPlatform.setRequiresArchives(args.getRequiresArchives());
 
     cxxPlatform.setStrip(ToolProviders.getToolProvider(args.getStrip()));
     cxxPlatform.setStripFlags(
@@ -363,8 +365,6 @@ public class CxxToolchainDescription
 
     // TODO(cjhopman): Is this reasonable?
     cxxPlatform.setConflictingHeaderBasenameWhitelist(ImmutableSortedSet.of());
-
-    cxxPlatform.setArchiveContents(ArchiveContents.NORMAL);
 
     cxxPlatform.setFilepathLengthLimited(args.getFilepathLengthLimited());
 
@@ -543,6 +543,21 @@ public class CxxToolchainDescription
 
     /** Archiver flags. */
     ImmutableList<StringWithMacros> getArchiverFlags();
+
+    /** The type of archives (e.g. thin v. normal) to use. */
+    @Value.Default
+    default ArchiveContents getArchiveContents() {
+      return ArchiveContents.NORMAL;
+    }
+
+    /**
+     * Whether this platform should always use archives to package object files (e.g. as opposed to
+     * wrapping in `--start-lib`/`--end-lib` flags).
+     */
+    @Value.Default
+    default boolean getRequiresArchives() {
+      return true;
+    }
 
     /** {@link ArchiverProvider.Type} of the archiver. */
     ArchiverProvider.Type getArchiverType();
