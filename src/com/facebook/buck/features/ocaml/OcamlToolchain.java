@@ -27,13 +27,14 @@ interface OcamlToolchain extends Toolchain {
   String DEFAULT_NAME = "ocaml-toolchain";
 
   static OcamlToolchain of(
-      OcamlPlatform defaultOcamlPlatform, FlavorDomain<OcamlPlatform> ocamlPlatforms) {
+      UnresolvedOcamlPlatform defaultOcamlPlatform,
+      FlavorDomain<UnresolvedOcamlPlatform> ocamlPlatforms) {
     return ImmutableOcamlToolchain.ofImpl(defaultOcamlPlatform, ocamlPlatforms);
   }
 
-  OcamlPlatform getDefaultOcamlPlatform();
+  UnresolvedOcamlPlatform getDefaultOcamlPlatform();
 
-  FlavorDomain<OcamlPlatform> getOcamlPlatforms();
+  FlavorDomain<UnresolvedOcamlPlatform> getOcamlPlatforms();
 
   @Override
   default String getName() {

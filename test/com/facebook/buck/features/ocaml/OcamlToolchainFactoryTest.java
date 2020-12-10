@@ -88,7 +88,13 @@ public class OcamlToolchainFactoryTest {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     assertThat(
-        Arg.stringify(toolchain.get().getDefaultOcamlPlatform().getCFlags(), resolver),
+        Arg.stringify(
+            toolchain
+                .get()
+                .getDefaultOcamlPlatform()
+                .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
+                .getCFlags(),
+            resolver),
         Matchers.contains("-cppflag", "-cflag", "-asflag"));
   }
 
@@ -135,6 +141,7 @@ public class OcamlToolchainFactoryTest {
             .get()
             .getOcamlPlatforms()
             .getValue(custom)
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
             .getOcamlCompiler()
             .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver()),

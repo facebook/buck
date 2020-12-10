@@ -19,12 +19,10 @@ package com.facebook.buck.features.ocaml;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -144,15 +142,5 @@ public class OcamlUtil {
     // if dot is in the first position,
     // we are dealing with a hidden file rather than an extension
     return (index > 0) ? fileName.substring(0, index) : fileName;
-  }
-
-  static Iterable<BuildTarget> getParseTimeDeps(
-      TargetConfiguration targetConfiguration, OcamlPlatform platform) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    deps.addAll(platform.getCCompiler().getParseTimeDeps(targetConfiguration));
-    deps.addAll(platform.getCxxCompiler().getParseTimeDeps(targetConfiguration));
-    deps.addAll(platform.getCPreprocessor().getParseTimeDeps(targetConfiguration));
-    deps.addAll(CxxPlatforms.getParseTimeDeps(targetConfiguration, platform.getCxxPlatform()));
-    return deps.build();
   }
 }

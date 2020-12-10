@@ -121,7 +121,10 @@ public class OCamlIntegrationTest {
             toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
 
     OcamlPlatform ocamlPlatform =
-        toolchain.orElseThrow(AssertionError::new).getDefaultOcamlPlatform();
+        toolchain
+            .orElseThrow(AssertionError::new)
+            .getDefaultOcamlPlatform()
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     try {

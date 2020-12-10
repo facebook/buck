@@ -16,97 +16,16 @@
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.tool.config.ToolConfig;
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
-
-  private static final String SECTION = "ocaml";
-
-  private static final Path DEFAULT_OCAML_COMPILER = Paths.get("ocamlopt.opt");
-  private static final Path DEFAULT_OCAML_BYTECODE_COMPILER = Paths.get("ocamlc.opt");
-  private static final Path DEFAULT_OCAML_DEP_TOOL = Paths.get("ocamldep.opt");
-  private static final Path DEFAULT_OCAML_YACC_COMPILER = Paths.get("ocamlyacc");
-  private static final Path DEFAULT_OCAML_DEBUG = Paths.get("ocamldebug");
-  private static final Path DEFAULT_OCAML_LEX_COMPILER = Paths.get("ocamllex.opt");
-
-  private OcamlPlatform getPlatform(
-      ToolchainCreationContext context, CxxPlatform cxxPlatform, String section) {
-    BiFunction<String, Path, ToolProvider> getTool =
-        (field, defaultValue) ->
-            context
-                .getBuckConfig()
-                .getView(ToolConfig.class)
-                .getToolProvider(section, field)
-                .orElseGet(
-                    () ->
-                        new ConstantToolProvider(
-                            new HashedFileTool(
-                                () ->
-                                    context
-                                        .getBuckConfig()
-                                        .getPathSourcePath(
-                                            context
-                                                .getExecutableFinder()
-                                                .getExecutable(
-                                                    context
-                                                        .getBuckConfig()
-                                                        .getPath(section, field)
-                                                        .orElse(defaultValue),
-                                                    context.getEnvironment())))));
-    return ImmutableOcamlPlatform.builder()
-        .setOcamlCompiler(getTool.apply("ocaml.compiler", DEFAULT_OCAML_COMPILER))
-        .setOcamlDepTool(getTool.apply("dep.tool", DEFAULT_OCAML_DEP_TOOL))
-        .setYaccCompiler(getTool.apply("yacc.compiler", DEFAULT_OCAML_YACC_COMPILER))
-        .setLexCompiler(getTool.apply("lex.compiler", DEFAULT_OCAML_LEX_COMPILER))
-        .setOcamlInteropIncludesDir(context.getBuckConfig().getValue(section, "interop.includes"))
-        .setWarningsFlags(context.getBuckConfig().getValue(section, "warnings_flags"))
-        .setOcamlBytecodeCompiler(
-            getTool.apply("ocaml.bytecode.compiler", DEFAULT_OCAML_BYTECODE_COMPILER))
-        .setOcamlDebug(getTool.apply("debug", DEFAULT_OCAML_DEBUG))
-        .setCCompiler(cxxPlatform.getCc())
-        .setCxxCompiler(cxxPlatform.getCxx())
-        .setCPreprocessor(cxxPlatform.getCpp())
-        .setCFlags(
-            ImmutableList.<Arg>builder()
-                .addAll(cxxPlatform.getCppflags())
-                .addAll(cxxPlatform.getCflags())
-                .addAll(cxxPlatform.getAsflags())
-                .build())
-        .setLdFlags(cxxPlatform.getLdflags())
-        .setCxxPlatform(cxxPlatform)
-        .build();
-  }
-
-  private String getSection(Flavor flavor) {
-    String section = SECTION;
-
-    // We special case the "default" C/C++ platform to just use the "ocaml" section.
-    if (!flavor.equals(DefaultCxxPlatforms.FLAVOR)) {
-      section += "#" + flavor;
-    }
-
-    return section;
-  }
 
   @Override
   public Optional<OcamlToolchain> createToolchain(
@@ -124,15 +43,18 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
     UnresolvedCxxPlatform defaultCxxPlatform =
         cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform();
 
-    FlavorDomain<OcamlPlatform> ocamlPlatforms =
+    FlavorDomain<UnresolvedOcamlPlatform> ocamlPlatforms =
         cxxPlatforms.convert(
             "OCaml platform",
             cxxPlatform ->
-                getPlatform(
-                    context,
-                    LegacyToolchainProvider.getLegacyTotallyUnsafe(cxxPlatform),
-                    getSection(cxxPlatform.getFlavor())));
-    OcamlPlatform defaultOcamlPlatform = ocamlPlatforms.getValue(defaultCxxPlatform.getFlavor());
+                new ConfigBasedUnresolvedOcamlPlatform(
+                    cxxPlatform.getFlavor(),
+                    context.getBuckConfig(),
+                    cxxPlatform,
+                    context.getExecutableFinder(),
+                    context.getEnvironment()));
+    UnresolvedOcamlPlatform defaultOcamlPlatform =
+        ocamlPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(OcamlToolchain.of(defaultOcamlPlatform, ocamlPlatforms));
   }

@@ -10,6 +10,7 @@ java_library(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/downwardapi/config:config",
         "//src/com/facebook/buck/features/ocaml:ocaml",
         "//src/com/facebook/buck/rules/coercer:coercer",

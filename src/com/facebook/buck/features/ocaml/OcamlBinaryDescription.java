@@ -64,12 +64,12 @@ public class OcamlBinaryDescription
     return OcamlBinaryDescriptionArg.class;
   }
 
-  private OcamlPlatform getPlatform(
+  private UnresolvedOcamlPlatform getPlatform(
       Optional<Flavor> platformFlavor, TargetConfiguration toolchainTargetConfiguration) {
     OcamlToolchain ocamlToolchain =
         toolchainProvider.getByName(
             OcamlToolchain.DEFAULT_NAME, toolchainTargetConfiguration, OcamlToolchain.class);
-    FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
+    FlavorDomain<UnresolvedOcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     return platformFlavor
         .map(ocamlPlatforms::getValue)
         .orElse(ocamlToolchain.getDefaultOcamlPlatform());
@@ -83,7 +83,8 @@ public class OcamlBinaryDescription
       OcamlBinaryDescriptionArg args) {
 
     OcamlPlatform ocamlPlatform =
-        getPlatform(args.getPlatform(), buildTarget.getTargetConfiguration());
+        getPlatform(args.getPlatform(), buildTarget.getTargetConfiguration())
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
@@ -162,9 +163,8 @@ public class OcamlBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        OcamlUtil.getParseTimeDeps(
-            buildTarget.getTargetConfiguration(),
-            getPlatform(constructorArg.getPlatform(), buildTarget.getTargetConfiguration())));
+        getPlatform(constructorArg.getPlatform(), buildTarget.getTargetConfiguration())
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
   @RuleArg

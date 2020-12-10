@@ -37,6 +37,6 @@ public class OcamlTestUtils {
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .build();
 
-  public static final FlavorDomain<OcamlPlatform> DEFAULT_PLATFORMS =
-      FlavorDomain.of("OCaml Platform", DEFAULT_PLATFORM);
+  public static final FlavorDomain<UnresolvedOcamlPlatform> DEFAULT_PLATFORMS =
+      FlavorDomain.of("OCaml Platform", new StaticUnresolvedOcamlPlatform(DEFAULT_PLATFORM));
 }

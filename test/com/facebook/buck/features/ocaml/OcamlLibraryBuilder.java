@@ -33,7 +33,9 @@ public class OcamlLibraryBuilder
         OcamlLibrary> {
 
   public OcamlLibraryBuilder(
-      BuildTarget target, OcamlPlatform defaultPlatform, FlavorDomain<OcamlPlatform> platforms) {
+      BuildTarget target,
+      UnresolvedOcamlPlatform defaultPlatform,
+      FlavorDomain<UnresolvedOcamlPlatform> platforms) {
     super(
         new OcamlLibraryDescription(
             DownwardApiConfig.of(FakeBuckConfig.empty()),
@@ -45,7 +47,10 @@ public class OcamlLibraryBuilder
   }
 
   public OcamlLibraryBuilder(BuildTarget target) {
-    this(target, OcamlTestUtils.DEFAULT_PLATFORM, OcamlTestUtils.DEFAULT_PLATFORMS);
+    this(
+        target,
+        new StaticUnresolvedOcamlPlatform(OcamlTestUtils.DEFAULT_PLATFORM),
+        OcamlTestUtils.DEFAULT_PLATFORMS);
   }
 
   public OcamlLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {

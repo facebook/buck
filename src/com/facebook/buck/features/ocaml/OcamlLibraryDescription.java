@@ -87,8 +87,14 @@ public class OcamlLibraryDescription
             OcamlToolchain.DEFAULT_NAME,
             buildTarget.getTargetConfiguration(),
             OcamlToolchain.class);
-    FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
-    Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
+    FlavorDomain<UnresolvedOcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
+    Optional<OcamlPlatform> ocamlPlatform =
+        ocamlPlatforms
+            .getValue(buildTarget)
+            .map(
+                platform ->
+                    platform.resolve(
+                        context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()));
     if (ocamlPlatform.isPresent()) {
       ImmutableList<SourcePath> srcs =
           args.getSrcs().isPresent() ? args.getSrcs().get().getPaths() : ImmutableList.of();
@@ -257,7 +263,7 @@ public class OcamlLibraryDescription
       AbstractOcamlLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    for (OcamlPlatform platform :
+    for (UnresolvedOcamlPlatform platform :
         toolchainProvider
             .getByName(
                 OcamlToolchain.DEFAULT_NAME,
@@ -266,7 +272,7 @@ public class OcamlLibraryDescription
             .getOcamlPlatforms()
             .getValues()) {
       targetGraphOnlyDepsBuilder.addAll(
-          OcamlUtil.getParseTimeDeps(buildTarget.getTargetConfiguration(), platform));
+          platform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
   }
 
