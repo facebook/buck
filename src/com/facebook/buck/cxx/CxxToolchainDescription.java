@@ -359,7 +359,7 @@ public class CxxToolchainDescription
       cxxPlatform.setSharedLibraryInterfaceParams(
           ElfSharedLibraryInterfaceParams.of(
               ToolProviders.getToolProvider(args.getObjcopyForSharedLibraryInterface()),
-              ImmutableList.of(),
+              args.getSharedLibraryInterfaceFlags(),
               sharedLibraryInterfaceType == Type.DEFINED_ONLY));
     }
 
@@ -591,6 +591,9 @@ public class CxxToolchainDescription
 
     /** Objcopy binary to use for creating shared library interfaces. */
     SourcePath getObjcopyForSharedLibraryInterface();
+
+    /** Linker flags to use when linking independent shared library interfaces. */
+    ImmutableList<String> getSharedLibraryInterfaceFlags();
 
     /** Whether to use header maps. */
     boolean getUseHeaderMap();
