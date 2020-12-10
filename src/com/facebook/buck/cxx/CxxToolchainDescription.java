@@ -153,7 +153,10 @@ public class CxxToolchainDescription
             ToolProviders.getToolProvider(args.getAssembler()),
             args.getAssemblerType(),
             ToolType.ASPP));
-    cxxPlatform.setAsppflags(ImmutableList.of());
+    cxxPlatform.setAsppflags(
+        args.getAssemblerPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setCc(
         new CompilerProvider(
@@ -182,14 +185,20 @@ public class CxxToolchainDescription
             ToolProviders.getToolProvider(args.getCCompiler()),
             args.getCCompilerType(),
             ToolType.CPP));
-    cxxPlatform.setCppflags(ImmutableList.of());
+    cxxPlatform.setCppflags(
+        args.getCPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setCxxpp(
         new PreprocessorProvider(
             ToolProviders.getToolProvider(args.getCxxCompiler()),
             args.getCxxCompilerType(),
             ToolType.CXXPP));
-    cxxPlatform.setCxxppflags(ImmutableList.of());
+    cxxPlatform.setCxxppflags(
+        args.getCxxPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
 
     boolean scrubConcurrently = false;
     cxxPlatform.setLd(
@@ -380,6 +389,9 @@ public class CxxToolchainDescription
     /** Flags for the assembler. */
     ImmutableList<StringWithMacros> getAssemblerFlags();
 
+    /** Flags for the assembler preprocessor. */
+    ImmutableList<StringWithMacros> getAssemblerPreprocessorFlags();
+
     /** C compiler binary. */
     SourcePath getCCompiler();
 
@@ -392,6 +404,9 @@ public class CxxToolchainDescription
     /** C compiler flags. */
     ImmutableList<StringWithMacros> getCCompilerFlags();
 
+    /** C preprocessor flags. */
+    ImmutableList<StringWithMacros> getCPreprocessorFlags();
+
     /** C++ compiler binary. */
     SourcePath getCxxCompiler();
 
@@ -403,6 +418,9 @@ public class CxxToolchainDescription
 
     /** C++ compiler flags. */
     ImmutableList<StringWithMacros> getCxxCompilerFlags();
+
+    /** C++ preprocessor flags. */
+    ImmutableList<StringWithMacros> getCxxPreprocessorFlags();
 
     /** Linker binary. */
     SourcePath getLinker();
