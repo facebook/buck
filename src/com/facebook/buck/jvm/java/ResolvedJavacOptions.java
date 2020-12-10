@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -34,7 +35,7 @@ public abstract class ResolvedJavacOptions {
 
   public abstract Optional<String> getBootclasspath();
 
-  public abstract Optional<List<AbsPath>> getBootclasspathList();
+  public abstract Optional<List<RelPath>> getBootclasspathList();
 
   public abstract JavacLanguageLevelOptions getLanguageLevelOptions();
 
@@ -61,11 +62,14 @@ public abstract class ResolvedJavacOptions {
     JavacLanguageLevelOptions languageLevelOptions = javacOptions.getLanguageLevelOptions();
     ImmutableList<PathSourcePath> bootclasspath =
         javacOptions.getSourceToBootclasspath().get(languageLevelOptions.getSourceLevel());
-    Optional<List<AbsPath>> bootclasspathList = Optional.empty();
+    Optional<List<RelPath>> bootclasspathList = Optional.empty();
     if (bootclasspath != null) {
       bootclasspathList =
           Optional.of(
-              bootclasspath.stream().map(resolver::getAbsolutePath).collect(Collectors.toList()));
+              bootclasspath.stream()
+                  .map(resolver::getAbsolutePath)
+                  .map(ruleCellRoot::relativize)
+                  .collect(Collectors.toList()));
     }
 
     JavacPluginParams javaAnnotationProcessorParams =
@@ -89,7 +93,7 @@ public abstract class ResolvedJavacOptions {
   /** Creates {@link ResolvedJavacOptions} */
   public static ResolvedJavacOptions of(
       Optional<String> bootclasspath,
-      Optional<List<AbsPath>> bootclasspathList,
+      Optional<List<RelPath>> bootclasspathList,
       JavacLanguageLevelOptions languageLevelOptions,
       boolean debug,
       boolean verbose,

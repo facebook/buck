@@ -192,17 +192,20 @@ public abstract class JavacOptions implements AddsToRuleKey {
       OptionsConsumer optionsConsumer, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     ImmutableList<PathSourcePath> bootclasspath =
         getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
-    Optional<List<AbsPath>> bootclasspathList = Optional.empty();
+    Optional<List<RelPath>> bootclasspathList = Optional.empty();
     if (bootclasspath != null) {
       bootclasspathList =
           Optional.of(
-              bootclasspath.stream().map(resolver::getAbsolutePath).collect(Collectors.toList()));
+              bootclasspath.stream()
+                  .map(resolver::getAbsolutePath)
+                  .map(ruleCellRoot::relativize)
+                  .collect(Collectors.toList()));
     }
 
     appendOptionsTo(
         ruleCellRoot,
         optionsConsumer,
-        getBootclasspathString(ruleCellRoot, getBootclasspath(), bootclasspathList),
+        getBootclasspathString(getBootclasspath(), bootclasspathList),
         getLanguageLevelOptions(),
         isDebug(),
         isVerbose(),
@@ -221,9 +224,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
         rootCellRoot,
         optionsConsumer,
         getBootclasspathString(
-            rootCellRoot,
-            resolvedJavacOptions.getBootclasspath(),
-            resolvedJavacOptions.getBootclasspathList()),
+            resolvedJavacOptions.getBootclasspath(), resolvedJavacOptions.getBootclasspathList()),
         resolvedJavacOptions.getLanguageLevelOptions(),
         resolvedJavacOptions.isDebug(),
         resolvedJavacOptions.isVerbose(),
@@ -327,18 +328,13 @@ public abstract class JavacOptions implements AddsToRuleKey {
   }
 
   private static String getBootclasspathString(
-      AbsPath ruleCellRoot,
-      Optional<String> bootclasspathOptional,
-      Optional<List<AbsPath>> bootclasspathList) {
+      Optional<String> bootclasspathOptional, Optional<List<RelPath>> bootclasspathList) {
     if (bootclasspathOptional.isPresent()) {
       return bootclasspathOptional.get();
     }
 
     if (bootclasspathList.isPresent()) {
       return bootclasspathList.get().stream()
-          .map(AbsPath::getPath)
-          .map(ruleCellRoot::resolve)
-          .map(ruleCellRoot::relativize)
           .map(RelPath::toString)
           .collect(Collectors.joining(File.pathSeparator));
     }
