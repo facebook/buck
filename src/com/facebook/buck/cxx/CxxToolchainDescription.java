@@ -24,8 +24,6 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -334,8 +332,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setSymbolNameTool(
         new PosixNmSymbolNameTool(
-            new ConstantToolProvider(new HashedFileTool(args.getNm())),
-            downwardApiConfig.isEnabledForCxx()));
+            ToolProviders.getToolProvider(args.getNm()), downwardApiConfig.isEnabledForCxx()));
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(
