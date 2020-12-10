@@ -1,0 +1,6 @@
+genrule(
+    name = "foo",
+    out = "foo",
+    bash = "touch $OUT",
+    cmd_exe = "echo \"\" > %OUT%",
+)
