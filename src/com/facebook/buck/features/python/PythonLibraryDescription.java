@@ -17,9 +17,11 @@
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -50,6 +52,7 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,7 +69,8 @@ public class PythonLibraryDescription
     implements DescriptionWithTargetGraph<PythonLibraryDescriptionArg>,
         VersionPropagator<PythonLibraryDescriptionArg>,
         MetadataProvidingDescription<PythonLibraryDescriptionArg>,
-        Flavored {
+        Flavored,
+        ImplicitDepsInferringDescription<PythonLibraryDescriptionArg> {
 
   private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
@@ -466,6 +470,22 @@ public class PythonLibraryDescription
             toolchainTargetConfiguration,
             PythonPlatformsProvider.class)
         .getPythonPlatforms();
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellNameResolver cellRoots,
+      PythonLibraryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    // When generating non-meta rules we use the resolved C++ platform, so make sure it's added to
+    // parse-time deps.
+    if (LIBRARY_TYPE.getFlavorAndValue(buildTarget).isPresent()) {
+      targetGraphOnlyDepsBuilder.addAll(
+          getCxxPlatform(buildTarget, constructorArg)
+              .getParseTimeDeps(buildTarget.getTargetConfiguration()));
+    }
   }
 
   /** Ways of building this library. */
