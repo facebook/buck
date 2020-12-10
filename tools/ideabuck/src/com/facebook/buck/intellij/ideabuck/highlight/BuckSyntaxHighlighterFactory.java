@@ -21,15 +21,19 @@ import com.intellij.openapi.fileTypes.SyntaxHighlighter;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import javax.annotation.Nullable;
 
 public class BuckSyntaxHighlighterFactory extends SyntaxHighlighterFactory {
 
   @Override
-  public SyntaxHighlighter getSyntaxHighlighter(Project project, VirtualFile virtualFile) {
-    project
-        .getMessageBus()
-        .syncPublisher(IntellijBuckAction.EVENT)
-        .consume(this.getClass().toString());
+  public SyntaxHighlighter getSyntaxHighlighter(
+      @Nullable Project project, VirtualFile virtualFile) {
+    if (project != null) {
+      project
+          .getMessageBus()
+          .syncPublisher(IntellijBuckAction.EVENT)
+          .consume(this.getClass().toString());
+    }
     return new BuckSyntaxHighlighter();
   }
 }
