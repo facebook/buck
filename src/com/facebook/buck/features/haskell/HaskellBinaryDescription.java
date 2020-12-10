@@ -164,6 +164,18 @@ public class HaskellBinaryDescription
           ImmutableList.of(),
           args.isEnableProfiling());
     }
+    if (type.isPresent() && type.get() == Type.IDE) {
+      return HaskellDescriptionUtils.requireIdeRule(
+          buildTarget,
+          projectFilesystem,
+          params,
+          graphBuilder,
+          platform,
+          args.getDeps(),
+          args.getPlatformDeps(),
+          args.getSrcs(),
+          args.getCompilerFlags());
+    }
 
     Linker.LinkableDepType depType = getLinkStyle(args, type);
 
@@ -372,6 +384,7 @@ public class HaskellBinaryDescription
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR, Linker.LinkableDepType.STATIC_PIC),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR, Linker.LinkableDepType.STATIC),
     GHCI(HaskellDescriptionUtils.GHCI_FLAV, Linker.LinkableDepType.STATIC),
+    IDE(HaskellDescriptionUtils.IDE_FLAV, Linker.LinkableDepType.STATIC),
     ;
 
     private final Flavor flavor;

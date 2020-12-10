@@ -80,6 +80,7 @@ public class HaskellDescriptionUtils {
   private HaskellDescriptionUtils() {}
 
   static final Flavor GHCI_FLAV = UserFlavor.of("ghci", "Open a ghci session on this target");
+  static final Flavor IDE_FLAV = UserFlavor.of("ide", "Obtain ide metadata about this target");
 
   static final Flavor PROF = InternalFlavor.of("prof");
   static final ImmutableList<String> PROF_FLAGS =
@@ -599,5 +600,71 @@ public class HaskellDescriptionUtils {
         hsProfile,
         platform,
         argExtraScriptTemplates);
+  }
+
+  public static HaskellIdeRule requireIdeRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
+      HaskellPlatform platform,
+      ImmutableSortedSet<BuildTarget> argDeps,
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformDeps,
+      SourceSortedSet argSrcs,
+      ImmutableList<String> argCompilerFlags) {
+    ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
+    depsBuilder.addAll(
+        CxxDeps.builder()
+            .addDeps(argDeps)
+            .addPlatformDeps(argPlatformDeps)
+            .build()
+            .get(graphBuilder, platform.getCxxPlatform()));
+    ImmutableSet<BuildRule> deps = depsBuilder.build();
+
+    // Haskell visitor
+    ImmutableSet.Builder<HaskellPackage> haskellPackages = ImmutableSet.builder();
+    ImmutableSet.Builder<HaskellPackage> prebuiltHaskellPackages = ImmutableSet.builder();
+    ImmutableSet.Builder<HaskellPackage> firstOrderHaskellPackages = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal<BuildRule> haskellVisitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(deps) {
+          @Override
+          public ImmutableSet<BuildRule> visit(BuildRule rule) {
+            ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
+            if (rule instanceof HaskellLibrary || rule instanceof PrebuiltHaskellLibrary) {
+              HaskellCompileDep haskellRule = (HaskellCompileDep) rule;
+              HaskellCompileInput ci =
+                  haskellRule.getCompileInput(platform, Linker.LinkableDepType.SHARED, false);
+
+              if (params.getBuildDeps().contains(rule)) {
+                firstOrderHaskellPackages.add(ci.getPackage());
+              }
+
+              if (rule instanceof HaskellLibrary) {
+                haskellPackages.add(ci.getPackage());
+              } else if (rule instanceof PrebuiltHaskellLibrary) {
+                prebuiltHaskellPackages.add(ci.getPackage());
+              }
+
+              traverse.addAll(haskellRule.getCompileDeps(platform));
+            }
+
+            return traverse.build();
+          }
+        };
+    haskellVisitor.start();
+
+    HaskellSources srcs = HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", argSrcs);
+
+    return HaskellIdeRule.from(
+        buildTarget,
+        projectFilesystem,
+        params,
+        graphBuilder,
+        srcs,
+        argCompilerFlags,
+        firstOrderHaskellPackages.build(),
+        haskellPackages.build(),
+        prebuiltHaskellPackages.build(),
+        platform);
   }
 }

@@ -655,6 +655,19 @@ public class HaskellLibraryDescription
         case HADDOCK:
           return requireHaddockLibrary(
               baseTarget, projectFilesystem, params, graphBuilder, platform, args);
+        case IDE:
+          return HaskellDescriptionUtils.requireIdeRule(
+              // The IDE rule is a user-facing "deployable" rule, rather than a factory rule, so
+              // make sure to use the original build target when generating it.
+              buildTarget,
+              projectFilesystem,
+              params,
+              graphBuilder,
+              platform,
+              args.getDeps(),
+              args.getPlatformDeps(),
+              args.getSrcs(),
+              args.getCompilerFlags());
         case GHCI:
           return HaskellDescriptionUtils.requireGhciRule(
               // The GHCi rule is a user-facing "deployable" rule, rather than a factory rule, so
@@ -937,6 +950,7 @@ public class HaskellLibraryDescription
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
 
     GHCI(HaskellDescriptionUtils.GHCI_FLAV),
+    IDE(HaskellDescriptionUtils.IDE_FLAV),
     HADDOCK(InternalFlavor.of("haddock"));
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =
