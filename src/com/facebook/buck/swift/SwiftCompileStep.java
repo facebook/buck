@@ -119,7 +119,6 @@ class SwiftCompileStep extends SwiftCompileStepBase {
       throws IOException, InterruptedException {
     ProcessExecutorParams params = makeProcessExecutorParams(context);
 
-    // TODO(markwang): parse the output, print build failure errors, etc.
     LOG.debug("%s", getRawCommand());
 
     boolean willTransformStderr =
@@ -142,24 +141,18 @@ class SwiftCompileStep extends SwiftCompileStepBase {
         getTransformedProcessResult(processExecutor.launchAndExecute(params), willTransformStderr);
 
     int result = processResult.getExitCode();
-    boolean failed = result != StepExecutionResults.SUCCESS_EXIT_CODE;
+    boolean success = result == StepExecutionResults.SUCCESS_EXIT_CODE;
     Optional<String> stderr = processResult.getStderr();
 
-    // If we are transforming the stderr output, we did not output stderr while running the process,
-    // so we need to output it now, with the absolute path transformations applied.
-    if (willTransformStderr && stderr.isPresent()) {
+    if ((willTransformStderr || success) && stderr.isPresent()) {
       boolean usingColor = context.getAnsi().isAnsiTerminal();
-      Level level = failed ? Level.SEVERE : Level.WARNING;
+      Level level = success ? Level.WARNING : Level.SEVERE;
       context
           .getBuckEventBus()
           .post(
               usingColor
                   ? ConsoleEvent.createForMessageWithAnsiEscapeCodes(level, stderr.get())
                   : ConsoleEvent.create(level, stderr.get()));
-    }
-
-    if (failed && !willTransformStderr) {
-      LOG.error("Error running %s: %s", getDescription(context), stderr);
     }
 
     return StepExecutionResult.of(processResult);
