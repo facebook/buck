@@ -361,10 +361,11 @@ public class Jsr199JavacIntegrationTest {
     if (jar.isPresent()) {
       return new JarBackedJavac(
               ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()))
-          .resolve(sourcePathResolver);
+          .resolve(sourcePathResolver, projectFilesystem.getRootPath());
     }
 
-    return new JdkProvidedInMemoryJavac().resolve(sourcePathResolver);
+    return new JdkProvidedInMemoryJavac()
+        .resolve(sourcePathResolver, projectFilesystem.getRootPath());
   }
 
   private Jsr199Javac.ResolvedJsr199Javac createJavac(boolean withSyntaxError) throws IOException {
@@ -378,7 +379,7 @@ public class Jsr199JavacIntegrationTest {
   private static class JdkNotFoundJavac extends Jsr199Javac {
 
     @Override
-    protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver) {
+    protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
       return new ResolvedJsr199Javac() {
 
         @Override
@@ -393,7 +394,10 @@ public class Jsr199JavacIntegrationTest {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public void jdkNotFound() {
     Jsr199Javac.ResolvedJsr199Javac javac =
-        new JdkNotFoundJavac().resolve(new TestActionGraphBuilder().getSourcePathResolver());
+        new JdkNotFoundJavac()
+            .resolve(
+                new TestActionGraphBuilder().getSourcePathResolver(),
+                projectFilesystem.getRootPath());
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =

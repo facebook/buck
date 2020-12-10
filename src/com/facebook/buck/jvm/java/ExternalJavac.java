@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -199,7 +200,7 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public ResolvedExternalJavac resolve(SourcePathResolverAdapter resolver) {
+  public ResolvedExternalJavac resolve(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     ImmutableList<String> commandPrefix = javac.get().getCommandPrefix(resolver);
     return new ResolvedExternalJavac(shortName, commandPrefix);
   }

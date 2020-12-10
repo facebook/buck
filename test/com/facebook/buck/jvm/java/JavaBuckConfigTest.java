@@ -390,7 +390,7 @@ public class JavaBuckConfigTest {
         javac,
         JavacFactoryHelper.createJavacFactory(javaConfig)
             .create(ruleFinder, null, UnconfiguredTargetConfiguration.INSTANCE)
-            .resolve(ruleFinder.getSourcePathResolver())
+            .resolve(ruleFinder.getSourcePathResolver(), defaultFilesystem.getRootPath())
             .getShortName());
   }
 

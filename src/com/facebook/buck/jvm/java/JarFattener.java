@@ -224,8 +224,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         compilerParameters,
         isolatedSteps,
         buildableContext,
-        javac.resolve(sourcePathResolver),
-        compileStepFactory.createExtraParams(context.getSourcePathResolver(), rootPath));
+        javac.resolve(sourcePathResolver, rootPath),
+        compileStepFactory.createExtraParams(sourcePathResolver, rootPath));
     steps.addAll(isolatedSteps.build());
 
     steps.add(zipStep);

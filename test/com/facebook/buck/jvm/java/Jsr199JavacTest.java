@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +64,9 @@ public class Jsr199JavacTest extends EasyMockSupport {
 
   private Jsr199Javac.ResolvedJsr199Javac createTestStep() {
     return new JdkProvidedInMemoryJavac()
-        .resolve(new TestActionGraphBuilder().getSourcePathResolver());
+        .resolve(
+            new TestActionGraphBuilder().getSourcePathResolver(),
+            AbsPath.of(Paths.get(".").toAbsolutePath()));
   }
 
   private ImmutableList.Builder<String> getArgs() {

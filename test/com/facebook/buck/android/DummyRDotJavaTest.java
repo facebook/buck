@@ -145,7 +145,7 @@ public class DummyRDotJavaTest {
             .addAll(makeCleanDirDescription(rootPath, rDotJavaAnnotationFolder))
             .add(
                 new JavacStep(
-                        DEFAULT_JAVAC.resolve(sourcePathResolver),
+                        DEFAULT_JAVAC.resolve(sourcePathResolver, rootPath),
                         ResolvedJavacOptions.of(
                             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                                 .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)

@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -39,30 +40,36 @@ public class JarBackedJavac extends Jsr199Javac {
   }
 
   @Override
-  protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver) {
-    ImmutableSortedSet<AbsPath> resolvedClasspath = resolver.getAllAbsolutePaths(classpath);
+  protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+    ImmutableSortedSet<RelPath> resolvedClasspath =
+        resolver.getAllAbsolutePaths(classpath).stream()
+            .map(ruleCellRoot::relativize)
+            .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
     return new ResolvedJarBackedJavac(resolvedClasspath, compilerClassName);
   }
 
   /** Resolved jar backed (loaded from a jar specified in .buckconfig.) javac tool. */
   public static class ResolvedJarBackedJavac extends Jsr199Javac.ResolvedJsr199Javac {
 
-    private final ImmutableSortedSet<AbsPath> resolvedClasspath;
+    private final ImmutableSortedSet<RelPath> resolvedClasspath;
     private final String compilerClassName;
 
     public ResolvedJarBackedJavac(
-        ImmutableSortedSet<AbsPath> resolvedClasspath, String compilerClassName) {
+        ImmutableSortedSet<RelPath> resolvedClasspath, String compilerClassName) {
       this.resolvedClasspath = resolvedClasspath;
       this.compilerClassName = compilerClassName;
     }
 
     @Override
     protected JavaCompiler createCompiler(JavacExecutionContext context) {
+      AbsPath ruleCellRoot = context.getRuleCellRoot();
       ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
       ClassLoader compilerClassLoader =
           classLoaderCache.getClassLoaderForClassPath(
               ClassLoader.getSystemClassLoader(),
               resolvedClasspath.stream()
+                  .map(ruleCellRoot::resolve)
+                  .map(AbsPath::normalize)
                   .map(this::pathToUrl)
                   // Use "toString" since URL.equals does DNS lookups.
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.usingToString()))
@@ -74,7 +81,7 @@ public class JarBackedJavac extends Jsr199Javac {
       }
     }
 
-    public Iterable<AbsPath> getClasspath() {
+    public Iterable<RelPath> getClasspath() {
       return resolvedClasspath;
     }
 

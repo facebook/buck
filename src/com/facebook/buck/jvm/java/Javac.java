@@ -16,11 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 
 /** Interface for a javac tool. */
 public interface Javac extends AddsToRuleKey {
 
-  ResolvedJavac resolve(SourcePathResolverAdapter resolver);
+  ResolvedJavac resolve(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot);
 }

@@ -179,7 +179,7 @@ public class JvmLibraryArgInterpreterTest {
 
     assertEquals(
         ImmutableList.of(externalJavac.toString()),
-        javac.resolve(ruleFinder.getSourcePathResolver()).getCommandPrefix());
+        javac.resolve(sourcePathResolverAdapter, tmp.getRoot()).getCommandPrefix());
   }
 
   @Test
@@ -202,7 +202,7 @@ public class JvmLibraryArgInterpreterTest {
 
     assertEquals(
         ImmutableList.of(externalJavacPath.toString()),
-        javac.resolve(ruleFinder.getSourcePathResolver()).getCommandPrefix());
+        javac.resolve(sourcePathResolverAdapter, tmp.getRoot()).getCommandPrefix());
   }
 
   @Test

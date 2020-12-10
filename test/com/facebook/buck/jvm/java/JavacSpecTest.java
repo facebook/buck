@@ -67,7 +67,7 @@ public class JavacSpecTest {
     specBuilder.setJavacPath(javacPath);
     ExternalJavac.ResolvedExternalJavac javac =
         (ExternalJavac.ResolvedExternalJavac)
-            getJavac().resolve(graphBuilder.getSourcePathResolver());
+            getJavac().resolve(graphBuilder.getSourcePathResolver(), tmp.getRoot());
 
     assertEquals(ImmutableList.of(externalPath.toString()), javac.getCommandPrefix());
   }
@@ -92,7 +92,7 @@ public class JavacSpecTest {
 
     JarBackedJavac.ResolvedJarBackedJavac javac =
         (JarBackedJavac.ResolvedJarBackedJavac)
-            getJavac().resolve(graphBuilder.getSourcePathResolver());
+            getJavac().resolve(graphBuilder.getSourcePathResolver(), tmp.getRoot());
 
     assertEquals(compilerClassName, javac.getCompilerClassName());
   }

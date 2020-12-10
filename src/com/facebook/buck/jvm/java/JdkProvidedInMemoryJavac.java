@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import javax.tools.JavaCompiler;
@@ -24,7 +25,7 @@ import javax.tools.JavaCompiler;
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
 
   @Override
-  protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver) {
+  protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     return createJsr199Javac();
   }
 

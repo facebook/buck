@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -32,11 +33,13 @@ import javax.tools.JavaCompiler;
 public abstract class Jsr199Javac implements Javac {
 
   @Override
-  public final ResolvedJsr199Javac resolve(SourcePathResolverAdapter resolver) {
-    return create(resolver);
+  public final ResolvedJsr199Javac resolve(
+      SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
+    return create(resolver, ruleCellRoot);
   }
 
-  protected abstract ResolvedJsr199Javac create(SourcePathResolverAdapter resolver);
+  protected abstract ResolvedJsr199Javac create(
+      SourcePathResolverAdapter resolver, AbsPath ruleCellRoot);
 
   /** Base class for a resolved javac in-process tool. */
   public abstract static class ResolvedJsr199Javac implements ResolvedJavac {

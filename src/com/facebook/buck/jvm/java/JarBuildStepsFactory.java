@@ -400,7 +400,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getLibraryJarParameters(context, filesystem, classesDir).orElse(null);
 
     AbsPath buildCellRootPath = AbsPath.of(context.getBuildCellRootPath());
-    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
     T extraParams = createExtraParams(context, rootPath);
 
     stepsBuilder.addBuildStepsForAbiJar(
@@ -525,7 +525,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     AbsPath buildCellRootPath = AbsPath.of(context.getBuildCellRootPath());
 
-    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
     Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, baseBuckPaths);
     T extraParams = createExtraParams(context, rootPath);
 
@@ -774,7 +774,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             isRequiredForSourceOnlyAbi,
             compilerOutputPaths);
 
-    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver);
+    ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
 
     return javacToJarStepFactory.createPipelineState(
         buildTargetValue,

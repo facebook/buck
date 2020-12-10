@@ -125,6 +125,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
     testJavaBuckConfig = getJavaBuckConfigWithCompilationMode();
+
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
     annotationScenarioGenPath =
@@ -1534,7 +1535,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule javac = graphBuilder.requireRule(javacTarget);
     BuildRule rule = graphBuilder.requireRule(libraryOneTarget);
@@ -1549,9 +1550,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertTrue(javacStep.getResolvedJavac() instanceof Jsr199Javac.ResolvedJsr199Javac);
     JarBackedJavac.ResolvedJarBackedJavac jsrJavac =
         ((JarBackedJavac.ResolvedJarBackedJavac) javacStep.getResolvedJavac());
+    SourcePath sourcePathToOutput = javac.getSourcePathToOutput();
+    ProjectFilesystem filesystem = sourcePathResolver.getFilesystem(sourcePathToOutput);
     assertEquals(
         jsrJavac.getClasspath(),
-        ImmutableSet.of(pathResolver.getAbsolutePath(javac.getSourcePathToOutput())));
+        ImmutableSet.of(
+            filesystem.relativize(sourcePathResolver.getAbsolutePath(sourcePathToOutput))));
   }
 
   // Utilities
