@@ -278,12 +278,14 @@ public class HaskellGhciDescription
   }
 
   // Return the C/C++ platform to build against.
-  private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
+  private UnresolvedHaskellPlatform getPlatform(
+      BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
     HaskellPlatformsProvider haskellPlatformsProvider =
         getHaskellPlatformsProvider(target.getTargetConfiguration());
-    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
+    FlavorDomain<UnresolvedHaskellPlatform> platforms =
+        haskellPlatformsProvider.getHaskellPlatforms();
 
-    Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
+    Optional<UnresolvedHaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
       return flavorPlatform.get();
     }
@@ -302,7 +304,9 @@ public class HaskellGhciDescription
       BuildRuleParams params,
       HaskellGhciDescriptionArg args) {
 
-    HaskellPlatform platform = getPlatform(buildTarget, args);
+    HaskellPlatform platform =
+        getPlatform(buildTarget, args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
     return HaskellDescriptionUtils.requireGhciRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -332,10 +336,9 @@ public class HaskellGhciDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    HaskellDescriptionUtils.getParseTimeDeps(
-        buildTarget.getTargetConfiguration(),
-        ImmutableList.of(getPlatform(buildTarget, constructorArg)),
-        targetGraphOnlyDepsBuilder);
+    targetGraphOnlyDepsBuilder.addAll(
+        getPlatform(buildTarget, constructorArg)
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     constructorArg
         .getDepsQuery()

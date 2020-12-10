@@ -38,8 +38,8 @@ public class HaskellBinaryBuilder
 
   public HaskellBinaryBuilder(
       BuildTarget target,
-      HaskellPlatform defaultPlatform,
-      FlavorDomain<HaskellPlatform> platforms,
+      UnresolvedHaskellPlatform defaultPlatform,
+      FlavorDomain<UnresolvedHaskellPlatform> platforms,
       CxxBuckConfig cxxBuckConfig) {
     super(
         new HaskellBinaryDescription(
@@ -56,7 +56,7 @@ public class HaskellBinaryBuilder
   public HaskellBinaryBuilder(BuildTarget target) {
     this(
         target,
-        HaskellTestUtils.DEFAULT_PLATFORM,
+        HaskellTestUtils.DEFAULT_UNRESOLVED_PLATFORM,
         HaskellTestUtils.DEFAULT_PLATFORMS,
         CxxPlatformUtils.DEFAULT_CONFIG);
   }

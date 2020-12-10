@@ -18,16 +18,9 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
-import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.io.ExecutableFinder;
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Paths;
-import java.util.Optional;
 
 public class HaskellPlatformsFactory {
 
@@ -41,44 +34,14 @@ public class HaskellPlatformsFactory {
     this.executableFinder = executableFinder;
   }
 
-  private HaskellPlatform getPlatform(String section, UnresolvedCxxPlatform unresolvedCxxPlatform) {
-    CxxPlatform cxxPlatform = LegacyToolchainProvider.getLegacyTotallyUnsafe(unresolvedCxxPlatform);
-
-    return HaskellPlatform.builder()
-        .setHaskellVersion(
-            ImmutableHaskellVersion.ofImpl(haskellBuckConfig.getCompilerMajorVersion(section)))
-        .setCompiler(getCompiler(section))
-        .setCompilerFlags(haskellBuckConfig.getCompilerFlags(section).orElse(ImmutableList.of()))
-        .setLinker(getLinker(section))
-        .setLinkerFlags(haskellBuckConfig.getLinkerFlags(section).orElse(ImmutableList.of()))
-        .setPackager(getPackager(section))
-        .setHaddock(getHaddock(section))
-        .setShouldCacheLinks(haskellBuckConfig.getShouldCacheLinks(section))
-        .setShouldUseArgsfile(haskellBuckConfig.getShouldUseArgsfile(section))
-        .setShouldUsedOldBinaryOutputLocation(
-            haskellBuckConfig.getShouldUsedOldBinaryOutputLocation(section))
-        .setSupportExposePackage(haskellBuckConfig.getSupportExposePackage(section))
-        .setArchiveContents(
-            haskellBuckConfig.getArchiveContents(section).orElse(cxxPlatform.getArchiveContents()))
-        .setPackageNamePrefix(haskellBuckConfig.getPackageNamePrefix(section))
-        .setGhciScriptTemplate(haskellBuckConfig.getGhciScriptTemplate(section))
-        .setGhciIservScriptTemplate(haskellBuckConfig.getGhciIservScriptTemplate(section))
-        .setGhciBinutils(haskellBuckConfig.getGhciBinutils(section))
-        .setGhciGhc(haskellBuckConfig.getGhciGhc(section))
-        .setGhciIServ(haskellBuckConfig.getGhciIServ(section))
-        .setGhciIServProf(haskellBuckConfig.getGhciIServProf(section))
-        .setGhciLib(haskellBuckConfig.getGhciLib(section))
-        .setGhciCxx(haskellBuckConfig.getGhciCxx(section))
-        .setGhciCc(haskellBuckConfig.getGhciCc(section))
-        .setGhciCpp(haskellBuckConfig.getGhciCpp(section))
-        .setGhciPackager(haskellBuckConfig.getGhciPackager(section))
-        .setLinkStyleForStubHeader(haskellBuckConfig.getLinkStyleForStubHeader(section))
-        .setCxxPlatform(cxxPlatform)
-        .build();
+  private UnresolvedHaskellPlatform getPlatform(
+      String section, UnresolvedCxxPlatform unresolvedCxxPlatform) {
+    return new ConfigBasedUnresolvedHaskellPlatform(
+        section, haskellBuckConfig, unresolvedCxxPlatform, buckConfig, executableFinder);
   }
 
   /** Maps the cxxPlatforms to corresponding HaskellPlatform. */
-  public FlavorDomain<HaskellPlatform> getPlatforms(
+  public FlavorDomain<UnresolvedHaskellPlatform> getPlatforms(
       FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     // Use convert (instead of map) so that if we ever have the haskell platform flavor different
     // from the underlying c++ platform's flavor this will continue to work correctly.
@@ -89,43 +52,5 @@ public class HaskellPlatformsFactory {
             cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
                 ? getPlatform(haskellBuckConfig.getDefaultSection(), cxxPlatform)
                 : getPlatform(haskellBuckConfig.getSectionForPlatform(cxxPlatform), cxxPlatform));
-  }
-
-  private ToolProvider getTool(
-      Optional<ToolProvider> toolProviderFromConfig, String source, String systemName) {
-    return toolProviderFromConfig.orElseGet(
-        () ->
-            SystemToolProvider.of(
-                executableFinder,
-                buckConfig::getPathSourcePath,
-                Paths.get(systemName),
-                buckConfig.getEnvironment(),
-                Optional.of(source)));
-  }
-
-  private ToolProvider getCompiler(String section) {
-    return getTool(
-        haskellBuckConfig.getCompiler(section),
-        haskellBuckConfig.getCompilerSource(section),
-        "ghc");
-  }
-
-  private ToolProvider getLinker(String section) {
-    return getTool(
-        haskellBuckConfig.getLinker(section), haskellBuckConfig.getLinkerSource(section), "ghc");
-  }
-
-  private ToolProvider getPackager(String section) {
-    return getTool(
-        haskellBuckConfig.getPackager(section),
-        haskellBuckConfig.getPackagerSource(section),
-        "ghc-pkg");
-  }
-
-  private ToolProvider getHaddock(String section) {
-    return getTool(
-        haskellBuckConfig.getHaddock(section),
-        haskellBuckConfig.getHaddockSource(section),
-        "haddock");
   }
 }

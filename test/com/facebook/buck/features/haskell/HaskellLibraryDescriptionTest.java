@@ -200,14 +200,16 @@ public class HaskellLibraryDescriptionTest {
             .setArchiveContents(ArchiveContents.THIN)
             .setCxxPlatform(cxxPlatform)
             .build();
-    FlavorDomain<HaskellPlatform> haskellPlatforms =
-        FlavorDomain.of("Haskell Platforms", haskellPlatform);
+    UnresolvedHaskellPlatform unresolvedHaskellPlatform =
+        new StaticUnresolvedHaskellPlatform(haskellPlatform);
+    FlavorDomain<UnresolvedHaskellPlatform> haskellPlatforms =
+        FlavorDomain.of("Haskell Platforms", unresolvedHaskellPlatform);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     HaskellLibraryBuilder builder =
         new HaskellLibraryBuilder(
                 target,
-                haskellPlatform,
+                unresolvedHaskellPlatform,
                 haskellPlatforms,
                 new CxxBuckConfig(FakeBuckConfig.empty()))
             .setSrcs(
@@ -286,9 +288,11 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder libBuilder =
         new HaskellLibraryBuilder(
             BuildTargetFactory.newInstance("//:rule"),
-            HaskellTestUtils.DEFAULT_PLATFORM,
+            HaskellTestUtils.DEFAULT_UNRESOLVED_PLATFORM,
             FlavorDomain.of(
-                "Haskell Platform", HaskellTestUtils.DEFAULT_PLATFORM, ruleDefaultPlatform),
+                "Haskell Platform",
+                HaskellTestUtils.DEFAULT_UNRESOLVED_PLATFORM,
+                new StaticUnresolvedHaskellPlatform(ruleDefaultPlatform)),
             CxxPlatformUtils.DEFAULT_CONFIG);
     libBuilder.setPlatform(ruleDefaultPlatform.getFlavor());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());

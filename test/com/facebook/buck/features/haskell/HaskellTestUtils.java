@@ -96,8 +96,11 @@ class HaskellTestUtils {
               })
           .build();
 
-  public static final FlavorDomain<HaskellPlatform> DEFAULT_PLATFORMS =
-      FlavorDomain.of("Haskell Platform", DEFAULT_PLATFORM);
+  public static final UnresolvedHaskellPlatform DEFAULT_UNRESOLVED_PLATFORM =
+      new StaticUnresolvedHaskellPlatform(DEFAULT_PLATFORM);
+
+  public static final FlavorDomain<UnresolvedHaskellPlatform> DEFAULT_PLATFORMS =
+      FlavorDomain.of("Haskell Platform", DEFAULT_UNRESOLVED_PLATFORM);
 
   private HaskellTestUtils() {}
 

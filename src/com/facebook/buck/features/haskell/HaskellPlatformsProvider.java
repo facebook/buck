@@ -25,9 +25,9 @@ public interface HaskellPlatformsProvider extends Toolchain {
 
   String DEFAULT_NAME = "haskell-platforms";
 
-  HaskellPlatform getDefaultHaskellPlatform();
+  UnresolvedHaskellPlatform getDefaultHaskellPlatform();
 
-  FlavorDomain<HaskellPlatform> getHaskellPlatforms();
+  FlavorDomain<UnresolvedHaskellPlatform> getHaskellPlatforms();
 
   @Override
   default String getName() {

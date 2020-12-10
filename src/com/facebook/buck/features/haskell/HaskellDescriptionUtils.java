@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -40,7 +39,6 @@ import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.ExplicitCxxToolFlags;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -60,7 +58,6 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -390,28 +387,6 @@ public class HaskellDescriptionUtils {
             platform.shouldCacheLinks(),
             platform.shouldUseArgsfile(),
             withDownwardApi));
-  }
-
-  /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */
-  public static void getParseTimeDeps(
-      TargetConfiguration targetConfiguration,
-      Iterable<HaskellPlatform> platforms,
-      ImmutableCollection.Builder<BuildTarget> depsBuilder) {
-    RichStream.from(platforms)
-        .forEach(
-            platform -> {
-
-              // Since this description generates haskell link/compile/package rules, make sure the
-              // parser includes deps for these tools.
-              depsBuilder.addAll(platform.getCompiler().getParseTimeDeps(targetConfiguration));
-              depsBuilder.addAll(platform.getLinker().getParseTimeDeps(targetConfiguration));
-              depsBuilder.addAll(platform.getPackager().getParseTimeDeps(targetConfiguration));
-
-              // We use the C/C++ linker's Linker object to find out how to pass in the soname, so
-              // just add all C/C++ platform parse time deps.
-              depsBuilder.addAll(
-                  CxxPlatforms.getParseTimeDeps(targetConfiguration, platform.getCxxPlatform()));
-            });
   }
 
   /** Give a rule that will result in a ghci session for the target */

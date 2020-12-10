@@ -112,12 +112,14 @@ public class HaskellBinaryDescription
   }
 
   // Return the C/C++ platform to build against.
-  private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellBinaryDescriptionArg arg) {
+  private UnresolvedHaskellPlatform getPlatform(
+      BuildTarget target, AbstractHaskellBinaryDescriptionArg arg) {
     HaskellPlatformsProvider haskellPlatformsProvider =
         getHaskellPlatformsProvider(target.getTargetConfiguration());
-    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
+    FlavorDomain<UnresolvedHaskellPlatform> platforms =
+        haskellPlatformsProvider.getHaskellPlatforms();
 
-    Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
+    Optional<UnresolvedHaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
       return flavorPlatform.get();
     }
@@ -138,7 +140,9 @@ public class HaskellBinaryDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
-    HaskellPlatform platform = getPlatform(buildTarget, args);
+    HaskellPlatform platform =
+        getPlatform(buildTarget, args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     Optional<Type> type = BINARY_TYPE.getValue(buildTarget);
@@ -340,10 +344,9 @@ public class HaskellBinaryDescription
       AbstractHaskellBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    HaskellDescriptionUtils.getParseTimeDeps(
-        buildTarget.getTargetConfiguration(),
-        ImmutableList.of(getPlatform(buildTarget, constructorArg)),
-        targetGraphOnlyDepsBuilder);
+    targetGraphOnlyDepsBuilder.addAll(
+        getPlatform(buildTarget, constructorArg)
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     constructorArg
         .getDepsQuery()

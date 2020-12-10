@@ -74,7 +74,9 @@ public class HaskellHaddockDescription
     LOG.info("Creating Haddock " + name);
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    HaskellPlatform platform = getPlatform(baseTarget, args);
+    HaskellPlatform platform =
+        getPlatform(baseTarget, args)
+            .resolve(context.getActionGraphBuilder(), baseTarget.getTargetConfiguration());
     ImmutableCollection<BuildRule> deps = graphBuilder.getAllRules(args.getDeps());
 
     // Collect all Haskell deps
@@ -112,16 +114,17 @@ public class HaskellHaddockDescription
   }
 
   // Return the C/C++ platform to build against.
-  private HaskellPlatform getPlatform(
+  private UnresolvedHaskellPlatform getPlatform(
       BuildTarget target, AbstractHaskellHaddockDescriptionArg arg) {
     HaskellPlatformsProvider haskellPlatformsProvider =
         toolchainProvider.getByName(
             HaskellPlatformsProvider.DEFAULT_NAME,
             target.getTargetConfiguration(),
             HaskellPlatformsProvider.class);
-    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
+    FlavorDomain<UnresolvedHaskellPlatform> platforms =
+        haskellPlatformsProvider.getHaskellPlatforms();
 
-    Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
+    Optional<UnresolvedHaskellPlatform> flavorPlatform = platforms.getValue(target);
     if (flavorPlatform.isPresent()) {
       return flavorPlatform.get();
     }
@@ -141,10 +144,9 @@ public class HaskellHaddockDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    HaskellDescriptionUtils.getParseTimeDeps(
-        buildTarget.getTargetConfiguration(),
-        ImmutableList.of(getPlatform(buildTarget, constructorArg)),
-        targetGraphOnlyDepsBuilder);
+    targetGraphOnlyDepsBuilder.addAll(
+        getPlatform(buildTarget, constructorArg)
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     constructorArg
         .getDepsQuery()

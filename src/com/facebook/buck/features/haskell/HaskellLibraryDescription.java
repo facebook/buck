@@ -560,11 +560,11 @@ public class HaskellLibraryDescription
                     hsProfile));
   }
 
-  private HaskellPlatform getPlatform(
+  private UnresolvedHaskellPlatform getPlatform(
       HaskellPlatformsProvider haskellPlatformsProvider,
       BuildTarget buildTarget,
       HaskellLibraryDescriptionArg args) {
-    Optional<HaskellPlatform> platform =
+    Optional<UnresolvedHaskellPlatform> platform =
         haskellPlatformsProvider.getHaskellPlatforms().getValue(buildTarget);
     if (platform.isPresent()) {
       return platform.get();
@@ -587,7 +587,8 @@ public class HaskellLibraryDescription
     HaskellPlatformsProvider haskellPlatformsProvider =
         getHaskellPlatformsProvider(buildTarget.getTargetConfiguration());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
+    FlavorDomain<UnresolvedHaskellPlatform> platforms =
+        haskellPlatformsProvider.getHaskellPlatforms();
 
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
@@ -595,7 +596,9 @@ public class HaskellLibraryDescription
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    HaskellPlatform platform = getPlatform(haskellPlatformsProvider, buildTarget, args);
+    HaskellPlatform platform =
+        getPlatform(haskellPlatformsProvider, buildTarget, args)
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     if (type.isPresent()) {
       // Get the base build, without any flavors referring to the library type or platform.
       BuildTarget baseTarget =
@@ -739,8 +742,11 @@ public class HaskellLibraryDescription
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
 
-        Optional<Linker.LinkableDepType> depType =
-            platforms.getValue(cxxPlatform.getFlavor()).getLinkStyleForStubHeader();
+        HaskellPlatform platform =
+            platforms
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+        Optional<Linker.LinkableDepType> depType = platform.getLinkStyleForStubHeader();
         if (depType.isPresent()) {
           HaskellCompileRule compileRule =
               requireCompileRule(
@@ -748,7 +754,7 @@ public class HaskellLibraryDescription
                   projectFilesystem,
                   params,
                   graphBuilder,
-                  platforms.getValue(cxxPlatform.getFlavor()),
+                  platform,
                   args,
                   allDeps.get(graphBuilder, cxxPlatform),
                   depType.get(),
@@ -832,7 +838,9 @@ public class HaskellLibraryDescription
                     params,
                     graphBuilder,
                     haskellPlatformsProvider,
-                    platforms.getValue(cxxPlatform.getFlavor()),
+                    platforms
+                        .getValue(cxxPlatform.getFlavor())
+                        .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                     args,
                     allDeps.get(graphBuilder, cxxPlatform),
                     type,
@@ -853,7 +861,9 @@ public class HaskellLibraryDescription
                     params,
                     graphBuilder,
                     haskellPlatformsProvider,
-                    platforms.getValue(cxxPlatform.getFlavor()),
+                    platforms
+                        .getValue(cxxPlatform.getFlavor())
+                        .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                     args,
                     allDeps.get(graphBuilder, cxxPlatform),
                     args.isEnableProfiling());
@@ -884,7 +894,9 @@ public class HaskellLibraryDescription
                 params,
                 graphBuilder,
                 haskellPlatformsProvider,
-                platforms.getValue(cxxPlatform.getFlavor()),
+                platforms
+                    .getValue(cxxPlatform.getFlavor())
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                 args,
                 allDeps.get(graphBuilder, cxxPlatform),
                 args.isEnableProfiling());
@@ -924,12 +936,13 @@ public class HaskellLibraryDescription
       AbstractHaskellLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    HaskellDescriptionUtils.getParseTimeDeps(
-        buildTarget.getTargetConfiguration(),
-        getHaskellPlatformsProvider(buildTarget.getTargetConfiguration())
-            .getHaskellPlatforms()
-            .getValues(),
-        targetGraphOnlyDepsBuilder);
+    getHaskellPlatformsProvider(buildTarget.getTargetConfiguration())
+        .getHaskellPlatforms()
+        .getValues()
+        .forEach(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 
   private HaskellPlatformsProvider getHaskellPlatformsProvider(
