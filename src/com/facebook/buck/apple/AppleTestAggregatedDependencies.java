@@ -24,8 +24,11 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -38,6 +41,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 /**
@@ -45,7 +49,7 @@ import java.util.stream.Collectors;
  * all of the symbols that a test target depends on. Useful for use with external build systems like
  * Xcode.
  */
-public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class AppleTestAggregatedDependencies extends AbstractBuildRule {
 
   private static final String RESOURCES_BASENAME = "resources";
   private static final String CODE_BASENAME = "code";
@@ -57,18 +61,19 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
   @AddToRuleKey private final Tool libTool;
   @AddToRuleKey private final boolean withDownwardApi;
   @AddToRuleKey private final SourcePath processedResourceDir;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   AppleTestAggregatedDependencies(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
       Path aggregationRoot,
       AppleBundleResources resources,
       AppleCxxPlatform appleCxxPlatform,
       ImmutableList<SourcePath> staticLibDeps,
       boolean withDownwardApi,
       SourcePath processedResourceDir) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.aggregationRoot = aggregationRoot;
     this.resources = resources;
     this.applePlatform = appleCxxPlatform.getAppleSdk().getApplePlatform();
@@ -76,6 +81,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
     this.staticLibDeps = ImmutableList.copyOf(staticLibDeps);
     this.withDownwardApi = withDownwardApi;
     this.processedResourceDir = processedResourceDir;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
   }
 
   @Override
@@ -144,5 +150,15 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), aggregationRoot);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return depsSupplier.get();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 }

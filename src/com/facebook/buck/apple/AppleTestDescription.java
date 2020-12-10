@@ -569,9 +569,6 @@ public class AppleTestDescription
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
             .resolve(AppleTestDescription.COMPILE_DEPS.getName());
 
-    ImmutableSortedSet.Builder<BuildRule> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
-    extraDepsBuilder.addAll(transitiveStaticLibraryDependencies);
-
     BuildTarget processResourcesTarget =
         buildTarget
             .withoutFlavors(SUPPORTED_FLAVORS)
@@ -598,14 +595,11 @@ public class AppleTestDescription
                         AppleBundleDestinations.platformDestinations(
                             appleCxxPlatform.getAppleSdk().getApplePlatform()),
                         appleConfig.getIncrementalBundlingEnabled()));
-    extraDepsBuilder.add(processResources);
-
-    BuildRuleParams newParams = params.withExtraDeps(extraDepsBuilder.build());
 
     return new AppleTestAggregatedDependencies(
         buildTarget,
         projectFilesystem,
-        newParams,
+        graphBuilder,
         outputPath,
         collectedResources,
         appleCxxPlatform,
