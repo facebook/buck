@@ -36,7 +36,6 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -98,7 +97,10 @@ public class GoLibraryDescription
     Optional<GoPlatform> platform =
         getGoToolchain(buildTarget.getTargetConfiguration())
             .getPlatformFlavorDomain()
-            .getValue(buildTarget);
+            .getValue(buildTarget)
+            .map(
+                goPlatform ->
+                    goPlatform.resolve(graphBuilder, buildTarget.getTargetConfiguration()));
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -135,7 +137,14 @@ public class GoLibraryDescription
       BuildRuleParams params,
       GoLibraryDescriptionArg args) {
     GoToolchain goToolchain = getGoToolchain(buildTarget.getTargetConfiguration());
-    Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
+    Optional<GoPlatform> platform =
+        goToolchain
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget)
+            .map(
+                goPlatform ->
+                    goPlatform.resolve(
+                        context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()));
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (platform.isPresent()) {
@@ -179,8 +188,7 @@ public class GoLibraryDescription
         .ifPresent(
             platform ->
                 targetGraphOnlyDepsBuilder.addAll(
-                    CxxPlatforms.getParseTimeDeps(
-                        buildTarget.getTargetConfiguration(), platform.getCxxPlatform())));
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 
   private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {

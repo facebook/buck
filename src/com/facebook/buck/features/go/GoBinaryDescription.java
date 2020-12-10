@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.versions.VersionRoot;
@@ -78,10 +77,11 @@ public class GoBinaryDescription
       GoBinaryDescriptionArg args) {
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(
-            getGoToolchain(buildTarget.getTargetConfiguration()),
-            this.goBuckConfig,
-            buildTarget,
-            args);
+                getGoToolchain(buildTarget.getTargetConfiguration()),
+                this.goBuckConfig,
+                buildTarget,
+                args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -108,15 +108,14 @@ public class GoBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
-    GoPlatform platform =
+    UnresolvedGoPlatform platform =
         GoDescriptors.getPlatformForRule(
             getGoToolchain(buildTarget.getTargetConfiguration()),
             this.goBuckConfig,
             buildTarget,
             constructorArg);
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            buildTarget.getTargetConfiguration(), platform.getCxxPlatform()));
+        platform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
   private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {

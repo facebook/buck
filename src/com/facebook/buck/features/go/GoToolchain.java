@@ -25,9 +25,9 @@ public abstract class GoToolchain implements Toolchain {
 
   public static final String DEFAULT_NAME = "go-toolchain";
 
-  public abstract FlavorDomain<GoPlatform> getPlatformFlavorDomain();
+  public abstract FlavorDomain<UnresolvedGoPlatform> getPlatformFlavorDomain();
 
-  public abstract GoPlatform getDefaultPlatform();
+  public abstract UnresolvedGoPlatform getDefaultPlatform();
 
   @Override
   public String getName() {

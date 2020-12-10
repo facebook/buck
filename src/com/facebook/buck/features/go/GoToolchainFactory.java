@@ -57,10 +57,10 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
             cxxPlatforms,
             defaultCxxPlatform);
 
-    FlavorDomain<GoPlatform> goPlatforms =
+    FlavorDomain<UnresolvedGoPlatform> goPlatforms =
         FlavorDomain.from(
             "Go Platforms",
-            ImmutableList.<GoPlatform>builder()
+            ImmutableList.<UnresolvedGoPlatform>builder()
                 // Add the default platform.
                 .add(platformFactory.getPlatform(GoBuckConfig.SECTION, DefaultCxxPlatforms.FLAVOR))
                 // Add custom platforms.
@@ -77,7 +77,7 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
                         .collect(ImmutableList.toImmutableList()))
                 .build());
     GoBuckConfig goBuckConfig = new GoBuckConfig(context.getBuckConfig());
-    GoPlatform defaultGoPlatform =
+    UnresolvedGoPlatform defaultGoPlatform =
         goPlatforms.getValue(
             goBuckConfig
                 .getDefaultPlatform()

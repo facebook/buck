@@ -45,7 +45,6 @@ import com.facebook.buck.core.test.rule.coercer.TestRunnerSpecCoercer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
@@ -121,7 +120,10 @@ public class GoTestDescription
     Optional<GoPlatform> platform =
         getGoToolchain(buildTarget.getTargetConfiguration())
             .getPlatformFlavorDomain()
-            .getValue(buildTarget);
+            .getValue(buildTarget)
+            .map(
+                goPlatform ->
+                    goPlatform.resolve(graphBuilder, buildTarget.getTargetConfiguration()));
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)
         && buildTarget.getFlavors().contains(TEST_LIBRARY_FLAVOR)) {
@@ -212,10 +214,11 @@ public class GoTestDescription
       GoTestDescriptionArg args) {
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(
-            getGoToolchain(buildTarget.getTargetConfiguration()),
-            this.goBuckConfig,
-            buildTarget,
-            args);
+                getGoToolchain(buildTarget.getTargetConfiguration()),
+                this.goBuckConfig,
+                buildTarget,
+                args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
@@ -560,15 +563,14 @@ public class GoTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ platform parse time deps.
-    GoPlatform platform =
+    UnresolvedGoPlatform platform =
         GoDescriptors.getPlatformForRule(
             getGoToolchain(buildTarget.getTargetConfiguration()),
             this.goBuckConfig,
             buildTarget,
             constructorArg);
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            buildTarget.getTargetConfiguration(), platform.getCxxPlatform()));
+        platform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
   private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {

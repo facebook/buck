@@ -223,12 +223,12 @@ abstract class GoDescriptors {
     return ImmutableMap.copyOf(importMapBuilder);
   }
 
-  static GoPlatform getPlatformForRule(
+  static UnresolvedGoPlatform getPlatformForRule(
       GoToolchain toolchain, GoBuckConfig buckConfig, BuildTarget target, HasGoLinkable arg) {
-    FlavorDomain<GoPlatform> platforms = toolchain.getPlatformFlavorDomain();
+    FlavorDomain<UnresolvedGoPlatform> platforms = toolchain.getPlatformFlavorDomain();
 
     // Check target-defined platform first.
-    Optional<GoPlatform> platform = platforms.getValue(target);
+    Optional<UnresolvedGoPlatform> platform = platforms.getValue(target);
     if (platform.isPresent()) {
       return platform.get();
     }

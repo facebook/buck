@@ -69,7 +69,10 @@ public class PrebuiltGoLibraryDescription
     Optional<GoPlatform> platform =
         getGoToolchain(buildTarget.getTargetConfiguration())
             .getPlatformFlavorDomain()
-            .getValue(buildTarget);
+            .getValue(buildTarget)
+            .map(
+                goPlatform ->
+                    goPlatform.resolve(graphBuilder, buildTarget.getTargetConfiguration()));
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());

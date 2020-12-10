@@ -21,6 +21,7 @@ import static org.junit.Assume.assumeNoException;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -85,6 +86,7 @@ abstract class GoAssumptions {
               UnconfiguredTargetConfiguration.INSTANCE)
           .get()
           .getDefaultPlatform()
+          .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
           .getCompiler();
     } catch (HumanReadableException e) {
       exception = e;
