@@ -97,8 +97,6 @@ public class CxxToolchainDescription
     // TODO(cjhopman): How to handle this?
     cxxPlatform.setFlagMacros(ImmutableMap.of());
 
-    cxxPlatform.setConflictingHeaderBasenameWhitelist(ImmutableSortedSet.of());
-
     // Below here are all the things that we actually support configuration of. They mostly match
     // CxxPlatform, but (1) are in some cases more restrictive and (2) use more descriptive names.
     cxxPlatform.setPrivateHeadersSymlinksEnabled(args.getPrivateHeadersSymlinksEnabled());
@@ -364,7 +362,8 @@ public class CxxToolchainDescription
     }
 
     // TODO(cjhopman): Is this reasonable?
-    cxxPlatform.setConflictingHeaderBasenameWhitelist(ImmutableSortedSet.of());
+    cxxPlatform.setConflictingHeaderBasenameWhitelist(
+        args.getConflictingHeaderBasenameExemptions());
 
     cxxPlatform.setFilepathLengthLimited(args.getFilepathLengthLimited());
 
@@ -609,5 +608,11 @@ public class CxxToolchainDescription
      * header verification.
      */
     ImmutableList<String> getHeadersWhitelist();
+
+    /** A list of basenames to exempt from header conflict checking. */
+    @Value.Default
+    default ImmutableSortedSet<String> getConflictingHeaderBasenameExemptions() {
+      return ImmutableSortedSet.of();
+    }
   }
 }
