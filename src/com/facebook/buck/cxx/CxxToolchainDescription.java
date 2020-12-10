@@ -34,10 +34,12 @@ import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams.Type;
@@ -51,6 +53,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -335,7 +338,11 @@ public class CxxToolchainDescription
             downwardApiConfig.isEnabledForCxx()));
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
-    cxxPlatform.setCompilerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);
+    cxxPlatform.setCompilerDebugPathSanitizer(
+        args.getDebugPathPrefixMapSanitizerFormat()
+            .<DebugPathSanitizer>map(
+                format -> new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(), false, format))
+            .orElse(NoopDebugPathSanitizer.INSTANCE));
 
     // We require that untracked headers are errors.
     cxxPlatform.setHeaderVerification(
@@ -614,5 +621,8 @@ public class CxxToolchainDescription
     default ImmutableSortedSet<String> getConflictingHeaderBasenameExemptions() {
       return ImmutableSortedSet.of();
     }
+
+    /** Format to use for debug prefix map path sanitization. */
+    Optional<String> getDebugPathPrefixMapSanitizerFormat();
   }
 }
