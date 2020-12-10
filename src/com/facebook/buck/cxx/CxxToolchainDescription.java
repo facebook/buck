@@ -84,19 +84,6 @@ public class CxxToolchainDescription
 
     CxxPlatform.Builder cxxPlatform = CxxPlatform.builder();
 
-    // TODO(cjhopman): Support these when we need them.
-    cxxPlatform.setCuda(Optional.empty());
-    cxxPlatform.setCudapp(Optional.empty());
-    cxxPlatform.setHip(Optional.empty());
-    cxxPlatform.setHippp(Optional.empty());
-    cxxPlatform.setAsm(Optional.empty());
-
-    cxxPlatform.setCudaflags(ImmutableList.of());
-    cxxPlatform.setCudappflags(ImmutableList.of());
-    cxxPlatform.setHipflags(ImmutableList.of());
-    cxxPlatform.setHipppflags(ImmutableList.of());
-    cxxPlatform.setAsmflags(ImmutableList.of());
-
     if (args.getUseHeaderMap()) {
       if (args.getPrivateHeadersSymlinksEnabled() || args.getPublicHeadersSymlinksEnabled()) {
         cxxPlatform.setHeaderMode(HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
@@ -197,6 +184,81 @@ public class CxxToolchainDescription
             ToolType.CXXPP));
     cxxPlatform.setCxxppflags(
         args.getCxxPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
+
+    // ASM
+    args.getAsmCompiler()
+        .ifPresent(
+            compiler -> {
+              cxxPlatform.setAsmpp(
+                  new PreprocessorProvider(
+                      ToolProviders.getToolProvider(compiler),
+                      args.getAsmCompilerType(),
+                      ToolType.ASMPP));
+              cxxPlatform.setAsm(
+                  new CompilerProvider(
+                      ToolProviders.getToolProvider(compiler),
+                      args.getAsmCompilerType(),
+                      ToolType.ASM,
+                      preferDependencyTree));
+            });
+    cxxPlatform.setAsmppflags(
+        args.getAsmPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
+    cxxPlatform.setAsmflags(
+        args.getAsmCompilerFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
+
+    // CUDA
+    args.getCudaCompiler()
+        .ifPresent(
+            compiler -> {
+              cxxPlatform.setCudapp(
+                  new PreprocessorProvider(
+                      ToolProviders.getToolProvider(compiler),
+                      args.getCudaCompilerType(),
+                      ToolType.CUDAPP));
+              cxxPlatform.setCuda(
+                  new CompilerProvider(
+                      ToolProviders.getToolProvider(compiler),
+                      args.getCudaCompilerType(),
+                      ToolType.CUDA,
+                      preferDependencyTree));
+            });
+    cxxPlatform.setCudappflags(
+        args.getCudaPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
+    cxxPlatform.setCudaflags(
+        args.getCudaCompilerFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
+
+    // HIP
+    args.getHipCompiler()
+        .ifPresent(
+            compiler -> {
+              cxxPlatform.setHippp(
+                  new PreprocessorProvider(
+                      ToolProviders.getToolProvider(compiler),
+                      args.getHipCompilerType(),
+                      ToolType.HIPPP));
+              cxxPlatform.setHip(
+                  new CompilerProvider(
+                      ToolProviders.getToolProvider(compiler),
+                      args.getHipCompilerType(),
+                      ToolType.HIP,
+                      preferDependencyTree));
+            });
+    cxxPlatform.setHipppflags(
+        args.getHipPreprocessorFlags().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList()));
+    cxxPlatform.setHipflags(
+        args.getHipCompilerFlags().stream()
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList()));
 
@@ -421,6 +483,51 @@ public class CxxToolchainDescription
 
     /** C++ preprocessor flags. */
     ImmutableList<StringWithMacros> getCxxPreprocessorFlags();
+
+    /** ASM compiler binary. */
+    Optional<SourcePath> getAsmCompiler();
+
+    /** {@link CxxToolProvider.Type} of ASM compiler. */
+    @Value.Default
+    default CxxToolProvider.Type getAsmCompilerType() {
+      return getCompilerType();
+    }
+
+    /** ASM compiler flags. */
+    ImmutableList<StringWithMacros> getAsmCompilerFlags();
+
+    /** ASM preprocessor flags. */
+    ImmutableList<StringWithMacros> getAsmPreprocessorFlags();
+
+    /** CUDA compiler binary. */
+    Optional<SourcePath> getCudaCompiler();
+
+    /** {@link CxxToolProvider.Type} of CUDA compiler. */
+    @Value.Default
+    default CxxToolProvider.Type getCudaCompilerType() {
+      return getCompilerType();
+    }
+
+    /** CUDA compiler flags. */
+    ImmutableList<StringWithMacros> getCudaCompilerFlags();
+
+    /** CUDA preprocessor flags. */
+    ImmutableList<StringWithMacros> getCudaPreprocessorFlags();
+
+    /** HIP compiler binary. */
+    Optional<SourcePath> getHipCompiler();
+
+    /** {@link CxxToolProvider.Type} of HIP compiler. */
+    @Value.Default
+    default CxxToolProvider.Type getHipCompilerType() {
+      return getCompilerType();
+    }
+
+    /** HIP compiler flags. */
+    ImmutableList<StringWithMacros> getHipCompilerFlags();
+
+    /** HIP preprocessor flags. */
+    ImmutableList<StringWithMacros> getHipPreprocessorFlags();
 
     /** Linker binary. */
     SourcePath getLinker();
