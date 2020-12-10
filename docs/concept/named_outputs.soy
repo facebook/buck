@@ -81,6 +81,35 @@ my_rule(
 will consume output2 in its <code>srcs</code>, but not output1.
 </p>
 
+{literal}<pre class="prettyprint lang-py">
+buck build //:foo --show-all-outputs
+</pre>{/literal}
+<p>
+will print output paths for each output label including the default output label, however,
+it still only consumes output2 in its <code>srcs</code> and not output1. Additional output
+details can be specified using the <code>--show-all-outputs-format</code> flag.
+</p>
+
+Command:
+{literal}<pre class="prettyprint lang-py">
+buck build //:foo --show-all-outputs
+</pre>{/literal}
+Output:
+{literal}<pre class="prettyprint lang-py">
+//:foo          {path to output for default rule}
+//:foo[output1] {path to output for output1 rule}
+//:foo[output2] {path to output for output2 rule}
+</pre>{/literal}
+
+Command:
+{literal}<pre class="prettyprint lang-py">
+buck build //:foo --show-output
+</pre>{/literal}
+Output:
+{literal}<pre class="prettyprint lang-py">
+//:foo          {path to output for default rule}
+</pre>{/literal}
+
     {/param}
   {/call}
 {/template}

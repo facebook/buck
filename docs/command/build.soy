@@ -32,9 +32,9 @@
 {param overview}
 
 <p>
-Builds one or more rules specified by a set 
-of {call buck.build_target /}s and  {call buck.build_target_pattern /}s. 
-This is the most commonly used command in Buck. 
+Builds one or more rules specified by a set
+of {call buck.build_target /}s and  {call buck.build_target_pattern /}s.
+This is the most commonly used command in Buck.
 </p>
 
 <p>
@@ -157,13 +157,48 @@ Example:
   {param name: 'populate-cache' /}
   {param desc}
 
-  Performs a cache population, which makes the output of all unchanged transitive dependencies available 
+  Performs a cache population, which makes the output of all unchanged transitive dependencies available
   (if these outputs are available in the remote cache). Does not build changed or unavailable dependencies locally.
  {/param}
 {/call}
 
 
 {call command_common.show_output_param /}
+
+{call buck.param}
+  {param name: 'show-all-outputs' /}
+  {param desc}
+  <p>
+    Print the paths to all the outputs for each of the build rules.
+    For more information on named outputs refer to the {call buck.named_outputs /} concept.
+  </p>
+ {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'show-all-outputs-format' /}
+  {param desc}
+  <p>
+    Used to specify the format of the output when using the <code>--show-all-outputs</code> flag.
+    Defaults to <code>list</code> if not specified.
+    <ul>
+    <li><code>list</code> -  output paths are printed relative to the cell.</li>
+    <li><code>full_list</code> - output paths are printed as absolute paths.</li>
+    <li><code>json</code> - output paths are printed in JSON format with relative paths.</li>
+    <li><code>full_json</code> - output paths are printed in JSON format with absolute paths.</li>
+    </ul>
+    <p>
+    Example:
+    </p>
+    <p>
+    <pre>buck build
+    --show-all-outputs --show-all-outputs-format=full_json <nil>//fake:rule1
+    </pre>
+    <p>
+    For more information on named outputs refer to the {call buck.named_outputs /} concept.
+  </p>
+ {/param}
+{/call}
 
 {call command_common.common_param_xref /}
 
@@ -209,7 +244,7 @@ Building: finished in 1.5 sec (100%) 3/3 jobs, 3 updated, 0.0% cache miss
 $ buck targets --show-output :main#compilation-database
 //:main#compilation-database buck-out/gen/__main#compilation-database/compile_commands.json
 
-$ jq . buck-out/gen/__main#compilation-database/compile_commands.json 
+$ jq . buck-out/gen/__main#compilation-database/compile_commands.json
 [
   {
     "directory": "/Users/devuser/git/gtDev/C++/oop/simple-classes",
@@ -240,10 +275,10 @@ $ jq . buck-out/gen/__main#compilation-database/compile_commands.json
 </pre>{/literal}
 
 <p>
-In the preceding example <code>:main</code> specifies 
-a <em>relative</em> build target that is defined in the build file 
+In the preceding example <code>:main</code> specifies
+a <em>relative</em> build target that is defined in the build file
 located in the current directory.
-The <code>jq</code> tool&mdash;available through package managers such 
+The <code>jq</code> tool&mdash;available through package managers such
 as Homebrew&mdash;enables you to pretty-print JSON files.
 </p>
 
