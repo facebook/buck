@@ -126,7 +126,6 @@ public class CxxToolchainDescription
     cxxPlatform.setObjectFileExtension(args.getObjectFileExtension());
     cxxPlatform.setBinaryExtension(args.getBinaryExtension());
 
-    CxxToolProvider.Type compilerType = args.getCompilerType();
     LinkerProvider.Type linkerType = args.getLinkerType();
     // This should be the same for all the tools that use it.
     final boolean preferDependencyTree = false;
@@ -141,7 +140,7 @@ public class CxxToolchainDescription
     cxxPlatform.setAs(
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getAssembler()),
-            compilerType,
+            args.getAssemblerType(),
             ToolType.AS,
             preferDependencyTree));
     cxxPlatform.setAsflags(
@@ -151,13 +150,15 @@ public class CxxToolchainDescription
 
     cxxPlatform.setAspp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getAssembler()), compilerType, ToolType.ASPP));
+            ToolProviders.getToolProvider(args.getAssembler()),
+            args.getAssemblerType(),
+            ToolType.ASPP));
     cxxPlatform.setAsppflags(ImmutableList.of());
 
     cxxPlatform.setCc(
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getCCompiler()),
-            compilerType,
+            args.getCCompilerType(),
             ToolType.CC,
             preferDependencyTree));
     cxxPlatform.setCflags(
@@ -168,7 +169,7 @@ public class CxxToolchainDescription
     cxxPlatform.setCxx(
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getCxxCompiler()),
-            compilerType,
+            args.getCxxCompilerType(),
             ToolType.CXX,
             preferDependencyTree));
     cxxPlatform.setCxxflags(
@@ -178,12 +179,16 @@ public class CxxToolchainDescription
 
     cxxPlatform.setCpp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getCCompiler()), compilerType, ToolType.CPP));
+            ToolProviders.getToolProvider(args.getCCompiler()),
+            args.getCCompilerType(),
+            ToolType.CPP));
     cxxPlatform.setCppflags(ImmutableList.of());
 
     cxxPlatform.setCxxpp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getCxxCompiler()), compilerType, ToolType.CXXPP));
+            ToolProviders.getToolProvider(args.getCxxCompiler()),
+            args.getCxxCompilerType(),
+            ToolType.CXXPP));
     cxxPlatform.setCxxppflags(ImmutableList.of());
 
     boolean scrubConcurrently = false;
@@ -360,14 +365,17 @@ public class CxxToolchainDescription
     /** Extension for binary files. */
     Optional<String> getBinaryExtension();
 
-    /** {@link CxxToolProvider.Type} of the compiler. */
+    /** Default {@link CxxToolProvider.Type} of compiler binaries. */
     CxxToolProvider.Type getCompilerType();
-
-    /** {@link LinkerProvider.Type} of the linker. */
-    LinkerProvider.Type getLinkerType();
 
     /** Assembler binary. */
     SourcePath getAssembler();
+
+    /** {@link CxxToolProvider.Type} of the assembler. */
+    @Value.Default
+    default CxxToolProvider.Type getAssemblerType() {
+      return getCompilerType();
+    }
 
     /** Flags for the assembler. */
     ImmutableList<StringWithMacros> getAssemblerFlags();
@@ -375,17 +383,32 @@ public class CxxToolchainDescription
     /** C compiler binary. */
     SourcePath getCCompiler();
 
+    /** {@link CxxToolProvider.Type} of C compiler. */
+    @Value.Default
+    default CxxToolProvider.Type getCCompilerType() {
+      return getCompilerType();
+    }
+
     /** C compiler flags. */
     ImmutableList<StringWithMacros> getCCompilerFlags();
 
     /** C++ compiler binary. */
     SourcePath getCxxCompiler();
 
+    /** {@link CxxToolProvider.Type} of C++ compiler. */
+    @Value.Default
+    default CxxToolProvider.Type getCxxCompilerType() {
+      return getCompilerType();
+    }
+
     /** C++ compiler flags. */
     ImmutableList<StringWithMacros> getCxxCompilerFlags();
 
     /** Linker binary. */
     SourcePath getLinker();
+
+    /** {@link LinkerProvider.Type} of the linker. */
+    LinkerProvider.Type getLinkerType();
 
     /** Linker flags. */
     ImmutableList<StringWithMacros> getLinkerFlags();
