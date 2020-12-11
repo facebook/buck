@@ -61,6 +61,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   private final Boolean enableDoubleWriteWithCAS;
   private final int artifactPartitionWritePercentage;
   private final int artifactPartitionReadPercentage;
+  private final long artifactCASStoreMinimumSize;
 
   private final SamplingCounter secondLevelHashComputationTimeMs;
 
@@ -72,7 +73,8 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       Boolean enableWrite,
       Boolean enableDoubleWriteWithCAS,
       int artifactPartitionWritePercentage,
-      int artifactPartitionReadPercentage) {
+      int artifactPartitionReadPercentage,
+      long artifactCASStoreMinimumSize) {
 
     this.delegate = delegate;
     this.projectFilesystem = projectFilesystem;
@@ -85,6 +87,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
     }
     this.artifactPartitionWritePercentage = artifactPartitionWritePercentage;
     this.artifactPartitionReadPercentage = artifactPartitionReadPercentage;
+    this.artifactCASStoreMinimumSize = artifactCASStoreMinimumSize;
 
     secondLevelHashComputationTimeMs =
         new SamplingCounter(
@@ -97,9 +100,14 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   }
 
   private boolean shouldReadCAS(SecondLevelContentKey contentKey) {
+    boolean isContentKeyTypeMatch =
+        contentKey.getType() == SecondLevelContentKey.Type.CAS_ONLY
+            || contentKey.getType() == SecondLevelContentKey.Type.HYBRID;
+    boolean isDigestSizeValid =
+        SecondLevelContentKey.getDigestBytes(contentKey) >= artifactCASStoreMinimumSize;
     return casClient.isPresent()
-        && (contentKey.getType() == SecondLevelContentKey.Type.CAS_ONLY
-            || contentKey.getType() == SecondLevelContentKey.Type.HYBRID)
+        && isContentKeyTypeMatch
+        && isDigestSizeValid
         && (Math.abs(SecondLevelContentKey.getDigestHash(contentKey).hashCode()) % 100)
             < artifactPartitionReadPercentage;
   }
@@ -171,10 +179,12 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
     return delegate.fetchAsync(target, ck.toRuleKey(), output);
   }
 
-  private boolean shouldWriteCAS(String digest) {
+  private boolean shouldWriteCAS(Digest digest) {
+    boolean isDigestSizeValid = digest.getSizeBytes() >= artifactCASStoreMinimumSize;
     return enableWrite
         && casClient.isPresent()
-        && (Math.abs(digest.hashCode()) % 100) < artifactPartitionWritePercentage;
+        && isDigestSizeValid
+        && (Math.abs(digest.getHash().hashCode()) % 100) < artifactPartitionWritePercentage;
   }
 
   private ListenableFuture<Unit> doCasStoreAsync(
@@ -226,7 +236,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       throw new RuntimeException("Cannot compute hash/size of " + output.getPath());
     }
 
-    boolean shouldCAS = shouldWriteCAS(digest.getHash());
+    boolean shouldCAS = shouldWriteCAS(digest);
     LOG.debug("Storing %s:%d (to cas? %s)", digest.getHash(), digest.getSizeBytes(), shouldCAS);
 
     SecondLevelContentKey contentKey;

@@ -138,6 +138,9 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final int DEFAULT_CAS_WRITE_PERCENTAGE = 0;
   private static final String CAS_READ_PERCENTAGE = "cas_read_percentage";
   private static final int DEFAULT_CAS_READ_PERCENTAGE = 0;
+  private static final String CAS_WRITE_ARTIFACT_SIZE_THRESHOLD =
+      "cas_write_artifact_size_threshold";
+  private static final long DEFAULT_CAS_WRITE_ARTIFACT_SIZE_THRESHOLD = Long.MAX_VALUE;
   private static final String CAS_HOST = "cache_cas_host";
   private static final String CAS_PORT = "cache_cas_port";
   private static final int DEFAULT_CAS_PORT = 443;
@@ -267,6 +270,13 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
           CACHE_SECTION_NAME, CAS_READ_PERCENTAGE, raw);
     }
     return Math.min(Math.max(raw, 0), 100);
+  }
+
+  public long getCASArtifactStoreMinimumSize() {
+    return buckConfig
+        .getValue(CACHE_SECTION_NAME, CAS_WRITE_ARTIFACT_SIZE_THRESHOLD)
+        .map(SizeUnit::parseBytes)
+        .orElse(DEFAULT_CAS_WRITE_ARTIFACT_SIZE_THRESHOLD);
   }
 
   public Optional<String> getCasHost() {

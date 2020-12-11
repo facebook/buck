@@ -748,7 +748,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         buckConfig.getEnableWriteToCas(),
         buckConfig.getEnableDoubleWriteWithCas(),
         buckConfig.getCasWritePercentage(),
-        buckConfig.getCasReadPercentage());
+        buckConfig.getCasReadPercentage(),
+        buckConfig.getCASArtifactStoreMinimumSize());
   }
 
   private static String stripNonAscii(String str) {
