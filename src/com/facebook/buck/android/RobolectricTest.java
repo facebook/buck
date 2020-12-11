@@ -168,4 +168,12 @@ public class RobolectricTest extends JavaTest {
   RobolectricTestHelper getRobolectricTestHelper() {
     return robolectricTestHelper;
   }
+
+  @Override
+  protected ImmutableSet<Path> getExtraRequiredPaths() {
+    return Stream.concat(
+            super.getExtraRequiredPaths().stream(),
+            robolectricTestHelper.getExtraRequiredPaths().stream())
+        .collect(ImmutableSet.toImmutableSet());
+  }
 }

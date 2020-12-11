@@ -16,8 +16,11 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.iterableWithSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -30,8 +33,12 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
@@ -61,6 +68,43 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+  }
+
+  @Test
+  public void testRobolectricTestAddsRequiredPath() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("required_paths"));
+    //noinspection unchecked
+    ImmutableSortedSet<String> requiredPaths =
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll((Iterable<String>) spec.get("required_paths"))
+            .build();
+
+    ImmutableList<String> robolectricResourceDirectoriesPath =
+        requiredPaths.stream()
+            .filter(path -> path.contains("robolectric-resource-directories"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, robolectricResourceDirectoriesPath.size());
+
+    ImmutableList<String> robolectricAssetDirectoriesPath =
+        requiredPaths.stream()
+            .filter(path -> path.contains("robolectric-asset-directories"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, robolectricAssetDirectoriesPath.size());
   }
 
   @Test

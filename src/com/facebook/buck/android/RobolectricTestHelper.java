@@ -34,8 +34,10 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -264,5 +266,11 @@ class RobolectricTestHelper {
             buildDeps.stream())
         .reduce(Stream.empty(), Stream::concat)
         .map(BuildRule::getBuildTarget);
+  }
+
+  protected ImmutableSet<Path> getExtraRequiredPaths() {
+    return ImmutableSet.of(
+        projectFilesystem.resolve(resourceDirectoriesPath).getPath(),
+        projectFilesystem.resolve(assetDirectoriesPath).getPath());
   }
 }
