@@ -21,7 +21,7 @@ import com.google.common.collect.Iterables;
 /** The descriptor of buck command. */
 public class BuckCommand {
   private static final String VERBOSITY_TAG = "-v";
-  private static final String VERBOSITY_LEVEL = "0";
+  private static final String VERBOSITY_LEVEL = "1";
   // Visual commands
   public static final BuckCommand BUILD_V_0 =
       new BuckCommand("build", VERBOSITY_TAG, VERBOSITY_LEVEL);
