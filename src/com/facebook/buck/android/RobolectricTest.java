@@ -170,10 +170,11 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  protected ImmutableSet<Path> getExtraRequiredPaths() {
+  protected ImmutableSet<Path> getExtraRequiredPaths(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     return Stream.concat(
-            super.getExtraRequiredPaths().stream(),
-            robolectricTestHelper.getExtraRequiredPaths().stream())
+            super.getExtraRequiredPaths(sourcePathResolverAdapter).stream(),
+            robolectricTestHelper.getExtraRequiredPaths(sourcePathResolverAdapter).stream())
         .collect(ImmutableSet.toImmutableSet());
   }
 }

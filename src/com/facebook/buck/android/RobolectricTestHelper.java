@@ -268,9 +268,18 @@ class RobolectricTestHelper {
         .map(BuildRule::getBuildTarget);
   }
 
-  protected ImmutableSet<Path> getExtraRequiredPaths() {
-    return ImmutableSet.of(
-        projectFilesystem.resolve(resourceDirectoriesPath).getPath(),
-        projectFilesystem.resolve(assetDirectoriesPath).getPath());
+  protected ImmutableSet<Path> getExtraRequiredPaths(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    optionalAapt2Link.ifPresent(
+        link ->
+            builder.add(
+                sourcePathResolverAdapter
+                    .getAbsolutePath(link.getAaptOutputInfo().getPrimaryResourcesApkPath())
+                    .getPath()));
+    builder.add(projectFilesystem.resolve(resourceDirectoriesPath).getPath());
+    builder.add(projectFilesystem.resolve(assetDirectoriesPath).getPath());
+
+    return builder.build();
   }
 }

@@ -585,7 +585,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .addRequiredPaths(externalJunitStep.getClasspathArgfile())
         .addRequiredPaths(externalJunitStep.getTestRunnerClassFile())
         .addRequiredPaths(getProjectFilesystem().getPath(command.get(0)))
-        .addAllRequiredPaths(getExtraRequiredPaths())
+        .addAllRequiredPaths(getExtraRequiredPaths(buildContext.getSourcePathResolver()))
         .build();
   }
 
@@ -650,7 +650,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  protected ImmutableSet<Path> getExtraRequiredPaths() {
+  @SuppressWarnings("unused")
+  protected ImmutableSet<Path> getExtraRequiredPaths(
+      SourcePathResolverAdapter sourcePathResolverAdapter) {
     return ImmutableSet.of();
   }
 

@@ -77,7 +77,7 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
-    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
 
     Path specOutput =
         workspace.getPath(
@@ -105,6 +105,12 @@ public class RobolectricTestRuleIntegrationTest {
             .filter(path -> path.contains("robolectric-asset-directories"))
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, robolectricAssetDirectoriesPath.size());
+
+    ImmutableList<String> robolectricResourceApkPath =
+        requiredPaths.stream()
+            .filter(path -> path.contains("resource-apk.ap_"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, robolectricResourceApkPath.size());
   }
 
   @Test
