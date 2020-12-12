@@ -688,10 +688,17 @@ public class CxxBuckConfig {
       // In a flavored cxx section, we don't allow any configuration except for configuration of the
       // platform.
       ImmutableMap<String, String> allEntries = config.getEntriesForSection(cxxSection);
-      if (allEntries.size() != 1) {
+      int nonEmptyCount = 0;
+      for (String entry : allEntries.values()) {
+        if (!entry.isEmpty()) {
+          nonEmptyCount++;
+        }
+      }
+      if (nonEmptyCount != 1) {
         throw new HumanReadableException(
-            "When configuring a cxx %s, no other configuration is allowed in that section. Got unexpected keys [%s]",
+            "When configuring a cxx %s for %s, no other configuration is allowed in that section. Got unexpected keys [%s]",
             TOOLCHAIN_TARGET,
+            cxxSection,
             Joiner.on(", ")
                 .join(Sets.difference(allEntries.keySet(), ImmutableSet.of(TOOLCHAIN_TARGET))));
       }
