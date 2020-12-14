@@ -115,6 +115,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final ImmutableMap<String, String> nativeLibsEnvironment;
 
+  private final ImmutableSet<Path> nativeLibsRequiredPaths;
+
   @Nullable private CompiledClassFileFinder compiledClassFileFinder;
 
   private final ImmutableSet<String> labels;
@@ -164,6 +166,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool javaRuntimeLauncher,
       List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
+      Set<Path> nativeLibsRequiredPaths,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
       ImmutableMap<String, Arg> env,
@@ -179,6 +182,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
+    this.nativeLibsRequiredPaths = ImmutableSet.copyOf(nativeLibsRequiredPaths);
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testType = testType;
@@ -653,7 +657,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @SuppressWarnings("unused")
   protected ImmutableSet<Path> getExtraRequiredPaths(
       SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return ImmutableSet.of();
+    return nativeLibsRequiredPaths;
   }
 
   public interface AdditionalClasspathEntriesProvider {

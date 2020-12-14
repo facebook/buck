@@ -47,6 +47,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -160,6 +161,7 @@ public class GroovyTestDescription
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
+        /* nativeLibsRequiredPaths */ ImmutableSet.of(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(

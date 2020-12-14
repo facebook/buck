@@ -62,14 +62,17 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 public class JavaTestDescription
@@ -269,6 +272,7 @@ public class JavaTestDescription
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
+        cxxLibraryEnhancement.requiredPaths,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(
@@ -341,6 +345,7 @@ public class JavaTestDescription
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;
     public final ImmutableMap<String, String> nativeLibsEnvironment;
+    public final ImmutableSet<Path> requiredPaths;
 
     public CxxLibraryEnhancement(
         BuildTarget buildTarget,
@@ -376,6 +381,17 @@ public class JavaTestDescription
                             nativeLibsSymlinkTree.getLinks().values()))
                     .build());
 
+        ImmutableSortedMap<Path, SourcePath> links = nativeLibsSymlinkTree.getLinks();
+        Stream<Path> symlinkKeys =
+            links.keySet().stream().map(path -> nativeLibsSymlinkTree.getRoot().resolve(path));
+        Stream<Path> symlinkValues =
+            links.values().stream()
+                .map(
+                    sourcePath ->
+                        graphBuilder.getSourcePathResolver().getAbsolutePath(sourcePath).getPath());
+        requiredPaths =
+            Stream.concat(symlinkKeys, symlinkValues).collect(ImmutableSet.toImmutableSet());
+
         ImmutableMap.Builder<String, String> nativeLibsEnvMapBuilder =
             new ImmutableMap.Builder<String, String>()
                 .put(
@@ -392,6 +408,7 @@ public class JavaTestDescription
       } else {
         updatedParams = params;
         nativeLibsEnvironment = ImmutableMap.of();
+        requiredPaths = ImmutableSet.of();
       }
     }
 

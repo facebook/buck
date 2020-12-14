@@ -353,6 +353,37 @@ public class JavaTestIntegrationTest {
   }
 
   @Test
+  public void testNativeRequiredPaths() throws Exception {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+
+    workspace.runBuckCommand("test", "//:jtest-symlink").assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("required_paths"));
+    //noinspection unchecked
+    ImmutableSortedSet<String> requiredPaths =
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll((Iterable<String>) spec.get("required_paths"))
+            .build();
+
+    ImmutableList<String> libjtestlibPaths =
+        requiredPaths.stream()
+            .filter(path -> path.contains("libjtestlib"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(2, libjtestlibPaths.size());
+  }
+
+  @Test
   public void testForkMode() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "slow_tests", temp);

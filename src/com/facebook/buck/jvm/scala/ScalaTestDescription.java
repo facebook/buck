@@ -173,6 +173,7 @@ public class ScalaTestDescription
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         cxxLibraryEnhancement.nativeLibsEnvironment,
+        cxxLibraryEnhancement.requiredPaths,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(

@@ -50,6 +50,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -171,6 +172,7 @@ public class KotlinTestDescription
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         ImmutableMap.of(), /* nativeLibsEnvironment */
+        ImmutableSet.of(), /* nativeLibsRequiredPaths */
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(

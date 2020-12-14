@@ -468,6 +468,7 @@ public class RobolectricTestDescription
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
+        cxxLibraryEnhancement.requiredPaths,
         args.isUseBinaryResources() ? Optional.empty() : dummyRDotJava,
         optionalAapt2Link,
         unitTestOptions,
