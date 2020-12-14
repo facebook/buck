@@ -277,6 +277,9 @@ class RobolectricTestHelper {
                 sourcePathResolverAdapter
                     .getAbsolutePath(link.getAaptOutputInfo().getPrimaryResourcesApkPath())
                     .getPath()));
+    robolectricManifest.ifPresent(
+        robolectricManifest ->
+            builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath()));
     builder.add(projectFilesystem.resolve(resourceDirectoriesPath).getPath());
     builder.add(projectFilesystem.resolve(assetDirectoriesPath).getPath());
 
