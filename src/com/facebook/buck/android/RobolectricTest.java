@@ -34,6 +34,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -98,6 +99,25 @@ public class RobolectricTest extends JavaTest {
                   options ->
                       builder.add(
                           resolver.getAbsolutePath(options.getSourcePathToOutput()).getPath()));
+              robolectricRuntimeDependency.ifPresent(
+                  robolectricRuntimeDir -> {
+                    Path robolectricRuntimeDirPath =
+                        resolver.getAbsolutePath(robolectricRuntimeDir).getPath();
+                    ImmutableCollection<Path> relativePaths;
+                    try {
+                      relativePaths =
+                          projectFilesystem
+                              .asView()
+                              .getDirectoryContents(robolectricRuntimeDirPath);
+                    } catch (IOException e) {
+                      throw new RuntimeException(
+                          "Unable to get directory contents for " + robolectricRuntimeDir, e);
+                    }
+                    builder.addAll(
+                        relativePaths.stream()
+                            .map(projectFilesystem::resolve)
+                            .collect(ImmutableSet.toImmutableSet()));
+                  });
               return builder.build();
             }),
         labels,

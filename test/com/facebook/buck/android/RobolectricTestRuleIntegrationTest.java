@@ -117,6 +117,12 @@ public class RobolectricTestRuleIntegrationTest {
             .filter(path -> path.contains("TestAndroidManifest.xml"))
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, robolectricManifestPath.size());
+
+    ImmutableList<String> robolectricRuntimeDepsDirEntries =
+        requiredPaths.stream()
+            .filter(path -> path.contains("robolectric_dir"))
+            .collect(ImmutableList.toImmutableList());
+    assertTrue(robolectricRuntimeDepsDirEntries.size() > 0);
   }
 
   @Test

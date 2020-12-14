@@ -122,9 +122,7 @@ robolectric_test(
     visibility = [
         "PUBLIC",
     ],
-    vm_args = [
-        "-Drobolectric.dependency.dir=$(location buck//third-party/java/robolectric:robolectric_dir)",
-    ],
+    robolectric_runtime_dependency = "buck//third-party/java/robolectric:robolectric_dir",
     deps = [
         "buck//third-party/java/asm:asm",
         "buck//third-party/java/bouncycastle:bcprov",
