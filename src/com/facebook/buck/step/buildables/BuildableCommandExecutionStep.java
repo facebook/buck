@@ -94,8 +94,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
             ProcessExecutorParams.builder()
                 .addAllCommand(getCommand(buildableCommandPath))
                 .setEnvironment(getEnvs())
-                .build(),
-            ImmutableMap.of()));
+                .build()));
   }
 
   @Override
