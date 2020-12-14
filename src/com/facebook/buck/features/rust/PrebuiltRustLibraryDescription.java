@@ -28,6 +28,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableMap;
@@ -64,6 +65,7 @@ public class PrebuiltRustLibraryDescription
       @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           Optional<BuildTarget> directDependent,
+          ProjectFilesystem dependentFilesystem,
           CrateType crateType,
           RustPlatform rustPlatform,
           Linker.LinkableDepType depType,
@@ -73,6 +75,7 @@ public class PrebuiltRustLibraryDescription
             alias.orElse(args.getCrate()),
             args.getRlib(),
             directDependent,
+            dependentFilesystem,
             rustBuckConfig.getExternLocations());
       }
 

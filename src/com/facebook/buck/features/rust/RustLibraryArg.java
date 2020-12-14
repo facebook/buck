@@ -17,11 +17,13 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import java.util.Optional;
@@ -60,6 +62,10 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   @AddToRuleKey
   public abstract Optional<BuildTarget> getDirectDependent();
 
+  /// Project filesystem of the target by which the dependency is specified,
+  /// direct or transitive.
+  public abstract ProjectFilesystem getDependentFilesystem();
+
   /// True if the `extern_locations` option is set.
   @AddToRuleKey
   public abstract boolean getExternLoc();
@@ -69,8 +75,10 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
       String crate,
       SourcePath rlib,
       Optional<BuildTarget> directDependent,
+      ProjectFilesystem dependentFilesystem,
       boolean extern_loc) {
-    return ImmutableRustLibraryArg.ofImpl(target, crate, rlib, directDependent, extern_loc);
+    return ImmutableRustLibraryArg.ofImpl(
+        target, crate, rlib, directDependent, dependentFilesystem, extern_loc);
   }
 
   @Override
@@ -81,8 +89,9 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   @Override
   public void appendToCommandLine(
       Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
-    // Use absolute path to make sure cross-cell references work.
-    AbsPath path = pathResolver.getAbsolutePath(getRlib());
+    // Relativize absolute path to project root to make sure cross-cell references work.
+    AbsPath absPath = pathResolver.getAbsolutePath(getRlib());
+    RelPath path = getDependentFilesystem().relativize(absPath);
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     Optional<BuildTarget> directDep = getDirectDependent();

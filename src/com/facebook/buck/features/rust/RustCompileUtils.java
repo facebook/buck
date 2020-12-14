@@ -366,7 +366,14 @@ public class RustCompileUtils {
     for (BuildRule rule : depRules) {
       if (rule instanceof RustLinkable) {
         addDependencyArgs(
-            rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, Optional.of(target));
+            rule,
+            rustPlatform,
+            crateType,
+            depArgs,
+            revAliasMap,
+            rustDepType,
+            Optional.of(target),
+            projectFilesystem);
       }
     }
 
@@ -390,7 +397,14 @@ public class RustCompileUtils {
 
           // Add an indirect dependency for this rule.
           addDependencyArgs(
-              rule, rustPlatform, crateType, depArgs, revAliasMap, rustDepType, Optional.empty());
+              rule,
+              rustPlatform,
+              crateType,
+              depArgs,
+              revAliasMap,
+              rustDepType,
+              Optional.empty(),
+              projectFilesystem);
         }
         return deps;
       }
@@ -485,7 +499,8 @@ public class RustCompileUtils {
       ImmutableList.Builder<Arg> depArgs,
       Multimap<BuildTarget, String> revAliasMap,
       LinkableDepType rustDepType,
-      Optional<BuildTarget> directDependent) {
+      Optional<BuildTarget> directDependent,
+      ProjectFilesystem dependentFilesystem) {
     Collection<String> coll = revAliasMap.get(rule.getBuildTarget());
     Stream<Optional<String>> aliases;
     if (coll.isEmpty()) {
@@ -497,7 +512,13 @@ public class RustCompileUtils {
         .map(
             alias ->
                 ((RustLinkable) rule)
-                    .getLinkerArg(directDependent, crateType, rustPlatform, rustDepType, alias))
+                    .getLinkerArg(
+                        directDependent,
+                        dependentFilesystem,
+                        crateType,
+                        rustPlatform,
+                        rustDepType,
+                        alias))
         .forEach(depArgs::add);
   }
 

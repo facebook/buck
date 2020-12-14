@@ -245,6 +245,7 @@ public class RustLibraryDescription
         @Override
         public Arg getLinkerArg(
             Optional<BuildTarget> directDependent,
+            ProjectFilesystem dependentFilesystem,
             CrateType wantCrateType,
             RustPlatform rustPlatform,
             LinkableDepType depType,
@@ -327,6 +328,7 @@ public class RustLibraryDescription
               alias.orElse(crate),
               rlib,
               directDependent,
+              dependentFilesystem,
               rustBuckConfig.getExternLocations());
         }
 

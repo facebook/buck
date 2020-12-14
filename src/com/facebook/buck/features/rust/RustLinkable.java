@@ -21,6 +21,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -33,7 +34,8 @@ interface RustLinkable {
   /**
    * Return Arg for dependency.
    *
-   * @param directDependent true for direct dependency, false for transitive
+   * @param directDependent Target by which the dependency is specified if it's direct.
+   * @param dependentFilesystem Project filesystem of the target which uses this dependency.
    * @param crateType Contains information about the crate.
    * @param rustPlatform Current platform we're building for.
    * @param depType What kind of linkage we want with the dependency.
@@ -42,6 +44,7 @@ interface RustLinkable {
    */
   Arg getLinkerArg(
       Optional<BuildTarget> directDependent,
+      ProjectFilesystem dependentFilesystem,
       CrateType crateType,
       RustPlatform rustPlatform,
       Linker.LinkableDepType depType,
