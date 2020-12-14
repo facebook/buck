@@ -66,7 +66,7 @@ public class ExternalActionsExecutable {
         OutputStream outputStream = namedPipe.getOutputStream()) {
       DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
       Logger.get("").addHandler(new ExternalLogHandler(outputStream));
-      executeSteps(args, parsedEnvVars, outputStream);
+      executeSteps(args, parsedEnvVars, console, outputStream);
     } catch (Exception e) {
       handleExceptionAndTerminate(Thread.currentThread(), console, e);
     }
@@ -93,19 +93,14 @@ public class ExternalActionsExecutable {
   }
 
   private static void executeSteps(
-      String[] args, ParsedEnvVars parsedEnvVars, OutputStream outputStream) throws Exception {
+      String[] args, ParsedEnvVars parsedEnvVars, Console console, OutputStream outputStream)
+      throws Exception {
     ParsedArgs parsedArgs = new ExternalArgsParser().parse(args);
     ImmutableList<IsolatedStep> stepsToExecute =
         BuildStepsRetriever.getStepsForBuildable(parsedArgs);
 
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(parsedEnvVars.getBuildUuid(), outputStream)) {
-      Console console =
-          new Console(
-              parsedEnvVars.getVerbosity(),
-              System.out,
-              System.err,
-              new Ansi(parsedEnvVars.isAnsiTerminal()));
       IsolatedExecutionContext executionContext =
           IsolatedExecutionContext.of(
               eventBus,
