@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.filesystem;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -52,6 +54,8 @@ public class GlobPatternMatcherTest {
   @Test
   public void returnsAGlobWhenAskedForPathOrGlob() {
     GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
-    assertEquals(matcher.getPathOrGlob(), "foo/*");
+    PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
+    assertTrue(pathOrGlob.isGlob());
+    assertThat(pathOrGlob.getValue(), equalTo("foo/*"));
   }
 }

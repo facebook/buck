@@ -75,8 +75,8 @@ public class RecursiveFileMatcher implements PathMatcher {
   }
 
   @Override
-  public String getPathOrGlob() {
-    return getPath().toString();
+  public PathOrGlob getPathOrGlob() {
+    return PathOrGlob.path(getPath());
   }
 
   /** @return The matcher for paths that start with {@code basePath}. */

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.filesystem;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -53,6 +55,8 @@ public class FileExtensionMatcherTest {
   @Test
   public void returnsAGlobWhenAskedForPathOrGlob() {
     FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
-    assertEquals(matcher.getPathOrGlob(), "**/*.cpp");
+    PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
+    assertTrue(pathOrGlob.isGlob());
+    assertThat(pathOrGlob.getValue(), equalTo("**/*.cpp"));
   }
 }

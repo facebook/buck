@@ -72,8 +72,8 @@ public class FileExtensionMatcher implements PathMatcher {
   }
 
   @Override
-  public String getPathOrGlob() {
-    return getGlob();
+  public PathOrGlob getPathOrGlob() {
+    return PathOrGlob.glob(getGlob());
   }
 
   public String getExtension() {

@@ -179,6 +179,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                       output,
                       options.getIgnorePaths().stream()
                           .map(PathMatcher::getPathOrGlob)
+                          .map(PathMatcher.PathOrGlob::getValue)
                           .collect(ImmutableList.toImmutableList()));
                 }
                 return ignorePathsJson1;

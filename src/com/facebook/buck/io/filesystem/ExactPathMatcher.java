@@ -76,8 +76,8 @@ public class ExactPathMatcher implements PathMatcher {
   }
 
   @Override
-  public String getPathOrGlob() {
-    return getGlob();
+  public PathOrGlob getPathOrGlob() {
+    return PathOrGlob.glob(getGlob());
   }
 
   /** @return The matcher for paths that are exactly the same as {@code path}. */

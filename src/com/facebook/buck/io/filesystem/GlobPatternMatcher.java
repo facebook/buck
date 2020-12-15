@@ -77,8 +77,8 @@ public class GlobPatternMatcher implements PathMatcher {
   }
 
   @Override
-  public String getPathOrGlob() {
-    return getGlob();
+  public PathOrGlob getPathOrGlob() {
+    return PathOrGlob.glob(getGlob());
   }
 
   /** @return The matcher for paths that start with {@code basePath}. */

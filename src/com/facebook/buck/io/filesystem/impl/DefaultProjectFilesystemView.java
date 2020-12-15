@@ -75,6 +75,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   public ImmutableList<String> toWatchmanQuery(Set<Capability> capabilities) {
     return ignoredPaths.keySet().stream()
         .map(PathMatcher::getPathOrGlob)
+        .map(PathMatcher.PathOrGlob::getValue)
         .collect(ImmutableList.toImmutableList());
   }
 

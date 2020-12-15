@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.filesystem;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -54,6 +56,8 @@ public class RecursiveFileMatcherTest {
   @Test
   public void returnsAPathWhenAskedForPathOrGlob() {
     RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("path"));
-    assertEquals(matcher.getPathOrGlob(), "path");
+    PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
+    assertTrue(pathOrGlob.isPath());
+    assertThat(pathOrGlob.getValue(), equalTo("path"));
   }
 }

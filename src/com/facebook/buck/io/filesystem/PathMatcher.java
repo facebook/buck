@@ -16,10 +16,13 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Set;
+import org.immutables.value.Value;
 
 /** A contract for matching {@link Path}s. */
 public interface PathMatcher extends java.nio.file.PathMatcher {
@@ -30,6 +33,46 @@ public interface PathMatcher extends java.nio.file.PathMatcher {
    */
   ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities);
 
-  /** Returns a path or glob pattern identifying paths that should be matched by this matcher. */
-  String getPathOrGlob();
+  /**
+   * Returns {@link PathOrGlob} object that contains a value that represents a path or glob pattern
+   * identifying paths that should be matched by this matcher, and a way to figure out whether the
+   * value is a Path or Glob.
+   */
+  PathOrGlob getPathOrGlob();
+
+  /**
+   * Wrapper around type of the path matcher's {@link #getPathOrGlob} return value (Path or Glob
+   * type and a value).
+   */
+  @BuckStyleValue
+  abstract class PathOrGlob {
+
+    /** Type of the path matcher's {@link #getPathOrGlob} return value. Path or Glob */
+    protected enum Type {
+      PATH,
+      GLOB
+    }
+
+    public abstract String getValue();
+
+    protected abstract Type getType();
+
+    @Value.Derived
+    public boolean isPath() {
+      return getType() == Type.PATH;
+    }
+
+    @Value.Derived
+    public boolean isGlob() {
+      return getType() == Type.GLOB;
+    }
+
+    public static PathOrGlob glob(String glob) {
+      return ImmutablePathOrGlob.ofImpl(glob, Type.GLOB);
+    }
+
+    public static PathOrGlob path(RelPath path) {
+      return ImmutablePathOrGlob.ofImpl(path.toString(), Type.PATH);
+    }
+  }
 }
