@@ -297,11 +297,9 @@ public class JavaTestDescription
       AbstractJavaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    if (constructorArg.getUseCxxLibraries().orElse(false)) {
-      targetGraphOnlyDepsBuilder.addAll(
-          getUnresolvedCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
-              .getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    }
+    targetGraphOnlyDepsBuilder.addAll(
+        getUnresolvedCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
     javaOptionsForTests
