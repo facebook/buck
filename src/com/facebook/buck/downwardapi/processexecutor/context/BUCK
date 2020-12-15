@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "context",
+    srcs = glob(["*.java"]),
+    visibility = ["//src/com/facebook/buck/downwardapi/processexecutor/..."],
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:util",
+    ],
+)

@@ -19,7 +19,7 @@ package com.facebook.buck.downwardapi.processexecutor.handlers;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.LogLevel;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 
 /** Downward API event handler for {@code LogEvent} */
 enum LogEventHandler implements EventHandler<LogEvent> {

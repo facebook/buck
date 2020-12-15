@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi.processexecutor;
+package com.facebook.buck.downwardapi.processexecutor.context;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.ConsoleEvent;
@@ -75,7 +75,7 @@ public abstract class DownwardApiExecutionContext {
     getBuckEventBus().post(event, atTime, getInvokingThreadId());
   }
 
-  static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus) {
+  public static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus) {
     return ImmutableDownwardApiExecutionContext.ofImpl(
         Instant.now(), buckEventBus, Thread.currentThread().getId());
   }

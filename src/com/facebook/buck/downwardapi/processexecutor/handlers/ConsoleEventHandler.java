@@ -20,7 +20,7 @@ import static com.facebook.buck.event.ConsoleEvent.create;
 
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.LogLevel;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import java.util.logging.Level;
 
 /** Downward API event handler for {@code ConsoleEvent} */

@@ -20,7 +20,7 @@ import static com.facebook.buck.event.StepEvent.finished;
 import static com.facebook.buck.event.StepEvent.started;
 
 import com.facebook.buck.downward.model.StepEvent;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.event.StepEvent.Started;
 import com.facebook.buck.step.StepExecutionResults;
 import java.time.Instant;

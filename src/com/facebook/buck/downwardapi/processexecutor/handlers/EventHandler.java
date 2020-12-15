@@ -17,7 +17,7 @@
 package com.facebook.buck.downwardapi.processexecutor.handlers;
 
 import com.facebook.buck.downward.model.EventTypeMessage;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Duration;
 import java.time.Instant;

@@ -17,7 +17,7 @@
 package com.facebook.buck.downwardapi.processexecutor.handlers;
 
 import com.facebook.buck.downward.model.ChromeTraceEvent;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.PerfEventTitle;
 import com.google.common.collect.ImmutableMap;
