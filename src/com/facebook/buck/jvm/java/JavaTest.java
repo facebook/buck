@@ -214,6 +214,10 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSet.of();
   }
 
+  protected boolean includeBootClasspathInRequiredPaths() {
+    return true;
+  }
+
   private Path getClassPathFile() {
     return getProjectFilesystem()
         .resolve(
@@ -585,7 +589,10 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setEnv(externalJunitStep.getEnvironmentVariables(executionContext.getPlatform()))
         .setLabels(getLabels())
         .setContacts(getContacts())
-        .addAllRequiredPaths(getRuntimeClasspath(buildContext))
+        .addAllRequiredPaths(
+            includeBootClasspathInRequiredPaths()
+                ? getRuntimeClasspath(buildContext)
+                : getRuntimeClasspathWithoutBootClasspathEntries(buildContext))
         .addRequiredPaths(externalJunitStep.getClasspathArgfile())
         .addRequiredPaths(externalJunitStep.getTestRunnerClassFile())
         .addRequiredPaths(getProjectFilesystem().getPath(command.get(0)))
@@ -634,6 +641,15 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *     when this test is executed
    */
   protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
+    return ImmutableSet.<Path>builder()
+        .addAll(getRuntimeClasspathWithoutBootClasspathEntries(buildContext))
+        .addAll(getBootClasspathEntries())
+        .build();
+  }
+
+  /** @return the runtime classpath entries not including the boot classpath entries */
+  protected ImmutableSet<Path> getRuntimeClasspathWithoutBootClasspathEntries(
+      BuildContext buildContext) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     unbundledResourcesRoot.ifPresent(
         sourcePath ->
@@ -650,7 +666,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             additionalClasspathEntriesProvider
                 .map(e -> e.getAdditionalClasspathEntries(buildContext.getSourcePathResolver()))
                 .orElse(ImmutableList.of()))
-        .addAll(getBootClasspathEntries())
         .build();
   }
 

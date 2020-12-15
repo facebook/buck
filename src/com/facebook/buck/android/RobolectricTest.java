@@ -52,6 +52,7 @@ public class RobolectricTest extends JavaTest {
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final RobolectricTestHelper robolectricTestHelper;
+  private final boolean includeBootClasspathInRequiredPaths;
 
   protected RobolectricTest(
       BuildTarget buildTarget,
@@ -81,6 +82,7 @@ public class RobolectricTest extends JavaTest {
       Optional<SourcePath> robolectricManifest,
       boolean passDirectoriesInFile,
       Tool javaRuntimeLauncher,
+      boolean includeBootClasspathInRequiredPaths,
       boolean withDownwardApi) {
     super(
         buildTarget,
@@ -148,6 +150,7 @@ public class RobolectricTest extends JavaTest {
             robolectricManifest,
             getProjectFilesystem(),
             passDirectoriesInFile);
+    this.includeBootClasspathInRequiredPaths = includeBootClasspathInRequiredPaths;
   }
 
   @Override
@@ -155,6 +158,11 @@ public class RobolectricTest extends JavaTest {
     return androidPlatformTarget.getBootclasspathEntries().stream()
         .map(AbsPath::getPath)
         .collect(ImmutableSet.toImmutableSet());
+  }
+
+  @Override
+  protected boolean includeBootClasspathInRequiredPaths() {
+    return includeBootClasspathInRequiredPaths;
   }
 
   @Override

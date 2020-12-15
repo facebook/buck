@@ -125,6 +125,44 @@ public class RobolectricTestRuleIntegrationTest {
             .filter(path -> path.contains("robolectric_dir"))
             .collect(ImmutableList.toImmutableList());
     assertTrue(robolectricRuntimeDepsDirEntries.size() > 0);
+
+    ImmutableList<String> androidJarEntries =
+        requiredPaths.stream()
+            .filter(path -> path.contains("android.jar"))
+            .collect(ImmutableList.toImmutableList());
+    assertFalse(androidJarEntries.isEmpty());
+  }
+
+  @Test
+  public void testNoBootClasspathInRequiredPath() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.addBuckConfigLocalOption("test", "include_boot_classpath_in_required_paths", "false");
+    workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
+
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("required_paths"));
+    //noinspection unchecked
+    ImmutableSortedSet<String> requiredPaths =
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll((Iterable<String>) spec.get("required_paths"))
+            .build();
+
+    ImmutableList<String> androidJarEntries =
+        requiredPaths.stream()
+            .filter(path -> path.contains("android.jar"))
+            .collect(ImmutableList.toImmutableList());
+    assertTrue(androidJarEntries.isEmpty());
   }
 
   @Test

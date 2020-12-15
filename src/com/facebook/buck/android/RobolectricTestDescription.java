@@ -494,6 +494,9 @@ public class RobolectricTestDescription
         javaRuntimeConfig
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaBuckConfig
+            .getDelegate()
+            .getBooleanValue("test", "include_boot_classpath_in_required_paths", true),
         downwardApiConfig.isEnabledForTests());
   }
 
