@@ -33,6 +33,7 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -282,6 +283,24 @@ class RobolectricTestHelper {
             builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath()));
     builder.add(projectFilesystem.resolve(resourceDirectoriesPath).getPath());
     builder.add(projectFilesystem.resolve(assetDirectoriesPath).getPath());
+
+    robolectricRuntimeDependency.ifPresent(
+        robolectricRuntimeDir -> {
+          Path robolectricRuntimeDirPath =
+              sourcePathResolverAdapter.getAbsolutePath(robolectricRuntimeDir).getPath();
+          ImmutableCollection<Path> relativePaths;
+          try {
+            relativePaths =
+                projectFilesystem.asView().getDirectoryContents(robolectricRuntimeDirPath);
+          } catch (IOException e) {
+            throw new RuntimeException(
+                "Unable to get directory contents for " + robolectricRuntimeDir, e);
+          }
+          builder.addAll(
+              relativePaths.stream()
+                  .map(projectFilesystem::resolve)
+                  .collect(ImmutableSet.toImmutableSet()));
+        });
 
     return builder.build();
   }
