@@ -145,4 +145,21 @@ public class PythonLibraryIntegrationTest {
             ImmutablePythonSourceDatabaseEntry.ofImpl(
                 ImmutableMap.of("bar.py", "bar.py"), ImmutableMap.of("foo.py", "foo.py"))));
   }
+
+  @Test
+  public void ignoreCompileError() throws Exception {
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "python_library_compile", tmp);
+    workspace.setUp();
+    workspace.writeContentsToPath("synax error", "error.py");
+    workspace
+        .runBuckBuild("-c", "python.interpreter=" + py3, "//:error#py-default,default,compile")
+        .assertSuccess();
+  }
 }

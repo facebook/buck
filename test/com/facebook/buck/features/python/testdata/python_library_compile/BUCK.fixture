@@ -4,3 +4,11 @@ python_library(
         "foo.py",
     ],
 )
+
+python_library(
+    name = "error",
+    ignore_compile_errors = True,
+    srcs = [
+        "error.py",
+    ],
+)

@@ -181,7 +181,7 @@ public class PythonLibraryDescription
                   () ->
                       new HumanReadableException(
                           "%s: rule has no sources to compile", buildTarget)),
-              false,
+              args.getIgnoreCompileErrors(),
               downwardApiConfig.isEnabledForPython());
         case SOURCE_DB:
           {
@@ -577,6 +577,11 @@ public class PythonLibraryDescription
     @Value.Default
     default SourceSortedSet getTypeStubs() {
       return SourceSortedSet.EMPTY;
+    }
+
+    @Value.Default
+    default boolean getIgnoreCompileErrors() {
+      return false;
     }
   }
 }
