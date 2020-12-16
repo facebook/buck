@@ -302,6 +302,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .getLevel();
   }
 
+  public boolean isJavaCDEnabled() {
+    return getDelegate().getBooleanValue(SECTION, "javacd_enabled", false);
+  }
+
   public enum SourceAbiVerificationMode {
     /** Don't verify ABI jars. */
     OFF,

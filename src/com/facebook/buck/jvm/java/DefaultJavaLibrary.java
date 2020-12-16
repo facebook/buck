@@ -176,7 +176,8 @@ public class DefaultJavaLibrary
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
-      boolean neverMarkAsUnusedDependency) {
+      boolean neverMarkAsUnusedDependency,
+      boolean isJavaCDEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -187,7 +188,8 @@ public class DefaultJavaLibrary
             jarBuildStepsFactory,
             unusedDependenciesAction,
             unusedDependenciesFinderFactory,
-            sourceAbi));
+            sourceAbi,
+            isJavaCDEnabled));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(

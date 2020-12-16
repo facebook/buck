@@ -74,7 +74,8 @@ public abstract class DefaultJavaLibraryRules {
         @Nullable CalculateSourceAbi previousRuleInPipeline,
         boolean isDesugarEnabled,
         boolean isInterfaceMethodsDesugarEnabled,
-        boolean neverMarkAsUnusedDependency);
+        boolean neverMarkAsUnusedDependency,
+        boolean isJavaCDEnabled);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -433,7 +434,8 @@ public abstract class DefaultJavaLibraryRules {
             null,
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
-            args != null && args.getNeverMarkAsUnusedDependency().orElse(false));
+            args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
+            getJavaBuckConfig().isJavaCDEnabled());
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -476,7 +478,8 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiRule,
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
-                args != null && args.getNeverMarkAsUnusedDependency().orElse(false));
+                args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
+                getJavaBuckConfig().isJavaCDEnabled());
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -524,7 +527,8 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getActionGraphBuilder()));
+                getActionGraphBuilder(),
+                getJavaBuckConfig().isJavaCDEnabled()));
   }
 
   @Nullable
@@ -542,7 +546,8 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getActionGraphBuilder()));
+                getActionGraphBuilder(),
+                getJavaBuckConfig().isJavaCDEnabled()));
   }
 
   @Nullable

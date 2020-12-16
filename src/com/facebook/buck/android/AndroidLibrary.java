@@ -106,7 +106,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
-      boolean neverMarkAsUnusedDependency) {
+      boolean neverMarkAsUnusedDependency,
+      boolean isJavaCDEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -128,7 +129,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         sourceAbi,
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled,
-        neverMarkAsUnusedDependency);
+        neverMarkAsUnusedDependency,
+        isJavaCDEnabled);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
@@ -216,7 +218,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               sourceAbi,
               isDesugarEnabled,
               isInterfaceMethodsDesugarEnabled,
-              neverMarkAsUnusedDependency) ->
+              neverMarkAsUnusedDependency,
+              isJavaCDEnabled) ->
               new AndroidLibrary(
                   target,
                   filesystem,
@@ -240,7 +243,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   sourceAbi,
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
-                  neverMarkAsUnusedDependency));
+                  neverMarkAsUnusedDependency,
+                  isJavaCDEnabled));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 

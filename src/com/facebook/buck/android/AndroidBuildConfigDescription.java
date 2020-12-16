@@ -34,6 +34,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -53,11 +54,15 @@ public class AndroidBuildConfigDescription
 
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
+  private final JavaBuckConfig javaBuckConfig;
 
   public AndroidBuildConfigDescription(
-      ToolchainProvider toolchainProvider, DownwardApiConfig downwardApiConfig) {
+      ToolchainProvider toolchainProvider,
+      DownwardApiConfig downwardApiConfig,
+      JavaBuckConfig javaBuckConfig) {
     javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
+    this.javaBuckConfig = javaBuckConfig;
   }
 
   @Override
@@ -99,7 +104,8 @@ public class AndroidBuildConfigDescription
                 JavacOptionsProvider.class)
             .getJavacOptions(),
         graphBuilder,
-        downwardApiConfig.isEnabledForAndroid());
+        downwardApiConfig.isEnabledForAndroid(),
+        javaBuckConfig.isJavaCDEnabled());
   }
 
   /**
@@ -121,7 +127,8 @@ public class AndroidBuildConfigDescription
       Javac javac,
       JavacOptions javacOptions,
       ActionGraphBuilder graphBuilder,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean isJavaCDEnabled) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -176,7 +183,8 @@ public class AndroidBuildConfigDescription
         javac,
         javacOptions,
         androidBuildConfig,
-        withDownwardApi);
+        withDownwardApi,
+        isJavaCDEnabled);
   }
 
   @Override

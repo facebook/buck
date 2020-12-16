@@ -43,6 +43,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -91,15 +92,18 @@ public class AndroidPrebuiltAarDescription
   private final JavacFactory javacFactory;
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final JavaBuckConfig javaBuckConfig;
 
   public AndroidPrebuiltAarDescription(
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
-      DownwardApiConfig downwardApiConfig) {
+      DownwardApiConfig downwardApiConfig,
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
+    this.javaBuckConfig = javaBuckConfig;
   }
 
   @Override
@@ -247,7 +251,8 @@ public class AndroidPrebuiltAarDescription
         args.getRequiredForSourceOnlyAbi(),
         args.getMavenCoords(),
         args.isUseSystemLibraryLoader(),
-        withDownwardApi);
+        withDownwardApi,
+        javaBuckConfig.isJavaCDEnabled());
   }
 
   @Override

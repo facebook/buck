@@ -72,7 +72,11 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
 
     return Arrays.asList(
         new AndroidAarDescription(
-            androidManifestFactory, cxxBuckConfig, downwardApiConfig, toolchainProvider),
+            androidManifestFactory,
+            cxxBuckConfig,
+            downwardApiConfig,
+            javaConfig,
+            toolchainProvider),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
@@ -88,7 +92,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
-        new AndroidBuildConfigDescription(toolchainProvider, downwardApiConfig),
+        new AndroidBuildConfigDescription(toolchainProvider, downwardApiConfig, javaConfig),
         new AndroidBundleDescription(
             javaConfig,
             proGuardConfig,
@@ -114,7 +118,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(
             javaConfig, downwardApiConfig, defaultAndroidCompilerFactory, toolchainProvider),
-        new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
+        new AndroidPrebuiltAarDescription(
+            toolchainProvider, androidBuckConfig, downwardApiConfig, javaConfig),
         new AndroidResourceDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, downwardApiConfig, defaultAndroidCompilerFactory),

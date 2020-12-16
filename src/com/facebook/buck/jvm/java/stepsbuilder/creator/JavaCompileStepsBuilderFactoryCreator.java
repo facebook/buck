@@ -28,12 +28,13 @@ public class JavaCompileStepsBuilderFactoryCreator {
 
   /** Returns specific implementation of {@link JavaCompileStepsBuilderFactory}. */
   public static <T extends CompileToJarStepFactory.ExtraParams>
-      JavaCompileStepsBuilderFactory createFactory(CompileToJarStepFactory<T> configuredCompiler) {
+      JavaCompileStepsBuilderFactory createFactory(
+          CompileToJarStepFactory<T> configuredCompiler, boolean isJavaCDEnabled) {
     DefaultJavaCompileStepsBuilderFactory<T> defaultJavaCompileStepsBuilderFactory =
         new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
 
     if (configuredCompiler.supportsCompilationDaemon()) {
-      return new JavaCDStepsBuilderFactory(defaultJavaCompileStepsBuilderFactory);
+      return new JavaCDStepsBuilderFactory(defaultJavaCompileStepsBuilderFactory, isJavaCDEnabled);
     }
     return defaultJavaCompileStepsBuilderFactory;
   }

@@ -31,9 +31,14 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
 
   // TODO msemko: remove delegate when all builders are ready.
   private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
+  // TODO msemko: would be used later.
+  @SuppressWarnings("unused")
+  private final boolean isJavaCDEnabled;
 
-  public JavaCDStepsBuilderFactory(DefaultJavaCompileStepsBuilderFactory<?> delegate) {
+  public JavaCDStepsBuilderFactory(
+      DefaultJavaCompileStepsBuilderFactory<?> delegate, boolean isJavaCDEnabled) {
     this.delegate = delegate;
+    this.isJavaCDEnabled = isJavaCDEnabled;
   }
 
   /** Creates an appropriate {@link JavaLibraryJarStepsBuilder} instance. */

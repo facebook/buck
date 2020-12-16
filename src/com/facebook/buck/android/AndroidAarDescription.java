@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -84,6 +85,7 @@ public class AndroidAarDescription
   private final AndroidManifestFactory androidManifestFactory;
   private final CxxBuckConfig cxxBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final JavaBuckConfig javaBuckConfig;
   private final ToolchainProvider toolchainProvider;
   private final JavacFactory javacFactory;
 
@@ -91,10 +93,12 @@ public class AndroidAarDescription
       AndroidManifestFactory androidManifestFactory,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
+      JavaBuckConfig javaBuckConfig,
       ToolchainProvider toolchainProvider) {
     this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.javaBuckConfig = javaBuckConfig;
     this.toolchainProvider = toolchainProvider;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
@@ -225,7 +229,8 @@ public class AndroidAarDescription
                       JavacOptionsProvider.class)
                   .getJavacOptions(),
               packageableCollection,
-              downwardApiConfig.isEnabledForAndroid());
+              downwardApiConfig.isEnabledForAndroid(),
+              javaBuckConfig.isJavaCDEnabled());
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

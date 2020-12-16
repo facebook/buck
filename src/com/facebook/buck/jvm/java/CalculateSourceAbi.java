@@ -63,19 +63,20 @@ public class CalculateSourceAbi
   private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final SourcePathRuleFinder ruleFinder;
   private final JavaAbiInfo javaAbiInfo;
-
   private final SourcePath sourcePathToOutput;
 
   public CalculateSourceAbi(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
-      SourcePathRuleFinder ruleFinder) {
+      SourcePathRuleFinder ruleFinder,
+      boolean isJavaCDEnabled) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new SourceAbiBuildable(buildTarget, projectFilesystem, jarBuildStepsFactory));
+        new SourceAbiBuildable(
+            buildTarget, projectFilesystem, jarBuildStepsFactory, isJavaCDEnabled));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -96,13 +97,16 @@ public class CalculateSourceAbi
 
     @AddToRuleKey private final PublicOutputPath rootOutputPath;
     @AddToRuleKey private final PublicOutputPath annotationsOutputPath;
+    @AddToRuleKey private final boolean isJavaCDEnabled;
 
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
-        JarBuildStepsFactory<?> jarBuildStepsFactory) {
+        JarBuildStepsFactory<?> jarBuildStepsFactory,
+        boolean isJavaCDEnabled) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
+      this.isJavaCDEnabled = isJavaCDEnabled;
 
       CompilerOutputPaths outputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -118,7 +122,7 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       AbiJarStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
-                  jarBuildStepsFactory.getConfiguredCompiler())
+                  jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled)
               .getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
@@ -138,7 +142,7 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       AbiJarPipelineStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
-                  jarBuildStepsFactory.getConfiguredCompiler())
+                  jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled)
               .getPipelineAbiJarBuilder();
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,

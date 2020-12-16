@@ -55,7 +55,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       Javac javac,
       JavacOptions javacOptions,
       AndroidBuildConfig androidBuildConfig,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean isJavaCDEnabled) {
     super(
         buildTarget,
         projectFilesystem,
@@ -93,7 +94,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         null,
         false,
         false,
-        false);
+        false,
+        isJavaCDEnabled);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }

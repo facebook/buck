@@ -63,7 +63,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       boolean requiredForSourceAbi,
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean isJavaCDEnabled) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -108,7 +109,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         null,
         false,
         false,
-        false);
+        false,
+        isJavaCDEnabled);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
