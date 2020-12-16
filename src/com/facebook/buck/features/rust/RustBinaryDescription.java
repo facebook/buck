@@ -84,8 +84,6 @@ public class RustBinaryDescription
             .addDeps(args.getNamedDeps().values())
             .addPlatformDeps(args.getPlatformDeps())
             .build();
-    Linker.LinkableDepType linkStyle =
-        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
     RustBinaryDescription.Type type =
         BINARY_TYPE.getFlavorAndValue(buildTarget).map(Entry::getValue).orElse(Type.STATIC);
@@ -116,7 +114,7 @@ public class RustBinaryDescription
         flagsAndEnv.getSecond(), // rustc environment
         flagsAndEnv.getFirst(), // rustc flags
         linkerFlags,
-        linkStyle,
+        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle(), rustPlatform),
         args.isRpath(),
         args.getSrcs(),
         args.getMappedSrcs(),

@@ -132,7 +132,8 @@ public class RustTestDescription
                         flagsAndEnv.getSecond(), // rustc environment
                         flagsAndEnv.getFirst(), // rustc flags
                         linkerFlags,
-                        RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
+                        RustCompileUtils.getLinkStyle(
+                            buildTarget, args.getLinkStyle(), rustPlatform),
                         args.isRpath(),
                         args.getSrcs(),
                         args.getMappedSrcs(),
