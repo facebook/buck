@@ -116,7 +116,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   @Override
   public void post(BuckEvent event, Instant atTime, long threadId) {
     long millis = atTime.toEpochMilli();
-    long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
+    long nano = clock.nanoTime();
     long threadUserNanoTime = clock.threadUserNanoTime(threadId);
     event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
     dispatch(event);
@@ -147,11 +147,6 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   public void postWithoutConfiguring(BuckEvent event) {
     Preconditions.checkState(event.isConfigured());
     dispatch(event);
-  }
-
-  @VisibleForTesting
-  Clock getClock() {
-    return clock;
   }
 
   /**

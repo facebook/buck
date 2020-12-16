@@ -93,7 +93,7 @@ public class DefaultBuckEventBusTest {
     buckEventBus.post(event, AT_TIME);
     buckEventBus.close();
 
-    verifyTimestamps(event);
+    verifyTimestampMillis(event);
     assertEquals(Thread.currentThread().getId(), event.getThreadId());
   }
 
@@ -104,7 +104,7 @@ public class DefaultBuckEventBusTest {
     buckEventBus.post(event, AT_TIME, threadId);
     buckEventBus.close();
 
-    verifyTimestamps(event);
+    verifyTimestampMillis(event);
     assertEquals(threadId, event.getThreadId());
   }
 
@@ -118,14 +118,13 @@ public class DefaultBuckEventBusTest {
     assertEquals(threadId, event.getThreadId());
   }
 
-  private void verifyTimestamps(TestEvent event) {
+  private void verifyTimestampMillis(TestEvent event) {
     long epochSecond = AT_TIME.getEpochSecond();
     int nano = AT_TIME.getNano();
 
     assertEquals(
         TimeUnit.SECONDS.toMillis(epochSecond) + TimeUnit.NANOSECONDS.toMillis(nano),
         event.getTimestampMillis());
-    assertEquals(TimeUnit.SECONDS.toNanos(epochSecond) + nano, event.getNanoTime());
   }
 
   @Test
