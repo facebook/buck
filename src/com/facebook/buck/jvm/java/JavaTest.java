@@ -589,10 +589,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setEnv(externalJunitStep.getEnvironmentVariables(executionContext.getPlatform()))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .addAllRequiredPaths(getRuntimeClasspath(buildContext))
         .addAllRequiredPaths(
-            includeBootClasspathInRequiredPaths()
-                ? getRuntimeClasspath(buildContext)
-                : getRuntimeClasspathWithoutBootClasspathEntries(buildContext))
+            includeBootClasspathInRequiredPaths() ? getBootClasspathEntries() : ImmutableSet.of())
         .addRequiredPaths(externalJunitStep.getClasspathArgfile())
         .addRequiredPaths(externalJunitStep.getTestRunnerClassFile())
         .addRequiredPaths(getProjectFilesystem().getPath(command.get(0)))
@@ -618,7 +617,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             new AbstractExecutionStep("write classpath file") {
               @Override
               public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-                ImmutableSet<Path> relativeClasspathEntries =
+                ImmutableSet<Path> relativeRuntimeClasspathEntries =
                     getRuntimeClasspath(buildContext).stream()
                         .map(
                             path ->
@@ -628,7 +627,12 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         .collect(ImmutableSet.toImmutableSet());
                 getProjectFilesystem()
                     .writeLinesToPath(
-                        Iterables.transform(relativeClasspathEntries, Object::toString),
+                        Iterables.transform(
+                            ImmutableSet.<Path>builder()
+                                .addAll(relativeRuntimeClasspathEntries)
+                                .addAll(getBootClasspathEntries())
+                                .build(),
+                            Object::toString),
                         getClassPathFile());
                 return StepExecutionResults.SUCCESS;
               }
@@ -641,15 +645,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *     when this test is executed
    */
   protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
-    return ImmutableSet.<Path>builder()
-        .addAll(getRuntimeClasspathWithoutBootClasspathEntries(buildContext))
-        .addAll(getBootClasspathEntries())
-        .build();
-  }
-
-  /** @return the runtime classpath entries not including the boot classpath entries */
-  protected ImmutableSet<Path> getRuntimeClasspathWithoutBootClasspathEntries(
-      BuildContext buildContext) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     unbundledResourcesRoot.ifPresent(
         sourcePath ->

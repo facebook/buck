@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.iterableWithSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -43,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
@@ -79,6 +81,7 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.addBuckConfigLocalOption("test", "java_for_tests_version", "11");
     workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
 
     Path specOutput =
@@ -131,6 +134,26 @@ public class RobolectricTestRuleIntegrationTest {
             .filter(path -> path.contains("android.jar"))
             .collect(ImmutableList.toImmutableList());
     assertFalse(androidJarEntries.isEmpty());
+
+    // The classpath arg file should use relative paths except for the bootclasspath, which uses an
+    // absolute path.
+    ImmutableList<String> classpathArgfile =
+        requiredPaths.stream()
+            .filter(path -> path.contains("classpath-argfile"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, classpathArgfile.size());
+    Path classpathArgFilePath = Paths.get(classpathArgfile.get(0));
+    for (String line : workspace.getProjectFileSystem().readLines(classpathArgFilePath)) {
+      // Last line ends with a quote
+      line = line.endsWith("\"") ? line.substring(0, line.length() - 1) : line;
+      if (line.equals("-classpath") || line.contains("ant-out")) {
+        continue;
+      }
+      assertSame(
+          "Only paths containing android_sdk should be absolute, path is: " + line,
+          Paths.get(line).isAbsolute(),
+          line.contains("android") && line.contains("sdk"));
+    }
   }
 
   @Test
