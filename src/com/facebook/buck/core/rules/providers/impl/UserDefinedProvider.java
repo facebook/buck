@@ -22,19 +22,16 @@ import com.facebook.buck.core.starlark.compatible.StarlarkExportable;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
-import com.google.devtools.build.lib.syntax.Tuple;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.LinkedHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -47,16 +44,18 @@ import javax.annotation.Nullable;
  * <p>NOTE: Until {@link #export(com.facebook.buck.core.model.label.Label, String)} is called, many
  * methods (especially ones that get the user defined name of the class) are not safe to call.
  */
-public class UserDefinedProvider extends BaseFunction
-    implements Provider<UserDefinedProviderInfo>, StarlarkValue, StarlarkExportable {
+public class UserDefinedProvider
+    implements StarlarkCallable,
+        Provider<UserDefinedProviderInfo>,
+        StarlarkValue,
+        StarlarkExportable {
 
   private final Key key;
   private final Location location;
   private boolean isExported = false;
   @Nullable private String name = null;
 
-  private final FunctionSignature functionSignature;
-  private final Tuple<Object> defaultValues;
+  private final ImmutableSet<String> fieldNames;
 
   /**
    * Create an instance of {@link UserDefinedProvider}
@@ -67,20 +66,9 @@ public class UserDefinedProvider extends BaseFunction
    *     UserDefinedProviderInfo} object
    */
   public UserDefinedProvider(Location location, String[] fieldNames) {
-    this.functionSignature = FunctionSignature.namedOnly(0, fieldNames);
-    this.defaultValues = Tuple.copyOf(Collections.nCopies(fieldNames.length, Starlark.NONE));
     this.location = location;
     this.key = new Key();
-  }
-
-  @Override
-  public FunctionSignature getSignature() {
-    return functionSignature;
-  }
-
-  @Override
-  public Tuple<Object> getDefaultValues() {
-    return defaultValues;
+    this.fieldNames = ImmutableSet.copyOf(fieldNames);
   }
 
   @Override
@@ -96,7 +84,7 @@ public class UserDefinedProvider extends BaseFunction
   @Override
   public void repr(Printer printer) {
     printer.format("%s(", getName());
-    MoreIterables.enumerate(Objects.requireNonNull(getSignature()).getParameterNames())
+    MoreIterables.enumerate(fieldNames)
         .forEach(
             pair -> {
               if (pair.getFirst() != 0) {
@@ -141,34 +129,30 @@ public class UserDefinedProvider extends BaseFunction
       throws EvalException, InterruptedException {
     Verify.verify(isExported, "Tried to call a Provider before exporting it");
 
-    Object[] args =
-        BaseFunction.matchSignature(
-            functionSignature, this, defaultValues, thread.mutability(), positional, named);
-
-    ImmutableList<String> fieldNames = Objects.requireNonNull(getSignature()).getParameterNames();
-
-    // TODO(nga): there seems to be a bug in Starlark 2.1.0
-    //   it adds an extra null value for a parameter for named-only signature:
-    //     ```
-    //     private boolean hasStar() {
-    //       return hasVarargs() || (numNamedOnly() > 0);
-    //     }
-    //     public int numParameters() {
-    //       return numPositionals() + numNamedOnly() + (hasStar() ? 1 : 0) + (hasKwargs() ? 1 : 0);
-    //     }
-    //     ```
-    //   (The snippet above should say `hasVarargs()` not `hasStar()`
-    //   But that code was heavily rewritten in 735094645155f8d231a8f5546901de005b28a899.
-    //   So no reason to report a bug.
-    Verify.verify(args.length == fieldNames.size() || args.length == fieldNames.size() + 1);
-
-    ImmutableMap.Builder<String, Object> builder =
-        ImmutableMap.builderWithExpectedSize(args.length);
-    for (int i = 0; i < fieldNames.size(); i++) {
-      builder.put(fieldNames.get(i), args[i]);
+    if (positional.length != 0) {
+      throw Starlark.errorf("providers only accept named arguments");
     }
 
-    return new UserDefinedProviderInfo(this, builder.build());
+    LinkedHashMap<String, Object> fieldValues = new LinkedHashMap<>();
+    for (int i = 0; i < named.length; i += 2) {
+      String name = (String) named[i];
+      Object value = named[i + 1];
+
+      if (!fieldNames.contains(name)) {
+        throw Starlark.errorf("unknown argument: %s", name);
+      }
+
+      Object prevValue = fieldValues.putIfAbsent(name, value);
+      if (prevValue != null) {
+        throw Starlark.errorf("duplicate argument: %s", name);
+      }
+    }
+
+    for (String fieldName : fieldNames) {
+      fieldValues.putIfAbsent(fieldName, Starlark.NONE);
+    }
+
+    return new UserDefinedProviderInfo(this, ImmutableMap.copyOf(fieldValues));
   }
 
   private class Key implements Provider.Key<UserDefinedProviderInfo> {}
