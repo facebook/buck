@@ -23,6 +23,7 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.android.DummyRDotJava;
+import com.facebook.buck.android.RobolectricTestDescriptionArg;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -39,6 +40,8 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.JavaTest;
+import com.facebook.buck.jvm.java.JavaTestDescriptionArg;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory;
 import com.google.common.base.Preconditions;
@@ -198,8 +201,13 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         && constructorArg.getAnnotationProcessors().isEmpty()) {
       return Optional.empty();
     }
+    BuildTarget buildTarget = targetNode.getBuildTarget();
+    if (targetNode.getConstructorArg() instanceof JavaTestDescriptionArg
+        || targetNode.getConstructorArg() instanceof RobolectricTestDescriptionArg) {
+      buildTarget = buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    }
     return Optional.of(
-        CompilerOutputPaths.of(targetNode.getBuildTarget(), projectFilesystem.getBuckPaths())
+        CompilerOutputPaths.of(buildTarget, projectFilesystem.getBuckPaths())
             .getAnnotationPath()
             .getPath());
   }
