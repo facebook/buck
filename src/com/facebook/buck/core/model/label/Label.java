@@ -38,8 +38,6 @@ import com.google.common.collect.Interners;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
-import com.google.devtools.build.skyframe.SkyFunctionName;
-import com.google.devtools.build.skyframe.SkyKey;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.annotation.Nullable;
@@ -61,7 +59,7 @@ import net.starlark.java.annot.StarlarkMethod;
     category = StarlarkDocumentationCategory.BUILTIN,
     doc = "A BUILD target identifier.")
 public final class Label
-    implements Comparable<Label>, Serializable, StarlarkValue, SkyKey, CommandLineItem {
+    implements Comparable<Label>, Serializable, StarlarkValue, CommandLineItem {
 
   /**
    * Package names that aren't made relative to the current repository because they mean special
@@ -75,9 +73,6 @@ public final class Label
           PathFragment.create("visibility"),
           // There is only one //external package
           LabelConstants.EXTERNAL_PACKAGE_NAME);
-
-  public static final SkyFunctionName TRANSITIVE_TRAVERSAL =
-      SkyFunctionName.createHermetic("TRANSITIVE_TRAVERSAL");
 
   private static final Interner<Label> LABEL_INTERNER = Interners.newWeakInterner();
 
@@ -527,11 +522,6 @@ public final class Label
         throw new IllegalStateException(e);
       }
     }
-  }
-
-  @Override
-  public SkyFunctionName functionName() {
-    return TRANSITIVE_TRAVERSAL;
   }
 
   @Override
