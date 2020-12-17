@@ -22,10 +22,8 @@ import com.facebook.buck.skylark.function.select.SelectorValue;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -135,9 +133,9 @@ public abstract class AbstractSkylarkFunctions {
       parameters = {@Param(name = "func", type = StarlarkCallable.class)},
       extraPositionals = @Param(name = "args"),
       extraKeywords = @Param(name = "kwargs"))
-  public BaseFunction partial(
+  public StarlarkCallable partial(
       StarlarkCallable func, Tuple<Object> args, Dict<String, Object> kwargs) {
-    return new BaseFunction() {
+    return new StarlarkCallable() {
       @Override
       public Object call(
           StarlarkThread thread, Tuple<Object> inner_args, Dict<String, Object> inner_kwargs)
@@ -151,11 +149,6 @@ public abstract class AbstractSkylarkFunctions {
       @Override
       public String getName() {
         return "<partial>";
-      }
-
-      @Override
-      public FunctionSignature getSignature() {
-        return FunctionSignature.ANY;
       }
     };
   }

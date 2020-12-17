@@ -30,10 +30,9 @@ import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.skylark.parser.pojoizer.BuildFileManifestPojoizer;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -70,14 +69,9 @@ public class RuleFunctionFactory {
    * @param ruleClass The name of the rule to to define.
    * @return Skylark function to handle the Buck rule.
    */
-  BaseFunction create(BaseDescription<?> ruleClass) {
+  StarlarkCallable create(BaseDescription<?> ruleClass) {
     String name = DescriptionCache.getRuleType(ruleClass).getName();
-    return new BaseFunction() {
-
-      @Override
-      public FunctionSignature getSignature() {
-        return FunctionSignature.KWARGS;
-      }
+    return new StarlarkCallable() {
 
       @Override
       public String getName() {

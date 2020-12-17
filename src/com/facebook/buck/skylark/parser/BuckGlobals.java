@@ -34,10 +34,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import java.util.function.Function;
 import org.immutables.value.Value.Lazy;
 
@@ -126,10 +126,10 @@ public abstract class BuckGlobals {
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
   @Lazy
-  ImmutableMap<String, BaseFunction> getBuckRuleFunctions() {
+  ImmutableMap<String, StarlarkCallable> getBuckRuleFunctions() {
     return getDescriptions().stream()
         .map(getRuleFunctionFactory()::create)
-        .collect(ImmutableMap.toImmutableMap(BaseFunction::getName, r -> r));
+        .collect(ImmutableMap.toImmutableMap(StarlarkCallable::getName, r -> r));
   }
 
   /**

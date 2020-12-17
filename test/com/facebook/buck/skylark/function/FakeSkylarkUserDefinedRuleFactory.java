@@ -29,12 +29,11 @@ import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Map;
@@ -94,15 +93,8 @@ public class FakeSkylarkUserDefinedRuleFactory {
       String label,
       Function<SkylarkRuleContext, Object> callable)
       throws EvalException, LabelSyntaxException {
-    FunctionSignature signature =
-        FunctionSignature.create(1, 0, 0, 0, false, false, ImmutableList.of("ctx"));
-    BaseFunction implementation =
-        new BaseFunction() {
-          @Override
-          public FunctionSignature getSignature() {
-            return signature;
-          }
-
+    StarlarkCallable implementation =
+        new StarlarkCallable() {
           @Override
           public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs)
               throws EvalException, InterruptedException {
