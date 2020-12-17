@@ -232,6 +232,18 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
+  public void buildConfigurationRule() throws Exception {
+    // Test we can "build" configuration rules.
+    // Not practically useful, but convenient if rule returned by query for example, and safe
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "build_configuration_rule", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:os").assertSuccess();
+  }
+
+  @Test
   public void defaultTargetPlatformIsAppliedWhenNoTargetPlatformSpecified() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);

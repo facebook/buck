@@ -364,15 +364,8 @@ public class TargetSpecResolver implements AutoCloseable {
           perBuildState.getRequestedTargetNodeJob(
               buildTargetSpec.getUnconfiguredBuildTarget(), targetConfiguration),
           node -> {
-            ImmutableSet<BuildTarget> buildTargets =
-                applySpecFilterAndFlavorEnhancer(
-                    spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
-            Preconditions.checkState(
-                buildTargets.size() == 1,
-                "BuildTargetSpec %s filter discarded target %s, but was not supposed to.",
-                spec,
-                node.getBuildTarget());
-            return buildTargets;
+            return applySpecFilterAndFlavorEnhancer(
+                spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
           },
           MoreExecutors.directExecutor());
     } else {
