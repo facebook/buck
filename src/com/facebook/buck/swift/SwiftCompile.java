@@ -36,6 +36,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -67,6 +68,7 @@ public class SwiftCompile extends SwiftCompileBase {
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps,
+      ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
       boolean withDownwardApi) {
     super(
@@ -89,6 +91,7 @@ public class SwiftCompile extends SwiftCompileBase {
         bridgingHeader,
         preprocessor,
         cxxDeps,
+        debugPrefixMap,
         importUnderlyingModule,
         withDownwardApi);
 

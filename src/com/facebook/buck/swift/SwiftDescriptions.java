@@ -25,8 +25,10 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.io.file.MorePaths;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
 
 public class SwiftDescriptions {
@@ -91,5 +93,14 @@ public class SwiftDescriptions {
 
   static String toSwiftHeaderName(String moduleName) {
     return moduleName + SWIFT_HEADER_SUFFIX;
+  }
+
+  public static ImmutableBiMap<Path, String> getDebugPrefixMap(
+      Path sdkRoot, Path platformRoot, Optional<Path> developerRoot) {
+    ImmutableBiMap.Builder<Path, String> debugPathsBuilder = ImmutableBiMap.builder();
+    debugPathsBuilder.put(sdkRoot, "APPLE_SDKROOT");
+    debugPathsBuilder.put(platformRoot, "APPLE_PLATFORM_DIR");
+    developerRoot.ifPresent(path -> debugPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
+    return debugPathsBuilder.build();
   }
 }

@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftToolchainBuildRule;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.base.Verify;
@@ -134,7 +135,14 @@ public class AppleToolchainDescription
     Optional<SwiftPlatform> swiftPlatform =
         swiftToolchainRule
             .map(SwiftToolchainBuildRule.class::cast)
-            .map(rule -> rule.getSwiftPlatform(swiftTarget));
+            .map(
+                rule ->
+                    rule.getSwiftPlatform(
+                        swiftTarget,
+                        SwiftDescriptions.getDebugPrefixMap(
+                            sdkPaths.getSdkPath(),
+                            sdkPaths.getPlatformPath(),
+                            sdkPaths.getDeveloperPath())));
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatform.builder()

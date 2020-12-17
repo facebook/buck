@@ -54,6 +54,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,6 +64,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
 
@@ -71,6 +74,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
 
   private static final String INCLUDE_FLAG = "-I";
+  private static final String DEBUG_PREFIX_MAP_FLAG = "-debug-prefix-map";
 
   @AddToRuleKey protected final Tool swiftCompiler;
 
@@ -125,11 +129,16 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean inputBasedEnabled;
 
+  @AddToRuleKey private final boolean useDebugPrefixMap;
+
   // The following fields do not have to be part of the rulekey, all the other must.
 
   private BuildableSupport.DepsSupplier depsSupplier;
   protected final Optional<AbsPath> swiftFileListPath; // internal scratch temp path
   protected final Optional<AbsPath> argfilePath; // internal scratch temp path
+
+  // We can't make the debug prefix map part of the rulekey as it is machine specific.
+  private final ImmutableBiMap<Path, String> debugPrefixMap;
 
   public static String getNormalizedModuleName(String moduleName) {
     return CxxDescriptionEnhancer.normalizeModuleName(moduleName);
@@ -155,6 +164,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps,
+      ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
@@ -206,6 +216,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.withDownwardApi = withDownwardApi;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
     this.inputBasedEnabled = swiftBuckConfig.getInputBasedCompileEnabled();
+    this.debugPrefixMap = debugPrefixMap;
+    this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     performChecks(buildTarget);
   }
 
@@ -302,6 +314,25 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       for (SourcePath sourcePath : srcs) {
         compilerArgs.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
       }
+    }
+
+    if (useDebugPrefixMap) {
+      // The Swift compiler always adds an implicit -working-directory flag which we need to remap.
+      compilerArgs.add(
+          DEBUG_PREFIX_MAP_FLAG, getProjectFilesystem().getRootPath().toString() + "=.");
+
+      // We reverse sort the paths by length as we want the longer paths to take precedence over
+      // the shorter paths.
+      debugPrefixMap.entrySet().stream()
+          .sorted(
+              Comparator.<Map.Entry<Path, String>>comparingInt(
+                      entry -> entry.getKey().getNameCount())
+                  .reversed()
+                  .thenComparing(entry -> entry.getKey()))
+          .forEach(
+              entry ->
+                  compilerArgs.add(
+                      DEBUG_PREFIX_MAP_FLAG, entry.getKey().toString() + "=" + entry.getValue()));
     }
 
     return compilerArgs.build();

@@ -319,6 +319,7 @@ public class SwiftLibraryDescription
           args.getBridgingHeader(),
           preprocessor,
           cxxDeps,
+          swiftPlatform.get().getDebugPrefixMap(),
           false,
           downwardApiConfig.isEnabledForApple());
     }
@@ -488,6 +489,7 @@ public class SwiftLibraryDescription
         args.getBridgingHeader(),
         preprocessor,
         preprocessFlags,
+        swiftPlatform.getDebugPrefixMap(),
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple());
   }
@@ -555,6 +557,7 @@ public class SwiftLibraryDescription
         args.getBridgingHeader(),
         preprocessor,
         preprocessFlags,
+        swiftPlatform.getDebugPrefixMap(),
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple());
   }

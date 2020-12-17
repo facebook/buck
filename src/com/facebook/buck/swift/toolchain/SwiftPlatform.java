@@ -19,6 +19,7 @@ package com.facebook.buck.swift.toolchain;
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -65,6 +66,9 @@ public interface SwiftPlatform {
    *     x86_64-apple-ios9.0
    */
   AppleCompilerTargetTriple getSwiftTarget();
+
+  /** @return A map of debug paths to prefix during compilation. */
+  ImmutableBiMap<Path, String> getDebugPrefixMap();
 
   @Value.Default
   default ImmutableList<Path> getAdditionalSystemFrameworkSearchPaths() {

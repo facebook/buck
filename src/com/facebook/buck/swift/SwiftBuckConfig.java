@@ -38,6 +38,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String INPUT_BASED_COMPILE_ENABLED = "input_based_compile_enabled";
   public static final String TRANSFORM_ERRORS_TO_ABSOLUTE_PATHS =
       "transform_errors_to_absolute_paths";
+  public static final String USE_DEBUG_PREFIX_MAP = "use_debug_prefix_map";
   private final BuckConfig delegate;
 
   @Override
@@ -150,5 +151,13 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getTransformErrorsToAbsolutePaths() {
     return delegate.getBooleanValue(SECTION_NAME, TRANSFORM_ERRORS_TO_ABSOLUTE_PATHS, false);
+  }
+
+  /**
+   * If true, use the -debug-prefix-map flag to remap paths in debug info to use custom prefixes.
+   * This is analogous to Cxx use of PrefixMapDebugPathSanitizer.
+   */
+  public boolean getUseDebugPrefixMap() {
+    return delegate.getBooleanValue(SECTION_NAME, USE_DEBUG_PREFIX_MAP, false);
   }
 }

@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -303,6 +304,45 @@ public class SwiftLibraryIntegrationTest {
     assertThat(
         compilerCommand,
         Matchers.hasItems("-emit-module-doc", "-emit-module-doc-path", expectedSwiftdocPath));
+  }
+
+  @Test
+  public void testSwiftCompileDebugPathPrefixFlags() throws NoSuchBuildTargetException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget swiftCompileTarget =
+        buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setSections("[swift]", "use_debug_prefix_map = True").build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftCompile buildRule =
+        (SwiftCompile)
+            swiftLibraryDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                swiftCompileTarget,
+                TestBuildRuleParams.create(),
+                createDummySwiftArg());
+
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    ImmutableList<Step> steps = buildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    SwiftCompileStep compileStep = (SwiftCompileStep) steps.get(1);
+    ImmutableList<String> compilerCommand =
+        ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
+
+    AppleSdkPaths sdkPaths = FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK_PATHS;
+    assertThat(
+        compilerCommand,
+        Matchers.containsInRelativeOrder(
+            "-debug-prefix-map", projectFilesystem.getRootPath().toString() + "=.",
+            "-debug-prefix-map", sdkPaths.getSdkPath() + "=APPLE_SDKROOT",
+            "-debug-prefix-map", sdkPaths.getPlatformPath() + "=APPLE_PLATFORM_DIR",
+            "-debug-prefix-map", sdkPaths.getDeveloperPath().get() + "=APPLE_DEVELOPER_DIR"));
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {

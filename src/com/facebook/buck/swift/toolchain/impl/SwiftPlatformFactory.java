@@ -23,6 +23,7 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -55,7 +56,12 @@ public class SwiftPlatformFactory {
             .setSwiftc(swiftc)
             .setSwiftStdlibTool(swiftStdLibTool)
             .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName, shouldLinkSystemSwift))
-            .setSwiftTarget(swiftTarget);
+            .setSwiftTarget(swiftTarget)
+            .setDebugPrefixMap(
+                SwiftDescriptions.getDebugPrefixMap(
+                    sdkPaths.getSdkPath(),
+                    sdkPaths.getPlatformPath(),
+                    sdkPaths.getDeveloperPath()));
 
     for (String systemFrameworkPath : sdk.getAdditionalSystemFrameworkSearchPaths()) {
       builder.addAdditionalSystemFrameworkSearchPaths(Paths.get(systemFrameworkPath));
