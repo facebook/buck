@@ -248,7 +248,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
-import java.nio.channels.ClosedByInterruptException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -989,6 +988,7 @@ public final class MainRunner {
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
 
+        Optional<CommandEvent.Started> startedEvent = Optional.empty();
         Optional<Exception> exceptionForFix = Optional.empty();
         Path simpleConsoleLog =
             invocationInfo
@@ -1177,12 +1177,7 @@ public final class MainRunner {
                     });
             CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
                 depsAwareExecutorSupplier =
-                    getDepsAwareExecutorSupplier(buckConfig, buildEventBus);
-
-            // This will get executed first once it gets out of try block and just wait for
-            // event bus to dispatch all pending events before we proceed to termination
-            // procedures
-            CloseableWrapper<BuckEventBus> waitEvents = getWaitEventsWrapper(buildEventBus)) {
+                    getDepsAwareExecutorSupplier(buckConfig, buildEventBus)) {
 
           LOG.debug(invocationInfo.toLogLine());
 
@@ -1337,16 +1332,22 @@ public final class MainRunner {
                       1, filteredUnexpandedArgsForLogging.size());
 
           Path absoluteClientPwd = getClientPwd(cells.getRootCell(), rawClientPwd);
-          CommandEvent.Started startedEvent =
-              CommandEvent.started(
-                  command.getDeclaredSubCommandName(),
-                  remainingArgs,
-                  cells.getRootCell().getRoot().getPath().relativize(absoluteClientPwd).normalize(),
-                  daemonMode.isDaemon()
-                      ? OptionalLong.of(buckGlobalState.getUptime())
-                      : OptionalLong.empty(),
-                  getBuckPID());
-          buildEventBus.post(startedEvent);
+          startedEvent =
+              Optional.of(
+                  CommandEvent.started(
+                      command.getDeclaredSubCommandName(),
+                      remainingArgs,
+                      cells
+                          .getRootCell()
+                          .getRoot()
+                          .getPath()
+                          .relativize(absoluteClientPwd)
+                          .normalize(),
+                      daemonMode.isDaemon()
+                          ? OptionalLong.of(buckGlobalState.getUptime())
+                          : OptionalLong.empty(),
+                      getBuckPID()));
+          buildEventBus.post(startedEvent.get());
 
           TargetSpecResolver targetSpecResolver =
               getTargetSpecResolver(
@@ -1460,11 +1461,7 @@ public final class MainRunner {
                         metadataProvider,
                         buckGlobalState,
                         absoluteClientPwd));
-          } catch (InterruptedException | ClosedByInterruptException e) {
-            buildEventBus.post(CommandEvent.interrupted(startedEvent, ExitCode.SIGNAL_INTERRUPT));
-            throw e;
           } finally {
-            buildEventBus.post(CommandEvent.finished(startedEvent, exitCode));
             buildEventBus.post(
                 new CacheStatsEvent(
                     "versioned_target_graph_cache",
@@ -1497,6 +1494,14 @@ public final class MainRunner {
                 invocationInfo);
           }
 
+          if (startedEvent.isPresent()) {
+            if (exitCode == ExitCode.SIGNAL_INTERRUPT) {
+              buildEventBus.post(CommandEvent.interrupted(startedEvent.get(), exitCode));
+            } else {
+              buildEventBus.post(CommandEvent.finished(startedEvent.get(), exitCode));
+            }
+          }
+
           commandManager.handleCommandFinished(exitCode);
 
           if (daemonMode.isDaemon()) {
@@ -1505,6 +1510,13 @@ public final class MainRunner {
             // complete; the cleaner will ensure subsequent cleans are
             // serialized with this one.)
             TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
+          }
+
+          // Wait all pending events to be processed before closing listeners
+          if (!buildEventBus.waitEvents(EVENT_BUS_TIMEOUT_SECONDS * 1000)) {
+            LOG.warn(
+                "Event bus did not complete all events within timeout; event listener's data"
+                    + "may be incorrect");
           }
 
           // TODO(buck_team): refactor eventListeners for RAII
@@ -2176,23 +2188,6 @@ public final class MainRunner {
           daemonMode.isDaemon(), parserConfig.getGlobHandler());
     }
     return watchman;
-  }
-
-  /**
-   * RAII wrapper which does not really close any object but waits for all events in given event bus
-   * to complete. We want to have it this way to safely start deinitializing event listeners
-   */
-  private static CloseableWrapper<BuckEventBus> getWaitEventsWrapper(BuckEventBus buildEventBus) {
-    return CloseableWrapper.of(
-        buildEventBus,
-        eventBus -> {
-          // wait for event bus to process all pending events
-          if (!eventBus.waitEvents(EVENT_BUS_TIMEOUT_SECONDS * 1000)) {
-            LOG.warn(
-                "Event bus did not complete all events within timeout; event listener's data"
-                    + "may be incorrect");
-          }
-        });
   }
 
   private static <T extends ExecutorService>
