@@ -36,7 +36,6 @@ import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.annot.StarlarkConstructor;
 import net.starlark.java.annot.StarlarkDocumentationCategory;
 import net.starlark.java.annot.StarlarkMethod;
 
@@ -120,7 +119,6 @@ public interface StructApi extends StarlarkValue {
                 doc = "Dictionary of arguments."),
         useStarlarkThread = true,
         selfCall = true)
-    @StarlarkConstructor(objectType = StructApi.class, receiverNameForDoc = "struct")
     StructApi createStruct(Dict<String, Object> kwargs, StarlarkThread thread) throws EvalException;
   }
 }

@@ -27,7 +27,6 @@ import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
-import net.starlark.java.annot.StarlarkConstructor;
 import net.starlark.java.annot.StarlarkGlobalLibrary;
 import net.starlark.java.annot.StarlarkMethod;
 
@@ -47,7 +46,6 @@ public interface SkylarkRuleFunctionsApi {
         @Param(name = "label_string", type = String.class, doc = "the label string."),
       },
       useStarlarkThread = true)
-  @StarlarkConstructor(objectType = Label.class)
   Label label(String labelString, StarlarkThread env) throws EvalException;
 
   @StarlarkMethod(
