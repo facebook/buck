@@ -46,6 +46,7 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,8 +62,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     return ImmutableList.of(
         new Object[] {"SKYLARK_WITHOUT_VERSIONS", Syntax.SKYLARK, false},
         new Object[] {"SKYLARK_WITH_VERSIONS", Syntax.SKYLARK, true},
-        new Object[] {"PYTHON_DSL_WITHOUT_VERSIONS", Syntax.SKYLARK, false},
-        new Object[] {"PYTHON_DSL_WITH_VERSIONS", Syntax.SKYLARK, true});
+        new Object[] {"PYTHON_DSL_WITHOUT_VERSIONS", Syntax.PYTHON_DSL, false},
+        new Object[] {"PYTHON_DSL_WITH_VERSIONS", Syntax.PYTHON_DSL, true});
   }
 
   @Parameterized.Parameter(value = 0)
@@ -78,10 +79,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
-    if (buildFileSyntax.equals(Syntax.PYTHON_DSL)) {
-      workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "PYTHON_DSL");
-      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
-    }
+    workspace.addBuckConfigLocalOption(
+        "parser", "default_build_file_syntax", buildFileSyntax.name());
+    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
     if (useVersions) {
       workspace.addBuckConfigLocalOption("build", "versions", "true");
     }
@@ -438,6 +438,10 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void failsWhenInvalidArgTypesGiven() throws IOException {
+    // Broken in Python DSL because RunInfo is not available in Python DSL,
+    // but TODO(nga) here is to remove Python DSL from Buck.
+    Assume.assumeTrue(buildFileSyntax == Syntax.SKYLARK);
+
     ProjectWorkspace workspace = setupWorkspace("args");
 
     assertEquals(
