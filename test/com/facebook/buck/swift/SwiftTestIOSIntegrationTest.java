@@ -45,6 +45,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class SwiftTestIOSIntegrationTest {
+  private static String XCTOOL_DEFAULT_DEST_FOR_TESTS = "name=iPhone 8";
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
@@ -58,6 +60,8 @@ public class SwiftTestIOSIntegrationTest {
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
         Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
+    workspace.addBuckConfigLocalOption(
+        "apple", "xctool_default_destination_specifier", XCTOOL_DEFAULT_DEST_FOR_TESTS);
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -106,6 +110,8 @@ public class SwiftTestIOSIntegrationTest {
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
         Paths.get("fbxctest"));
     workspace.addBuckConfigLocalOption("apple", "xctool_path", "fbxctest/bin/fbxctest");
+    workspace.addBuckConfigLocalOption(
+        "apple", "xctool_default_destination_specifier", XCTOOL_DEFAULT_DEST_FOR_TESTS);
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -140,7 +146,7 @@ public class SwiftTestIOSIntegrationTest {
         containsString("XCTest.framework/XCTest"));
     assertThat(
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
-        containsString("@rpath/libswiftCore.dylib"));
+        containsString("/usr/lib/swift/libswiftCore.dylib"));
     assertThat(
         workspace.runCommand("otool", "-l", binaryOutput.toString()).getStdout().get(),
         containsString("@loader_path/Frameworks"));
