@@ -38,7 +38,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -300,6 +303,49 @@ class RobolectricTestHelper {
               relativePaths.stream()
                   .map(projectFilesystem::resolve)
                   .collect(ImmutableSet.toImmutableSet()));
+        });
+
+    optionalDummyRDotJava.ifPresent(
+        dummyRDotJava -> {
+          ImmutableSet<Path> resDirs =
+              RichStream.from(optionalDummyRDotJava)
+                  .flatMap(input -> input.getAndroidResourceDeps().stream())
+                  .flatMap(input -> Stream.of(input.getRes(), input.getAssets()))
+                  .filter(Objects::nonNull)
+                  .map(
+                      sourcePath -> sourcePathResolverAdapter.getAbsolutePath(sourcePath).getPath())
+                  .collect(ImmutableSet.toImmutableSet());
+
+          for (Path resDir : resDirs) {
+            ImmutableCollection<Path> relativeSubPaths;
+            try {
+              relativeSubPaths =
+                  projectFilesystem
+                      .asView()
+                      .getFilesUnderPath(resDir, EnumSet.of(FileVisitOption.FOLLOW_LINKS));
+            } catch (IOException e) {
+              throw new RuntimeException("Unable to get files for " + resDir, e);
+            }
+            builder.addAll(
+                relativeSubPaths.stream()
+                    .map(projectFilesystem::resolve)
+                    .collect(ImmutableSet.toImmutableSet()));
+            // Resource deps can be symbolic links so we need the symlink path too.
+            builder.addAll(
+                relativeSubPaths.stream()
+                    .map(projectFilesystem::resolve)
+                    .filter(Files::isSymbolicLink)
+                    .map(
+                        link -> {
+                          try {
+                            return Files.readSymbolicLink(link);
+                          } catch (IOException e) {
+                            throw new RuntimeException(
+                                "Not able to resolve symbolic link for " + link, e);
+                          }
+                        })
+                    .collect(ImmutableSet.toImmutableSet()));
+          }
         });
 
     return builder.build();
