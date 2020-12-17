@@ -151,6 +151,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ForkMode forkMode;
 
   private final Optional<SourcePath> unbundledResourcesRoot;
+  private final boolean useRelativePathsInClasspathFile;
   private final boolean withDownwardApi;
 
   public JavaTest(
@@ -175,6 +176,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
       Optional<SourcePath> unbundledResourcesRoot,
+      boolean useRelativePathsInClasspathFile,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
@@ -196,6 +198,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.stdErrLogLevel = stdErrLogLevel;
     this.unbundledResourcesRoot = unbundledResourcesRoot;
     this.withDownwardApi = withDownwardApi;
+    this.useRelativePathsInClasspathFile = useRelativePathsInClasspathFile;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
   }
 
@@ -273,6 +276,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .addAllTestClasses(reorderedTestClasses)
             .setShouldExplainTestSelectorList(options.shouldExplainTestSelectorList())
             .setTestSelectorList(testSelectorList)
+            .setUseRelativePathsInClasspathFile(useRelativePathsInClasspathFile)
             .build();
 
     return new JUnitStep(
@@ -621,9 +625,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     getRuntimeClasspath(buildContext).stream()
                         .map(
                             path ->
-                                ProjectFilesystemUtils.relativize(
-                                        getProjectFilesystem().getRootPath(), path)
-                                    .getPath())
+                                useRelativePathsInClasspathFile
+                                    ? ProjectFilesystemUtils.relativize(
+                                            getProjectFilesystem().getRootPath(), path)
+                                        .getPath()
+                                    : path)
                         .collect(ImmutableSet.toImmutableSet());
                 getProjectFilesystem()
                     .writeLinesToPath(

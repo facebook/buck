@@ -140,6 +140,12 @@ abstract class JUnitJvmArgs {
   /** @return The version of Java that we are using to run the tests, if specified */
   abstract OptionalInt getJavaForTestsVersion();
 
+  /** @return True if relative paths should be used in the classpath file */
+  @Value.Default
+  boolean useRelativePathsInClasspathFile() {
+    return false;
+  }
+
   /** Formats the JVM arguments in this object suitable to pass on the command line. */
   public void formatCommandLineArgsToList(
       ImmutableList.Builder<String> args,
@@ -277,11 +283,13 @@ abstract class JUnitJvmArgs {
     builder.append(System.lineSeparator());
     builder.append('"');
 
-    builder.append(
-        escapePathForArgfile(
-            ProjectFilesystemUtils.relativize(filesystem.getRootPath(), getTestRunnerClasspath())
+    Path testRunnerClasspath =
+        useRelativePathsInClasspathFile()
+            ? ProjectFilesystemUtils.relativize(filesystem.getRootPath(), getTestRunnerClasspath())
                 .getPath()
-                .toString()));
+            : getTestRunnerClasspath();
+
+    builder.append(escapePathForArgfile(testRunnerClasspath.toString()));
 
     for (String classpathEntry : filesystem.readLines(getClasspathFile())) {
       builder.append(File.pathSeparatorChar);

@@ -485,6 +485,44 @@ public class JavaTestIntegrationTest {
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, javaFilePath.size());
 
+    // The classpath arg file should use absolute paths.
+    ImmutableList<String> classpathArgfile =
+        requiredPaths.stream()
+            .filter(path -> path.contains("classpath-argfile"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, classpathArgfile.size());
+    Path classpathArgFilePath = Paths.get(classpathArgfile.get(0));
+    for (String line : workspace.getProjectFileSystem().readLines(classpathArgFilePath)) {
+      // Last line ends with a quote
+      line = line.endsWith("\"") ? line.substring(0, line.length() - 1) : line;
+      assertTrue(
+          line.equals("-classpath") || line.contains("ant-out") || Paths.get(line).isAbsolute());
+    }
+  }
+
+  @Test
+  public void testClasspathArgFileHasRelativePaths() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "false");
+    workspace.addBuckConfigLocalOption("test", "use_relative_paths_in_classpath_file", "true");
+    workspace.runBuckCommand("test", "//:top", "-c", "test.java_for_tests_version=11");
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("required_paths"));
+    //noinspection unchecked
+    ImmutableSortedSet<String> requiredPaths =
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll((Iterable<String>) spec.get("required_paths"))
+            .build();
+
     // The classpath arg file should use relative paths.
     ImmutableList<String> classpathArgfile =
         requiredPaths.stream()

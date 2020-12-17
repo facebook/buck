@@ -82,6 +82,7 @@ public class RobolectricTest extends JavaTest {
       boolean passDirectoriesInFile,
       Tool javaRuntimeLauncher,
       boolean includeBootClasspathInRequiredPaths,
+      boolean useRelativePathsInClasspathFile,
       boolean withDownwardApi) {
     super(
         buildTarget,
@@ -120,6 +121,7 @@ public class RobolectricTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel,
         unbundledResourcesRoot,
+        useRelativePathsInClasspathFile,
         withDownwardApi);
     this.androidPlatformTarget = androidPlatformTarget;
     this.robolectricTestHelper =

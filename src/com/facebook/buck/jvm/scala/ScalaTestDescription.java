@@ -188,6 +188,10 @@ public class ScalaTestDescription
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
         args.getUnbundledResourcesRoot(),
+        javaBuckConfig
+            .getDelegate()
+            .getView(TestBuckConfig.class)
+            .useRelativePathsInClasspathFile(),
         downwardApiConfig.isEnabledForTests());
   }
 

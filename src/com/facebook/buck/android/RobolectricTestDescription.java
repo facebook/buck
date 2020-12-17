@@ -497,6 +497,10 @@ public class RobolectricTestDescription
         javaBuckConfig
             .getDelegate()
             .getBooleanValue("test", "include_boot_classpath_in_required_paths", true),
+        javaBuckConfig
+            .getDelegate()
+            .getView(TestBuckConfig.class)
+            .useRelativePathsInClasspathFile(),
         downwardApiConfig.isEnabledForTests());
   }
 

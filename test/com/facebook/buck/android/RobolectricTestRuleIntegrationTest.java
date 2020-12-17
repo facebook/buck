@@ -80,6 +80,7 @@ public class RobolectricTestRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace.addBuckConfigLocalOption("test", "use_relative_paths_in_classpath_file", "true");
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
     workspace.addBuckConfigLocalOption("test", "java_for_tests_version", "11");
     workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
