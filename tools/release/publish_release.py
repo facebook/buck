@@ -221,6 +221,11 @@ def parse_args(args):
             "https://github.com/chocolatey/chocolatey.org/issues/584"
         ),
     )
+    parser.add_argument(
+        "--docker-login",
+        action="store_true",
+        help="If set, run 'docker login' using DOCKERHUB_USERNAME and DOCKERHUB_TOKEN",
+    )
     parsed_kwargs = dict(parser.parse_args(args)._get_kwargs())
     if parsed_kwargs["deb_file"]:
         parsed_kwargs["build_deb"] = False
@@ -281,6 +286,15 @@ def validate_repo_upstream(args):
         raise ReleaseException(
             "Releases may only be published from the upstream OSS buck repository"
         )
+
+
+def docker_login():
+    username = os.environ.get("DOCKERHUB_USERNAME")
+    token = os.environ.get("DOCKERHUB_TOKEN")
+    if username and token:
+        run(["docker", "login", "--username", username, "--password-stdin"], input=token)
+    else:
+        logging.error("Both DOCKERHUB_USERNAME and DOCKERHUB_TOKEN must be set to login to dockerhub")
 
 
 def validate_environment(args):
@@ -410,6 +424,10 @@ def main():
     github_token = (
         args.github_token if args.github_token else get_token(args.github_token_file)
     )
+
+    if args.docker_login:
+        docker_login()
+
     if args.chocolatey_publish:
         chocolatey_token = (
             args.chocolatey_token

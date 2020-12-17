@@ -201,6 +201,10 @@ windows_environment: &windows_environment
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
 
+dockerhub: &dockerhub
+  context:
+    - DOCKERHUB_TOKEN
+
 tags_only_filter: &tags_only_filter
   filters:
     tags:
@@ -1639,11 +1643,11 @@ workflows:
   publish_jobs:
     jobs:
       - macos_publish_release:
-          <<: *tags_only_filter
+          <<: [*tags_only_filter, *dockerhub]
       - linux_publish_release:
-          <<: *tags_only_filter
+          <<: [*tags_only_filter, *dockerhub]
       - windows_publish_release:
-          <<: *tags_only_filter
+          <<: [*tags_only_filter, *dockerhub]
       - publish_docs:
           requires:
             - linux_publish_release
