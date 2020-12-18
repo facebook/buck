@@ -42,6 +42,7 @@ public final class BuckIcons {
   public static final Icon ACTION_TEST = load("/icons/actions/Test.png");
   public static final Icon ACTION_UNINSTALL = load("/icons/actions/Uninstall.png");
   public static final Icon CONFIGURATION_TEST = load("/icons/runConfigurations/test.png");
+  public static final Icon BUCK_INSTALL = load("/icons/runConfigurations/install.png");
 
   // Gutter icons for running unit tests
   public static final Icon BUILD_RUN_TEST = TestState.Run;
