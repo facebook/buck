@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableMap;
 
@@ -24,7 +25,7 @@ public interface JavaLibraryCompileStepsBuilder extends JavaCompileStepsBuilder 
 
   void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<String, RelPath> cellToPathMappings);
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings);
 
   void addMakeMissingOutputsStep(
       RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath);

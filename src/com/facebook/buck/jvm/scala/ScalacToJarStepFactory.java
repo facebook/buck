@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -85,7 +86,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
   @Override
   public void createCompileStep(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,

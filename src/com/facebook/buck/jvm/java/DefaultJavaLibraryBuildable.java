@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -193,7 +194,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       CellPathResolver cellPathResolver = buildContext.getCellPathResolver();
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
 
-      ImmutableMap<String, RelPath> cellToPathMappings =
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
           CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
 
       CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
@@ -226,7 +227,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   private void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       JavaLibraryCompileStepsBuilder stepsBuilder) {
     stepsBuilder.addUnusedDependencyStep(unusedDependenciesParams, cellToPathMappings);
   }

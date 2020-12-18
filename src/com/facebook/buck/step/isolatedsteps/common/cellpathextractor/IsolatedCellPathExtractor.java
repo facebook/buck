@@ -23,7 +23,9 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** {@link CellPathExtractor} implementation that is isolated from the build graph. */
 @BuckStyleValue
@@ -31,7 +33,7 @@ public abstract class IsolatedCellPathExtractor implements CellPathExtractor {
 
   public abstract AbsPath getRoot();
 
-  public abstract ImmutableMap<String, RelPath> getCellToPathMapping();
+  public abstract ImmutableMap<CanonicalCellName, RelPath> getCellToPathMapping();
 
   @Override
   public final AbsPath getCellPathOrThrow(CanonicalCellName cellName) {
@@ -39,20 +41,26 @@ public abstract class IsolatedCellPathExtractor implements CellPathExtractor {
         .orElseThrow(
             () ->
                 new UnknownCellException(
-                    cellName.getLegacyName(), getCellToPathMapping().keySet()));
+                    cellName.getLegacyName(),
+                    getCellToPathMapping().keySet().stream()
+                        .map(CanonicalCellName::getLegacyName)
+                        .flatMap(optional -> optional.map(Stream::of).orElse(Stream.empty()))
+                        .collect(ImmutableSet.toImmutableSet())));
   }
 
   @Override
   public final Optional<AbsPath> getCellPath(CanonicalCellName cellName) {
-    return cellName
-        .getLegacyName()
-        .map(name -> getCellToPathMapping().get(name))
-        .map(relPath -> Optional.ofNullable(getRoot().resolve(relPath)))
-        .orElseGet(() -> Optional.of(getRoot()));
+    if (CanonicalCellName.rootCell().equals(cellName)) {
+      return Optional.of(getRoot());
+    }
+
+    RelPath relPath = getCellToPathMapping().get(cellName);
+    AbsPath absPath = getRoot().resolve(relPath);
+    return Optional.of(absPath);
   }
 
   public static IsolatedCellPathExtractor of(
-      AbsPath root, ImmutableMap<String, RelPath> cellToPathMapping) {
+      AbsPath root, ImmutableMap<CanonicalCellName, RelPath> cellToPathMapping) {
     return ImmutableIsolatedCellPathExtractor.ofImpl(root, cellToPathMapping);
   }
 }

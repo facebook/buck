@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -391,7 +392,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CopyResourcesStep.getResourcesMap(
             context, filesystem, classesDir.getPath(), resourcesParameters, buildTarget);
 
-    ImmutableMap<String, RelPath> cellToPathMappings =
+    ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver());
 
     JarParameters abiJarParameters =
@@ -458,7 +459,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             resourcesParameters,
             buildTarget);
 
-    ImmutableMap<String, RelPath> cellToPathMappings =
+    ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(
             filesystem.getRootPath(), context.getCellPathResolver());
 
@@ -516,7 +517,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             resourcesParameters,
             buildTarget);
 
-    ImmutableMap<String, RelPath> cellToPathMappings =
+    ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver());
 
     JarParameters libraryJarParameters =
@@ -578,7 +579,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             resourcesParameters,
             libraryTarget);
 
-    ImmutableMap<String, RelPath> cellToPathMappings =
+    ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(
             filesystem.getRootPath(), context.getCellPathResolver());
 

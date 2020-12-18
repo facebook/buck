@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
@@ -36,6 +37,6 @@ public interface JavaLibraryJarPipelineStepsBuilder extends JavaLibraryCompileSt
       CompilerOutputPathsValue compilerOutputPathsValue,
       RelPath pathToClassHashes,
       ImmutableMap<RelPath, RelPath> resourcesMap,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       Optional<RelPath> pathToClasses);
 }

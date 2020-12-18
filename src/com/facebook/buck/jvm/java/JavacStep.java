@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExternalEvent;
@@ -45,7 +46,7 @@ public class JavacStep extends IsolatedStep {
   private final BuildTargetValue invokingRule;
   private final RelPath configuredBuckOut;
   private final boolean ownsPipelineObject;
-  private final ImmutableMap<String, RelPath> cellToPathMappings;
+  private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
   private final CompilerOutputPathsValue compilerOutputPathsValue;
 
   public JavacStep(
@@ -59,7 +60,7 @@ public class JavacStep extends IsolatedStep {
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     this(
         new JavacPipelineState(
             resolvedJavac,
@@ -82,7 +83,7 @@ public class JavacStep extends IsolatedStep {
       BuildTargetValue invokingRule,
       RelPath configuredBuckOut,
       CompilerOutputPathsValue compilerOutputPathsValue,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     this(
         pipeline,
         invokingRule,
@@ -98,7 +99,7 @@ public class JavacStep extends IsolatedStep {
       RelPath configuredBuckOut,
       boolean ownsPipelineObject,
       CompilerOutputPathsValue compilerOutputPathsValue,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     this.pipeline = pipeline;
     this.invokingRule = invokingRule;
     this.configuredBuckOut = configuredBuckOut;

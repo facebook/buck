@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -38,7 +39,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       RelPath relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
       AbsPath parent = rootPath.resolve(relativePath).getParent();
@@ -60,7 +61,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     ImmutableSortedMap.Builder<Path, Map<Path, Integer>> builder =
         ImmutableSortedMap.naturalOrder();
 
@@ -95,14 +96,17 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
    * cell roots in the resolver, Optional.empty() is returned.
    */
   private static Optional<Path> getCrossCellPath(
-      Path jarAbsolutePath, AbsPath root, ImmutableMap<String, RelPath> cellToPathMappings) {
+      Path jarAbsolutePath,
+      AbsPath root,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     // TODO(cjhopman): This is wrong if a cell ends up depending on something in another cell that
     // it doesn't have a mapping for :o
-    for (Map.Entry<String, RelPath> entry : cellToPathMappings.entrySet()) {
+    for (Map.Entry<CanonicalCellName, RelPath> entry : cellToPathMappings.entrySet()) {
       AbsPath cellRoot = root.resolve(entry.getValue()).normalize();
       if (jarAbsolutePath.startsWith(cellRoot.getPath())) {
         RelPath relativePath = cellRoot.relativize(jarAbsolutePath);
-        Optional<String> cellName = Optional.ofNullable(entry.getKey());
+        CanonicalCellName canonicalCellName = entry.getKey();
+        Optional<String> cellName = canonicalCellName.getLegacyName();
         // We use an absolute path to represent a path rooted in another cell
         AbsPath cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
         return Optional.of(cellNameRoot.resolve(relativePath).getPath());

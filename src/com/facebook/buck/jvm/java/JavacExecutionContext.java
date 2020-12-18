@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -36,7 +37,7 @@ public interface JavacExecutionContext {
 
   Verbosity getVerbosity();
 
-  ImmutableMap<String, RelPath> getCellToMapMappings();
+  ImmutableMap<CanonicalCellName, RelPath> getCellToPathMappings();
 
   AbsPath getRuleCellRoot();
 

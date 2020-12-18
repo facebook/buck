@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableMap;
@@ -26,5 +27,5 @@ public interface ClassUsageFileWriter {
       RelPath relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
-      ImmutableMap<String, RelPath> cellToPathMappings);
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings);
 }

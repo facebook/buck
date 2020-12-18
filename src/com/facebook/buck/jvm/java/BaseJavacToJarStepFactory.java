@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -71,7 +72,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   @Override
   public void createCompileStep(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,
@@ -102,7 +103,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   /** Creates pipelined compile to jar steps and adds them into a {@code steps} builder */
   public void createPipelinedCompileToJarStep(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue,
       JavacPipelineState pipeline,
       CompilerOutputPathsValue compilerOutputPathsValue,
@@ -156,7 +157,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   @Override
   public void createCompileToJarStepImpl(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
@@ -231,7 +232,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   private void createPipelinedCompileStep(
       RelPath configuredBuckOut,
       CompilerOutputPathsValue compilerOutputPathsValue,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       JavacPipelineState pipeline,
       BuildTargetValue invokingRule,
       ImmutableList.Builder<IsolatedStep> steps) {

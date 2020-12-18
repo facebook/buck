@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -78,7 +79,7 @@ public abstract class UnusedDependenciesParams {
   /** Creates {@link UnusedDependenciesFinder} */
   public static UnusedDependenciesFinder createFinder(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     return UnusedDependenciesFinder.of(
         unusedDependenciesParams.getFullyQualifiedName(),
         unusedDependenciesParams.getDeps(),

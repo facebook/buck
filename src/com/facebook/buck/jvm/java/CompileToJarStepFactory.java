@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -64,7 +65,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       boolean withDownwardApi,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
@@ -163,7 +164,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
   protected void createCompileToJarStepImpl(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue target,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
@@ -281,7 +282,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
 
   public abstract void createCompileStep(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,

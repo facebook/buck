@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
@@ -64,7 +65,7 @@ class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraP
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
       Optional<RelPath> pathToClasses,

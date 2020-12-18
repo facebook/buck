@@ -283,7 +283,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                           CompilerOutputPaths.getDepFilePath(outputJarDirPath),
                           context.getRuleCellRoot(),
                           context.getConfiguredBuckOut(),
-                          context.getCellToMapMappings());
+                          context.getCellToPathMappings());
                 }
                 abiResult.set(0);
               } else {
@@ -459,7 +459,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                                         .getOutputJarDirPath()),
                                 context.getRuleCellRoot(),
                                 context.getConfiguredBuckOut(),
-                                context.getCellToMapMappings());
+                                context.getCellToPathMappings());
                       }
                     } else {
                       reportDiagnosticsToUser();

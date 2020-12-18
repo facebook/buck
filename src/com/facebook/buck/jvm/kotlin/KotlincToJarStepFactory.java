@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -153,7 +154,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   @Override
   public void createCompileStep(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,

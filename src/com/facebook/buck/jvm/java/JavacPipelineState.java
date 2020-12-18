@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
@@ -91,7 +92,7 @@ public class JavacPipelineState implements RulePipelineState {
   public ResolvedJavac.Invocation getJavacInvocation(
       CompilerOutputPathsValue compilerOutputPathsValue,
       IsolatedExecutionContext context,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       RelPath configuredBuckOut)
       throws IOException {
     if (invocation == null) {

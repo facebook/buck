@@ -19,6 +19,8 @@ package com.facebook.buck.core.cell.impl;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -31,9 +33,10 @@ public class CellPathResolverUtils {
   private CellPathResolverUtils() {}
 
   /** Returns cell to relative path mapping */
-  public static ImmutableMap<String, RelPath> getCellToPathMappings(
+  public static ImmutableMap<CanonicalCellName, RelPath> getCellToPathMappings(
       AbsPath ruleCellRoot, CellPathResolver cellPathResolver) {
-    return cellPathResolver.getCellPathsByRootCellExternalName().entrySet().stream()
+    NewCellPathResolver newCellPathResolver = cellPathResolver.getNewCellPathResolver();
+    return newCellPathResolver.getCellToPathMap().entrySet().stream()
         .collect(
             toImmutableMap(
                 Map.Entry::getKey,

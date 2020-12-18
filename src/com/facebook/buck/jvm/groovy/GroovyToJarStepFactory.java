@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -60,7 +61,7 @@ class GroovyToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareEx
   @Override
   public void createCompileStep(
       FilesystemParams filesystemParams,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters parameters,

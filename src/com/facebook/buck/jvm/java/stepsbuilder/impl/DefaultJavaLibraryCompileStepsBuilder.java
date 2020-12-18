@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
@@ -34,7 +35,7 @@ abstract class DefaultJavaLibraryCompileStepsBuilder<T extends CompileToJarStepF
   @Override
   public void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<String, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     stepsBuilder.add(
         UnusedDependenciesParams.createFinder(unusedDependenciesParams, cellToPathMappings));
   }

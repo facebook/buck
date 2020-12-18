@@ -79,7 +79,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public abstract ImmutableSet<Optional<String>> getKnownCellsNames();
 
-  public abstract ImmutableMap<String, RelPath> getCellToPathMappings();
+  public abstract ImmutableMap<CanonicalCellName, RelPath> getCellToPathMappings();
 
   public abstract RelPath getDepFile();
 
@@ -94,7 +94,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       ImmutableSet<Optional<String>> knownCellNames,
-      ImmutableMap<String, RelPath> cellToPathMappings,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       RelPath depFile,
       boolean doUltralightChecking) {
     return ImmutableUnusedDependenciesFinder.ofImpl(
