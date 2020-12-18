@@ -20,15 +20,12 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Tuple;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
@@ -37,11 +34,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
-import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.spelling.SpellChecker;
 
 /**
@@ -145,25 +140,20 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       List<String> defaultSkylarkValues,
       Set<String> noneableParams) {
 
-    try {
-      return MethodDescriptor.of(
-          BuckStarlarkFunction.class.getDeclaredMethod(
-              "fake"), /* we hand a fake reflective method since we only use the MethodDescriptor to
-                       piggy back off skylark's parameter handling. We don't actually have a
-                       Method object to use in many cases (e.g. if the MethodHandle is a
-                       constructor). */
-          inferSkylarkCallableAnnotationFromMethod(
-              methodName, method, namedParams, defaultSkylarkValues, noneableParams));
-    } catch (NoSuchMethodException e) {
-      throw new IllegalStateException();
-    }
+    return MethodDescriptor.of(
+        /* we hand a fake reflective method since we only use the MethodDescriptor to
+        piggy back off skylark's parameter handling. We don't actually have a
+        Method object to use in many cases (e.g. if the MethodHandle is a
+        constructor). */
+        inferSkylarkCallableAnnotationFromMethod(
+            methodName, method, namedParams, defaultSkylarkValues, noneableParams));
   }
 
   @Override
   public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
     // this is the effectively the same as bazel's {@BuiltInCallable}
-    Object[] javaArguments = getArgumentVector(thread, methodDescriptor, positional, named);
+    Object[] javaArguments = getArgumentVector(methodDescriptor, positional, named);
 
     // TODO: deal with Optionals and some java/skylark object coercing
     ImmutableList<Object> argsForReflectionBuilder = ImmutableList.copyOf(javaArguments);
@@ -175,12 +165,8 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
         return Starlark.NONE;
       }
       if (result == null) {
-        if (methodDescriptor.isAllowReturnNones()) {
-          return Starlark.NONE;
-        } else {
-          throw new EvalException(
-              "method invocation returned None, please file a bug report: " + getName() + "(...)");
-        }
+        throw new EvalException(
+            "method invocation returned None, please file a bug report: " + getName() + "(...)");
       }
       if (!Starlark.valid(result)) {
         throw new EvalException(
@@ -244,7 +230,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
     return methodDescriptor;
   }
 
-  private StarlarkMethod inferSkylarkCallableAnnotationFromMethod(
+  private BuckStarlarkCallable inferSkylarkCallableAnnotationFromMethod(
       String methodName,
       MethodHandle method,
       List<String> namedParams,
@@ -259,7 +245,6 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   private void fake() {}
 
   private Object[] getArgumentVector(
-      StarlarkThread thread,
       MethodDescriptor desc, // intentionally shadows this.desc
       Object[] positional,
       Object[] named)
@@ -281,15 +266,6 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
 
     // Allocate argument vector.
     int n = parameters.length;
-    if (desc.acceptsExtraArgs()) {
-      n++;
-    }
-    if (desc.acceptsExtraKwargs()) {
-      n++;
-    }
-    if (desc.isUseStarlarkThread()) {
-      n++;
-    }
     Object[] vector = new Object[n];
 
     // positional arguments
@@ -301,23 +277,13 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
         break;
       }
 
-      // disabled?
-      if (param.disabledByFlag() != null) {
-        // Skip disabled parameter as if not present at all.
-        // The default value will be filled in below.
-        continue;
-      }
-
       Object value = positional[argIndex++];
       checkParamValue(param, value);
       vector[paramIndex] = value;
     }
 
     // *args
-    Tuple<Object> varargs = null;
-    if (desc.acceptsExtraArgs()) {
-      varargs = Tuple.wrap(Arrays.copyOfRange(positional, argIndex, positional.length));
-    } else if (argIndex < positional.length) {
+    if (argIndex < positional.length) {
       if (argIndex == 0) {
         throw Starlark.errorf("%s() got unexpected positional argument", getName());
       } else {
@@ -328,7 +294,6 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
     }
 
     // named arguments
-    LinkedHashMap<String, Object> kwargs = desc.acceptsExtraKwargs() ? new LinkedHashMap<>() : null;
     for (int i = 0; i < named.length; i += 2) {
       String name = (String) named[i]; // safe
       Object value = named[i + 1];
@@ -338,57 +303,25 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       // unknown parameter?
       if (index < 0) {
         // spill to **kwargs
-        if (kwargs == null) {
-          List<String> allNames =
-              Arrays.stream(parameters)
-                  .map(ParamDescriptor::getName)
-                  .collect(ImmutableList.toImmutableList());
-          throw Starlark.errorf(
-              "%s() got unexpected keyword argument '%s'%s",
-              getName(), name, SpellChecker.didYouMean(name, allNames));
-        }
+        List<String> allNames =
+            Arrays.stream(parameters)
+                .map(ParamDescriptor::getName)
+                .collect(ImmutableList.toImmutableList());
+        throw Starlark.errorf(
+            "%s() got unexpected keyword argument '%s'%s",
+            getName(), name, SpellChecker.didYouMean(name, allNames));
 
         // duplicate named argument?
-        if (kwargs.put(name, value) != null) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", getName(), name);
-        }
-        continue;
       }
       ParamDescriptor param = parameters[index];
 
       // positional-only param?
       if (!param.isNamed()) {
         // spill to **kwargs
-        if (kwargs == null) {
-          throw Starlark.errorf(
-              "%s() got named argument for positional-only parameter '%s'", getName(), name);
-        }
+        throw Starlark.errorf(
+            "%s() got named argument for positional-only parameter '%s'", getName(), name);
 
         // duplicate named argument?
-        if (kwargs.put(name, value) != null) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", getName(), name);
-        }
-        continue;
-      }
-
-      // disabled?
-      String flag = param.disabledByFlag();
-      if (flag != null) {
-        // spill to **kwargs
-        if (kwargs == null) {
-          throw Starlark.errorf(
-              "in call to %s(), parameter '%s' is %s",
-              getName(), param.getName(), disabled(flag, thread.getSemantics()));
-        }
-
-        // duplicate named argument?
-        if (kwargs.put(name, value) != null) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", getName(), name);
-        }
-        continue;
       }
 
       checkParamValue(param, value);
@@ -441,18 +374,6 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
           Joiner.on(", ").join(missingNamed));
     }
 
-    // special parameters
-    int i = parameters.length;
-    if (desc.acceptsExtraArgs()) {
-      vector[i++] = varargs;
-    }
-    if (desc.acceptsExtraKwargs()) {
-      vector[i++] = Dict.wrap(thread.mutability(), kwargs);
-    }
-    if (desc.isUseStarlarkThread()) {
-      vector[i++] = thread;
-    }
-
     return vector;
   }
 
@@ -486,22 +407,5 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
 
   private static String plural(int n) {
     return n == 1 ? "" : "s";
-  }
-
-  // Returns a phrase meaning "disabled" appropriate to the specified flag.
-  private static String disabled(String flag, StarlarkSemantics semantics) {
-    // If the flag is True, it must be a deprecation flag. Otherwise it's an experimental flag.
-    // TODO(adonovan): is that assumption sound?
-    if (semantics.flagValue(flag)) {
-      return String.format(
-          "deprecated and will be removed soon. It may be temporarily re-enabled by setting"
-              + " --%s=false",
-          flag);
-    } else {
-      return String.format(
-          "experimental and thus unavailable with the current flags. It may be enabled by setting"
-              + " --%s",
-          flag);
-    }
   }
 }

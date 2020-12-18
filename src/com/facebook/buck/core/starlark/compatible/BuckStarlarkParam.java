@@ -20,14 +20,13 @@ import com.google.common.primitives.Primitives;
 import java.lang.annotation.Annotation;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
-import net.starlark.java.annot.ParamType;
 
 /**
  * An instance of the skylark annotation that we create and pass around to piggy-back off skylark
  * functions.
  */
 @SuppressWarnings("all")
-class BuckStarlarkParam implements Param {
+class BuckStarlarkParam {
 
   public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "", true);
 
@@ -70,73 +69,27 @@ class BuckStarlarkParam implements Param {
     return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue, noneable);
   }
 
-  @Override
   public Class<? extends Annotation> annotationType() {
     return Param.class;
   }
 
-  @Override
   public String name() {
     return name;
   }
 
-  @Override
   public Class<?> type() {
     return type;
   }
 
-  @Override
-  public Class<?> generic1() {
-    return Object.class;
-  }
-
-  @Override
   public boolean noneable() {
     return noneable;
   }
 
-  @Override
-  public String doc() {
-    return "";
-  }
-
-  @Override
   public String defaultValue() {
     return defaultSkylarkValue;
   }
 
-  @Override
-  public ParamType[] allowedTypes() {
-    return new ParamType[] {};
-  }
-
-  @Override
-  public boolean callbackEnabled() {
-    return false;
-  }
-
-  @Override
   public boolean named() {
     return !name.isEmpty();
-  }
-
-  @Override
-  public boolean positional() {
-    return true;
-  }
-
-  @Override
-  public String enableOnlyWithFlag() {
-    return "";
-  }
-
-  @Override
-  public String disableWithFlag() {
-    return "";
-  }
-
-  @Override
-  public String valueWhenDisabled() {
-    return "";
   }
 }

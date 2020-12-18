@@ -30,17 +30,7 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
-import com.google.devtools.build.lib.syntax.Tuple;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
-import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkMethod;
 
 /**
@@ -51,178 +41,27 @@ import net.starlark.java.annot.StarlarkMethod;
  * which are ~7× slower.
  */
 final class MethodDescriptor {
-  private final Method method;
-  private final StarlarkMethod annotation;
 
   private final String name;
-  private final String doc;
-  private final boolean documented;
-  private final boolean structField;
   private final ParamDescriptor[] parameters;
-  private final boolean extraPositionals;
-  private final boolean extraKeywords;
-  private final boolean selfCall;
-  private final boolean allowReturnNones;
-  private final boolean useStarlarkThread;
-  private final boolean useStarlarkSemantics;
 
-  private MethodDescriptor(
-      Method method,
-      StarlarkMethod annotation,
-      String name,
-      String doc,
-      boolean documented,
-      boolean structField,
-      ParamDescriptor[] parameters,
-      boolean extraPositionals,
-      boolean extraKeywords,
-      boolean selfCall,
-      boolean allowReturnNones,
-      boolean useStarlarkThread,
-      boolean useStarlarkSemantics) {
-    this.method = method;
-    this.annotation = annotation;
+  private MethodDescriptor(String name, ParamDescriptor[] parameters) {
     this.name = name;
-    this.doc = doc;
-    this.documented = documented;
-    this.structField = structField;
     this.parameters = parameters;
-    this.extraPositionals = extraPositionals;
-    this.extraKeywords = extraKeywords;
-    this.selfCall = selfCall;
-    this.allowReturnNones = allowReturnNones;
-    this.useStarlarkThread = useStarlarkThread;
-    this.useStarlarkSemantics = useStarlarkSemantics;
-  }
-
-  /** Returns the StarlarkMethod annotation corresponding to this method. */
-  StarlarkMethod getAnnotation() {
-    return annotation;
   }
 
   /** @return Starlark method descriptor for provided Java method and signature annotation. */
-  public static MethodDescriptor of(Method method, StarlarkMethod annotation) {
-    // This happens when the interface is public but the implementation classes
-    // have reduced visibility.
-    method.setAccessible(true);
+  public static MethodDescriptor of(BuckStarlarkCallable annotation) {
     return new MethodDescriptor(
-        method,
-        annotation,
         annotation.name(),
-        annotation.doc(),
-        annotation.documented(),
-        annotation.structField(),
         Arrays.stream(annotation.parameters())
-            .map(param -> ParamDescriptor.of(param))
-            .toArray(ParamDescriptor[]::new),
-        !annotation.extraPositionals().name().isEmpty(),
-        !annotation.extraKeywords().name().isEmpty(),
-        annotation.selfCall(),
-        annotation.allowReturnNones(),
-        annotation.useStarlarkThread(),
-        annotation.useStarlarkSemantics());
-  }
-
-  private static final Object[] EMPTY = {};
-
-  /** Calls this method, which must have {@code structField=true}. */
-  Object callField(Object obj, StarlarkSemantics semantics, @Nullable Mutability mu)
-      throws EvalException, InterruptedException {
-    if (!structField) {
-      throw new IllegalStateException("not a struct field: " + name);
-    }
-    Object[] args = useStarlarkSemantics ? new Object[] {semantics} : EMPTY;
-    return call(obj, args, mu);
-  }
-
-  /**
-   * Invokes this method using {@code obj} as a target and {@code args} as Java arguments.
-   *
-   * <p>Methods with {@code void} return type return {@code None} following Python convention.
-   *
-   * <p>The Mutability is used if it is necessary to allocate a Starlark copy of a Java result.
-   */
-  Object call(Object obj, Object[] args, @Nullable Mutability mu)
-      throws EvalException, InterruptedException {
-    Preconditions.checkNotNull(obj);
-    Object result;
-    try {
-      result = method.invoke(obj, args);
-    } catch (IllegalAccessException ex) {
-      // The annotated processor ensures that annotated methods are accessible.
-      throw new IllegalStateException(ex);
-
-    } catch (InvocationTargetException ex) {
-      Throwable e = ex.getCause();
-      if (e == null) {
-        throw new IllegalStateException(e);
-      }
-      // Don't intercept unchecked exceptions.
-      Throwables.throwIfUnchecked(e);
-      if (e instanceof EvalException) {
-        throw (EvalException) e;
-      } else if (e instanceof InterruptedException) {
-        throw (InterruptedException) e;
-      } else {
-        // All other checked exceptions (e.g. LabelSyntaxException) are reported to Starlark.
-        throw new EvalException(null, null, e);
-      }
-    }
-    if (method.getReturnType().equals(Void.TYPE)) {
-      return Starlark.NONE;
-    }
-    if (result == null) {
-      // TODO(adonovan): eliminate allowReturnNones. Given that we convert
-      // String/Integer/Boolean/List/Map, it seems obtuse to crash instead
-      // of converting null too.
-      if (isAllowReturnNones()) {
-        return Starlark.NONE;
-      } else {
-        throw new IllegalStateException(
-            "method invocation returned None: " + getName() + Tuple.copyOf(Arrays.asList(args)));
-      }
-    }
-
-    return Starlark.fromJava(result, mu);
+            .map(ParamDescriptor::of)
+            .toArray(ParamDescriptor[]::new));
   }
 
   /** @see StarlarkMethod#name() */
   public String getName() {
     return name;
-  }
-
-  Method getMethod() {
-    return method;
-  }
-
-  /** @see StarlarkMethod#structField() */
-  boolean isStructField() {
-    return structField;
-  }
-
-  /** @see StarlarkMethod#useStarlarkThread() */
-  public boolean isUseStarlarkThread() {
-    return useStarlarkThread;
-  }
-
-  /** @see StarlarkMethod#useStarlarkSemantics() */
-  boolean isUseStarlarkSemantics() {
-    return useStarlarkSemantics;
-  }
-
-  /** @see StarlarkMethod#allowReturnNones() */
-  public boolean isAllowReturnNones() {
-    return allowReturnNones;
-  }
-
-  /** @return {@code true} if this method accepts extra arguments ({@code *args}) */
-  public boolean acceptsExtraArgs() {
-    return extraPositionals;
-  }
-
-  /** @see StarlarkMethod#extraKeywords() */
-  public boolean acceptsExtraKwargs() {
-    return extraKeywords;
   }
 
   /** @see StarlarkMethod#parameters() */
@@ -238,20 +77,5 @@ final class MethodDescriptor {
       }
     }
     return -1;
-  }
-
-  /** @see StarlarkMethod#documented() */
-  boolean isDocumented() {
-    return documented;
-  }
-
-  /** @see StarlarkMethod#doc() */
-  String getDoc() {
-    return doc;
-  }
-
-  /** @see StarlarkMethod#selfCall() */
-  boolean isSelfCall() {
-    return selfCall;
   }
 }

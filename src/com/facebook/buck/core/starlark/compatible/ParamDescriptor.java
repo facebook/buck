@@ -49,7 +49,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
-import net.starlark.java.annot.ParamType;
 
 /** A value class for storing {@link Param} metadata to avoid using Java proxies. */
 final class ParamDescriptor {
@@ -60,9 +59,6 @@ final class ParamDescriptor {
   private final boolean named;
   private final boolean positional;
   private final List<Class<?>> allowedClasses; // non-empty
-  // The semantics flag responsible for disabling this parameter, or null if enabled.
-  // It is an error for Starlark code to supply a value to a disabled parameter.
-  @Nullable private final String disabledByFlag;
 
   private ParamDescriptor(
       String name,
@@ -70,35 +66,25 @@ final class ParamDescriptor {
       boolean noneable,
       boolean named,
       boolean positional,
-      List<Class<?>> allowedClasses,
-      @Nullable String disabledByFlag) {
+      List<Class<?>> allowedClasses) {
     this.name = name;
     this.defaultValue = defaultExpr.isEmpty() ? null : evalDefault(name, defaultExpr);
     this.noneable = noneable;
     this.named = named;
     this.positional = positional;
     this.allowedClasses = allowedClasses;
-    this.disabledByFlag = disabledByFlag;
   }
 
   /**
    * Returns a {@link ParamDescriptor} representing the given raw {@link Param} annotation and the
    * given semantics.
    */
-  static ParamDescriptor of(Param param) {
+  static ParamDescriptor of(BuckStarlarkParam param) {
     String defaultExpr = param.defaultValue();
-    String disabledByFlag = null;
 
     // Compute set of allowed classes.
-    ParamType[] allowedTypes = param.allowedTypes();
     List<Class<?>> allowedClasses = new ArrayList<>();
-    if (allowedTypes.length > 0) {
-      for (ParamType pt : allowedTypes) {
-        allowedClasses.add(pt.type());
-      }
-    } else {
-      allowedClasses.add(param.type());
-    }
+    allowedClasses.add(param.type());
     if (param.noneable()) {
       // A few annotations redundantly declare NoneType.
       if (!allowedClasses.contains(NoneType.class)) {
@@ -107,13 +93,7 @@ final class ParamDescriptor {
     }
 
     return new ParamDescriptor(
-        param.name(),
-        defaultExpr,
-        param.noneable(),
-        param.named(),
-        param.positional(),
-        allowedClasses,
-        disabledByFlag);
+        param.name(), defaultExpr, param.noneable(), param.named(), true, allowedClasses);
   }
 
   /** @see Param#name() */
@@ -149,12 +129,6 @@ final class ParamDescriptor {
   @Nullable
   public Object getDefaultValue() {
     return defaultValue;
-  }
-
-  /** Returns the flag responsible for disabling this parameter, or null if it is enabled. */
-  @Nullable
-  public String disabledByFlag() {
-    return disabledByFlag;
   }
 
   // A memoization of evalDefault, keyed by expression.

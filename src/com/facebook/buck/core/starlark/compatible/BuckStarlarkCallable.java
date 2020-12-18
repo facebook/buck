@@ -17,24 +17,21 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.devtools.build.lib.syntax.Location;
-import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
 import java.util.Set;
-import net.starlark.java.annot.Param;
-import net.starlark.java.annot.StarlarkMethod;
 
 /**
  * An instance of the skylark annotation that we create and pass around to piggy-back off skylark
  * functions.
  */
 @SuppressWarnings("all")
-class BuckStarlarkCallable implements StarlarkMethod {
+class BuckStarlarkCallable {
 
   private final String methodName;
-  private final Param[] skylarkParams;
+  private final BuckStarlarkParam[] skylarkParams;
 
-  private BuckStarlarkCallable(String methodName, Param[] skylarkParams) {
+  private BuckStarlarkCallable(String methodName, BuckStarlarkParam[] skylarkParams) {
     this.methodName = methodName;
     this.skylarkParams = skylarkParams;
   }
@@ -65,7 +62,7 @@ class BuckStarlarkCallable implements StarlarkMethod {
       throw new IllegalStateException("Location parameter is no longer supported: " + method);
     }
 
-    Param[] skylarkParams = new Param[parameters.length];
+    BuckStarlarkParam[] skylarkParams = new BuckStarlarkParam[parameters.length];
 
     if (namedParams.size() > parameters.length) {
       throw new IllegalArgumentException(
@@ -96,73 +93,11 @@ class BuckStarlarkCallable implements StarlarkMethod {
     return new BuckStarlarkCallable(name, skylarkParams);
   }
 
-  @Override
   public String name() {
     return methodName;
   }
 
-  @Override
-  public Param[] parameters() {
+  public BuckStarlarkParam[] parameters() {
     return skylarkParams;
-  }
-
-  @Override
-  public Class<? extends Annotation> annotationType() {
-    return StarlarkMethod.class;
-  }
-
-  @Override
-  public String doc() {
-    return "";
-  }
-
-  @Override
-  public boolean documented() {
-    return false;
-  }
-
-  @Override
-  public boolean structField() {
-    return false;
-  }
-
-  @Override
-  public Param extraPositionals() {
-    return BuckStarlarkParam.NONE;
-  }
-
-  @Override
-  public Param extraKeywords() {
-    return BuckStarlarkParam.NONE;
-  }
-
-  @Override
-  public boolean selfCall() {
-    return false;
-  }
-
-  @Override
-  public boolean allowReturnNones() {
-    return false;
-  }
-
-  @Override
-  public boolean useStarlarkThread() {
-    return false;
-  }
-
-  @Override
-  public boolean useStarlarkSemantics() {
-    return false;
-  }
-
-  @Override
-  public String enableOnlyWithFlag() {
-    return "";
-  }
-
-  @Override
-  public String disableWithFlag() {
-    return "";
   }
 }
