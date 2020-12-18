@@ -60,7 +60,8 @@ public class ExactPathMatcher implements PathMatcher {
     return this.path.getPath().equals(path);
   }
 
-  private String getGlob() {
+  @Override
+  public String getGlob() {
     return path.toString();
   }
 

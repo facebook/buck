@@ -18,7 +18,6 @@ package com.facebook.buck.io.filesystem;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -48,9 +47,17 @@ public class RecursiveFileMatcherTest {
   @Test
   public void usesWatchmanQueryToMatchProvidedBasePath() {
     RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("path"));
-    assertEquals(
+    assertThat(
         matcher.toWatchmanMatchQuery(EnumSet.noneOf(Capability.class)),
-        ImmutableList.of("match", "path" + File.separator + "**", "wholename"));
+        equalTo(ImmutableList.of("match", "path" + File.separator + "**", "wholename")));
+  }
+
+  @Test
+  public void watchmanQueryWithDirnameCapability() {
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("path"));
+    assertThat(
+        matcher.toWatchmanMatchQuery(EnumSet.of(Capability.DIRNAME)),
+        equalTo(ImmutableList.of("dirname", "path")));
   }
 
   @Test
@@ -59,5 +66,12 @@ public class RecursiveFileMatcherTest {
     PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
     assertTrue(pathOrGlob.isPath());
     assertThat(pathOrGlob.getValue(), equalTo("path"));
+  }
+
+  @Test
+  public void getGlob() {
+    RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("path"));
+    String glob = matcher.getGlob();
+    assertThat(glob, equalTo("path" + File.separator + "**"));
   }
 }

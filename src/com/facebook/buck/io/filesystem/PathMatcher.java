@@ -40,6 +40,9 @@ public interface PathMatcher extends java.nio.file.PathMatcher {
    */
   PathOrGlob getPathOrGlob();
 
+  /** Returns a glob pattern identifying paths that should be matched by this matcher. */
+  String getGlob();
+
   /**
    * Wrapper around type of the path matcher's {@link #getPathOrGlob} return value (Path or Glob
    * type and a value).

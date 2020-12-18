@@ -65,7 +65,8 @@ public class GlobPatternMatcher implements PathMatcher {
     return globPatternMatcher.matches(path);
   }
 
-  private String getGlob() {
+  @Override
+  public String getGlob() {
     return globPattern;
   }
 

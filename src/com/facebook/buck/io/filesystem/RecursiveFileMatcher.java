@@ -66,17 +66,20 @@ public class RecursiveFileMatcher implements PathMatcher {
 
   @Override
   public ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities) {
-    RelPath ignorePath = basePath;
     if (capabilities.contains(Capability.DIRNAME)) {
-      return ImmutableList.of("dirname", ignorePath.toString());
-    } else {
-      return ImmutableList.of("match", ignorePath + File.separator + "**", "wholename");
+      return ImmutableList.of("dirname", getPath().toString());
     }
+    return ImmutableList.of("match", getGlob(), "wholename");
   }
 
   @Override
   public PathOrGlob getPathOrGlob() {
     return PathOrGlob.path(getPath());
+  }
+
+  @Override
+  public String getGlob() {
+    return getPath() + File.separator + "**";
   }
 
   /** @return The matcher for paths that start with {@code basePath}. */
