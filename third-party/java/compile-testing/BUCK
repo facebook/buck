@@ -1,0 +1,11 @@
+prebuilt_jar(
+    name = "compile-testing",
+    binary_jar = "compile-testing-0.19.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    source_jar = "compile-testing-0.19-sources.jar",
+    visibility = [
+        "//third-party/java/bazel/...",
+    ],
+)
