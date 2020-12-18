@@ -6,7 +6,6 @@
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/modules/tip/gen" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/modules/tip/gen" />
         <option name="RES_FOLDERS_RELATIVE_PATH" value="" />
-        <option name="LIBRARY_PROJECT" value="true" />
         <option name="PROJECT_TYPE" value="1" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />
         <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
