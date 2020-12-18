@@ -38,14 +38,16 @@ public class ChromeTraceEventMatcher extends BaseMatcher<ChromeTraceEvent> {
 
   @Override
   public boolean matches(Object actual) {
-    if (actual instanceof ChromeTraceEvent) {
-      ChromeTraceEvent object = (ChromeTraceEvent) actual;
-      return expected.getCategory().equals(object.getCategory())
-          && expected.getTitle().equals(object.getTitle())
-          && expected.getDataMap().equals(object.getDataMap())
-          && expected.getStatus().equals(object.getStatus());
+    if (!(actual instanceof ChromeTraceEvent)) {
+      return false;
     }
-    return false;
+
+    ChromeTraceEvent chromeTraceEvent = (ChromeTraceEvent) actual;
+    return expected.getCategory().equals(chromeTraceEvent.getCategory())
+        && expected.getTitle().equals(chromeTraceEvent.getTitle())
+        && expected.getDataMap().equals(chromeTraceEvent.getDataMap())
+        && expected.getStatus().equals(chromeTraceEvent.getStatus())
+        && expected.getDuration().equals(chromeTraceEvent.getDuration());
   }
 
   @Override

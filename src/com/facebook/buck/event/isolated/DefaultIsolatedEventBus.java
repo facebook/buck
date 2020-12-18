@@ -37,6 +37,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.Duration;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.Instant;
@@ -48,7 +49,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
-  private static final Logger LOG = Logger.get(DefaultIsolatedEventBus.class.getSimpleName());
+  private static final Logger LOG = Logger.get(DefaultIsolatedEventBus.class);
   private static final String THREAD_NAME = "DefaultIsolatedEventBus";
   public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
 
@@ -57,14 +58,17 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   private final Clock clock;
   private final ListeningExecutorService executorService;
   private final int shutdownTimeoutMillis;
+  private final long startExecutionEpochMillis;
 
-  public DefaultIsolatedEventBus(BuildId buildId, OutputStream outputStream) {
+  public DefaultIsolatedEventBus(
+      BuildId buildId, OutputStream outputStream, long startExecutionEpochMillis) {
     this(
         buildId,
         outputStream,
         new DefaultClock(true),
         MoreExecutors.listeningDecorator(MostExecutors.newSingleThreadExecutor(THREAD_NAME)),
-        DEFAULT_SHUTDOWN_TIMEOUT_MS);
+        DEFAULT_SHUTDOWN_TIMEOUT_MS,
+        startExecutionEpochMillis);
   }
 
   public DefaultIsolatedEventBus(
@@ -72,12 +76,14 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
       OutputStream outputStream,
       Clock clock,
       ListeningExecutorService executorService,
-      int shutdownTimeoutMillis) {
+      int shutdownTimeoutMillis,
+      long startExecutionEpochMillis) {
     this.buildId = buildId;
     this.outputStream = outputStream;
     this.clock = clock;
     this.executorService = executorService;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
+    this.startExecutionEpochMillis = startExecutionEpochMillis;
   }
 
   @Override
@@ -121,7 +127,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   @Override
   public void post(StepEvent event, Instant atTime, long threadId) {
     long millis = atTime.toEpochMilli();
-    long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
+    long nano = clock.nanoTime();
     long threadUserNanoTime = clock.threadUserNanoTime(threadId);
     event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
     writeStepEvent(event);
@@ -146,7 +152,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   @Override
   public void post(SimplePerfEvent event, Instant atTime, long threadId) {
     long millis = atTime.toEpochMilli();
-    long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
+    long nano = clock.nanoTime();
     long threadUserNanoTime = clock.threadUserNanoTime(threadId);
     event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
     writeChromeTraceEvent(event);
@@ -231,6 +237,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setStepStatus(getStepStatus(event))
             .setStepType(event.getShortStepName())
             .setDescription(event.getDescription())
+            .setDuration(getDuration(event))
             .build();
     writeToNamedPipe(eventTypeMessage, stepEvent);
   }
@@ -246,9 +253,14 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setCategory(event.getCategory())
             .setTitle(event.getTitle().getValue())
             .setStatus(convertEventType(event))
-            .putAllData(Maps.transformValues(event.getEventInfo(), object -> object.toString()))
+            .putAllData(Maps.transformValues(event.getEventInfo(), Object::toString))
+            .setDuration(getDuration(event))
             .build();
     writeToNamedPipe(eventTypeMessage, chromeTraceEvent);
+  }
+
+  private Duration getDuration(BuckEvent event) {
+    return DurationUtils.millisToDuration(event.getTimestampMillis() - startExecutionEpochMillis);
   }
 
   private ChromeTraceEvent.ChromeTraceEventStatus convertEventType(SimplePerfEvent event) {

@@ -99,8 +99,10 @@ public class ExternalActionsExecutable {
     ImmutableList<IsolatedStep> stepsToExecute =
         BuildStepsRetriever.getStepsForBuildable(parsedArgs);
 
+    long startExecutionEpochMillis = System.currentTimeMillis();
     try (IsolatedEventBus eventBus =
-        new DefaultIsolatedEventBus(parsedEnvVars.getBuildUuid(), outputStream)) {
+        new DefaultIsolatedEventBus(
+            parsedEnvVars.getBuildUuid(), outputStream, startExecutionEpochMillis)) {
       IsolatedExecutionContext executionContext =
           IsolatedExecutionContext.of(
               eventBus,

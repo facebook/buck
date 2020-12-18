@@ -48,20 +48,26 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.protobuf.Duration;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class IsolatedStepsRunnerTest {
+
+  private static final Instant AT_TIME = Instant.parse("2020-12-15T12:13:14.123456789Z");
+  private static final int CLOCK_SHIFT_IN_SECONDS = 123;
 
   private static final Verbosity VERBOSITY_FOR_TEST = Verbosity.STANDARD_INFORMATION;
   private static final Ansi ANSI_FOR_TEST = new Ansi(true);
@@ -211,13 +217,16 @@ public class IsolatedStepsRunnerTest {
   }
 
   private IsolatedExecutionContext createContext(AbsPath root) throws Exception {
+    long startExecutionMillis = AT_TIME.toEpochMilli();
     IsolatedEventBus buckEventBus =
         new DefaultIsolatedEventBus(
             BUILD_UUID_FOR_TEST,
             new FileOutputStream(downwardApiFile),
-            new DefaultClock(),
+            FakeClock.of(
+                startExecutionMillis + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             MoreExecutors.newDirectExecutorService(),
-            DefaultIsolatedEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS);
+            DefaultIsolatedEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS,
+            startExecutionMillis);
     Console console = new Console(VERBOSITY_FOR_TEST, System.out, System.err, ANSI_FOR_TEST);
     ProcessExecutor defaultProcessExecutor = new DefaultProcessExecutor(console);
 
@@ -241,6 +250,7 @@ public class IsolatedStepsRunnerTest {
             .setDescription(step.getIsolatedStepDescription(context))
             .setStepType(step.getShortName())
             .setStepStatus(stepStatus)
+            .setDuration(Duration.newBuilder().setSeconds(CLOCK_SHIFT_IN_SECONDS).build())
             .build();
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     StepEvent actualEvent = protocol.readEvent(inputStream, actualEventType);

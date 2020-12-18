@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogLevel;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.testutil.ChromeTraceEventMatcher;
 import com.facebook.buck.downwardapi.testutil.StepEventMatcher;
@@ -36,13 +37,16 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.protobuf.Duration;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.junit.After;
 import org.junit.Before;
@@ -52,7 +56,13 @@ import org.junit.rules.ExpectedException;
 
 public class DefaultIsolatedEventBusTest {
 
+  private static final DownwardProtocol DOWNWARD_PROTOCOL =
+      DownwardProtocolType.BINARY.getDownwardProtocol();
+
   private static final int TIMEOUT_MILLIS = 500;
+  private static final long NOW_MILLIS =
+      Instant.parse("2020-12-15T12:13:14.123456789Z").toEpochMilli();
+  private static final int CLOCK_SHIFT_IN_SECONDS = 42;
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public final ExpectedException exception = ExpectedException.none();
@@ -72,9 +82,10 @@ public class DefaultIsolatedEventBusTest {
         new DefaultIsolatedEventBus(
             BuckEventBusForTests.BUILD_ID_FOR_TEST,
             outputStream,
-            FakeClock.doNotCare(),
+            FakeClock.of(NOW_MILLIS + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             executorService,
-            TIMEOUT_MILLIS);
+            TIMEOUT_MILLIS,
+            NOW_MILLIS);
   }
 
   @After
@@ -94,10 +105,9 @@ public class DefaultIsolatedEventBusTest {
             .build();
 
     testEventBus.post(consoleEvent);
-    EventTypeMessage.EventType actualEventType =
-        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    EventTypeMessage.EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     com.facebook.buck.downward.model.ConsoleEvent actualConsoleEvent =
-        DownwardProtocolType.BINARY.getDownwardProtocol().readEvent(inputStream, actualEventType);
+        DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType);
 
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
     assertThat(actualConsoleEvent, equalTo(expectedConsoleEvent));
@@ -106,18 +116,23 @@ public class DefaultIsolatedEventBusTest {
   @Test
   public void stepEventCanBeWrittenToOutputStream() throws Exception {
     StepEvent stepEvent = StepEvent.started("short_name", "my_description", UUID.randomUUID());
+    int secondsElapsedTillEventOccurred = 123;
     com.facebook.buck.downward.model.StepEvent expectedStepEvent =
         com.facebook.buck.downward.model.StepEvent.newBuilder()
             .setDescription("my_description")
             .setStepType("short_name")
             .setStepStatus(com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED)
+            .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
             .build();
 
-    testEventBus.post(stepEvent);
-    EventTypeMessage.EventType actualEventType =
-        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    testEventBus.post(
+        stepEvent,
+        Instant.ofEpochMilli(
+            NOW_MILLIS + TimeUnit.SECONDS.toMillis(secondsElapsedTillEventOccurred)),
+        Thread.currentThread().getId());
+    EventTypeMessage.EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     com.facebook.buck.downward.model.StepEvent actualStepEvent =
-        DownwardProtocolType.BINARY.getDownwardProtocol().readEvent(inputStream, actualEventType);
+        DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType);
 
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.STEP_EVENT));
     assertThat(actualStepEvent, StepEventMatcher.equalsStepEvent(expectedStepEvent));
@@ -134,6 +149,8 @@ public class DefaultIsolatedEventBusTest {
     // Closing the scope sends a finish event
     scope.close();
 
+    int secondsElapsedTillEventOccurred = CLOCK_SHIFT_IN_SECONDS;
+
     ChromeTraceEvent expectedStartEvent =
         ChromeTraceEvent.newBuilder()
             .setEventId(123)
@@ -141,6 +158,7 @@ public class DefaultIsolatedEventBusTest {
             .setTitle("my_event")
             .setCategory("buck")
             .putData("my_path_key", Paths.get("my_path_value").toString())
+            .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
             .build();
     ChromeTraceEvent expectedFinishEvent =
         ChromeTraceEvent.newBuilder()
@@ -148,23 +166,18 @@ public class DefaultIsolatedEventBusTest {
             .setStatus(ChromeTraceEvent.ChromeTraceEventStatus.END)
             .setTitle("my_event")
             .setCategory("buck")
+            .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
             .build();
 
-    EventTypeMessage.EventType actualStartEventType =
-        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    EventTypeMessage.EventType actualStartEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     ChromeTraceEvent actualStartEvent =
-        DownwardProtocolType.BINARY
-            .getDownwardProtocol()
-            .readEvent(inputStream, actualStartEventType);
+        DOWNWARD_PROTOCOL.readEvent(inputStream, actualStartEventType);
     assertThat(actualStartEventType, equalTo(EventTypeMessage.EventType.CHROME_TRACE_EVENT));
     assertThat(actualStartEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedStartEvent));
 
-    EventTypeMessage.EventType actualFinishEventType =
-        DownwardProtocolType.BINARY.getDownwardProtocol().readEventType(inputStream);
+    EventTypeMessage.EventType actualFinishEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     ChromeTraceEvent actualFinishEvent =
-        DownwardProtocolType.BINARY
-            .getDownwardProtocol()
-            .readEvent(inputStream, actualFinishEventType);
+        DOWNWARD_PROTOCOL.readEvent(inputStream, actualFinishEventType);
     assertThat(actualFinishEventType, equalTo(EventTypeMessage.EventType.CHROME_TRACE_EVENT));
     assertThat(actualFinishEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedFinishEvent));
 

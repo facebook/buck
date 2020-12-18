@@ -38,13 +38,15 @@ public class StepEventMatcher extends BaseMatcher<StepEvent> {
 
   @Override
   public boolean matches(Object actual) {
-    if (actual instanceof StepEvent) {
-      StepEvent object = (StepEvent) actual;
-      return expected.getDescription().equals(object.getDescription())
-          && expected.getStepStatus().equals(object.getStepStatus())
-          && expected.getStepType().equals(object.getStepType());
+    if (!(actual instanceof StepEvent)) {
+      return false;
     }
-    return false;
+
+    StepEvent stepEvent = (StepEvent) actual;
+    return expected.getDescription().equals(stepEvent.getDescription())
+        && expected.getStepStatus().equals(stepEvent.getStepStatus())
+        && expected.getStepType().equals(stepEvent.getStepType())
+        && expected.getDuration().equals(stepEvent.getDuration());
   }
 
   @Override
