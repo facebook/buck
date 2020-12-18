@@ -23,8 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.MethodDescriptor;
-import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
@@ -155,8 +153,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
                        Method object to use in many cases (e.g. if the MethodHandle is a
                        constructor). */
           inferSkylarkCallableAnnotationFromMethod(
-              methodName, method, namedParams, defaultSkylarkValues, noneableParams),
-          BuckStarlark.BUCK_STARLARK_SEMANTICS);
+              methodName, method, namedParams, defaultSkylarkValues, noneableParams));
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException();
     }
