@@ -60,6 +60,22 @@ public class BuildBuckConfigTest {
   }
 
   @Test
+  public void testKeepGoingEnabledTrueCheck() {
+    BuildBuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("build", ImmutableMap.of("keep_going", "true")))
+            .build()
+            .getView(BuildBuckConfig.class);
+    assertThat(buckConfig.getBuildKeepGoingEnabled(), Matchers.equalTo(true));
+  }
+
+  @Test
+  public void testKeepGoingEnabledDefaultCheck() {
+    BuildBuckConfig buckConfig = FakeBuckConfig.builder().build().getView(BuildBuckConfig.class);
+    assertThat(buckConfig.getBuildKeepGoingEnabled(), Matchers.equalTo(false));
+  }
+
+  @Test
   public void testBuildThreadsRatioGreaterThanZero() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()

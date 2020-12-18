@@ -381,6 +381,10 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }
+    // check if keep-going was enabled in buck config and override --keep-going if necessary
+    BuildBuckConfig buildBuckConfig = BuildBuckConfig.of(params.getBuckConfig());
+    setKeepGoing(buildBuckConfig.getBuildKeepGoingEnabled() || isKeepGoing());
+
     BuildEvent.Started started = postBuildStartedEvent(params);
     BuildRunResult result =
         ImmutableBuildRunResult.ofImpl(ExitCode.BUILD_ERROR, ImmutableList.of());
