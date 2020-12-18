@@ -75,7 +75,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             false,
             false,
             0,
-            0,
             Long.MAX_VALUE);
     String testContents = "hi, i am a test file.";
     AbsPath testFile = tmp.newFile();
@@ -111,7 +110,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             true,
             false,
             100,
-            100,
             0);
 
     String testContents = "hi, i am a CAS test file. O__O";
@@ -140,15 +138,7 @@ public class HybridCASSecondLevelArtifactCacheTest {
             tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
-            baseCache,
-            projectFilesystem,
-            buckEventBus,
-            Optional.of(casClient),
-            true,
-            true,
-            100,
-            100,
-            0);
+            baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, true, 100, 0);
 
     String testContents = "hey, I am a CAS test file.";
     AbsPath testFile = tmp.newFile();
@@ -184,7 +174,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             Optional.of(casClient),
             true,
             true,
-            100,
             100,
             Long.MAX_VALUE);
 
@@ -222,7 +211,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             true,
             false,
             100,
-            100,
             0);
 
     Futures.getUnchecked(cache.fetchAsync(null, "cas/Hello!", LazyPath.ofInstance(tmp.newFile())));
@@ -241,7 +229,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             Optional.of(casClient),
             true,
             false,
-            100,
             100,
             0);
 
@@ -266,7 +253,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             true,
             false,
             100,
-            100,
             0);
 
     Futures.getUnchecked(
@@ -285,7 +271,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
             Optional.empty(),
             false,
             false,
-            100,
             100,
             Long.MAX_VALUE);
     String testContents = "hi, i am a test file.";

@@ -59,7 +59,6 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
   private final Optional<ContentAddressedStorageClient> casClient;
   private final Boolean enableWrite;
   private final Boolean enableDoubleWriteWithCAS;
-  private final int artifactPartitionWritePercentage;
   private final int artifactPartitionReadPercentage;
   private final long artifactCASStoreMinimumSize;
 
@@ -72,7 +71,6 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       Optional<ContentAddressedStorageClient> casClient,
       Boolean enableWrite,
       Boolean enableDoubleWriteWithCAS,
-      int artifactPartitionWritePercentage,
       int artifactPartitionReadPercentage,
       long artifactCASStoreMinimumSize) {
 
@@ -85,7 +83,6 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       LOG.warn(
           "Ignore the enableDoubleWriteWithCAS as it requires enableCASWrite to be true as well");
     }
-    this.artifactPartitionWritePercentage = artifactPartitionWritePercentage;
     this.artifactPartitionReadPercentage = artifactPartitionReadPercentage;
     this.artifactCASStoreMinimumSize = artifactCASStoreMinimumSize;
 
@@ -181,10 +178,7 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
 
   private boolean shouldWriteCAS(Digest digest) {
     boolean isDigestSizeValid = digest.getSizeBytes() >= artifactCASStoreMinimumSize;
-    return enableWrite
-        && casClient.isPresent()
-        && isDigestSizeValid
-        && (Math.abs(digest.getHash().hashCode()) % 100) < artifactPartitionWritePercentage;
+    return enableWrite && casClient.isPresent() && isDigestSizeValid;
   }
 
   private ListenableFuture<Unit> doCasStoreAsync(
