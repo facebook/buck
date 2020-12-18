@@ -21,7 +21,6 @@ import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.ide.highlighter.JavaFileType;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiIdentifier;
@@ -47,23 +46,24 @@ public class SelectedTestRunLineMarkerContributor extends RunLineMarkerContribut
       if (parent instanceof PsiClass) {
         PsiClass psiClass = (PsiClass) parent;
         if (BuckTestDetector.isTestClass(psiClass)) {
-          return createInfo(psiClass, null);
+          return createInfo(psiClass, null, true);
         }
       } else if (parent instanceof PsiMethod) {
         PsiMethod psiMethod = (PsiMethod) parent;
         PsiClass psiClass = psiMethod.getContainingClass();
         if (BuckTestDetector.isTestMethod(psiMethod)) {
-          return createInfo(psiClass, psiMethod);
+          return createInfo(psiClass, psiMethod, false);
         }
       }
     }
     return null;
   }
 
-  private Info createInfo(PsiClass psiClass, PsiMethod psiMethod) {
+  private Info createInfo(PsiClass psiClass, PsiMethod psiMethod, boolean isClass) {
     // TODO: Verify that this file is part of a buck test target
     return new Info(
-        IconLoader.getIcon("/icons/buck_icon.png"),
+        // state not used to determine icon since prioritising testing in Buck instead of IntelliJ
+        getTestStateIcon(/* state= */ null, isClass),
         new AnAction[] {
           new FixedBuckTestAction(psiClass, psiMethod, false),
           new FixedBuckTestAction(psiClass, psiMethod, true),

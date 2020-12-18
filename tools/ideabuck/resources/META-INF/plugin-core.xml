@@ -86,7 +86,7 @@
     <psi.referenceContributor implementation="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierReferenceContributor"/>
 
     <runLineMarkerContributor language="JAVA"
-      implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
+      implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor" order="first"/>
     <runLineMarkerContributor language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedBuckLineMarkerContributor"/>
     <additionalTextAttributes scheme="Default" file="colorSchemes/BuckDefault.xml"/>
