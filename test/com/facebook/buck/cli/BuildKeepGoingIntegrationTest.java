@@ -28,25 +28,54 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameter;
+import org.junit.runners.Parameterized.Parameters;
 
 /** Verifies that {@code buck build --keep-going} works as intended. */
+@RunWith(Parameterized.class)
 public class BuildKeepGoingIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public TemporaryPaths tmpFolderForBuildReport = new TemporaryPaths();
 
+  @Parameters
+  public static Iterable<Boolean> inputs() {
+    return Arrays.asList(true, false);
+  }
+
+  @Parameter public boolean useConfig;
+
+  private ProjectWorkspace workspace;
+  private ImmutableList.Builder<String> runBuckBuildArgumentsBuilder;
+
+  @Before
+  public void setUp() throws IOException {
+    String scenario = "keep_going";
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp).setUp();
+
+    runBuckBuildArgumentsBuilder = new ImmutableList.Builder<>();
+
+    if (useConfig) {
+      workspace.addBuckConfigLocalOption("build", "keep_going", "true");
+    } else {
+      runBuckBuildArgumentsBuilder.add("--keep-going");
+    }
+  }
+
   @Test
   public void testKeepGoingWithMultipleSuccessfulTargets() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
-
-    ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
+    ProcessResult result = buildTwoGoodRulesAndAssertSuccess();
     // genrule uses legacy format
     String genruleOutputPath =
         BuildTargetPaths.getGenPath(
@@ -65,9 +94,7 @@ public class BuildKeepGoingIntegrationTest {
 
   @Test
   public void testKeepGoingWithOneFailingTarget() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
-
+    runBuckBuildArgumentsBuilder.add("//:rule_with_output", "//:failing_rule");
     // genrule uses legacy format
     String genruleOutputPath =
         BuildTargetPaths.getGenPath(
@@ -78,7 +105,7 @@ public class BuildKeepGoingIntegrationTest {
             .toString();
     ProcessResult result =
         workspace
-            .runBuckBuild("--keep-going", "//:rule_with_output", "//:failing_rule")
+            .runBuckBuild(buildArgsAndReturnArray(runBuckBuildArgumentsBuilder))
             .assertFailure();
     String expectedReport =
         linesToText(
@@ -92,8 +119,6 @@ public class BuildKeepGoingIntegrationTest {
 
   @Test
   public void testVariousSuccessTypesInReport() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
     workspace.enableDirCache();
 
     // genrule uses legacy format
@@ -104,7 +129,7 @@ public class BuildKeepGoingIntegrationTest {
                 "%s")
             .resolve("rule_with_output.txt")
             .toString();
-    ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
+    ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess();
     String expectedReport1 =
         linesToText(
             "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
@@ -112,7 +137,7 @@ public class BuildKeepGoingIntegrationTest {
             "");
     assertThat(result1.getStderr(), containsString(expectedReport1));
 
-    ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess(workspace);
+    ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess();
     String expectedReport2 =
         linesToText(
             "OK   //:rule_with_output MATCHING_RULE_KEY " + genruleOutputPath,
@@ -122,7 +147,7 @@ public class BuildKeepGoingIntegrationTest {
 
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
-    ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
+    ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess();
     String expectedReport3 =
         linesToText(
             "OK   //:rule_with_output FETCHED_FROM_CACHE " + genruleOutputPath,
@@ -133,25 +158,23 @@ public class BuildKeepGoingIntegrationTest {
 
   @Test
   public void testKeepGoingWithBuildReport() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
-
     AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
-    workspace
-        .runBuckBuild(
-            "--build-report",
-            buildReport.toString(),
-            "--keep-going",
-            "//:rule_with_output",
-            "//:failing_rule")
-        .assertFailure();
+    runBuckBuildArgumentsBuilder.add(
+        "--build-report", buildReport.toString(), "//:rule_with_output", "//:failing_rule");
+    workspace.runBuckBuild(buildArgsAndReturnArray(runBuckBuildArgumentsBuilder)).assertFailure();
 
     TestUtils.assertBuildReport(workspace, tmp, buildReport, "expected_build_report.json");
   }
 
-  private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace) {
+  private ProcessResult buildTwoGoodRulesAndAssertSuccess() {
+    runBuckBuildArgumentsBuilder.add("//:rule_with_output", "//:rule_without_output");
     return workspace
-        .runBuckBuild("--keep-going", "//:rule_with_output", "//:rule_without_output")
+        .runBuckBuild(buildArgsAndReturnArray(runBuckBuildArgumentsBuilder))
         .assertSuccess();
+  }
+
+  private String[] buildArgsAndReturnArray(ImmutableList.Builder<String> builder) {
+    ImmutableList<String> list = builder.build();
+    return list.toArray(new String[0]);
   }
 }
