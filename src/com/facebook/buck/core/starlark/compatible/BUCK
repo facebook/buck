@@ -13,6 +13,7 @@ java_library(
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/model/label:label",
+        "//src/com/facebook/buck/core/starlark/eventhandler:eventhandler",
         "//src/com/facebook/buck/rules/param:param",
         "//third-party/java/bazel:bazel",
     ],

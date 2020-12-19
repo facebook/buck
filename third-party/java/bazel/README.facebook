@@ -1,5 +1,6 @@
-This version contains a copy of a subset of bazel repository (version
-2.1.0 at the moment of writing) with certain modifications needed
+This version contains a copy of a subset of bazel repository (revision
+9fba7c5cf577f6b2e7537b894ce90ce81e352d77 at the moment of writing)
+with certain modifications needed
 for Buck.
 
 Incomplete list of changes:

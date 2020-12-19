@@ -18,10 +18,10 @@ package com.facebook.buck.skylark.packages;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.events.EventHandler;
 import java.util.Map;
 
 /** Exposes package information to Skylark functions. */

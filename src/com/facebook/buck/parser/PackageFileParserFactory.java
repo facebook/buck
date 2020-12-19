@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
+import com.facebook.buck.core.starlark.eventhandler.EventKind;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.watchman.Watchman;
@@ -39,7 +40,6 @@ import com.facebook.buck.skylark.parser.SkylarkPackageFileParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.EventKind;
 import java.util.Optional;
 
 /** Factory for creating instances of {@link PackageFileParser}. */

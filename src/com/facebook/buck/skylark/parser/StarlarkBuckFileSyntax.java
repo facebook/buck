@@ -16,8 +16,8 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.google.devtools.build.lib.events.Event;
-import com.google.devtools.build.lib.events.EventHandler;
+import com.facebook.buck.core.starlark.eventhandler.Event;
+import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.google.devtools.build.lib.syntax.Argument;
 import com.google.devtools.build.lib.syntax.CallExpression;
 import com.google.devtools.build.lib.syntax.DefStatement;

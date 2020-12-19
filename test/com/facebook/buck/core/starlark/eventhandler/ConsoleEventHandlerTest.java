@@ -24,8 +24,6 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.events.Event;
-import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.syntax.Location;
 import java.io.IOException;
 import java.util.HashSet;

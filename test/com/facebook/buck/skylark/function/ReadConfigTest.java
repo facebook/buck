@@ -22,14 +22,14 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.eventhandler.Event;
+import com.facebook.buck.core.starlark.eventhandler.EventKind;
+import com.facebook.buck.core.starlark.eventhandler.PrintingEventHandler;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.events.Event;
-import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
