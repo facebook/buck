@@ -31,13 +31,18 @@ import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.skylark.parser.pojoizer.BuildFileManifestPojoizer;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Location;
+import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkFunction;
@@ -56,7 +61,7 @@ import javax.annotation.Nullable;
  * adds invocations to the parse context. Type checking is done with coercion later; it is not
  * checked in this class.
  */
-public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExportable {
+public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExportable {
 
   private static final String TEST_RULE_SUFFIX = "_test";
 
@@ -64,7 +69,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExpo
   @Nullable private String name = null;
   @Nullable private Label label = null;
   @Nullable private String exportedName = null;
-  private final FunctionSignature signature;
+  @VisibleForTesting final FunctionSignature signature;
   private final Tuple<Object> defaultValues;
   private final Location location;
   private final StarlarkCallable implementation;
@@ -104,27 +109,17 @@ public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExpo
                 .collect(ImmutableList.toImmutableList()));
   }
 
-  @Override
-  public FunctionSignature getSignature() {
-    return signature;
-  }
-
-  @Override
-  public Tuple<Object> getDefaultValues() {
-    return defaultValues;
-  }
-
   @SuppressWarnings("unchecked")
   @Override
   public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
 
     Object[] args =
-        BaseFunction.matchSignature(
+        matchSignaturePrivate(
             signature, this, defaultValues, thread.mutability(), positional, named);
 
     // We're being called directly somewhere that is not in the parser (e.g. with Location.BuiltIn)
-    ImmutableList<String> names = Objects.requireNonNull(this.getSignature()).getParameterNames();
+    ImmutableList<String> names = Objects.requireNonNull(signature).getParameterNames();
 
     ParseContext parseContext = ParseContext.getParseContext(thread, getName());
     ForwardRelativePath basePath = parseContext.getPackageContext().getBasePath();
@@ -162,6 +157,166 @@ public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExpo
     return Starlark.NONE;
   }
 
+  private static Object[] matchSignaturePrivate(
+      FunctionSignature signature,
+      StarlarkCallable func, // only for use in error messages
+      Tuple<Object> defaults,
+      @Nullable Mutability mu,
+      Object[] positional,
+      Object[] named)
+      throws EvalException {
+    // TODO(adonovan): simplify this function. Combine cases 1 and 2 without loss of efficiency.
+    // TODO(adonovan): reduce the verbosity of errors. Printing func.toString is often excessive.
+    // Make the error messages consistent in form.
+    // TODO(adonovan): report an error if there were missing values in 'defaults'.
+
+    Object[] arguments = new Object[signature.numParameters()];
+
+    ImmutableList<String> names = signature.getParameterNames();
+
+    // Note that this variable will be adjusted down if there are extra positionals,
+    // after these extra positionals are dumped into starParam.
+    int numPositionalArgs = positional.length;
+
+    int numMandatoryPositionalParams = signature.numMandatoryPositionals();
+    int numOptionalPositionalParams = signature.numOptionalPositionals();
+    int numMandatoryNamedOnlyParams = signature.numMandatoryNamedOnly();
+    int numOptionalNamedOnlyParams = signature.numOptionalNamedOnly();
+    boolean hasVarargs = signature.hasVarargs();
+    boolean hasKwargs = signature.hasKwargs();
+    int numPositionalParams = numMandatoryPositionalParams + numOptionalPositionalParams;
+    int numNamedOnlyParams = numMandatoryNamedOnlyParams + numOptionalNamedOnlyParams;
+    int numNamedParams = numPositionalParams + numNamedOnlyParams;
+    int kwargIndex = names.size() - 1; // only valid if hasKwargs
+
+    // (1) handle positional arguments
+    if (hasVarargs) {
+      // Nota Bene: we collect extra positional arguments in a (tuple,) rather than a [list],
+      // and this is actually the same as in Python.
+      Object varargs;
+      if (numPositionalArgs > numPositionalParams) {
+        varargs =
+            Tuple.wrap(Arrays.copyOfRange(positional, numPositionalParams, numPositionalArgs));
+        numPositionalArgs = numPositionalParams; // clip numPositionalArgs
+      } else {
+        varargs = Tuple.empty();
+      }
+      arguments[numNamedParams] = varargs;
+    } else if (numPositionalArgs > numPositionalParams) {
+      throw new EvalException(
+          null,
+          numPositionalParams > 0
+              ? "too many (" + numPositionalArgs + ") positional arguments in call to " + func
+              : func + " does not accept positional arguments, but got " + numPositionalArgs);
+    }
+
+    if (numPositionalArgs >= 0) {
+      System.arraycopy(positional, 0, arguments, 0, numPositionalArgs);
+    }
+
+    // (2) handle keyword arguments
+    if (named.length == 0) {
+      // Easy case (2a): there are no keyword arguments.
+      // All arguments were positional, so check we had enough to fill all mandatory positionals.
+      if (numPositionalArgs < numMandatoryPositionalParams) {
+        throw Starlark.errorf(
+            "insufficient arguments received by %s (got %s, expected at least %s)",
+            func, numPositionalArgs, numMandatoryPositionalParams);
+      }
+      // We had no named argument, so fail if there were mandatory named-only parameters
+      if (numMandatoryNamedOnlyParams > 0) {
+        throw Starlark.errorf("missing mandatory keyword arguments in call to %s", func);
+      }
+      // Fill in defaults for missing optional parameters, that were conveniently grouped together,
+      // thanks to the absence of mandatory named-only parameters as checked above.
+      if (defaults != null) {
+        int endOptionalParams = numPositionalParams + numOptionalNamedOnlyParams;
+        for (int i = numPositionalArgs; i < endOptionalParams; i++) {
+          arguments[i] = defaults.get(i - numMandatoryPositionalParams);
+        }
+      }
+      // If there's a kwarg, it's empty.
+      if (hasKwargs) {
+        arguments[kwargIndex] = Dict.of(mu);
+      }
+    } else {
+      // general case (2b): some keyword arguments may correspond to named parameters
+      Dict<String, Object> kwargs = hasKwargs ? Dict.of(mu) : null;
+
+      // Accept the named arguments that were passed.
+      for (int i = 0; i < named.length; i += 2) {
+        String keyword = (String) named[i]; // safe
+        Object value = named[i + 1];
+        int pos = names.indexOf(keyword); // the list should be short, so linear scan is OK.
+        if (0 <= pos && pos < numNamedParams) {
+          if (arguments[pos] != null) {
+            throw Starlark.errorf("%s got multiple values for parameter '%s'", func, keyword);
+          }
+          arguments[pos] = value;
+        } else {
+          if (!hasKwargs) {
+            Set<String> unexpected = Sets.newHashSet();
+            for (int j = 0; j < named.length; j += 2) {
+              unexpected.add((String) named[j]);
+            }
+            unexpected.removeAll(names.subList(0, numNamedParams));
+            // TODO(adonovan): do spelling check.
+            throw Starlark.errorf(
+                "unexpected keyword%s '%s' in call to %s",
+                unexpected.size() > 1 ? "s" : "",
+                Joiner.on("', '").join(Ordering.natural().sortedCopy(unexpected)),
+                func);
+          }
+          int sz = kwargs.size();
+          kwargs.put(keyword, value, null);
+          if (kwargs.size() == sz) {
+            throw Starlark.errorf(
+                "%s got multiple values for keyword argument '%s'", func, keyword);
+          }
+        }
+      }
+      if (hasKwargs) {
+        arguments[kwargIndex] = kwargs;
+      }
+
+      // Check that all mandatory parameters were filled in general case 2b.
+      // Note: it's possible that numPositionalArgs > numMandatoryPositionalParams but that's OK.
+      for (int i = numPositionalArgs; i < numMandatoryPositionalParams; i++) {
+        if (arguments[i] == null) {
+          throw Starlark.errorf(
+              "missing mandatory positional argument '%s' while calling %s", names.get(i), func);
+        }
+      }
+
+      int endMandatoryNamedOnlyParams = numPositionalParams + numMandatoryNamedOnlyParams;
+      for (int i = numPositionalParams; i < endMandatoryNamedOnlyParams; i++) {
+        if (arguments[i] == null) {
+          throw Starlark.errorf(
+              "missing mandatory named-only argument '%s' while calling %s", names.get(i), func);
+        }
+      }
+
+      // Get defaults for those parameters that weren't passed.
+      if (defaults != null) {
+        for (int i = Math.max(numPositionalArgs, numMandatoryPositionalParams);
+            i < numPositionalParams;
+            i++) {
+          if (arguments[i] == null) {
+            arguments[i] = defaults.get(i - numMandatoryPositionalParams);
+          }
+        }
+        int numMandatoryParams = numMandatoryPositionalParams + numMandatoryNamedOnlyParams;
+        for (int i = numMandatoryParams + numOptionalPositionalParams; i < numNamedParams; i++) {
+          if (arguments[i] == null) {
+            arguments[i] = defaults.get(i - numMandatoryParams);
+          }
+        }
+      }
+    } // End of general case 2b for argument passing.
+
+    return arguments;
+  }
+
   /** Create an instance of {@link SkylarkUserDefinedRule} */
   public static SkylarkUserDefinedRule of(
       Location location,
@@ -189,6 +344,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements StarlarkExpo
         hiddenImplicitAttributes,
         inferRunInfo,
         test);
+  }
+
+  /** Function with a signature, used only in tests. */
+  interface BaseFunction extends StarlarkCallable {
+    FunctionSignature getSignature();
   }
 
   private static void validateImplementation(Location location, StarlarkCallable implementation)

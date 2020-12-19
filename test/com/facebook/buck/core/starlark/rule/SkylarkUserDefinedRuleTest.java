@@ -41,11 +41,9 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.CallExpression;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Location;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -54,7 +52,6 @@ import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
-import javax.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -70,18 +67,11 @@ public class SkylarkUserDefinedRuleTest {
       ImmutableMap.of(
           ParamName.bySnakeCase("name"), IMPLICIT_ATTRIBUTES.get(ParamName.bySnakeCase("name")));
 
-  public static class SimpleFunction extends BaseFunction {
+  public static class SimpleFunction implements SkylarkUserDefinedRule.BaseFunction {
 
     private final String name;
     private final FunctionSignature signature;
     private final Tuple<Object> defaultValues;
-
-    public SimpleFunction(
-        String name, FunctionSignature signature, ImmutableList<Object> defaultValues) {
-      this.name = name;
-      this.signature = signature;
-      this.defaultValues = Tuple.copyOf(defaultValues);
-    }
 
     public SimpleFunction(String name, FunctionSignature signature) {
       this.name = name;
@@ -92,12 +82,6 @@ public class SkylarkUserDefinedRuleTest {
     @Override
     public FunctionSignature getSignature() {
       return signature;
-    }
-
-    @Nullable
-    @Override
-    public Tuple<Object> getDefaultValues() {
-      return defaultValues;
     }
 
     @Override
@@ -204,7 +188,7 @@ public class SkylarkUserDefinedRuleTest {
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
-    assertEquals(expectedOrder, rule.getSignature().getParameterNames());
+    assertEquals(expectedOrder, rule.signature.getParameterNames());
     assertEquals(expectedRawArgs, ImmutableList.copyOf(rule.getAttrs().keySet()));
   }
 
@@ -241,7 +225,7 @@ public class SkylarkUserDefinedRuleTest {
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
-    assertEquals(expectedOrder, rule.getSignature().getParameterNames());
+    assertEquals(expectedOrder, rule.signature.getParameterNames());
   }
 
   @Test
@@ -419,8 +403,7 @@ public class SkylarkUserDefinedRuleTest {
       StarlarkThread env = newEnvironment(mutability);
 
       expectedException.expect(EvalException.class);
-      expectedException.expectMessage(
-          "missing mandatory named-only argument 'arg4' while calling @foo//bar:extension.bzl:baz_rule(*, name, arg2, arg4, arg1 = \"some string\", arg3 = 5)");
+      expectedException.expectMessage("missing mandatory named-only argument 'arg4' while calling");
       Starlark.call(
           env,
           rule,
