@@ -102,7 +102,7 @@ public class BuiltInProviderInfoTest {
 
   @ImmutableInfo(
       args = {"str_list", "my_info"},
-      defaultSkylarkValues = {"{\"foo\":\"bar\"}", "1"})
+      defaultSkylarkValues = {"{}", "1"})
   public abstract static class SomeInfoWithInstantiate
       extends BuiltInProviderInfo<SomeInfoWithInstantiate> {
     public static final BuiltInProvider<SomeInfoWithInstantiate> PROVIDER =
@@ -282,7 +282,7 @@ public class BuiltInProviderInfoTest {
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
     SomeInfoWithInstantiate someInfo4 = (SomeInfoWithInstantiate) o;
-    assertEquals(ImmutableList.of("foo"), someInfo4.str_list());
+    assertEquals(ImmutableList.<String>of(), someInfo4.str_list());
     assertEquals("4", someInfo4.myInfo());
   }
 

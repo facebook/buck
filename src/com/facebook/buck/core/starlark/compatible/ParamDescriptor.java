@@ -30,22 +30,15 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.FileOptions;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.NoneType;
-import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
@@ -134,8 +127,6 @@ final class ParamDescriptor {
   // A memoization of evalDefault, keyed by expression.
   // This cache is manually maintained (instead of using LoadingCache),
   // as default values may sometimes be recursively requested.
-  private static final ConcurrentHashMap<String, Object> defaultValueCache =
-      new ConcurrentHashMap<>();
 
   // Evaluates the default value expression for a parameter.
   private static Object evalDefault(String name, String expr) {
@@ -161,38 +152,19 @@ final class ParamDescriptor {
       return 1;
     } else if (expr.equals("[]")) {
       return StarlarkList.empty();
+    } else if (expr.equals("{}")) {
+      return Dict.empty();
     } else if (expr.equals("()")) {
       return Tuple.empty();
-    } else if (expr.equals("\" \"")) {
-      return " ";
     }
 
-    Object x = defaultValueCache.get(expr);
-    if (x != null) {
-      return x;
+    Matcher strLitMatcher = Pattern.compile("\"([^\"\\\\]*)\"").matcher(expr);
+    if (strLitMatcher.matches()) {
+      return strLitMatcher.group(1);
     }
 
-    // We can't evaluate Starlark code until UNIVERSE is bootstrapped.
-    if (Starlark.UNIVERSE == null) {
-      throw new IllegalStateException("no bootstrap value for " + name + "=" + expr);
-    }
-
-    Module module = Module.create();
-    try (Mutability mu = Mutability.create("Builtin param default init")) {
-      // Note that this Starlark thread ignores command line flags.
-      StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
-
-      x = EvalUtils.eval(ParserInput.fromLines(expr), FileOptions.DEFAULT, module, thread);
-    } catch (InterruptedException ex) {
-      throw new IllegalStateException(ex); // can't happen
-    } catch (SyntaxError.Exception | EvalException ex) {
-      throw new IllegalArgumentException(
-          String.format(
-              "failed to evaluate default value '%s' of parameter '%s': %s",
-              expr, name, ex.getMessage()),
-          ex);
-    }
-    defaultValueCache.put(expr, x);
-    return x;
+    // not doing full default value parser for Buck builtin providers
+    throw new IllegalArgumentException(
+        "cannot parse default value for param: " + name + ": " + expr);
   }
 }
