@@ -29,7 +29,6 @@
 // limitations under the License.
 package com.facebook.buck.core.starlark.eventhandler;
 
-import com.google.devtools.build.lib.util.io.OutErr;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -61,45 +60,29 @@ public class PrintingEventHandler extends AbstractEventHandler implements EventH
   public static final PrintingEventHandler ERRORS_TO_STDERR =
       new PrintingEventHandler(EventKind.ERRORS_AND_OUTPUT);
 
-  private OutErr outErr;
-
-  /** Setup a printing event handler that prints events matching the mask. */
-  public PrintingEventHandler(OutErr outErr, Set<EventKind> mask) {
-    super(mask);
-    this.outErr = outErr;
-  }
-
   /**
    * Setup a printing event handler that prints events matching the mask. Events are printed to the
    * System.out and System.err unless/until redirected by a call to setOutErr().
    */
   public PrintingEventHandler(Set<EventKind> mask) {
-    this(OutErr.SYSTEM_OUT_ERR, mask);
-  }
-
-  /** Redirect all output to the specified OutErr stream pair. Returns the previous OutErr. */
-  public OutErr setOutErr(OutErr outErr) {
-    OutErr prev = this.outErr;
-    this.outErr = outErr;
-    return prev;
+    super(mask);
   }
 
   /** Print a description of the specified event to the appropriate output or error stream. */
   @Override
   public void handle(Event event) {
     if (!getEventMask().contains(event.getKind())) {
-      handleFollowUpEvents(event);
       return;
     }
     try {
       switch (event.getKind()) {
         case STDOUT:
-          outErr.getOutputStream().write(event.getMessageBytes());
-          outErr.getOutputStream().flush();
+          System.out.write(event.getMessageBytes());
+          System.out.flush();
           break;
         case STDERR:
-          outErr.getErrorStream().write(event.getMessageBytes());
-          outErr.getErrorStream().flush();
+          System.err.write(event.getMessageBytes());
+          System.err.flush();
           break;
           // $CASES-OMITTED$
         default:
@@ -109,8 +92,8 @@ public class PrintingEventHandler extends AbstractEventHandler implements EventH
             builder.append(event.getLocation()).append(": ");
           }
           builder.append(event.getMessage()).append("\n");
-          outErr.getErrorStream().write(builder.toString().getBytes(StandardCharsets.UTF_8));
-          outErr.getErrorStream().flush();
+          System.err.write(builder.toString().getBytes(StandardCharsets.UTF_8));
+          System.err.flush();
       }
     } catch (IOException e) {
       /*
@@ -119,21 +102,7 @@ public class PrintingEventHandler extends AbstractEventHandler implements EventH
        * translate I/O to STDOUT and STDERR events,
        * which would result in infinite recursion.
        */
-      outErr.printErrLn(e.getMessage());
-    }
-    handleFollowUpEvents(event);
-  }
-
-  private void handleFollowUpEvents(Event event) {
-    if (event.getStdErr() != null) {
-      handle(
-          Event.of(
-              EventKind.STDERR, null, event.getStdErr().getBytes(StandardCharsets.ISO_8859_1)));
-    }
-    if (event.getStdOut() != null) {
-      handle(
-          Event.of(
-              EventKind.STDOUT, null, event.getStdOut().getBytes(StandardCharsets.ISO_8859_1)));
+      System.err.println(e.getMessage());
     }
   }
 }
