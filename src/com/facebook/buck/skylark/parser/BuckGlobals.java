@@ -85,7 +85,7 @@ public abstract class BuckGlobals {
     builder.put("struct", StructProvider.STRUCT);
     if (getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
       Starlark.addMethods(builder, new SkylarkRuleFunctions(getLabelCache()));
-      Starlark.addModule(builder, new AttrModule());
+      builder.put("attr", new AttrModule());
       builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
       builder.putAll(getPerFeatureProvidersForBuildFile());
     } else {
@@ -111,7 +111,7 @@ public abstract class BuckGlobals {
     if (getImplicitNativeRulesState() == ImplicitNativeRulesState.ENABLED) {
       builder.putAll(getBuckRuleFunctions());
     }
-    Starlark.addModule(builder, getSkylarkFunctionModule());
+    builder.put("native", getSkylarkFunctionModule());
     addNativeModuleFunctions(builder);
     return builder.build();
   }
