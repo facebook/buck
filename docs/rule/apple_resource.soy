@@ -48,6 +48,13 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
 {/call}
 
 {call buck.arg}
+  {param name: 'content_dirs' /}
+  {param desc}
+  Set of paths of directories containing resource files that should be placed in an application bundle. Unlike <code>dirs</code>, the directories themselves are not placed in the bundle.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'files' /}
   {param desc}
   Set of paths of resource files that should be placed in an application bundle.

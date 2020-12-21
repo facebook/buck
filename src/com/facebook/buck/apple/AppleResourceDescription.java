@@ -84,6 +84,13 @@ public class AppleResourceDescription
                     SourcePathWithAppleBundleDestination.of(
                         sourcePath, destination.asGenericDestination(), false))
             .collect(Collectors.toCollection(supplier)));
+    builder.addAllDirsContainingResourceDirs(
+        appleResource.getContentDirs().stream()
+            .map(
+                sourcePath ->
+                    SourcePathWithAppleBundleDestination.of(
+                        sourcePath, destination.asGenericDestination(), false))
+            .collect(Collectors.toCollection(supplier)));
     builder.addAllResourceFiles(
         appleResource.getFiles().stream()
             .map(
@@ -108,6 +115,8 @@ public class AppleResourceDescription
   @RuleArg
   interface AbstractAppleResourceDescriptionArg extends BuildRuleArg {
     ImmutableSet<SourcePath> getDirs();
+
+    ImmutableSet<SourcePath> getContentDirs();
 
     ImmutableSet<SourcePath> getFiles();
 
