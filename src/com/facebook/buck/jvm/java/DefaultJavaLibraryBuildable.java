@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -197,7 +196,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
           CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
 
-      CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
       BaseBuckPaths buckPaths = filesystem.getBuckPaths();
 
       RelPath depFile =
@@ -212,7 +210,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
               unusedDependenciesAction,
               factory.exportedDeps,
               factory.buildozerPath,
-              cellNameResolver.getKnownCells().keySet(),
               factory.onlyPrintCommands,
               factory.doUltralightChecking);
 

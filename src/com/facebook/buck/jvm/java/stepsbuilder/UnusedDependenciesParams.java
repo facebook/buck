@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /** Parameters that used for {@link UnusedDependenciesFinder} creation. */
@@ -45,8 +44,6 @@ public abstract class UnusedDependenciesParams {
 
   public abstract Optional<String> getBuildozerPath();
 
-  public abstract ImmutableSet<Optional<String>> getKnownCellNames();
-
   public abstract boolean isOnlyPrintCommands();
 
   public abstract boolean isDoUltralightChecking();
@@ -60,7 +57,6 @@ public abstract class UnusedDependenciesParams {
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
       ImmutableList<String> exportedDeps,
       Optional<String> buildozerPath,
-      ImmutableSet<Optional<String>> knownCellNames,
       boolean onlyPrintCommands,
       boolean doUltralightChecking) {
     return ImmutableUnusedDependenciesParams.ofImpl(
@@ -71,7 +67,6 @@ public abstract class UnusedDependenciesParams {
         unusedDependenciesAction,
         exportedDeps,
         buildozerPath,
-        knownCellNames,
         onlyPrintCommands,
         doUltralightChecking);
   }
@@ -88,7 +83,6 @@ public abstract class UnusedDependenciesParams {
         unusedDependenciesParams.getUnusedDependenciesAction(),
         unusedDependenciesParams.getBuildozerPath(),
         unusedDependenciesParams.isOnlyPrintCommands(),
-        unusedDependenciesParams.getKnownCellNames(),
         cellToPathMappings,
         unusedDependenciesParams.getDepFile(),
         unusedDependenciesParams.isDoUltralightChecking());

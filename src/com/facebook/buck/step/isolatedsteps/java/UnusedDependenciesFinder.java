@@ -19,8 +19,6 @@ package com.facebook.buck.step.isolatedsteps.java;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.CellPathExtractor;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.cell.nameresolver.DefaultCellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -39,11 +37,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,8 +73,6 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public abstract boolean isOnlyPrintCommands();
 
-  public abstract ImmutableSet<Optional<String>> getKnownCellsNames();
-
   public abstract ImmutableMap<CanonicalCellName, RelPath> getCellToPathMappings();
 
   public abstract RelPath getDepFile();
@@ -93,7 +87,6 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
-      ImmutableSet<Optional<String>> knownCellNames,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       RelPath depFile,
       boolean doUltralightChecking) {
@@ -105,7 +98,6 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
         unusedDependenciesAction,
         buildozerPath,
         onlyPrintCommands,
-        knownCellNames,
         cellToPathMappings,
         depFile,
         doUltralightChecking);
@@ -119,8 +111,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     CellPathExtractor cellPathExtractor =
         IsolatedCellPathExtractor.of(ruleCellRoot, getCellToPathMappings());
 
-    ImmutableSet<AbsPath> usedJars =
-        loadUsedJarPaths(ruleCellRoot, cellPathExtractor, getCellNameResolver());
+    ImmutableSet<AbsPath> usedJars = loadUsedJarPaths(ruleCellRoot, cellPathExtractor);
     MessageHandler messageHandler = chooseMessageHandler(context);
 
     findUnusedDependenciesAndProcessMessages(ruleCellRoot, messageHandler, usedJars);
@@ -138,22 +129,14 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     }
   }
 
-  private CellNameResolver getCellNameResolver() {
-    Map<Optional<String>, CanonicalCellName> knownCells =
-        getKnownCellsNames().stream()
-            .collect(
-                Collectors.toMap(Function.identity(), cellName -> CanonicalCellName.of(cellName)));
-    return DefaultCellNameResolver.of(knownCells);
-  }
-
   private ImmutableSet<AbsPath> loadUsedJarPaths(
-      AbsPath root, CellPathExtractor cellPathExtractor, CellNameResolver cellNameResolver) {
+      AbsPath root, CellPathExtractor cellPathExtractor) {
     AbsPath depFile = toAbsPath(root, getDepFile());
     if (!depFile.toFile().exists()) {
       return ImmutableSet.of();
     }
     return DefaultClassUsageFileReader.loadUsedJarsFromFile(
-        root, cellPathExtractor, cellNameResolver, depFile, doUltralightChecking());
+        root, cellPathExtractor, depFile, doUltralightChecking());
   }
 
   private MessageHandler chooseMessageHandler(IsolatedExecutionContext executionContext) {

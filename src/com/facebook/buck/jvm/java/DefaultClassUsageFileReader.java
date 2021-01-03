@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.cell.CellPathExtractor;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -71,11 +70,7 @@ public class DefaultClassUsageFileReader {
     for (Map.Entry<String, ImmutableMap<String, Integer>> jarUsedClassesEntry :
         classUsageEntries.entrySet()) {
       AbsPath jarAbsolutePath =
-          convertRecordedJarPathToAbsolute(
-              root,
-              cellPathResolver,
-              cellPathResolver.getCellNameResolver(),
-              jarUsedClassesEntry.getKey());
+          convertRecordedJarPathToAbsolute(root, cellPathResolver, jarUsedClassesEntry.getKey());
       SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath.getPath());
       if (sourcePath == null) {
         // This indicates a dependency that wasn't among the deps of the rule; i.e.,
@@ -93,7 +88,6 @@ public class DefaultClassUsageFileReader {
   public static ImmutableSet<AbsPath> loadUsedJarsFromFile(
       AbsPath root,
       CellPathExtractor cellPathExtractor,
-      CellNameResolver cellNameResolver,
       AbsPath classUsageFilePath,
       boolean doUltralightChecking) {
     ImmutableSet.Builder<AbsPath> builder = ImmutableSet.builder();
@@ -105,8 +99,7 @@ public class DefaultClassUsageFileReader {
       }
 
       String jarPath = entry.getKey();
-      AbsPath jarAbsolutePath =
-          convertRecordedJarPathToAbsolute(root, cellPathExtractor, cellNameResolver, jarPath);
+      AbsPath jarAbsolutePath = convertRecordedJarPathToAbsolute(root, cellPathExtractor, jarPath);
       builder.add(jarAbsolutePath);
     }
     return builder.build();
@@ -128,13 +121,10 @@ public class DefaultClassUsageFileReader {
   }
 
   private static AbsPath convertRecordedJarPathToAbsolute(
-      AbsPath root,
-      CellPathExtractor cellPathExtractor,
-      CellNameResolver cellNameResolver,
-      String jarPath) {
+      AbsPath root, CellPathExtractor cellPathExtractor, String jarPath) {
     Path recordedPath = Paths.get(jarPath);
     return recordedPath.isAbsolute()
-        ? getAbsolutePathForCellRootedPath(recordedPath, cellPathExtractor, cellNameResolver)
+        ? getAbsolutePathForCellRootedPath(recordedPath, cellPathExtractor)
         : AbsPath.of(ProjectFilesystemUtils.getPathForRelativePath(root, recordedPath));
   }
 
@@ -145,12 +135,10 @@ public class DefaultClassUsageFileReader {
    *     cell
    * @param cellPathExtractor the CellPathExtractor capable of mapping cell_name to absolute root
    *     path
-   * @param cellNameResolver for resolving cell aliases to their {@link CanonicalCellName} needed
-   *     for {@link CellPathExtractor}
    * @return an absolute path: 'path/to/cell/root/' + 'relative/path/in/cell'
    */
   private static AbsPath getAbsolutePathForCellRootedPath(
-      Path cellRootedPath, CellPathExtractor cellPathExtractor, CellNameResolver cellNameResolver) {
+      Path cellRootedPath, CellPathExtractor cellPathExtractor) {
     Preconditions.checkArgument(cellRootedPath.isAbsolute(), "Path must begin with /<cell_name>");
     Iterator<Path> pathIterator = cellRootedPath.iterator();
     Path cellNamePath = pathIterator.next();
@@ -162,7 +150,12 @@ public class DefaultClassUsageFileReader {
     CanonicalCellName canonicalCellName =
         cellName.equals(DefaultClassUsageFileWriter.ROOT_CELL_IDENTIFIER)
             ? CanonicalCellName.rootCell()
-            : cellNameResolver.getName(Optional.of(cellName));
+            /**
+             * as we write only {@link CanonicalCellName} based paths in {@link
+             * DefaultClassUsageFileWriter#getCrossCellPath} then we could read value and explicitly
+             * convert it into {@link CanonicalCellName}
+             */
+            : CanonicalCellName.of(Optional.of(cellName));
     return cellPathExtractor.getCellPathOrThrow(canonicalCellName).resolve(relativeToCellRoot);
   }
 }
