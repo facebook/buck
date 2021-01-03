@@ -23,7 +23,6 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
@@ -41,7 +40,7 @@ public interface ResolvedJavac {
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList,
       RelPath workingDirectory,
       boolean trackClassUsage,
@@ -54,7 +53,7 @@ public interface ResolvedJavac {
 
   String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList);
 
   /** Returns a short name of the tool */

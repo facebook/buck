@@ -74,8 +74,8 @@ import org.junit.Test;
 
 public class Jsr199JavacIntegrationTest {
 
-  public static final ImmutableSortedSet<Path> SOURCE_PATHS =
-      ImmutableSortedSet.of(Paths.get("Example.java"));
+  public static final ImmutableSortedSet<RelPath> SOURCE_PATHS =
+      ImmutableSortedSet.orderedBy(RelPath.comparator()).add(RelPath.get("Example.java")).build();
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private RelPath pathToSrcsList;

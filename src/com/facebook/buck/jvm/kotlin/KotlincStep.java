@@ -20,6 +20,7 @@ import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -49,7 +50,7 @@ public class KotlincStep extends IsolatedStep {
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
   private final ImmutableList<String> verboseModeOnlyExtraArguments;
-  private final ImmutableSortedSet<Path> sourceFilePaths;
+  private final ImmutableSortedSet<RelPath> sourceFilePaths;
   private final Path pathToSrcsList;
   private final BuildTargetValue invokingRule;
   private final Optional<Path> workingDirectory;
@@ -58,7 +59,7 @@ public class KotlincStep extends IsolatedStep {
   KotlincStep(
       BuildTargetValue invokingRule,
       Path outputDirectory,
-      ImmutableSortedSet<Path> sourceFilePaths,
+      ImmutableSortedSet<RelPath> sourceFilePaths,
       Path pathToSrcsList,
       ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,

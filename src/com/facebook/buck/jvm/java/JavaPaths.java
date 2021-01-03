@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -38,13 +39,13 @@ public class JavaPaths {
    * Processes a list of java source files, extracting and SRC_ZIP or SRC_JAR to the working
    * directory and returns a list of all the resulting .java files.
    */
-  static ImmutableList<Path> extractArchivesAndGetPaths(
-      AbsPath ruleCellPathRoot, ImmutableSet<Path> javaSourceFilePaths, Path workingDirectory)
+  static ImmutableList<RelPath> extractArchivesAndGetPaths(
+      AbsPath ruleCellPathRoot, ImmutableSet<RelPath> javaSourceFilePaths, Path workingDirectory)
       throws IOException {
 
     // Add sources file or sources list to command
-    ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
+    ImmutableList.Builder<RelPath> sources = ImmutableList.builder();
+    for (RelPath path : javaSourceFilePaths) {
       String pathString = path.toString();
       if (pathString.endsWith(".java")) {
         sources.add(path);
@@ -59,7 +60,10 @@ public class JavaPaths {
                     ruleCellPathRoot.resolve(workingDirectory).getPath(),
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
-            zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());
+            zipPaths.stream()
+                .filter(input -> input.toString().endsWith(".java"))
+                .map(ruleCellPathRoot::relativize)
+                .iterator());
       }
     }
     return sources.build();

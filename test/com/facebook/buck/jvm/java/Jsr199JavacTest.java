@@ -25,15 +25,14 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.easymock.EasyMockSupport;
 import org.junit.Test;
 
 public class Jsr199JavacTest extends EasyMockSupport {
   private static final RelPath PATH_TO_SRCS_LIST = RelPath.get("srcs_list");
-  public static final ImmutableSortedSet<Path> SOURCE_FILES =
-      ImmutableSortedSet.of(Paths.get("foobar.java"));
+  public static final ImmutableSortedSet<RelPath> SOURCE_FILES =
+      ImmutableSortedSet.orderedBy(RelPath.comparator()).add(RelPath.get("foobar.java")).build();
 
   @Test
   public void testJavacCommand() {

@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -65,7 +64,7 @@ public class ExternalJavac implements Javac {
     @Override
     public String getDescription(
         ImmutableList<String> options,
-        ImmutableSortedSet<Path> javaSourceFilePaths,
+        ImmutableSortedSet<RelPath> javaSourceFilePaths,
         RelPath pathToSrcsList) {
       StringBuilder builder = new StringBuilder(getShortName());
       builder.append(" ");
@@ -93,7 +92,7 @@ public class ExternalJavac implements Javac {
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-        ImmutableSortedSet<Path> javaSourceFilePaths,
+        ImmutableSortedSet<RelPath> javaSourceFilePaths,
         RelPath pathToSrcsList,
         RelPath workingDirectory,
         boolean trackClassUsage,
@@ -124,7 +123,7 @@ public class ExternalJavac implements Javac {
           Preconditions.checkArgument(
               abiGenerationMode == AbiGenerationMode.CLASS,
               "Cannot compile ABI jars with external javac");
-          ImmutableList<Path> expandedSources;
+          ImmutableList<RelPath> expandedSources;
           try {
             expandedSources =
                 JavaPaths.extractArchivesAndGetPaths(

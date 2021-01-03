@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
@@ -157,14 +156,15 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(writeFatJarInfo(fatJarInfo, sonameToResourceMap));
 
     // Build up the resource and src collections.
-    ImmutableSortedSet.Builder<Path> javaSourceFilePaths =
-        new ImmutableSortedSet.Builder<>(Ordering.natural());
+    ImmutableSortedSet.Builder<RelPath> javaSourceFilePaths =
+        new ImmutableSortedSet.Builder<>(RelPath.comparator());
     for (String srcResource : FAT_JAR_SRC_RESOURCES) {
-      Path fatJarSource = outputDir.resolve(Paths.get(srcResource).getFileName());
+      RelPath fatJarSource = outputDir.resolveRel(Paths.get(srcResource).getFileName().toString());
       javaSourceFilePaths.add(fatJarSource);
       steps.add(writeFromResource(fatJarSource, srcResource));
     }
-    Path fatJarMainSource = outputDir.resolve(Paths.get(FAT_JAR_MAIN_SRC_RESOURCE).getFileName());
+    RelPath fatJarMainSource =
+        outputDir.resolveRel(Paths.get(FAT_JAR_MAIN_SRC_RESOURCE).getFileName().toString());
     javaSourceFilePaths.add(fatJarMainSource);
     steps.add(writeFromResource(fatJarMainSource, FAT_JAR_MAIN_SRC_RESOURCE));
 
@@ -266,7 +266,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   /** @return a {@link Step} that writes the final from the resource named {@code name}. */
-  private Step writeFromResource(Path destination, String name) {
+  private Step writeFromResource(RelPath destination, String name) {
     return WriteFileStep.of(
         getProjectFilesystem().getRootPath(),
         Resources.asByteSource(Resources.getResource(name)),

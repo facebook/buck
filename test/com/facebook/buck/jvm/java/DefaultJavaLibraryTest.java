@@ -146,14 +146,14 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     tmp.newFolder(folder.split("/"));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//" + folder + ":fb");
 
-    Path src = Paths.get(folder, "Main.java");
+    RelPath src = RelPath.get(folder, "Main.java");
     tmp.newFile(src.toString());
 
     BuildContext context = createBuildContext();
 
     List<Step> steps =
         AndroidLibraryBuilder.createBuilder(buildTarget)
-            .addSrc(src)
+            .addSrc(src.getPath())
             .build(graphBuilder)
             .getBuildSteps(context, new FakeBuildableContext());
 
@@ -161,7 +161,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     JavacStep javac = getJavacStep(steps);
     assertEquals(
         "Should compile Main.java rather than generated R.java.",
-        ImmutableSet.of(src),
+        ImmutableSortedSet.orderedBy(RelPath.comparator()).add(src).build(),
         javac.getSrcs());
   }
 

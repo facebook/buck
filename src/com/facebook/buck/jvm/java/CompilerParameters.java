@@ -21,14 +21,13 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
 public abstract class CompilerParameters {
   @Value.Default
-  public ImmutableSortedSet<Path> getSourceFilePaths() {
+  public ImmutableSortedSet<RelPath> getSourceFilePaths() {
     return ImmutableSortedSet.of();
   }
 

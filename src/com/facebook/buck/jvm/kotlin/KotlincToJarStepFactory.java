@@ -179,17 +179,17 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
     ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
     Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList().getPath();
 
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     boolean hasKotlinSources =
-        sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)
-            || sourceFilePaths.stream().anyMatch(SRC_ZIP_MATCHER::matches);
+        sourceFilePaths.stream().map(RelPath::getPath).anyMatch(KOTLIN_PATH_MATCHER::matches)
+            || sourceFilePaths.stream().map(RelPath::getPath).anyMatch(SRC_ZIP_MATCHER::matches);
 
-    ImmutableSortedSet.Builder<Path> sourceBuilder =
-        ImmutableSortedSet.<Path>naturalOrder().addAll(sourceFilePaths);
+    ImmutableSortedSet.Builder<RelPath> sourceBuilder =
+        ImmutableSortedSet.orderedBy(RelPath.comparator()).addAll(sourceFilePaths);
 
     // Only invoke kotlinc if we have kotlin or src zip files.
     if (hasKotlinSources) {
@@ -322,7 +322,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                 outputDirectory.getPath(),
                 CopySourceMode.DIRECTORY_CONTENTS_ONLY));
 
-        sourceBuilder.add(genOutput.getPath());
+        sourceBuilder.add(genOutput);
       }
 
       ImmutableList.Builder<String> extraArguments =
@@ -382,11 +382,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     }
 
     // Note that this filters out only .kt files, so this keeps both .java and .src.zip files.
-    ImmutableSortedSet<Path> javaSourceFiles =
-        ImmutableSortedSet.copyOf(
-            sourceBuilder.build().stream()
-                .filter(input -> !KOTLIN_PATH_MATCHER.matches(input))
-                .collect(Collectors.toSet()));
+    ImmutableSortedSet<RelPath> javaSourceFiles =
+        sourceBuilder.build().stream()
+            .filter(input -> !KOTLIN_PATH_MATCHER.matches(input.getPath()))
+            .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
 
     CompilerParameters javacParameters =
         CompilerParameters.builder()

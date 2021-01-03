@@ -194,7 +194,7 @@ public class DummyRDotJava extends AbstractBuildRule
                 buildCellRootPath, filesystem, rDotJavaSrcFolder)));
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    ImmutableSortedSet<Path> javaSourceFilePaths;
+    ImmutableSortedSet<RelPath> javaSourceFilePaths;
     if (androidResourceDeps.isEmpty()) {
       // In this case, the user is likely running a Robolectric test that does not happen to
       // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
@@ -202,7 +202,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
       // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
       // associated TestAndroidManifest.xml file.
-      Path emptyRDotJava = rDotJavaSrcFolder.resolve("com/facebook/R.java");
+      RelPath emptyRDotJava = rDotJavaSrcFolder.resolveRel("com/facebook/R.java");
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
@@ -214,7 +214,8 @@ public class DummyRDotJava extends AbstractBuildRule
               "package com.facebook;\n public class R {}\n",
               emptyRDotJava,
               /* executable */ false));
-      javaSourceFilePaths = ImmutableSortedSet.of(emptyRDotJava);
+      javaSourceFilePaths =
+          ImmutableSortedSet.orderedBy(RelPath.comparator()).add(emptyRDotJava).build();
     } else {
       MergeAndroidResourcesStep mergeStep =
           MergeAndroidResourcesStep.createStepForDummyRDotJava(
@@ -246,7 +247,7 @@ public class DummyRDotJava extends AbstractBuildRule
         steps.add(mergeFinalRStep);
 
         javaSourceFilePaths =
-            ImmutableSortedSet.<Path>naturalOrder()
+            ImmutableSortedSet.orderedBy(RelPath.comparator())
                 .addAll(mergeStep.getRDotJavaFiles())
                 .addAll(mergeFinalRStep.getRDotJavaFiles())
                 .build();
@@ -341,9 +342,9 @@ public class DummyRDotJava extends AbstractBuildRule
 
   private class CheckDummyRJarNotEmptyStep implements Step {
 
-    private final ImmutableSortedSet<Path> javaSourceFilePaths;
+    private final ImmutableSortedSet<RelPath> javaSourceFilePaths;
 
-    CheckDummyRJarNotEmptyStep(ImmutableSortedSet<Path> javaSourceFilePaths) {
+    CheckDummyRJarNotEmptyStep(ImmutableSortedSet<RelPath> javaSourceFilePaths) {
       this.javaSourceFilePaths = javaSourceFilePaths;
     }
 
@@ -359,9 +360,9 @@ public class DummyRDotJava extends AbstractBuildRule
       }
 
       StringBuilder sb = new StringBuilder();
-      for (Path file : javaSourceFilePaths) {
+      for (RelPath file : javaSourceFilePaths) {
         BasicFileAttributes attrs =
-            getProjectFilesystem().readAttributes(file, BasicFileAttributes.class);
+            getProjectFilesystem().readAttributes(file.getPath(), BasicFileAttributes.class);
         sb.append(file);
         sb.append(' ');
         sb.append(attrs.size());

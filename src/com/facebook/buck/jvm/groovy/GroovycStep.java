@@ -51,7 +51,7 @@ class GroovycStep extends IsolatedStep {
   private final Optional<ImmutableList<String>> extraArguments;
   private final ResolvedJavacOptions javacOptions;
   private final Path outputDirectory;
-  private final ImmutableSortedSet<Path> sourceFilePaths;
+  private final ImmutableSortedSet<RelPath> sourceFilePaths;
   private final Path pathToSrcsList;
   private final ImmutableSortedSet<RelPath> declaredClasspathEntries;
   private final boolean withDownwardApi;
@@ -61,7 +61,7 @@ class GroovycStep extends IsolatedStep {
       Optional<ImmutableList<String>> extraArguments,
       ResolvedJavacOptions javacOptions,
       Path outputDirectory,
-      ImmutableSortedSet<Path> sourceFilePaths,
+      ImmutableSortedSet<RelPath> sourceFilePaths,
       Path pathToSrcsList,
       ImmutableSortedSet<RelPath> declaredClasspathEntries,
       boolean withDownwardApi) {
@@ -130,7 +130,7 @@ class GroovycStep extends IsolatedStep {
     return command.build();
   }
 
-  private void writePathToSourcesList(AbsPath rootCellRoot, Iterable<Path> expandedSources)
+  private void writePathToSourcesList(AbsPath rootCellRoot, Iterable<RelPath> expandedSources)
       throws IOException {
     ProjectFilesystemUtils.writeLinesToPath(
         rootCellRoot,

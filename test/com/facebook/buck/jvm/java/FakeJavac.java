@@ -24,7 +24,6 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /** Fake implementation of {@link com.facebook.buck.jvm.java.Javac} for tests. */
@@ -38,7 +37,7 @@ public class FakeJavac implements ResolvedJavac {
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList,
       RelPath workingDirectory,
       boolean trackClassUsage,
@@ -81,7 +80,7 @@ public class FakeJavac implements ResolvedJavac {
   @Override
   public String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList) {
     return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
   }

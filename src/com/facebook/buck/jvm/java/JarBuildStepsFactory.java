@@ -369,7 +369,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
         getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
-    ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
+    ImmutableSortedSet<RelPath> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     AbsPath rootPath = filesystem.getRootPath();
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
@@ -490,7 +490,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
         getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
-    ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
+    ImmutableSortedSet<RelPath> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     AbsPath rootPath = filesystem.getRootPath();
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
@@ -609,11 +609,11 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .toString());
   }
 
-  private ImmutableSortedSet<Path> getJavaSrcs(
+  private ImmutableSortedSet<RelPath> getJavaSrcs(
       ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
     return srcs.stream()
-        .map(src -> filesystem.relativize(sourcePathResolver.getAbsolutePath(src)).getPath())
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .map(src -> filesystem.relativize(sourcePathResolver.getAbsolutePath(src)))
+        .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
   private ImmutableSortedSet<RelPath> getCompileTimeClasspathPaths(
@@ -736,7 +736,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
         getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
-    ImmutableSortedSet<Path> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
+    ImmutableSortedSet<RelPath> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
 
     ImmutableList<BaseJavaAbiInfo> fullJarInfos =

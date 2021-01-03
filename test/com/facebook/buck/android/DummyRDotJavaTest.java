@@ -127,8 +127,10 @@ public class DummyRDotJavaTest {
         Stream.of(resourceRule1, resourceRule2)
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList());
-    ImmutableSortedSet<Path> javaSourceFiles =
-        ImmutableSortedSet.of(rDotJavaSrcFolder.resolve("com/facebook/R.java"));
+    ImmutableSortedSet<RelPath> javaSourceFiles =
+        ImmutableSortedSet.orderedBy(RelPath.comparator())
+            .add(rDotJavaSrcFolder.resolveRel("com/facebook/R.java"))
+            .build();
 
     AbsPath rootPath = filesystem.getRootPath();
     StepExecutionContext stepExecutionContext = TestExecutionContext.newInstance(rootPath);

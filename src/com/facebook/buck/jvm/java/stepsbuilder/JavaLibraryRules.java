@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,7 +76,7 @@ public class JavaLibraryRules {
   /** Creates {@link CompilerParameters} */
   public static CompilerParameters getCompilerParameters(
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
-      ImmutableSortedSet<Path> javaSrcs,
+      ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       String fullyQualifiedBuildTargetName,

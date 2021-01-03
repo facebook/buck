@@ -33,6 +33,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -550,11 +551,11 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ true);
 
-    ImmutableSortedSet<Path> rDotJavaFiles = mergeStep.getRDotJavaFiles();
+    ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
     assertEquals(rDotJavaFiles.size(), 1);
 
-    ImmutableSortedSet<Path> expected =
-        ImmutableSortedSet.<Path>naturalOrder()
+    ImmutableSortedSet<RelPath> expected =
+        ImmutableSortedSet.orderedBy(RelPath.comparator())
             .add(mergeStep.getPathToRDotJava("com.package"))
             .build();
 
@@ -601,11 +602,11 @@ public class MergeAndroidResourcesStepTest {
             /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
-    ImmutableSortedSet<Path> rDotJavaFiles = mergeStep.getRDotJavaFiles();
+    ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
     assertEquals(rDotJavaFiles.size(), 3);
 
-    ImmutableSortedSet<Path> expected =
-        ImmutableSortedSet.<Path>naturalOrder()
+    ImmutableSortedSet<RelPath> expected =
+        ImmutableSortedSet.orderedBy(RelPath.comparator())
             .add(mergeStep.getPathToRDotJava("com.package"))
             .add(mergeStep.getPathToRDotJava("com.package1"))
             .add(mergeStep.getPathToRDotJava("com.package2"))

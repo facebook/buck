@@ -171,7 +171,8 @@ public class MergeAndroidResourcesStep implements Step {
         /* skipNonUnionRDotJava */ false);
   }
 
-  public ImmutableSortedSet<Path> getRDotJavaFiles() {
+  /** Returns R. java files */
+  public ImmutableSortedSet<RelPath> getRDotJavaFiles() {
     FluentIterable<String> packages =
         FluentIterable.from(
             unionPackage.map(Collections::singletonList).orElse(Collections.emptyList()));
@@ -183,7 +184,7 @@ public class MergeAndroidResourcesStep implements Step {
                   .transform(HasAndroidResourceDeps::getRDotJavaPackage));
     }
 
-    return packages.transform(this::getPathToRDotJava).toSortedSet(natural());
+    return packages.transform(this::getPathToRDotJava).toSortedSet(RelPath.comparator());
   }
 
   @Override
@@ -323,7 +324,7 @@ public class MergeAndroidResourcesStep implements Step {
   private void writeEmptyRDotJavaForPackages(
       Set<String> rDotJavaPackages, ProjectFilesystem filesystem) throws IOException {
     for (String rDotJavaPackage : rDotJavaPackages) {
-      Path outputFile = getPathToRDotJava(rDotJavaPackage);
+      RelPath outputFile = getPathToRDotJava(rDotJavaPackage);
       filesystem.mkdirs(outputFile.getParent());
       filesystem.writeContentsToPath(
           String.format("package %s;\n\npublic class %s {}\n", rDotJavaPackage, rName), outputFile);
@@ -335,10 +336,10 @@ public class MergeAndroidResourcesStep implements Step {
       SortedSetMultimap<String, RDotTxtEntry> packageToResources, ProjectFilesystem filesystem)
       throws IOException {
     for (String rDotJavaPackage : packageToResources.keySet()) {
-      Path outputFile = getPathToRDotJava(rDotJavaPackage);
+      RelPath outputFile = getPathToRDotJava(rDotJavaPackage);
       filesystem.mkdirs(outputFile.getParent());
       try (ThrowingPrintWriter writer =
-          new ThrowingPrintWriter(filesystem.newFileOutputStream(outputFile))) {
+          new ThrowingPrintWriter(filesystem.newFileOutputStream(outputFile.getPath()))) {
         writer.format("package %s;\n\n", rDotJavaPackage);
         writer.format("public class %s {\n", rName);
 
@@ -683,10 +684,12 @@ public class MergeAndroidResourcesStep implements Step {
     return getShortName() + " " + Joiner.on(' ').join(resources);
   }
 
-  protected Path getPathToRDotJava(String rDotJavaPackage) {
-    return outputDir
-        .resolve(rDotJavaPackage.replace('.', '/'))
-        .resolve(String.format("%s.java", rName));
+  /** Returns {@link RelPath} to R. java file */
+  protected RelPath getPathToRDotJava(String rDotJavaPackage) {
+    return RelPath.of(
+        outputDir
+            .resolve(rDotJavaPackage.replace('.', '/'))
+            .resolve(String.format("%s.java", rName)));
   }
 
   private static class IntEnumerator {

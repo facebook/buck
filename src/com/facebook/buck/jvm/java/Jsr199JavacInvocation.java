@@ -94,7 +94,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
   private final ImmutableList<String> options;
   private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
   private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
-  private final ImmutableSortedSet<Path> javaSourceFilePaths;
+  private final ImmutableSortedSet<RelPath> javaSourceFilePaths;
   private final RelPath pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
   @Nullable private final JarParameters abiJarParameters;
@@ -113,7 +113,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       ImmutableList<String> options,
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
       ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
@@ -660,12 +660,12 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
     private Iterable<? extends JavaFileObject> createCompilationUnits(
         StandardJavaFileManager fileManager,
-        Function<Path, AbsPath> absolutifier,
-        Set<Path> javaSourceFilePaths)
+        Function<RelPath, AbsPath> absolutifier,
+        Set<RelPath> javaSourceFilePaths)
         throws IOException {
       List<JavaFileObject> compilationUnits = new ArrayList<>();
       boolean seenZipOrJarSources = false;
-      for (Path path : javaSourceFilePaths) {
+      for (RelPath path : javaSourceFilePaths) {
         String pathString = path.toString();
         if (pathString.endsWith(".java")) {
           // For an ordinary .java file, create a corresponding JavaFileObject.

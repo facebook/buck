@@ -55,7 +55,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,8 +68,8 @@ import org.junit.Test;
 public class ExternalJavacTest extends EasyMockSupport {
 
   private static final RelPath PATH_TO_SRCS_LIST = RelPath.get("srcs_list");
-  public static final ImmutableSortedSet<Path> SOURCE_PATHS =
-      ImmutableSortedSet.of(Paths.get("foobar.java"));
+  public static final ImmutableSortedSet<RelPath> SOURCE_PATHS =
+      ImmutableSortedSet.orderedBy(RelPath.comparator()).add(RelPath.get("foobar.java")).build();
 
   @Rule public TemporaryPaths root = new TemporaryPaths();
 

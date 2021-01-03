@@ -21,6 +21,7 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -74,7 +75,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   @Override
   public String getDescription(
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> javaSourceFilePaths,
+      ImmutableSortedSet<RelPath> javaSourceFilePaths,
       Path pathToSrcsList) {
     StringBuilder builder = new StringBuilder("kotlinc ");
     Joiner.on(" ").appendTo(builder, options);
@@ -99,7 +100,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       IsolatedExecutionContext context,
       BuildTargetValue invokingRule,
       ImmutableList<String> options,
-      ImmutableSortedSet<Path> kotlinSourceFilePaths,
+      ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
       AbsPath ruleCellRoot,

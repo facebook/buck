@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.stream.Collectors;
 
 /** Factory that creates Scala related compile build steps. */
 public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
@@ -96,14 +95,14 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
       BuildContextAwareExtraParams extraParams) {
 
     ImmutableSortedSet<RelPath> classpathEntries = parameters.getClasspathEntries();
-    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
     AbsPath rootPath = filesystemParams.getRootPath();
     BuildContext context = extraParams.getBuildContext();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 
-    if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
+    if (sourceFilePaths.stream().map(RelPath::getPath).anyMatch(SCALA_PATH_MATCHER::matches)) {
 
       ImmutableList<String> commandPrefix = scalac.getCommandPrefix(sourcePathResolver);
       ImmutableMap<String, String> environment = scalac.getEnvironment(sourcePathResolver);
@@ -139,11 +138,10 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
               withDownwardApi));
     }
 
-    ImmutableSortedSet<Path> javaSourceFiles =
-        ImmutableSortedSet.copyOf(
-            sourceFilePaths.stream()
-                .filter(JAVA_PATH_MATCHER::matches)
-                .collect(Collectors.toSet()));
+    ImmutableSortedSet<RelPath> javaSourceFiles =
+        sourceFilePaths.stream()
+            .filter(relPath -> JAVA_PATH_MATCHER.matches(relPath.getPath()))
+            .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
 
     // Don't invoke javac if we don't have any java files.
     if (!javaSourceFiles.isEmpty()) {

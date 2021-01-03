@@ -25,7 +25,6 @@ import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 import javax.tools.JavaCompiler;
 
@@ -49,7 +48,7 @@ public abstract class Jsr199Javac implements Javac {
     @Override
     public String getDescription(
         ImmutableList<String> options,
-        ImmutableSortedSet<Path> javaSourceFilePaths,
+        ImmutableSortedSet<RelPath> javaSourceFilePaths,
         RelPath pathToSrcsList) {
       StringBuilder builder = new StringBuilder("javac ");
       Joiner.on(" ").appendTo(builder, options);
@@ -72,7 +71,7 @@ public abstract class Jsr199Javac implements Javac {
         ImmutableList<String> options,
         ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
         ImmutableList<JavacPluginJsr199Fields> javacPlugins,
-        ImmutableSortedSet<Path> javaSourceFilePaths,
+        ImmutableSortedSet<RelPath> javaSourceFilePaths,
         RelPath pathToSrcsList,
         RelPath workingDirectory,
         boolean trackClassUsage,

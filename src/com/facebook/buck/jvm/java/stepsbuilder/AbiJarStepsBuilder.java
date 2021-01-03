@@ -31,7 +31,6 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /** Builder that creates abi jar steps. */
@@ -49,7 +48,7 @@ public interface AbiJarStepsBuilder extends JavaCompileStepsBuilder {
       BuildTargetValue buildTargetValue,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
-      ImmutableSortedSet<Path> javaSrcs,
+      ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,

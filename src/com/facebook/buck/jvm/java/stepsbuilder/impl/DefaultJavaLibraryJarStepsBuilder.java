@@ -34,7 +34,6 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -61,7 +60,7 @@ class DefaultJavaLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraP
       CompilerOutputPathsValue compilerOutputPathsValue,
       RelPath pathToClassHashes,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
-      ImmutableSortedSet<Path> javaSrcs,
+      ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,

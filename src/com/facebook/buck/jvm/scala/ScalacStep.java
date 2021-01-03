@@ -35,7 +35,7 @@ public class ScalacStep extends IsolatedShellStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> extraArguments;
   private final Path outputDirectory;
-  private final ImmutableSortedSet<Path> sourceFilePaths;
+  private final ImmutableSortedSet<RelPath> sourceFilePaths;
   private final ImmutableSortedSet<Path> classpathEntries;
 
   ScalacStep(
@@ -43,7 +43,7 @@ public class ScalacStep extends IsolatedShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> extraArguments,
       Path outputDirectory,
-      ImmutableSortedSet<Path> sourceFilePaths,
+      ImmutableSortedSet<RelPath> sourceFilePaths,
       ImmutableSortedSet<Path> classpathEntries,
       AbsPath ruleCellRoot,
       RelPath cellPath,
@@ -87,7 +87,7 @@ public class ScalacStep extends IsolatedShellStep {
     } else {
       commandBuilder.add("-classpath", classpath);
     }
-    commandBuilder.addAll(sourceFilePaths.stream().map(Path::toString).iterator());
+    commandBuilder.addAll(sourceFilePaths.stream().map(RelPath::toString).iterator());
 
     return commandBuilder.build();
   }
