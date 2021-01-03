@@ -19,7 +19,6 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/step/isolatedsteps/common/cellpathextractor:cellpathextractor",
-        "//src/com/facebook/buck/util/timing:timing",
         "//src/com/facebook/buck/util/zip:zip",
     ],
     exported_deps = [
