@@ -20,11 +20,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
@@ -57,5 +59,19 @@ public class ExactPathMatcherTest {
     PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
     assertTrue(pathOrGlob.isGlob());
     assertThat(pathOrGlob.getValue(), equalTo(".idea"));
+  }
+
+  @Test
+  public void verifyPathWithAnAsteriskChar() {
+    String path = ".idea/blah/blah/bl*ah/foo/bar";
+    InvalidPathException expectedException =
+        assertThrows(
+            InvalidPathException.class,
+            () -> {
+              ExactPathMatcher.of(path);
+            });
+
+    assertThat(expectedException.getCause(), equalTo(null));
+    assertThat(expectedException.getMessage(), equalTo("Illegal char <*> at index 18: " + path));
   }
 }

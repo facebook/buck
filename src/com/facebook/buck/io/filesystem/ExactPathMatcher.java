@@ -20,6 +20,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
@@ -29,8 +30,12 @@ public class ExactPathMatcher implements PathMatcher {
 
   private final RelPath path;
 
-  private ExactPathMatcher(RelPath path) {
-    this.path = path;
+  private ExactPathMatcher(RelPath relPath) {
+    String path = relPath.toString();
+    if (path.contains("*")) {
+      throw new InvalidPathException(path, "Illegal char <*>", path.indexOf('*'));
+    }
+    this.path = relPath;
   }
 
   @Override
@@ -71,9 +76,8 @@ public class ExactPathMatcher implements PathMatcher {
 
   @Override
   public ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities) {
-    String pathGlob = getGlob();
     return ImmutableList.of(
-        "match", pathGlob, "wholename", ImmutableMap.of("includedotfiles", true));
+        "match", getGlob(), "wholename", ImmutableMap.of("includedotfiles", true));
   }
 
   @Override
