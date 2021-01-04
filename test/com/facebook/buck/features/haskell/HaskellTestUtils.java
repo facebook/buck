@@ -50,6 +50,10 @@ class HaskellTestUtils {
           .setSupportExposePackage(false)
           .setArchiveContents(ArchiveContents.NORMAL)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+          .setIdeScriptTemplate(
+              () -> {
+                throw new UnsupportedOperationException();
+              })
           .setGhciScriptTemplate(
               () -> {
                 throw new UnsupportedOperationException();

@@ -179,6 +179,10 @@ public class HaskellBuckConfig {
     return () -> delegate.getRequiredPath(section, "ghci_packager");
   }
 
+  public Supplier<Path> getIdeScriptTemplate(String section) {
+    return () -> delegate.getRequiredPath(section, "ide_script_template");
+  }
+
   public Optional<? extends Linker.LinkableDepType> getLinkStyleForStubHeader(String section) {
     return delegate.getEnum(section, "link_style_for_stub_header", Linker.LinkableDepType.class);
   }

@@ -108,6 +108,9 @@ abstract class HaskellPlatform implements FlavorConvertible {
   /** @return the path for the haskell packager. */
   abstract Supplier<Path> getGhciPackager();
 
+  /** @return The template to use for IDE targets. */
+  abstract Supplier<Path> getIdeScriptTemplate();
+
   /** @return An optional prefix for generated Haskell package names. */
   abstract Optional<String> getPackageNamePrefix();
 

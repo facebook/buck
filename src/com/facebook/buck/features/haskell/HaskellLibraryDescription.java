@@ -116,7 +116,7 @@ public class HaskellLibraryDescription
   }
 
   /** @return the package identifier to use for the library with the given target. */
-  private HaskellPackageInfo getPackageInfo(HaskellPlatform platform, BuildTarget target) {
+  public static HaskellPackageInfo getPackageInfo(HaskellPlatform platform, BuildTarget target) {
     String name = String.format("%s-%s", target.getBaseName(), target.getShortName());
     name = name.replace(File.separatorChar, '-');
     name = name.replace('_', '-');
@@ -658,11 +658,15 @@ public class HaskellLibraryDescription
         case HADDOCK:
           return requireHaddockLibrary(
               baseTarget, projectFilesystem, params, graphBuilder, platform, args);
-        case IDE:
+        case IDE_SHARED:
+        case IDE_STATIC:
+          Linker.LinkableDepType ideDepType =
+              type.get().getValue().equals(Type.IDE_SHARED)
+                  ? Linker.LinkableDepType.SHARED
+                  : Linker.LinkableDepType.STATIC;
           return HaskellDescriptionUtils.requireIdeRule(
-              // The IDE rule is a user-facing "deployable" rule, rather than a factory rule, so
-              // make sure to use the original build target when generating it.
               buildTarget,
+              ImmutableSet.of(buildTarget),
               projectFilesystem,
               params,
               graphBuilder,
@@ -670,7 +674,8 @@ public class HaskellLibraryDescription
               args.getDeps(),
               args.getPlatformDeps(),
               args.getSrcs(),
-              args.getCompilerFlags());
+              args.getCompilerFlags(),
+              ideDepType);
         case GHCI:
           return HaskellDescriptionUtils.requireGhciRule(
               // The GHCi rule is a user-facing "deployable" rule, rather than a factory rule, so
@@ -963,7 +968,8 @@ public class HaskellLibraryDescription
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
 
     GHCI(HaskellDescriptionUtils.GHCI_FLAV),
-    IDE(HaskellDescriptionUtils.IDE_FLAV),
+    IDE_SHARED(HaskellDescriptionUtils.IDE_SHARED_FLAV),
+    IDE_STATIC(HaskellDescriptionUtils.IDE_STATIC_FLAV),
     HADDOCK(InternalFlavor.of("haddock"));
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =

@@ -94,6 +94,7 @@ public class ConfigBasedUnresolvedHaskellPlatform implements UnresolvedHaskellPl
         .setGhciCc(haskellBuckConfig.getGhciCc(section))
         .setGhciCpp(haskellBuckConfig.getGhciCpp(section))
         .setGhciPackager(haskellBuckConfig.getGhciPackager(section))
+        .setIdeScriptTemplate(haskellBuckConfig.getIdeScriptTemplate(section))
         .setLinkStyleForStubHeader(haskellBuckConfig.getLinkStyleForStubHeader(section))
         .setCxxPlatform(cxxPlatform)
         .build();
