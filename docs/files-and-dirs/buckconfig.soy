@@ -1075,7 +1075,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {param name: 'compilation_database_includes_swift' /}
   {param example_value: 'false' /}
   {param description}
-  Determines whether Swift sources are included in the compilation database of 
+  Determines whether Swift sources are included in the compilation database of
   <code>apple_library()</code>, <code>apple_binary()</code> and <code>apple_test()</code>.
   The default value is <code>false</code>.
   {/param}
@@ -4510,7 +4510,7 @@ $ buck build app#py3
 
 {call buckconfig.entry}
   {param section: 'python' /}
-  {param name: 'path_to_pex_executor' /}
+  {param name: 'path_to_pex_executer' /}
   {param example_value: '/bin/sh' /}
   {param description}
     The path to the tool used to run executable Python packages.  For self-executing packages, this
@@ -4997,7 +4997,7 @@ buck = .
     The version of Swift to pass to the compiler using
     the <code>-swift-version</code> parameter.
     </p>
-    
+
     <p>
     Note that every
     <code>apple_library()</code>, <code>apple_binary()</code> and
