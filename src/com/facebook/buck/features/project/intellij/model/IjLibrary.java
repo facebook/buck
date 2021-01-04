@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij.model;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** Represents a prebuilt library (.jar or .aar) as seen by IntelliJ. */
-@BuckStyleValueWithBuilder
+@BuckStylePrehashedValue
 public abstract class IjLibrary implements IjProjectElement {
   /**
    * Types of IjLibrary
@@ -46,30 +46,40 @@ public abstract class IjLibrary implements IjProjectElement {
     MODULE
   }
 
+  /**
+   * This is a unique identifier for the library within its level, derived from the buck build
+   * target name that this library corresponds to.
+   */
   @Override
   public abstract String getName();
 
   @Override
+  @Value.Auxiliary
   public abstract ImmutableSet<BuildTarget> getTargets();
 
   /** @return path to the binary (.jar or .aar) the library represents. */
   @Value.NaturalOrder
+  @Value.Auxiliary
   public abstract ImmutableSortedSet<Path> getBinaryJars();
 
   /** @return classPath paths */
   @Value.NaturalOrder
+  @Value.Auxiliary
   public abstract ImmutableSortedSet<Path> getClassPaths();
 
   /** @return path to the jar containing sources for the library. */
   @Value.NaturalOrder
+  @Value.Auxiliary
   public abstract ImmutableSortedSet<Path> getSourceJars();
 
   /** @return url to the javadoc. */
   @Value.NaturalOrder
+  @Value.Auxiliary
   public abstract ImmutableSortedSet<String> getJavadocUrls();
 
   /** @return path to the directories containing Java sources for the library. */
   @Value.NaturalOrder
+  @Value.Auxiliary
   public abstract ImmutableSortedSet<Path> getSourceDirs();
 
   @Value.Check
@@ -119,6 +129,7 @@ public abstract class IjLibrary implements IjProjectElement {
     }
   }
 
+  @Value.Auxiliary
   public abstract Type getType();
 
   public abstract Level getLevel();

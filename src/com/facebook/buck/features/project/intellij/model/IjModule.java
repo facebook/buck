@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij.model;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.features.project.intellij.IjDependencyListBuilder;
 import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
@@ -32,7 +32,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Represents a single IntelliJ module. */
-@BuckStyleValueWithBuilder
+@BuckStylePrehashedValue
 public abstract class IjModule implements IjProjectElement {
 
   @Override
@@ -42,41 +42,54 @@ public abstract class IjModule implements IjProjectElement {
   }
 
   @Override
+  @Value.Auxiliary
   public abstract ImmutableSet<BuildTarget> getTargets();
 
+  @Value.Auxiliary
   public abstract ImmutableSet<BuildTarget> getNonSourceBuildTargets();
 
+  @Value.Auxiliary
   public abstract Map<BuildTarget, List<IjFolder>> getTargetsToGeneratedSourcesMap();
 
   /** @return path to the top-most directory the module is responsible for. */
   public abstract Path getModuleBasePath();
 
   /** @return paths to various directories the module is responsible for. */
+  @Value.Auxiliary
   public abstract ImmutableList<IjFolder> getFolders();
 
   /**
    * @return map of {@link BuildTarget}s the module depends on and information on whether it's a
    *     test-only dependency or not.
    */
+  @Value.Auxiliary
   public abstract ImmutableMap<BuildTarget, DependencyType> getDependencies();
 
+  @Value.Auxiliary
   public abstract Optional<IjModuleAndroidFacet> getAndroidFacet();
 
   /** @return a set of IjLibrary that the module requires to index all symbols correctly. */
+  @Value.Auxiliary
   public abstract ImmutableSet<IjLibrary> getExtraLibraryDependencies();
 
   /** @return a set of module paths that the module requires to index correctly. */
+  @Value.Auxiliary
   public abstract ImmutableSet<Path> getExtraModuleDependencies();
 
   /** @return Folders which contain the generated source code. */
+  @Value.Auxiliary
   public abstract ImmutableList<IjFolder> getGeneratedSourceCodeFolders();
 
+  @Value.Auxiliary
   public abstract Optional<String> getLanguageLevel();
 
+  @Value.Auxiliary
   public abstract IjModuleType getModuleType();
 
+  @Value.Auxiliary
   public abstract Optional<Path> getMetaInfDirectory();
 
+  @Value.Auxiliary
   public abstract Optional<Path> getCompilerOutputPath();
 
   @Value.Check
@@ -115,18 +128,6 @@ public abstract class IjModule implements IjProjectElement {
       scope = IjDependencyListBuilder.Scope.RUNTIME;
     }
     dependencyListBuilder.addModule(getName(), scope, false /* exported */);
-  }
-
-  @Override
-  public int hashCode() {
-    return getModuleBasePath().hashCode();
-  }
-
-  @Override
-  public boolean equals(Object another) {
-    return this == another
-        || another instanceof IjModule
-            && getModuleBasePath().equals(((IjModule) another).getModuleBasePath());
   }
 
   public static Builder builder() {
