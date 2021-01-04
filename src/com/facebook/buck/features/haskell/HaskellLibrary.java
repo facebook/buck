@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public abstract class HaskellLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     implements HaskellCompileDep,
+        HaskellIdeDep,
         HaskellOmnibusLinkable,
         LegacyNativeLinkableGroup,
         CxxPreprocessorDep {

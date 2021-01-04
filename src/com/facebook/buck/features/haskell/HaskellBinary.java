@@ -25,25 +25,32 @@ import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableSet;
 
-public class HaskellBinary extends BinaryWrapperRule {
+public class HaskellBinary extends BinaryWrapperRule implements HaskellIdeDep {
 
   private final ImmutableSet<BuildRule> deps;
   private final Tool binary;
   private final SourcePath output;
+  private final SourceSortedSet srcs;
+  private final Iterable<String> compilerFlags;
 
   public HaskellBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSet<BuildRule> deps,
+      SourceSortedSet srcs,
+      Iterable<String> compilerFlags,
       Tool binary,
       SourcePath output) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.deps = deps;
     this.binary = binary;
     this.output = output;
+    this.srcs = srcs;
+    this.compilerFlags = compilerFlags;
   }
 
   @Override
@@ -58,5 +65,20 @@ public class HaskellBinary extends BinaryWrapperRule {
 
   public ImmutableSet<BuildRule> getBinaryDeps() {
     return deps;
+  }
+
+  @Override
+  public Iterable<BuildRule> getIdeDeps(HaskellPlatform platform) {
+    return deps;
+  }
+
+  @Override
+  public Iterable<String> getIdeCompilerFlags() {
+    return compilerFlags;
+  }
+
+  @Override
+  public SourceSortedSet getIdeSources() {
+    return srcs;
   }
 }

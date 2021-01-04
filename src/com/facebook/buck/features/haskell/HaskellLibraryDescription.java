@@ -913,6 +913,21 @@ public class HaskellLibraryDescription
       public PlatformLockedNativeLinkableGroup.Cache getNativeLinkableCompatibilityCache() {
         return linkableCache;
       }
+
+      @Override
+      public Iterable<BuildRule> getIdeDeps(HaskellPlatform platform) {
+        return getCompileDeps(platform);
+      }
+
+      @Override
+      public Iterable<String> getIdeCompilerFlags() {
+        return args.getCompilerFlags();
+      }
+
+      @Override
+      public SourceSortedSet getIdeSources() {
+        return args.getSrcs();
+      }
     };
   }
 

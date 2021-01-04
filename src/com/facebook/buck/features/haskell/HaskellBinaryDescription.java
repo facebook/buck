@@ -335,6 +335,8 @@ public class HaskellBinaryDescription
         projectFilesystem,
         params.copyAppendingExtraDeps(linkRule),
         deps,
+        args.getSrcs(),
+        args.getCompilerFlags(),
         executable,
         linkRule.getSourcePathToOutput());
   }
