@@ -24,10 +24,6 @@ enum BuckCacheRequestType {
   // `DELETE` is a define somewhere inside glibc
   DELETE_REQUEST = 105,
   CONTAINS = 107,
-  MANIFEST_APPEND = 108,
-  MANIFEST_FETCH = 109,
-  MANIFEST_DELETE = 110,
-  MANIFEST_SET = 111,
 }
 
 struct RuleKey {
@@ -206,40 +202,6 @@ struct BuckCacheDeleteResponse {
   1: optional DeleteDebugInfo debugInfo;
 }
 
-struct Manifest {
-  1: optional string key;
-  2: optional list<binary> values;
-}
-
-struct ManifestAppendRequest {
-  1: optional Manifest manifest;
-}
-
-struct ManifestAppendResponse {
-}
-
-struct ManifestFetchRequest {
-  1: optional string manifestKey;
-}
-
-struct ManifestFetchResponse {
-  1: optional Manifest manifest;
-}
-
-struct ManifestDeleteRequest {
-  1: optional string manifestKey;
-}
-
-struct ManifestDeleteResponse {
-}
-
-struct ManifestSetRequest {
-  1: optional Manifest manifest;
-}
-
-struct ManifestSetResponse {
-}
-
 struct BuckCacheRequest {
   1: optional BuckCacheRequestType type = BuckCacheRequestType.UNKNOWN;
 
@@ -253,10 +215,6 @@ struct BuckCacheRequest {
   103: optional BuckCacheMultiFetchRequest multiFetchRequest;
   105: optional BuckCacheDeleteRequest deleteRequest;
   107: optional BuckCacheMultiContainsRequest multiContainsRequest;
-  108: optional ManifestAppendRequest manifestAppendRequest;
-  109: optional ManifestFetchRequest manifestFetchRequest;
-  110: optional ManifestDeleteRequest manifestDeleteRequest;
-  111: optional ManifestSetRequest manifestSetRequest;
 }
 
 struct BuckCacheResponse {
@@ -277,8 +235,4 @@ struct BuckCacheResponse {
   103: optional BuckCacheMultiFetchResponse multiFetchResponse;
   105: optional BuckCacheDeleteResponse deleteResponse;
   107: optional BuckCacheMultiContainsResponse multiContainsResponse;
-  108: optional ManifestAppendResponse manifestAppendResponse;
-  109: optional ManifestFetchResponse manifestFetchResponse;
-  110: optional ManifestDeleteResponse manifestDeleteResponse;
-  111: optional ManifestSetResponse manifestSetResponse;
 }

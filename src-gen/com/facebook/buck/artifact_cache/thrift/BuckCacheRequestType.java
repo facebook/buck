@@ -14,11 +14,7 @@ public enum BuckCacheRequestType implements org.apache.thrift.TEnum {
   STORE(101),
   MULTI_FETCH(102),
   DELETE_REQUEST(105),
-  CONTAINS(107),
-  MANIFEST_APPEND(108),
-  MANIFEST_FETCH(109),
-  MANIFEST_DELETE(110),
-  MANIFEST_SET(111);
+  CONTAINS(107);
 
   private final int value;
 
@@ -52,14 +48,6 @@ public enum BuckCacheRequestType implements org.apache.thrift.TEnum {
         return DELETE_REQUEST;
       case 107:
         return CONTAINS;
-      case 108:
-        return MANIFEST_APPEND;
-      case 109:
-        return MANIFEST_FETCH;
-      case 110:
-        return MANIFEST_DELETE;
-      case 111:
-        return MANIFEST_SET;
       default:
         return null;
     }
