@@ -16,6 +16,9 @@
 
 package com.facebook.buck.features.haskell;
 
+import static java.util.stream.Collectors.*;
+
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -32,6 +35,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import org.immutables.value.Value;
 
@@ -62,6 +68,43 @@ abstract class HaskellSources implements AddsToRuleKey {
               graphBuilder, platform.getCxxPlatform(), ent.getValue()));
     }
     return ImmutableHaskellSources.ofImpl(moduleMap.build());
+  }
+
+  public static HaskellSources concat(Collection<HaskellSources> srcs) {
+    return new HaskellSources() {
+      @Override
+      ImmutableSortedMap<HaskellSourceModule, SourcePath> getModuleMap() {
+
+        Map<HaskellSourceModule, List<SourcePath>> resultWithDuplicates =
+            srcs.stream()
+                .flatMap(m -> m.getModuleMap().entrySet().stream())
+                .collect(groupingBy(e -> e.getKey(), mapping(e -> e.getValue(), toList())));
+
+        ImmutableMap<HaskellSourceModule, List<SourcePath>> duplicates =
+            resultWithDuplicates.entrySet().stream()
+                .filter(e -> e.getValue().size() > 1 && !e.getKey().getModuleName().equals("Main"))
+                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+
+        if (!duplicates.isEmpty()) {
+          // It would be nicer to extract a checked Exception type
+          StringBuilder msg = new StringBuilder();
+          msg.append("Duplicate module names:\n");
+          duplicates.entrySet().stream()
+              .forEach(
+                  e -> {
+                    msg.append("  + ").append(e.getKey()).append("\n");
+                    e.getValue().forEach(v -> msg.append("    - ").append(v).append("\n"));
+                  });
+          msg.append("\n");
+          throw new HumanReadableException(msg.toString());
+        }
+
+        return resultWithDuplicates.entrySet().stream()
+            .collect(
+                ImmutableSortedMap.toImmutableSortedMap(
+                    Ordering.natural(), e -> e.getKey(), e -> e.getValue().get(0)));
+      };
+    };
   }
 
   public ImmutableSortedSet<String> getModuleNames() {
