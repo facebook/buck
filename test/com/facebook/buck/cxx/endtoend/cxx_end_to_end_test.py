@@ -25,7 +25,7 @@ from xplat.build_infra.buck_e2e.repo_workspace import (
 async def test_should_build_and_run_successfully(repo: BuckRepo):
     result = await repo.build(
         "//simple_successful_helloworld:simple_successful_helloworld", "--show-output"
-    ).wait()
+    )
 
     target_to_build_output = result.get_target_to_build_output()
     assert len(target_to_build_output) == 1
