@@ -13,8 +13,11 @@
 # limitations under the License.
 
 from xplat.build_infra.buck_api.buck_repo import BuckRepo
-from xplat.build_infra.buck_e2e import asserts
-from xplat.build_infra.buck_e2e.repo_workspace import buck_test, exec_path
+from xplat.build_infra.buck_e2e.asserts import assert_parse_error, expect_failure
+from xplat.build_infra.buck_e2e.repo_workspace import (
+    buck_test,
+    exec_path,
+)
 
 
 # TODO: Add decorator to run this with and without buckd
@@ -23,7 +26,6 @@ async def test_should_build_and_run_successfully(repo: BuckRepo):
     result = await repo.build(
         "//simple_successful_helloworld:simple_successful_helloworld", "--show-output"
     ).wait()
-    asserts.success(result)
 
     target_to_build_output = result.get_target_to_build_output()
     assert len(target_to_build_output) == 1
@@ -35,15 +37,14 @@ async def test_should_build_and_run_successfully(repo: BuckRepo):
 
 @buck_test(data="testdata/cxx")
 async def test_successful_env_empty_file(repo: BuckRepo):
-    result = await repo.build(
-        "//simple_parse_error_helloworld:simple_parse_error_helloworld"
-    ).wait()
-    asserts.parse_error(result)
+    build_failure = await expect_failure(
+        repo.build("//simple_parse_error_helloworld:simple_parse_error_helloworld")
+    )
+    assert_parse_error(build_failure)
 
 
 @buck_test(data="testdata/cxx")
 async def test_should_not_build_successfully(repo: BuckRepo):
-    result = await repo.build(
-        "//simple_failed_helloworld:simple_failed_helloworld"
-    ).wait()
-    asserts.failure(result, f"Should fail to compile: {result.stdout}")
+    await expect_failure(
+        repo.build("//simple_failed_helloworld:simple_failed_helloworld")
+    )
