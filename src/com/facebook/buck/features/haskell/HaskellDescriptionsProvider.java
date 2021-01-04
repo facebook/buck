@@ -42,6 +42,7 @@ public class HaskellDescriptionsProvider implements DescriptionProvider {
         new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new HaskellPrebuiltLibraryDescription(),
-        new HaskellGhciDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig));
+        new HaskellGhciDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
+        new HaskellIdeDescription(toolchainProvider));
   }
 }
