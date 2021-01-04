@@ -38,13 +38,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -180,32 +178,34 @@ public final class IjModuleGraphFactory {
       IjLibraryFactory libraryFactory,
       ImmutableMap<BuildTarget, IjModule> rulesToModules,
       IjModule module,
+      int depCount,
       Stream<BuildTarget> buildTargetStream) {
-    return buildTargetStream
-        .filter(
-            input -> {
-              // The exported deps closure can contain references back to targets contained
-              // in the module, so filter those out.
-              return !module.getTargets().contains(input);
-            })
-        .flatMap(
-            depTarget -> {
-              List<IjProjectElement> elements = new ArrayList<>();
-              IjModule depModule = rulesToModules.get(depTarget);
-              if (depModule != null) {
-                elements.add(depModule);
-              }
-              if (depModule == null || depModule.getNonSourceBuildTargets().contains(depTarget)) {
-                // all BuildTarget's are merged into IJModule
-                // if a BuildTarget is not built from Java sources, it will also be added as a
-                // library
-                TargetNode<?> targetNode = targetGraph.get(depTarget);
-                elements.add(libraryFactory.getLibrary(targetNode).orElse(null));
-              }
-              return elements.stream();
-            })
-        .filter(Objects::nonNull)
-        .collect(ImmutableSet.toImmutableSet());
+
+    ImmutableSet.Builder<IjProjectElement> result = ImmutableSet.builderWithExpectedSize(depCount);
+    Iterator<BuildTarget> i = buildTargetStream.iterator();
+    while (i.hasNext()) {
+      BuildTarget target = i.next();
+      if (module.getTargets().contains(target)) {
+        continue;
+      }
+
+      IjModule depModule = rulesToModules.get(target);
+      if (depModule != null) {
+        result.add(depModule);
+      }
+      if (depModule == null || depModule.getNonSourceBuildTargets().contains(target)) {
+        // all BuildTarget's are merged into IJModule
+        // if a BuildTarget is not built from Java sources, it will also be added as a
+        // library
+        TargetNode<?> targetNode = targetGraph.get(target);
+        Optional<IjLibrary> lib = libraryFactory.getLibrary(targetNode);
+        if (lib.isPresent()) {
+          result.add(lib.get());
+        }
+      }
+    }
+    ImmutableSet<IjProjectElement> resultx = result.build();
+    return resultx;
   }
 
   /**
@@ -287,26 +287,28 @@ public final class IjModuleGraphFactory {
             depElements = ImmutableSet.of();
           }
         } else {
+          ImmutableSet<BuildTarget> exportedDeps =
+              exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget);
+
           depElements =
               getProjectElementFromBuildTargets(
                   targetGraph,
                   libraryFactory,
                   rulesToModules,
                   module,
-                  Stream.concat(
-                      exportedDepsClosureResolver.getExportedDepsClosure(depBuildTarget).stream(),
-                      Stream.of(depBuildTarget)));
+                  exportedDeps.size() + 1,
+                  Stream.concat(exportedDeps.stream(), Stream.of(depBuildTarget)));
           if (projectConfig.isIncludeTransitiveDependency()) {
+            ImmutableSet<BuildTarget> transitiveDeps =
+                transitiveDepsClosureResolver.getTransitiveDepsClosure(depBuildTarget);
             transitiveDepElements =
                 getProjectElementFromBuildTargets(
                     targetGraph,
                     libraryFactory,
                     rulesToModules,
                     module,
-                    Stream.concat(
-                        transitiveDepsClosureResolver.getTransitiveDepsClosure(depBuildTarget)
-                            .stream(),
-                        Stream.of(depBuildTarget)));
+                    transitiveDeps.size() + 1,
+                    Stream.concat(transitiveDeps.stream(), Stream.of(depBuildTarget)));
           }
         }
 
