@@ -47,6 +47,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -57,7 +58,6 @@ import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -455,7 +455,7 @@ public class TestRunning {
                                 .getTargetConfiguration()
                                 .orElse(UnconfiguredTargetConfiguration.INSTANCE))
                         .getSpoolMode()
-                    == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
+                    == BuildJavaCommand.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
                 options.getCoverageExcludes(),
                 downwardApiConfig.isEnabledForTests()),

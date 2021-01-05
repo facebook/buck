@@ -26,6 +26,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -128,8 +129,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       builder.setTrackJavacPhaseEvents(trackJavacPhaseEvents.get());
     }
 
-    Optional<JavacOptions.SpoolMode> spoolMode =
-        delegate.getEnum(SECTION, "jar_spool_mode", JavacOptions.SpoolMode.class);
+    Optional<BuildJavaCommand.SpoolMode> spoolMode =
+        delegate.getEnum(SECTION, "jar_spool_mode", BuildJavaCommand.SpoolMode.class);
     if (spoolMode.isPresent()) {
       builder.setSpoolMode(spoolMode.get());
     }

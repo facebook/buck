@@ -13,7 +13,7 @@ java_immutables_library(
         "//test/com/facebook/buck/cli/query:query",
     ],
     visibility = [
-        "//src/com/facebook/buck/event:dependencies-for-external-projects-inner",
+        "//src/com/facebook/buck/event/...",
         "//src/com/facebook/buck/features/apple/project:",
         "//src/com/facebook/buck/features/apple/projectV2:",
         "//src/com/facebook/buck/features/go:",
@@ -21,6 +21,7 @@ java_immutables_library(
         "//test/com/facebook/buck/...",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",

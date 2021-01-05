@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -65,7 +66,7 @@ public class JavacOptionsTest {
   public void spoolModeToDiskByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertThat(options.getSpoolMode(), is(JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK));
+    assertThat(options.getSpoolMode(), is(BuildJavaCommand.SpoolMode.INTERMEDIATE_TO_DISK));
   }
 
   @Test

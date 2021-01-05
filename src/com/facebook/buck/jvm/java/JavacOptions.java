@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -44,24 +45,6 @@ import org.immutables.value.Value;
  */
 @BuckStyleValueWithBuilder
 public abstract class JavacOptions implements AddsToRuleKey {
-
-  /** The method in which the compiler output is spooled. */
-  public enum SpoolMode {
-    /**
-     * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory. If {@link
-     * com.facebook.buck.jvm.java.JavaLibraryDescription.AbstractJavaLibraryDescriptionArg}
-     * postprocessClassesCommands are present, the builder will resort to writing .class files to
-     * disk by necessity.
-     */
-    DIRECT_TO_JAR,
-
-    /**
-     * Writes the intermediate .class files from the compiler output to disk which is later packed
-     * up into a .jar file.
-     */
-    INTERMEDIATE_TO_DISK,
-  }
 
   @Value.Default
   @AddToRuleKey
