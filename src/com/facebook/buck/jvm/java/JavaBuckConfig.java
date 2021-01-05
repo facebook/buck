@@ -25,7 +25,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.annotations.VisibleForTesting;
@@ -252,7 +253,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
    * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
    */
   public SourceAbiVerificationMode getSourceAbiVerificationMode() {
-    if (!getAbiGenerationMode().isSourceAbi()) {
+    if (!AbiGenerationModeUtils.isSourceAbi(getAbiGenerationMode())) {
       return SourceAbiVerificationMode.OFF;
     }
 

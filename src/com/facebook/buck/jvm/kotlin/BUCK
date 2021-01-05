@@ -8,6 +8,7 @@ java_library_with_plugins(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description/attr:attr",

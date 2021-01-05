@@ -116,6 +116,7 @@ standard_java_test(
     ],
     with_test_data = True,
     deps = [
+        "//src-gen:javacd-model",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",

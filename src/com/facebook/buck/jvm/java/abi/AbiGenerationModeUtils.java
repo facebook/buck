@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.facebook.buck.jvm.java.abi;
+
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+import javax.tools.Diagnostic;
+
+/** Utilities method for {@link AbiGenerationMode} */
+public class AbiGenerationModeUtils {
+
+  private static Map<AbiGenerationMode, Diagnostic.Kind> DIAGNOSTICS_MAP =
+      ImmutableMap.of(
+          AbiGenerationMode.MIGRATING_TO_SOURCE_ONLY, Diagnostic.Kind.WARNING,
+          AbiGenerationMode.SOURCE_ONLY, Diagnostic.Kind.ERROR);
+
+  private AbiGenerationModeUtils() {}
+
+  public static boolean checkForSourceOnlyAbiCompatibility(AbiGenerationMode abiGenerationMode) {
+    return DIAGNOSTICS_MAP.containsKey(abiGenerationMode);
+  }
+
+  public static Diagnostic.Kind getDiagnosticKindForSourceOnlyAbiCompatibility(
+      AbiGenerationMode abiGenerationMode) {
+    return DIAGNOSTICS_MAP.get(abiGenerationMode);
+  }
+
+  public static boolean isSourceAbi(AbiGenerationMode abiGenerationMode) {
+    return abiGenerationMode != AbiGenerationMode.CLASS;
+  }
+
+  public static boolean usesDependencies(AbiGenerationMode abiGenerationMode) {
+    return abiGenerationMode != AbiGenerationMode.SOURCE_ONLY;
+  }
+}

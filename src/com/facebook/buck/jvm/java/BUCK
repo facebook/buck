@@ -30,6 +30,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
@@ -304,6 +305,7 @@ java_library_with_plugins(
         "PUBLIC",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",

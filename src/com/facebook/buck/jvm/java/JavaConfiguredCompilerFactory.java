@@ -16,11 +16,14 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.isSourceAbi;
+import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.usesDependencies;
+
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
@@ -77,7 +80,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public boolean shouldGenerateSourceAbi() {
-    return javaBuckConfig.getAbiGenerationMode().isSourceAbi();
+    return isSourceAbi(javaBuckConfig.getAbiGenerationMode());
   }
 
   @Override
@@ -87,7 +90,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public boolean shouldGenerateSourceOnlyAbi() {
-    return shouldGenerateSourceAbi() && !javaBuckConfig.getAbiGenerationMode().usesDependencies();
+    return shouldGenerateSourceAbi() && !usesDependencies(javaBuckConfig.getAbiGenerationMode());
   }
 
   @Override

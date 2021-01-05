@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
@@ -32,7 +33,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
 import com.google.common.collect.ImmutableList;
@@ -130,7 +131,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public boolean shouldGenerateSourceAbi() {
-    return kotlinBuckConfig.getAbiGenerationMode().isSourceAbi();
+    return AbiGenerationModeUtils.isSourceAbi(kotlinBuckConfig.getAbiGenerationMode());
   }
 
   private static ImmutableList<SourcePath> getFriendSourcePaths(

@@ -21,6 +21,7 @@ java_library(
         "//test/com/facebook/buck/jvm/java/abi/...",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/io/file:file",

@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.usesDependencies;
+
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.infer.annotation.PropagatesNullable;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -58,7 +61,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Nullable
   public MethodVisitor visitMethod(
       int access, String name, String desc, String signature, String[] exceptions) {
-    if (!compatibilityMode.usesDependencies() && (access & Opcodes.ACC_BRIDGE) != 0) {
+    if (!usesDependencies(compatibilityMode) && (access & Opcodes.ACC_BRIDGE) != 0) {
       return null;
     }
 
@@ -74,7 +77,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
     Objects.requireNonNull(this.name);
-    if (!compatibilityMode.usesDependencies()
+    if (!usesDependencies(compatibilityMode)
         && !this.name.equals(name)
         && !this.name.equals(outerName)) {
       // Because we can't know the flags for inferred types, InnerClassesTable marks all entries
@@ -88,7 +91,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   }
 
   private String fixupSignature(@PropagatesNullable String signature) {
-    if (signature == null || compatibilityMode.usesDependencies()) {
+    if (signature == null || usesDependencies(compatibilityMode)) {
       return signature;
     }
 
@@ -101,7 +104,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   }
 
   private int stripAbstractFromEnums(int access) {
-    if (compatibilityMode.usesDependencies()) {
+    if (usesDependencies(compatibilityMode)) {
       return access;
     }
 

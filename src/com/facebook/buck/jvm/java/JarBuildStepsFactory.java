@@ -40,13 +40,14 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
@@ -350,8 +351,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   public boolean useRulePipelining() {
     return configuredCompiler instanceof BaseJavacToJarStepFactory
-        && abiGenerationMode.isSourceAbi()
-        && abiGenerationMode.usesDependencies();
+        && AbiGenerationModeUtils.isSourceAbi(abiGenerationMode)
+        && AbiGenerationModeUtils.usesDependencies(abiGenerationMode);
   }
 
   /** Adds build steps for ABI jar. */

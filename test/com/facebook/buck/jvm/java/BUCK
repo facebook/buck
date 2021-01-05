@@ -24,6 +24,7 @@ java_library(
         "//test/...",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",
@@ -393,6 +394,7 @@ java_test(
     ),
     deps = [
         ":fakepackagefinder",
+        "//src-gen:javacd-model",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",

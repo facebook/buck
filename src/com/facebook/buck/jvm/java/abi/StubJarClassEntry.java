@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.kotlin.KotlinMetadataReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

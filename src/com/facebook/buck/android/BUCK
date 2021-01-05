@@ -175,6 +175,7 @@ java_library_with_plugins(
         ":helpers",
         ":split_dex",
         ":steps",
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/dalvik:dalvik",

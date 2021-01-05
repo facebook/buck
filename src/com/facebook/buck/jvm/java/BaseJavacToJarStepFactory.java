@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
@@ -182,7 +183,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     // (2) The target must have 0 postprocessing steps.
     // (3) Tha compile API must be JSR 199.
     boolean isSpoolingToJarEnabled =
-        compilerParameters.getAbiGenerationMode().isSourceAbi()
+        AbiGenerationModeUtils.isSourceAbi(compilerParameters.getAbiGenerationMode())
             || (postprocessClassesCommands.isEmpty()
                 && this.spoolMode == JavacOptions.SpoolMode.DIRECT_TO_JAR
                 && resolvedJavac instanceof Jsr199Javac.ResolvedJsr199Javac);

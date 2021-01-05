@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.checkForSourceOnlyAbiCompatibility;
+import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.getDiagnosticKindForSourceOnlyAbiCompatibility;
+
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -23,8 +26,8 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.SourceVersionUtils;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
@@ -590,7 +593,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
           PluginClassLoader pluginLoader = loaderFactory.getPluginClassLoader(javacTask);
 
           BuckJavacTaskListener taskListener = null;
-          if (abiGenerationMode.checkForSourceOnlyAbiCompatibility()
+          if (checkForSourceOnlyAbiCompatibility(abiGenerationMode)
               && !generatingSourceOnlyAbi
               && ruleInfoFactory != null) {
             taskListener =
@@ -601,7 +604,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                     () ->
                         diagnostics.getDiagnostics().stream()
                             .anyMatch(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR),
-                    abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
+                    getDiagnosticKindForSourceOnlyAbiCompatibility(abiGenerationMode));
           }
 
           phaseEventLogger =
