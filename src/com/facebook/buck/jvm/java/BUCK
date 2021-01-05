@@ -154,6 +154,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/description:description",
@@ -419,6 +420,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src-gen:javacd-model",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/config:config",

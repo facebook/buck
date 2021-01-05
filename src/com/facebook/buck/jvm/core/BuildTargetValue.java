@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.core;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.javacd.model.BuildTargetValue.Type;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -28,13 +29,6 @@ import org.immutables.value.Value;
  */
 @BuckStyleValue
 public abstract class BuildTargetValue {
-
-  /** java compilation build target type */
-  public enum Type {
-    LIBRARY,
-    SOURCE_ABI,
-    SOURCE_ONLY_ABI
-  }
 
   public abstract Type getType();
 

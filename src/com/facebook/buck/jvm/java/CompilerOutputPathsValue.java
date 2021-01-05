@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
-import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.javacd.model.BuildTargetValue.Type;
 import com.facebook.buck.jvm.core.JavaAbis;
 
 /**
@@ -38,7 +38,7 @@ public abstract class CompilerOutputPathsValue {
   abstract CompilerOutputPaths getSourceOnlyAbiCompilerOutputPath();
 
   /** Returns {@link CompilerOutputPaths} by given {@code type} */
-  public CompilerOutputPaths getByType(BuildTargetValue.Type type) {
+  public CompilerOutputPaths getByType(Type type) {
     switch (type) {
       case LIBRARY:
         return getLibraryCompilerOutputPath();
@@ -49,6 +49,8 @@ public abstract class CompilerOutputPathsValue {
       case SOURCE_ONLY_ABI:
         return getSourceOnlyAbiCompilerOutputPath();
 
+      case UNKNOWN:
+      case UNRECOGNIZED:
       default:
         throw new IllegalStateException(type + " is not supported");
     }
