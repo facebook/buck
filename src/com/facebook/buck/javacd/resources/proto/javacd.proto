@@ -1,0 +1,327 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+//
+//----------------------------------------------
+//  Check protobuf version
+//----------------------------------------------
+//
+//  Check what version of protobuf is installed (Ex. 3.7.0 on Mar 31, 2020)
+//  //third-party/java/protobuf
+//
+//  Install `protoc` of the same version as above (Ex. 3.7.0 )
+//  http://google.github.io/proto-lens/installing-protoc.html
+//
+//----------------------------------------------
+//  Install of protobuf version 3.7.0
+//----------------------------------------------
+//   PROTOC_ZIP=protoc-3.7.0-osx-x86_64.zip
+//   curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.7.0/$PROTOC_ZIP
+//   sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
+//   sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
+//   rm -f $PROTOC_ZIP
+//----------------------------------------------
+//
+//
+//----------------------------------------------
+//  Generate command
+//----------------------------------------------
+//
+//      protoc --java_out=src-gen/ \
+//      --java_opt=annotate_code \
+//      --plugin=protoc-gen-grpc-java=third-party/java/grpc/protoc-gen-grpc-java-1.10.1-osx-x86_64.exe \
+//      --grpc-java_out=src/ \
+//      --proto_path=src/com/facebook/buck/javacd/resources/proto \
+//      javacd.proto \
+//      && yes | rm src-gen/com/facebook/buck/javacd/model/*.meta
+//
+//-----------------------
+//
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.facebook.buck.javacd.model";
+option java_outer_classname = "JavaCDProto";
+
+// best practices to include version number in package
+package javacd.api.v1;
+
+message BuildJavaCommand {
+    // BaseJavacToJarStepFactory params
+    SpoolMode spoolMode = 1;
+    bool hasAnnotationProcessing = 2;
+    bool withDownwardApi = 3;
+
+    oneof command {
+        LibraryJarCommand libraryJarCommand = 4;
+        AbiJarCommand abiJarCommand = 5;
+    }
+
+    /** The method in which the compiler output is spooled. */
+    enum SpoolMode {
+        UNKNOWN = 0;
+
+        /**
+         * Writes the compiler output directly to a .jar file while retaining the intermediate .class
+         * files in memory. If `postprocessClassesCommands` are present, the builder will resort to writing .class files to
+         * disk by necessity.
+         */
+        DIRECT_TO_JAR = 1;
+
+        /**
+         * Writes the intermediate .class files from the compiler output to disk which is later packed
+         * up into a .jar file.
+         */
+        INTERMEDIATE_TO_DISK = 2;
+    }
+}
+
+message BaseJarCommand {
+    AbiGenerationMode abiCompatibilityMode = 1;
+    AbiGenerationMode abiGenerationMode = 2;
+    bool isRequiredForSourceOnlyAbi = 3;
+    bool trackClassUsage = 4;
+    bool trackJavacPhaseEvents = 5;
+    FilesystemParams filesystemParams = 6;
+    BuildTargetValue buildTargetValue = 7;
+    OutputPathsValue outputPathsValue = 8;
+    repeated RelPath compileTimeClasspathPaths = 9;
+    repeated RelPath javaSrcs = 10;
+    repeated JavaAbiInfo fullJarInfos = 11;
+    repeated JavaAbiInfo abiJarInfos = 12;
+    // protobuf map doesn't support custom type as map key, so would present a map as list of entries.
+    repeated RelPathMapEntry resourcesMap = 13;
+    map<string, RelPath> cellToPathMappings = 14;
+    JarParameters libraryJarParameters = 15;
+    AbsPath buildCellRootPath = 16;
+    ResolvedJavac resolvedJavac = 17;
+    ResolvedJavacOptions resolvedJavacOptions = 18;
+
+    message RelPathMapEntry {
+        RelPath key = 1;
+        RelPath value = 2;
+    }
+
+    enum AbiGenerationMode {
+        UNKNOWN = 0;
+        /** Generate ABIs by stripping .class files */
+        CLASS = 1;
+        /** Generate ABIs by parsing .java files with dependency ABIs available */
+        SOURCE = 2;
+        /**
+         * Output warnings for things that aren't legal when generating ABIs from source without
+         * dependency ABIs
+         */
+        MIGRATING_TO_SOURCE_ONLY = 3;
+        /**
+         * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
+         */
+        SOURCE_ONLY = 4;
+    }
+}
+
+message LibraryJarCommand {
+    BaseJarCommand baseJarCommand = 1;
+    repeated string postprocessClassesCommands = 2;
+    RelPath pathToClasses = 3;
+    RelPath rootOutput = 4;
+    RelPath pathToClassHashes = 5;
+    RelPath annotationsPath = 6;
+    UnusedDependenciesParams unusedDependenciesParams = 7;
+}
+
+message AbiJarCommand {
+    BaseJarCommand baseJarCommand = 1;
+    JarParameters abiJarParameters = 2;
+}
+
+message FilesystemParams {
+    AbsPath rootPath = 1;
+    RelPath configuredBuckOut = 2;
+    repeated string globIgnorePaths = 3;
+}
+
+message BuildTargetValue {
+    string fullyQualifiedName = 1;
+    Type type = 2;
+    enum Type {
+        UNKNOWN = 0;
+        LIBRARY = 1;
+        SOURCE_ABI = 2;
+        SOURCE_ONLY_ABI = 3;
+    }
+}
+
+message OutputPathsValue {
+    OutputPaths libraryPaths = 1;
+    OutputPaths sourceAbiPaths = 2;
+    OutputPaths sourceOnlyAbiPaths = 3;
+    string libraryTargetFullyQualifiedName = 4;
+
+    message OutputPaths {
+        RelPath classesDir = 1;
+        RelPath outputJarDirPath = 2;
+        RelPath abiJarPath = 3;
+        RelPath annotationPath = 4;
+        RelPath pathToSourcesList = 5;
+        RelPath workingDirectory = 6;
+        RelPath outputJarPath = 7;
+    }
+}
+
+message JavaAbiInfo {
+    string buildTargetName = 1;
+    repeated Path contentPaths = 2;
+}
+
+message ResolvedJavacOptions {
+    string bootclasspath = 1;
+    repeated RelPath bootclasspathList = 2;
+    JavacLanguageLevelOptions languageLevelOptions = 3;
+    bool debug = 4;
+    bool verbose = 5;
+    JavacPluginParams javaAnnotationProcessorParams = 6;
+    JavacPluginParams standardJavacPluginParams = 7;
+    repeated string extraArguments = 8;
+    repeated JavacPluginJsr199Fields annotationProcessors = 9;
+    repeated JavacPluginJsr199Fields javaPlugins = 10;
+    bool javaAnnotationProcessorParamsPresent = 11;
+
+    message JavacLanguageLevelOptions {
+        string sourceLevel = 1;
+        string targetLevel = 2;
+    }
+
+    message JavacPluginJsr199Fields {
+        bool canReuseClassLoader = 1;
+        repeated string processorNames = 2;
+        repeated URL classpath = 3;
+
+        message URL {
+            string value = 1;
+        }
+    }
+
+    message JavacPluginParams {
+        repeated string parameters = 1;
+        bool processOnly = 2;
+        repeated ResolvedJavacPluginProperties pluginProperties = 3;
+    }
+
+    message ResolvedJavacPluginProperties {
+        bool canReuseClassLoader = 1;
+        bool doesNotAffectAbi = 2;
+        bool supportsAbiGenerationFromSource = 3;
+        repeated string processorNames = 4;
+        repeated RelPath classpath = 5;
+        map<string, RelPath> pathParams = 6;
+    }
+}
+
+message JarParameters {
+    bool hashEntries = 1;
+    bool mergeManifests = 2;
+    bool disallowAllDuplicates = 3;
+    RelPath jarPath = 4;
+    RemoveClassesPatternsMatcher removeEntryPredicate = 5;
+    repeated RelPath entriesToJar = 6;
+    repeated RelPath overrideEntriesToJar = 7;
+    string mainClass = 8;
+    RelPath manifestFile = 9;
+    LogLevel duplicatesLogLevel = 10;
+
+    enum LogLevel {
+        UNKNOWN = 0;
+        OFF = 1;
+        SEVERE = 2;
+        WARNING = 3;
+        INFO = 4;
+        CONFIG = 5;
+        FINE = 6;
+        FINER = 7;
+        FINEST = 8;
+        ALL = 9;
+    }
+
+    message RemoveClassesPatternsMatcher {
+        repeated string patterns = 1;
+    }
+}
+
+message ResolvedJavac {
+    oneof javac {
+        ExternalJavac externalJavac = 1;
+        JarBackedJavac jarBackedJavac = 2;
+        JSR199Javac jcr199Javac = 3;
+    }
+
+    message ExternalJavac {
+        string shortName = 1;
+        repeated string commandPrefix = 2;
+    }
+
+    message JarBackedJavac {
+        string compilerClassName = 1;
+        repeated RelPath resolvedClasspath = 2;
+    }
+
+    message JSR199Javac {
+    }
+}
+
+message UnusedDependenciesParams {
+    repeated DependencyAndExportedDepsPath deps = 1;
+    repeated DependencyAndExportedDepsPath providedDeps = 2;
+    RelPath depFile = 3;
+    UnusedDependenciesAction unusedDependenciesAction = 4;
+    repeated string exportedDeps = 5;
+    string buildozerPath = 6;
+    bool onlyPrintCommands = 7;
+    bool doUltralightChecking = 8;
+
+    /** An action that is executed when a rule that compiles Java code has unused dependencies. */
+    enum UnusedDependenciesAction {
+        UNKNOWN = 0;
+        FAIL = 1;
+        WARN = 2;
+        IGNORE = 3;
+    }
+
+    message DependencyAndExportedDepsPath {
+        BuildTargetAndPaths dependency = 1;
+        repeated DependencyAndExportedDepsPath exportedDeps = 2;
+    }
+
+    message BuildTargetAndPaths {
+        string buildTargetName = 1;
+        RelPath fullJarPath = 2;
+        RelPath abiPath = 3;
+    }
+}
+
+message RelPath {
+    string path = 1;
+}
+
+message AbsPath {
+    string path = 1;
+}
+
+// TODO: the only place where this type is used is JavaAbiInfo.contentPaths
+message Path {
+    string path = 1;
+}

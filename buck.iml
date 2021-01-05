@@ -21,6 +21,9 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/core/util/immutables/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/logd/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/downwardapi/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/downwardapi/resources/proto" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/javacd/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/javacd/resources/proto" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp-buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp.buckd" />
