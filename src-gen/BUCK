@@ -55,7 +55,10 @@ java_library(
 java_library(
     name = "downward-model",
     srcs = glob(["**/downward/model/**/*.java"]),
-    visibility = ["PUBLIC"],
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
     deps = select({
         # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
         # from the JCL in Java 11. Add it back via this third party library.
@@ -71,6 +74,24 @@ java_library(
 java_library(
     name = "buildable-command-model",
     srcs = glob(["**/rules/modern/model/**/*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = select({
+        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
+        # from the JCL in Java 11. Add it back via this third party library.
+        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+        "DEFAULT": [],
+    }),
+    exported_deps = [
+        "//third-party/java/protobuf:protobuf",
+    ],
+)
+
+java_library(
+    name = "javacd-model",
+    srcs = glob(["**/javacd/model/**/*.java"]),
     visibility = [
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",
