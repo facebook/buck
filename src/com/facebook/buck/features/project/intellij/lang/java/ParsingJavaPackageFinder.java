@@ -146,15 +146,15 @@ public abstract class ParsingJavaPackageFinder {
     }
     try (BufferedReader reader =
         new BufferedReader(
-            new InputStreamReader(
-                projectFilesystem.newFileInputStream(pathRelativeToProjectRoot)))) {
+            new InputStreamReader(projectFilesystem.newFileInputStream(pathRelativeToProjectRoot)),
+            512)) {
       StringBuilder block = new StringBuilder();
       String line;
       while ((line = reader.readLine()) != null) {
         if (END_OF_PRELUDE.matcher(line).find()) {
           break;
         }
-        block.append(line);
+        block.append('\n').append(line);
       }
       return Optional.of(block.toString());
     } catch (IOException e) {
