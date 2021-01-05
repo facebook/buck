@@ -170,5 +170,6 @@
     <orderEntry type="library" name="junixsocket" level="project" />
     <orderEntry type="module" module-name="bazel" />
     <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
+    <orderEntry type="module" module-name="buck" />
   </component>
 </module>

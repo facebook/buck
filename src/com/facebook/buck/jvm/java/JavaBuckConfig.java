@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -317,16 +318,9 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     FAIL,
   }
 
-  /** An action that is executed when a rule that compiles Java code has unused dependencies. */
-  public enum UnusedDependenciesAction {
-    FAIL,
-    WARN,
-    IGNORE,
-  }
-
   /**
-   * The same as {@link UnusedDependenciesAction} with a couple of extra options to give greater
-   * flexibility.
+   * The same as {@link UnusedDependenciesParams.UnusedDependenciesAction} with a couple of extra
+   * options to give greater flexibility.
    */
   public enum UnusedDependenciesConfig {
     FAIL,

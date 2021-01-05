@@ -26,9 +26,8 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileReader;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -84,7 +83,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       ImmutableList<DependencyAndExportedDepsPath> deps,
       ImmutableList<DependencyAndExportedDepsPath> providedDeps,
       ImmutableList<String> exportedDeps,
-      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
+      UnusedDependenciesAction unusedDependenciesAction,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,

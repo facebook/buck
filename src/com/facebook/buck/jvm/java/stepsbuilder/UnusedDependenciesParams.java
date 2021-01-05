@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +38,7 @@ public abstract class UnusedDependenciesParams {
 
   public abstract RelPath getDepFile();
 
-  public abstract JavaBuckConfig.UnusedDependenciesAction getUnusedDependenciesAction();
+  public abstract UnusedDependenciesAction getUnusedDependenciesAction();
 
   public abstract ImmutableList<String> getExportedDeps();
 
@@ -54,7 +54,7 @@ public abstract class UnusedDependenciesParams {
       ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> providedDeps,
       String fullyQualifiedName,
       RelPath depFile,
-      JavaBuckConfig.UnusedDependenciesAction unusedDependenciesAction,
+      UnusedDependenciesAction unusedDependenciesAction,
       ImmutableList<String> exportedDeps,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,

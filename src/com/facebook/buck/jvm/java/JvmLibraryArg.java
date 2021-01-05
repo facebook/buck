@@ -28,9 +28,9 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
-import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.JavacSpec.Builder;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +85,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   Optional<SourceAbiVerificationMode> getSourceAbiVerificationMode();
 
-  Optional<UnusedDependenciesAction> getOnUnusedDependencies();
+  Optional<UnusedDependenciesParams.UnusedDependenciesAction> getOnUnusedDependencies();
 
   Optional<Boolean> getNeverMarkAsUnusedDependency();
 
