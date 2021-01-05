@@ -23,8 +23,6 @@ import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -77,19 +75,6 @@ public abstract class DebugPathSanitizer implements AddsToRuleKey {
       }
       return builder.build();
     }
-  }
-
-  /**
-   * @return the given path as a string, expanded using {@code separator} to fulfill the required
-   *     {@code pathSize}.
-   */
-  public static String getPaddedDir(String path, int size, char pad) {
-    Preconditions.checkArgument(
-        path.length() <= size,
-        String.format(
-            "Path is too long to sanitize:\n'%s' is %d characters long, limit is %d.",
-            path, path.length(), size));
-    return Strings.padEnd(path, size, pad);
   }
 
   public abstract ImmutableMap<String, String> getCompilationEnvironment(

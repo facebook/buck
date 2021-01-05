@@ -37,7 +37,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -271,7 +270,7 @@ public class CompilationDatabaseIntegrationTest {
     commandArgs.add("-Xclang");
     commandArgs.add("-fdebug-compilation-dir");
     commandArgs.add("-Xclang");
-    commandArgs.add("." + Strings.repeat("/", 399));
+    commandArgs.add(".");
     commandArgs.add("-o");
     commandArgs.add(output);
     commandArgs.add("-c");

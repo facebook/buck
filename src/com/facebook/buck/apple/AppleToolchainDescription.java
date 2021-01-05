@@ -54,7 +54,6 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -207,9 +206,7 @@ public class AppleToolchainDescription
     sanitizerPathsBuilder.put(platformRootPath.getPath(), "APPLE_PLATFORM_DIR");
     developerRootPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
     DebugPathSanitizer compilerDebugPathSanitizer =
-        new PrefixMapDebugPathSanitizer(
-            DebugPathSanitizer.getPaddedDir(".", 250, File.separatorChar),
-            sanitizerPathsBuilder.build());
+        new PrefixMapDebugPathSanitizer(".", sanitizerPathsBuilder.build());
     cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);
 
     ImmutableMap.Builder<String, String> macrosBuilder = ImmutableMap.builder();

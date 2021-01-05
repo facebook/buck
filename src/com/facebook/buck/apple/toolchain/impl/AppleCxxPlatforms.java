@@ -75,7 +75,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -338,10 +337,7 @@ public class AppleCxxPlatforms {
     }
 
     DebugPathSanitizer compilerDebugPathSanitizer =
-        new PrefixMapDebugPathSanitizer(
-            DebugPathSanitizer.getPaddedDir(
-                ".", cxxBuckConfig.getDebugPathSanitizerLimit(), File.separatorChar),
-            sanitizerPaths.build());
+        new PrefixMapDebugPathSanitizer(".", sanitizerPaths.build());
 
     ImmutableList<String> cflags = cflagsBuilder.build();
 
