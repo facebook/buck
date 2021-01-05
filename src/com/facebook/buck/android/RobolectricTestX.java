@@ -52,7 +52,7 @@ public class RobolectricTestX extends JavaTestX {
       CoercedTestRunnerSpec specs,
       List<Arg> vmArgs,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Optional<Aapt2Link> optionalAapt2Link,
+      Optional<MergeAssets> optionalBinaryResources,
       Optional<SourcePath> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest,
       boolean passDirectoriesInFile) {
@@ -70,7 +70,7 @@ public class RobolectricTestX extends JavaTestX {
         new RobolectricTestHelper(
             getBuildTarget(),
             optionalDummyRDotJava,
-            optionalAapt2Link,
+            optionalBinaryResources,
             robolectricRuntimeDependency,
             robolectricManifest,
             getProjectFilesystem(),

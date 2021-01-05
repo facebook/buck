@@ -67,7 +67,7 @@ public class RobolectricTest extends JavaTest {
       Map<String, String> nativeLibsEnvironment,
       Set<Path> nativeLibsRequiredPaths,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Optional<Aapt2Link> optionalAapt2Link,
+      Optional<MergeAssets> optionalBinaryResources,
       Optional<UnitTestOptions> unitTestOptions,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
@@ -128,7 +128,7 @@ public class RobolectricTest extends JavaTest {
         new RobolectricTestHelper(
             getBuildTarget(),
             optionalDummyRDotJava,
-            optionalAapt2Link,
+            optionalBinaryResources,
             robolectricRuntimeDependency,
             robolectricManifest,
             getProjectFilesystem(),

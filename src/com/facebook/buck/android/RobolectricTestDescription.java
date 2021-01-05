@@ -76,6 +76,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -222,7 +223,7 @@ public class RobolectricTestDescription
             AndroidPlatformTarget.class);
 
     Optional<UnitTestOptions> unitTestOptions = Optional.empty();
-    Optional<Aapt2Link> optionalAapt2Link = Optional.empty();
+    Optional<MergeAssets> optionalBinaryResources = Optional.empty();
     if (dummyRDotJava.isPresent()) {
       DummyRDotJava actualDummyRDotJava = dummyRDotJava.get();
       ImmutableSortedSet<BuildRule> newDeclaredDeps =
@@ -294,8 +295,21 @@ public class RobolectricTestDescription
                 downwardApiConfig.isEnabledForAndroid());
 
         graphBuilder.addToIndex(aapt2Link);
-        optionalAapt2Link = Optional.of(aapt2Link);
         AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+
+        MergeAssets mergeAssets =
+            new MergeAssets(
+                buildTarget.withAppendedFlavors(
+                    AndroidBinaryResourcesGraphEnhancer.MERGE_ASSETS_FLAVOR),
+                projectFilesystem,
+                graphBuilder,
+                Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
+                actualDummyRDotJava.getAndroidResourceDeps().stream()
+                    .map(HasAndroidResourceDeps::getAssets)
+                    .filter(Objects::nonNull)
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+        graphBuilder.addToIndex(mergeAssets);
+        optionalBinaryResources = Optional.of(mergeAssets);
 
         unitTestOptions =
             Optional.of(
@@ -307,7 +321,7 @@ public class RobolectricTestDescription
                         "android_resource_apk",
                         graphBuilder
                             .getSourcePathResolver()
-                            .getCellUnsafeRelPath(aaptOutputInfo.getPrimaryResourcesApkPath())
+                            .getCellUnsafeRelPath(mergeAssets.getSourcePathToOutput())
                             .toString(),
                         "android_merged_manifest",
                         graphBuilder
@@ -446,7 +460,7 @@ public class RobolectricTestDescription
           TestRunnerSpecCoercer.coerce(args.getSpecs().get(), macrosConverter),
           vmArgs,
           dummyRDotJava,
-          optionalAapt2Link,
+          optionalBinaryResources,
           args.getUnbundledResourcesRoot(),
           args.getRobolectricRuntimeDependency(),
           javaBuckConfig
@@ -470,7 +484,7 @@ public class RobolectricTestDescription
         cxxLibraryEnhancement.nativeLibsEnvironment,
         cxxLibraryEnhancement.requiredPaths,
         args.isUseBinaryResources() ? Optional.empty() : dummyRDotJava,
-        optionalAapt2Link,
+        optionalBinaryResources,
         unitTestOptions,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)

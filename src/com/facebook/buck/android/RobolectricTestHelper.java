@@ -69,7 +69,7 @@ class RobolectricTestHelper {
 
   private final BuildTarget buildTarget;
   private final Optional<DummyRDotJava> optionalDummyRDotJava;
-  private final Optional<Aapt2Link> optionalAapt2Link;
+  private final Optional<MergeAssets> optionalBinaryResources;
   private final Optional<SourcePath> robolectricManifest;
   private final Optional<SourcePath> robolectricRuntimeDependency;
   private final ProjectFilesystem projectFilesystem;
@@ -80,14 +80,14 @@ class RobolectricTestHelper {
   RobolectricTestHelper(
       BuildTarget buildTarget,
       Optional<DummyRDotJava> optionalDummyRDotJava,
-      Optional<Aapt2Link> optionalAapt2Link,
+      Optional<MergeAssets> optionalBinaryResources,
       Optional<SourcePath> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest,
       ProjectFilesystem projectFilesystem,
       boolean passDirectoriesInFile) {
     this.buildTarget = buildTarget;
     this.optionalDummyRDotJava = optionalDummyRDotJava;
-    this.optionalAapt2Link = optionalAapt2Link;
+    this.optionalBinaryResources = optionalBinaryResources;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
     this.projectFilesystem = projectFilesystem;
@@ -262,8 +262,8 @@ class RobolectricTestHelper {
                     .flatMap(input -> input.getAndroidResourceDeps().stream())
                     .flatMap(input -> Stream.of(input.getRes(), input.getAssets()))
                     .filter(Objects::nonNull)),
-            // We need the aapt2link if we're using binary resources
-            RichStream.from(optionalAapt2Link),
+            // We need the binary resources if we have them.
+            RichStream.from(optionalBinaryResources),
             // It's possible that the user added some tool as a dependency, so make sure we
             // promote this rules first-order deps to runtime deps, so that these potential
             // tools are available when this test runs.
@@ -275,11 +275,11 @@ class RobolectricTestHelper {
   protected ImmutableSet<Path> getExtraRequiredPaths(
       SourcePathResolverAdapter sourcePathResolverAdapter) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    optionalAapt2Link.ifPresent(
-        link ->
+    optionalBinaryResources.ifPresent(
+        mergeAssets ->
             builder.add(
                 sourcePathResolverAdapter
-                    .getAbsolutePath(link.getAaptOutputInfo().getPrimaryResourcesApkPath())
+                    .getAbsolutePath(mergeAssets.getSourcePathToOutput())
                     .getPath()));
     robolectricManifest.ifPresent(
         robolectricManifest ->

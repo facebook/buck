@@ -59,7 +59,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   static final String AAPT2_COMPILE_FLAVOR_PREFIX = "aapt2_compile_";
   static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
   static final Flavor PACKAGE_STRING_ASSETS_FLAVOR = InternalFlavor.of("package_string_assets");
-  private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
+  static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
   static final Flavor GENERATE_RDOT_JAVA_FLAVOR = InternalFlavor.of("generate_rdot_java");
   private static final Flavor SPLIT_RESOURCES_FLAVOR = InternalFlavor.of("split_resources");
   static final Flavor GENERATE_STRING_RESOURCES_FLAVOR =

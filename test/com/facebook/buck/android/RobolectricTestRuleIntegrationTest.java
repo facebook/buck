@@ -112,11 +112,11 @@ public class RobolectricTestRuleIntegrationTest {
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, robolectricAssetDirectoriesPath.size());
 
-    ImmutableList<String> robolectricResourceApkPath =
+    ImmutableList<String> robolectricBinaryResourcesApkPath =
         requiredPaths.stream()
-            .filter(path -> path.contains("resource-apk.ap_"))
+            .filter(path -> path.contains("merged.assets.ap_"))
             .collect(ImmutableList.toImmutableList());
-    assertEquals(1, robolectricResourceApkPath.size());
+    assertEquals(1, robolectricBinaryResourcesApkPath.size());
 
     ImmutableList<String> robolectricManifestPath =
         requiredPaths.stream()
