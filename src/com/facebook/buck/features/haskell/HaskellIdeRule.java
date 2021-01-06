@@ -228,7 +228,6 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       srcDirs.add(importDir);
     }
 
-
     String importDirs =
         srcDirs.build().stream().map(s -> makeRelativeToParent(dir, s)).collect(joining(" "));
     String packageDbs =
