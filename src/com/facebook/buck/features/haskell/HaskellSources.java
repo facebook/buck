@@ -32,12 +32,12 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import org.immutables.value.Value;
 
@@ -75,12 +75,15 @@ abstract class HaskellSources implements AddsToRuleKey {
       @Override
       ImmutableSortedMap<HaskellSourceModule, SourcePath> getModuleMap() {
 
-        Map<HaskellSourceModule, List<SourcePath>> resultWithDuplicates =
+        Map<HaskellSourceModule, ImmutableSet<SourcePath>> resultWithDuplicates =
             srcs.stream()
                 .flatMap(m -> m.getModuleMap().entrySet().stream())
-                .collect(groupingBy(e -> e.getKey(), mapping(e -> e.getValue(), toList())));
+                .collect(
+                    groupingBy(
+                        e -> e.getKey(),
+                        mapping(e -> e.getValue(), ImmutableSet.toImmutableSet())));
 
-        ImmutableMap<HaskellSourceModule, List<SourcePath>> duplicates =
+        ImmutableMap<HaskellSourceModule, ImmutableSet<SourcePath>> duplicates =
             resultWithDuplicates.entrySet().stream()
                 .filter(e -> e.getValue().size() > 1 && !e.getKey().getModuleName().equals("Main"))
                 .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
@@ -102,7 +105,7 @@ abstract class HaskellSources implements AddsToRuleKey {
         return resultWithDuplicates.entrySet().stream()
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
-                    Ordering.natural(), e -> e.getKey(), e -> e.getValue().get(0)));
+                    Ordering.natural(), e -> e.getKey(), e -> e.getValue().iterator().next()));
       };
     };
   }
