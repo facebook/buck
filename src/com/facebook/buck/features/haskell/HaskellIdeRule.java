@@ -244,7 +244,8 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .map(p -> String.format("%s-%s", p.getName(), p.getVersion()))
             .collect(joining(" "));
     Collection<String> compilerFlagsFinal = compilerFlagsBuilder.build();
-    String compilerFlags = compilerFlagsFinal.stream().collect(joining(" "));
+    String compilerFlags =
+        compilerFlagsFinal.stream().map(x -> String.format("\"%s\"", x)).collect(joining(" "));
 
     buildableContext.recordArtifact(dir.getPath());
 
