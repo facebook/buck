@@ -51,7 +51,7 @@ install_openjdk8: &install_openjdk8
       sudo apt-get update && sudo apt-get install openjdk-8-jdk
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     elif [ "${PLATFORM}" == "macos" ]; then
-      brew cask install adoptopenjdk8
+      brew install --cask adoptopenjdk8
     fi
     java -version
 
