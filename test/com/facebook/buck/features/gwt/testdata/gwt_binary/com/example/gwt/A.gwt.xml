@@ -1,4 +1,7 @@
 <module rename-to="a">
   <inherits name="com.google.gwt.user.User"/>
+  <inherits name="com.example.gwt.jreemul"/>
   <entry-point class="com.example.gwt.client.A"/>
+  <source path="client"/>
+  <source path="shared"/>
 </module>

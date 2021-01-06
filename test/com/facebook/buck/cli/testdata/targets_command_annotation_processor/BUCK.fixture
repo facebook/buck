@@ -1,0 +1,60 @@
+java_library(
+    name = "test-library",
+    srcs = [],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+java_library(
+    name = "test-library-with-srcs",
+    srcs = [
+        "Sample.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+java_library(
+    name = "test-library-with-processing",
+    srcs = [],
+    plugins = [
+        ":annotation_processor",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+java_library(
+    name = "test-library-with-processing-with-srcs",
+    srcs = [
+        "Sample.java",
+    ],
+    plugins = [
+        ":annotation_processor",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+java_annotation_processor(
+    name = "annotation_processor",
+    processor_class = "com.example.AnnotationProcessor",
+    deps = [
+        ":annotation_processor_lib",
+    ],
+)
+
+java_library(
+    name = "annotation_processor_lib",
+    srcs = [
+        "AnnotationProcessor.java",
+    ],
+)

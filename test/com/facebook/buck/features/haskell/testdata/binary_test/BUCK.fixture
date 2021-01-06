@@ -36,6 +36,16 @@ haskell_library(
 )
 
 haskell_binary(
+    name = "mutually_recursive",
+    srcs = [
+        "Boot/Bar.hs",
+        "Boot/Foo.hs",
+        "Boot/Foo.hs-boot",
+    ],
+    main = "Boot.Foo",
+)
+
+haskell_binary(
     name = "foreign",
     srcs = [
         "Foreign.hs",

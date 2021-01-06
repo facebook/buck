@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.cache.manager;
@@ -26,11 +26,13 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -64,7 +66,14 @@ public class BuildCacheArtifactUploader {
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
   }
 
-  public ListenableFuture<Void> uploadToCache(BuildRuleSuccessType success) throws IOException {
+  /**
+   * Perform an actual write to a cache
+   *
+   * @param success outcome of a build rule
+   * @param buildTimeMs time it took to actually build a rule
+   */
+  public ListenableFuture<Unit> uploadToCache(BuildRuleSuccessType success, long buildTimeMs)
+      throws IOException {
     // Collect up all the rule keys we have index the artifact in the cache with.
     Set<RuleKey> ruleKeys = new HashSet<>();
 
@@ -75,8 +84,7 @@ public class BuildCacheArtifactUploader {
     // If the input-based rule key has changed, we need to push the artifact to cache
     // using the new key.
     if (SupportsInputBasedRuleKey.isSupported(rule)) {
-      Preconditions.checkNotNull(
-          inputBasedKey, "input-based key should have been computed already.");
+      Objects.requireNonNull(inputBasedKey, "input-based key should have been computed already.");
       Optional<RuleKey> calculatedRuleKey = inputBasedKey.get();
       Optional<RuleKey> onDiskRuleKey =
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY);
@@ -110,8 +118,8 @@ public class BuildCacheArtifactUploader {
         eventBus,
         onDiskBuildInfo.getMetadataForArtifact(),
         onDiskBuildInfo.getPathsForArtifact(),
-        rule.getBuildTarget(),
-        rule.getProjectFilesystem());
+        rule,
+        buildTimeMs);
   }
 
   /** @return whether we should upload the given rules artifacts to cache. */

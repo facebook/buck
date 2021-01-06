@@ -6,7 +6,7 @@ prebuilt_jar(
     ],
     source_jar = "jopt-simple-4.6-sources.jar",
     visibility = [
-        "//third-party/java/jmh/...",
         "//third-party/java/d8/...",
+        "//third-party/java/jmh/...",
     ],
 )

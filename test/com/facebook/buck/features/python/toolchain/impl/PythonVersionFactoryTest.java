@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python.toolchain.impl;
@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -36,14 +37,16 @@ public class PythonVersionFactoryTest {
   public void testGetPythonVersion() {
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(
-            Paths.get("usr", "bin", "python"), new ProcessExecutor.Result(0, "", "CPython 2.7\n"));
+            Paths.get("usr", "bin", "python"),
+            new ProcessExecutor.Result(0, "", "CPython 2.7\n", ImmutableList.of()));
     assertEquals("CPython 2.7", version.toString());
   }
 
   @Test
   public void testBrokenPythonVersionWithoutStderr() {
     thrown.expectMessage("Could not extract Python version of broken");
-    PythonVersionFactory.extractPythonVersion(Paths.get("broken"), new ProcessExecutor.Result(1));
+    PythonVersionFactory.extractPythonVersion(
+        Paths.get("broken"), new ProcessExecutor.Result(1, ImmutableList.of()));
   }
 
   @Test
@@ -51,7 +54,8 @@ public class PythonVersionFactoryTest {
     thrown.expectMessage("Could not extract Python version of broken (foo)");
     PythonVersionFactory.extractPythonVersion(
         Paths.get("broken"),
-        new ProcessExecutor.Result(1, false, Optional.empty(), Optional.of("foo")));
+        new ProcessExecutor.Result(
+            1, false, Optional.empty(), Optional.of("foo"), ImmutableList.of()));
   }
 
   @Test
@@ -59,7 +63,7 @@ public class PythonVersionFactoryTest {
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(
             Paths.get("non", "important", "path"),
-            new ProcessExecutor.Result(0, "", "CPython 2.7\n"));
+            new ProcessExecutor.Result(0, "", "CPython 2.7\n", ImmutableList.of()));
     assertEquals("CPython 2.7", version.toString());
   }
 
@@ -68,7 +72,8 @@ public class PythonVersionFactoryTest {
     String output = "CPython 2.7\r\n";
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(
-            Paths.get("non", "important", "path"), new ProcessExecutor.Result(0, "", output));
+            Paths.get("non", "important", "path"),
+            new ProcessExecutor.Result(0, "", output, ImmutableList.of()));
     assertThat(version.toString(), Matchers.equalTo("CPython 2.7"));
   }
 

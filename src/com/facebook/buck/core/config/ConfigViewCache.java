@@ -1,25 +1,28 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.config;
 
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -32,11 +35,10 @@ import java.lang.reflect.Method;
  * @param <T> Config type
  */
 public final class ConfigViewCache<T> {
-
   private final LoadingCache<Class<? extends ConfigView<T>>, ? extends ConfigView<T>> cache;
 
-  public ConfigViewCache(T delegate) {
-    this.cache = CacheBuilder.newBuilder().build(new ConfigViewCacheLoader<>(delegate));
+  public ConfigViewCache(T delegate, Class<T> clazz) {
+    this.cache = CacheBuilder.newBuilder().build(new ConfigViewCacheLoader<>(delegate, clazz));
   }
 
   public <V extends ConfigView<T>> V getView(Class<V> viewClass) {
@@ -51,29 +53,40 @@ public final class ConfigViewCache<T> {
   private static class ConfigViewCacheLoader<T>
       extends CacheLoader<Class<? extends ConfigView<T>>, ConfigView<T>> {
     private final T delegate;
+    private final Class<T> clazz;
 
-    private ConfigViewCacheLoader(T delegate) {
+    private ConfigViewCacheLoader(T delegate, Class<T> clazz) {
       this.delegate = delegate;
+      this.clazz = clazz;
     }
 
     @Override
     public ConfigView<T> load(Class<? extends ConfigView<T>> key) {
-      Method builderMethod;
+      ThrowingFunction<T, ConfigView<T>, Exception> creator;
       try {
-        builderMethod = key.getMethod("of", this.delegate.getClass());
+        Method builderMethod = key.getMethod("of", this.delegate.getClass());
+        creator = config -> key.cast(builderMethod.invoke(null, config));
       } catch (NoSuchMethodException e) {
-        throw new IllegalStateException("missing factory method of(Config) for config view", e);
+        try {
+          Constructor<? extends ConfigView<T>> constructor = key.getConstructor(clazz);
+          creator = constructor::newInstance;
+        } catch (NoSuchMethodException e1) {
+          throw new IllegalStateException(
+              "missing factory method of(Config) or constructor for config view", e);
+        }
       }
 
       try {
-        return key.cast(builderMethod.invoke(null, this.delegate));
+        return creator.apply(delegate);
       } catch (InvocationTargetException e) {
-        throw new IllegalStateException("of() should not throw.", e);
+        throw new IllegalStateException("ConfigView creator should not throw.", e);
       } catch (IllegalAccessException e) {
-        throw new IllegalStateException("of() should be public.", e);
+        throw new IllegalStateException("ConfigView creator should be public.", e);
       } catch (ClassCastException e) {
         throw new IllegalStateException(
-            "factory method should create correct ConfigView instance.", e);
+            "ConfigView creator should create correct ConfigView instance.", e);
+      } catch (Exception e) {
+        throw new IllegalStateException("Error creating ConfigView.", e);
       }
     }
   }

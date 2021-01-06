@@ -1,0 +1,24 @@
+{
+  "//:dummy_multiple_concats" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ [ ":4" ], {
+        "selectable" : true,
+        "conditions" : {
+          ":macos" : [ ":1", ":2", ":3" ],
+          "DEFAULT" : [ ":1" ]
+        },
+        "no_match_error" : ""
+      }, {
+        "selectable" : true,
+        "conditions" : {
+          ":linux" : [ ":2" ],
+          "DEFAULT" : [ ":3" ]
+        },
+        "no_match_error" : ""
+      }, [ ":5" ] ]
+    },
+    "name" : "dummy_multiple_concats"
+  }
+}

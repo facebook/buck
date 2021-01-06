@@ -1,0 +1,5 @@
+[repositories]
+  foo = .
+  bar = bar
+[project]
+  ide = xcode

@@ -1,0 +1,22 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "standard_java_test",
+)
+
+standard_java_test(
+    name = "parse",
+    with_test_data = True,
+    deps = [
+        "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/listener/stats/parse:parse",
+        "//src/com/facebook/buck/event/listener/util:util",
+        "//src/com/facebook/buck/parser:parser",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/event:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

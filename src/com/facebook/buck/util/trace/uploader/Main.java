@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.trace.uploader;
@@ -29,6 +29,7 @@ import java.io.PrintWriter; // NOPMD this is just a log
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -125,9 +126,17 @@ public final class Main {
       }
       log.format("Upload URL: %s\n", url);
       if (compressionEnabled) {
-        log.format("Uploading compressed trace...");
+        log.format("Uploading compressed trace...\n");
       } else {
-        log.format("Uploading trace...");
+        log.format("Uploading trace...\n");
+      }
+
+      if (traceFileKind.equals("build_log")) {
+        // Copy the log to a temp file in case buck is still writing to it.
+        // TODO launch uploader from buck *after* logs are flushed
+        Path tempFile = File.createTempFile(uuid, ".log").toPath();
+        Files.copy(fileToUpload, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        fileToUpload = tempFile;
       }
 
       Request request =
@@ -147,16 +156,20 @@ public final class Main {
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode root = objectMapper.readTree(response.body().byteStream());
 
-        if (root.get("success").asBoolean()) {
-          log.format("Success!\nFind it at %s\n", root.get("content").get("uri").asText());
-          return 0;
-        } else {
-          log.format("Failed!\nMessage: %s\n", root.get("error").asText());
+        if (root.has("error")) {
+          log.format("Failed!\n%s\n", root.toString());
           return 1;
+        } else if (root.has("uri")) {
+          log.format("Success!\nFind it at %s\n", root.get("uri").asText());
+        } else {
+          log.format("Success!\n");
         }
+        return 0;
       }
+
     } catch (Exception e) {
       log.format("\nFailed to upload trace; %s\n", e.getMessage());
+      e.printStackTrace(log);
       return 1;
     } finally {
       log.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));

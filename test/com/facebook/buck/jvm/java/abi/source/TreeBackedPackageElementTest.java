@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
@@ -42,7 +42,7 @@ import org.junit.runner.RunWith;
 public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTest {
   @Test
   public void testToStringUnnamedPackage() throws IOException {
-    initCompiler();
+    compile("class Foo { }");
 
     assertEquals("unnamed package", elements.getPackageElement("").toString());
   }
@@ -109,7 +109,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testUnnamedPackageHasEmptyNames() throws IOException {
-    initCompiler();
+    compile("class Foo { }");
 
     PackageElement unnamedPackage = elements.getPackageElement("");
     Name emptyName = elements.getName("");
@@ -131,14 +131,19 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
   @Test
   public void testCanExtendPackageFromDependencies() throws IOException {
-    compile(Joiner.on('\n').join("package java.util;", "class Foo { }"));
+    withClasspath(
+        ImmutableMap.of(
+            "com/example/buck/List.java",
+            Joiner.on('\n').join("package com.example.buck;", "public class List { }")));
 
-    PackageElement javaUtilPackage = elements.getPackageElement("java.util");
-    TypeElement listType = elements.getTypeElement("java.util.List");
-    TypeElement fooType = elements.getTypeElement("java.util.Foo");
+    compile(Joiner.on('\n').join("package com.example.buck;", "class Foo { }"));
 
-    assertPackageContains(javaUtilPackage, listType);
-    assertPackageContains(javaUtilPackage, fooType);
+    PackageElement buckPackage = elements.getPackageElement("com.example.buck");
+    TypeElement listType = elements.getTypeElement("com.example.buck.List");
+    TypeElement fooType = elements.getTypeElement("com.example.buck.Foo");
+
+    assertPackageContains(buckPackage, listType);
+    assertPackageContains(buckPackage, fooType);
   }
 
   @Test
@@ -156,9 +161,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
     PackageElement fooPackage = elements.getPackageElement("foo");
     assertThat(
-        fooPackage
-            .getAnnotationMirrors()
-            .stream()
+        fooPackage.getAnnotationMirrors().stream()
             .map(it -> it.getAnnotationType().asElement().getSimpleName().toString())
             .collect(Collectors.toList()),
         Matchers.contains("Deprecated"));
@@ -168,9 +171,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
     // We compare strings because there's some funkiness around built-in types, and they can
     // end up having multiple Elements for them depending on how you arrive at them.
     Set<String> enclosedElements =
-        packageElement
-            .getEnclosedElements()
-            .stream()
+        packageElement.getEnclosedElements().stream()
             .map(Object::toString)
             .collect(Collectors.toSet());
 

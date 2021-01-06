@@ -1,0 +1,7 @@
+Project: kotlin
+Version: 1.3.50
+Release date: 2019-08-22
+Website: https://github.com/JetBrains/kotlin/releases/
+License: Apache 2.0
+Description: Compiler and standard library for the Kotlin JVM language
+Changes: none - jars as-is from github

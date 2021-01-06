@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -23,7 +23,13 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -31,10 +37,11 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.OkHttpResponseWrapper;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Charsets;
@@ -59,6 +66,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -82,7 +90,7 @@ public class HttpArtifactCacheTest {
       "{cache_name} encountered an error: {error_message}";
   private static final int ERROR_TEXT_LIMIT = 100;
 
-  private NetworkCacheArgs.Builder argsBuilder;
+  private ImmutableNetworkCacheArgs.Builder argsBuilder;
 
   private ResponseBody createResponseBody(
       ImmutableSet<RuleKey> ruleKeys,
@@ -127,8 +135,10 @@ public class HttpArtifactCacheTest {
 
   @Before
   public void setUp() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     this.argsBuilder =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("http")
             .setCacheMode(ArtifactCacheMode.http)
             .setRepository("some_repository")
@@ -136,7 +146,13 @@ public class HttpArtifactCacheTest {
             .setFetchClient(withMakeRequest((a, b) -> null))
             .setStoreClient(withMakeRequest((a, b) -> null))
             .setCacheReadMode(CacheReadMode.READWRITE)
-            .setProjectFilesystem(new FakeProjectFilesystem())
+            .setTargetConfigurationSerializer(
+                TargetConfigurationSerializerForTests.create(cellPathResolver))
+            .setUnconfiguredBuildTargetFactory(
+                target ->
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(target, cellPathResolver.getCellNameResolver()))
+            .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
             .setHttpFetchExecutorService(DIRECT_EXECUTOR_SERVICE)
@@ -241,6 +257,41 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Futures.getUnchecked(
         cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(Paths.get("output/file"))));
+    cache.close();
+  }
+
+  @Test
+  public void testFetchURLWithBuildTarget() {
+    RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar#baz");
+    String expectedUri =
+        "/artifacts/key/00000000000000000000000000000000?target=%2F%2Ffoo%3Abar%23baz";
+
+    argsBuilder.setFetchClient(
+        withMakeRequest(
+            (path, requestBuilder) -> {
+              Request request = requestBuilder.url(SERVER + path).build();
+              assertEquals(expectedUri, path);
+              HttpUrl url = request.url();
+              assertEquals("/artifacts/key/00000000000000000000000000000000", url.encodedPath());
+              assertEquals("//foo:bar#baz", url.queryParameter("target"));
+              return new OkHttpResponseWrapper(
+                  new Response.Builder()
+                      .request(request)
+                      .protocol(Protocol.HTTP_1_1)
+                      .code(HttpURLConnection.HTTP_OK)
+                      .body(
+                          createResponseBody(
+                              ImmutableSet.of(ruleKey),
+                              ImmutableMap.of(),
+                              ByteSource.wrap(new byte[0]),
+                              "data"))
+                      .message("")
+                      .build());
+            }));
+    HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
+    Futures.getUnchecked(
+        cache.fetchAsync(target, ruleKey, LazyPath.ofInstance(Paths.get("output/file"))));
     cache.close();
   }
 

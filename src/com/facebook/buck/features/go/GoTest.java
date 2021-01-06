@@ -1,42 +1,45 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.features.go.GoTestCoverStep.Mode;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -54,33 +57,41 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
+
   private static final Pattern TEST_START_PATTERN = Pattern.compile("^=== RUN\\s+(?<name>.*)$");
   private static final Pattern TEST_FINISHED_PATTERN =
       Pattern.compile(
           "^\\s*--- (?<status>PASS|FAIL|SKIP): (?<name>.+) \\((?<duration>\\d+\\.\\d+)(?: seconds|s)\\)$");
   // Extra time to wait for the process to exit on top of the test timeout
   private static final int PROCESS_TIMEOUT_EXTRA_MS = 5000;
+  private static final String NON_PRINTABLE_REPLACEMENT = "囧";
 
   private final GoBinary testMain;
 
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
+  private final ImmutableMap<String, Arg> env;
   private final boolean runTestsSeparately;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Mode coverageMode;
@@ -93,6 +104,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       Optional<Long> testRuleTimeoutMs,
+      ImmutableMap<String, Arg> env,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources,
       Mode coverageMode) {
@@ -101,6 +113,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = labels;
     this.contacts = contacts;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.env = env;
     this.runTestsSeparately = runTestsSeparately;
     this.resources = resources;
     this.coverageMode = coverageMode;
@@ -113,13 +126,12 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
     Optional<Long> processTimeoutMs =
-        testRuleTimeoutMs.isPresent()
-            ? Optional.of(testRuleTimeoutMs.get() + PROCESS_TIMEOUT_EXTRA_MS)
-            : Optional.empty();
+        testRuleTimeoutMs.map(timeout -> timeout + PROCESS_TIMEOUT_EXTRA_MS);
 
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testMain.getExecutableCommand().getCommandPrefix(resolver));
+    args.addAll(
+        testMain.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(resolver));
     args.add("-test.v");
     if (coverageMode != Mode.NONE) {
       Path coverProfile =
@@ -150,7 +162,13 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 getPathToTestWorkingDirectory(),
                 args.build(),
-                testMain.getExecutableCommand().getEnvironment(resolver),
+                Stream.of(
+                        testMain
+                            .getExecutableCommand(OutputLabel.defaultLabel())
+                            .getEnvironment(resolver),
+                        Arg.stringify(env, resolver))
+                    .flatMap(m -> m.entrySet().stream())
+                    .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue)),
                 getPathToTestExitCode(),
                 processTimeoutMs,
                 getPathToTestResults()))
@@ -159,9 +177,14 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<TestResultSummary> parseTestResults() throws IOException {
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
+    CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
+    decoder.onMalformedInput(CodingErrorAction.REPLACE);
+    decoder.replaceWith(NON_PRINTABLE_REPLACEMENT);
     try (BufferedReader reader =
-        Files.newBufferedReader(
-            getProjectFilesystem().resolve(getPathToTestResults()), Charsets.UTF_8)) {
+        new BufferedReader(
+            new InputStreamReader(
+                Files.newInputStream(getProjectFilesystem().resolve(getPathToTestResults())),
+                decoder))) {
       Set<String> currentTests = new HashSet<>();
       List<String> stdout = new ArrayList<>();
       List<String> stackTrace = new ArrayList<>();
@@ -242,7 +265,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
@@ -277,8 +300,13 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  @Nullable
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToTestOutputDirectory());
+    SourcePath sourcePath = testMain.getSourcePathToOutput();
+    if (sourcePath == null) {
+      return null;
+    }
+    return ForwardingBuildTargetSourcePath.of(getBuildTarget(), sourcePath);
   }
 
   protected Path getPathToTestResults() {
@@ -298,7 +326,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path outputDirectory,
       Optional<BuildableContext> buildableContext) {
 
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
     if (buildableContext.isPresent()) {
       resources.forEach(
@@ -315,8 +343,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         "go_test",
         getProjectFilesystem(),
         outputDirectory,
-        resources
-            .stream()
+        resources.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     input ->
@@ -336,35 +363,39 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
         Stream.of((testMain.getBuildTarget())),
-        resources
-            .stream()
-            .map(ruleFinder::filterBuildRuleInputs)
+        resources.stream()
+            .map(buildRuleResolver::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));
   }
 
   @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+  public ExternalTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("go")
         .putAllEnv(
-            testMain.getExecutableCommand().getEnvironment(buildContext.getSourcePathResolver()))
+            testMain
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getEnvironment(buildContext.getSourcePathResolver()))
         .addAllCommand(
-            testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            testMain
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return testMain.getExecutableCommand();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return testMain.getExecutableCommand(OutputLabel.defaultLabel());
   }
 }

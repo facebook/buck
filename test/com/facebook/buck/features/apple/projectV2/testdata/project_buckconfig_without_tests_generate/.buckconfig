@@ -1,0 +1,3 @@
+[project]
+  ide = xcode
+  xcode_project_tests_mode = without_tests

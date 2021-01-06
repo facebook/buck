@@ -1,45 +1,42 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.relinker.Symbols;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -51,23 +48,26 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectWorkspace workspace;
 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidBinaryNativeIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
@@ -188,50 +188,82 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testNativeLibraryMergeErrors() throws IOException {
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
-      Assert.fail("No exception from trying to merge lib into two targets.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("into both"));
-    }
+  public void testMergeWithPlatformSpecificDeps() throws Exception {
+    workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86, armv7");
+    Path apkPath =
+        workspace.buildAndReturnOutput("//apps/sample:app_with_different_merged_libs_per_platform");
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
-      Assert.fail("No exception from trying to merge between asset and non-asset.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("contains both asset and non-asset"));
-    }
+    ZipInspector zipInspector = new ZipInspector(apkPath);
 
-    // An older version of the code made this illegal.
-    // Keep the test around in case we want to restore this behavior.
-    //    try {
-    //      workspace.runBuckBuild("//apps/sample:app_with_merge_into_existing_lib");
-    //      Assert.fail("No exception from trying to merge into existing name.");
-    //    } catch (RuntimeException e) {
-    //      assertThat(e.getMessage(), Matchers.containsString("already a library name"));
-    //    }
+    zipInspector.assertFileExists("lib/armeabi-v7a/liball.so");
+    zipInspector.assertFileExists("lib/x86/liball.so");
+  }
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
-      Assert.fail("No exception from trying circular merged dep.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Dependency cycle"));
-    }
+  @Test
+  public void testMergeHeaderOnly() throws Exception {
+    workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_header_only_merged");
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
-      Assert.fail("No exception from trying circular merged dep.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.containsString("Dependency cycle"));
-    }
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists("lib/x86/liball.so");
+  }
 
-    try {
-      workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
-      Assert.fail("No exception from trying invalid glue.");
-    } catch (RuntimeException e) {
-      assertThat(e.getMessage(), Matchers.matchesPattern(".*glue.*is not linkable.*"));
-    }
+  @Test
+  public void throwIfLibMergedIntoTwoTargets() {
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        allOf(containsString("attempted to merge"), containsString("into both")));
+  }
+
+  @Test
+  public void throwIfLibMergedContainsAssetsAndNonAssets() {
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(), containsString("contains both asset and non-asset libraries"));
+  }
+
+  @Test
+  public void throwIfMergeHasCircularDependency() {
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
+    processResult.assertFailure();
+    String stderr = processResult.getStderr();
+    assertThat(stderr, containsString("Error: Dependency cycle detected"));
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between merge:libbroken.so and no-merge://native/merge:D:\n"
+                + "  //native/merge:C -> //native/merge:D\n"));
+    // We need to split the assertion because the order in which
+    // these occur in the output is not deterministic.
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between no-merge://native/merge:D and merge:libbroken.so:\n"
+                + "  //native/merge:D -> //native/merge:F"));
+  }
+
+  @Test
+  public void throwIfMergedHasCircularDependencyIncludeRoot() {
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("Error: Dependency cycle detected"));
+  }
+
+  @Test
+  public void throwIfMergedWithInvalidGlue() {
+    ProcessResult processResult =
+        workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
+    processResult.assertExitCode(ExitCode.FATAL_GENERIC);
+    assertThat(
+        processResult.getStderr(),
+        allOf(containsString("Native library merge glue"), containsString("is not linkable")));
   }
 
   @Test
@@ -355,7 +387,11 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
     Symbols unstrippedSyms = syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath));
     assertThat(unstrippedSyms.global, hasItem("get_value"));
-    assertThat(unstrippedSyms.all, hasItem("supply_value"));
+    if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
+      assertThat(unstrippedSyms.all, hasItem("supply_value"));
+    } else {
+      assertThat(unstrippedSyms.all, hasItem("ndk_version"));
+    }
   }
 
   @Test
@@ -374,12 +410,45 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
     assertThat(syms.global, not(hasItem("x86_only_function")));
   }
 
-  private SymbolGetter getSymbolGetter() throws IOException, InterruptedException {
-    NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
-    Path tmpDir = tmpFolder.newFolder("symbols_tmp");
-    return new SymbolGetter(
-        new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);
+  @Test
+  public void canBuildNativeMergedLibraryWithPrecompiledHeader() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    ProcessResult result = workspace.runBuckBuild("//apps/sample:native_merge_lib_with_pch");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testLibcxxUsesCorrectUnwinder() throws IOException, InterruptedException {
+    String target = "//apps/sample:app_with_exceptions";
+    Path output =
+        workspace.buildAndReturnOutput(
+            "-c",
+            "ndk.compiler=clang",
+            "-c",
+            "ndk.cxx_runtime=libcxx",
+            "-c",
+            "ndk.cxx_runtime_type=static",
+            // libcxx depends on posix_memalign, which doesn't exist in libc.so in
+            // the default app_platform (android-16)
+            "-c",
+            "ndk.app_platform=android-21",
+            target);
+
+    SymbolGetter symGetter = getSymbolGetter();
+    Symbols syms =
+        symGetter.getDynamicSymbols(output, "lib/armeabi-v7a/libnative_cxx_lib-with-exceptions.so");
+
+    // Test target throws an exception, which involves a call to __cxa_throw.
+    assertTrue(syms.all.contains("__cxa_throw"));
+
+    // For 32-bit ARM the NDK makes use of two unwinders: libgcc and LLVM's libunwind. Exception
+    // handling in libcxx depends on libunwind, so we need to make sure that unwind methods from
+    // libgcc are not inadvertently linked into the target binary. For more info see
+    // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#Unwinding
+    assertFalse(syms.all.contains("__gnu_Unwind_RaiseException"));
+  }
+
+  private SymbolGetter getSymbolGetter() throws IOException {
+    return AndroidNdkHelper.getSymbolGetter(filesystem, tmpFolder);
   }
 }

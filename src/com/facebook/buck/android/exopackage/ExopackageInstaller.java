@@ -1,32 +1,32 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.ApkInfo;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.agent.util.AgentUtil;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -62,13 +62,13 @@ public class ExopackageInstaller {
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckEventBus eventBus;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final AndroidDevice device;
   private final String packageName;
   private final Path dataRoot;
 
   public ExopackageInstaller(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ExecutionContext context,
       ProjectFilesystem projectFilesystem,
       String packageName,
@@ -85,7 +85,8 @@ public class ExopackageInstaller {
 
   /** @return Returns true. */
   // TODO(cjhopman): This return value is silly. Change it to be void.
-  public boolean doInstall(ApkInfo apkInfo, @Nullable String processName) throws Exception {
+  public boolean doInstall(HasInstallableApk.ApkInfo apkInfo, @Nullable String processName)
+      throws Exception {
     if (exopackageEnabled(apkInfo)) {
       device.mkDirP(dataRoot.toString());
       ImmutableSortedSet<Path> presentFiles = device.listDirRecursive(dataRoot);
@@ -98,7 +99,8 @@ public class ExopackageInstaller {
     return true;
   }
 
-  public void killApp(ApkInfo apkInfo, @Nullable String processName) throws Exception {
+  public void killApp(HasInstallableApk.ApkInfo apkInfo, @Nullable String processName)
+      throws Exception {
     // TODO(dreiss): Make this work on Gingerbread.
     try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(eventBus, "kill_app")) {
       // If a specific process name is given and we're not installing a full APK,
@@ -111,7 +113,7 @@ public class ExopackageInstaller {
     }
   }
 
-  public void installApkIfNecessary(ApkInfo apkInfo) throws Exception {
+  public void installApkIfNecessary(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     File apk = pathResolver.getAbsolutePath(apkInfo.getApkPath()).toFile();
     // TODO(dreiss): Support SD installation.
     boolean installViaSd = false;
@@ -141,7 +143,16 @@ public class ExopackageInstaller {
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
           new NativeExoHelper(
-              device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
+              () -> {
+                try {
+                  return device.getDeviceAbis();
+                } catch (Exception e) {
+                  throw new HumanReadableException("Unable to communicate with device", e);
+                }
+              },
+              pathResolver,
+              projectFilesystem,
+              exoInfo.getNativeLibsInfo().get());
       wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
       metadata.putAll(nativeExoHelper.getMetadataToInstall());
     }
@@ -175,7 +186,16 @@ public class ExopackageInstaller {
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
           new NativeExoHelper(
-              device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
+              () -> {
+                try {
+                  return device.getDeviceAbis();
+                } catch (Exception e) {
+                  throw new HumanReadableException("Unable to communicate with device", e);
+                }
+              },
+              pathResolver,
+              projectFilesystem,
+              exoInfo.getNativeLibsInfo().get());
       installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), NATIVE_LIBRARY_TYPE);
     }
 
@@ -192,7 +212,11 @@ public class ExopackageInstaller {
     }
   }
 
-  private boolean exopackageEnabled(ApkInfo apkInfo) {
+  /**
+   * @param apkInfo the apk info to examine for exopackage items
+   * @return true if the given apk info contains any items which need to be installed via exopackage
+   */
+  public static boolean exopackageEnabled(HasInstallableApk.ApkInfo apkInfo) {
     return apkInfo
         .getExopackageInfo()
         .map(
@@ -207,12 +231,12 @@ public class ExopackageInstaller {
   private Optional<PackageInfo> getPackageInfo(String packageName) throws Exception {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("get_package_info"), "package", packageName)) {
+            eventBus, SimplePerfEvent.PerfEventId.of("get_package_info"), "package", packageName)) {
       return device.getPackageInfo(packageName);
     }
   }
 
-  private boolean shouldAppBeInstalled(ApkInfo apkInfo) throws Exception {
+  private boolean shouldAppBeInstalled(HasInstallableApk.ApkInfo apkInfo) throws Exception {
     Optional<PackageInfo> appPackageInfo = getPackageInfo(packageName);
     if (!appPackageInfo.isPresent()) {
       eventBus.post(ConsoleEvent.info("App not installed.  Installing now."));
@@ -254,9 +278,7 @@ public class ExopackageInstaller {
       String filesType)
       throws Exception {
     ImmutableSortedMap<Path, Path> filesToInstall =
-        wantedFilesToInstall
-            .entrySet()
-            .stream()
+        wantedFilesToInstall.entrySet().stream()
             .filter(entry -> !presentFiles.contains(entry.getKey()))
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
@@ -268,16 +290,14 @@ public class ExopackageInstaller {
   private void deleteUnwantedFiles(
       ImmutableSortedSet<Path> presentFiles, ImmutableSet<Path> wantedFiles) {
     ImmutableSortedSet<Path> filesToDelete =
-        presentFiles
-            .stream()
+        presentFiles.stream()
             .filter(p -> !p.getFileName().toString().equals("lock") && !wantedFiles.contains(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     deleteFiles(filesToDelete);
   }
 
   private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
-    filesToDelete
-        .stream()
+    filesToDelete.stream()
         .collect(
             ImmutableListMultimap.toImmutableListMultimap(
                 path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
@@ -294,9 +314,7 @@ public class ExopackageInstaller {
             SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
         AutoCloseable ignored1 = device.createForward()) {
       // Make sure all the directories exist.
-      filesToInstall
-          .keySet()
-          .stream()
+      filesToInstall.keySet().stream()
           .map(p -> dataRoot.resolve(p).getParent())
           .distinct()
           .forEach(
@@ -309,9 +327,7 @@ public class ExopackageInstaller {
               });
       // Plan the installation.
       Map<Path, Path> installPaths =
-          filesToInstall
-              .entrySet()
-              .stream()
+          filesToInstall.entrySet().stream()
               .collect(
                   Collectors.toMap(
                       entry -> dataRoot.resolve(entry.getKey()),

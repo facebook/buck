@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -26,13 +26,13 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -44,7 +44,7 @@ public class AndroidLibraryBuilder
         AndroidLibrary> {
 
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
-      (language, factory) ->
+      (language, factory, toolchainTargetConfiguration) ->
           new JavaConfiguredCompilerFactory(
               DEFAULT_JAVA_CONFIG, AndroidClasspathProvider::new, factory);
 
@@ -54,8 +54,7 @@ public class AndroidLibraryBuilder
             javaBuckConfig, JAVA_ONLY_COMPILER_FACTORY, createToolchainProviderForAndroidLibrary()),
         target,
         new FakeProjectFilesystem(),
-        createToolchainProviderForAndroidLibrary(),
-        null);
+        createToolchainProviderForAndroidLibrary());
   }
 
   public static AndroidLibraryBuilder createBuilder(BuildTarget target) {
@@ -77,13 +76,8 @@ public class AndroidLibraryBuilder
         .build();
   }
 
-  public AndroidLibraryBuilder addProcessor(String processor) {
-    getArgForPopulating().addAnnotationProcessors(processor);
-    return this;
-  }
-
-  public AndroidLibraryBuilder addProcessorBuildTarget(BuildTarget processorRule) {
-    getArgForPopulating().addAnnotationProcessorDeps(processorRule);
+  public AndroidLibraryBuilder addPluginTarget(BuildTarget pluginRule) {
+    getArgForPopulating().addPlugins(pluginRule);
     return this;
   }
 
@@ -114,6 +108,11 @@ public class AndroidLibraryBuilder
 
   public AndroidLibraryBuilder addSrc(Path path) {
     getArgForPopulating().addSrcs(PathSourcePath.of(new FakeProjectFilesystem(), path));
+    return this;
+  }
+
+  public AndroidLibraryBuilder setLanguage(AndroidLibraryDescription.JvmLanguage jvmLanguage) {
+    getArgForPopulating().setLanguage(jvmLanguage);
     return this;
   }
 }

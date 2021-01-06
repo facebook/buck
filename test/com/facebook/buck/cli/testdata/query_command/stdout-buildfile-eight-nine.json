@@ -1,8 +1,0 @@
-{
-  "example/app/lib/9.txt": [
-    "example/app/BUCK"
-  ],
-  "other/8-test.txt": [
-    "other/BUCK"
-  ]
-}

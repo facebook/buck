@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -36,25 +36,25 @@ public class AndroidConsistencyIntegrationTest extends AbiCompilationModeTest {
   public ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidAppModularityIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
-  public void testModuleConsistencyStep() throws IOException {
+  public void testModuleConsistencyStep() {
     String target = "//apps/multidex:app-with-consistency-check";
     workspace.runBuckCommand("build", target).assertSuccess();
   }
 
   @Test
-  public void testModuleConsistencyFailure() throws IOException {
+  public void testModuleConsistencyFailure() {
     String target = "//apps/multidex:app-with-consistency-failure";
     workspace.runBuckCommand("build", target).assertFailure();
   }

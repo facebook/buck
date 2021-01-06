@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.event;
@@ -45,6 +45,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -69,7 +70,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
   @JsonView(JsonViews.MachineReadableLog.class)
   public ClockDuration getDuration() {
     Preconditions.checkState(isConfigured(), "Event was not configured yet.");
-    return Preconditions.checkNotNull(duration);
+    return Objects.requireNonNull(duration);
   }
 
   @Override
@@ -108,7 +109,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
-      Optional<Pair<Long, Long>> buildTimestamps) {
+      Optional<Pair<Long, Long>> buildTimestamps,
+      Optional<String> strategyResult) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -125,7 +127,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         ruleKeyCacheCheckTimestamps,
         inputRuleKeyCacheCheckTimestamps,
         manifestRuleKeyCacheCheckTimestamps,
-        buildTimestamps);
+        buildTimestamps,
+        strategyResult);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -168,9 +171,13 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @Override
     public void configure(
-        long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
-      super.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
-      this.duration = tracker.doBeginning(getBuildRule(), timestamp, nanoTime);
+        long timestampMillis,
+        long nanoTime,
+        long threadUserNanoTime,
+        long threadId,
+        BuildId buildId) {
+      super.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
+      this.duration = tracker.doBeginning(getBuildRule(), timestampMillis, nanoTime);
     }
 
     @Override
@@ -198,11 +205,16 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @Override
     public void configure(
-        long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
-      super.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+        long timestampMillis,
+        long nanoTime,
+        long threadUserNanoTime,
+        long threadId,
+        BuildId buildId) {
+      super.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
       long threadUserNanoDuration = threadUserNanoTime - beginning.getThreadUserNanoTime();
       this.duration =
-          beginning.tracker.doEnding(getBuildRule(), timestamp, nanoTime, threadUserNanoDuration);
+          beginning.tracker.doEnding(
+              getBuildRule(), timestampMillis, nanoTime, threadUserNanoDuration);
     }
 
     @Override
@@ -240,6 +252,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> buildTimestamps;
+    private final Optional<String> strategyResult;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -257,7 +270,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
-        Optional<Pair<Long, Long>> buildTimestamps) {
+        Optional<Pair<Long, Long>> buildTimestamps,
+        Optional<String> strategyResult) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -274,6 +288,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.inputRuleKeyCacheCheckTimestamps = inputRuleKeyCacheCheckTimestamps;
       this.manifestRuleKeyCacheCheckTimestamps = manifestRuleKeyCacheCheckTimestamps;
       this.buildTimestamps = buildTimestamps;
+      this.strategyResult = strategyResult;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -298,7 +313,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @JsonView(JsonViews.MachineReadableLog.class)
     public Optional<String> getSuccessTypeName() {
-      return successType.isPresent() ? Optional.of(successType.get().name()) : Optional.empty();
+      return successType.map(Enum::name);
     }
 
     @JsonIgnore
@@ -356,6 +371,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       return buildTimestamps;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public Optional<String> getStrategyResult() {
+      return strategyResult;
+    }
+
     @JsonIgnore
     public boolean isBuildRuleNoOp() {
       return getBuildRule() instanceof NoopBuildRule
@@ -410,8 +430,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
   /** Marks the continuation of processing a rule. */
   public static class Resumed extends BeginningBuildRuleEvent {
-
     private final String ruleKey;
+
+    /** The reason why Buck suspended this rule. */
+    @JsonView(JsonViews.MachineReadableLog.class)
+    private final BuildRuleResumeReason reason;
 
     private Resumed(
         EventKey eventKey,
@@ -420,6 +443,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         RuleKeyFactory<RuleKey> ruleKeyFactory) {
       super(eventKey, rule, tracker);
       this.ruleKey = ruleKeyFactory.build(rule).toString();
+      this.reason = BuildRuleResumeReason.UNKNOWN;
     }
 
     @JsonIgnore
@@ -492,6 +516,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @Override
     protected String getValueString() {
       return rule.toString();
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getRule() {
+      return rule;
     }
   }
 

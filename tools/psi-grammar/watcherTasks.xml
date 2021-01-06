@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectTasksOptions">
+    <TaskOptions isEnabled="true">
+      <option name="arguments" value="build //tools/psi-grammar:parsers" />
+      <option name="checkSyntaxErrors" value="true" />
+      <option name="description" />
+      <option name="exitCodeBehavior" value="ERROR" />
+      <option name="fileExtension" value="bnf" />
+      <option name="immediateSync" value="true" />
+      <option name="name" value="Rebuild psi-grammar parsers (*.bnf)" />
+      <option name="output" value="$ProjectFileDir$/buck-out/gen/tools/psi-grammar" />
+      <option name="outputFilters">
+        <array />
+      </option>
+      <option name="outputFromStdout" value="false" />
+      <option name="program" value="buck" />
+      <option name="runOnExternalChanges" value="true" />
+      <option name="scopeName" value="Module 'psi-grammar'" />
+      <option name="trackOnlyRoot" value="false" />
+      <option name="workingDir" value="$ProjectFileDir$" />
+      <envs />
+    </TaskOptions>
+    <TaskOptions isEnabled="true">
+      <option name="arguments" value="build //tools/psi-grammar:lexers" />
+      <option name="checkSyntaxErrors" value="true" />
+      <option name="description" />
+      <option name="exitCodeBehavior" value="ERROR" />
+      <option name="fileExtension" value="flex" />
+      <option name="immediateSync" value="true" />
+      <option name="name" value="Rebuild psi-grammar lexers (*.flex)" />
+      <option name="output" value="$ProjectFileDir$/buck-out/gen/tools/psi-grammar" />
+      <option name="outputFilters">
+        <array />
+      </option>
+      <option name="outputFromStdout" value="false" />
+      <option name="program" value="buck" />
+      <option name="runOnExternalChanges" value="true" />
+      <option name="scopeName" value="Module 'psi-grammar'" />
+      <option name="trackOnlyRoot" value="false" />
+      <option name="workingDir" value="$ProjectFileDir$" />
+      <envs />
+    </TaskOptions>
+  </component>
+</project>

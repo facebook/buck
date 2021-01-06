@@ -1,33 +1,34 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.JavaFileParser;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -44,7 +45,7 @@ public class ParsingJavaPackageFinderTest {
   private JavaFileParser javaFileParser;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     matchPath = Paths.get("case1/org/test/package1/Match.java");
     mismatchPath = Paths.get("case1/org/test/package2/Mismatch.java");
     placeholderPath = Paths.get("case3/com/test/placeholder");
@@ -52,7 +53,8 @@ public class ParsingJavaPackageFinderTest {
     fakeProjectFilesystem =
         new FakeProjectFilesystem(
             FakeClock.doNotCare(),
-            Paths.get(".").toAbsolutePath(),
+            CanonicalCellName.rootCell(),
+            AbsPath.of(Paths.get(".").toAbsolutePath()),
             ImmutableSet.of(matchPath, mismatchPath, placeholderPath));
     fakeProjectFilesystem.writeContentsToPath(
         "package org.test.package1; \n class Match {} \n", matchPath);
@@ -79,7 +81,8 @@ public class ParsingJavaPackageFinderTest {
         };
 
     javaFileParser =
-        JavaFileParser.createJavaFileParser(JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS);
+        JavaFileParser.createJavaFileParser(
+            JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS.getLanguageLevelOptions());
   }
 
   @Test

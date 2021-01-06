@@ -1,0 +1,78 @@
+ndk_toolchain(
+    name = "good",
+    cxx_runtime = "libcxx",
+    cxx_toolchain = "//toolchain:good",
+    objdump = "//:objdump",
+    shared_runtime_path = "//data:runtime.so",
+    visibility = ["PUBLIC"],
+)
+
+ndk_toolchain(
+    name = "bad",
+    cxx_runtime = "libcxx",
+    cxx_toolchain = "//toolchain:bad",
+    objdump = "//:objdump",
+    shared_runtime_path = "//data:runtime.so",
+    visibility = ["PUBLIC"],
+)
+
+ndk_toolchain(
+    name = "good_with_ndk",
+    cxx_runtime = "libcxx",
+    cxx_toolchain = ":ndk_cxx_toolchain",
+    objdump = "//:objdump",
+    shared_runtime_path = "//data:runtime.so",
+    ndk_path = "//data:gen_ndk",
+    visibility = ["PUBLIC"],
+)
+
+cxx_toolchain(
+    name = "ndk_cxx_toolchain",
+    archiver_type = "bsd",
+    compiler_type = "clang",
+    linker_type = "gnu",
+    shared_library_interface_type = "enabled",
+    object_file_extension = "object",
+    static_library_extension = "static",
+    shared_library_extension = "so",
+    shared_library_versioned_extension_format = "%s.shared",
+    use_header_map = True,
+    archiver = "//tools:archiver",
+    assembler = "//tools:unimplemented",
+    c_compiler = ":ndk_compiler",
+    cxx_compiler = ":ndk_compiler",
+    cxx_compiler_flags = [
+        "-test-flag",
+        "$NDK_ROOT/outfile",
+    ],
+    linker = ":ndk_linker",
+    linker_flags = [
+        "-test-arg",
+        "$NDK_ROOT/outfile",
+    ],
+    nm = "//tools:unimplemented",
+    objcopy_for_shared_library_interface = "//tools:unimplemented",
+    ranlib = "//tools:ranlib",
+    strip = "//tools:strip",
+    visibility = ["PUBLIC"],
+)
+
+python_binary(
+    name = "ndk_compiler",
+    main = "ndk_compiler.py",
+    deps = [
+        "//tools:impl",
+        "//data:gen_ndk",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+python_binary(
+    name = "ndk_linker",
+    main = "ndk_linker.py",
+    deps = [
+        "//tools:impl",
+        "//data:gen_ndk",
+    ],
+    visibility = ["PUBLIC"],
+)

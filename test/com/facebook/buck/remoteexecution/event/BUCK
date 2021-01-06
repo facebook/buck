@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "event",
+    srcs = glob([
+        "*.java",
+    ]),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/remoteexecution/event:event",
+        "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

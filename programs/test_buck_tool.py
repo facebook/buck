@@ -1,24 +1,21 @@
-# Copyright 2016-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
-import shutil
-import tempfile
 import unittest
 
-from buck_tool import BuckToolException, CommandLineArgs, get_java_path
-from subprocutils import which
+from programs.buck_tool import BuckToolException, CommandLineArgs, MovableTemporaryFile
 
 
 class TestCommandLineArgs(unittest.TestCase):
@@ -70,7 +67,28 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.command, "clean")
         self.assertEqual(args.buck_options, ["--help"])
         self.assertEqual(args.command_options, [])
-        self.assertFalse(args.is_help(), "Global --help ignored with command")
+        self.assertTrue(args.is_help())
+
+    def test_short_help_before_command(self):
+        args = CommandLineArgs(["buck", "-h", "clean"])
+        self.assertEqual(args.command, "clean")
+        self.assertEqual(args.buck_options, ["-h"])
+        self.assertEqual(args.command_options, [])
+        self.assertTrue(args.is_help())
+
+    def test_short_help_after_command(self):
+        args = CommandLineArgs(["buck", "clean", "-h"])
+        self.assertEqual(args.command, "clean")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["-h"])
+        self.assertTrue(args.is_help())
+
+    def test_short_help_after_external(self):
+        args = CommandLineArgs(["buck", "test", "--", "-h"])
+        self.assertEqual(args.command, "test")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, [])
+        self.assertFalse(args.is_help())
 
     def test_command_all(self):
         args = CommandLineArgs(
@@ -81,33 +99,100 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.command_options, ["--help", "all"])
         self.assertTrue(args.is_help())
 
+    def test_run_command(self):
+        args = CommandLineArgs(["buck", "run", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["--help"])
+        self.assertTrue(args.is_help())
 
-class TestJavaPath(unittest.TestCase):
-    def setUp(self):
-        self.java_home = tempfile.mkdtemp()
-        self.java_exec = "java.exe" if os.name == "nt" else "java"
-        bin_dir = os.path.join(self.java_home, "bin")
-        os.mkdir(bin_dir)
-        open(os.path.join(bin_dir, self.java_exec), "w")
+    def test_run_command_help_for_program(self):
+        args = CommandLineArgs(["buck", "run", "//some:cli", "--", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["//some:cli"])
+        self.assertFalse(args.is_help())
 
-    def test_with_java_home_valid(self):
-        os.environ["JAVA_HOME"] = self.java_home
-        self.assertEqual(
-            get_java_path().lower(),
-            os.path.join(self.java_home, "bin", self.java_exec).lower(),
-        )
+    def test_run_command_help_for_program_and_buck(self):
+        args = CommandLineArgs(["buck", "--help", "run", "//some:cli", "--", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, ["--help"])
+        self.assertEqual(args.command_options, ["//some:cli"])
+        self.assertTrue(args.is_help())
 
-    def test_with_java_home_invalid(self):
-        os.environ["JAVA_HOME"] = "/nosuchfolder/89aabebc-42cb-4cd8-bcf7-d964371daf3e"
-        self.assertRaises(BuckToolException)
+    def test_run_command_help_for_program_and_command(self):
+        args = CommandLineArgs(["buck", "run", "--help", "//some:cli", "--", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["--help", "//some:cli"])
+        self.assertTrue(args.is_help())
 
-    def test_without_java_home(self):
-        self.assertEquals(get_java_path().lower(), which("java").lower())
 
-    def tearDown(self):
-        if "JAVA_HOME" in os.environ:
-            del os.environ["JAVA_HOME"]
-        shutil.rmtree(self.java_home)
+class TestMovableTemporaryFile(unittest.TestCase):
+    def test_cleans_up_if_not_moved(self):
+        path = None
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+
+        self.assertIsNotNone(path)
+        self.assertFalse(os.path.exists(path))
+
+    def test_leaves_file_if_moved(self):
+        path = None
+        moved = None
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+            moved = f.move()
+
+        try:
+            self.assertIsNotNone(path)
+            self.assertIsNotNone(moved)
+            self.assertTrue(os.path.exists(path))
+        finally:
+            if path and os.path.exists(path):
+                os.unlink(path)
+
+    def test_cleans_up_if_moved_context_is_entered(self):
+        path = None
+        moved = None
+
+        path = None
+        moved = None
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+            moved = f.move()
+
+        try:
+            with moved as f2:
+                self.assertEquals(path, f2.file.name)
+                self.assertTrue(os.path.exists(path))
+            self.assertFalse(os.path.exists(path))
+        finally:
+            if path and os.path.exists(path):
+                os.unlink(path)
+
+    def test_close_and_name(self):
+        with MovableTemporaryFile() as f:
+            self.assertFalse(f.file.closed)
+            f.close()
+            self.assertTrue(f.file.closed)
+            self.assertEquals(f.file.name, f.name)
+
+    def test_handles_file_going_missing_while_entered(self):
+        path = None
+
+        with MovableTemporaryFile() as f:
+            f.close()
+            path = f.name
+            self.assertTrue(os.path.exists(path))
+            os.unlink(path)
+        self.assertFalse(os.path.exists(path))
 
 
 if __name__ == "__main__":

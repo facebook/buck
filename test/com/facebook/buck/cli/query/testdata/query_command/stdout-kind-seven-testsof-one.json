@@ -1,0 +1,10 @@
+[
+  "//example/app:seven",
+  "//example:one",
+  "//example:application-test-lib",
+  "//example:four",
+  "//example:six",
+  "//example:three",
+  "//example:two",
+  "//example:five"
+]

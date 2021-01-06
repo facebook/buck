@@ -1,21 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -31,6 +32,7 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -64,8 +66,8 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   private <K> V calculateNode(K node, Function<K, RuleKeyResult<V>> create) {
     Preconditions.checkArgument(
-        node instanceof BuildRule || node instanceof AddsToRuleKey,
-        "%s must be one of either a `BuildRule` or `AddsToRuleKey`",
+        node instanceof BuildEngineAction || node instanceof AddsToRuleKey,
+        "%s must be one of either a `BuildEngineAction` or `AddsToRuleKey`",
         node.getClass());
 
     RuleKeyResult<V> result = create.apply(node);
@@ -115,17 +117,17 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
                   return value;
                 })
             .value;
-    return Preconditions.checkNotNull(supplier).get();
+    return Objects.requireNonNull(supplier).get();
   }
 
   @Nullable
   @Override
-  public V get(BuildRule rule, CacheStatsTracker statsTracker) {
+  public V get(BuildEngineAction action, CacheStatsTracker statsTracker) {
     CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
-    Node<Object, V> node = cache.get(new IdentityWrapper<Object>(rule));
+    Node<Object, V> node = cache.get(new IdentityWrapper<Object>(action));
     if (node != null && node.value != null) {
       request.recordHit();
-      return Preconditions.checkNotNull(node.value).get();
+      return Objects.requireNonNull(node.value).get();
     }
     request.recordMiss();
     return null;
@@ -133,10 +135,10 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
 
   @Override
   public V get(
-      BuildRule rule,
-      Function<? super BuildRule, RuleKeyResult<V>> create,
+      BuildEngineAction action,
+      Function<? super BuildEngineAction, RuleKeyResult<V>> create,
       CacheStatsTracker statsTracker) {
-    return getNode(rule, create, statsTracker);
+    return getNode(action, create, statsTracker);
   }
 
   @Override
@@ -152,7 +154,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
   }
 
   @VisibleForTesting
-  boolean isCached(BuildRule rule) {
+  boolean isCached(BuildEngineAction rule) {
     return isCachedNode(rule);
   }
 
@@ -206,9 +208,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
       invalidateAll(statsTracker);
     } else {
       invalidateInputs(
-          inputsIndex
-              .keySet()
-              .stream()
+          inputsIndex.keySet().stream()
               .filter(input -> !filesystems.contains(input.getFilesystem()))
               .collect(Collectors.toList()),
           statsTracker);
@@ -221,9 +221,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
   @Override
   public void invalidateFilesystem(ProjectFilesystem filesystem, CacheStatsTracker statsTracker) {
     invalidateInputs(
-        inputsIndex
-            .keySet()
-            .stream()
+        inputsIndex.keySet().stream()
             .filter(input -> filesystem.equals(input.getFilesystem()))
             .collect(Collectors.toList()),
         statsTracker);

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -26,19 +26,20 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.TestRule;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -53,17 +54,15 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -88,7 +87,7 @@ public class CxxTestDescriptionTest {
     return new CxxTestBuilder(
         BuildTargetFactory.newInstance(target),
         cxxBuckConfig,
-        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
         CxxTestUtils.createDefaultPlatforms());
   }
 
@@ -123,8 +122,7 @@ public class CxxTestDescriptionTest {
   public void environmentIsPropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -146,7 +144,7 @@ public class CxxTestDescriptionTest {
             options,
             FakeBuildContext.withSourcePathResolver(pathResolver),
             TestRule.NOOP_REPORTING_CALLBACK);
-    CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
+    CxxTestStep testStep = getTestStep(steps);
     assertThat(
         testStep.getEnv(),
         Matchers.equalTo(
@@ -155,15 +153,14 @@ public class CxxTestDescriptionTest {
                     "TEST",
                     "value "
                         + pathResolver.getAbsolutePath(
-                            Preconditions.checkNotNull(someRule.getSourcePathToOutput()))))));
+                            Objects.requireNonNull(someRule.getSourcePathToOutput()))))));
   }
 
   @Test
   public void testArgsArePropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -187,13 +184,13 @@ public class CxxTestDescriptionTest {
             testOptions,
             FakeBuildContext.withSourcePathResolver(pathResolver),
             TestRule.NOOP_REPORTING_CALLBACK);
-    CxxTestStep testStep = (CxxTestStep) Iterables.getLast(steps);
+    CxxTestStep testStep = getTestStep(steps);
     assertThat(
         testStep.getCommand(),
         hasItem(
             "value "
                 + pathResolver.getAbsolutePath(
-                    Preconditions.checkNotNull(someRule.getSourcePathToOutput()))));
+                    Objects.requireNonNull(someRule.getSourcePathToOutput()))));
   }
 
   @Test
@@ -238,8 +235,6 @@ public class CxxTestDescriptionTest {
   public void locationMacro() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -258,17 +253,18 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
-        Arg.stringify(binary.getArgs(), pathResolver),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
   @Test
-  public void linkerFlagsLocationMacro() throws Exception {
+  public void linkerFlagsLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -289,9 +285,12 @@ public class CxxTestDescriptionTest {
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
-        Arg.stringify(binary.getArgs(), pathResolver),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -299,8 +298,6 @@ public class CxxTestDescriptionTest {
   public void platformLinkerFlagsLocationMacroWithMatch() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -311,8 +308,7 @@ public class CxxTestDescriptionTest {
                 new PatternMatchedCollection.Builder<ImmutableList<StringWithMacros>>()
                     .add(
                         Pattern.compile(
-                            Pattern.quote(
-                                CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor().toString())),
+                            Pattern.quote(CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR.toString())),
                         ImmutableList.of(
                             StringWithMacrosUtils.format(
                                 "--linker-script=%s", LocationMacro.of(dep.getBuildTarget()))))
@@ -325,9 +321,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
-        Arg.stringify(binary.getArgs(), pathResolver),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -335,8 +334,6 @@ public class CxxTestDescriptionTest {
   public void platformLinkerFlagsLocationMacroWithoutMatch() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -359,10 +356,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
-        Arg.stringify(binary.getArgs(), pathResolver),
-        Matchers.not(
-            hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
+        Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
+        Matchers.not(hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath))));
     assertThat(binary.getBuildDeps(), Matchers.not(hasItem(dep)));
   }
 
@@ -403,20 +402,26 @@ public class CxxTestDescriptionTest {
               .setFramework(framework)
               .setResources(ImmutableSortedSet.of(resource))
               .build();
-      assertThat(cxxTestWithResources.getInputs(), hasItem(resource));
+      assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelativePath.ofPath(resource)));
     }
   }
 
   private RuleKey getRuleKey(BuildRuleResolver resolver, BuildRule rule) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    FileHashCache fileHashCache =
+    FileHashLoader fileHashLoader =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, resolver);
     return factory.build(rule);
+  }
+
+  private CxxTestStep getTestStep(Iterable<? extends Step> steps) {
+    for (Step s : steps) {
+      if (s instanceof CxxTestStep) {
+        return (CxxTestStep) s;
+      }
+    }
+    throw new IllegalStateException("Can't find CxxTestStep");
   }
 }

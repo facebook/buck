@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,58 +24,41 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
-import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
-import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
-import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.parser.TestParserFactory;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.testutil.FakeExecutor;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
-import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
-import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
-import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
-import org.pf4j.PluginManager;
 
 /** Unit test for {@link CleanCommand}. */
 public class CleanCommandTest {
 
   private ProjectFilesystem projectFilesystem;
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Before
   public void setUp() {
@@ -87,8 +70,7 @@ public class CleanCommandTest {
   // exit code is 1 and that the appropriate error message is printed.
 
   @Test
-  public void testCleanCommandNoArguments()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandNoArguments() throws Exception {
     CleanCommand cleanCommand = createCommandFromArgs();
     CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
 
@@ -108,6 +90,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -120,8 +103,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandWithKeepCache()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandWithKeepCache() throws Exception {
     CleanCommand cleanCommand = createCommandFromArgs("--keep-cache");
     CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
 
@@ -141,6 +123,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -153,8 +136,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandExcludeLocalCache()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandExcludeLocalCache() throws Exception {
     String cacheToKeep = "warmtestcache";
     CleanCommand cleanCommand =
         createCommandFromArgs("-c", "clean.excluded_dir_caches=" + cacheToKeep);
@@ -177,6 +159,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -193,8 +176,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandWithDryRun()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandWithDryRun() throws Exception {
     CleanCommand cleanCommand = createCommandFromArgs("--dry-run");
     CommandRunnerParams params = createCommandRunnerParams(cleanCommand, true);
 
@@ -214,6 +196,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertTrue(projectFilesystem.exists(projectFilesystem.getBuckPaths().getScratchDir()));
@@ -226,8 +209,7 @@ public class CleanCommandTest {
   }
 
   @Test
-  public void testCleanCommandWithAdditionalPaths()
-      throws CmdLineException, IOException, InterruptedException {
+  public void testCleanCommandWithAdditionalPaths() throws Exception {
     Path additionalPath = projectFilesystem.getPath("foo");
     CleanCommand cleanCommand =
         createCommandFromArgs("-c", "clean.additional_paths=" + additionalPath);
@@ -239,6 +221,7 @@ public class CleanCommandTest {
 
     // Simulate `buck clean --project`.
     ExitCode exitCode = cleanCommand.run(params);
+
     assertEquals(ExitCode.SUCCESS, exitCode);
 
     assertFalse(projectFilesystem.exists(additionalPath));
@@ -251,8 +234,7 @@ public class CleanCommandTest {
   }
 
   private CommandRunnerParams createCommandRunnerParams(
-      AbstractCommand command, boolean enableCacheSection)
-      throws InterruptedException, IOException {
+      AbstractCommand command, boolean enableCacheSection) {
     FakeBuckConfig.Builder buckConfigBuilder = FakeBuckConfig.builder();
 
     if (enableCacheSection) {
@@ -276,58 +258,26 @@ public class CleanCommandTest {
           command.getConfigOverrides(ImmutableMap.of()).getForCell(CellName.ROOT_CELL_NAME));
     }
     BuckConfig buckConfig = buckConfigBuilder.build();
-    Cell cell =
+    Cells cell =
         new TestCellBuilder().setFilesystem(projectFilesystem).setBuckConfig(buckConfig).build();
     return createCommandRunnerParams(buckConfig, cell);
   }
 
-  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
-    ProcessExecutor processExecutor = new FakeProcessExecutor();
+  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cells cells) {
+    CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
+        depsAwareExecutorSupplier =
+            MainRunner.getDepsAwareExecutorSupplier(buckConfig, BuckEventBusForTests.newInstance());
 
-    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    KnownRuleTypesProvider knownRuleTypesProvider =
-        TestKnownRuleTypesProvider.create(pluginManager);
-    ExecutableFinder executableFinder = new ExecutableFinder();
-
-    return CommandRunnerParams.of(
+    return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+        depsAwareExecutorSupplier.get(),
         new TestConsole(),
-        new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-        cell,
-        WatchmanFactory.NULL_WATCHMAN,
-        new InstrumentedVersionedTargetGraphCache(
-            new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
-        new SingletonArtifactCacheFactory(new NoopArtifactCache()),
-        typeCoercerFactory,
-        TestParserFactory.create(buckConfig, knownRuleTypesProvider),
+        cells,
+        new SingletonArtifactCacheFactory(new NoopArtifactCache()).newInstance(),
         BuckEventBusForTests.newInstance(),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        new DefaultClock(),
-        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty(),
         buckConfig,
-        new StackedFileHashCache(ImmutableList.of()),
-        ImmutableMap.of(),
-        new FakeExecutor(),
-        CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphProviderBuilder()
-            .withMaxEntries(buckConfig.getMaxActionGraphCacheEntries())
-            .withPoolSupplier(Main.getForkJoinPoolSupplier(buckConfig))
-            .build(),
-        knownRuleTypesProvider,
-        new BuildInfoStoreManager(),
-        Optional.empty(),
-        Optional.empty(),
-        new DefaultProjectFilesystemFactory(),
-        TestRuleKeyConfigurationFactory.create(),
-        processExecutor,
-        executableFinder,
-        pluginManager,
-        TestBuckModuleManagerFactory.create(pluginManager),
-        Main.getForkJoinPoolSupplier(buckConfig));
+        Platform.detect(),
+        EnvVariablesProvider.getSystemEnv(),
+        new FakeJavaPackageFinder(),
+        Optional.empty());
   }
 }

@@ -1,0 +1,6 @@
+genrule(
+    name = "non-utf8",
+    cmd = "python3 $SRCDIR/out.py",
+    srcs = ["out.py"],
+    out = "out.txt",
+)

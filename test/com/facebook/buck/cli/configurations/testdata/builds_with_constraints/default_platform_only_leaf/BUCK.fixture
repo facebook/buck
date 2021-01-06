@@ -1,0 +1,24 @@
+java_library(
+    name = "dep",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = [
+        "//config:linux_config",
+    ],
+)
+
+java_library(
+    name = "intermediate",
+    default_target_platform = "buck//config/constraints:macos",
+    deps = [
+        ":dep",
+    ],
+)
+
+java_library(
+    name = "leaf",
+    deps = [
+        ":intermediate",
+    ],
+)

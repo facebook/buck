@@ -1,0 +1,20 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_library(
+    name = "lib",
+    srcs = [
+        "Foo.m",
+        "other_cell//:gen",
+        ":gen",
+    ],
+    configs = EMPTY_CONFIGS,
+)
+
+genrule(
+    name = "gen",
+    out = "source.m",
+    cmd = "echo \"static int answer = 42;\" > $OUT",
+)

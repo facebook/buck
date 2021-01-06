@@ -1,3 +1,19 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* mobile first */
 
 * {
@@ -83,7 +99,10 @@ code {
     letter-spacing: 0.02em;
     border: 1px solid #ededed;
     border-radius: 3px;
-    padding: 0.1em;
+    padding-top: 0.0em;
+    padding-bottom: 0.01em;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
 }
 
 /*
@@ -165,7 +184,11 @@ ul, ol {
 
 a {
   text-decoration: none;
-  color: #3b5998;
+  color: #3A5CA9;
+}
+
+a:hover {
+  font-weight: bold;
 }
 
 .width {
@@ -229,8 +252,8 @@ header.topbar nav ul li a {
   line-height: 60px;
 }
 
-header.topbar nav ul li a.active {
-  color: #3b5998;
+header.topbar nav ul li a:active {
+  color: #3A5CA9;
 }
 
 header.hero {
@@ -529,7 +552,17 @@ footer {
 .display-platform-ios .toggler .button-ios,
 .display-platform-android .toggler .button-android,
 .display-platform-other .toggler .button-other,
-.display-platform-java .toggler .button-java {
+.display-platform-java .toggler .button-java,
+.disp-os-mac .toggler .button-mac,
+.disp-os-linux .toggler .button-linux,
+.disp-os-windows .toggler .button-windows,
+.disp-platform-ios .toggler .button-ios,
+.disp-platform-android .toggler .button-android,
+.disp-platform-macos .toggler .button-macos,
+.disp-platform-linuxos .toggler .button-linuxos,
+.disp-language-java .toggler .button-java,
+.disp-language-kotlin .toggler .button-kotlin,
+.disp-language-rust .toggler .button-rust {
   background-color: #05A5D1;
   color: white;
 }
@@ -538,6 +571,12 @@ block {
   display: none;
 }
 
+.disp-platform-android.disp-os-mac.disp-language-java .android.mac.java,
+.disp-platform-android.disp-os-linux.disp-language-java .android.linux.java,
+.disp-platform-android.disp-os-mac.disp-language-kotlin .android.mac.kotlin,
+.disp-platform-android.disp-os-linux.disp-language-kotlin .android.linux.kotlin,
+.disp-platform-macos.disp-os-mac.disp-language-rust .macos.mac.rust,
+.disp-platform-linuxos.disp-os-linux.disp-language-rust .linuxos.linux.rust,
 .display-platform-ios.display-os-mac .ios.mac,
 .display-platform-ios.display-os-linux .ios.linux,
 .display-platform-ios.display-os-windows .ios.windows,

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,11 +22,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
@@ -49,13 +49,13 @@ public class FilterResourcesStepTest {
 
   @Test
   public void testFilterDrawables() throws IOException, InterruptedException {
-    final String first = "/first-path/res";
-    Path baseDestination = Paths.get("/dest");
+    final String first = "first-path/res";
+    Path baseDestination = Paths.get("dest");
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
         ImmutableBiMap.of(
             Paths.get(first), baseDestination.resolve("1"),
-            Paths.get("/second-path/res"), baseDestination.resolve("2"),
-            Paths.get("/third-path/res"), baseDestination.resolve("3"));
+            Paths.get("second-path/res"), baseDestination.resolve("2"),
+            Paths.get("third-path/res"), baseDestination.resolve("3"));
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -122,7 +122,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testWhitelistFilter() throws IOException, InterruptedException {
+  public void testWhitelistFilter() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             true,
@@ -139,7 +139,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterLocales() throws IOException, InterruptedException {
+  public void testFilterLocales() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), Optional.empty());
@@ -156,8 +156,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testFilterLocalesWithLocalizedStringFileName()
-      throws IOException, InterruptedException {
+  public void testFilterLocalesWithLocalizedStringFileName() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), Optional.of("localized.xml"));
@@ -174,7 +173,7 @@ public class FilterResourcesStepTest {
   }
 
   @Test
-  public void testUsingWhitelistIgnoresLocaleFilter() throws IOException, InterruptedException {
+  public void testUsingWhitelistIgnoresLocaleFilter() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
             true,

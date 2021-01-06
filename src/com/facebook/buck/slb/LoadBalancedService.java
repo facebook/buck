@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
@@ -41,8 +41,9 @@ public class LoadBalancedService implements HttpService {
   @Override
   public HttpResponse makeRequest(String path, Request.Builder requestBuilder) throws IOException {
     URI server = slb.getBestServer();
-    LoadBalancedServiceEventData.Builder data =
-        LoadBalancedServiceEventData.builder().setServer(server);
+    long startRequestNanos = System.nanoTime();
+    ImmutableLoadBalancedServiceEventData.Builder data =
+        ImmutableLoadBalancedServiceEventData.builder().setServer(server);
     URL fullUrl = SingleUriService.getFullUrl(server, path);
     requestBuilder.url(fullUrl);
     Request request = requestBuilder.build();
@@ -60,8 +61,9 @@ public class LoadBalancedService implements HttpService {
       return response;
     } catch (IOException e) {
       data.setException(e);
-      throw new IOException(e);
+      throw e;
     } finally {
+      data.setLatencyMicros((System.nanoTime() - startRequestNanos) / 1000);
       eventBus.post(new LoadBalancedServiceEvent(data.build()));
     }
   }

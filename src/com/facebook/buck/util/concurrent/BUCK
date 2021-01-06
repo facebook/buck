@@ -3,22 +3,27 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "concurrent",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//third-party/java/concurrent-locks:concurrent-locks",
-    ],
     tests = [
         "//test/com/facebook/buck/util/concurrent:concurrent",
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/util:util",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//third-party/java/concurrent-locks:concurrent-locks",
     ],
 )
 
 java_library(
     name = "concurrent_for_junit_runner",
     srcs = ["MostExecutors.java"],
+    # This target is pulled in by testrunner, which needs to compile against Java 8.
+    source = "8",
+    target = "8",
     visibility = [
         "//src/com/facebook/buck/testrunner:junit",
         "//test/...",

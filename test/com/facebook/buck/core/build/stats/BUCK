@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_test(
     name = "stats",
     srcs = glob(
@@ -8,7 +6,7 @@ java_test(
     deps = [
         "//src/com/facebook/buck/core/build/stats:stats",
         "//src/com/facebook/buck/core/rules:rules",
-        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
         "//third-party/java/junit:junit",
     ],
 )

@@ -1,0 +1,19 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "handler",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/rules/analysis:analysis",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/support/exceptions/handler:handler",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/hamcrest:hamcrest-junit",
+        "//third-party/java/junit:junit",
+        "//third-party/java/nailgun:nailgun",
+    ],
+)

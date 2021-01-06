@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_test(
     name = "buildinfo",
     srcs = glob(
@@ -17,6 +15,7 @@ java_test(
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
         "//third-party/java/junit:junit",

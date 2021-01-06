@@ -1,31 +1,34 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.android.AndroidBinaryDescription;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidBinaryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidResourceModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.RobolectricTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.cxx.CxxLibraryModuleRule;
+import com.facebook.buck.features.project.intellij.lang.cxx.CxxTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.groovy.GroovyLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.groovy.GroovyTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.java.JavaBinaryModuleRule;
@@ -68,6 +71,7 @@ public class SupportedTargetTypeRegistry {
               AndroidLibraryDescription.class,
               AndroidResourceDescription.class,
               CxxLibraryDescription.class,
+              CxxTestDescription.class,
               JavaBinaryDescription.class,
               JavaLibraryDescription.class,
               JavaTestDescription.class,
@@ -105,6 +109,7 @@ public class SupportedTargetTypeRegistry {
     addToIndex(
         new AndroidResourceModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new CxxTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(
         new JavaLibraryModuleRule(

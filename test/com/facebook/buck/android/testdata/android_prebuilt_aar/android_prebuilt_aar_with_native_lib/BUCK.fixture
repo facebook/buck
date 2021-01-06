@@ -1,0 +1,14 @@
+android_prebuilt_aar(
+    name = "aar_with_native_lib",
+    aar = "lib.aar",
+    use_system_library_loader = True,
+)
+
+android_library(
+    name = "lib",
+    srcs = ["ExampleActivity.java"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":aar_with_native_lib",
+    ],
+)

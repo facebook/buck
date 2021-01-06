@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,11 +21,12 @@ import static com.google.common.collect.Ordering.natural;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -60,6 +61,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -68,7 +70,7 @@ public class MergeAndroidResourcesStep implements Step {
   private static final Logger LOG = Logger.get(MergeAndroidResourcesStep.class);
 
   private final ProjectFilesystem filesystem;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final ImmutableList<Path> uberRDotTxt;
   private final Path outputDir;
@@ -90,7 +92,7 @@ public class MergeAndroidResourcesStep implements Step {
   @VisibleForTesting
   MergeAndroidResourcesStep(
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       ImmutableList<Path> uberRDotTxt,
       Path outputDir,
@@ -119,7 +121,7 @@ public class MergeAndroidResourcesStep implements Step {
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path outputDir,
       boolean forceFinalResourceIds,
@@ -145,7 +147,7 @@ public class MergeAndroidResourcesStep implements Step {
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       ImmutableList<Path> uberRDotTxt,
       Path outputDir,
@@ -185,8 +187,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try {
       // In order to convert a symbols file to R.java, all resources of the same type are grouped
       // into a static class of that name. The static class contains static values that correspond
@@ -205,39 +206,36 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableMap.Builder<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps =
           ImmutableMap.builder();
       for (HasAndroidResourceDeps res : androidResourceDeps) {
-        Path rDotTxtPath =
+        RelPath rDotTxtPath =
             filesystem.relativize(pathResolver.getAbsolutePath(res.getPathToTextSymbolsFile()));
-        rDotTxtToPackage.put(rDotTxtPath, res.getRDotJavaPackage());
-        symbolsFileToResourceDeps.put(rDotTxtPath, res);
+        rDotTxtToPackage.put(rDotTxtPath.getPath(), res.getRDotJavaPackage());
+        symbolsFileToResourceDeps.put(rDotTxtPath.getPath(), res);
       }
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
       if (uberRDotTxt.isEmpty()) {
         uberRDotTxtIds = Optional.empty();
       } else {
         // re-assign Ids
+        ImmutableSet.Builder<RDotTxtEntry> uberRdotTxtEntries = ImmutableSet.builder();
+        uberRDotTxt.forEach(
+            rDot -> {
+              try {
+                RDotTxtEntry.readResources(filesystem, rDot).forEach(uberRdotTxtEntries::add);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
         uberRDotTxtIds =
             Optional.of(
-                FluentIterable.from(uberRDotTxt)
-                    .stream()
-                    .flatMap(
-                        rDot -> {
-                          try {
-                            return RDotTxtEntry.readResources(filesystem, rDot).stream();
-                          } catch (IOException e) {
-                            throw new RuntimeException(e);
-                          }
-                        })
-                    .sorted((left, right) -> left.compareWithValue(right))
-                    .distinct()
-                    .collect(ImmutableMap.toImmutableMap(input -> input, b -> b.idValue)));
+                uberRdotTxtEntries.build().stream()
+                    .collect(ImmutableMap.toImmutableMap(input -> input, input -> input.idValue)));
       }
-
       ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();
 
       Optional<SetMultimap<String, RDotTxtEntry>> overrideSymbols =
           loadOverrideSymbols(overrideSymbolsPath);
 
-      ImmutableSet<String> duplciateResourceWhitelist =
+      ImmutableSet<String> duplicateResourceWhitelist =
           (duplicateResourceWhitelistPath.isPresent())
               ? ImmutableSet.copyOf(filesystem.readLines(duplicateResourceWhitelistPath.get()))
               : ImmutableSet.of();
@@ -249,7 +247,7 @@ public class MergeAndroidResourcesStep implements Step {
               symbolsFileToResourceDeps.build(),
               overrideSymbols,
               bannedDuplicateResourceTypes,
-              duplciateResourceWhitelist,
+              duplicateResourceWhitelist,
               filesystem,
               useOldStyleableFormat);
 
@@ -294,7 +292,10 @@ public class MergeAndroidResourcesStep implements Step {
       }
       return StepExecutionResults.SUCCESS;
     } catch (DuplicateResourceException e) {
-      return StepExecutionResult.of(1, Optional.of(e.getMessage()));
+      return StepExecutionResult.builder()
+          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+          .setStderr(Optional.of(e.getMessage()))
+          .build();
     }
   }
 
@@ -449,9 +450,7 @@ public class MergeAndroidResourcesStep implements Step {
       List<RDotTxtEntry> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            filesystem
-                .readLines(symbolsFile)
-                .stream()
+            filesystem.readLines(symbolsFile).stream()
                 .filter(input -> !Strings.isNullOrEmpty(input))
                 .map(MergeAndroidResourcesStep::parseEntryOrThrow)
                 .collect(Collectors.toList());
@@ -478,7 +477,7 @@ public class MergeAndroidResourcesStep implements Step {
         RDotTxtEntry resource = linesInSymbolsFile.get(index);
 
         if (uberRDotTxtIds.isPresent()) {
-          Preconditions.checkNotNull(finalIds);
+          Objects.requireNonNull(finalIds);
           if (!finalIds.containsKey(resource)) {
             LOG.debug("Cannot find resource '%s' in the uber R.txt.", resource);
             continue;
@@ -487,12 +486,12 @@ public class MergeAndroidResourcesStep implements Step {
 
         } else if (useOldStyleableFormat) {
           if (resource.idValue.startsWith("0x7f")) {
-            Preconditions.checkNotNull(enumerator);
+            Objects.requireNonNull(enumerator);
             resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
           }
         } else {
           if (resourceToIdValuesMap.containsKey(resource)) {
-            resource = Preconditions.checkNotNull(resourceToIdValuesMap.get(resource));
+            resource = Objects.requireNonNull(resourceToIdValuesMap.get(resource));
 
           } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
             Map<RDotTxtEntry, String> styleableResourcesMap =
@@ -515,7 +514,7 @@ public class MergeAndroidResourcesStep implements Step {
             // Framework resources starts with 0x01 and are constants
             // which should not be assigned a custom R value.
             if (!resource.idValue.startsWith("0x01")) {
-              Preconditions.checkNotNull(enumerator);
+              Objects.requireNonNull(enumerator);
               resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
             }
 
@@ -543,7 +542,7 @@ public class MergeAndroidResourcesStep implements Step {
         ovr ->
             ovr.forEach(
                 (pkg, resource) -> {
-                  Preconditions.checkNotNull(finalFinalIds);
+                  Objects.requireNonNull(finalFinalIds);
                   if (!rDotJavaPackageToSymbolsFiles.containsEntry(pkg, resource)) {
                     String realId = finalFinalIds.get(resource);
                     Preconditions.checkState(
@@ -677,8 +676,7 @@ public class MergeAndroidResourcesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     List<String> resources =
-        androidResourceDeps
-            .stream()
+        androidResourceDeps.stream()
             .map(Object::toString)
             .sorted(natural())
             .collect(Collectors.toList());

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.tools.consistency;
@@ -27,7 +27,6 @@ import com.facebook.buck.log.thrift.rulekeys.NullValue;
 import com.facebook.buck.log.thrift.rulekeys.Pattern;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Sha1;
-import com.facebook.buck.log.thrift.rulekeys.SourceRoot;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
@@ -350,11 +349,6 @@ public class RuleKeyDiffPrinterTest {
                 new ArchiveMemberPath("archive path", "member path", "some hash"))));
 
     Assert.assertEquals(
-        "SourceRoot: some path",
-        RuleKeyDiffPrinter.valueAsReadableString(
-            sampleParsedFile, Value.sourceRoot(new SourceRoot("some path"))));
-
-    Assert.assertEquals(
         "BuildRuleType: rule type",
         RuleKeyDiffPrinter.valueAsReadableString(
             sampleParsedFile, Value.buildRuleType(new BuildRuleType("rule type"))));
@@ -500,11 +494,6 @@ public class RuleKeyDiffPrinterTest {
             f.apply(
                 Value.archiveMemberPath(
                     new ArchiveMemberPath("archive path", "member path", "some hash")))));
-
-    Assert.assertEquals(
-        "argument: some path",
-        RuleKeyDiffPrinter.getRuleKeyName(
-            sampleParsedFile, f.apply(Value.sourceRoot(new SourceRoot("some path")))));
 
     Assert.assertEquals(
         "argument: rule type",

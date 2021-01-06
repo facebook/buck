@@ -1,0 +1,28 @@
+constraint_setting(
+    name = "constraint-color",
+)
+
+constraint_value(
+    name = "constraint-red",
+    constraint_setting = ":constraint-color",
+)
+
+config_setting(
+    name = "red",
+    constraint_values = [
+        ":constraint-red",
+    ],
+)
+
+java_library(
+    name = "test-library",
+    srcs = select({
+        ":red": [],
+        "DEFAULT": [],
+    }),
+    source = "6",
+    target = "6",
+    visibility = [
+        "PUBLIC",
+    ],
+)

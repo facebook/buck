@@ -1,0 +1,15 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/model/platform/impl:impl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/environment:platform",
+    ],
+)

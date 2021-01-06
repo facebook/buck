@@ -1,23 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.ExpressionTree;
@@ -29,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
@@ -98,7 +98,7 @@ class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
         ExecutableElement underlyingKeyElement = entry.getKey();
 
         Tree valueTree =
-            Preconditions.checkNotNull(trees.get(entry.getKey().getSimpleName().toString()));
+            Objects.requireNonNull(trees.get(entry.getKey().getSimpleName().toString()));
 
         result.put(
             canonicalizer.getCanonicalElement(underlyingKeyElement),
@@ -120,9 +120,7 @@ class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
     if (!elementValues.isEmpty()) {
       result.append("(");
       result.append(
-          elementValues
-              .entrySet()
-              .stream()
+          elementValues.entrySet().stream()
               .map(
                   entry -> {
                     Name key = entry.getKey().getSimpleName();

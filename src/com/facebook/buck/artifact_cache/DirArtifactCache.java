@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -26,6 +26,7 @@ import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.DirectoryCleanerArgs;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ComparisonChain;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -69,6 +71,7 @@ public class DirArtifactCache implements ArtifactCache {
   private final Path cacheDir;
   private final Optional<Long> maxCacheSizeBytes;
   private final CacheReadMode cacheReadMode;
+  private final ListeningExecutorService storeExecutorService;
   private long bytesSinceLastDeleteOldFiles;
 
   public DirArtifactCache(
@@ -76,13 +79,15 @@ public class DirArtifactCache implements ArtifactCache {
       ProjectFilesystem filesystem,
       Path cacheDir,
       CacheReadMode cacheReadMode,
-      Optional<Long> maxCacheSizeBytes)
+      Optional<Long> maxCacheSizeBytes,
+      ListeningExecutorService storeExecutorService)
       throws IOException {
     this.name = name;
     this.filesystem = filesystem;
     this.cacheDir = cacheDir;
     this.maxCacheSizeBytes = maxCacheSizeBytes;
     this.cacheReadMode = cacheReadMode;
+    this.storeExecutorService = storeExecutorService;
     this.bytesSinceLastDeleteOldFiles = 0L;
 
     // Check first, as mkdirs will fail if the path is a symlink.
@@ -106,12 +111,13 @@ public class DirArtifactCache implements ArtifactCache {
     CacheResult result;
     try {
       // First, build up the metadata from the metadata file.
-      ImmutableMap.Builder<String, String> metadata = ImmutableMap.builder();
+      ImmutableMap.Builder<String, String> metadata;
       try (DataInputStream in =
           new DataInputStream(
               filesystem.newFileInputStream(
                   getPathForRuleKey(ruleKey, Optional.of(".metadata"))))) {
         int sz = in.readInt();
+        metadata = ImmutableMap.builderWithExpectedSize(sz);
         for (int i = 0; i < sz; i++) {
           String key = in.readUTF();
           int valSize = in.readInt();
@@ -142,12 +148,20 @@ public class DirArtifactCache implements ArtifactCache {
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
 
     if (!getCacheReadMode().isWritable()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
+    return storeExecutorService.submit(
+        () -> {
+          storeSynchronously(info, output);
+          return null;
+        });
+  }
+
+  private void storeSynchronously(ArtifactInfo info, BorrowablePath output) {
     try {
       Optional<Path> borrowedAndStoredArtifactPath = Optional.empty();
       for (RuleKey ruleKey : info.getRuleKeys()) {
@@ -161,7 +175,7 @@ public class DirArtifactCache implements ArtifactCache {
         filesystem.mkdirs(getParentDirForRuleKey(ruleKey));
 
         if (!output.canBorrow()) {
-          storeArtifactOutput(output.getPath(), artifactPath);
+          filesystem.copyFile(output.getPath(), artifactPath);
         } else {
           // This branch means that we are apparently the only users of the `output`, so instead
           // of making a safe transfer of the output to the dir cache (copy+move), we can just
@@ -170,7 +184,7 @@ public class DirArtifactCache implements ArtifactCache {
             borrowedAndStoredArtifactPath = Optional.of(artifactPath);
             filesystem.move(output.getPath(), artifactPath, StandardCopyOption.REPLACE_EXISTING);
           } else {
-            storeArtifactOutput(borrowedAndStoredArtifactPath.get(), artifactPath);
+            filesystem.copyFile(borrowedAndStoredArtifactPath.get(), artifactPath);
           }
         }
         bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
@@ -204,8 +218,6 @@ public class DirArtifactCache implements ArtifactCache {
       bytesSinceLastDeleteOldFiles = 0L;
       deleteOldFiles();
     }
-
-    return Futures.immediateFuture(null);
   }
 
   @Override
@@ -251,7 +263,7 @@ public class DirArtifactCache implements ArtifactCache {
     ruleKeys.forEach(this::deleteSync);
 
     ImmutableList<String> cacheNames = ImmutableList.of(DirArtifactCache.class.getSimpleName());
-    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+    return Futures.immediateFuture(CacheDeleteResult.of(cacheNames));
   }
 
   private Path getPathToTempFolder() {
@@ -288,20 +300,6 @@ public class DirArtifactCache implements ArtifactCache {
       result = result.resolve(f);
     }
     return result;
-  }
-
-  private void storeArtifactOutput(Path output, Path artifactPath) throws IOException {
-    // Write to a temporary file and move the file to its final location atomically to protect
-    // against partial artifacts (whether due to buck interruption or filesystem failure) posing
-    // as valid artifacts during subsequent buck runs.
-    Path tmp = filesystem.createTempFile(getPreparedTempFolder(), "artifact", TMP_EXTENSION);
-    try {
-      filesystem.copyFile(output, tmp);
-      filesystem.move(tmp, artifactPath);
-      bytesSinceLastDeleteOldFiles += filesystem.getFileSize(artifactPath);
-    } finally {
-      filesystem.deleteFileAtPathIfExists(tmp);
-    }
   }
 
   @Override

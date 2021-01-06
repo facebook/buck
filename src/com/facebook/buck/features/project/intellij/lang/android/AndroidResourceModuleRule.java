@@ -1,27 +1,31 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij.lang.android;
 
+import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
+import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -70,8 +74,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
       for (Path resourceFolder : resourceFolders) {
         context.addSourceFolder(new AndroidResourceFolder(resourceFolder));
 
-        excludedResourcePaths
-            .stream()
+        excludedResourcePaths.stream()
             .map((file) -> resourceFolder.resolve(file))
             .forEach((folder) -> context.addSourceFolder(new ExcludeFolder(folder)));
       }
@@ -83,7 +86,15 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
 
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
-      context.addExtraClassPathDependency(dummyRDotJavaClassPath.get());
+      BuildTarget dummyRDotJavaTarget =
+          target.getBuildTarget().withFlavors(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR);
+      IjLibrary extraClassPathLibrary =
+          IjLibrary.builder()
+              .setBinaryJars(ImmutableSet.of(dummyRDotJavaClassPath.get()))
+              .setTargets(ImmutableSet.of(dummyRDotJavaTarget))
+              .setName(dummyRDotJavaTarget.getFullyQualifiedName())
+              .build();
+      context.addExtraLibraryDependency(extraClassPathLibrary);
       context.addExtraModuleDependency(dummyRDotJavaClassPath.get());
     }
 

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.aapt;
@@ -25,13 +25,12 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,8 +50,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidResourceIndexMiniAaptTest {
-  private final SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+  private final SourcePathResolverAdapter resolver =
+      new TestActionGraphBuilder().getSourcePathResolver();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
@@ -62,7 +61,7 @@ public class AndroidResourceIndexMiniAaptTest {
   private MiniAapt aapt;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
@@ -75,7 +74,6 @@ public class AndroidResourceIndexMiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("android_resources.json"),
             ImmutableSet.of(),
-            false,
             false,
             MiniAapt.ResourceCollectionType.ANDROID_RESOURCE_INDEX);
   }
@@ -90,9 +88,9 @@ public class AndroidResourceIndexMiniAaptTest {
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.ID, "button1", 4, 41, Paths.get("sample_resources_1.xml")),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.ID, "button3", 7, 55, Paths.get("sample_resources_1.xml"))),
         definitions);
   }
@@ -107,24 +105,25 @@ public class AndroidResourceIndexMiniAaptTest {
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(RType.STRING, "hello", 2, 25, valuesFile),
-            AndroidResourceIndexEntry.of(RType.PLURALS, "people", 4, 27, valuesFile),
-            AndroidResourceIndexEntry.of(RType.INTEGER, "number", 9, 27, valuesFile),
-            AndroidResourceIndexEntry.of(RType.DIMEN, "dimension", 10, 28, valuesFile),
-            AndroidResourceIndexEntry.of(RType.STYLEABLE, "MyNiceView", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(RType.STRING, "hello", 2, 25, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.PLURALS, "people", 4, 27, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.INTEGER, "number", 9, 27, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.DIMEN, "dimension", 10, 28, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(
+                RType.STYLEABLE, "MyNiceView", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_titleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_subtitleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_complexAttr", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STYLEABLE, "MyNiceView_android_layout_gravity", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "titleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "subtitleText", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ATTR, "complexAttr", 11, 41, valuesFile),
-            AndroidResourceIndexEntry.of(RType.ID, "some_id", 23, 36, valuesFile),
-            AndroidResourceIndexEntry.of(RType.STYLE, "Widget_Theme", 24, 31, valuesFile)),
+            ImmutableAndroidResourceIndexEntry.of(RType.ATTR, "titleText", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.ATTR, "subtitleText", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.ATTR, "complexAttr", 11, 41, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.ID, "some_id", 23, 36, valuesFile),
+            ImmutableAndroidResourceIndexEntry.of(RType.STYLE, "Widget_Theme", 24, 31, valuesFile)),
         definitions);
   }
 
@@ -149,7 +148,7 @@ public class AndroidResourceIndexMiniAaptTest {
     assertEquals(
         definitions,
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.STRING, "hello", 3, 22, Paths.get("sample_resources_4.xml"))));
   }
 
@@ -164,7 +163,7 @@ public class AndroidResourceIndexMiniAaptTest {
         definitions,
         IsEqual.equalToObject(
             ImmutableSet.of(
-                AndroidResourceIndexEntry.of(
+                ImmutableAndroidResourceIndexEntry.of(
                     RType.DRAWABLE,
                     "sample_resources_android_drawables",
                     0,
@@ -183,7 +182,7 @@ public class AndroidResourceIndexMiniAaptTest {
         definitions,
         IsEqual.equalToObject(
             ImmutableSet.of(
-                AndroidResourceIndexEntry.of(
+                ImmutableAndroidResourceIndexEntry.of(
                     RType.DRAWABLE,
                     "sample_resources_custom_drawables",
                     0,
@@ -204,7 +203,7 @@ public class AndroidResourceIndexMiniAaptTest {
         definitions,
         IsEqual.equalToObject(
             ImmutableSet.of(
-                AndroidResourceIndexEntry.of(
+                ImmutableAndroidResourceIndexEntry.of(
                     RType.DRAWABLE, "fbui_tomato", 0, 0, Paths.get("fbui_tomato.g.png")))));
   }
 
@@ -260,6 +259,8 @@ public class AndroidResourceIndexMiniAaptTest {
 
   @Test
   public void testProcessFileNamesInDirectory() throws IOException, ResourceParseException {
+    ProjectFilesystemView filesystemView = filesystem.asView();
+
     filesystem.createParentDirs("sample_res/values/value.xml~");
     filesystem.touch(Paths.get("sample_res/values/value.xml~"));
     filesystem.writeContentsToPath(
@@ -268,25 +269,25 @@ public class AndroidResourceIndexMiniAaptTest {
             + "<bool name=\"v\">false</bool>"
             + "</resources>",
         Paths.get("sample_res/values/value.xml~"));
-    aapt.processFileNamesInDirectory(filesystem, Paths.get("sample_res/drawable"));
-    aapt.processFileNamesInDirectory(filesystem, Paths.get("sample_res/drawable-ldpi"));
-    aapt.processFileNamesInDirectory(filesystem, Paths.get("sample_res/transition-v19"));
+    aapt.processFileNamesInDirectory(filesystemView, Paths.get("sample_res/drawable"));
+    aapt.processFileNamesInDirectory(filesystemView, Paths.get("sample_res/drawable-ldpi"));
+    aapt.processFileNamesInDirectory(filesystemView, Paths.get("sample_res/transition-v19"));
     aapt.processValues(
-        filesystem,
+        filesystemView,
         new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")),
         Paths.get("sample_res/values"));
 
     assertEquals(
         ImmutableSet.of(
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.DRAWABLE, "icon", 0, 0, Paths.get("sample_res/drawable/icon.png")),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.DRAWABLE,
                 "nine_patch",
                 0,
                 0,
                 Paths.get("sample_res/drawable-ldpi/nine_patch.9.png")),
-            AndroidResourceIndexEntry.of(
+            ImmutableAndroidResourceIndexEntry.of(
                 RType.TRANSITION,
                 "some_transition",
                 0,

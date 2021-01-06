@@ -1,21 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -66,33 +67,42 @@ public final class IjModuleGraphFactory {
       ImmutableSet<String> ignoredTargetLabels) {
 
     Stream<TargetNode<?>> nodes =
-        targetGraph
-            .getNodes()
-            .stream()
+        targetGraph.getNodes().stream()
             .filter(
                 input ->
                     SupportedTargetTypeRegistry.isTargetTypeSupported(
                         input.getDescription().getClass()))
             .filter(
                 targetNode -> {
-                  CommonDescriptionArg arg = (CommonDescriptionArg) targetNode.getConstructorArg();
+                  BuildRuleArg arg = (BuildRuleArg) targetNode.getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
-            // IntelliJ doesn't support referring to source files which aren't below the root of the
-            // project. Filter out those cases proactively, so that we don't try to resolve files
-            // relative to the wrong ProjectFilesystem.
-            // Maybe one day someone will fix this.
-            .filter(targetNode -> isInRootCell(projectFilesystem, targetNode));
+            // Experimental support for generating modules outside the project root
+            .filter(
+                targetNode ->
+                    projectConfig.isMultiCellModuleSupportEnabled()
+                        || isInRootCell(projectFilesystem, targetNode));
 
     ImmutableListMultimap<Path, TargetNode<?>> baseTargetPathMultimap =
         (projectConfig.getProjectRoot().isEmpty()
                 ? nodes
                 : nodes.filter(
                     targetNode ->
-                        shouldConvertToIjModule(projectConfig.getProjectRoot(), targetNode)))
+                        shouldConvertToIjModule(
+                            projectFilesystem, projectConfig.getProjectRoot(), targetNode)))
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
-                    targetNode -> targetNode.getBuildTarget().getBasePath(),
+                    targetNode ->
+                        projectFilesystem
+                            .relativize(
+                                targetNode
+                                    .getFilesystem()
+                                    .resolve(
+                                        targetNode
+                                            .getBuildTarget()
+                                            .getCellRelativeBasePath()
+                                            .getPath()))
+                            .getPath(),
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =
@@ -104,7 +114,7 @@ public final class IjModuleGraphFactory {
 
     aggregationTree
         .getModules()
-        .stream()
+        .parallelStream()
         .filter(aggregationModule -> !aggregationModule.getTargets().isEmpty())
         .forEach(
             aggregationModule -> {
@@ -113,16 +123,24 @@ public final class IjModuleGraphFactory {
                       aggregationModule.getModuleBasePath(),
                       aggregationModule.getTargets(),
                       aggregationModule.getExcludes());
-              module
-                  .getTargets()
-                  .forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
+              synchronized (moduleByBuildTarget) {
+                module
+                    .getTargets()
+                    .forEach(buildTarget -> moduleByBuildTarget.put(buildTarget, module));
+              }
             });
 
     return moduleByBuildTarget.build();
   }
 
-  private static boolean shouldConvertToIjModule(String projectRoot, TargetNode<?> targetNode) {
-    return targetNode.getBuildTarget().getBasePath().startsWith(projectRoot);
+  private static boolean shouldConvertToIjModule(
+      ProjectFilesystem projectFilesystem, String projectRoot, TargetNode<?> targetNode) {
+    return targetNode
+        .getBuildTarget()
+        .getCellRelativeBasePath()
+        .getPath()
+        .toPath(projectFilesystem.getFileSystem())
+        .startsWith(projectRoot);
   }
 
   private static AggregationTree createAggregationTree(
@@ -130,10 +148,7 @@ public final class IjModuleGraphFactory {
       AggregationModuleFactory aggregationModuleFactory,
       ImmutableListMultimap<Path, TargetNode<?>> targetNodesByBasePath) {
     Map<Path, AggregationModule> pathToAggregationModuleMap =
-        targetNodesByBasePath
-            .asMap()
-            .entrySet()
-            .stream()
+        targetNodesByBasePath.asMap().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     Map.Entry::getKey,
@@ -152,9 +167,7 @@ public final class IjModuleGraphFactory {
 
     AggregationTree aggregationTree = new AggregationTree(projectConfig, rootAggregationModule);
 
-    pathToAggregationModuleMap
-        .entrySet()
-        .stream()
+    pathToAggregationModuleMap.entrySet().stream()
         .filter(e -> !rootPath.equals(e.getKey()))
         .forEach(e -> aggregationTree.addModule(e.getKey(), e.getValue()));
 
@@ -230,14 +243,31 @@ public final class IjModuleGraphFactory {
     Set<IjLibrary> referencedLibraries = new HashSet<>();
     Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
-    for (IjModule module : ImmutableSet.copyOf(rulesToModules.values())) {
+    Set<IjModule> seenModules = new HashSet<>();
+    for (IjModule module : rulesToModules.values()) {
+      if (!seenModules.add(module)) {
+        continue;
+      }
+
       Map<IjProjectElement, DependencyType> moduleDeps = new LinkedHashMap<>();
+
+      module
+          .getExtraLibraryDependencies()
+          .forEach(library -> moduleDeps.put(library, DependencyType.PROD));
+
+      if (extraCompileOutputRootPath.isPresent()
+          && !module.getExtraModuleDependencies().isEmpty()) {
+        IjModule extraModule =
+            createExtraModuleForCompilerOutput(module, extraCompileOutputRootPath.get());
+        moduleDeps.put(extraModule, DependencyType.PROD);
+        depsBuilder.put(extraModule, ImmutableMap.of());
+      }
 
       for (Map.Entry<BuildTarget, DependencyType> entry : module.getDependencies().entrySet()) {
         BuildTarget depBuildTarget = entry.getKey();
         TargetNode<?> depTargetNode = targetGraph.get(depBuildTarget);
 
-        CommonDescriptionArg arg = (CommonDescriptionArg) depTargetNode.getConstructorArg();
+        BuildRuleArg arg = (BuildRuleArg) depTargetNode.getConstructorArg();
         if (arg.labelsContainsAnyOf(ignoredTargetLabels)) {
           continue;
         }
@@ -271,8 +301,7 @@ public final class IjModuleGraphFactory {
                     rulesToModules,
                     module,
                     Stream.concat(
-                        transitiveDepsClosureResolver
-                            .getTransitiveDepsClosure(depBuildTarget)
+                        transitiveDepsClosureResolver.getTransitiveDepsClosure(depBuildTarget)
                             .stream(),
                         Stream.of(depBuildTarget)));
           }
@@ -288,27 +317,7 @@ public final class IjModuleGraphFactory {
         }
       }
 
-      if (!module.getExtraClassPathDependencies().isEmpty()) {
-        IjLibrary extraClassPathLibrary =
-            IjLibrary.builder()
-                .setClassPaths(module.getExtraClassPathDependencies())
-                .setTargets(ImmutableSet.of())
-                .setName("library_" + module.getName() + "_extra_classpath")
-                .build();
-        moduleDeps.put(extraClassPathLibrary, DependencyType.PROD);
-      }
-
-      if (extraCompileOutputRootPath.isPresent()
-          && !module.getExtraModuleDependencies().isEmpty()) {
-        IjModule extraModule =
-            createExtraModuleForCompilerOutput(module, extraCompileOutputRootPath.get());
-        moduleDeps.put(extraModule, DependencyType.PROD);
-        depsBuilder.put(extraModule, ImmutableMap.of());
-      }
-
-      moduleDeps
-          .keySet()
-          .stream()
+      moduleDeps.keySet().stream()
           .filter(dep -> dep instanceof IjLibrary)
           .map(library -> (IjLibrary) library)
           .forEach(referencedLibraries::add);

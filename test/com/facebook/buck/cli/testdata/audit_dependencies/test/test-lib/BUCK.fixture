@@ -1,4 +1,4 @@
-apple_library(
+java_library(
     name = "test-lib",
     srcs = ["test-lib.txt"],
     deps = ["//lib/lib2:lib2"],

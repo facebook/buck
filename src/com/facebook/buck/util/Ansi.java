@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
@@ -65,6 +65,7 @@ public final class Ansi {
   private final boolean isAnsiTerminal;
 
   private final String clearLineString;
+  private final String clearToTheEndOfLineString;
 
   private static final Ansi noTtyAnsi = new Ansi(false /* isAnsiTerminal */);
   private static final Ansi forceTtyAnsi = new Ansi(true /* isAnsiTerminal */);
@@ -73,6 +74,7 @@ public final class Ansi {
   public Ansi(boolean isAnsiTerminal) {
     this.isAnsiTerminal = isAnsiTerminal;
     clearLineString = isAnsiTerminal ? ANSI_ERASE_LINE : "";
+    clearToTheEndOfLineString = isAnsiTerminal ? ANSI_ERASE_TO_THE_END_OF_LINE : "";
   }
 
   public static Ansi withoutTty() {
@@ -193,7 +195,7 @@ public final class Ansi {
 
   /** Clears from the cursor to the end of line. */
   public String clearToTheEndOfLine() {
-    return ANSI_ERASE_TO_THE_END_OF_LINE;
+    return clearToTheEndOfLineString;
   }
 
   public enum SeverityLevel {

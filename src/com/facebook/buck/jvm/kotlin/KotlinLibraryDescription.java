@@ -1,31 +1,36 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -40,21 +45,26 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class KotlinLibraryDescription
-    implements DescriptionWithTargetGraph<KotlinLibraryDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<KotlinLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<KotlinLibraryDescriptionArg>,
+        Flavored {
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
   public KotlinLibraryDescription(
       ToolchainProvider toolchainProvider,
@@ -63,10 +73,12 @@ public class KotlinLibraryDescription
     this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
@@ -83,7 +95,7 @@ public class KotlinLibraryDescription
       KotlinLibraryDescriptionArg args) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     BuildTarget buildTargetWithMavenFlavor = null;
     BuildRuleParams paramsWithMavenFlavor = null;
@@ -108,7 +120,7 @@ public class KotlinLibraryDescription
         return MavenUberJar.SourceJar.create(
             buildTargetWithMavenFlavor,
             projectFilesystem,
-            Preconditions.checkNotNull(paramsWithMavenFlavor),
+            Objects.requireNonNull(paramsWithMavenFlavor),
             args.getSrcs(),
             mavenCoords,
             args.getMavenPomTemplate());
@@ -118,10 +130,12 @@ public class KotlinLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
-            projectFilesystem,
             graphBuilder,
             args);
 
@@ -132,11 +146,10 @@ public class KotlinLibraryDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args,
-                JavacFactory.getDefault(toolchainProvider))
+                javacFactory)
             .setJavacOptions(javacOptions)
             .build();
 
@@ -156,10 +169,21 @@ public class KotlinLibraryDescription
           defaultKotlinLibrary,
           buildTargetWithMavenFlavor,
           projectFilesystem,
-          Preconditions.checkNotNull(paramsWithMavenFlavor),
+          Objects.requireNonNull(paramsWithMavenFlavor),
           args.getMavenCoords(),
           args.getMavenPomTemplate());
     }
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellNameResolver cellRoots,
+      KotlinLibraryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
   public enum AnnotationProcessingTool {
@@ -177,12 +201,112 @@ public class KotlinLibraryDescription
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
-    ImmutableList<String> getExtraKotlincArguments();
+
+    /**
+     * A list of additional compiler arguments.
+     */
+    ImmutableList<String> getFreeCompilerArgs();
+
+    /**
+     * Report an error if there are any warnings.
+     */
+    @Value.Default
+    default boolean getAllWarningsAsErrors() {
+      return false;
+    }
+
+    /**
+     * Generate no warnings.
+     */
+    @Value.Default
+    default boolean getSuppressWarnings() {
+      return false;
+    }
+
+    /**
+     * Enable verbose logging output.
+     */
+    @Value.Default
+    default boolean getVerbose() {
+      return false;
+    }
+
+    /**
+     * Include Kotlin runtime in to resulting .jar
+     */
+    @Value.Default
+    default boolean getIncludeRuntime() {
+      return false;
+    }
+
+    /**
+     * Target version of the generated JVM bytecode (1.6 or 1.8), default is 1.6
+     * Possible values: "1.6", "1.8"
+     */
+    @Value.Default
+    default String getJvmTarget() {
+      return "1.6";
+    }
+
+    /**
+     * Path to JDK home directory to include into classpath, if differs from default JAVA_HOME
+     */
+    Optional<String> getJdkHome();
+
+    /**
+     * Don't include Java runtime into classpath.
+     */
+    @Value.Default
+    default boolean getNoJdk() {
+      return false;
+    }
+
+    /**
+     * Don't include kotlin-stdlib.jar or kotlin-reflect.jar into classpath.
+     */
+    @Value.Default
+    default boolean getNoStdlib() {
+      return true;
+    }
+
+    /**
+     * Don't include kotlin-reflect.jar into classpath.
+     */
+    @Value.Default
+    default boolean getNoReflect() {
+      return true;
+    }
+
+    /**
+     * Generate metadata for Java 1.8 reflection on method parameters.
+     */
+    @Value.Default
+    default boolean getJavaParameters() {
+      return false;
+    }
+
+    /**
+     * Allow to use declarations only from the specified version of bundled libraries.
+     * Possible values: "1.0", "1.1", "1.2", "1.3", "1.4".
+     */
+    Optional<String> getApiVersion();
+
+    /**
+     * Provide source compatibility with specified language version.
+     * Possible values: "1.0", "1.1", "1.2", "1.3", "1.4".
+     */
+    Optional<String> getLanguageVersion();
 
     Optional<AnnotationProcessingTool> getAnnotationProcessingTool();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getFriendPaths();
+
+    ImmutableMap<String, String> getKaptApOptions();
+
+    ImmutableList<SourcePath> getKotlincPlugins();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractKotlinLibraryDescriptionArg extends CoreArg {}
 }

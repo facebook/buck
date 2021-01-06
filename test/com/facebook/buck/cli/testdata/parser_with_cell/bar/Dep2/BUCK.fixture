@@ -1,6 +1,0 @@
-cxx_library(
-    name = "Dep2",
-    srcs = [],
-    visibility = ["PUBLIC"],
-    deps = [],
-)

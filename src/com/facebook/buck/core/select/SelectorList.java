@@ -1,23 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.rules.coercer.concat.Concatable;
-import java.util.List;
+import com.facebook.buck.util.function.ThrowingFunction;
+import com.google.common.collect.ImmutableList;
+import java.util.Objects;
 
 /**
  * Represents a list of {@link Selector} objects
@@ -40,26 +41,51 @@ import java.util.List;
  * @param <T> the type of objects the underlying selectors provide after resolution
  */
 public final class SelectorList<T> {
-  private final Concatable<T> elementTypeConcatable;
-  private final List<Selector<T>> selectors;
 
-  public SelectorList(Concatable<T> elementTypeConcatable, List<Selector<T>> selectors) {
-    this.elementTypeConcatable = elementTypeConcatable;
+  private final ImmutableList<Selector<T>> selectors;
+
+  public SelectorList(ImmutableList<Selector<T>> selectors) {
     this.selectors = selectors;
   }
 
   /**
    * @return a syntactically order-preserved list of all values and selectors for this attribute.
    */
-  public List<Selector<T>> getSelectors() {
+  public ImmutableList<Selector<T>> getSelectors() {
     return selectors;
   }
 
-  /**
-   * @return {@link Concatable} that should be used to produce a final result by concatenating the
-   *     results of individual selectors in this list.
-   */
-  public Concatable<T> getConcatable() {
-    return elementTypeConcatable;
+  /** Transform all items with given function. */
+  public <U, E extends Exception> SelectorList<U> mapValuesThrowing(
+      ThrowingFunction<T, U, E> function) throws E {
+    ImmutableList.Builder<Selector<U>> selectors =
+        ImmutableList.builderWithExpectedSize(this.selectors.size());
+    for (Selector<T> selector : this.selectors) {
+      selectors.add(selector.mapValuesThrowing(function));
+    }
+
+    return new SelectorList<>(selectors.build());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SelectorList<?> that = (SelectorList<?>) o;
+    return selectors.equals(that.selectors);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(selectors);
+  }
+
+  @Override
+  public String toString() {
+    return "SelectorList{" + ", selectors=" + selectors + '}';
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.gwt;
@@ -49,13 +49,15 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path outputFile;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> filesForGwtModule;
   private final SourcePathRuleFinder ruleFinder;
+  @AddToRuleKey private final Optional<String> resourcesRoot;
 
   GwtModule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSortedSet<SourcePath> filesForGwtModule) {
+      ImmutableSortedSet<SourcePath> filesForGwtModule,
+      Optional<String> resourcesRoot) {
     super(buildTarget, projectFilesystem, params);
     this.ruleFinder = ruleFinder;
     this.outputFile =
@@ -64,6 +66,7 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             buildTarget,
             "__gwt_module_%s__/" + buildTarget.getShortNameAndFlavorPostfix() + ".jar");
     this.filesForGwtModule = filesForGwtModule;
+    this.resourcesRoot = resourcesRoot;
   }
 
   @Override
@@ -87,15 +90,10 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             context,
             getBuildTarget(),
-            ResourcesParameters.builder()
-                .setResources(
-                    ResourcesParameters.getNamedResources(
-                        context.getSourcePathResolver(),
-                        ruleFinder,
-                        getProjectFilesystem(),
-                        filesForGwtModule))
-                .setResourcesRoot(Optional.empty())
-                .build(),
+            ResourcesParameters.of(
+                ResourcesParameters.getNamedResources(
+                    ruleFinder, getProjectFilesystem(), filesForGwtModule),
+                resourcesRoot),
             tempJarFolder));
 
     steps.add(

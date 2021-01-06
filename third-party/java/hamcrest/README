@@ -1,0 +1,4 @@
+Library of matchers for JUnit testing
+
+http://central.maven.org/maven2/org/hamcrest/hamcrest-junit
+https://mvnrepository.com/artifact/org.hamcrest/hamcrest

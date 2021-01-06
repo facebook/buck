@@ -1,0 +1,32 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "server",
+    srcs = glob(["**/*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/remoteexecution/grpc:grpc",
+        "//src/com/facebook/buck/remoteexecution/util:util",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/grpc:grpc-core",
+        "//third-party/java/grpc:grpc-netty-shaded",
+    ],
+)
+
+java_binary(
+    name = "main",
+    main_class = "com.facebook.buck.remoteexecution.grpc.server.GrpcServerMain",
+    deps = [
+        ":server",
+    ],
+)

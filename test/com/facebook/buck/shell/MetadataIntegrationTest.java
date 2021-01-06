@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -23,7 +23,7 @@ import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 import static java.nio.file.attribute.PosixFilePermission.OWNER_WRITE;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -32,6 +32,8 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,7 +51,7 @@ public class MetadataIntegrationTest {
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
-  public void testMetadataPermissions() throws InterruptedException, IOException {
+  public void testMetadataPermissions() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     ProjectWorkspace workspace =
@@ -62,12 +64,21 @@ public class MetadataIntegrationTest {
 
     // Check permissions on metadata.type
     ProjectFilesystem fs = workspace.asCell().getFilesystem();
-    Path metadataType = fs.getBuckPaths().getScratchDir().resolve("metadata.type");
+    Path metadataType = fs.getBuckPaths().getScratchDir().resolve("metadata.db");
     Set<PosixFilePermission> perms = fs.getPosixFilePermissions(metadataType);
-    assertEquals(perms, EnumSet.of(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ));
+    Set<PosixFilePermission> expectedPermissions =
+        ImmutableSet.of(OWNER_READ, OWNER_WRITE, GROUP_READ, OTHERS_READ);
+    assertTrue(
+        "Missing expected permissions: "
+            + Sets.difference(expectedPermissions, perms)
+            + "; expected: "
+            + expectedPermissions
+            + "; actual: "
+            + perms,
+        perms.containsAll(expectedPermissions));
 
     // As a proxy for being able to read from a build performed by another user, check that we can
-    // still build if we remove write permissions from metadata.type.
+    // still build if we remove write permissions from metadata.db.
     Files.setPosixFilePermissions(
         fs.getPathForRelativeExistingPath(metadataType),
         EnumSet.of(OWNER_READ, GROUP_READ, OTHERS_READ));

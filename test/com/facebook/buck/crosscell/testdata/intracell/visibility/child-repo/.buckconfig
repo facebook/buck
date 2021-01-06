@@ -1,3 +1,7 @@
 
 [repositories]
+child = .
 parent = ..
+
+[project]
+ignore = buck-out

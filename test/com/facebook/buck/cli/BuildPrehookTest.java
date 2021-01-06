@@ -1,24 +1,25 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -26,7 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -34,7 +35,7 @@ import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -50,7 +51,7 @@ public class BuildPrehookTest {
 
   private Collection<FakeListeningProcessState> processStates;
   private FakeListeningProcessExecutor processExecutor;
-  private Cell cell;
+  private Cells cell;
   private BuckEventBus eventBus;
   private BuckConfig buckConfig;
   private FakeBuckEventListener eventListener;
@@ -61,7 +62,11 @@ public class BuildPrehookTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     String pathToScript =
-        cell.getFilesystem().getPathForRelativePath("script.sh").toAbsolutePath().toString();
+        cell.getRootCell()
+            .getFilesystem()
+            .getPathForRelativePath("script.sh")
+            .toAbsolutePath()
+            .toString();
     buckConfig =
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("build", ImmutableMap.of("prehook_script", pathToScript)))
@@ -83,17 +88,13 @@ public class BuildPrehookTest {
   @Test
   public void presubmitHookPostsAWarningOnStderr() throws Exception {
     String warningMessage = "some_warning";
-    FakeListeningProcessState stderrState =
-        FakeListeningProcessState.builder()
-            .setStderr(StandardCharsets.UTF_8.encode(warningMessage))
-            .setType(FakeListeningProcessState.Type.STDERR)
-            .build();
+    FakeListeningProcessState stderrState = FakeListeningProcessState.ofStderr(warningMessage);
     FakeListeningProcessState exitState = FakeListeningProcessState.ofExit(0);
     processStates = Arrays.asList(stderrState, exitState);
 
     try (BuildPrehook buildPrehook = newBuildHook()) {
       buildPrehook.startPrehookScript();
-      processExecutor.waitForProcess(buildPrehook.process);
+      processExecutor.waitForAllLaunchedProcesses();
     }
     ConsoleEvent warning = (ConsoleEvent) Iterables.getOnlyElement(eventListener.getEvents());
     assertThat(warning.getLevel(), CoreMatchers.equalTo(Level.WARNING));
@@ -106,7 +107,7 @@ public class BuildPrehookTest {
 
     try (BuildPrehook buildPrehook = newBuildHook()) {
       buildPrehook.startPrehookScript();
-      processExecutor.waitForProcess(buildPrehook.process);
+      processExecutor.waitForAllLaunchedProcesses();
     }
     assertThat(eventListener.getEvents(), Matchers.empty());
   }
@@ -117,10 +118,44 @@ public class BuildPrehookTest {
 
     try (BuildPrehook buildPrehook = newBuildHook(ImmutableList.of("target"))) {
       buildPrehook.startPrehookScript();
-      processExecutor.waitForProcess(buildPrehook.process);
+      processExecutor.waitForAllLaunchedProcesses();
       String argumentsFile = params.getEnvironment().get().get("BUCK_BUILD_ARGUMENTS_FILE");
       String argumentsJson = Iterables.getOnlyElement(Files.readAllLines(Paths.get(argumentsFile)));
       assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
+    }
+  }
+
+  @Test
+  public void interpreterAndArgsArePassed() throws IOException, InterruptedException {
+    String pathToScript =
+        cell.getRootCell().getFilesystem().getPathForRelativePath("script.py").toString();
+    String interpreterAndArgs = "python3 -B";
+
+    processStates = Collections.singleton(FakeListeningProcessState.ofExit(0));
+
+    buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "build",
+                    ImmutableMap.of(
+                        "prehook_script",
+                        pathToScript,
+                        "prehook_script_interpreter_and_args",
+                        interpreterAndArgs)))
+            .build();
+    try (BuildPrehook buildPrehook = newBuildHook(ImmutableList.of("target"))) {
+      buildPrehook.startPrehookScript();
+      processExecutor.waitForAllLaunchedProcesses();
+      String argumentsFile = params.getEnvironment().get().get("BUCK_BUILD_ARGUMENTS_FILE");
+      String argumentsJson = Iterables.getOnlyElement(Files.readAllLines(Paths.get(argumentsFile)));
+      assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
+      assertEquals(
+          ImmutableList.of(
+              "python3",
+              "-B",
+              cell.getRootCell().getFilesystem().resolve(pathToScript).toAbsolutePath().toString()),
+          params.getCommand());
     }
   }
 
@@ -130,6 +165,7 @@ public class BuildPrehookTest {
 
   private BuildPrehook newBuildHook(ImmutableList<String> arguments) {
     ImmutableMap<String, String> env = ImmutableMap.of();
-    return new BuildPrehook(processExecutor, cell, eventBus, buckConfig, env, arguments);
+    return new BuildPrehook(
+        processExecutor, cell.getRootCell(), eventBus, buckConfig, env, arguments);
   }
 }

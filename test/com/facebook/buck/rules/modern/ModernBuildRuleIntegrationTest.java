@@ -1,31 +1,32 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -37,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,9 +60,10 @@ public class ModernBuildRuleIntegrationTest {
             sandboxExecutionStrategyFactory,
             knownConfigurationDescriptions) ->
             cell ->
-                KnownRuleTypes.of(
+                KnownNativeRuleTypes.of(
                     ImmutableList.of(new TemporaryWritingDescription()),
-                    knownConfigurationDescriptions));
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     workspace.setUp();
   }
 
@@ -88,13 +89,12 @@ public class ModernBuildRuleIntegrationTest {
             workspace.getPath(workspace.getBuckPaths().getScratchDir()),
             255,
             (path, basicFileAttributes) -> path.endsWith("temporary_writing_rule_temp"))) {
-      Assert.assertTrue("Temporary file should be deleted", paths.count() == 0);
+      Assert.assertEquals("Temporary file should be deleted", 0, paths.count());
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractTemporaryWritingDescriptionArg {}
+  @RuleArg
+  interface AbstractTemporaryWritingDescriptionArg extends BuildRuleArg {}
 
   private static class TemporaryWritingDescription
       implements DescriptionWithTargetGraph<TemporaryWritingDescriptionArg> {
@@ -111,9 +111,7 @@ public class ModernBuildRuleIntegrationTest {
         BuildRuleParams params,
         TemporaryWritingDescriptionArg args) {
       return new TemporaryWritingRule(
-          buildTarget,
-          context.getProjectFilesystem(),
-          new SourcePathRuleFinder(context.getActionGraphBuilder()));
+          buildTarget, context.getProjectFilesystem(), context.getActionGraphBuilder());
     }
   }
 

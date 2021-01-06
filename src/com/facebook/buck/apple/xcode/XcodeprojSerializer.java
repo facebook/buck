@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.xcode;
@@ -23,8 +23,8 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXObject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.core.util.log.Logger;
-import com.google.common.base.Preconditions;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -102,19 +102,19 @@ public class XcodeprojSerializer {
 
   public void addField(String name, PBXObject obj) {
     String gid = serializeObject(obj);
-    Preconditions.checkNotNull(currentObject).put(name, gid);
+    Objects.requireNonNull(currentObject).put(name, gid);
   }
 
   public void addField(String name, int val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, String val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, boolean val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, List<? extends PBXObject> objectList) {
@@ -123,10 +123,10 @@ public class XcodeprojSerializer {
       String gid = serializeObject(objectList.get(i));
       array.setValue(i, new NSString(gid));
     }
-    Preconditions.checkNotNull(currentObject).put(name, array);
+    Objects.requireNonNull(currentObject).put(name, array);
   }
 
   public void addField(String name, NSObject v) {
-    Preconditions.checkNotNull(currentObject).put(name, v);
+    Objects.requireNonNull(currentObject).put(name, v);
   }
 }

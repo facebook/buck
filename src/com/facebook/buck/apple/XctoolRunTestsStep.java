@@ -1,27 +1,27 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -50,6 +50,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -73,6 +74,7 @@ class XctoolRunTestsStep implements Step {
       Executors.newSingleThreadScheduledExecutor();
   private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
   private static final String FB_REFERENCE_IMAGE_DIR = "FB_REFERENCE_IMAGE_DIR";
+  private static final String IMAGE_DIFF_DIR = "IMAGE_DIFF_DIR";
 
   private final ProjectFilesystem filesystem;
 
@@ -95,6 +97,9 @@ class XctoolRunTestsStep implements Step {
   private final Optional<String> logLevel;
   private final Optional<Long> timeoutInMs;
   private final Optional<String> snapshotReferenceImagesPath;
+  private final Optional<String> snapshotImagesDiffPath;
+  private final Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths;
+  private final boolean isUsingXCodeBuildTool;
 
   // Helper class to parse the output of `xctool -listTestsOnly` then
   // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
@@ -119,7 +124,7 @@ class XctoolRunTestsStep implements Step {
 
     @Override
     public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
-      Preconditions.checkNotNull(this.currentTestTarget);
+      Objects.requireNonNull(this.currentTestTarget);
       Preconditions.checkState(this.currentTestTarget.equals(event.targetName));
       // Signals the end of listing all tests belonging to a single target.
       this.currentTestTarget = null;
@@ -140,10 +145,9 @@ class XctoolRunTestsStep implements Step {
     @Override
     public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
       testTargetsToDescriptions.put(
-          Preconditions.checkNotNull(this.currentTestTarget),
+          Objects.requireNonNull(this.currentTestTarget),
           new TestDescription(
-              Preconditions.checkNotNull(event.className),
-              Preconditions.checkNotNull(event.methodName)));
+              Objects.requireNonNull(event.className), Objects.requireNonNull(event.methodName)));
     }
 
     @Override
@@ -170,7 +174,8 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevelEnvironmentVariable,
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
-      Optional<String> snapshotReferenceImagesPath) {
+      Optional<String> snapshotReferenceImagesPath,
+      Optional<String> snapshotImagesDiffPath) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty()
             && appTestBundleToHostAppPaths.isEmpty()
@@ -191,6 +196,8 @@ class XctoolRunTestsStep implements Step {
             appTestBundleToHostAppPaths,
             appTestPathsToTestHostAppPathsToTestTargetAppPaths,
             waitForDebugger);
+    this.appTestPathsToTestHostAppPathsToTestTargetAppPaths =
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths;
     this.environmentOverrides = environmentOverrides;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
@@ -203,6 +210,11 @@ class XctoolRunTestsStep implements Step {
     this.logLevel = logLevel;
     this.timeoutInMs = timeoutInMs;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+    this.snapshotImagesDiffPath = snapshotImagesDiffPath;
+    // Super hacky, but xcodebuildtool is an alternative wrapper
+    // around xcodebuild and forwarding the -f arguments only makes
+    // sense in that context.
+    this.isUsingXCodeBuildTool = xctoolPath.endsWith("xcodebuildtool.py");
   }
 
   @Override
@@ -232,6 +244,11 @@ class XctoolRunTestsStep implements Step {
           XCTOOL_ENV_VARIABLE_PREFIX + FB_REFERENCE_IMAGE_DIR, snapshotReferenceImagesPath.get());
     }
 
+    if (snapshotImagesDiffPath.isPresent()) {
+      environment.put(
+        XCTOOL_ENV_VARIABLE_PREFIX + IMAGE_DIFF_DIR, snapshotImagesDiffPath.get());
+    }
+
     environment.putAll(this.environmentOverrides);
     return ImmutableMap.copyOf(environment);
   }
@@ -244,36 +261,48 @@ class XctoolRunTestsStep implements Step {
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
             .addAllCommand(command)
-            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .setEnvironment(env);
 
+    Console console = context.getConsole();
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
-      int returnCode =
-          listAndFilterTestsThenFormatXctoolParams(
-              context.getProcessExecutor(),
-              context.getConsole(),
-              testSelectorList,
-              // Copy the entire xctool command and environment but add a -listTestsOnly arg.
-              ProcessExecutorParams.builder()
-                  .from(processExecutorParamsBuilder.build())
-                  .addCommand("-listTestsOnly")
-                  .build(),
-              xctoolFilterParamsBuilder);
-      if (returnCode != 0) {
-        context.getConsole().printErrorText("Failed to query tests with xctool");
-        return StepExecutionResult.of(returnCode);
+      if (isUsingXCodeBuildTool) {
+        int returnCode =
+            formatXctoolParamsForXCodeBuildTool(
+                console,
+                appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+                testSelectorList,
+                xctoolFilterParamsBuilder);
+        if (returnCode != 0) {
+          console.printErrorText("Failed to parse the selectors for xcodebuildtool.");
+          return StepExecutionResult.of(returnCode);
+        }
+      } else {
+        int returnCode =
+            listAndFilterTestsThenFormatXctoolParams(
+                context.getProcessExecutor(),
+                console,
+                testSelectorList,
+                // Copy the entire xctool command and environment but add a -listTestsOnly arg.
+                ProcessExecutorParams.builder()
+                    .from(processExecutorParamsBuilder.build())
+                    .addCommand("-listTestsOnly")
+                    .build(),
+                xctoolFilterParamsBuilder);
+        if (returnCode != 0) {
+          console.printErrorText("Failed to query tests with xctool");
+          return StepExecutionResult.of(returnCode);
+        }
       }
       ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
       if (xctoolFilterParams.isEmpty()) {
-        context
-            .getConsole()
-            .printBuildFailure(
-                String.format(
-                    Locale.US,
-                    "No tests found matching specified filter (%s)",
-                    testSelectorList.getExplanation()));
+        console.printBuildFailure(
+            String.format(
+                Locale.US,
+                "No tests found matching specified filter (%s)",
+                testSelectorList.getExplanation()));
         return StepExecutionResults.SUCCESS;
       }
       processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
@@ -292,8 +321,8 @@ class XctoolRunTestsStep implements Step {
       ProcessExecutor.LaunchedProcess launchedProcess =
           context.getProcessExecutor().launchProcess(processExecutorParams);
 
-      int exitCode = -1;
-      String stderr = "Unexpected termination";
+      int exitCode;
+      String stderr;
       try {
         ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
         ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
@@ -317,22 +346,21 @@ class XctoolRunTestsStep implements Step {
         context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
       }
 
-      if (exitCode != 0) {
+      if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
         if (!stderr.isEmpty()) {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(
-                      Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
+          console.printErrorText(
+              String.format(Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
         } else {
-          context
-              .getConsole()
-              .printErrorText(
-                  String.format(Locale.US, "xctool failed with exit code %d", exitCode));
+          console.printErrorText(
+              String.format(Locale.US, "xctool failed with exit code %d", exitCode));
         }
       }
 
-      return StepExecutionResult.of(exitCode);
+      return StepExecutionResult.builder()
+          .setExitCode(exitCode)
+          .setExecutedCommand(launchedProcess.getCommand())
+          .setStderr(Optional.ofNullable(stderr))
+          .build();
 
     } finally {
       releaseStutterLock(stutterLockIsNotified);
@@ -352,7 +380,7 @@ class XctoolRunTestsStep implements Step {
     public void run() {
       try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
           TeeInputStream stdoutWrapperStream =
-              new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+              new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
         if (stdoutReadingCallback.isPresent()) {
           // The caller is responsible for reading all the data, which TeeInputStream will
           // copy to outputStream.
@@ -361,7 +389,7 @@ class XctoolRunTestsStep implements Step {
           // Nobody's going to read from stdoutWrapperStream, so close it and copy
           // the process's stdout to outputPath directly.
           stdoutWrapperStream.close();
-          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+          ByteStreams.copy(launchedProcess.getStdout(), outputStream);
         }
       } catch (IOException e) {
         exception = Optional.of(e);
@@ -385,7 +413,7 @@ class XctoolRunTestsStep implements Step {
     @Override
     public void run() {
       try (InputStreamReader stderrReader =
-              new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+              new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
           BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
         stderr = CharStreams.toString(bufferedStderrReader).trim();
       } catch (IOException e) {
@@ -401,6 +429,63 @@ class XctoolRunTestsStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return command.stream().map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" "));
+  }
+
+  private static int formatXctoolParamsForXCodeBuildTool(
+      Console console,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+      TestSelectorList testSelectorList,
+      ImmutableList.Builder<String> filterParamsBuilder) {
+    LOG.debug("Filtering tests with selector list: %s", testSelectorList.getExplanation());
+    for (String selector : testSelectorList.getRawSelectors()) {
+      String flag = "-only";
+      if (selector.charAt(0) == '!') {
+        flag = "-omit";
+        selector = selector.substring(1);
+      }
+      String[] split = selector.split("#");
+      String className = "";
+      String methodName = "";
+      if (split.length == 1) {
+        // "No #, implies this is a class name";
+        className = split[0];
+      } else if (split.length == 2) {
+        className = split[0];
+        methodName = split[1];
+      } else {
+        console.printErrorText(selector + " is not a valid selector for xcodebuildtool.");
+        return 1;
+      }
+      if (className.endsWith("$")) {
+        className = className.substring(0, className.length() - 1);
+      }
+      if (methodName.endsWith("$")) {
+        methodName = methodName.substring(0, methodName.length() - 1);
+      }
+      for (Map.Entry<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetApp :
+          appTestPathsToTestHostAppPathsToTestTargetAppPaths.entrySet()) {
+        filterParamsBuilder.add(flag);
+        Path suite = appTestPathsToTestHostAppPathsToTestTargetApp.getKey();
+        StringBuilder sb = new StringBuilder();
+        String fileName = suite.getFileName().toString();
+        int extensionPosition = fileName.lastIndexOf(".");
+        if (extensionPosition == -1) {
+          console.printErrorText(selector + " is not a valid selector for xcodebuildtool.");
+          return 1;
+        } else {
+          sb.append(fileName.substring(0, extensionPosition));
+        }
+        sb.append("/");
+        sb.append(className);
+        if (!methodName.isEmpty()) {
+          sb.append("/");
+          sb.append(methodName);
+        }
+        LOG.debug("Selector %s was translated to filter %s", selector, sb.toString());
+        filterParamsBuilder.add(sb.toString());
+      }
+    }
+    return 0;
   }
 
   private static int listAndFilterTestsThenFormatXctoolParams(
@@ -421,10 +506,10 @@ class XctoolRunTestsStep implements Step {
     String stderr;
     int listTestsResult;
     try (InputStreamReader isr =
-            new InputStreamReader(launchedProcess.getInputStream(), StandardCharsets.UTF_8);
+            new InputStreamReader(launchedProcess.getStdout(), StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
         InputStreamReader esr =
-            new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+            new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
         BufferedReader ebr = new BufferedReader(esr)) {
       XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
       stderr = CharStreams.toString(ebr).trim();

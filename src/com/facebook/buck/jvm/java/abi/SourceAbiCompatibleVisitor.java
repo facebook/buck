@@ -1,23 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.infer.annotation.PropagatesNullable;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -37,7 +37,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Nullable private String name;
 
   public SourceAbiCompatibleVisitor(ClassVisitor cv, AbiGenerationMode compatibilityMode) {
-    super(Opcodes.ASM6, cv);
+    super(Opcodes.ASM7, cv);
     this.compatibilityMode = compatibilityMode;
   }
 
@@ -73,7 +73,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
 
   @Override
   public void visitInnerClass(String name, String outerName, String innerName, int access) {
-    Preconditions.checkNotNull(this.name);
+    Objects.requireNonNull(this.name);
     if (!compatibilityMode.usesDependencies()
         && !this.name.equals(name)
         && !this.name.equals(outerName)) {

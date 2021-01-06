@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -20,17 +20,22 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFacto
 import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
+import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
+import com.facebook.buck.cli.StringSetOptionHandler;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
@@ -128,6 +133,22 @@ public class IjProjectSubCommand extends ProjectSubCommand {
   private String outputDir = null;
 
   @Option(
+      name = "--include-tests",
+      usage = "If using --with-tests, only tests that match any of these patterns will be included",
+      handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
+  @VisibleForTesting
+  Supplier<ImmutableSet<String>> includeTests = Suppliers.ofInstance(ImmutableSet.of());
+
+  @Option(
+      name = "--exclude-tests",
+      usage = "If using --with-tests, only tests that fit none of these patterns will be included",
+      handler = StringSetOptionHandler.class)
+  @SuppressFieldNotInitialized
+  @VisibleForTesting
+  Supplier<ImmutableSet<String>> excludeTests = Suppliers.ofInstance(ImmutableSet.of());
+
+  @Option(
       name = "--keep-module-files-in-module-dirs",
       usage = "Write module iml files to each modules working directory, instead of .idea/modules.")
   private boolean keepModuleFilesInModuleDirs = false;
@@ -163,17 +184,20 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             excludeArtifacts,
             includeTransitiveDependencies,
             skipBuild || !build,
-            keepModuleFilesInModuleDirs);
+            keepModuleFilesInModuleDirs,
+            includeTests.get(),
+            excludeTests.get());
 
     IjProjectCommandHelper projectCommandHelper =
         new IjProjectCommandHelper(
             params.getBuckEventBus(),
             executor,
-            params.getBuckConfig(),
-            params.getActionGraphProvider(),
+            params.getDepsAwareExecutorSupplier(),
             params.getVersionedTargetGraphCache(),
             params.getTypeCoercerFactory(),
-            params.getCell(),
+            params.getUnconfiguredBuildTargetFactory(),
+            params.getCells().getRootCell(),
+            params.getTargetConfiguration(),
             projectConfig,
             projectGeneratorParameters.getEnableParserProfiling(),
             processAnnotations,
@@ -181,19 +205,25 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             outputDir,
             (buildTargets, disableCaching) -> runBuild(params, buildTargets, disableCaching),
             projectGeneratorParameters.getArgsParser(),
-            projectGeneratorParameters);
+            projectGeneratorParameters,
+            params.getBuckConfig());
     return projectCommandHelper.parseTargetsAndRunProjectGenerator(projectCommandArguments);
   }
 
   private ExitCode runBuild(
-      CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching)
-      throws IOException, InterruptedException {
+      CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching) {
     BuildCommand buildCommand =
         new BuildCommand(
             targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
-    return buildCommand.run(
-        disableCaching ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory()) : params);
+    try {
+      return buildCommand.run(
+          disableCaching
+              ? params.withArtifactCacheFactory(new NoopArtifactCacheFactory())
+              : params);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public static class AggregationModeOptionHandler extends OptionHandler<AggregationMode> {

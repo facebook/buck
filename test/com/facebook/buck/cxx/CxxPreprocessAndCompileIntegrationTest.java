@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -32,12 +33,10 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -48,6 +47,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -89,7 +89,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
@@ -97,7 +97,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // ...
     ProjectWorkspace longPwdWorkspace = setupWorkspace(tmp_long_pwd);
-    ProjectFilesystem longPwdFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem longPwdFilesystem = workspace.getProjectFileSystem();
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path longPwdLib =
         longPwdWorkspace.getPath(
@@ -110,7 +110,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult processResult = workspace.runBuckBuild(target.getFullyQualifiedName());
     processResult.assertSuccess();
     Path lib =
@@ -124,8 +124,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(folder.getRoot().toPath());
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
@@ -144,7 +142,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .assertSuccess();
 
     // Verify that we still sanitized this path correctly.
-    Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
+    Path lib =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(), target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
     assertFalse(lib.toString(), contents.contains(symlinkedRoot.toString()));
@@ -156,8 +157,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target =
-        BuildTargetFactory.newInstance(workspace.getDestPath(), "//:binary_using_generated_source");
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
     String sourceName = "bar.cpp";
@@ -527,12 +527,12 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void langCompilerFlags() throws IOException {
+  public void langCompilerFlags() {
     workspace.runBuckBuild("//:lang_compiler_flags#default,static").assertSuccess();
   }
 
   @Test
-  public void binaryBuildRuleTools() throws IOException {
+  public void binaryBuildRuleTools() {
     workspace
         .runBuckBuild(
             "-c",
@@ -556,14 +556,14 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void ignoreVerifyHeaders() throws IOException {
+  public void ignoreVerifyHeaders() {
     ProcessResult result =
         workspace.runBuckBuild("-c", "cxx.untracked_headers=ignore", "//:untracked_header");
     result.assertSuccess();
   }
 
   @Test
-  public void errorVerifyHeaders() throws IOException {
+  public void errorVerifyHeaders() {
     ProcessResult result;
     result =
         workspace.runBuckBuild(
@@ -576,11 +576,60 @@ public class CxxPreprocessAndCompileIntegrationTest {
     assertThat(
         result.getStderr(),
         containsString(
-            "untracked_header.cpp: included an untracked header \"untracked_header.h\""));
+            String.format(
+                "untracked_header.cpp: included an untracked header: %n" + "untracked_header.h")));
   }
 
   @Test
-  public void whitelistVerifyHeaders() throws IOException {
+  public void errorVerifyTwoHeaders() {
+    ProcessResult result;
+    result =
+        workspace.runBuckBuild(
+            "-c",
+            "cxx.untracked_headers=error",
+            "-c",
+            "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "//:two_untracked_headers");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            String.format(
+                "two_untracked_headers.cpp: included an untracked header: %n"
+                    + "untracked_header.h")));
+    assertThat(
+        result.getStderr(),
+        containsString(
+            String.format(
+                "two_untracked_headers.cpp: included an untracked header: %n"
+                    + "untracked_header_2.h")));
+  }
+
+  @Test
+  public void errorVerifyNestedHeaders() {
+    ProcessResult result;
+    result =
+        workspace.runBuckBuild(
+            "-c",
+            "cxx.untracked_headers=error",
+            "-c",
+            "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
+            "-c",
+            "cxx.detailed_untracked_header_messages=true",
+            "//header_check:nested_untracked_header");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsString(
+            String.format(
+                "header_check/nested_untracked_header.cpp: included an untracked header: %n"
+                    + "header_check/untracked_header.h, which is included by: %n"
+                    + "header_check/untracked_header_includer.h, which is included by: %n"
+                    + "header_check/parent_header.h")));
+  }
+
+  @Test
+  public void whitelistVerifyHeaders() {
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -600,7 +649,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void errorVerifyHeadersWithPrefixHeader() throws Exception {
+  public void errorVerifyHeadersWithPrefixHeader() {
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -613,7 +662,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   }
 
   @Test
-  public void verifyAppleFrameworksHeaders() throws IOException {
+  public void verifyAppleFrameworksHeaders() {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -655,5 +704,47 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace.setUp();
     workspace.runBuckBuild("//:c-as-c").assertFailure();
     workspace.runBuckBuild("//:c-as-cxx").assertSuccess();
+  }
+
+  // Setup a test which modifies the header layout of a dependency and verify that it gets
+  // rebuilt.
+  @Test
+  public void depHeaderTreesAreUpdated() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "dep_headers_up_to_date", tmp.newFolder());
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DFOO", "//:first")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "test.header=second.h", "-c", "test.flag=-DFOO", "//:second")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DBAR", "//:first")
+        .assertSuccess();
+  }
+
+  @Test
+  public void depfilePathsRelative() throws IOException {
+    String targetName = "//:binary_using_location_include_path";
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    Path output =
+        workspace.buildAndReturnOutput("--config", "build.depfiles=enabled", target.toString());
+    Path parentFolder = output.getParent();
+    String[] listFiles =
+        parentFolder
+            .toFile()
+            .list(
+                (dir, name) ->
+                    name.startsWith("binary_using_location_include_path#compile-foo.cpp."));
+    assertTrue(listFiles != null && listFiles.length == 1);
+    Path depfile = parentFolder.resolve(listFiles[0]).resolve("foo.cpp.o.dep");
+    ProjectFilesystem projectFileSystem = workspace.getProjectFileSystem();
+    String depfileContent =
+        projectFileSystem.readFileIfItExists(depfile).orElseThrow(FileNotFoundException::new);
+    assertFalse(depfileContent.contains(projectFileSystem.getRootPath().toString()));
   }
 }

@@ -1,21 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -52,6 +53,7 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
 
   private final int hashCode;
 
+  @JsonCreator
   private ImmutableMapWithNullValues(Map<K, Object> delegate) {
     this.delegate = delegate;
     this.hashCode = computeHashCode();
@@ -71,9 +73,7 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
   @Override
   @SuppressWarnings("unchecked")
   public Collection<V> values() {
-    return delegate
-        .values()
-        .stream()
+    return delegate.values().stream()
         .map(v -> v == NULL ? null : (V) v)
         .collect(Collectors.toList());
   }
@@ -127,11 +127,7 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
       @SuppressWarnings("unchecked")
       public Entry<K, V> next() {
         Entry<K, Object> e = iteratorDelegate.next();
-        Entry<K, V> result =
-            e.getValue() == NULL
-                ? new AbstractMap.SimpleEntry<>(e.getKey(), null)
-                : (Map.Entry<K, V>) e;
-        return result;
+        return e.getValue() == NULL ? new SimpleEntry<>(e.getKey(), null) : (Entry<K, V>) e;
       }
     }
 

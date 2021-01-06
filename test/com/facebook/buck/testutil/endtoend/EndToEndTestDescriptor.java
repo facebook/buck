@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testutil.endtoend;
@@ -30,7 +30,7 @@ public class EndToEndTestDescriptor {
   private final String command;
   private final String[] buildTargets;
   private final String[] arguments;
-  private final Boolean buckdEnabled;
+  private final boolean buckdEnabled;
   private final Map<String, String> variableMap;
   private final Map<String, Map<String, String>> localConfigs;
   private String name;
@@ -50,7 +50,7 @@ public class EndToEndTestDescriptor {
       String command,
       String[] buildTargets,
       String[] arguments,
-      Boolean buckdEnabled,
+      boolean buckdEnabled,
       Map<String, String> variableMap,
       Map<String, Map<String, String>> localConfigs) {
     this.method = method;
@@ -98,15 +98,15 @@ public class EndToEndTestDescriptor {
     if (nameIsCached) {
       return name;
     }
-    StringBuilder stringBuilder = new StringBuilder("Test");
-    stringBuilder.append(capitalizeAndJoin(templateSet));
-    stringBuilder.append(capitalizeAndJoin(command));
-    stringBuilder.append(capitalizeAndJoin(arguments));
-    stringBuilder.append(buckdEnabled ? "BuckdOn" : "BuckdOff");
-    stringBuilder.append(capitalizeAndJoinMap(variableMap));
-    stringBuilder.append(capitalizeAndJoinLocalConfigs(localConfigs));
-    stringBuilder.append(method.getName());
-    name = stringBuilder.toString();
+    name =
+        "Test"
+            + capitalizeAndJoin(templateSet)
+            + capitalizeAndJoin(command)
+            + capitalizeAndJoin(arguments)
+            + (buckdEnabled ? "BuckdOn" : "BuckdOff")
+            + capitalizeAndJoinMap(variableMap)
+            + capitalizeAndJoinLocalConfigs(localConfigs)
+            + method.getName();
     nameIsCached = true;
     return name;
   }
@@ -135,7 +135,7 @@ public class EndToEndTestDescriptor {
   }
 
   /** Gets whether buckd should be enabled during the test or not */
-  public Boolean getBuckdEnabled() {
+  public boolean getBuckdEnabled() {
     return buckdEnabled;
   }
 

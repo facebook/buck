@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
@@ -537,7 +537,7 @@ public class InnerClassesTableTest {
     private final TestCompiler compiler = new TestCompiler();
 
     public Tester setSourceFile(String name, String... lines) throws IOException {
-      compiler.addSourceFileContents(name, Arrays.stream(lines).collect(Collectors.joining("\n")));
+      compiler.addSourceFileContents(name, String.join("\n", lines));
       return this;
     }
 
@@ -581,14 +581,12 @@ public class InnerClassesTableTest {
       InnerClassesTable innerClassesTable =
           new InnerClassesTable(descriptorFactory, accessFlags, topElement);
 
-      ClassNode classNode = new ClassNode(Opcodes.ASM6);
+      ClassNode classNode = new ClassNode(Opcodes.ASM7);
       innerClassesTable.reportInnerClassReferences(classNode);
 
       assertEquals(
           Arrays.asList(innerClassesEntries),
-          classNode
-              .innerClasses
-              .stream()
+          classNode.innerClasses.stream()
               .map(innerClass -> innerClass.name)
               .collect(Collectors.toList()));
       return this;

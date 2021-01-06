@@ -4,3 +4,4 @@
     # Use the system runtime so that we don't have to deal with `buck install` pushing the c++
     # runtime.
     cxx_runtime = system
+    ndk_version = 17

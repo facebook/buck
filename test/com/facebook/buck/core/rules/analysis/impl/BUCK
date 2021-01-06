@@ -1,0 +1,67 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+    "java_test",
+)
+
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util/json:json",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
+        "//test/com/facebook/buck/event:testutil",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/analysis/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
+        "//src/com/facebook/buck/util/function:function",
+    ],
+)
+
+java_test(
+    name = "impl",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/core/rules/analysis/computation:computation",
+        "//src/com/facebook/buck/core/rules/analysis/impl:impl",
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/test/rule:rule",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/test:test",
+        "//src/com/facebook/buck/util/json:json",
+        "//test/com/facebook/buck/core/artifact:testutil",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,23 +1,23 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.hash.HasherInputStream;
 import com.facebook.buck.util.hash.HasherOutputStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
-import org.immutables.value.Value;
 
 /** Implements the binary protocol used by Buck to talk to the cache server. */
 public class HttpArtifactCacheBinaryProtocol {
@@ -57,7 +56,8 @@ public class HttpArtifactCacheBinaryProtocol {
     MetadataAndPayloadReadResultInternal resultInternal =
         readMetadataAndPayload(input, payloadSink);
 
-    FetchResponseReadResult.Builder result = FetchResponseReadResult.builder().from(resultInternal);
+    ImmutableFetchResponseReadResult.Builder result =
+        ImmutableFetchResponseReadResult.builder().from(resultInternal);
     return result.build();
   }
 
@@ -72,7 +72,8 @@ public class HttpArtifactCacheBinaryProtocol {
     MetadataAndPayloadReadResultInternal resultInternal =
         readMetadataAndPayload(input, payloadSink);
 
-    StoreResponseReadResult.Builder result = StoreResponseReadResult.builder().from(resultInternal);
+    ImmutableStoreResponseReadResult.Builder result =
+        ImmutableStoreResponseReadResult.builder().from(resultInternal);
     result.setRawKeys(rawRuleKeys.build());
     return result.build();
   }
@@ -85,8 +86,8 @@ public class HttpArtifactCacheBinaryProtocol {
     if (metadataSize > MAX_METADATA_HEADER_SIZE) {
       throw new IOException(String.format("Metadata header size of %d is too big.", metadataSize));
     }
-    MetadataAndPayloadReadResultInternal.Builder result =
-        MetadataAndPayloadReadResultInternal.builder();
+    ImmutableMetadataAndPayloadReadResultInternal.Builder result =
+        ImmutableMetadataAndPayloadReadResultInternal.builder();
     // Create a hasher to be used to generate a hash of the metadata and input.  We'll use
     // this to compare against the embedded checksum.
     Hasher hasher = HASH_FUNCTION.newHasher();
@@ -211,7 +212,7 @@ public class HttpArtifactCacheBinaryProtocol {
     }
 
     public StoreWriteResult write(OutputStream requestSink) throws IOException {
-      StoreWriteResult.Builder result = StoreWriteResult.builder();
+      ImmutableStoreWriteResult.Builder result = ImmutableStoreWriteResult.builder();
       try (DataOutputStream dataOutputStream = new DataOutputStream(requestSink)) {
         dataOutputStream.write(rawKeys);
         dataOutputStream.writeInt(rawMetadata.length);
@@ -254,7 +255,7 @@ public class HttpArtifactCacheBinaryProtocol {
     }
   }
 
-  abstract static class MetadataAndPayloadReadResult {
+  public abstract static class MetadataAndPayloadReadResult {
     public abstract ImmutableSet<RuleKey> getRuleKeys();
 
     public abstract HashCode getExpectedHashCode();
@@ -268,24 +269,19 @@ public class HttpArtifactCacheBinaryProtocol {
     public abstract ImmutableMap<String, String> getMetadata();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractMetadataAndPayloadReadResultInternal
-      extends MetadataAndPayloadReadResult {}
+  @BuckStyleValueWithBuilder
+  abstract static class MetadataAndPayloadReadResultInternal extends MetadataAndPayloadReadResult {}
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractFetchResponseReadResult extends MetadataAndPayloadReadResult {}
+  @BuckStyleValueWithBuilder
+  abstract static class FetchResponseReadResult extends MetadataAndPayloadReadResult {}
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractStoreResponseReadResult extends MetadataAndPayloadReadResult {
+  @BuckStyleValueWithBuilder
+  public abstract static class StoreResponseReadResult extends MetadataAndPayloadReadResult {
     public abstract ImmutableSet<RuleKey> getRawKeys();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractStoreWriteResult {
+  @BuckStyleValueWithBuilder
+  abstract static class StoreWriteResult {
     public abstract HashCode getArtifactContentHashCode();
 
     public abstract long getArtifactSizeBytes();

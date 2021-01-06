@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -25,7 +25,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import javax.tools.FileObject;
 import javax.tools.ForwardingJavaFileObject;
@@ -113,9 +115,13 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
   }
 
   @Override
+  @Nullable
   public JavaFileObject getJavaFileForInput(
       Location location, String className, JavaFileObject.Kind kind) throws IOException {
     JavaFileObject javaFileObject = super.getJavaFileForInput(location, className, kind);
+    if (javaFileObject == null) {
+      return null;
+    }
     if (location == StandardLocation.ANNOTATION_PROCESSOR_PATH) {
       return javaFileObject;
     } else {
@@ -204,13 +210,18 @@ class ListenableFileManager extends ForwardingStandardJavaFileManager {
     }
 
     public JavaFileObject wrap(JavaFileObject inner) {
-      return new ListenableJavaFileObject(inner);
+      return new ListenableJavaFileObject(Objects.requireNonNull(inner));
     }
   }
 
   private class ListenableJavaFileObject extends ForwardingJavaFileObject<JavaFileObject> {
     public ListenableJavaFileObject(JavaFileObject fileObject) {
       super(fileObject);
+    }
+
+    @Override
+    public String toString() {
+      return fileObject.getName();
     }
 
     public JavaFileObject getJavaFileObject() {

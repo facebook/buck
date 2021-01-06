@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.dalvik;
@@ -32,10 +32,13 @@ class DalvikStatsCache {
   }
 
   DalvikStatsTool.Stats getStats(FileLike entry) {
-    String name = entry.getRelativePath();
-    if (!name.endsWith(".class")) {
+    String[] pathParts = entry.getRelativePath().split("/");
+    String name = pathParts[pathParts.length-1];
+    if (!name.endsWith(".class") || name.equals("module-info.class")) {
       // Probably something like a pom.properties file in a JAR: this does not contribute
       // to the linear alloc size, so return zero.
+      // skipping special class files like module descriptor - here no classes will be
+      // declared and class visitor throws error.
       return DalvikStatsTool.Stats.ZERO;
     }
 

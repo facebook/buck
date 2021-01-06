@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
@@ -26,6 +27,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.config.Inis;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -185,7 +187,7 @@ public class AuditConfigCommandIntegrationTest {
   }
 
   @Test
-  public void testConfigAuditEntireConfig() throws IOException, InterruptedException {
+  public void testConfigAuditEntireConfig() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
     workspace.setUp();
@@ -193,12 +195,13 @@ public class AuditConfigCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("audit", "config");
 
     // Use low level ini parser to build config.
-    Ini audit_ini = new Ini(new StringReader(result.getStdout()));
+    Ini auditIni = Inis.makeIniParser(true);
+    auditIni.load(new StringReader(result.getStdout()));
     // Ini object doesn't really provide a good way to compare 2 ini files.
     // Convert that into immutable map so that we can compare sorted maps instead.
     ImmutableMap.Builder<String, ImmutableMap<String, String>> audit_config =
         ImmutableMap.builder();
-    audit_ini.forEach(
+    auditIni.forEach(
         (section_name, section) -> {
           ImmutableMap.Builder<String, String> section_builder = ImmutableMap.builder();
           section.forEach((k, v) -> section_builder.put(k, v));

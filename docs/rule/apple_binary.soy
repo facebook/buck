@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace apple_binary}
 
 /***/
@@ -17,8 +33,8 @@
 <p>
 An <code>apple_binary()</code> rule builds a native executable&mdash;such as an iOS or OSX app&mdash;from 
 the supplied set of Objective-C/C++ source files and dependencies. It is similar to
-a <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary()</code> rule</a> with which it shares many
-attributes. In addition to those common attributes, <code>apple_binary()</code> has a some additional attributes 
+a {call buck.cxx_binary /} rule with which it shares many attributes. In addition 
+to those common attributes, <code>apple_binary()</code> has a some additional attributes 
 that are specific to binaries intended to be built using the Apple toolchain. 
 Note, however, that <code>apple_binary()</code> and <code>cxx_binary()</code> differ 
 in the way that they import header files, in order to better accommodate existing conventions. 
@@ -35,12 +51,7 @@ See {call buckconfig.apple_replacement /} and {call buckconfig.apple_xcode_tool_
 {/param}
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call cxx_common.srcs_arg}
   {param sample_file_name : 'foo/bar.m' /}
@@ -82,6 +93,8 @@ See {call buckconfig.apple_replacement /} and {call buckconfig.apple_xcode_tool_
 {call cxx_common.platform_linker_flags_arg /}
 
 {call native_common.link_style /}
+
+{call apple_common.target_sdk_version /}
 
 {call buck.tests_apple_arg /}
 

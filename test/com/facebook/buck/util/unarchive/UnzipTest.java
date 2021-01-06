@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.unarchive;
@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.base.Charsets;
@@ -369,5 +370,32 @@ public class UnzipTest {
     assertEquals(new String(bazDotSh), filesystem.readFileIfItExists(bazDotShPath).get());
     assertEquals(
         new String(DUMMY_FILE_CONTENTS), filesystem.readFileIfItExists(bazDotTxtPath).get());
+  }
+
+  @Test
+  public void testExcludedEntriesNotExtracted() throws IOException {
+    try (ZipArchive zipArchive = new ZipArchive(this.zipFile, true)) {
+      zipArchive.add("1.bin", DUMMY_FILE_CONTENTS);
+      zipArchive.add("subdir/2.bin", DUMMY_FILE_CONTENTS);
+      zipArchive.addDir("emptydir");
+    }
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+
+    Path extractFolder = tmpFolder.newFolder();
+    ImmutableSet<Path> result =
+        ArchiveFormat.ZIP
+            .getUnarchiver()
+            .extractArchive(
+                zipFile.toAbsolutePath(),
+                filesystem,
+                extractFolder,
+                Optional.empty(),
+                new PatternsMatcher(ImmutableSet.of("subdir/2.bin")),
+                ExistingFileMode.OVERWRITE);
+    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("1.bin")));
+    assertTrue(Files.isDirectory(extractFolder.toAbsolutePath().resolve("emptydir")));
+    assertEquals(ImmutableSet.of(extractFolder.resolve("1.bin")), result);
   }
 }

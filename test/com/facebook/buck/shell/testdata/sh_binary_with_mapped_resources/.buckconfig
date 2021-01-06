@@ -1,0 +1,4 @@
+[repositories]
+app = .
+node = node
+subnode = node/subnode

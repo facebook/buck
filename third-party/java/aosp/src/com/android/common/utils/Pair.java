@@ -82,7 +82,6 @@ public class Pair<S,T> {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

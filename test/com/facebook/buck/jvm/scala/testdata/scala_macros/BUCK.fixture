@@ -17,10 +17,3 @@ java_binary(
         ":main",
     ],
 )
-
-###### Compiler
-
-prebuilt_jar(
-    name = "paradise",
-    binary_jar = "paradise_2.11.7-2.1.0.jar",
-)

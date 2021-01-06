@@ -1,6 +1,5 @@
 #[test]
-fn firsttest() {
-}
+fn firsttest() {}
 
 #[test]
 fn secondtest() {

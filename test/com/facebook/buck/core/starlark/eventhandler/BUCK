@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "evenhandler",
+    deps = [
+        "//src/com/facebook/buck/core/starlark/eventhandler:eventhandler",
+        "//test/com/facebook/buck/event:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

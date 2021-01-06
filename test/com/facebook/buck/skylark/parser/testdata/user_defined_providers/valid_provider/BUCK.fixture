@@ -1,0 +1,9 @@
+load("//valid_provider:defs.bzl", "SecondInfo", "first_info", "validate_first_info", "validate_second_info")
+
+_first_info = first_info(first = "first_value")
+
+second_info = SecondInfo(second = "second_value")
+
+validate_first_info(_first_info)
+
+validate_second_info(second_info)

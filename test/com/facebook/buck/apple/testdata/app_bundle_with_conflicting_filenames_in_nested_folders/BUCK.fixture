@@ -2,8 +2,8 @@ apple_resource(
     name = "DemoAppResources",
     files = [],
     dirs = [
-        'ImagesA',
-        'ImagesB',
+        "ImagesA",
+        "ImagesB",
     ],
 )
 

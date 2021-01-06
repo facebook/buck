@@ -1,9 +1,11 @@
 <component name="libraryTable">
   <library name="infer-annotations">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/infer-annotations/infer-annotations-4.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/infer-annotations/infer-annotation-0.17.0.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/infer-annotations/infer-annotation-0.17.0-sources.jar!/" />
+    </SOURCES>
   </library>
 </component>

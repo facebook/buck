@@ -1,34 +1,36 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.kohsuke.args4j.Argument;
@@ -70,15 +72,20 @@ public class AuditDependenciesCommand extends AbstractCommand {
     return includeTests;
   }
 
-  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
+  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(
+      Cell rootCell, Path clientWorkingDir, BuckConfig buckConfig) {
+    return getCommandLineBuildTargetNormalizer(rootCell, clientWorkingDir, buckConfig)
+        .normalizeAll(getArguments());
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     ImmutableSet<String> fullyQualifiedBuildTargets =
-        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+        ImmutableSet.copyOf(
+            getArgumentsFormattedAsBuildTargets(
+                params.getCells().getRootCell(),
+                params.getClientWorkingDir(),
+                params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
@@ -91,7 +98,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
               ConsoleEvent.info(
                   "'buck audit dependencies' is deprecated. Please use 'buck query' instead.\n"
                       + "The equivalent 'buck query' command is:\n$ %s\n\nThe query language is documented at "
-                      + "https://buckbuild.com/command/query.html",
+                      + "https://buck.build/command/query.html",
                   QueryCommand.buildAuditDependenciesQueryExpression(
                       getArguments(),
                       shouldShowTransitiveDependencies(),
@@ -104,29 +111,40 @@ public class AuditDependenciesCommand extends AbstractCommand {
         PerBuildState parserState =
             new PerBuildStateFactory(
                     params.getTypeCoercerFactory(),
-                    new ConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    new DefaultConstructorArgMarshaller(),
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
-                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                        params.getCells().getRootCell().getBuckConfig(),
+                        params.getExecutableFinder()),
                     params.getWatchman(),
-                    params.getBuckEventBus())
+                    params.getBuckEventBus(),
+                    params.getUnconfiguredBuildTargetFactory(),
+                    params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    params.getParser().getPermState(),
-                    pool.getListeningExecutorService(),
-                    params.getCell(),
-                    getEnableParserProfiling(),
-                    SpeculativeParsing.ENABLED)) {
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .withExcludeUnsupportedTargets(false),
+                    params.getParser().getPermState())) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
-              params, parserState, pool.getListeningExecutorService(), getEnableParserProfiling());
-      return QueryCommand.runMultipleQuery(
+              params,
+              parserState,
+              createParsingContext(
+                  params.getCells().getRootCell(), pool.getListeningExecutorService()));
+      QueryCommand.runMultipleQuery(
           params,
           env,
           QueryCommand.getAuditDependenciesQueryFormat(
               shouldShowTransitiveDependencies(), shouldIncludeTests()),
-          getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
+          getArgumentsFormattedAsBuildTargets(
+              params.getCells().getRootCell(),
+              params.getClientWorkingDir(),
+              params.getBuckConfig()),
           shouldGenerateJsonOutput(),
-          ImmutableSet.of());
+          ImmutableSet.of(),
+          params.getConsole().getStdOut(),
+          AbstractQueryCommand.WhichQueryCommand.QUERY);
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
@@ -137,6 +155,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
       // TODO(buck_team): catch specific exceptions and return proper codes
       return ExitCode.BUILD_ERROR;
     }
+    return ExitCode.SUCCESS;
   }
 
   @Override

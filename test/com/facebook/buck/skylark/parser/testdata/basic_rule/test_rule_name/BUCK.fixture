@@ -1,0 +1,3 @@
+load("//test_rule_name:defs.bzl", "some_rule")
+
+some_rule(name = "foo")

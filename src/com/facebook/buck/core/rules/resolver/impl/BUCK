@@ -3,13 +3,6 @@ java_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/rules/impl:impl",
-        "//src/com/facebook/buck/core/rules/transformer:transformer",
-        "//src/com/facebook/buck/util/types:types",
-    ],
     tests = [
         "//test/com/facebook/buck/core/rules/resolver/impl:impl",
     ],
@@ -17,11 +10,22 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/description/metadata:metadata",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/types:types",
         "//src/com/facebook/buck/versions:types",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/analysis/computation:computation",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/rules/transformer:transformer",
+        "//src/com/facebook/buck/util/types:types",
     ],
 )

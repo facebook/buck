@@ -1,0 +1,12 @@
+java_library(
+    name = "names",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/bazel:bazel",
+    ],
+)

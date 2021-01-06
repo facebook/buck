@@ -2,8 +2,7 @@ java_library(
     name = "testutil",
     srcs = glob(["*.java"]),
     visibility = [
-        "//test/com/facebook/buck/android/...",
-        "//test/com/facebook/buck/jvm/java/...",
+        "PUBLIC",
     ],
     deps = [
         "//src/com/facebook/buck/core/config:config",

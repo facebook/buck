@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -55,6 +55,14 @@ public class CxxGenruleIntegrationTest {
     workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(cxxppflags :c)");
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(workspace.getFileContents(output), Matchers.containsString("-DC_CXXFLAG"));
+  }
+
+  @Test
+  public void ldflagsfilter() throws IOException {
+    workspace.replaceFileContents(
+        "BUCK", "@CMD@", "echo -- $(ldflags-static-filter ^.*prebuilt_c.* :dep_on_prebuilt_c)");
+    Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(workspace.getFileContents(output), Matchers.containsString("dep_on_prebuilt_c"));
   }
 
   @Test
@@ -139,5 +147,14 @@ public class CxxGenruleIntegrationTest {
     workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(platform-name)");
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(workspace.getFileContents(output), Matchers.containsString("default"));
+  }
+
+  @Test
+  public void locationPlatformMacro() throws IOException {
+    workspace.replaceFileContents(
+        "BUCK", "@CMD@", "echo -- $(location-platform //:trivial shared)");
+    Path trivialPath = workspace.buildAndReturnOutput("//:trivial#default,shared");
+    Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(workspace.getFileContents(output), Matchers.containsString(trivialPath.toString()));
   }
 }

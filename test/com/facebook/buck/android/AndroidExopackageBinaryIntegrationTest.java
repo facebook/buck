@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -57,13 +57,13 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
 
     Properties properties = System.getProperties();
@@ -75,7 +75,7 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
         .runBuckBuild(
             DEX_EXOPACKAGE_TARGET, NATIVE_EXOPACKAGE_TARGET, DEX_AND_NATIVE_EXOPACKAGE_TARGET)
         .assertSuccess();
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test
@@ -95,11 +95,11 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
     // It would be better if we could call getExopackageInfo on the app rule.
     Path secondaryDir =
         workspace.resolve(
-            BuildTargetPaths.getScratchPath(
-                filesystem,
-                BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
-                    .withFlavors(InternalFlavor.of("dex"), InternalFlavor.of("dex_merge")),
-                "%s_output/secondary/jarfiles/assets/secondary-program-dex-jars"));
+            BuildPaths.getScratchDir(
+                    filesystem,
+                    BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET)
+                        .withFlavors(InternalFlavor.of("d8"), InternalFlavor.of("split_dex_merge")))
+                .resolve("secondary/jarfiles/assets/secondary-program-dex-jars"));
 
     try (DirectoryStream<Path> stream = Files.newDirectoryStream(secondaryDir)) {
       List<Path> files = Lists.newArrayList(stream);
@@ -122,7 +122,9 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
   @Test
   public void testNativeExopackageHasNoNativeLibraries() throws IOException {
     ZipInspector zipInspector =
-        new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-native-exo.apk"));
+        new ZipInspector(
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance(NATIVE_EXOPACKAGE_TARGET), "%s.apk"));
 
     zipInspector.assertFileDoesNotExist("assets/secondary-program-dex-jars/metadata.txt");
 
@@ -225,7 +227,8 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector =
-        new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-dex-exo.apk"));
+        new ZipInspector(
+            workspace.getGenPath(BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk"));
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileDoesNotExist("assets/lib/armeabi-v7a/libnative_cxx_lib.so");
 
@@ -238,7 +241,8 @@ public class AndroidExopackageBinaryIntegrationTest extends AbiCompilationModeTe
 
     workspace.getBuildLog().assertTargetBuiltLocally(DEX_EXOPACKAGE_TARGET);
     zipInspector =
-        new ZipInspector(workspace.getPath("buck-out/gen/apps/multidex/app-dex-exo.apk"));
+        new ZipInspector(
+            workspace.getGenPath(BuildTargetFactory.newInstance(DEX_EXOPACKAGE_TARGET), "%s.apk"));
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_lib.so");
     zipInspector.assertFileExists("assets/lib/armeabi-v7a/libnative_cxx_lib.so");
 

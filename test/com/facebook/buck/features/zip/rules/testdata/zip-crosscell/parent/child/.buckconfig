@@ -1,0 +1,7 @@
+[repositories]
+  parent = ..
+  child = .
+
+[project]
+  embedded_cell_buck_out_enabled = true
+  ignore = buck-out

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright 2004-2015, Martian Software, Inc.
+# Copyright 2017-Present Facebook, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,9 +25,10 @@ import select
 import socket
 import struct
 import sys
+from io import BytesIO
 from threading import Condition, Event, Thread, RLock
 
-is_py2 = sys.version[0] == "2"
+is_py2 = sys.version_info[0] == 2
 if is_py2:
     import Queue as Queue
     import __builtin__ as builtin
@@ -44,9 +46,11 @@ else:
         return bytes(s, "utf-8")
 
 
-def bytes_to_str(bytes_to_convert):
-    """Version independent way of converting bytes to string."""
-    return bytes_to_convert if is_py2 else bytes_to_convert.decode("utf-8")
+if sys.platform == "win32":
+    import os, msvcrt
+
+    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+    msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
 
 
 # @author <a href="http://www.martiansoftware.com/contact.html">Marty Lamb</a>
@@ -55,7 +59,7 @@ def bytes_to_str(bytes_to_convert):
 #
 # Please try to keep this working on Python 2.6.
 
-NAILGUN_VERSION = "0.9.3"
+NAILGUN_VERSION = "1.0.0"
 BUFSIZE = 2048
 NAILGUN_PORT_DEFAULT = 2113
 CHUNK_HEADER_LEN = 5
@@ -86,6 +90,21 @@ HAS_MEMORYVIEW = "memoryview" in dir(builtin)
 EVENT_STDIN_CHUNK = 0
 EVENT_STDIN_CLOSED = 1
 EVENT_STDIN_EXCEPTION = 2
+
+
+def compat_memoryview_py2(buf):
+    return memoryview(buf)
+
+
+def compat_memoryview_py3(buf):
+    return memoryview(buf).cast("c")
+
+
+# memoryview in python3, while wrapping ctypes.create_string_buffer has problems with
+# that type's default format (<c) and assignment operators. For python3, cast to
+# a 'c' array. Little endian single byte doesn't make sense anyways. However,
+# 'cast' does not exist for python2. So, we have to toggle a bit.
+compat_memoryview = compat_memoryview_py2 if is_py2 else compat_memoryview_py3
 
 
 class NailgunException(Exception):
@@ -171,6 +190,9 @@ if os.name == "nt":
     # Overlapped I/O operation is in progress. (997)
     ERROR_IO_PENDING = 0x000003E5
     ERROR_PIPE_BUSY = 231
+
+    # No process is on the other end of the pipe error on Windows
+    ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE = 233
 
     # The pointer size follows the architecture
     # We use WPARAM since this type is already conditionally defined
@@ -360,8 +382,15 @@ class WindowsNamedPipeTransport(Transport):
 
         immediate = ReadFile(self.pipe, buf, nbytes, None, olap)
 
+        err = GetLastError()
+
+        if err == ERROR_NO_PROCESS_ON_OTHER_END_OF_PIPE:
+            raise NailgunException(
+                "No process on the other end of pipe",
+                NailgunException.CONNECTION_BROKEN,
+            )
+
         if not immediate:
-            err = GetLastError()
             if err != ERROR_IO_PENDING:
                 self._raise_win_err("failed to read %d bytes" % nbytes, GetLastError())
 
@@ -371,6 +400,11 @@ class WindowsNamedPipeTransport(Transport):
             self._raise_win_err("error while waiting for read", err)
 
         nread = nread.value
+        if not is_py2:
+            # Wrap in a memoryview, as python3 does not let you assign from a
+            # ctypes.c_char_array slice directly to a memory view, as one is 'c', and one
+            # is '<c' struct/buffer proto format.
+            buf = compat_memoryview(buf)
         buffer[:nread] = buf[:nread]
         return nread
 
@@ -567,7 +601,7 @@ class NailgunConnection(object):
         """
         Sends a NAILGUN_TTY_# environment variable.
         """
-        if not f or not hasattr(f, "fileno"):
+        if not f or not hasattr(f, "fileno") or isinstance(f, BytesIO):
             return
         try:
             fileno = f.fileno()
@@ -593,12 +627,21 @@ class NailgunConnection(object):
         object. Used to route data to stdout or stderr on the client.
         """
         bytes_read = 0
+        dest_fd = dest_file
+        flush = False
+        if dest_file and hasattr(dest_file, 'buffer'):
+            dest_fd = dest_file.buffer
+            flush = True
+            # Make sure we've written anything that already existed in the buffer
+            dest_fd.flush()
 
         while bytes_read < num_bytes:
             bytes_to_read = min(len(self.buf), num_bytes - bytes_read)
             bytes_received = self.transport.recv_into(self.buf, bytes_to_read)
-            if dest_file:
-                dest_file.write(bytes_to_str(self.buf[:bytes_received]))
+            if dest_fd:
+                dest_fd.write(self.buf[:bytes_received])
+                if flush:
+                    dest_fd.flush()
             bytes_read += bytes_received
 
     def _recv_to_buffer(self, num_bytes, buf):
@@ -610,7 +653,7 @@ class NailgunConnection(object):
         # only way to provide an offset to recv_into() is to use
         # memoryview(), which doesn't exist until Python 2.7.
         if HAS_MEMORYVIEW:
-            self._recv_into_memoryview(num_bytes, memoryview(buf))
+            self._recv_into_memoryview(num_bytes, compat_memoryview(buf))
         else:
             self._recv_to_buffer_with_copy(num_bytes, buf)
 
@@ -796,8 +839,8 @@ def send_thread_main(conn):
             while not conn.send_queue.empty():
                 # only this thread can deplete the queue, so it is safe to use blocking get()
                 (chunk_type, buf) = conn.send_queue.get()
-                struct.pack_into(">ic", header_buf, 0, len(buf), chunk_type)
                 bbuf = to_bytes(buf)
+                struct.pack_into(">ic", header_buf, 0, len(bbuf), chunk_type)
 
                 # these chunk types are not required for server to accept and process and server may terminate
                 # any time without waiting for them

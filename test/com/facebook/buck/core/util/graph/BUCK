@@ -3,7 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "graph",
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/graph:graph",
+        "//src/com/facebook/buck/util/function:function",
         "//src/com/facebook/buck/util/string:string",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",

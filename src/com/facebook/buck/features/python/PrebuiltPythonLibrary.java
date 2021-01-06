@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -36,10 +36,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -50,18 +47,21 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   @AddToRuleKey private final SourcePath binarySrc;
   private final Path extractedOutput;
   private final boolean excludeDepsFromOmnibus;
+  private final boolean compile;
 
   public PrebuiltPythonLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       SourcePath binarySrc,
-      boolean excludeDepsFromOmnibus) {
+      boolean excludeDepsFromOmnibus,
+      boolean compile) {
     super(buildTarget, projectFilesystem, params);
     this.binarySrc = binarySrc;
     this.extractedOutput =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s__extracted");
     this.excludeDepsFromOmnibus = excludeDepsFromOmnibus;
+    this.compile = compile;
   }
 
   @Override
@@ -71,16 +71,49 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public PythonPackageComponents getPythonPackageComponents(
+  public Optional<PythonComponents> getPythonModules(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
-    return PythonPackageComponents.of(
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableMap.of(),
-        ImmutableSetMultimap.of(Paths.get(""), Objects.requireNonNull(getSourcePathToOutput())),
-        Optional.empty());
+    return Optional.of(
+        PrebuiltPythonLibraryComponents.ofModules(Objects.requireNonNull(getSourcePathToOutput())));
+  }
+
+  @Override
+  public Optional<PythonComponents> getPythonResources(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
+    // extension modules).
+    return Optional.of(
+        PrebuiltPythonLibraryComponents.ofResources(
+            Objects.requireNonNull(getSourcePathToOutput())));
+  }
+
+  private Optional<PythonComponents> getPythonSources() {
+    return Optional.of(
+        PrebuiltPythonLibraryComponents.ofSources(Objects.requireNonNull(getSourcePathToOutput())));
+  }
+
+  @Override
+  public Optional<PythonComponents> getPythonBytecode(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    if (!compile) {
+      return Optional.empty();
+    }
+    return getPythonSources()
+        .map(
+            sources -> {
+              PythonCompileRule compileRule =
+                  (PythonCompileRule)
+                      graphBuilder.requireRule(
+                          getBuildTarget()
+                              .withAppendedFlavors(
+                                  pythonPlatform.getFlavor(),
+                                  cxxPlatform.getFlavor(),
+                                  PrebuiltPythonLibraryDescription.LibraryType.COMPILE
+                                      .getFlavor()));
+              return compileRule.getCompiledSources();
+            });
   }
 
   @Override
@@ -110,7 +143,8 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public boolean doesPythonPackageDisallowOmnibus() {
+  public boolean doesPythonPackageDisallowOmnibus(
+      PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return excludeDepsFromOmnibus;
   }
 }

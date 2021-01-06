@@ -1,24 +1,23 @@
 /*
- * Copyright 2017 Google Inc.
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.xml;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import java.util.Stack;
 import javax.annotation.Nullable;
 import javax.xml.parsers.DocumentBuilder;
@@ -64,7 +63,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes) {
     addText();
-    Preconditions.checkNotNull(document);
+    Objects.requireNonNull(document);
     Element element = document.createElementNS(uri, qName);
     for (int i = 0; i < attributes.getLength(); i++) {
       element.setAttribute(attributes.getQName(i), attributes.getValue(i));
@@ -79,7 +78,7 @@ public class PositionalXmlHandler extends DefaultHandler {
     Element closedElement = elementStack.pop();
     if (elementStack.isEmpty()) { // If this is the root element
       closedElement.setUserData("encoding", getLocatorEncoding(), null);
-      Preconditions.checkNotNull(document);
+      Objects.requireNonNull(document);
       document.appendChild(closedElement);
     } else {
       Element parentElement = elementStack.peek();
@@ -96,7 +95,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   @VisibleForTesting
   void addText() {
     if (textBuffer.length() > 0) {
-      Preconditions.checkNotNull(document);
+      Objects.requireNonNull(document);
       Element element = elementStack.peek();
       Node textNode = document.createTextNode(textBuffer.toString());
       element.appendChild(textNode);

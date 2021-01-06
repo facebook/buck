@@ -1,28 +1,28 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -121,7 +121,7 @@ public class InfoPlistSubstitution {
       String openParen = variableMatcher.group(OPEN_PAREN_GROUP_NAME);
       String closeParen = variableMatcher.group(CLOSE_PAREN_GROUP_NAME);
 
-      String expectedCloseParen = Preconditions.checkNotNull(MATCHING_PARENS.get(openParen));
+      String expectedCloseParen = Objects.requireNonNull(MATCHING_PARENS.get(openParen));
       if (!expectedCloseParen.equals(closeParen)) {
         // Mismatching parens; don't substitute.
         variableMatcher.appendReplacement(

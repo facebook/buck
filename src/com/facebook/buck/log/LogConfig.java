@@ -1,23 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.PathListing;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -54,12 +54,16 @@ public class LogConfig {
 
   /** Default constructor, called by LogManager. */
   public LogConfig() throws IOException {
-    setupLogging(
-        LogConfigSetup.builder()
-            .from(LogConfigSetup.DEFAULT_SETUP)
-            .setLogFilePrefix("launch-")
-            .setCount(1)
-            .build());
+    LogConfigSetup.Builder logConfig = LogConfigSetup.builder().from(LogConfigSetup.DEFAULT_SETUP);
+    if (isBuckd()) {
+      logConfig.setLogFilePrefix("launchd-");
+      logConfig.setCount(10);
+
+    } else {
+      logConfig.setLogFilePrefix("launch-");
+      logConfig.setCount(1);
+    }
+    setupLogging(logConfig.build());
   }
 
   public static void setUseAsyncFileLogging(boolean useAsyncFileLogging) {
@@ -136,7 +140,7 @@ public class LogConfig {
       ST st = new ST(template);
       st.add(
           "default_file_pattern",
-          MorePaths.pathWithUnixSeparators(logConfigSetup.getLogFilePath()));
+          PathFormatter.pathWithUnixSeparators(logConfigSetup.getLogFilePath()));
       st.add("default_count", logConfigSetup.getCount());
       st.add("default_max_size_bytes", logConfigSetup.getMaxLogSizeBytes());
       String result = st.render();
@@ -171,5 +175,9 @@ public class LogConfig {
             Optional.of(logConfigSetup.getMaxLogSizeBytes()))) {
       Files.deleteIfExists(path);
     }
+  }
+
+  private static boolean isBuckd() {
+    return Boolean.valueOf(System.getProperty("buck.is_buckd"));
   }
 }

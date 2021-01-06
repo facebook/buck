@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -119,23 +119,16 @@ public class UserInput {
       output.printf("[%d]. %s.\n", i, entryFormatter.apply(entries.get(i)));
     }
 
-    Integer index = 0;
     try {
       String response = ask("(input individual number, for example 1 or 2)");
-      if (response.trim().isEmpty()) {
-        index = 0;
-      } else {
-        index = parseOne(response);
-      }
-
+      int index = response.trim().isEmpty() ? 0 : parseOne(response);
       Preconditions.checkArgument(
           index >= 0 && index < entries.size(), "Index %s out of bounds.", index);
+      return Optional.of(entries.get(index));
     } catch (IllegalArgumentException e) {
       output.printf("Illegal choice: %s\n", e.getMessage());
       return Optional.empty();
     }
-
-    return Optional.of(entries.get(index));
   }
 
   public <T> ImmutableSet<T> selectRange(

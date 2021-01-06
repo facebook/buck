@@ -1,3 +1,12 @@
+CMD_UNIX = "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out"
+
+CMD_WIN = "\r\n".join([
+    "set out=\"$(abs_output testbin)\"",
+    "for %%F in (\"%out%\") do set out_dir=%%~dpF",
+    "cd \"%out_dir%\"",
+    "python \"%out%\"",
+])
+
 python_test(
     name = "test-success",
     srcs = [
@@ -69,14 +78,14 @@ python_test(
     ],
 )
 
-sh_binary(
-    name = "sh_binary1",
-    main = "sh_binary1.sh",
+export_file(
+    name = "file1.txt",
+    src = "file1.txt",
 )
 
-sh_binary(
-    name = "sh_binary2",
-    main = "sh_binary2.sh",
+export_file(
+    name = "file2.txt",
+    src = "file2.txt",
 )
 
 python_test(
@@ -85,6 +94,81 @@ python_test(
         "test_deps_with_env_macros.py",
     ],
     env = {
-        "TESTING_BINARIES": "$(location :sh_binary1) -- $(location :sh_binary2)",
+        "TESTING_BINARIES": "$(location :file1.txt) -- $(location :file2.txt)",
+    },
+)
+
+python_test_runner(
+    name = "runner",
+    src = "runner_binary.py",
+    main_module = "runner_binary",
+)
+
+python_test(
+    name = "testx_success",
+    srcs = [
+        "test_success.py",
+    ],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
+    },
+)
+
+python_test(
+    name = "testx_failure",
+    srcs = [
+        "test_failure.py",
+    ],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
+    },
+)
+
+python_test_runner(
+    name = "runner_with_bad_test_main_module",
+    src = "runner_binary.py",
+    main_module = "bad_test_main",
+)
+
+python_test(
+    name = "testx_failure_with_test_main",
+    srcs = [
+        "test_success.py",
+    ],
+    runner = ":runner_with_bad_test_main_module",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
     },
 )

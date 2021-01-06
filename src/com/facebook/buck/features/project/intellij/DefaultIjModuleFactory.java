@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleRule;
+import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class DefaultIjModuleFactory implements IjModuleFactory {
@@ -36,11 +38,15 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
   private static final Logger LOG = Logger.get(DefaultIjModuleFactory.class);
 
   private final ProjectFilesystem projectFilesystem;
+  private final IjProjectConfig projectConfig;
   private final SupportedTargetTypeRegistry typeRegistry;
 
   public DefaultIjModuleFactory(
-      ProjectFilesystem projectFilesystem, SupportedTargetTypeRegistry typeRegistry) {
+      ProjectFilesystem projectFilesystem,
+      IjProjectConfig projectConfig,
+      SupportedTargetTypeRegistry typeRegistry) {
     this.projectFilesystem = projectFilesystem;
+    this.projectConfig = projectConfig;
     this.typeRegistry = typeRegistry;
   }
 
@@ -69,7 +75,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       Class<?> nodeType = targetNode.getDescription().getClass();
       seenTypes.add(nodeType);
       IjModuleRule<?> rule =
-          Preconditions.checkNotNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
+          Objects.requireNonNull(typeRegistry.getModuleRuleByTargetNodeType(nodeType));
       rule.apply((TargetNode) targetNode, context);
       context.setModuleType(rule.detectModuleType((TargetNode) targetNode));
     }
@@ -82,11 +88,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
       context
           .getOrCreateAndroidFacetBuilder()
           .setGeneratedSourcePath(
-              IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
+              IjAndroidHelper.createAndroidGenPath(
+                  projectFilesystem, projectConfig, moduleBasePath));
     }
 
-    excludes
-        .stream()
+    excludes.stream()
         .map(moduleBasePath::resolve)
         .map(ExcludeFolder::new)
         .forEach(context::addSourceFolder);
@@ -95,10 +101,11 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
         .setModuleBasePath(moduleBasePath)
         .setTargets(moduleBuildTargets)
         .setNonSourceBuildTargets(context.getNonSourceBuildTargets())
+        .setTargetsToGeneratedSourcesMap(context.getTargetsToGeneratedSourcesMap())
         .addAllFolders(context.getSourceFolders())
         .putAllDependencies(context.getDependencies())
         .setAndroidFacet(context.getAndroidFacet())
-        .addAllExtraClassPathDependencies(context.getExtraClassPathDependencies())
+        .addAllExtraLibraryDependencies(context.getExtraLibraryDependencies())
         .addAllExtraModuleDependencies(context.getExtraModuleDependencies())
         .addAllGeneratedSourceCodeFolders(context.getGeneratedSourceCodeFolders())
         .setLanguageLevel(context.getJavaLanguageLevel())

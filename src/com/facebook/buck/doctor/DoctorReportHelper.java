@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -112,7 +112,7 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
-      BuildLogEntry entry, DefectSubmitResult reportResult) throws IOException {
+      BuildLogEntry entry, DefectReporter.DefectSubmitResult reportResult) throws IOException {
     Optional<String> machineLog;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
@@ -135,6 +135,17 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointResponse uploadRequest(DoctorEndpointRequest request) {
+    OkHttpClient httpClient =
+        new OkHttpClient.Builder()
+            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
+            .build();
+    return uploadRequest(httpClient, request);
+  }
+
+  @VisibleForTesting
+  DoctorEndpointResponse uploadRequest(OkHttpClient httpClient, DoctorEndpointRequest request) {
     if (!doctorConfig.getEndpointUrl().isPresent()) {
       String errorMsg =
           String.format(
@@ -151,13 +162,6 @@ public class DoctorReportHelper {
           "Failed to encode request to JSON. " + "Reason: " + e.getMessage());
     }
 
-    OkHttpClient httpClient =
-        new OkHttpClient.Builder()
-            .connectTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .readTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .writeTimeout(doctorConfig.getEndpointTimeoutMs(), TimeUnit.MILLISECONDS)
-            .build();
-
     Response httpResponse;
     try {
       RequestBody requestBody;
@@ -173,9 +177,15 @@ public class DoctorReportHelper {
         requestBody = formBody.build();
       }
 
-      Request httpRequest =
-          new Request.Builder().url(doctorConfig.getEndpointUrl().get()).post(requestBody).build();
-      httpResponse = httpClient.newCall(httpRequest).execute();
+      Request.Builder requestBuilder = new Request.Builder();
+      requestBuilder.url(doctorConfig.getEndpointUrl().get()).post(requestBody);
+
+      for (Map.Entry<String, String> entry :
+          doctorConfig.getEndpointExtraRequestHeaders().entrySet()) {
+        requestBuilder.addHeader(entry.getKey(), entry.getValue());
+      }
+
+      httpResponse = httpClient.newCall(requestBuilder.build()).execute();
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(
           "Failed to perform the request to "
@@ -189,7 +199,11 @@ public class DoctorReportHelper {
         String body = new String(httpResponse.body().bytes(), Charsets.UTF_8);
         return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
-      return createErrorDoctorEndpointResponse("Request was not successful.");
+      return createErrorDoctorEndpointResponse(
+          "Request was not successful. HTTP Status: "
+              + httpResponse.code()
+              + " Message: "
+              + httpResponse.message());
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     }
@@ -217,13 +231,13 @@ public class DoctorReportHelper {
     output.println();
   }
 
-  public final void presentRageResult(Optional<DefectSubmitResult> result) {
+  public final void presentRageResult(Optional<DefectReporter.DefectSubmitResult> result) {
     if (!result.isPresent()) {
       console.getStdOut().println("=> Failed to generate a report DefectSubmitResult.");
       return;
     }
 
-    DefectSubmitResult submitResult = result.get();
+    DefectReporter.DefectSubmitResult submitResult = result.get();
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
         if (submitResult.getRequestProtocol().equals(DoctorProtocolVersion.JSON)) {

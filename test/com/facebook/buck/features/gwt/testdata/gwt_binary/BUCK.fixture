@@ -1,10 +1,38 @@
 java_library(
     name = "a",
-    srcs = glob(["com/example/gwt/client/*.java"]),
+    srcs = glob([
+        "com/example/gwt/client/*.java",
+        "com/example/gwt/shared/*.java",
+    ]),
+    plugins = [
+        ":annotation_processor",
+    ],
     resources = ["com/example/gwt/A.gwt.xml"],
     deps = [
         ":gwt-user",
     ],
+)
+
+java_annotation_processor(
+    name = "annotation_processor",
+    processor_class = "com.example.AnnotationProcessor",
+    deps = [
+        ":annotation_processor_lib",
+    ],
+)
+
+java_library(
+    name = "annotation_processor_lib",
+    srcs = [
+        "com/example/gwt/shared/MyFieldAnnotation.java",
+        "com/example/processor/AnnotationProcessor.java",
+    ],
+)
+
+java_library(
+    name = "jreemul",
+    resources = ["com/example/gwt/jreemul.gwt.xml"] + glob(["com/example/gwt/emul/**/*.java"]),
+    resources_root = ".",
 )
 
 gwt_binary(
@@ -12,11 +40,12 @@ gwt_binary(
     draft_compile = True,
     module_deps = [
         ":a",
+        ":jreemul",
     ],
     modules = ["com/example/gwt/A"],
     optimize = 0,
     style = "PRETTY",
-    vm_args = ["-Xmx256M"],
+    vm_args = ["-Xmx512m"],
     deps = [
         ":gwt-dev",
     ],
@@ -24,10 +53,10 @@ gwt_binary(
 
 prebuilt_jar(
     name = "gwt-dev",
-    binary_jar = "lib/gwt-dev-2.7.0.jar",
+    binary_jar = "lib/gwt-dev-2.8.2.jar",
 )
 
 prebuilt_jar(
     name = "gwt-user",
-    binary_jar = "lib/gwt-user-2.7.0.jar",
+    binary_jar = "lib/gwt-user-2.8.2.jar",
 )

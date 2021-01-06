@@ -1,0 +1,67 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.facebook.buck.core.rulekey;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+/**
+ * Marks a field/method of a class explicitly excluded from rulekeys. Usage of this should be very
+ * rare. In general, we consider uses of it to indicate likely correctness problems. Instead
+ * annotate the field with @{@link AddToRuleKey}.
+ */
+@Retention(RUNTIME)
+@Target({FIELD, METHOD})
+public @interface ExcludeFromRuleKey {
+  /**
+   * This indicates the reason we exclude a value from rulekeys. It's currently only used for
+   * logging.
+   */
+  String reason() default "";
+
+  /**
+   * Indicates how serialization of this field should be handled. For default serialization, use
+   * {@link DefaultFieldSerialization} If serialization cannot possibly be supported, use {@link
+   * ThrowingSerialization}.
+   */
+  Class<? extends CustomFieldSerializationTag> serialization();
+
+  /**
+   * Indicates how inputs should be derived from this field. For default inputs derivation, use
+   * {@link DefaultFieldInputs}. If this field should not contribute to inputs, use {@link
+   * IgnoredFieldInputs}.
+   */
+  Class<? extends CustomFieldInputsTag> inputs();
+
+  /**
+   * Indicates how deps should be derived from this field. For default deps derivation, use {@link
+   * DefaultFieldDeps}. If this field should not contribute to deps, use {@link IgnoredFieldDeps}.
+   * If you would like to provide custom logic, see {@link CustomFieldDeps}.
+   */
+  Class<? extends CustomFieldDepsTag> deps() default IgnoredFieldDeps.class;
+
+  /**
+   * We really do think that using this annotation indicates a likely source of problems. By
+   * default, the first time we encounter such an annotated field/method, we will log that
+   * information to the buck log.
+   */
+  boolean shouldReport() default true;
+}

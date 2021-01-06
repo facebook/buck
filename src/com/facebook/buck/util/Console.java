@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
@@ -92,25 +92,11 @@ public class Console {
   }
 
   /**
-   * Prints the message of the {@link Throwable} as a build failure.
-   *
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithoutStacktraceDontUnwrap(Throwable t) {
-    LOG.warn(t, "Build error caused by exception");
-    printBuildFailureInternal(t.getMessage());
-  }
-
-  /**
    * Prints an error message prefixed with {@code BUILD FAILED} to stderr that will be highlighted
    * in red if stderr is a tty.
    */
   public void printBuildFailure(String failureMessage) {
     LOG.warn("Build failure: %s", failureMessage);
-    printBuildFailureInternal(failureMessage);
-  }
-
-  private void printBuildFailureInternal(String failureMessage) {
     ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 
@@ -118,17 +104,5 @@ public class Console {
   public void printFailure(String failureMessage) {
     LOG.warn("Command failure: %s", failureMessage);
     ansi.printlnHighlightedFailureText(stdErr, failureMessage);
-  }
-
-  /** Prints error message to console in red, also logs stacktrace but does not display it */
-  public void printFailure(Throwable t, String failureMessage) {
-    LOG.warn(t, failureMessage);
-    ansi.printlnHighlightedFailureText(stdErr, failureMessage);
-  }
-
-  /** Prints error message to console in red, logs and displays stacktrace */
-  public void printFailureWithStacktrace(Throwable t, String failureMessage) {
-    printFailure(t, failureMessage);
-    t.printStackTrace(stdErr);
   }
 }

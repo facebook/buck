@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -23,10 +23,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -45,8 +45,8 @@ public class CxxTestBuilder
 
   private static CxxTestDescription createCxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
@@ -60,13 +60,17 @@ public class CxxTestBuilder
   public CxxTestBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(createCxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
   }
 
   public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
-    this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
+    this(
+        target,
+        config,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {

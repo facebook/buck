@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -63,7 +63,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -75,6 +75,7 @@ public class InteractiveReportIntegrationTest {
     ZipInspector zipInspector = new ZipInspector(reportFile);
     zipInspector.assertFileExists("report.json");
     zipInspector.assertFileExists("buckconfig.local");
+    zipInspector.assertFileExists(BUILD_PATH + "buckconfig.json");
     zipInspector.assertFileExists(BUILD_PATH + "buck-machine-log");
     zipInspector.assertFileExists(BUILD_PATH + "buck.log");
     zipInspector.assertFileExists(BUILD_PATH + "file.trace");
@@ -91,7 +92,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -115,7 +116,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -140,7 +141,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -166,7 +167,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),

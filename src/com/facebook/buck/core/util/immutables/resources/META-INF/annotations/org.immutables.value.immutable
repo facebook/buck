@@ -1,0 +1,5 @@
+com.facebook.buck.core.util.immutables.BuckStyleValue
+com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder
+com.facebook.buck.core.util.immutables.BuckStylePrehashedValue
+com.facebook.buck.core.util.immutables.RuleArg
+com.facebook.buck.core.rules.providers.annotations.ImmutableInfo

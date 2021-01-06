@@ -1,0 +1,29 @@
+cxx_library(
+    name = "dep",
+    exported_headers = [
+        read_config("test", "header"),
+    ],
+)
+
+cxx_binary(
+    name = "first",
+    srcs = [
+        "first.cpp",
+    ],
+    compiler_flags = [
+        read_config("test", "flag"),
+    ],
+    deps = [
+        ":dep",
+    ],
+)
+
+cxx_binary(
+    name = "second",
+    srcs = [
+        "second.cpp",
+    ],
+    deps = [
+        ":dep",
+    ],
+)

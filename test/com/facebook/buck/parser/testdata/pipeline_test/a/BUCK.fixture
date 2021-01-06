@@ -1,4 +1,7 @@
+load("//a:test.bzl", "TEST")
+
 java_library(
     name = "a",
     srcs = glob(["*.java"]),
+    labels = [TEST],
 )

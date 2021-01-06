@@ -1,0 +1,42 @@
+rust_binary(
+    name = "subbin",
+    srcs = ["main.rs"],
+    mapped_srcs = {"//:generated": "generated.rs"},
+)
+
+rust_test(
+    name = "subbin-test",
+    srcs = ["main.rs"],
+    mapped_srcs = {"//:generated": "generated.rs"},
+)
+
+rust_binary(
+    name = "subdir_generated_top",
+    srcs = ["src/included.rs"],
+    mapped_srcs = {
+        ":generate-main": "src/main.rs",
+    },
+)
+
+rust_binary(
+    name = "subdir_generated_top_crateroot",
+    srcs = ["src/included.rs"],
+    crate_root = "src/foobar.rs",
+    mapped_srcs = {
+        ":generate-main": "src/foobar.rs",
+    },
+)
+
+genrule(
+    name = "generate-main",
+    out = "out.rs",
+    cmd = """
+echo '
+include!("included.rs");
+
+fn main() {
+    println!("generated main, included {}", INCLUDED);
+}
+' > $OUT
+""",
+)

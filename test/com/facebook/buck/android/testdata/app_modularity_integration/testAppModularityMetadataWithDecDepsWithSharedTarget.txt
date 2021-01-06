@@ -1,0 +1,31 @@
+CLASSES
+  dex
+    com/facebook/sample/Sample
+    com/facebook/sample/Sample2
+    com/facebook/sample/Sample3
+    com/sample/app/MyApplication
+  small_with_shared2_with_no_resource_deps
+    com/facebook/sample/Shared
+    com/facebook/sample/SmallWithShared2
+  small_with_shared_with_no_resource_deps
+    com/facebook/sample/SmallWithShared
+TARGETS
+  dex
+    //java/com/sample/app:app
+    //java/com/sample/lib:lib
+    //res/com/sample/asset_only:asset_only
+    //res/com/sample/base:base
+    //res/com/sample/title:title
+    //res/com/sample/top:top
+  small_with_shared2_with_no_resource_deps
+    //java/com/sample/shared:shared_with_no_resource_deps
+    //java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps
+  small_with_shared_with_no_resource_deps
+    //java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps
+DEPS
+  dex
+  small_with_shared2_with_no_resource_deps
+    dex
+  small_with_shared_with_no_resource_deps
+    dex
+    small_with_shared2_with_no_resource_deps

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
@@ -53,8 +55,7 @@ public class MultiArtifactCache implements ArtifactCache {
   public MultiArtifactCache(ImmutableList<ArtifactCache> artifactCaches) {
     this.artifactCaches = artifactCaches;
     this.writableArtifactCaches =
-        artifactCaches
-            .stream()
+        artifactCaches.stream()
             .filter(c -> c.getCacheReadMode().equals(CacheReadMode.READWRITE))
             .collect(ImmutableList.toImmutableList());
     this.isStoreSupported = this.writableArtifactCaches.size() > 0;
@@ -69,8 +70,8 @@ public class MultiArtifactCache implements ArtifactCache {
   public ListenableFuture<CacheResult> fetchAsync(
       @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     ListenableFuture<CacheResult> cacheResult = Futures.immediateFuture(CacheResult.miss());
-    // This is the list of higher-priority caches that we should write the artifact to.
-    ImmutableList.Builder<ArtifactCache> cachesToFill = ImmutableList.builder();
+    AtomicReference<ArtifactCache> lastCache = new AtomicReference<>();
+
     for (ArtifactCache artifactCache : artifactCaches) {
       cacheResult =
           Futures.transformAsync(
@@ -79,9 +80,8 @@ public class MultiArtifactCache implements ArtifactCache {
                 if (result.getType().isSuccess()) {
                   return Futures.immediateFuture(result);
                 }
-                if (artifactCache.getCacheReadMode().isWritable()) {
-                  cachesToFill.add(artifactCache);
-                }
+
+                lastCache.set(artifactCache);
                 return artifactCache.fetchAsync(target, ruleKey, output);
               },
               MoreExecutors.directExecutor());
@@ -94,10 +94,29 @@ public class MultiArtifactCache implements ArtifactCache {
           if (!result.getType().isSuccess()) {
             return result;
           }
-          storeToCaches(
-              cachesToFill.build(),
-              ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(result.getMetadata()).build(),
-              BorrowablePath.notBorrowablePath(output.getUnchecked()));
+
+          ImmutableList.Builder<ArtifactCache> builder = ImmutableList.builder();
+          for (ArtifactCache artifactCache : artifactCaches) {
+            if (artifactCache == lastCache.get()) {
+              break;
+            }
+
+            if (artifactCache.getCacheReadMode().isWritable()) {
+              builder.add(artifactCache);
+            }
+          }
+
+          ImmutableList<ArtifactCache> cachesToFill = builder.build();
+          if (!cachesToFill.isEmpty()) {
+            storeToCaches(
+                cachesToFill,
+                ArtifactInfo.builder()
+                    .addRuleKeys(ruleKey)
+                    .setMetadata(result.getMetadata())
+                    .setBuildTarget(Optional.ofNullable(target))
+                    .build(),
+                BorrowablePath.notBorrowablePath(output.getUnchecked()));
+          }
           return result;
         },
         MoreExecutors.directExecutor());
@@ -110,29 +129,30 @@ public class MultiArtifactCache implements ArtifactCache {
     }
   }
 
-  private static ListenableFuture<Void> storeToCaches(
+  private static ListenableFuture<Unit> storeToCaches(
       ImmutableList<ArtifactCache> caches, ArtifactInfo info, BorrowablePath output) {
     // TODO(cjhopman): support BorrowablePath with multiple writable caches.
     if (caches.size() != 1) {
       output = BorrowablePath.notBorrowablePath(output.getPath());
     }
-    List<ListenableFuture<Void>> storeFutures = Lists.newArrayListWithExpectedSize(caches.size());
+    List<ListenableFuture<Unit>> storeFutures = Lists.newArrayListWithExpectedSize(caches.size());
     for (ArtifactCache artifactCache : caches) {
       storeFutures.add(artifactCache.store(info, output));
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(Futures.allAsList(storeFutures), Functions.constant(null));
+    return Futures.transform(
+        Futures.allAsList(storeFutures), Functions.constant(null), MoreExecutors.directExecutor());
   }
 
   /** Store the artifact to all encapsulated ArtifactCaches. */
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     return storeToCaches(writableArtifactCaches, info, output);
   }
 
   @Override
-  public ListenableFuture<Void> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
+  public ListenableFuture<Unit> store(ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     if (writableArtifactCaches.size() != 1) {
       ImmutableList.Builder<Pair<ArtifactInfo, BorrowablePath>> artifactTemporaryPaths =
           ImmutableList.builderWithExpectedSize(artifacts.size());
@@ -145,14 +165,15 @@ public class MultiArtifactCache implements ArtifactCache {
       artifacts = artifactTemporaryPaths.build();
     }
 
-    List<ListenableFuture<Void>> storeFutures =
+    List<ListenableFuture<Unit>> storeFutures =
         Lists.newArrayListWithExpectedSize(writableArtifactCaches.size());
     for (ArtifactCache artifactCache : writableArtifactCaches) {
       storeFutures.add(artifactCache.store(artifacts));
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(Futures.allAsList(storeFutures), Functions.constant(null));
+    return Futures.transform(
+        Futures.allAsList(storeFutures), Functions.constant(null), MoreExecutors.directExecutor());
   }
 
   @Override
@@ -172,9 +193,7 @@ public class MultiArtifactCache implements ArtifactCache {
               cacheResultFuture,
               mergedResults -> {
                 ImmutableSet<RuleKey> missingKeys =
-                    mergedResults
-                        .entrySet()
-                        .stream()
+                    mergedResults.entrySet().stream()
                         .filter(e -> !e.getValue().getType().isSuccess())
                         .map(Map.Entry::getKey)
                         .collect(ImmutableSet.toImmutableSet());
@@ -215,7 +234,7 @@ public class MultiArtifactCache implements ArtifactCache {
             cacheNames.addAll(deleteResult.getCacheNames());
           }
 
-          return CacheDeleteResult.builder().setCacheNames(cacheNames.build()).build();
+          return CacheDeleteResult.of(cacheNames.build());
         },
         MoreExecutors.directExecutor());
   }

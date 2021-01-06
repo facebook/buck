@@ -1,0 +1,28 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
+
+java_test(
+    name = "args",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/artifact:artifact",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/actions/lib:lib",
+        "//src/com/facebook/buck/core/rules/actions/lib/args:args",
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//test/com/facebook/buck/core/artifact:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/starlark/compatible:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/rules/keys:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

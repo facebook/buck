@@ -1,29 +1,35 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.ClassInfo;
+import com.facebook.buck.rules.modern.CustomBehaviorUtils;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +38,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -41,10 +48,13 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   private StringBuilder builder = new StringBuilder();
   private int indent = 0;
 
+  public static final class ExcludeFromStringification implements CustomFieldBehaviorTag {}
+
   @Override
   public void visitOutputPath(OutputPath value) {
     append(
-        "OutputPath(%s)", MorePaths.pathWithUnixSeparators(OutputPath.internals().getPath(value)));
+        "OutputPath(%s)",
+        PathFormatter.pathWithUnixSeparators(OutputPath.internals().getPath(value)));
   }
 
   @Override
@@ -57,10 +67,17 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
       Field field,
       T value,
       ValueTypeInfo<T> valueTypeInfo,
-      Optional<CustomFieldBehavior> customBehavior) {
+      List<Class<? extends CustomFieldBehaviorTag>> customBehavior) {
     newline();
     append("%s:", field.getName());
     valueTypeInfo.visit(value, this);
+
+    boolean excludeFromStringification =
+        CustomBehaviorUtils.get(ExcludeFromStringification.class, customBehavior).isPresent();
+
+    if (valueTypeInfo instanceof ExcludedValueTypeInfo && !excludeFromStringification) {
+      append("excluded");
+    }
   }
 
   private <T> void visitIterableValues(Iterable<T> value, ValueTypeInfo<T> innerType) {
@@ -197,6 +214,21 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
     append("double(%s)", value);
   }
 
+  @Override
+  public void visitTargetConfiguration(TargetConfiguration value) throws RuntimeException {
+    if (value instanceof UnconfiguredTargetConfiguration) {
+      append("configuration<>");
+    } else if (value instanceof RuleBasedTargetConfiguration) {
+      append(
+          "configuration<targetPlatform(%s)>",
+          ((RuleBasedTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
+    } else if (value instanceof ConfigurationForConfigurationTargets) {
+      append("configuration<configurationTarget>");
+    } else {
+      throw new IllegalArgumentException("Cannot visit target configuration: " + value);
+    }
+  }
+
   private void container(String label, Runnable runner) {
     append("%s<", label);
     indent++;
@@ -231,6 +263,6 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
 
   @Override
   public void visitPath(Path path) {
-    append("path(%s)", MorePaths.pathWithUnixSeparators(path));
+    append("path(%s)", PathFormatter.pathWithUnixSeparators(path));
   }
 }

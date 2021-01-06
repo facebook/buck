@@ -1,0 +1,71 @@
+python_library(
+    name = "main",
+    srcs = [
+        "main.py",
+    ],
+)
+
+cxx_library(
+    name = "preload",
+    srcs = [
+        "preload.c",
+    ],
+)
+
+python_binary(
+    name = "bin",
+    main_module = "preload_deps.main",
+    preload_deps = [
+        ":preload",
+    ],
+    deps = [
+        ":main",
+    ],
+)
+
+cxx_library(
+    name = "preload_a",
+    srcs = [
+        "preload_a.c",
+    ],
+)
+
+cxx_library(
+    name = "preload_b",
+    srcs = [
+        "preload_b.c",
+    ],
+)
+
+python_library(
+    name = "preload_order",
+    srcs = [
+        "preload_order.py",
+    ],
+)
+
+# Binary which preloads `preload_a` before `preload_b`.
+python_binary(
+    name = "bin_a_first",
+    main_module = "preload_deps.preload_order",
+    preload_deps = [
+        ":preload_a",
+        ":preload_b",
+    ],
+    deps = [
+        ":preload_order",
+    ],
+)
+
+# Binary which preloads `preload_b` before `preload_a`.
+python_binary(
+    name = "bin_b_first",
+    main_module = "preload_deps.preload_order",
+    preload_deps = [
+        ":preload_b",
+        ":preload_a",
+    ],
+    deps = [
+        ":preload_order",
+    ],
+)

@@ -1,0 +1,17 @@
+{
+  "//:dummy_with_one_select" : {
+    "buck.type" : "cxx_library",
+    "deps" : {
+      "concatable" : true,
+      "elements" : [ {
+        "selectable" : true,
+        "conditions" : {
+          ":macos" : [ ":1" ],
+          "DEFAULT" : [ ":2", ":3" ]
+        },
+        "no_match_error" : ""
+      } ]
+    },
+    "name" : "dummy_with_one_select"
+  }
+}

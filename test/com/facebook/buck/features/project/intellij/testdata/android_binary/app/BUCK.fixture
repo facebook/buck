@@ -9,3 +9,13 @@ keystore(
     properties = "debug.keystore.properties",
     store = "debug.keystore",
 )
+
+android_instrumentation_test(
+    name = "instrumentation_test",
+    apk = ":bin",
+)
+
+android_instrumentation_apk(
+    name = "instrumentation_test_apk",
+    apk = ":bin",
+)

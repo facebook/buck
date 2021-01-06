@@ -1,29 +1,30 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -93,19 +94,33 @@ public class StubJar {
   }
 
   private void writeTo(LibraryReader input, StubJarWriter writer) throws IOException {
+    List<Path> relativePaths = input.getRelativePaths();
+    Comparator<Path> visitOuterClassesFirst = Comparator.comparing(StubJar::pathWithoutClassSuffix);
     List<Path> paths =
-        input
-            .getRelativePaths()
-            .stream()
-            .sorted(Comparator.comparing(MorePaths::pathWithUnixSeparators))
-            .collect(Collectors.toList());
+        relativePaths.stream().sorted(visitOuterClassesFirst).collect(Collectors.toList());
 
+    Map<String, List<String>> inlineFunctions = new HashMap<>();
+
+    boolean isKotlinModule = isKotlinModule(relativePaths);
     for (Path path : paths) {
-      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode);
+      StubJarEntry entry =
+          StubJarEntry.of(input, path, compatibilityMode, isKotlinModule, inlineFunctions);
       if (entry == null) {
         continue;
       }
       entry.write(writer);
+      inlineFunctions.put(pathWithoutClassSuffix(path), entry.getInlineMethods());
     }
+  }
+
+  private boolean isKotlinModule(List<Path> relativePaths) {
+    return relativePaths.stream().anyMatch(path -> path.toString().endsWith(".kotlin_module"));
+  }
+
+  static String pathWithoutClassSuffix(Path path) {
+    final String pathString = path.toString();
+    return pathString.endsWith(".class")
+        ? pathString.substring(0, pathString.length() - ".class".length())
+        : pathString;
   }
 }

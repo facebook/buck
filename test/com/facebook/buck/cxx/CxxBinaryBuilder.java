@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -25,11 +25,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -47,8 +47,8 @@ public class CxxBinaryBuilder
         CxxBinaryDescriptionArg.Builder, CxxBinaryDescriptionArg, CxxBinaryDescription, CxxBinary> {
 
   private static CxxBinaryDescription createCxxBinaryDescription(
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms,
       CxxBuckConfig cxxBuckConfig) {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
@@ -69,7 +69,9 @@ public class CxxBinaryBuilder
   }
 
   public CxxBinaryBuilder(
-      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         createCxxBinaryDescription(
             defaultCxxPlatform, cxxPlatforms, CxxPlatformUtils.DEFAULT_CONFIG),
@@ -78,14 +80,17 @@ public class CxxBinaryBuilder
 
   public CxxBinaryBuilder(
       BuildTarget target,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms,
       CxxBuckConfig cxxBuckConfig) {
     super(createCxxBinaryDescription(defaultCxxPlatform, cxxPlatforms, cxxBuckConfig), target);
   }
 
   public CxxBinaryBuilder(BuildTarget target) {
-    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
+    this(
+        target,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxBinaryBuilder setDepQuery(Query depQuery) {

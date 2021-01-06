@@ -1,22 +1,21 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -24,31 +23,30 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
+import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.stream.Collectors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@Value.Style(
-    overshadowImplementation = true,
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PACKAGE)
+@BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(
@@ -61,6 +59,7 @@ public abstract class DefaultJavaLibraryRules {
         ImmutableSortedSet<BuildRule> fullJarExportedDeps,
         ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
         ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+        ImmutableSortedSet<BuildRule> runtimeDeps,
         @Nullable BuildTarget abiJar,
         @Nullable BuildTarget sourceOnlyAbiJar,
         Optional<String> mavenCoords,
@@ -68,7 +67,10 @@ public abstract class DefaultJavaLibraryRules {
         boolean requiredForSourceOnlyAbi,
         UnusedDependenciesAction unusedDependenciesAction,
         Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
-        @Nullable CalculateSourceAbi previousRuleInPipeline);
+        @Nullable CalculateSourceAbi previousRuleInPipeline,
+        boolean isDesugarEnabled,
+        boolean isInterfaceMethodsDesugarEnabled,
+        boolean neverMarkAsUnusedDependency);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -94,17 +96,9 @@ public abstract class DefaultJavaLibraryRules {
   @org.immutables.builder.Builder.Parameter
   abstract ActionGraphBuilder getActionGraphBuilder();
 
-  @org.immutables.builder.Builder.Parameter
-  abstract CellPathResolver getCellPathResolver();
-
   @Value.Lazy
-  SourcePathRuleFinder getSourcePathRuleFinder() {
-    return new SourcePathRuleFinder(getActionGraphBuilder());
-  }
-
-  @Value.Lazy
-  SourcePathResolver getSourcePathResolver() {
-    return DefaultSourcePathResolver.from(getSourcePathRuleFinder());
+  SourcePathResolverAdapter getSourcePathResolver() {
+    return getActionGraphBuilder().getSourcePathResolver();
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -188,6 +182,8 @@ public abstract class DefaultJavaLibraryRules {
     BuildTarget rootmostTarget = getLibraryTarget();
     if (willProduceCompareAbis()) {
       rootmostTarget = JavaAbis.getVerifiedSourceAbiJar(rootmostTarget);
+    } else if (willProduceSourceAbiFromLibraryTarget()) {
+      rootmostTarget = JavaAbis.getSourceAbiJar(rootmostTarget);
     } else if (willProduceClassAbi()) {
       rootmostTarget = JavaAbis.getClassAbiJar(rootmostTarget);
     }
@@ -196,6 +192,20 @@ public abstract class DefaultJavaLibraryRules {
     graphBuilder.computeIfAbsent(
         rootmostTarget,
         target -> {
+          if (willProduceSourceAbiFromLibraryTarget()) {
+            DefaultJavaLibrary libraryRule = buildLibraryRule(/* sourceAbiRule */ null);
+            CalculateSourceAbiFromLibraryTarget sourceAbiRule =
+                buildSourceAbiRuleFromLibraryTarget(libraryRule);
+            CalculateClassAbi classAbiRule = buildClassAbiRule(libraryRule);
+
+            if (JavaAbis.isLibraryTarget(target)) {
+              return libraryRule;
+            } else if (JavaAbis.isClassAbiTarget(target)) {
+              return classAbiRule;
+            } else if (JavaAbis.isSourceAbiTarget(target)) {
+              return sourceAbiRule;
+            }
+          }
           CalculateSourceAbi sourceOnlyAbiRule = buildSourceOnlyAbiRule();
           CalculateSourceAbi sourceAbiRule = buildSourceAbiRule();
           DefaultJavaLibrary libraryRule = buildLibraryRule(sourceAbiRule);
@@ -225,8 +235,8 @@ public abstract class DefaultJavaLibraryRules {
     if (!willProduceCompareAbis()) {
       return null;
     }
-    Preconditions.checkNotNull(correctAbi);
-    Preconditions.checkNotNull(experimentalAbi);
+    Objects.requireNonNull(correctAbi);
+    Objects.requireNonNull(experimentalAbi);
 
     BuildTarget compareAbisTarget = JavaAbis.getVerifiedSourceAbiJar(getLibraryTarget());
     return getActionGraphBuilder()
@@ -239,7 +249,7 @@ public abstract class DefaultJavaLibraryRules {
                     .withoutExtraDeps(),
                 correctAbi.getSourcePathToOutput(),
                 experimentalAbi.getSourcePathToOutput(),
-                Preconditions.checkNotNull(getJavaBuckConfig()).getSourceAbiVerificationMode()));
+                Objects.requireNonNull(getJavaBuckConfig()).getSourceAbiVerificationMode()));
   }
 
   @Value.Lazy
@@ -270,6 +280,20 @@ public abstract class DefaultJavaLibraryRules {
     return !getSrcs().isEmpty() || !getResources().isEmpty() || getManifestFile().isPresent();
   }
 
+  // regex pattern to extract java version from both "7" and "1.7" notations.
+  private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>\\d)$");
+
+  private boolean isDesugarRequired() {
+    String sourceLevel = getJavacOptions().getLanguageLevelOptions().getSourceLevel();
+    Matcher matcher = JAVA_VERSION_PATTERN.matcher(sourceLevel);
+    if (!matcher.find()) {
+      return false;
+    }
+    int version = Integer.parseInt(matcher.group("version"));
+    // Currently only java 8+ requires desugaring on Android
+    return version > 7;
+  }
+
   @Value.Lazy
   AbiGenerationMode getAbiGenerationMode() {
     AbiGenerationMode result = null;
@@ -278,9 +302,14 @@ public abstract class DefaultJavaLibraryRules {
     if (args != null) {
       result = args.getAbiGenerationMode().orElse(null);
     }
-    if (result == null) {
-      result = Preconditions.checkNotNull(getJavaBuckConfig()).getAbiGenerationMode();
+
+    // Respect user input if provided
+    if (result != null) {
+      return result;
     }
+
+    // Infer ABI generation mode based on properties of build target
+    result = Objects.requireNonNull(getConfiguredCompilerFactory()).getAbiGenerationMode();
 
     if (result == AbiGenerationMode.CLASS) {
       return result;
@@ -327,6 +356,11 @@ public abstract class DefaultJavaLibraryRules {
     return result;
   }
 
+  private boolean willProduceSourceAbiFromLibraryTarget() {
+    return willProduceSourceAbi()
+        && getConfiguredCompilerFactory().sourceAbiCopiesFromLibraryTargetOutput();
+  }
+
   private boolean willProduceSourceAbi() {
     return willProduceAbiJar() && getAbiGenerationMode().isSourceAbi();
   }
@@ -352,9 +386,9 @@ public abstract class DefaultJavaLibraryRules {
 
   private boolean pluginsSupportSourceOnlyAbis() {
     ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-        Preconditions.checkNotNull(getJavacOptions())
-            .getAnnotationProcessingParams()
-            .getAnnotationProcessors(getProjectFilesystem(), getSourcePathResolver());
+        Objects.requireNonNull(getJavacOptions())
+            .getJavaAnnotationProcessorParams()
+            .getPluginProperties();
 
     for (ResolvedJavacPluginProperties annotationProcessor : annotationProcessors) {
       if (!annotationProcessor.getDoesNotAffectAbi()
@@ -373,24 +407,25 @@ public abstract class DefaultJavaLibraryRules {
     UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
     Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory = Optional.empty();
 
-    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE) {
-      ProjectFilesystem projectFilesystem = getProjectFilesystem();
-      BuildTarget buildTarget = getLibraryTarget();
-      SourcePathResolver sourcePathResolver = getSourcePathResolver();
+    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
+        && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
       BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
 
       unusedDependenciesFinderFactory =
           Optional.of(
-              () ->
-                  UnusedDependenciesFinder.of(
-                      buildTarget,
-                      projectFilesystem,
+              new UnusedDependenciesFinderFactory(
+                  Objects.requireNonNull(getJavaBuckConfig())
+                      .getUnusedDependenciesBuildozerString(),
+                  Objects.requireNonNull(getJavaBuckConfig())
+                      .isUnusedDependenciesOnlyPrintCommands(),
+                  UnusedDependenciesFinder.getDependencies(
                       buildRuleResolver,
-                      getCellPathResolver(),
-                      CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
-                      Preconditions.checkNotNull(getDeps()),
-                      sourcePathResolver,
-                      unusedDependenciesAction));
+                      buildRuleResolver.getAllRules(
+                          Objects.requireNonNull(getDeps()).getDepTargets())),
+                  UnusedDependenciesFinder.getDependencies(
+                      buildRuleResolver,
+                      buildRuleResolver.getAllRules(
+                          Objects.requireNonNull(getDeps()).getProvidedDepTargets()))));
     }
 
     DefaultJavaLibrary libraryRule =
@@ -399,12 +434,13 @@ public abstract class DefaultJavaLibraryRules {
                 getLibraryTarget(),
                 getProjectFilesystem(),
                 getJarBuildStepsFactory(),
-                getSourcePathRuleFinder(),
+                getActionGraphBuilder(),
                 getProguardConfig(),
                 classpaths.getFirstOrderPackageableDeps(),
-                Preconditions.checkNotNull(getDeps()).getExportedDeps(),
-                Preconditions.checkNotNull(getDeps()).getProvidedDeps(),
-                Preconditions.checkNotNull(getDeps()).getExportedProvidedDeps(),
+                Objects.requireNonNull(getDeps()).getExportedDeps(),
+                Objects.requireNonNull(getDeps()).getProvidedDeps(),
+                Objects.requireNonNull(getDeps()).getExportedProvidedDeps(),
+                Objects.requireNonNull(getDeps()).getRuntimeDeps(),
                 getAbiJar(),
                 getSourceOnlyAbiJar(),
                 getMavenCoords(),
@@ -412,7 +448,10 @@ public abstract class DefaultJavaLibraryRules {
                 getRequiredForSourceOnlyAbi(),
                 unusedDependenciesAction,
                 unusedDependenciesFinderFactory,
-                sourceAbiRule);
+                sourceAbiRule,
+                isDesugarRequired(),
+                getConfiguredCompilerFactory().shouldDesugarInterfaceMethods(),
+                getArgs() != null && getArgs().getNeverMarkAsUnusedDependency().orElse(false));
 
     getActionGraphBuilder().addToIndex(libraryRule);
     return libraryRule;
@@ -437,7 +476,7 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getSourcePathRuleFinder()));
+                getActionGraphBuilder()));
   }
 
   @Nullable
@@ -455,7 +494,24 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getSourcePathRuleFinder()));
+                getActionGraphBuilder()));
+  }
+
+  @Nullable
+  private CalculateSourceAbiFromLibraryTarget buildSourceAbiRuleFromLibraryTarget(
+      DefaultJavaLibrary libraryRule) {
+    if (!willProduceSourceAbi()) {
+      return null;
+    }
+
+    BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(getLibraryTarget());
+    return getActionGraphBuilder()
+        .addToIndex(
+            new CalculateSourceAbiFromLibraryTarget(
+                libraryRule.getSourcePathToOutput(),
+                sourceAbiTarget,
+                getProjectFilesystem(),
+                getActionGraphBuilder()));
   }
 
   @Nullable
@@ -469,9 +525,8 @@ public abstract class DefaultJavaLibraryRules {
         .addToIndex(
             CalculateClassAbi.of(
                 classAbiTarget,
-                getSourcePathRuleFinder(),
+                getActionGraphBuilder(),
                 getProjectFilesystem(),
-                getInitialParams(),
                 libraryRule.getSourcePathToOutput(),
                 getAbiCompatibilityMode()));
   }
@@ -484,15 +539,14 @@ public abstract class DefaultJavaLibraryRules {
         // Use the BuckConfig version (rather than the inferred one) because if any
         // targets are using source_only it can affect the output of other targets
         // in ways that are hard to simulate
-        : getJavaBuckConfig().getAbiGenerationMode();
+        : getConfiguredCompilerFactory().getAbiGenerationMode();
   }
 
   @Value.Lazy
   DefaultJavaLibraryClasspaths getClasspaths() {
-    return DefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
+    return ImmutableDefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
         .setBuildRuleParams(getInitialParams())
-        .setConfiguredCompiler(getConfiguredCompiler())
-        .setDeps(Preconditions.checkNotNull(getDeps()))
+        .setDeps(Objects.requireNonNull(getDeps()))
         .setCompileAgainstLibraryType(getCompileAgainstLibraryType())
         .build();
   }
@@ -503,41 +557,36 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   @Value.Lazy
-  ConfiguredCompiler getConfiguredCompiler() {
+  CompileToJarStepFactory getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
-        .configure(getArgs(), getJavacOptions(), getActionGraphBuilder(), getToolchainProvider());
+        .configure(
+            getArgs(),
+            getJavacOptions(),
+            getActionGraphBuilder(),
+            getInitialBuildTarget().getTargetConfiguration(),
+            getToolchainProvider());
   }
 
   @Value.Lazy
-  ConfiguredCompiler getConfiguredCompilerForSourceOnlyAbi() {
+  CompileToJarStepFactory getConfiguredCompilerForSourceOnlyAbi() {
     return getConfiguredCompilerFactory()
         .configure(
             getArgs(),
             getJavacOptionsForSourceOnlyAbi(),
             getActionGraphBuilder(),
+            getInitialBuildTarget().getTargetConfiguration(),
             getToolchainProvider());
   }
 
   @Value.Lazy
   JavacOptions getJavacOptionsForSourceOnlyAbi() {
     JavacOptions javacOptions = getJavacOptions();
-    return javacOptions.withAnnotationProcessingParams(
-        abiProcessorsOnly(javacOptions.getAnnotationProcessingParams()));
+    return javacOptions.withJavaAnnotationProcessorParams(
+        abiProcessorsOnly(javacOptions.getJavaAnnotationProcessorParams()));
   }
 
-  private AnnotationProcessingParams abiProcessorsOnly(
-      AnnotationProcessingParams annotationProcessingParams) {
-    Preconditions.checkArgument(annotationProcessingParams.getLegacyProcessors().isEmpty());
-
-    return AnnotationProcessingParams.builder()
-        .from(annotationProcessingParams)
-        .setModernProcessors(
-            annotationProcessingParams
-                .getModernProcessors()
-                .stream()
-                .filter(processor -> !processor.getDoesNotAffectAbi())
-                .collect(Collectors.toList()))
-        .build();
+  private JavacPluginParams abiProcessorsOnly(JavacPluginParams annotationProcessingParams) {
+    return annotationProcessingParams.withAbiProcessorsOnly();
   }
 
   @Value.Lazy
@@ -597,18 +646,43 @@ public abstract class DefaultJavaLibraryRules {
 
   private ResourcesParameters getResourcesParameters() {
     return ResourcesParameters.create(
-        getProjectFilesystem(), getSourcePathRuleFinder(), getResources(), getResourcesRoot());
+        getProjectFilesystem(), getActionGraphBuilder(), getResources(), getResourcesRoot());
   }
 
+  /**
+   * This is a little complicated, but goes along the lines of: 1. If the buck config value is
+   * "ignore_always", then ignore. 2. If the buck config value is "warn_if_fail", then downgrade a
+   * local "fail" to "warn". 3. Use the local action if available. 4. Use the buck config value if
+   * available. 5. Default to ignore.
+   */
   private static UnusedDependenciesAction getUnusedDependenciesAction(
       @Nullable JavaBuckConfig javaBuckConfig, @Nullable JavaLibraryDescription.CoreArg args) {
-    if (args != null && args.getOnUnusedDependencies().isPresent()) {
-      return args.getOnUnusedDependencies().get();
-    }
-    if (javaBuckConfig == null) {
+    UnusedDependenciesAction localAction =
+        args == null ? null : args.getOnUnusedDependencies().orElse(null);
+
+    UnusedDependenciesConfig configAction =
+        javaBuckConfig == null ? null : javaBuckConfig.getUnusedDependenciesAction();
+
+    if (configAction == UnusedDependenciesConfig.IGNORE_ALWAYS) {
       return UnusedDependenciesAction.IGNORE;
     }
-    return javaBuckConfig.getUnusedDependenciesAction();
+
+    if (configAction == UnusedDependenciesConfig.WARN_IF_FAIL
+        && localAction == UnusedDependenciesAction.FAIL) {
+      return UnusedDependenciesAction.WARN;
+    }
+
+    if (localAction != null) {
+      return localAction;
+    }
+
+    if (configAction == UnusedDependenciesConfig.FAIL) {
+      return UnusedDependenciesAction.FAIL;
+    } else if (configAction == UnusedDependenciesConfig.WARN) {
+      return UnusedDependenciesAction.WARN;
+    } else {
+      return UnusedDependenciesAction.IGNORE;
+    }
   }
 
   @org.immutables.builder.Builder.AccessibleFields
@@ -619,7 +693,6 @@ public abstract class DefaultJavaLibraryRules {
         ToolchainProvider toolchainProvider,
         BuildRuleParams initialParams,
         ActionGraphBuilder graphBuilder,
-        CellPathResolver cellPathResolver,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
         @Nullable JavaLibraryDescription.CoreArg args) {
@@ -629,7 +702,6 @@ public abstract class DefaultJavaLibraryRules {
           toolchainProvider,
           initialParams,
           graphBuilder,
-          cellPathResolver,
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,
@@ -643,7 +715,12 @@ public abstract class DefaultJavaLibraryRules {
             .setResourcesRoot(args.getResourcesRoot())
             .setProguardConfig(args.getProguardConfig())
             .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-            .setDeps(JavaLibraryDeps.newInstance(args, graphBuilder))
+            .setDeps(
+                JavaLibraryDeps.newInstance(
+                    args,
+                    graphBuilder,
+                    initialBuildTarget.getTargetConfiguration(),
+                    configuredCompilerFactory))
             .setTests(args.getTests())
             .setManifestFile(args.getManifestFile())
             .setMavenCoords(args.getMavenCoords())

@@ -3,3 +3,7 @@
 
 [tools]
     javac = @JAVAC@
+
+[cache]
+    dir_mode = readwrite
+    dir = buck-cache

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.ui.tree.renderers;
@@ -32,11 +32,11 @@ public class TextNodeRenderer implements TreeNodeRenderer {
       return new JLabel("");
     }
 
-    Icon icon = AllIcons.Ide.Info_notifications;
+    Icon icon = AllIcons.General.Information;
     if (node.getTextType() == BuckTextNode.TextType.ERROR) {
-      icon = AllIcons.Ide.Error;
+      icon = AllIcons.Ide.FatalError;
     } else if (node.getTextType() == BuckTextNode.TextType.WARNING) {
-      icon = AllIcons.Ide.Warning_notifications;
+      icon = AllIcons.General.Warning;
     }
 
     String message =
@@ -44,7 +44,7 @@ public class TextNodeRenderer implements TreeNodeRenderer {
             + HtmlEscapers.htmlEscaper().escape(node.getText())
             + "</pre></html>";
 
-    JBLabel result = new JBLabel(message, icon, SwingConstants.HORIZONTAL);
+    JBLabel result = new JBLabel(message, icon, SwingConstants.LEFT);
 
     result.setToolTipText("<pre>" + node.getText() + "</pre>");
 

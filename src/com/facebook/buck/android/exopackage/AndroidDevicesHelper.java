@@ -1,23 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.exopackage;
 
 import com.facebook.buck.android.HasInstallableApk;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.Closeable;
@@ -50,7 +50,7 @@ public interface AndroidDevicesHelper extends Closeable {
   void adbCall(String description, AdbDeviceCallable func, boolean quiet)
       throws InterruptedException;
 
-  ImmutableList<AndroidDevice> getDevices(boolean quiet) throws InterruptedException;
+  ImmutableList<AndroidDevice> getDevices(boolean quiet);
 
   /**
    * Install apk on all matching devices. This functions performs device filtering based on three
@@ -65,7 +65,7 @@ public interface AndroidDevicesHelper extends Closeable {
    * be used to install the apk if needed.
    */
   void installApk(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet,
@@ -75,14 +75,14 @@ public interface AndroidDevicesHelper extends Closeable {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
    */
   void uninstallApp(String packageName, boolean shouldKeepUserData) throws InterruptedException;
 
   void startActivity(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)
-      throws IOException, InterruptedException;
+      throws IOException;
 }

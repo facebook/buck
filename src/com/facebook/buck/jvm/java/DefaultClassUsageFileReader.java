@@ -1,26 +1,26 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
@@ -122,13 +122,16 @@ class DefaultClassUsageFileReader {
       Path cellRootedPath, CellPathResolver cellPathResolver) {
     Preconditions.checkArgument(cellRootedPath.isAbsolute(), "Path must begin with /<cell_name>");
     Iterator<Path> pathIterator = cellRootedPath.iterator();
-    Path cellName = pathIterator.next();
+    Path cellNamePath = pathIterator.next();
     Path relativeToCellRoot = pathIterator.next();
     while (pathIterator.hasNext()) {
       relativeToCellRoot = relativeToCellRoot.resolve(pathIterator.next());
     }
-    return cellPathResolver
-        .getCellPathOrThrow(Optional.of(cellName.toString()))
-        .resolve(relativeToCellRoot);
+    String cellName = cellNamePath.toString();
+    Optional<String> canonicalCellName =
+        cellName.equals(DefaultClassUsageFileWriter.ROOT_CELL_IDENTIFIER)
+            ? Optional.empty()
+            : Optional.of(cellName);
+    return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(relativeToCellRoot);
   }
 }

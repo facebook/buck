@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="netty-tcnative-boringssl-static-2.0.7.Final">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/netty-tcnative/netty-tcnative-boringssl-static-2.0.7.Final.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/netty-tcnative/netty-tcnative-boringssl-static-2.0.7.Final!/" />
+    </SOURCES>
+  </library>
+</component>

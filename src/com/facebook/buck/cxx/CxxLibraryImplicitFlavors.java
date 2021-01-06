@@ -1,26 +1,27 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,11 +41,14 @@ public class CxxLibraryImplicitFlavors {
   }
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
-      ImmutableSortedSet<Flavor> argDefaultFlavors, RuleType... types) {
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration,
+      RuleType... types) {
     Optional<Flavor> typeFlavor = CxxLibraryDescription.LIBRARY_TYPE.getFlavor(argDefaultFlavors);
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(toolchainTargetConfiguration);
     Optional<Flavor> platformFlavor =
-        cxxPlatformsProvider.getCxxPlatforms().getFlavor(argDefaultFlavors);
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms().getFlavor(argDefaultFlavors);
 
     LOG.debug("Got arg default type %s platform %s", typeFlavor, platformFlavor);
 
@@ -67,14 +71,18 @@ public class CxxLibraryImplicitFlavors {
         ImmutableSortedSet.of(
             // Default to static if not otherwise specified.
             typeFlavor.orElse(CxxDescriptionEnhancer.STATIC_FLAVOR),
-            platformFlavor.orElse(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor()));
+            platformFlavor.orElse(
+                cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor()));
 
     LOG.debug("Got default flavors %s for rule types %s", result, Arrays.toString(types));
     return result;
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

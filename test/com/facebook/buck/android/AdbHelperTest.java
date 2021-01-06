@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -23,15 +23,15 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
@@ -45,7 +45,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Before;
 import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
 
 public class AdbHelperTest {
 
@@ -54,7 +53,7 @@ public class AdbHelperTest {
   private AdbHelper basicAdbHelper;
 
   @Before
-  public void setUp() throws CmdLineException {
+  public void setUp() {
     testContext = TestExecutionContext.newInstance();
     testConsole = (TestConsole) testContext.getConsole();
     basicAdbHelper = createAdbHelper(createAdbOptions(), new TargetDeviceOptions());
@@ -72,8 +71,8 @@ public class AdbHelperTest {
     return device;
   }
 
-  private AdbHelper createAdbHelper(AdbOptions adbOptions, TargetDeviceOptions targetDeviceOptions)
-      throws CmdLineException {
+  private AdbHelper createAdbHelper(
+      AdbOptions adbOptions, TargetDeviceOptions targetDeviceOptions) {
     return createAdbHelper(testContext, adbOptions, targetDeviceOptions);
   }
 
@@ -118,7 +117,7 @@ public class AdbHelperTest {
   }
 
   @Test
-  public void testEmulatorAddsGenymotionDevices() throws Throwable {
+  public void testEmulatorAddsGenymotionDevices() {
     AdbHelper adbHelper =
         createAdbHelper(createAdbOptions(), new TargetDeviceOptions(true, false, Optional.empty()));
 
@@ -136,7 +135,7 @@ public class AdbHelperTest {
   }
 
   @Test
-  public void testGenymotionIsntARealDevice() throws Throwable {
+  public void testGenymotionIsntARealDevice() {
     AdbHelper adbHelper =
         createAdbHelper(createAdbOptions(), new TargetDeviceOptions(false, true, Optional.empty()));
 
@@ -158,7 +157,7 @@ public class AdbHelperTest {
    * they all appear in resulting list.
    */
   @Test
-  public void testDeviceFilterMultipleDevices() throws CmdLineException {
+  public void testDeviceFilterMultipleDevices() {
     IDevice[] devices =
         new IDevice[] {
           createEmulator("1", IDevice.DeviceState.ONLINE),
@@ -179,7 +178,7 @@ public class AdbHelperTest {
 
   /** Verify that when emulator-only mode is enabled only emulators appear in result. */
   @Test
-  public void testDeviceFilterEmulator() throws CmdLineException {
+  public void testDeviceFilterEmulator() {
     AdbHelper myAdbHelper =
         createAdbHelper(createAdbOptions(), new TargetDeviceOptions(true, false, Optional.empty()));
 
@@ -197,7 +196,7 @@ public class AdbHelperTest {
 
   /** Verify that when real-device-only mode is enabled only real devices appear in result. */
   @Test
-  public void testDeviceFilterRealDevices() throws CmdLineException {
+  public void testDeviceFilterRealDevices() {
     AdbHelper myAdbHelper =
         createAdbHelper(createAdbOptions(), new TargetDeviceOptions(false, true, Optional.empty()));
 
@@ -215,7 +214,7 @@ public class AdbHelperTest {
 
   /** Verify that filtering by serial number works. */
   @Test
-  public void testDeviceFilterBySerial() throws CmdLineException {
+  public void testDeviceFilterBySerial() {
     IDevice[] devices =
         new IDevice[] {
           createRealDevice("1", IDevice.DeviceState.ONLINE),
@@ -238,7 +237,7 @@ public class AdbHelperTest {
 
   /** Verify that filtering by environment variable works. */
   @Test
-  public void whenSerialNumberSetInEnvironmentThenCorrectDeviceFound() throws CmdLineException {
+  public void whenSerialNumberSetInEnvironmentThenCorrectDeviceFound() {
     IDevice[] devices =
         new IDevice[] {
           createRealDevice("1", IDevice.DeviceState.ONLINE),
@@ -265,7 +264,7 @@ public class AdbHelperTest {
 
   /** Verify that if no devices match filters null is returned. */
   @Test
-  public void testDeviceFilterNoMatchingDevices() throws CmdLineException {
+  public void testDeviceFilterNoMatchingDevices() {
     IDevice[] devices =
         new IDevice[] {
           createRealDevice("1", IDevice.DeviceState.ONLINE),
@@ -284,7 +283,7 @@ public class AdbHelperTest {
 
   /** Verify that different combinations of arguments work correctly. */
   @Test
-  public void testDeviceFilterCombos() throws CmdLineException {
+  public void testDeviceFilterCombos() {
     TestDevice realDevice1 = createRealDevice("1", IDevice.DeviceState.ONLINE);
     TestDevice realDevice2 = createRealDevice("2", IDevice.DeviceState.ONLINE);
     TestDevice emulator1 = createEmulator("3", IDevice.DeviceState.ONLINE);
@@ -412,8 +411,7 @@ public class AdbHelperTest {
         ImmutableList.of()) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
-        return deviceList
-            .stream()
+        return deviceList.stream()
             .map(
                 id ->
                     (AndroidDevice)

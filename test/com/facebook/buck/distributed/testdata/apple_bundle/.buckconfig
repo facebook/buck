@@ -1,8 +1,0 @@
-[cxx]
-  default_platform = iphonesimulator-x86_64
-  cflags = -g
-[apple]
-  default_debug_info_format_for_binaries = NONE
-  default_debug_info_format_for_libraries = NONE
-  default_debug_info_format_for_tests = NONE
-  iphonesimulator_target_sdk_version = 10.0

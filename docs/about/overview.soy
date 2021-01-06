@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace buck.overview}
 
 /***/
@@ -18,7 +34,7 @@
     A <strong><em>{call buck.concept_link}{param name: 'build rule' /}{param page: 'build_rule' /}{/call}</em></strong> describes 
     how to produce an output file from a set of input files. Most build rules
     are specific to a particular language or platform. For example, you would use 
-    the {call buck.ruleLink}{param name : 'cxx_binary' /}{/call} rule to
+    the {call buck.cxx_binary /} rule to
     create a C++ binary, but you would use the {call buck.ruleLink}{param name : 'android_binary' /}{/call} rule to 
     create an Android APK.
   </li>
@@ -83,7 +99,7 @@
 
     <p>
       The root of a Buck cell contains a global configuration file
-      called <strong><code>{call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig' /}{/call}</code></strong>.
+      called <strong><code>{call buck.buckconfig_link /}</code></strong>.
       Note that although the cell root should contain a <code>.buckconfig</code>, the
       presence of a <code>.buckconfig</code> file doesn't in itself 
       define a cell. Rather, <em>the cells involved in a build are defined
@@ -103,13 +119,12 @@
 
     <p>
       The <code>.buckconfig</code> for the project specifies the cells
-      that constitute the Buck project. Specifically, these cells are
-      specified in the <code>[repositories]</code> section of 
-      the <code>.buckconfig</code>. Note that the directory tree rooted at 
-      this <code>.buckconfig</code> is automatically considered a cell
-      by Buck; in other words, the project's <code>.buckconfig</code> doesn't 
-      need to specify the project cell explicitly&mdash;although it is a 
-      good practice to do so.
+      that constitute the Buck project. Specifically, these cells are specified in 
+      the {call buckconfig.repositories /} section of the <code>.buckconfig</code>. 
+      Note that the directory tree rooted at this <code>.buckconfig</code> is 
+      automatically considered a cell by Buck; in other words, the 
+      project's <code>.buckconfig</code> doesn't need to specify the project 
+      cell explicitly&mdash;although it is a good practice to do so.
     </p>
   </li>
 

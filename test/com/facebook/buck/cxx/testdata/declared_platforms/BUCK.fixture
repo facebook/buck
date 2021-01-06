@@ -17,3 +17,27 @@ cxx_library(
         "bar.h",
     ],
 )
+
+cxx_binary(
+    name = "defaults",
+    srcs = [
+        "simple.cpp",
+    ],
+    defaults = {
+        "platform": "my-favorite-platform",
+    },
+    deps = [
+        ":library",
+    ],
+)
+
+cxx_binary(
+    name = "default_platform",
+    srcs = [
+        "simple.cpp",
+    ],
+    default_platform = "my-favorite-platform",
+    deps = [
+        ":library",
+    ],
+)

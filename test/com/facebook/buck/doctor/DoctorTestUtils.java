@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -36,10 +36,10 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 
 final class DoctorTestUtils {
@@ -48,7 +48,7 @@ final class DoctorTestUtils {
 
   private static final String WATCHMAN_DIAG_COMMAND = "watchman-diag";
 
-  static DefectSubmitResult createDefectReport(
+  static DefectReporter.DefectSubmitResult createDefectReport(
       ProjectWorkspace workspace,
       ImmutableSet<BuildLogEntry> buildLogEntries,
       UserInput userInput,
@@ -104,37 +104,38 @@ final class DoctorTestUtils {
 
   static DoctorConfig createDoctorConfig(
       int port, String extraInfo, DoctorProtocolVersion version) {
+    return createDoctorConfig(port, extraInfo, version, "");
+  }
+
+  static DoctorConfig createDoctorConfig(
+      int port, String extraInfo, DoctorProtocolVersion version, String extraHeaders) {
+    ImmutableMap<String, String> options =
+        new ImmutableMap.Builder<String, String>()
+            .put(DoctorConfig.REPORT_UPLOAD_PATH_FIELD, DEFAULT_REPORT_UPLOAD_PATH)
+            .put(DoctorConfig.PROTOCOL_VERSION_FIELD, version.name())
+            .put(DoctorConfig.ENDPOINT_URL_FIELD, "http://localhost:" + port)
+            .put("slb_server_pool", "http://localhost:" + port)
+            .put(DoctorConfig.REPORT_EXTRA_INFO_COMMAND_FIELD, extraInfo)
+            .put(DoctorConfig.ENDPOINT_EXTRA_HEADERS_FIELD, extraHeaders)
+            .build();
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    DoctorConfig.DOCTOR_SECTION,
-                    ImmutableMap.of(
-                        DoctorConfig.REPORT_UPLOAD_PATH_FIELD,
-                        DEFAULT_REPORT_UPLOAD_PATH,
-                        DoctorConfig.PROTOCOL_VERSION_FIELD,
-                        version.name(),
-                        DoctorConfig.ENDPOINT_URL_FIELD,
-                        "http://localhost:" + port,
-                        "slb_server_pool",
-                        "http://localhost:" + port,
-                        DoctorConfig.REPORT_EXTRA_INFO_COMMAND_FIELD,
-                        extraInfo)))
+            .setSections(ImmutableMap.of(DoctorConfig.DOCTOR_SECTION, options))
             .build();
     return DoctorConfig.of(buckConfig);
   }
 
   public static class CapturingDefectReporter implements DefectReporter {
-    private DefectReport defectReport = null;
+    private DefectReporter.DefectReport defectReport = null;
 
-    DefectReport getDefectReport() {
-      return Preconditions.checkNotNull(defectReport);
+    DefectReporter.DefectReport getDefectReport() {
+      return Objects.requireNonNull(defectReport);
     }
 
     @Override
     public DefectSubmitResult submitReport(DefectReport defectReport) {
       this.defectReport = defectReport;
-      return DefectSubmitResult.builder()
+      return ImmutableDefectSubmitResult.builder()
           .setRequestProtocol(DoctorProtocolVersion.SIMPLE)
           .setReportSubmitLocation("")
           .build();

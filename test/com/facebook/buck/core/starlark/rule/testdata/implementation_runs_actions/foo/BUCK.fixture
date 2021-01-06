@@ -1,0 +1,46 @@
+load("//:defs.bzl", "invalid_types", "my_rule", "test_script")
+
+test_script(name = "exe")
+
+my_rule(
+    name = "returning_zero",
+    srcs = [":exe"],
+    exit_code = 0,
+    use_env = False,
+)
+
+my_rule(
+    name = "returning_one",
+    srcs = [":exe"],
+    exit_code = 1,
+    use_env = False,
+)
+
+my_rule(
+    name = "returning_zero_with_env",
+    srcs = [":exe"],
+    exit_code = 0,
+    use_env = True,
+)
+
+my_rule(
+    name = "returning_one_with_env",
+    srcs = [":exe"],
+    exit_code = 1,
+    use_env = True,
+)
+
+invalid_types(
+    name = "invalid_arguments",
+    type = "arguments",
+)
+
+invalid_types(
+    name = "invalid_env",
+    type = "env",
+)
+
+invalid_types(
+    name = "invalid_zeroargs",
+    type = "zeroargs",
+)

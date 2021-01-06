@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python.toolchain.impl;
@@ -98,9 +98,9 @@ public class PythonInterpreterFromConfigTest {
   }
 
   @Test
-  public void whenPython2OnPathThenItIsUsed() throws IOException {
+  public void whenPython3OnPathThenItIsUsed() throws IOException {
     temporaryFolder.newExecutableFile("python");
-    Path python2 = temporaryFolder.newExecutableFile("python2");
+    Path python3 = temporaryFolder.newExecutableFile("python3");
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder()
@@ -114,8 +114,8 @@ public class PythonInterpreterFromConfigTest {
         new PythonInterpreterFromConfig(config, new ExecutableFinder());
 
     assertEquals(
-        "Should return path to python2.",
-        python2.toAbsolutePath(),
+        "Should return path to python3.",
+        python3.toAbsolutePath(),
         pythonInterpreter.getPythonInterpreterPath(config.getDefaultSection()));
   }
 
@@ -141,8 +141,8 @@ public class PythonInterpreterFromConfigTest {
 
   @Test
   public void whenMultiplePythonExecutablesOnPathFirstIsUsed() throws IOException {
-    Path pythonA = temporaryFolder.newExecutableFile("python2");
-    temporaryFolder2.newExecutableFile("python2");
+    Path pythonA = temporaryFolder.newExecutableFile("python3");
+    temporaryFolder2.newExecutableFile("python3");
     String path =
         temporaryFolder.getRoot().toAbsolutePath()
             + File.pathSeparator

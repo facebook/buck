@@ -1,21 +1,22 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +30,8 @@ import javax.annotation.Nullable;
  * as well as its estimated dex weight.
  */
 public interface DexWithClasses {
+  @Nullable
+  BuildTarget getSourceBuildTarget();
 
   /** @return path from the project root where the {@code .dex.jar} file can be found. */
   SourcePath getSourcePathToDexFile();
@@ -57,11 +60,17 @@ public interface DexWithClasses {
           }
 
           SourcePath sourcePathToDex = preDex.getSourcePathToDex();
-          ImmutableSet<String> classNames = preDex.getClassNames().keySet();
+          ImmutableSet<String> classNames = preDex.getClassNamesToHashes().keySet();
           Sha1HashCode classesHash =
-              Sha1HashCode.fromHashCode(Hashing.combineOrdered(preDex.getClassNames().values()));
+              Sha1HashCode.fromHashCode(
+                  Hashing.combineOrdered(preDex.getClassNamesToHashes().values()));
           int weightEstimate = preDex.getWeightEstimate();
           return new DexWithClasses() {
+            @Override
+            public BuildTarget getSourceBuildTarget() {
+              return preDex.getBuildTarget();
+            }
+
             @Override
             public SourcePath getSourcePathToDexFile() {
               return sourcePathToDex;
@@ -86,5 +95,5 @@ public interface DexWithClasses {
       };
 
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
-      (o1, o2) -> o1.getSourcePathToDexFile().compareTo(o2.getSourcePathToDexFile());
+      Comparator.comparing(DexWithClasses::getSourcePathToDexFile);
 }

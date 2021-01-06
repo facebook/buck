@@ -1,23 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -28,20 +30,19 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -87,7 +88,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableSet.Builder<SourcePath> outDirsBuilder = ImmutableSet.builder();
     for (HaskellHaddockInput i : inputs) {
       ifacesBuilder.addAll(i.getInterfaces());
-      outDirsBuilder.addAll(i.getOutputDirs());
+      outDirsBuilder.addAll(i.getHaddockOutputDirs());
     }
     ImmutableSet<SourcePath> ifaces = ifacesBuilder.build();
     ImmutableSet<SourcePath> outDirs = outDirsBuilder.build();
@@ -114,6 +115,10 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
+  private Path getHaddockOuptutDir() {
+    return getOutputDir().resolve("ALL");
+  }
+
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
@@ -123,9 +128,8 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     String name = getBuildTarget().getShortName();
-    Path dir = getOutputDir();
 
     LOG.info(name);
 
@@ -134,20 +138,21 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
+                context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())));
     steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context));
 
     // Copy the generated data from dependencies into our output directory
+    Path haddockOutputDir = getHaddockOuptutDir();
     for (SourcePath odir : outputDirs) {
       steps.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
               resolver.getRelativePath(odir),
-              dir,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+              haddockOutputDir,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    buildableContext.recordArtifact(dir);
+    buildableContext.recordArtifact(getOutputDir());
     return steps.build();
   }
 
@@ -155,7 +160,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     private BuildContext buildContext;
 
-    public HaddockStep(Path rootPath, BuildContext buildContext) {
+    public HaddockStep(AbsPath rootPath, BuildContext buildContext) {
       super(rootPath);
       this.buildContext = buildContext;
     }
@@ -167,7 +172,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       return ImmutableList.<String>builder()
           .addAll(haddockTool.getCommandPrefix(resolver))
           .addAll(flags)
@@ -179,7 +184,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                   RichStream.from(interfaces)
                       .map(sp -> resolver.getAbsolutePath(sp).toString())
                       .toImmutableList()))
-          .add("-o", getOutputDir().resolve("HTML").toString())
+          .add("-o", getHaddockOuptutDir().toString())
           .build();
     }
 

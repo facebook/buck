@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "rulekey",
@@ -17,12 +17,12 @@ java_test(
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
-        "//test/com/facebook/buck/rules:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
-        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",
     ],
 )

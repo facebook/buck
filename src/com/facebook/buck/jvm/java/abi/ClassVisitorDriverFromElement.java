@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
@@ -20,11 +20,11 @@ import com.facebook.buck.jvm.java.abi.source.api.CannotInferException;
 import com.facebook.buck.jvm.java.lang.model.BridgeMethod;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.jvm.java.lang.model.MoreElements;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.processing.Messager;
 import javax.lang.model.SourceVersion;
@@ -89,32 +89,6 @@ class ClassVisitorDriverFromElement {
     visitor.visitEnd();
   }
 
-  /** Gets the class file version corresponding to the given source version constant. */
-  private static int sourceVersionToClassFileVersion(SourceVersion version) {
-    switch (version) {
-      case RELEASE_0:
-        return Opcodes.V1_1; // JVMS8 4.1: 1.0 and 1.1 both support version 45.3 (Opcodes.V1_1)
-      case RELEASE_1:
-        return Opcodes.V1_1;
-      case RELEASE_2:
-        return Opcodes.V1_2;
-      case RELEASE_3:
-        return Opcodes.V1_3;
-      case RELEASE_4:
-        return Opcodes.V1_4;
-      case RELEASE_5:
-        return Opcodes.V1_5;
-      case RELEASE_6:
-        return Opcodes.V1_6;
-      case RELEASE_7:
-        return Opcodes.V1_7;
-      case RELEASE_8:
-        return Opcodes.V1_8;
-      default:
-        throw new IllegalArgumentException(String.format("Unexpected source version: %s", version));
-    }
-  }
-
   private interface VisitorWithAnnotations {
     AnnotationVisitor visitAnnotation(String desc, boolean visible);
   }
@@ -125,7 +99,7 @@ class ClassVisitorDriverFromElement {
     @Override
     public Void visitPackage(PackageElement e, ClassVisitor classVisitor) {
       classVisitor.visit(
-          sourceVersionToClassFileVersion(targetVersion),
+          SourceVersionUtils.sourceVersionToClassFileVersion(targetVersion),
           Opcodes.ACC_SYNTHETIC | Opcodes.ACC_ABSTRACT | Opcodes.ACC_INTERFACE,
           e.getQualifiedName().toString().replace('.', '/') + "/package-info",
           null,
@@ -153,22 +127,29 @@ class ClassVisitorDriverFromElement {
 
       TypeMirror superclass = e.getSuperclass();
       if (superclass.getKind() == TypeKind.NONE) {
-        superclass =
-            Preconditions.checkNotNull(elements.getTypeElement("java.lang.Object")).asType();
+        superclass = Objects.requireNonNull(elements.getTypeElement("java.lang.Object")).asType();
       }
 
-      int classFileVersion = sourceVersionToClassFileVersion(targetVersion);
+      int classFileVersion = SourceVersionUtils.sourceVersionToClassFileVersion(targetVersion);
       visitor.visit(
           classFileVersion,
           accessFlagsUtils.getAccessFlagsForClassNode(e),
           descriptorFactory.getInternalName(e),
           signatureFactory.getSignature(e),
           descriptorFactory.getInternalName(superclass),
-          e.getInterfaces()
-              .stream()
+          e.getInterfaces().stream()
               .map(descriptorFactory::getInternalName)
               .toArray(size -> new String[size]));
       classVisitorStarted = true;
+
+      // Handle nests in Java 11+. See JEP 181 (https://openjdk.java.net/jeps/181) for details.
+      if (classFileVersion >= Opcodes.V11) {
+        if (e.getNestingKind().isNested()) {
+          visitNestHost(e, visitor);
+        } else {
+          visitNestMembers(e, visitor);
+        }
+      }
 
       visitAnnotations(e, visitor::visitAnnotation);
 
@@ -187,6 +168,27 @@ class ClassVisitorDriverFromElement {
       innerClassesTable.reportInnerClassReferences(visitor);
 
       return null;
+    }
+
+    private void visitNestHost(TypeElement e, ClassVisitor visitor) {
+      TypeElement nestHost = e;
+      while (nestHost.getNestingKind().isNested()) {
+        nestHost = (TypeElement) nestHost.getEnclosingElement();
+      }
+
+      visitor.visitNestHost(descriptorFactory.getInternalName(nestHost));
+    }
+
+    private void visitNestMembers(TypeElement e, ClassVisitor visitor) {
+      if (e.getNestingKind().isNested()) {
+        visitor.visitNestMember(descriptorFactory.getInternalName(e));
+      }
+
+      for (Element child : e.getEnclosedElements()) {
+        if (child.getKind().isClass() || child.getKind().isInterface()) {
+          visitNestMembers((TypeElement) child, visitor);
+        }
+      }
     }
 
     private void generateBridges(
@@ -224,9 +226,7 @@ class ClassVisitorDriverFromElement {
         innerClassesTable.addTypeReferences(toErasure);
 
         String[] exceptions =
-            toErasure
-                .getThrownTypes()
-                .stream()
+            toErasure.getThrownTypes().stream()
                 .map(descriptorFactory::getInternalName)
                 .toArray(String[]::new);
 
@@ -275,8 +275,7 @@ class ClassVisitorDriverFromElement {
       }
 
       String[] exceptions =
-          e.getThrownTypes()
-              .stream()
+          e.getThrownTypes().stream()
               .map(descriptorFactory::getInternalName)
               .toArray(count -> new String[count]);
 
@@ -288,10 +287,12 @@ class ClassVisitorDriverFromElement {
               signatureFactory.getSignature(e),
               exceptions);
 
-      visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
-      visitDefaultValue(e, methodVisitor);
-      visitAnnotations(e, methodVisitor::visitAnnotation);
-      methodVisitor.visitEnd();
+      if (methodVisitor != null) {
+        visitParameters(e.getParameters(), methodVisitor, MoreElements.isInnerClassConstructor(e));
+        visitDefaultValue(e, methodVisitor);
+        visitAnnotations(e, methodVisitor::visitAnnotation);
+        methodVisitor.visitEnd();
+      }
 
       return null;
     }

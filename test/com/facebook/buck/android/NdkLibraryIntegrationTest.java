@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -25,10 +25,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
@@ -53,12 +50,12 @@ public class NdkLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp2 = new TemporaryPaths();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
   }
 
   @Test
-  public void cxxLibraryDep() throws InterruptedException, IOException {
+  public void cxxLibraryDep() throws IOException {
     ProjectWorkspace workspace1 =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(this, "cxx_deps", tmp1);
     workspace1.setUp();
@@ -78,7 +75,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void sourceFilesChangeTargetHash() throws InterruptedException, IOException {
+  public void sourceFilesChangeTargetHash() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
@@ -107,7 +104,7 @@ public class NdkLibraryIntegrationTest {
   }
 
   @Test
-  public void ndkLibraryOwnsItsSources() throws InterruptedException, IOException {
+  public void ndkLibraryOwnsItsSources() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_deps", tmp1);
     workspace.setUp();
@@ -179,12 +176,13 @@ public class NdkLibraryIntegrationTest {
   }
 
   private SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tempLocation)
-      throws IOException, InterruptedException {
+      throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     Path tmpDir = tempLocation.newFolder("symbols_tmp");
     return new SymbolGetter(
-        new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);
+        new DefaultProcessExecutor(new TestConsole()),
+        tmpDir,
+        platform.getObjdump(),
+        new TestActionGraphBuilder().getSourcePathResolver());
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file.downloader.impl;
@@ -27,6 +27,7 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBus;
@@ -62,7 +63,9 @@ public class StackedDownloaderTest {
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
     Downloader downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(), new ToolchainProviderBuilder().build());
+            FakeBuckConfig.builder().build(),
+            new ToolchainProviderBuilder().build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     assertNotNull(downloader);
 
@@ -74,7 +77,9 @@ public class StackedDownloaderTest {
   public void shouldAddOnDiskAndroidReposIfPresentInSdk() throws IOException {
     Downloader downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(), new ToolchainProviderBuilder().build());
+            FakeBuckConfig.builder().build(),
+            new ToolchainProviderBuilder().build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     for (Downloader seen : downloaders) {
@@ -93,7 +98,10 @@ public class StackedDownloaderTest {
             .withToolchain(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.of(sdkRoot))
             .build();
     downloader =
-        StackedDownloader.createFromConfig(FakeBuckConfig.builder().build(), toolchainProvider);
+        StackedDownloader.createFromConfig(
+            FakeBuckConfig.builder().build(),
+            toolchainProvider,
+            UnconfiguredTargetConfiguration.INSTANCE);
     downloaders = unpackDownloaders(downloader);
 
     int count = 0;
@@ -127,7 +135,10 @@ public class StackedDownloaderTest {
             .build();
 
     Downloader downloader =
-        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
+        StackedDownloader.createFromConfig(
+            config,
+            new ToolchainProviderBuilder().build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     List<Downloader> downloaders = unpackDownloaders(downloader);
     boolean seenRemote = false;
@@ -162,7 +173,10 @@ public class StackedDownloaderTest {
             .build();
 
     Downloader downloader =
-        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
+        StackedDownloader.createFromConfig(
+            config,
+            new ToolchainProviderBuilder().build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(downloader, includes(RemoteMavenDownloader.class));
   }
 
@@ -220,7 +234,8 @@ public class StackedDownloaderTest {
                 + "as a local Maven repository as configured",
             pathNotExist));
 
-    StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
+    StackedDownloader.createFromConfig(
+        config, new ToolchainProviderBuilder().build(), UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test
@@ -238,7 +253,8 @@ public class StackedDownloaderTest {
                 + "as a local Maven repository as configured",
             pathNotExist));
 
-    StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
+    StackedDownloader.createFromConfig(
+        config, new ToolchainProviderBuilder().build(), UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test
@@ -247,7 +263,10 @@ public class StackedDownloaderTest {
         FakeBuckConfig.builder().setSections("[download]", "max_number_of_retries = 1").build();
 
     Downloader downloader =
-        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
+        StackedDownloader.createFromConfig(
+            config,
+            new ToolchainProviderBuilder().build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(downloader, includes(RetryingDownloader.class));
   }
 
@@ -255,7 +274,10 @@ public class StackedDownloaderTest {
   public void shouldNotUseRetryingDownloaderIfMaxNumberOfRetriesIsSet() {
     BuckConfig config = FakeBuckConfig.builder().build();
     Downloader downloader =
-        StackedDownloader.createFromConfig(config, new ToolchainProviderBuilder().build());
+        StackedDownloader.createFromConfig(
+            config,
+            new ToolchainProviderBuilder().build(),
+            UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(downloader, not(includes(RetryingDownloader.class)));
   }
 

@@ -1,0 +1,24 @@
+apple_bundle(
+    name = "app",
+    binary = ":binary",
+    default_platform = "iphonesimulator-x86_64",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = ["//lib:framework"],
+)
+
+apple_binary(
+    name = "binary",
+    srcs = [
+        "main.m",
+    ],
+    preprocessor_flags = ["-DFOO=$(location :gen)"],
+    deps = ["//lib:lib#shared"],
+)
+
+genrule(
+    name = "gen",
+    cmd = "echo foo > $OUT",
+    out = "gen",
+    srcs = ["//lib:framework"],
+)

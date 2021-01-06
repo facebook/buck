@@ -1,0 +1,13 @@
+cxx_binary(
+    name = "simple",
+    srcs = [
+        "simple.cpp",
+    ],
+    link_style = "static",
+)
+
+genrule(
+    name = "exe-out",
+    out = "simple.exe",
+    cmd_exe = "copy $(location //simple:simple#windows-x86_64) %OUT%",
+)

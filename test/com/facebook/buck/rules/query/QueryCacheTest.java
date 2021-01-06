@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.query;
@@ -22,25 +22,27 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.parser.BuildTargetPatternParser;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -49,13 +51,30 @@ public class QueryCacheTest {
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 
   @Test
-  public void cacheQueryResults() throws ExecutionException, QueryException {
-    Query q1 = Query.of("deps(:a) union deps(:c) except (deps(:a) intersect classpath(deps(:f)))");
-    Query q2 = Query.of("deps(:a) ^ classpath(deps(:f))");
-    Query q3 = Query.of("kind(binary, deps(:a))");
-    Query q4 = Query.of("attrfilter(deps, :e, set(:b :c :f :g))");
-    Query q5 = Query.of("kind(library, deps(:a) + deps(:c))");
-    Query q6 = Query.of("deps(:c)");
+  public void cacheQueryResults() throws QueryException {
+    Query q1 =
+        Query.of(
+            "deps(:a) union deps(:c) except (deps(:a) intersect classpath(deps(:f)))",
+            UnconfiguredTargetConfiguration.INSTANCE,
+            BaseName.ROOT);
+    Query q2 =
+        Query.of(
+            "deps(:a) ^ classpath(deps(:f))",
+            UnconfiguredTargetConfiguration.INSTANCE,
+            BaseName.ROOT);
+    Query q3 =
+        Query.of("kind(binary, deps(:a))", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT);
+    Query q4 =
+        Query.of(
+            "attrfilter(deps, :e, set(:b :c :f :g))",
+            UnconfiguredTargetConfiguration.INSTANCE,
+            BaseName.ROOT);
+    Query q5 =
+        Query.of(
+            "kind(library, deps(:a) + deps(:c))",
+            UnconfiguredTargetConfiguration.INSTANCE,
+            BaseName.ROOT);
+    Query q6 = Query.of("deps(:c)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT);
 
     BuildTarget foo = BuildTargetFactory.newInstance("//:foo");
     BuildTarget bar = BuildTargetFactory.newInstance("//:bar");
@@ -107,9 +126,11 @@ public class QueryCacheTest {
             Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
-            BuildTargetPatternParser.forBaseName(targetA.getBaseName()),
-            ImmutableSet.of());
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            targetA.getBaseName(),
+            ImmutableSet.of(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     QueryCache cache = new QueryCache();
 
@@ -137,8 +158,9 @@ public class QueryCacheTest {
   }
 
   @Test
-  public void dynamicDeps() throws ExecutionException, QueryException {
-    Query declared = Query.of("$declared_deps");
+  public void dynamicDeps() throws QueryException {
+    Query declared =
+        Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT);
 
     BuildTarget fooTarget = BuildTargetFactory.newInstance("//:foo");
     BuildTarget barTarget = BuildTargetFactory.newInstance("//:bar");
@@ -165,24 +187,30 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetB).build());
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
 
     GraphEnhancementQueryEnvironment fooEnv =
         new GraphEnhancementQueryEnvironment(
             Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
-            BuildTargetPatternParser.forBaseName(fooTarget.getBaseName()),
-            foo.getDeclaredDeps());
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
+            unconfiguredBuildTargetFactory,
+            fooTarget.getBaseName(),
+            foo.getDeclaredDeps(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     GraphEnhancementQueryEnvironment barEnv =
         new GraphEnhancementQueryEnvironment(
             Optional.of(graphBuilder),
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
-            TestCellPathResolver.get(new FakeProjectFilesystem()),
-            BuildTargetPatternParser.forBaseName(barTarget.getBaseName()),
-            bar.getDeclaredDeps());
+            TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
+            unconfiguredBuildTargetFactory,
+            barTarget.getBaseName(),
+            bar.getDeclaredDeps(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     QueryCache cache = new QueryCache();
 

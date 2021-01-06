@@ -1,0 +1,8 @@
+prebuilt_jar(
+    name = "vavr",
+    binary_jar = "vavr-0.9.2.jar",
+    source_jar = "vavr-0.9.2-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.support.exopackage;
@@ -31,11 +31,15 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.Process;
 import android.view.View;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 /** Support and Utility Functions for Exopackage, including hotswap helper functions */
 public class ExoHelper {
+
+  private static boolean sIsHotswapSetup = false;
+
   private static final List<OnModulesChangedCallback> sCallbacks =
       new ArrayList<OnModulesChangedCallback>();
 
@@ -236,10 +240,16 @@ public class ExoHelper {
    * "modules" exopackage mode, and the initial call to {@link
    * ExopackageDexLoader#loadExopackageJars(Context, boolean)} passed true as the second arg
    */
-  public static void setupHotswap(Application application) {
-    application.registerReceiver(
-        new ModularDexChangedReceiver(),
-        ModularDexChangedReceiver.getIntentFilter(application.getPackageName()));
+  public static synchronized void setupHotswap(Application application) {
+    if (!sIsHotswapSetup) {
+      final File dexOptDir = application.getDir("exopackage_modular_dex_opt", Context.MODE_PRIVATE);
+      DelegatingClassLoader.getInstance().setDexOptDir(dexOptDir);
+      application.registerReceiver(
+          new ModularDexChangedReceiver(),
+          ModularDexChangedReceiver.getIntentFilter(application.getPackageName()));
+
+      sIsHotswapSetup = true;
+    }
   }
 
   /**
@@ -269,10 +279,10 @@ public class ExoHelper {
    * Trigger all callbacks which have registered to receive notifications when the module
    * definitions have changed on disk
    */
-  static void triggerCallbacks() {
+  static void triggerCallbacks(List<String> moduleClasses) {
     synchronized (sCallbacks) {
       for (OnModulesChangedCallback mCallback : sCallbacks) {
-        mCallback.onModulesChanged();
+        mCallback.onModulesChanged(moduleClasses);
       }
     }
   }

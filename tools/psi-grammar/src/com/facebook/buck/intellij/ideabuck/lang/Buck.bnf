@@ -1,0 +1,356 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+{
+  parserClass="com.facebook.buck.intellij.ideabuck.lang.BuckParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Buck"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.facebook.buck.intellij.ideabuck.lang.psi"
+  psiImplPackage="com.facebook.buck.intellij.ideabuck.lang.psi.impl"
+
+  elementTypeHolderClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes"
+  elementTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckElementType"
+  tokenTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckTokenType"
+
+  psiImplUtilClass="com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckPsiImplUtil"
+
+  tokens = [
+    NONE = 'None'
+    BOOLEAN = 'regexp:(True|False)'
+
+    COMMA = ','
+    EQUAL = '='
+    DOUBLE_EQUAL = '=='
+    NOT_EQUAL = '!='
+    GREATER_THAN = '>'
+    LESS_THAN = '<'
+    GREATER_EQUAL = '>='
+    LESS_EQUAL = '<='
+    UPDATE_OPS = 'regexp:\+=|-=|\*=|/=|//=|%=|&=|\|=|\^=|<<=|>>='
+    BIT_OR = '|'
+    BIT_AND = '&'
+    BIT_XOR = '^'
+
+    SLASH = '\'
+    COLON = ':'
+    PLUS = '+'
+    MINUS = '-'
+    DIVISION = '/'
+    DIVISION_INT = '//'
+    DOT = '.'
+    SEMI_COLON = ';'
+    STAR = '*'
+    DOUBLE_STAR = '**'
+
+    LINE_COMMENT = 'regexp:#[^\r\n]*'
+
+    TRIPLE_APOSTROPHED_STRING="regexp:'''.*(''')?"
+    TRIPLE_APOSTROPHED_RAW_STRING="regexp:r'''.*(''')?"
+    APOSTROPHED_STRING="regexp:'([^\\'\r\n]|\\.)*'?"
+    APOSTROPHED_RAW_STRING="regexp:r'[^\r\n']*'?"
+
+    TRIPLE_QUOTED_STRING='regexp:""".*(""")?'
+    TRIPLE_QUOTED_RAW_STRING='regexp:r""".*(""")?'
+    QUOTED_STRING='regexp:"([^\\"\r\n]|\\.)*"?'
+    QUOTED_RAW_STRING='regexp:r"[^\r\n"]*"?'
+
+    // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
+    // "The following tokens are keywords and may not be used as identifiers:"
+    AND = 'and'
+    BREAK = 'break'
+    CONTINUE = 'continue'
+    DEF = 'def'
+    ELIF = 'elif'
+    ELSE = 'else'
+    FOR = 'for'
+    IF = 'if'
+    IN = 'in'
+    LOAD = 'load'
+    NOT = 'not'
+    OR = 'or'
+    PASS = 'pass'
+    RETURN = 'return'
+
+    // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
+    // "The tokens below also may not be used as identifiers
+    // although they do not appear in the grammar;
+    // they are reserved as possible future keywords:"
+    AS = 'as'
+    ASSERT = 'assert'
+    CLASS = 'class'
+    DEL = 'del'
+    EXCEPT = 'except'
+    FINALLY = 'finally'
+    FROM = 'from'
+    GLOBAL = 'global'
+    IMPORT = 'import'
+    IS = 'is'
+    LAMBDA = 'lambda'
+    NONLOCAL = 'nonlocal'
+    RAISE = 'raise'
+    TRY = 'try'
+    WHILE = 'while'
+    WITH = 'with'
+    YIELD = 'yield'
+
+    L_PARENTHESES = '('
+    L_BRACKET = '['
+    L_CURLY = '{'
+    R_PARENTHESES = ')'
+    R_BRACKET = ']'
+    R_CURLY = '}'
+    PERCENT = '%'
+
+    HEX_LITERAL = 'regexp:0[xX][0-9A-Fa-f]+'
+    OCTAL_LITERAL = 'regexp:0[oO][0-7]+'
+    DECIMAL_LITERAL = 'regexp:0|([1-9][0-9]*)'
+
+    IDENTIFIER_TOKEN = 'regexp:[a-zA-Z_]([a-zA-Z0-9_])*'
+
+    space = 'regexp:(\s|\\(\n|\r|\r\n))+'
+  ]
+}
+
+buckFile ::= statement*
+
+function_definition ::= 'def' identifier '(' parameter_list ')' ':' suite {
+  mixin = "com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckNamedElementImpl"
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BuckNamedElement"
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
+
+parameter_list ::= [parameter (',' parameter)* ','?]
+parameter ::= '**' identifier | '*' identifier | identifier ['=' simple_expression]
+
+statement ::= simple_statement | compound_statement
+
+simple_statement ::= small_statement (';' small_statement)* ';'?
+
+small_statement ::= (load_call
+                     | expression_statement
+                     | pass_statement
+                     | break_statement
+                     | continue_statement
+                     | return_statement
+                     | assert_statement)
+
+load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
+load_target_argument ::= string
+load_argument ::= [identifier '='] string {
+  mixin = "com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckNamedElementImpl"
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BuckNamedElement"
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
+
+expression_statement ::= expression_list (augment_assignment expression_list | ('=' expression_list)*)
+
+augment_assignment ::= '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' | '**=' | '//='
+
+pass_statement ::= 'pass'
+
+break_statement ::= 'break'
+
+continue_statement ::= 'continue'
+
+return_statement ::= 'return' [expression_list]
+
+assert_statement ::= 'assert' expression [',' expression]
+
+compound_statement ::= if_statement | for_statement | function_definition
+
+if_statement ::= 'if' expression ':' suite ('elif' expression ':' suite)* ['else' ':' suite]
+
+for_statement ::= 'for' simple_expression_list 'in' expression_list ':' suite
+
+suite ::= simple_statement | INDENT statement* DEDENT
+
+expression ::= or_expression [ 'if' or_expression 'else' expression ] {
+  methods = [
+    getStringValue
+  ]
+}
+
+or_expression ::= and_expression ( 'or' and_expression )* {
+  methods = [
+    getStringValue
+  ]
+}
+
+and_expression ::= not_expression ( 'and' not_expression )* {
+  methods = [
+    getStringValue
+  ]
+}
+not_expression ::= 'not' not_expression | comparison_expression {
+  methods = [
+    getStringValue
+  ]
+}
+
+comparison_expression ::= simple_expression [comparison_op simple_expression] {
+  methods = [
+    getStringValue
+  ]
+}
+
+comparison_op ::=  '<' | '>' | '==' | '>=' | '<=' | '<>' | '!=' | 'in' | 'not' 'in'
+
+simple_expression ::= xor_expression ('|' xor_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+
+xor_expression ::= bitwise_and_expression ('^' bitwise_and_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+
+bitwise_and_expression ::= shift_expression ('&' shift_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+
+shift_expression ::= arithmetic_expression (shift_op arithmetic_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+
+shift_op ::= '<<' | '>>'
+
+arithmetic_expression ::= term_expression (arithmetic_op term_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+arithmetic_op ::= '+' | '-'
+
+term_expression ::= factor_expression (term_op factor_expression)* {
+  methods = [
+    getStringValue
+  ]
+}
+term_op ::= '*' | '/' | '%' | '//'
+
+factor_expression ::= factor_unary_op factor_expression | power_expression {
+  methods = [
+    getStringValue
+  ]
+}
+factor_unary_op ::= '+' | '-' | '~'
+
+power_expression ::= atomic_expression expression_trailer* [ '**' factor_expression] {
+  methods = [
+    getStringValue
+  ]
+}
+
+atomic_expression ::= '(' expression_list_or_comprehension ')'
+                    | '[' list_maker ']'
+                    | '{' dict_maker '}'
+                    | identifier | BOOLEAN | integer | NONE | string {
+  methods = [
+    getStringValue
+  ]
+}
+
+list_maker ::= expression_list_or_comprehension
+
+expression_list_or_comprehension ::= [expression ( comprehension_for | (',' expression)* [','] )]
+
+expression_trailer ::= function_trailer | subscript_trailer | dot_trailer
+function_trailer ::= '(' [argument (',' argument)* ','?] ')' {
+  methods = [
+    getName
+    getNamedArgument
+  ]
+}
+subscript_trailer ::= '[' subscript_list ']'
+dot_trailer ::= '.' identifier
+
+// [Python2]: subscriptlist: subscript (',' subscript)* [',']
+subscript_list ::= subscript (',' subscript)* [',']
+
+// [Python2]: subscript: '.' '.' '.' | test | [test] ':' [test] [sliceop]
+// [Python2]: sliceop: ':' [test]
+subscript ::= proper_slice | expression
+proper_slice ::= [slice_lower] ':' [slice_upper] [':' [slice_stride]]
+slice_lower ::= expression
+slice_upper ::= expression
+slice_stride ::= expression
+
+// [Python2]: exprlist: expr (',' expr)* [',']
+simple_expression_list ::= simple_expression (',' simple_expression)* [',']
+
+// [Python2]: testlist: test (',' test)* [',']
+expression_list ::= expression (',' expression)* [',']
+
+dict_maker ::= [dict_entry (comprehension_for | (',' dict_entry)* [','])]
+dict_entry ::= expression ':' expression
+
+argument ::= '**' expression | '*' expression | [identifier '='] expression {
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
+
+comprehension_iter ::= comprehension_for | comprehension_if
+comprehension_for ::= 'for' simple_expression_list 'in' or_expression [comprehension_iter]
+comprehension_if ::= 'if' expression [comprehension_iter]
+
+string ::= APOSTROPHED_STRING
+         | APOSTROPHED_RAW_STRING
+         | TRIPLE_APOSTROPHED_STRING
+         | TRIPLE_APOSTROPHED_RAW_STRING
+         | QUOTED_STRING
+         | QUOTED_RAW_STRING
+         | TRIPLE_QUOTED_STRING
+         | TRIPLE_QUOTED_RAW_STRING {
+  methods = [
+    getInnerText
+    getValue
+    setInnerText
+    setValue
+  ]
+}
+
+integer ::= HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL
+
+identifier ::= IDENTIFIER_TOKEN {
+  mixin = "com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckNamedElementImpl"
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BuckNamedElement"
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}

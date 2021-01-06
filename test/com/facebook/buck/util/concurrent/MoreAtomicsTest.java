@@ -1,23 +1,22 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.concurrent;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
@@ -33,13 +32,26 @@ public class MoreAtomicsTest {
   @Test
   public void testSetMaxLong() {
     AtomicLong atomic = new AtomicLong(0l);
-    boolean result = MoreAtomics.setMax(1l, atomic);
-    assertTrue(result);
+    long result = MoreAtomics.setMaxAndGet(1l, atomic);
+
+    assertEquals(1l, result);
     assertEquals(1l, atomic.get());
 
-    result = MoreAtomics.setMax(0l, atomic);
-    assertFalse(result);
+    result = MoreAtomics.setMaxAndGet(0l, atomic);
+    assertEquals(1l, result);
     assertEquals(1l, atomic.get());
+  }
+
+  @Test
+  public void testSetMinLong() {
+    AtomicLong atomic = new AtomicLong(1l);
+    long result = MoreAtomics.setMinAndGet(0l, atomic);
+    assertEquals(0l, result);
+    assertEquals(0l, atomic.get());
+
+    result = MoreAtomics.setMinAndGet(1l, atomic);
+    assertEquals(0l, result);
+    assertEquals(0l, atomic.get());
   }
 
   @Test
@@ -71,13 +83,13 @@ public class MoreAtomicsTest {
 
     assertEquals(3l, atomic.get());
 
-    // maximum value should be set just once
-    assertEquals(1, successThreeCounter.get());
+    // maximum value should be returned back the same anount of times it was requested
+    assertEquals(threeCount, successThreeCounter.get());
 
     // non-maximum values could be set no more than once; it is possible they are not set at all
     // if greater number gets checked first by concurrent thread
-    assertTrue(successOneCounter.get() <= 1);
-    assertTrue(successTwoCounter.get() <= 1);
+    assertTrue(successOneCounter.get() <= oneCount);
+    assertTrue(successTwoCounter.get() <= twoCount);
   }
 
   private static void runSetMax(
@@ -90,7 +102,7 @@ public class MoreAtomicsTest {
     for (int i = 0; i < count; i++) {
       executor.submit(
           () -> {
-            if (MoreAtomics.setMax(value, atomic)) {
+            if (MoreAtomics.setMaxAndGet(value, atomic) == value) {
               // count number of successful maximum updates
               successCounter.incrementAndGet();
             }

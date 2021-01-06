@@ -1,18 +1,19 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -51,6 +52,11 @@ public class FakeAndroidBuckConfig {
     return this;
   }
 
+  public FakeAndroidBuckConfig setSdkPathSearchOrder(String searchOrder) {
+    androidSection.put("sdk_path_search_order", searchOrder);
+    return this;
+  }
+
   public FakeAndroidBuckConfig setBuildToolsVersion(String buildToolsVersion) {
     androidSection.put("build_tools_version", buildToolsVersion);
     return this;
@@ -63,6 +69,11 @@ public class FakeAndroidBuckConfig {
 
   public FakeAndroidBuckConfig setNdkRepositoryPath(String ndkRepository) {
     ndkSection.put("ndk_repository_path", ndkRepository);
+    return this;
+  }
+
+  public FakeAndroidBuckConfig setNdkSearchOrder(String searchOrder) {
+    ndkSection.put("ndk_search_order", searchOrder);
     return this;
   }
 

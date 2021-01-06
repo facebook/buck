@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.runner;
 
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.IOException;
 import java.net.URL;
@@ -64,7 +65,9 @@ public class FileClassPathRunnerTest {
   }
 
   @Test
-  public void mainThrowsIfNoTestRunnerProperty() throws IOException, ReflectiveOperationException {
+  public void mainThrowsIfNoTestRunnerPropertyOnJava8()
+      throws IOException, ReflectiveOperationException {
+    Assume.assumeTrue(JavaVersion.getMajorVersion() <= 8);
     thrown.expect(IllegalArgumentException.class);
     FileClassPathRunner.main(new String[] {"one"});
   }
@@ -176,25 +179,15 @@ public class FileClassPathRunnerTest {
 
   @Test
   public void getPlatformClassLoaderOnJava8() {
-    Assume.assumeTrue(isJava8());
+    Assume.assumeTrue(JavaVersion.getMajorVersion() <= 8);
     thrown.expect(AssertionError.class);
     FileClassPathRunner.findPlatformClassLoader();
   }
 
   @Test
   public void getPlatformClassLoaderOnJava9Plus() {
-    Assume.assumeTrue(isJava9Plus());
+    Assume.assumeTrue(JavaVersion.getMajorVersion() >= 9);
     ClassLoader loader = FileClassPathRunner.findPlatformClassLoader();
     Assert.assertNotNull(loader);
-  }
-
-  private static boolean isJava8() {
-    String javaVersion = System.getProperty("java.version");
-    return "1.8".equals(javaVersion) || javaVersion.startsWith("1.8.");
-  }
-
-  private static boolean isJava9Plus() {
-    String javaVersion = System.getProperty("java.version");
-    return javaVersion.startsWith("9.") || javaVersion.startsWith("10.");
   }
 }

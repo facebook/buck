@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -20,9 +20,15 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
+import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -32,22 +38,24 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
+import com.facebook.buck.query.QueryException;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.concurrent.FakeListeningExecutorService;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -71,8 +79,12 @@ public class QueryCommandTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
+
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     TestConsole console = new TestConsole();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
@@ -81,7 +93,7 @@ public class QueryCommandTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             workspace.getDestPath().toRealPath().normalize());
-    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
@@ -89,13 +101,14 @@ public class QueryCommandTest {
     queryCommand.outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());
     params =
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            executor.get(),
             console,
             cell,
             artifactCache,
             eventBus,
             FakeBuckConfig.builder().build(),
             Platform.detect(),
-            ImmutableMap.copyOf(System.getenv()),
+            EnvVariablesProvider.getSystemEnv(),
             new FakeJavaPackageFinder(),
             Optional.empty());
 
@@ -104,26 +117,37 @@ public class QueryCommandTest {
     PerBuildState perBuildState =
         new PerBuildStateFactory(
                 typeCoercerFactory,
-                new ConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                new ParserPythonInterpreterProvider(
+                    cell.getRootCell().getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
-                eventBus)
+                eventBus,
+                new ParsingUnconfiguredBuildTargetViewFactory(),
+                params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                params.getParser().getPermState(),
-                executorService,
-                cell,
-                false,
-                SpeculativeParsing.ENABLED);
+                ParsingContext.builder(cell.getRootCell(), executorService)
+                    .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                    .build(),
+                params.getParser().getPermState());
     env =
         new FakeBuckQueryEnvironment(
-            cell,
-            OwnersReport.builder(params.getCell(), params.getParser()),
+            cell.getRootCell(),
+            OwnersReport.builder(
+                params.getCells().getRootCell(),
+                params.getClientWorkingDir(),
+                params.getParser(),
+                perBuildState,
+                Optional.empty()),
             params.getParser(),
             perBuildState,
-            executorService,
             new TargetPatternEvaluator(
-                params.getCell(), params.getBuckConfig(), params.getParser(), false),
+                params.getCells().getRootCell(),
+                params.getClientWorkingDir(),
+                params.getBuckConfig(),
+                params.getParser(),
+                ParsingContext.builder(params.getCells().getRootCell(), executorService).build(),
+                Optional.empty()),
             eventBus,
             typeCoercerFactory);
   }
@@ -134,7 +158,6 @@ public class QueryCommandTest {
         Builder ownersReportBuilder,
         Parser parser,
         PerBuildState parserState,
-        ListeningExecutorService executor,
         TargetPatternEvaluator targetPatternEvaluator,
         BuckEventBus eventBus,
         TypeCoercerFactory typeCoercerFactory) {
@@ -143,7 +166,6 @@ public class QueryCommandTest {
           ownersReportBuilder,
           parser,
           parserState,
-          executor,
           targetPatternEvaluator,
           eventBus,
           typeCoercerFactory);
@@ -187,7 +209,7 @@ public class QueryCommandTest {
     queryCommand.formatAndRunQuery(params, env);
   }
 
-  @Test(expected = HumanReadableException.class)
+  @Test(expected = QueryException.class)
   public void testRunMultiQueryWithIncorrectNumberOfSets() throws Exception {
     queryCommand.setArguments(
         ImmutableList.of(

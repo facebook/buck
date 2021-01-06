@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event;
@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 public abstract class AbstractBuckEvent implements BuckEvent {
 
   private boolean isConfigured;
-  private long timestamp;
+  private long timestampMillis;
   private long nanoTime;
   private long threadUserNanoTime;
   private long threadId;
@@ -41,7 +41,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   protected AbstractBuckEvent(EventKey eventKey) {
     this.isConfigured = false;
-    this.eventKey = Preconditions.checkNotNull(eventKey);
+    this.eventKey = Objects.requireNonNull(eventKey);
   }
 
   /**
@@ -51,9 +51,13 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   @Override
   @VisibleForTesting
   public void configure(
-      long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
+      long timestampMillis,
+      long nanoTime,
+      long threadUserNanoTime,
+      long threadId,
+      BuildId buildId) {
     Preconditions.checkState(!isConfigured, "Events can only be configured once.");
-    this.timestamp = timestamp;
+    this.timestampMillis = timestampMillis;
     this.nanoTime = nanoTime;
     this.threadUserNanoTime = threadUserNanoTime;
     this.threadId = threadId;
@@ -68,9 +72,9 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   @Override
   @JsonView(JsonViews.MachineReadableLog.class)
-  public long getTimestamp() {
+  public long getTimestampMillis() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return timestamp;
+    return timestampMillis;
   }
 
   @Override
@@ -98,7 +102,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   @Override
   public BuildId getBuildId() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return Preconditions.checkNotNull(buildId);
+    return Objects.requireNonNull(buildId);
   }
 
   @Override

@@ -1,44 +1,58 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.util;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
-import com.google.common.collect.ImmutableList;
-import com.intellij.mock.MockVirtualFileSystem;
+import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.registry.Registry;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.testFramework.PlatformTestCase;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.easymock.EasyMock;
 import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-public class BuckCellFinderTest {
+public class BuckCellFinderTest extends PlatformTestCase {
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  File tmpDir;
+  BuckCellSettingsProvider buckCellSettingsProvider;
+  BuckCellManager buckCellManager;
+  BuckTargetLocator buckTargetLocator;
+
+  @Override
+  protected void setUp() throws Exception {
+    Registry.get("ide.mac.touchbar.use").setValue(false);
+    super.setUp();
+    tmpDir = this.createTempDirectory();
+    Project project = getProject();
+    buckCellSettingsProvider = BuckCellSettingsProvider.getInstance(project);
+    buckCellManager = BuckCellManager.getInstance(project);
+    buckTargetLocator = BuckTargetLocator.getInstance(project);
+  }
 
   private Path tmpDir() throws IOException {
-    return tmp.getRoot().getCanonicalFile().toPath();
+    return tmpDir.getCanonicalFile().toPath();
   }
 
   private Path makeTmpDir(Path path) throws IOException {
@@ -65,23 +79,40 @@ public class BuckCellFinderTest {
     return makeTmpFile(tmpDir().resolve(relativePath));
   }
 
-  private BuckCell makeBuckCell(Path path) {
+  private BuckCell makeBuckCell(String name, String path) {
     BuckCell cell = new BuckCell();
-    cell.setRoot(path.toString());
-    cell.setName(path.getFileName().toString());
+    cell.setName(name);
+    cell.setRoot(path);
     return cell;
   }
 
-  private BuckCell makeBuckCell(Path path, String buildfileName) {
-    BuckCell cell = makeBuckCell(path);
+  private BuckCell makeBuckCell(String name, Path path) {
+    return makeBuckCell(name, path.toString());
+  }
+
+  private BuckCell makeBuckCell(String name, Path path, String buildfileName) {
+    BuckCell cell = makeBuckCell(name, path.toString());
     cell.setBuildFileName(buildfileName);
     return cell;
   }
 
-  private MockVirtualFileSystem virtualFileSystem = new MockVirtualFileSystem();
+  private void setUpCells(BuckCell... buckCells) {
+    buckCellSettingsProvider.setCells(Arrays.asList(buckCells));
+  }
 
   private VirtualFile toVirtualFile(Path path) {
-    return virtualFileSystem.findFileByPath(path.toAbsolutePath().toString());
+    return LocalFileSystem.getInstance().findFileByPath(path.toAbsolutePath().toString());
+  }
+
+  public void testFindBuckCellByName() throws IOException {
+    BuckCell thisCell = makeBuckCell("this", makeTmpDir("foo"));
+    BuckCell thatCell = makeBuckCell("that", makeTmpDir("bar"));
+    setUpCells(thisCell, thatCell);
+
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
+    Assert.assertEquals(Optional.of(thisCell), finder.findBuckCellByName("this"));
+    Assert.assertEquals(Optional.of(thatCell), finder.findBuckCellByName("that"));
+    Assert.assertEquals(Optional.empty(), finder.findBuckCellByName("other"));
   }
 
   private void assertFindBuckCell(@Nullable BuckCell expected, BuckCellFinder finder, Path path) {
@@ -99,49 +130,35 @@ public class BuckCellFinderTest {
         finder.findBuckCell(toVirtualFile(path)));
   }
 
-  @Test
   public void testFindBuckCellForPath() throws IOException {
     Path cellRoot = makeTmpDir("path/to/cell");
-    BuckCell cell = makeBuckCell(cellRoot);
-    BuckCell otherCell = makeBuckCell(makeTmpDir("foo/bar/baz"));
-    Project project = EasyMock.createMock(Project.class);
-    BuckProjectSettingsProvider projectSettingsProvider =
-        EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(ImmutableList.of(cell, otherCell))
-        .anyTimes();
-    EasyMock.replay(project, projectSettingsProvider);
+    BuckCell cell = makeBuckCell("this", cellRoot);
+    BuckCell otherCell = makeBuckCell("that", makeTmpDir("foo/bar/baz"));
+    setUpCells(cell, otherCell);
 
     Path topLevelFile = makeTmpFile(cellRoot.resolve("source"));
     Path lowerLevelFile = makeTmpFile(cellRoot.resolve("deep/in/cell/source"));
     Path nonCellFile = makeTmpFile("outside/cell/source");
-    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
     assertFindBuckCell(cell, finder, topLevelFile);
     assertFindBuckCell(cell, finder, lowerLevelFile);
     assertFindBuckCell(null, finder, nonCellFile);
   }
 
-  @Test
   public void testFindBuckCellWhenNested() throws IOException {
     Path outerCellRoot = makeTmpDir("outer");
     Path innerCellRoot = makeTmpDir("outer/lib/inner");
-    BuckCell outerCell = makeBuckCell(outerCellRoot);
-    BuckCell innerCell = makeBuckCell(innerCellRoot);
-    BuckCell otherCell = makeBuckCell(makeTmpDir("foo/bar/baz"));
-    Project project = EasyMock.createMock(Project.class);
-    BuckProjectSettingsProvider projectSettingsProvider =
-        EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(ImmutableList.of(outerCell, innerCell, otherCell))
-        .anyTimes();
-    EasyMock.replay(project, projectSettingsProvider);
+    BuckCell outerCell = makeBuckCell("outer", outerCellRoot);
+    BuckCell innerCell = makeBuckCell("inner", innerCellRoot);
+    BuckCell otherCell = makeBuckCell("other", makeTmpDir("foo/bar/baz"));
+    setUpCells(outerCell, innerCell, otherCell);
 
     Path nonCellFile = makeTmpFile("source");
     Path outerCellLevel0File = makeTmpFile("outer/source");
     Path outerCellLevel1File = makeTmpFile("outer/lib/source");
     Path innerCellLevel0File = makeTmpFile("outer/lib/inner/source");
     Path innerCellLevel1File = makeTmpFile("outer/lib/inner/tools/source");
-    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
     assertFindBuckCell(null, finder, nonCellFile);
     assertFindBuckCell(outerCell, finder, outerCellLevel0File);
     assertFindBuckCell(outerCell, finder, outerCellLevel1File);
@@ -164,17 +181,10 @@ public class BuckCellFinderTest {
         finder.findBuckFile(toVirtualFile(path)));
   }
 
-  @Test
   public void testFindBuckFile() throws IOException {
     Path cellRoot = makeTmpDir("path/to/cell");
-    BuckCell cell = makeBuckCell(cellRoot, "BINGO");
-    Project project = EasyMock.createMock(Project.class);
-    BuckProjectSettingsProvider projectSettingsProvider =
-        EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(ImmutableList.of(cell))
-        .anyTimes();
-    EasyMock.replay(project, projectSettingsProvider);
+    BuckCell cell = makeBuckCell("", cellRoot, "BINGO");
+    setUpCells(cell);
 
     Path level1BuckFile = makeTmpFile(cellRoot.resolve("one/BINGO"));
     Path level3BuckFile = makeTmpFile(cellRoot.resolve("one/two/three/BINGO"));
@@ -183,7 +193,7 @@ public class BuckCellFinderTest {
     Path level2SourceFile = makeTmpFile(cellRoot.resolve("one/two/source"));
     Path level3SourceFile = makeTmpFile(cellRoot.resolve("one/two/three/source"));
     Path level4SourceFile = makeTmpFile(cellRoot.resolve("one/two/three/four/source"));
-    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
     assertFindBuckFile(null, finder, level0SourceFile);
     assertFindBuckFile(level1BuckFile, finder, level1SourceFile);
     assertFindBuckFile(level1BuckFile, finder, level2SourceFile);
@@ -191,20 +201,13 @@ public class BuckCellFinderTest {
     assertFindBuckFile(level3BuckFile, finder, level4SourceFile);
   }
 
-  @Test
   public void testFindBuckFileWhenNested() throws IOException {
     Path outerCellRoot = makeTmpDir("outer");
     Path innerCellRoot = makeTmpDir("outer/lib/inner");
-    BuckCell outerCell = makeBuckCell(outerCellRoot, "OUTERBUCK");
-    BuckCell innerCell = makeBuckCell(innerCellRoot, "INNERBUCK");
-    BuckCell otherCell = makeBuckCell(makeTmpDir("foo/bar/baz"));
-    Project project = EasyMock.createMock(Project.class);
-    BuckProjectSettingsProvider projectSettingsProvider =
-        EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(ImmutableList.of(outerCell, innerCell, otherCell))
-        .anyTimes();
-    EasyMock.replay(project, projectSettingsProvider);
+    BuckCell outerCell = makeBuckCell("outer", outerCellRoot, "OUTERBUCK");
+    BuckCell innerCell = makeBuckCell("inner", innerCellRoot, "INNERBUCK");
+    BuckCell otherCell = makeBuckCell("other", makeTmpDir("foo/bar/baz"));
+    setUpCells(outerCell, innerCell, otherCell);
 
     Path nonCellFile = makeTmpFile("source");
     Path outerCellLevel0SourceFile = makeTmpFile("outer/source");
@@ -216,7 +219,7 @@ public class BuckCellFinderTest {
     Path innerCellLevel1SourceFile = makeTmpFile("outer/lib/inner/tools/source");
     Path innerCellLevel1BuckFile = makeTmpFile("outer/lib/inner/tools/INNERBUCK");
 
-    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
     assertFindBuckFile(null, finder, nonCellFile);
     assertFindBuckFile(null, finder, outerCellLevel0SourceFile);
     assertFindBuckFile(outerCellLevel1BuckFile, finder, outerCellLevel1SourceFile);
@@ -225,33 +228,29 @@ public class BuckCellFinderTest {
   }
 
   private void assertFindBuckTargetFile(
-      @Nullable Path expected, BuckCellFinder finder, Path sourcePath, String target) {
+      @Nullable Path expectedTargetFile, BuckCellFinder finder, Path sourcePath, String target) {
+    Optional<VirtualFile> actualTargetFile =
+        finder.findBuckTargetFile(toVirtualFile(sourcePath), target);
     Assert.assertEquals(
         "Should find buck file correctly for " + target + " starting from " + sourcePath.toString(),
-        Optional.ofNullable(expected).map(this::toVirtualFile),
-        finder.findBuckTargetFile(toVirtualFile(sourcePath), target));
+        Optional.ofNullable(expectedTargetFile).map(this::toVirtualFile),
+        actualTargetFile);
   }
 
-  @Test
   public void testFindTargetFile() throws IOException {
     Path fromRoot = makeTmpDir("from");
-    BuckCell fromCell = makeBuckCell(fromRoot, "FROMBUCK");
+    BuckCell fromCell = makeBuckCell("src", fromRoot, "FROMBUCK");
     Path toRoot = makeTmpDir("to");
-    BuckCell toCell = makeBuckCell(toRoot, "TOBUCK");
-    Project project = EasyMock.createMock(Project.class);
-    BuckProjectSettingsProvider projectSettingsProvider =
-        EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(ImmutableList.of(fromCell, toCell))
-        .anyTimes();
-    EasyMock.replay(project, projectSettingsProvider);
+    BuckCell toCell = makeBuckCell("dst", toRoot, "TOBUCK");
+    setUpCells(fromCell, toCell);
 
     Path fromLevel0 = makeTmpFile("from/FROMBUCK");
     Path fromLevel1 = makeTmpFile("from/foo/FROMBUCK");
+    Path fromLevel2 = makeTmpFile("from/foo/bar/NOBUCKFILEHERE");
     Path toLevel0 = makeTmpFile("to/TOBUCK");
     Path toLevel1 = makeTmpFile("to/bar/TOBUCK");
 
-    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
 
     assertFindBuckTargetFile(fromLevel0, finder, fromLevel0, "//:any");
     assertFindBuckTargetFile(fromLevel0, finder, fromLevel1, "//:any");
@@ -260,22 +259,23 @@ public class BuckCellFinderTest {
     assertFindBuckTargetFile(null, finder, fromLevel0, "//foo/any:any");
     assertFindBuckTargetFile(null, finder, fromLevel1, "//foo/any:any");
 
-    assertFindBuckTargetFile(fromLevel0, finder, fromLevel0, "from//:any");
-    assertFindBuckTargetFile(fromLevel0, finder, fromLevel1, "from//:any");
-    assertFindBuckTargetFile(fromLevel1, finder, fromLevel0, "from//foo:any");
-    assertFindBuckTargetFile(fromLevel1, finder, fromLevel1, "from//foo:any");
-    assertFindBuckTargetFile(null, finder, fromLevel0, "from//foo/any:any");
-    assertFindBuckTargetFile(null, finder, fromLevel1, "from//foo/any:any");
+    assertFindBuckTargetFile(fromLevel0, finder, fromLevel0, "src//:any");
+    assertFindBuckTargetFile(fromLevel0, finder, fromLevel1, "src//:any");
+    assertFindBuckTargetFile(fromLevel1, finder, fromLevel0, "src//foo:any");
+    assertFindBuckTargetFile(fromLevel1, finder, fromLevel1, "src//foo:any");
+    assertFindBuckTargetFile(null, finder, fromLevel0, "src//foo/any:any");
+    assertFindBuckTargetFile(null, finder, fromLevel1, "src//foo/any:any");
 
-    assertFindBuckTargetFile(toLevel0, finder, fromLevel0, "to//:any");
-    assertFindBuckTargetFile(toLevel0, finder, fromLevel1, "to//:any");
-    assertFindBuckTargetFile(toLevel1, finder, fromLevel0, "to//bar:any");
-    assertFindBuckTargetFile(toLevel1, finder, fromLevel1, "to//bar:any");
-    assertFindBuckTargetFile(null, finder, fromLevel0, "to//bar/any:any");
-    assertFindBuckTargetFile(null, finder, fromLevel1, "to//bar/any:any");
+    assertFindBuckTargetFile(toLevel0, finder, fromLevel0, "dst//:any");
+    assertFindBuckTargetFile(toLevel0, finder, fromLevel1, "dst//:any");
+    assertFindBuckTargetFile(toLevel1, finder, fromLevel0, "dst//bar:any");
+    assertFindBuckTargetFile(toLevel1, finder, fromLevel1, "dst//bar:any");
+    assertFindBuckTargetFile(null, finder, fromLevel0, "dst//bar/any:any");
+    assertFindBuckTargetFile(null, finder, fromLevel1, "dst//bar/any:any");
 
     assertFindBuckTargetFile(null, finder, fromLevel0, "not/absolute/path");
-    assertFindBuckTargetFile(null, finder, fromLevel0, ":not_absolute_target");
+    assertFindBuckTargetFile(fromLevel0, finder, fromLevel0, ":relative_target");
+    assertFindBuckTargetFile(null, finder, fromLevel2, ":no_buildfile_here");
     assertFindBuckTargetFile(null, finder, fromLevel0, "bogus_cell//:FROMBUCK");
   }
 
@@ -290,19 +290,12 @@ public class BuckCellFinderTest {
         finder.findExtensionFile(toVirtualFile(sourcePath), target));
   }
 
-  @Test
   public void testFindExtensionFile() throws IOException {
     Path fromRoot = makeTmpDir("from");
-    BuckCell fromCell = makeBuckCell(fromRoot);
+    BuckCell fromCell = makeBuckCell("src", fromRoot);
     Path toRoot = makeTmpDir("to");
-    BuckCell toCell = makeBuckCell(toRoot);
-    Project project = EasyMock.createMock(Project.class);
-    BuckProjectSettingsProvider projectSettingsProvider =
-        EasyMock.createMock(BuckProjectSettingsProvider.class);
-    EasyMock.expect(projectSettingsProvider.getCells())
-        .andReturn(ImmutableList.of(fromCell, toCell))
-        .anyTimes();
-    EasyMock.replay(project, projectSettingsProvider);
+    BuckCell toCell = makeBuckCell("dst", toRoot);
+    setUpCells(fromCell, toCell);
 
     Path fromLevel0BuckFile = makeTmpFile("from/BUCK");
     Path fromLevel0ExtFile = makeTmpFile("from/extension.bzl");
@@ -311,7 +304,7 @@ public class BuckCellFinderTest {
     Path toLevel0ExtFile = makeTmpFile("to/extension.bzl");
     Path toLevel1ExtFile = makeTmpFile("to/bar/extension.bzl");
 
-    BuckCellFinder finder = new BuckCellFinder(project, projectSettingsProvider);
+    BuckCellFinder finder = new BuckCellFinder(buckCellManager, buckTargetLocator);
 
     assertFindBuckExtensionFile(fromLevel0ExtFile, finder, fromLevel0BuckFile, "//:extension.bzl");
     assertFindBuckExtensionFile(fromLevel0ExtFile, finder, fromLevel1BuckFile, "//:extension.bzl");
@@ -323,24 +316,24 @@ public class BuckCellFinderTest {
     assertFindBuckExtensionFile(null, finder, fromLevel1BuckFile, "//foo/any:extension.bzl");
 
     assertFindBuckExtensionFile(
-        fromLevel0ExtFile, finder, fromLevel0BuckFile, "from//:extension.bzl");
+        fromLevel0ExtFile, finder, fromLevel0BuckFile, "src//:extension.bzl");
     assertFindBuckExtensionFile(
-        fromLevel0ExtFile, finder, fromLevel1BuckFile, "from//:extension.bzl");
+        fromLevel0ExtFile, finder, fromLevel1BuckFile, "src//:extension.bzl");
     assertFindBuckExtensionFile(
-        fromLevel1ExtFile, finder, fromLevel0BuckFile, "from//foo:extension.bzl");
+        fromLevel1ExtFile, finder, fromLevel0BuckFile, "src//foo:extension.bzl");
     assertFindBuckExtensionFile(
-        fromLevel1ExtFile, finder, fromLevel1BuckFile, "from//foo:extension.bzl");
-    assertFindBuckExtensionFile(null, finder, fromLevel0BuckFile, "from//foo/any:extension.bzl");
-    assertFindBuckExtensionFile(null, finder, fromLevel1BuckFile, "from//foo/any:extension.bzl");
+        fromLevel1ExtFile, finder, fromLevel1BuckFile, "src//foo:extension.bzl");
+    assertFindBuckExtensionFile(null, finder, fromLevel0BuckFile, "src//foo/any:extension.bzl");
+    assertFindBuckExtensionFile(null, finder, fromLevel1BuckFile, "src//foo/any:extension.bzl");
 
-    assertFindBuckExtensionFile(toLevel0ExtFile, finder, fromLevel0BuckFile, "to//:extension.bzl");
-    assertFindBuckExtensionFile(toLevel0ExtFile, finder, fromLevel1BuckFile, "to//:extension.bzl");
+    assertFindBuckExtensionFile(toLevel0ExtFile, finder, fromLevel0BuckFile, "dst//:extension.bzl");
+    assertFindBuckExtensionFile(toLevel0ExtFile, finder, fromLevel1BuckFile, "dst//:extension.bzl");
     assertFindBuckExtensionFile(
-        toLevel1ExtFile, finder, fromLevel0BuckFile, "to//bar:extension.bzl");
+        toLevel1ExtFile, finder, fromLevel0BuckFile, "dst//bar:extension.bzl");
     assertFindBuckExtensionFile(
-        toLevel1ExtFile, finder, fromLevel1BuckFile, "to//bar:extension.bzl");
-    assertFindBuckExtensionFile(null, finder, fromLevel0BuckFile, "to//bar/any:extension.bzl");
-    assertFindBuckExtensionFile(null, finder, fromLevel1BuckFile, "to//bar/any:extension.bzl");
+        toLevel1ExtFile, finder, fromLevel1BuckFile, "dst//bar:extension.bzl");
+    assertFindBuckExtensionFile(null, finder, fromLevel0BuckFile, "dst//bar/any:extension.bzl");
+    assertFindBuckExtensionFile(null, finder, fromLevel1BuckFile, "dst//bar/any:extension.bzl");
 
     assertFindBuckExtensionFile(fromLevel0ExtFile, finder, fromLevel0BuckFile, ":extension.bzl");
     assertFindBuckExtensionFile(fromLevel1ExtFile, finder, fromLevel1BuckFile, ":extension.bzl");

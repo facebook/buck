@@ -1,54 +1,55 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -64,6 +65,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
@@ -74,7 +76,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Optional<SourcePath> xctool;
 
-  private Optional<Long> xctoolStutterTimeout;
+  private Optional<Long> stutterTimeout;
 
   private final Tool xctest;
 
@@ -102,16 +104,20 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path testLogsPath;
 
   private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
+  private final Optional<Either<SourcePath, String>> snapshotImagesDiffPath;
 
   private Optional<Long> testRuleTimeoutMs;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
+  private Optional<AppleTestIdbStdoutReader> idbStdoutReader;
   private Optional<AppleTestXctestOutputReader> xctestOutputReader;
 
   private final String testLogDirectoryEnvironmentVariable;
   private final String testLogLevelEnvironmentVariable;
   private final String testLogLevel;
   private final Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables;
+  private final boolean useIdb;
+  private final Path idbPath;
 
   /**
    * Absolute path to xcode developer dir.
@@ -143,6 +149,27 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
   }
 
+  private static class AppleTestIdbStdoutReader implements IdbRunTestsStep.StdoutReadingCallback {
+
+    private final TestCaseSummariesBuildingIdb idbTestHandler;
+
+    public AppleTestIdbStdoutReader(TestRule.TestReportingCallback testReportingCallback) {
+      this.idbTestHandler = new TestCaseSummariesBuildingIdb(testReportingCallback);
+    }
+
+    @Override
+    public void readStdout(InputStream stdout) throws IOException {
+      try (InputStreamReader stdoutReader = new InputStreamReader(stdout, StandardCharsets.UTF_8);
+          BufferedReader bufferedReader = new BufferedReader(stdoutReader)) {
+        IdbOutputParsing.streamOutputFromReader(bufferedReader, idbTestHandler);
+      }
+    }
+
+    public ImmutableList<TestCaseSummary> getTestCaseSummaries() {
+      return idbTestHandler.getTestCaseSummaries();
+    }
+  }
+
   private static class AppleTestXctestOutputReader
       implements XctestRunTestsStep.OutputReadingCallback {
 
@@ -168,7 +195,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   AppleTest(
       Optional<SourcePath> xctool,
-      Optional<Long> xctoolStutterTimeout,
+      Optional<Long> stutterTimeout,
       Tool xctest,
       boolean useXctest,
       String platformName,
@@ -190,10 +217,13 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Long> testRuleTimeoutMs,
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
-      Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables) {
+      Optional<Either<SourcePath, String>> snapshotImagesDiffPath,
+      Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables,
+      boolean useIdb,
+      Path idbPath) {
     super(buildTarget, projectFilesystem, params);
     this.xctool = xctool;
-    this.xctoolStutterTimeout = xctoolStutterTimeout;
+    this.stutterTimeout = stutterTimeout;
     this.useXctest = useXctest;
     this.xctest = xctest;
     this.platformName = platformName;
@@ -216,7 +246,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.testLogLevel = testLogLevel;
     this.isUiTest = isUiTest;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+    this.snapshotImagesDiffPath = snapshotImagesDiffPath;
     this.testSpecificEnvironmentVariables = testSpecificEnvironmentVariables;
+    this.useIdb = useIdb;
+    this.idbPath = idbPath;
   }
 
   @Override
@@ -238,6 +271,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ExternalTestRunnerTestSpec.Builder externalSpec =
         ExternalTestRunnerTestSpec.builder()
+            .setCwd(getProjectFilesystem().getRootPath().getPath())
             .setTarget(getBuildTarget())
             .setLabels(getLabels())
             .setContacts(getContacts());
@@ -245,7 +279,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Path resolvedTestBundleDirectory =
         buildContext
             .getSourcePathResolver()
-            .getAbsolutePath(Preconditions.checkNotNull(testBundle.getSourcePathToOutput()));
+            .getAbsolutePath(Objects.requireNonNull(testBundle.getSourcePathToOutput()));
 
     Path pathToTestOutput = getProjectFilesystem().resolve(getPathToTestOutputDirectory());
 
@@ -265,8 +299,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 
-    Optional<Path> testHostAppPath = extractBundlePathForBundle(testHostApp, buildContext);
-    Optional<Path> uiTestTargetAppPath = extractBundlePathForBundle(uiTestTargetApp, buildContext);
+    Optional<Path> testHostAppPath =
+        extractBundlePathForBundle(testHostApp, buildContext.getSourcePathResolver());
+    Optional<Path> uiTestTargetAppPath =
+        extractBundlePathForBundle(uiTestTargetApp, buildContext.getSourcePathResolver());
 
     ImmutableMap<String, String> testEnvironmentOverrides =
         ImmutableMap.<String, String>builder()
@@ -312,30 +348,15 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         destinationSpecifierArg = defaultDestinationSpecifier;
       }
 
-      Optional<String> snapshotReferenceImagesPath = Optional.empty();
-      if (this.snapshotReferenceImagesPath.isPresent()) {
-        if (this.snapshotReferenceImagesPath.get().isLeft()) {
-          snapshotReferenceImagesPath =
-              Optional.of(
-                  buildContext
-                      .getSourcePathResolver()
-                      .getAbsolutePath(this.snapshotReferenceImagesPath.get().getLeft())
-                      .toString());
-        } else if (this.snapshotReferenceImagesPath.get().isRight()) {
-          snapshotReferenceImagesPath =
-              Optional.of(
-                  getProjectFilesystem()
-                      .getPathForRelativePath(this.snapshotReferenceImagesPath.get().getRight())
-                      .toString());
-        }
-      }
+      Optional<String> snapshotReferenceImagesPath = getAbsoluteSnapshotTestingArgumentPath(this.snapshotReferenceImagesPath, buildContext);
+      Optional<String> snapshotImagesDiffPath = getAbsoluteSnapshotTestingArgumentPath(this.snapshotImagesDiffPath, buildContext);
 
       XctoolRunTestsStep xctoolStep =
           new XctoolRunTestsStep(
               getProjectFilesystem(),
               buildContext.getSourcePathResolver().getAbsolutePath(xctool.get()),
               testEnvironmentOverrides,
-              xctoolStutterTimeout,
+              stutterTimeout,
               platformName,
               destinationSpecifierArg,
               logicTestPathsBuilder.build(),
@@ -351,8 +372,41 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
-              snapshotReferenceImagesPath);
-      steps.add(xctoolStep);
+              snapshotReferenceImagesPath,
+              snapshotImagesDiffPath);
+
+      if (useIdb) {
+        idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
+        AppleDeviceController appleDeviceController =
+            new AppleDeviceController(context.getProcessExecutor(), idbPath);
+        Optional<String> deviceUdid;
+        if (platformName.contains("mac")) {
+          deviceUdid = Optional.of("mac");
+        } else {
+          deviceUdid = appleDeviceController.getSimulatorUdidForTest();
+        }
+        ImmutableList<IdbRunTestsStep> idbSteps =
+            IdbRunTestsStep.createCommands(
+                idbPath,
+                getProjectFilesystem(),
+                platformName,
+                testBundle,
+                resolvedTestOutputPath,
+                idbStdoutReader,
+                options.getTestSelectorList(),
+                stutterTimeout,
+                testRuleTimeoutMs,
+                logicTestPathsBuilder.build(),
+                appTestPathsToHostAppsBuilder.build(),
+                appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build(),
+                deviceUdid);
+        for (IdbRunTestsStep step : idbSteps) {
+          steps.add(step);
+        }
+      } else {
+        steps.add(xctoolStep);
+      }
+
       String xctoolTypeSuffix;
       if (uiTestTargetApp.isPresent()) {
         xctoolTypeSuffix = "uitest";
@@ -391,15 +445,33 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new Pair<>(steps.build(), externalSpec.build());
   }
 
-  private Optional<Path> extractBundlePathForBundle(
-      Optional<AppleBundle> bundle, BuildContext buildContext) {
+  private Optional<String> getAbsoluteSnapshotTestingArgumentPath(
+    Optional<Either<SourcePath, String>> snapshotTestArgument, BuildContext buildContext) {
+    if (snapshotTestArgument.isPresent()) {
+      if (snapshotTestArgument.get().isLeft()) {
+        return Optional.of(
+          buildContext
+            .getSourcePathResolver()
+            .getAbsolutePath(snapshotTestArgument.get().getLeft())
+            .toString());
+      } else if (snapshotTestArgument.get().isRight()) {
+        return Optional.of(
+          getProjectFilesystem()
+            .getPathForRelativePath(snapshotTestArgument.get().getRight())
+            .toString());
+      }
+    }
+    return Optional.empty();
+  }
+
+  static Optional<Path> extractBundlePathForBundle(
+      Optional<AppleBundle> bundle, SourcePathResolverAdapter sourcePathResolverAdapter) {
     if (!bundle.isPresent()) {
       return Optional.empty();
     }
     Path resolvedBundleDirectory =
-        buildContext
-            .getSourcePathResolver()
-            .getAbsolutePath(Preconditions.checkNotNull(bundle.get().getSourcePathToOutput()));
+        sourcePathResolverAdapter.getAbsolutePath(
+            Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
     return Optional.of(
         resolvedBundleDirectory.resolve(bundle.get().getUnzippedOutputFilePathToBinary()));
   }
@@ -420,14 +492,16 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       List<TestCaseSummary> testCaseSummaries;
-      if (xctoolStdoutReader.isPresent()) {
+      if (xctoolStdoutReader.isPresent() && !useIdb) {
         // We've already run the tests with 'xctool' and parsed
         // their output; no need to parse the same output again.
         testCaseSummaries = xctoolStdoutReader.get().getTestCaseSummaries();
+      } else if (useIdb && idbStdoutReader.isPresent()) {
+        testCaseSummaries = idbStdoutReader.get().getTestCaseSummaries();
       } else if (xctestOutputReader.isPresent()) {
         // We've already run the tests with 'xctest' and parsed
         // their output; no need to parse the same output again.
@@ -446,6 +520,11 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 new TestCaseSummariesBuildingXctestEventHandler(NOOP_REPORTING_CALLBACK);
             XctestOutputParsing.streamOutput(reader, xctestEventHandler);
             testCaseSummaries = xctestEventHandler.getTestCaseSummaries();
+          } else if (useIdb) {
+            TestCaseSummariesBuildingIdb idbEventHandler =
+                new TestCaseSummariesBuildingIdb(NOOP_REPORTING_CALLBACK);
+            IdbOutputParsing.streamOutputFromReader(reader, idbEventHandler);
+            testCaseSummaries = idbEventHandler.getTestCaseSummaries();
           } else {
             TestCaseSummariesBuildingXctoolEventHandler xctoolEventHandler =
                 new TestCaseSummariesBuildingXctoolEventHandler(NOOP_REPORTING_CALLBACK);
@@ -488,14 +567,14 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   // This test rule just executes the test bundle, so we need it available locally.
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
         Stream.concat(
                 Stream.of(testBundle),
-                Stream.concat(Optionals.toStream(testHostApp), Optionals.toStream(uiTestTargetApp)))
+                Stream.concat(RichStream.from(testHostApp), RichStream.from(uiTestTargetApp)))
             .map(BuildRule::getBuildTarget),
-        Optionals.toStream(xctool)
-            .map(ruleFinder::filterBuildRuleInputs)
+        RichStream.from(xctool)
+            .map(buildRuleResolver::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));
   }
@@ -506,7 +585,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
+  public ExternalTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {

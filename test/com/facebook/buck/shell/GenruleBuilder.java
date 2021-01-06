@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -29,6 +29,8 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -43,13 +45,6 @@ public class GenruleBuilder
             createToolchainProvider(),
             FakeBuckConfig.builder().build(),
             new NoSandboxExecutionStrategy()),
-        target);
-  }
-
-  private GenruleBuilder(BuildTarget target, BuckConfig buckConfig) {
-    super(
-        new GenruleDescription(
-            createToolchainProvider(), buckConfig, new NoSandboxExecutionStrategy()),
         target);
   }
 
@@ -70,6 +65,12 @@ public class GenruleBuilder
         filesystem);
   }
 
+  private GenruleBuilder(BuildTarget target, BuckConfig config) {
+    super(
+        new GenruleDescription(createToolchainProvider(), config, new NoSandboxExecutionStrategy()),
+        target);
+  }
+
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder().build();
   }
@@ -87,8 +88,17 @@ public class GenruleBuilder
     return new GenruleBuilder(target, filesystem);
   }
 
+  public static GenruleBuilder newGenruleBuilder(BuildTarget target, BuckConfig config) {
+    return new GenruleBuilder(target, config);
+  }
+
   public GenruleBuilder setOut(String out) {
     getArgForPopulating().setOut(out);
+    return this;
+  }
+
+  public GenruleBuilder setOuts(ImmutableMap<String, ImmutableSet<String>> outs) {
+    getArgForPopulating().setOuts(outs);
     return this;
   }
 
@@ -133,8 +143,13 @@ public class GenruleBuilder
     return this;
   }
 
-  public GenruleBuilder setNoRemote(@Nullable Boolean noRemote) {
-    getArgForPopulating().setNoRemote(Optional.ofNullable(noRemote));
+  public GenruleBuilder setRemote(@Nullable Boolean remote) {
+    getArgForPopulating().setRemote(Optional.ofNullable(remote));
+    return this;
+  }
+
+  public GenruleBuilder setNeedAndroidTools(boolean needAndroidTools) {
+    getArgForPopulating().setNeedAndroidTools(needAndroidTools);
     return this;
   }
 

@@ -1,0 +1,33 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
+
+standard_java_test(
+    name = "infer",
+    labels = [
+        "long_running",
+    ],
+    with_test_data = True,
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/util/json:json",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_immutables_library(
+    name = "testutil",
+    srcs = [
+        "InferAssumptions.java",
+    ],
+    visibility = ["//test/com/facebook/buck/infer/..."],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/infer:infer",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//third-party/java/junit:junit",
+    ],
+)

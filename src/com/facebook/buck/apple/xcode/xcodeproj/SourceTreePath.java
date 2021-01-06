@@ -1,26 +1,32 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.util.Optionals;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.util.Optionals;
+import com.facebook.buck.rules.modern.CustomFieldSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -33,6 +39,7 @@ public class SourceTreePath implements Comparable<SourceTreePath>, AddsToRuleKey
   @AddToRuleKey private final PBXReference.SourceTree sourceTree;
 
   @AddToRuleKey(stringify = true)
+  @CustomFieldBehavior(SourceTreePath.PathSerialization.class)
   private final Path path;
 
   @AddToRuleKey private final Optional<String> defaultType;
@@ -56,16 +63,17 @@ public class SourceTreePath implements Comparable<SourceTreePath>, AddsToRuleKey
     return path;
   }
 
-  public PBXFileReference createFileReference(String name) {
-    return new PBXFileReference(name, path.toString(), sourceTree, defaultType);
+  public PBXFileReference createFileReference(String name, AbstractPBXObjectFactory objectFactory) {
+    return objectFactory.createFileReference(name, path.toString(), sourceTree, defaultType);
   }
 
-  public PBXFileReference createFileReference() {
-    return createFileReference(path.getFileName().toString());
+  public PBXFileReference createFileReference(AbstractPBXObjectFactory objectFactory) {
+    return createFileReference(path.getFileName().toString(), objectFactory);
   }
 
-  public XCVersionGroup createVersionGroup() {
-    return new XCVersionGroup(path.getFileName().toString(), path.toString(), sourceTree);
+  public XCVersionGroup createVersionGroup(AbstractPBXObjectFactory objectFactory) {
+    return objectFactory.createVersionGroup(
+        path.getFileName().toString(), path.toString(), sourceTree);
   }
 
   @Override
@@ -103,5 +111,18 @@ public class SourceTreePath implements Comparable<SourceTreePath>, AddsToRuleKey
   @Override
   public String toString() {
     return "$" + sourceTree + "/" + path;
+  }
+
+  /** Custom serialization. */
+  static class PathSerialization implements CustomFieldSerialization<Path> {
+    @Override
+    public <E extends Exception> void serialize(Path value, ValueVisitor<E> serializer) throws E {
+      serializer.visitString(value.toString());
+    }
+
+    @Override
+    public <E extends Exception> Path deserialize(ValueCreator<E> deserializer) throws E {
+      return Paths.get(deserializer.createString());
+    }
   }
 }

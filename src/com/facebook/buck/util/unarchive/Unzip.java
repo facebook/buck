@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.unarchive;
@@ -19,6 +19,7 @@ package com.facebook.buck.util.unarchive;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -221,12 +222,16 @@ public class Unzip extends Unarchiver {
    *     will be in the map at {@code relativePath}/bar/baz.txt
    */
   private static SortedMap<Path, ZipArchiveEntry> getZipFilePathsStrippingPrefix(
-      ZipFile zip, Path relativePath, Path prefix) {
+      ZipFile zip, Path relativePath, Path prefix, PatternsMatcher entriesToExclude) {
     SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
     for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
-      if (Paths.get(entry.getName()).startsWith(prefix)) {
-        Path target =
-            relativePath.resolve(prefix.relativize(Paths.get(entry.getName()))).normalize();
+      String entryName = entry.getName();
+      if (entriesToExclude.matches(entryName)) {
+        continue;
+      }
+      Path entryPath = Paths.get(entryName);
+      if (entryPath.startsWith(prefix)) {
+        Path target = relativePath.resolve(prefix.relativize(entryPath)).normalize();
         pathMap.put(target, entry);
       }
     }
@@ -240,10 +245,15 @@ public class Unzip extends Unarchiver {
    * @param relativePath The relative path where the extraction will be rooted
    * @return The list of paths in {@code zip} sorted by path so dirs come before contents.
    */
-  private static SortedMap<Path, ZipArchiveEntry> getZipFilePaths(ZipFile zip, Path relativePath) {
+  private static SortedMap<Path, ZipArchiveEntry> getZipFilePaths(
+      ZipFile zip, Path relativePath, PatternsMatcher entriesToExclude) {
     SortedMap<Path, ZipArchiveEntry> pathMap = new TreeMap<>();
     for (ZipArchiveEntry entry : Collections.list(zip.getEntries())) {
-      Path target = relativePath.resolve(entry.getName()).normalize();
+      String entryName = entry.getName();
+      if (entriesToExclude.matches(entryName)) {
+        continue;
+      }
+      Path target = relativePath.resolve(entryName).normalize();
       pathMap.put(target, entry);
     }
     return pathMap;
@@ -256,6 +266,7 @@ public class Unzip extends Unarchiver {
       ProjectFilesystem filesystem,
       Path relativePath,
       Optional<Path> stripPrefix,
+      PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
       throws IOException {
 
@@ -270,9 +281,10 @@ public class Unzip extends Unarchiver {
     try (ZipFile zip = new ZipFile(archiveFile.toFile())) {
       SortedMap<Path, ZipArchiveEntry> pathMap;
       if (stripPrefix.isPresent()) {
-        pathMap = getZipFilePathsStrippingPrefix(zip, relativePath, stripPrefix.get());
+        pathMap =
+            getZipFilePathsStrippingPrefix(zip, relativePath, stripPrefix.get(), entriesToExclude);
       } else {
-        pathMap = getZipFilePaths(zip, relativePath);
+        pathMap = getZipFilePaths(zip, relativePath, entriesToExclude);
       }
       // A zip file isn't required to list intermediate paths (e.g., it can contain "foo/" and
       // "foo/bar/baz"), but we need to know not to delete those intermediates, so fill them in.

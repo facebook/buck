@@ -1,22 +1,24 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.types;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 
 /** A discriminated union of two parameters that holds a value of either the LEFT or RIGHT type. */
@@ -41,6 +43,12 @@ public abstract class Either<LEFT, RIGHT> {
    * @throws IllegalStateException if this instance does not hold a right value.
    */
   public abstract RIGHT getRight();
+
+  /** Left value or empty otherwise. */
+  public abstract Optional<LEFT> getLeftOption();
+
+  /** Right value or empty otherwise. */
+  public abstract Optional<RIGHT> getRightOption();
 
   /** Apply a function based on whether the instance holds a left or right value. */
   public abstract <X> X transform(
@@ -82,8 +90,19 @@ public abstract class Either<LEFT, RIGHT> {
     }
 
     @Override
+    @JsonIgnore
     public RIGHT getRight() {
       throw new IllegalStateException("Cannot get Right value of a Left either.");
+    }
+
+    @Override
+    public Optional<LEFT> getLeftOption() {
+      return Optional.of(value);
+    }
+
+    @Override
+    public Optional<RIGHT> getRightOption() {
+      return Optional.empty();
     }
 
     @Override
@@ -129,6 +148,7 @@ public abstract class Either<LEFT, RIGHT> {
     }
 
     @Override
+    @JsonIgnore
     public LEFT getLeft() {
       throw new IllegalStateException("Cannot get Left value of a Right either.");
     }
@@ -136,6 +156,16 @@ public abstract class Either<LEFT, RIGHT> {
     @Override
     public RIGHT getRight() {
       return value;
+    }
+
+    @Override
+    public Optional<LEFT> getLeftOption() {
+      return Optional.empty();
+    }
+
+    @Override
+    public Optional<RIGHT> getRightOption() {
+      return Optional.of(value);
     }
 
     @Override

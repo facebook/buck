@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
+import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -36,8 +37,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Holds all of the mutable state required during {@link IjModule} creation. */
@@ -46,9 +50,10 @@ public class ModuleBuildContext {
   private final ImmutableSet<BuildTarget> circularDependencyInducingTargets;
 
   private Optional<IjModuleAndroidFacet.Builder> androidFacetBuilder;
-  private ImmutableSet.Builder<Path> extraClassPathDependenciesBuilder;
+  private ImmutableSet.Builder<IjLibrary> extraLibraryDependenciesBuilder;
   private ImmutableSet.Builder<Path> extraModuleDependenciesBuilder;
   private ImmutableSet.Builder<BuildTarget> nonSourceBuildTargets;
+  private Map<BuildTarget, List<IjFolder>> targetsToGeneratedSourcesMap;
   private Map<Path, IjFolder> generatedSourceCodeFoldersMap = new HashMap<>();
   private Map<Path, IjFolder> sourceFoldersMergeMap;
   // See comment in getDependencies for these two member variables.
@@ -62,9 +67,10 @@ public class ModuleBuildContext {
   public ModuleBuildContext(ImmutableSet<BuildTarget> circularDependencyInducingTargets) {
     this.circularDependencyInducingTargets = circularDependencyInducingTargets;
     this.androidFacetBuilder = Optional.empty();
-    this.extraClassPathDependenciesBuilder = new ImmutableSet.Builder<>();
+    this.extraLibraryDependenciesBuilder = new ImmutableSet.Builder<>();
     this.extraModuleDependenciesBuilder = new ImmutableSet.Builder<>();
     this.nonSourceBuildTargets = new ImmutableSet.Builder<>();
+    this.targetsToGeneratedSourcesMap = new HashMap<>();
     this.sourceFoldersMergeMap = new HashMap<>();
     this.dependencyTypeMap = new HashMap<>();
     this.dependencyOriginMap = HashMultimap.create();
@@ -97,12 +103,12 @@ public class ModuleBuildContext {
     return ImmutableList.copyOf(sourceFoldersMergeMap.values());
   }
 
-  public void addExtraClassPathDependency(Path path) {
-    extraClassPathDependenciesBuilder.add(path);
+  public void addExtraLibraryDependency(IjLibrary library) {
+    extraLibraryDependenciesBuilder.add(library);
   }
 
-  public ImmutableSet<Path> getExtraClassPathDependencies() {
-    return extraClassPathDependenciesBuilder.build();
+  public ImmutableSet<IjLibrary> getExtraLibraryDependencies() {
+    return extraLibraryDependenciesBuilder.build();
   }
 
   public void addExtraModuleDependency(Path path) {
@@ -121,9 +127,17 @@ public class ModuleBuildContext {
     return nonSourceBuildTargets.build();
   }
 
-  public void addGeneratedSourceCodeFolder(IjFolder generatedFolder) {
+  public Map<BuildTarget, List<IjFolder>> getTargetsToGeneratedSourcesMap() {
+    return targetsToGeneratedSourcesMap;
+  }
+
+  /** Add BuildTarget and its associated IjFolder */
+  public void addGeneratedSourceCodeFolder(BuildTarget buildTarget, IjFolder generatedFolder) {
     Preconditions.checkState(
         generatedSourceCodeFoldersMap.put(generatedFolder.getPath(), generatedFolder) == null);
+    targetsToGeneratedSourcesMap
+        .computeIfAbsent(buildTarget, target -> new ArrayList<>())
+        .add(generatedFolder);
   }
 
   public ImmutableCollection<IjFolder> getGeneratedSourceCodeFolders() {
@@ -274,7 +288,7 @@ public class ModuleBuildContext {
     Map<BuildTarget, DependencyType> result = new HashMap<>(dependencyTypeMap);
     for (Path path : dependencyOriginMap.keySet()) {
       DependencyType dependencyType =
-          Preconditions.checkNotNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder
+          Objects.requireNonNull(sourceFoldersMergeMap.get(path)) instanceof TestFolder
               ? DependencyType.TEST
               : DependencyType.PROD;
       for (BuildTarget buildTarget : dependencyOriginMap.get(path)) {

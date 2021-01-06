@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -50,7 +50,7 @@ public class PrebuiltAppleFrameworkIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
   }
@@ -128,11 +128,19 @@ public class PrebuiltAppleFrameworkIntegrationTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    BuildTarget target = BuildTargetFactory.newInstance("//app:TestApp#static,macosx-x86_64");
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//app:TestAppBundle#dwarf-and-dsym,macosx-x86_64,no-include-frameworks");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path testBinaryPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path testAppBundlePath =
+        workspace
+            .getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))
+            .resolve("TestApp.app");
+    Path testBinaryPath = testAppBundlePath.resolve("Contents/MacOS/TestApp");
+    Path transitiveResourcePath = testAppBundlePath.resolve("Contents/Resources/resource_file");
+    assertTrue(Files.exists(transitiveResourcePath));
 
     ProcessExecutor.Result otoolResult =
         workspace.runCommand("otool", "-L", testBinaryPath.toString());

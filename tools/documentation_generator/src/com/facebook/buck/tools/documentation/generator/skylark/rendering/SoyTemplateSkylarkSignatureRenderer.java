@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.tools.documentation.generator.skylark.rendering;
@@ -22,6 +22,8 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
+import com.google.common.escape.Escaper;
+import com.google.common.escape.Escapers;
 import com.google.common.io.Resources;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -29,6 +31,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 
@@ -39,6 +42,9 @@ public class SoyTemplateSkylarkSignatureRenderer {
   private static final char DELIMITER_STOP_CHAR = '%';
   private static final String FUNCTION_TEMPLATE_NAME = "signature_template.stg";
   private static final String TABLE_OF_CONTENTS_TEMPLATE_NAME = "table_of_contents_template.stg";
+  private static final Escaper DOC_ESCAPER =
+      Escapers.builder().addEscape('{', "{lb}").addEscape('}', "{rb}").build();
+  private static final Escaper VALUE_ESCAPER = Escapers.builder().addEscape('\'', "\\'").build();
 
   private final LoadingCache<String, String> templateCache;
 
@@ -68,7 +74,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
     return stringTemplate.render();
   }
 
-  /** Renders a table of contents for the Skylark functions subsection on buckbuild.com website. */
+  /** Renders a table of contents for the Skylark functions subsection on buck.build website. */
   public String renderTableOfContents(Iterable<SkylarkCallable> signatures) {
     ST stringTemplate = createTemplate(TABLE_OF_CONTENTS_TEMPLATE_NAME);
     stringTemplate.add("openCurly", "{");
@@ -76,6 +82,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
     stringTemplate.add(
         "signatures",
         Streams.stream(signatures)
+            .sorted(Comparator.comparing(SkylarkCallable::name))
             .map(SoyTemplateSkylarkSignatureRenderer::toMap)
             .collect(Collectors.toList()));
     return stringTemplate.render();
@@ -104,9 +111,7 @@ public class SoyTemplateSkylarkSignatureRenderer {
         "doc",
         skylarkSignature.doc(),
         "parameters",
-        parameters
-            .build()
-            .stream()
+        parameters.build().stream()
             .map(SoyTemplateSkylarkSignatureRenderer::toMap)
             .collect(Collectors.toList()));
   }
@@ -114,7 +119,8 @@ public class SoyTemplateSkylarkSignatureRenderer {
   private static ImmutableMap<String, String> toMap(Param param) {
     return ImmutableMap.of(
         "name", param.name(),
-        "doc", param.doc(),
-        "defaultValue", param.defaultValue().isEmpty() ? "None" : param.defaultValue());
+        "doc", DOC_ESCAPER.escape(param.doc()),
+        "defaultValue",
+            VALUE_ESCAPER.escape(param.defaultValue().isEmpty() ? "None" : param.defaultValue()));
   }
 }

@@ -1,27 +1,28 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.worker;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -30,6 +31,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -68,7 +70,7 @@ public class WorkerProcessPoolFactory {
     } else {
       processPoolMap = context.getWorkerProcessPools();
       key = Joiner.on(' ').join(getCommand(context.getPlatform(), paramsToUse));
-      workerHash = Hashing.sha1().hashString(key, StandardCharsets.UTF_8);
+      workerHash = Hashing.sha256().hashString(key, StandardCharsets.UTF_8);
     }
 
     // If the worker pool has a different hash, recreate the pool.
@@ -89,9 +91,16 @@ public class WorkerProcessPoolFactory {
       context.postEvent(
           ConsoleEvent.warning(
               "There are two 'worker_tool' targets declared with the same command (%s), but "
-                  + "different 'max_worker' settings (%d and %d). Only the first capacity is applied. "
+                  + "different 'max_worker' settings (%d and %d). Only the former capacity is applied. "
                   + "Consolidate these workers to avoid this warning.",
               key, poolCapacity, paramsToUse.getMaxWorkers()));
+    }
+    if ((pool instanceof WorkerProcessPoolAsync) != paramsToUse.isAsync()) {
+      context.postEvent(
+          ConsoleEvent.warning(
+              "There are two 'worker_tool' targets declared with the same command (%s), but "
+                  + "different 'solo_async' settings. Consolidate these workers to avoid this warning.",
+              key));
     }
 
     return pool;
@@ -107,23 +116,29 @@ public class WorkerProcessPoolFactory {
         ProcessExecutorParams.builder()
             .setCommand(getCommand(context.getPlatform(), paramsToUse))
             .setEnvironment(getEnvironmentForProcess(context, paramsToUse))
-            .setDirectory(filesystem.getRootPath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .build();
 
     Path workerTmpDir = paramsToUse.getTempDir();
     AtomicInteger workerNumber = new AtomicInteger(0);
+    ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess =
+        () -> {
+          Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
+          filesystem.mkdirs(tmpDir);
+          WorkerProcess process =
+              WorkerProcessPoolFactory.this.createWorkerProcess(processParams, context, tmpDir);
+          process.ensureLaunchAndHandshake();
+          return process;
+        };
 
-    WorkerProcessPool newPool =
-        new WorkerProcessPool(
-            paramsToUse.getMaxWorkers(),
-            workerHash,
-            () -> {
-              Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
-              filesystem.mkdirs(tmpDir);
-              WorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
-              process.ensureLaunchAndHandshake();
-              return process;
-            });
+    WorkerProcessPool newPool;
+    if (paramsToUse.isAsync()) {
+      newPool =
+          new WorkerProcessPoolAsync(paramsToUse.getMaxWorkers(), workerHash, startWorkerProcess);
+    } else {
+      newPool =
+          new WorkerProcessPoolSync(paramsToUse.getMaxWorkers(), workerHash, startWorkerProcess);
+    }
     WorkerProcessPool previousPool = processPoolMap.putIfAbsent(key, newPool);
     // If putIfAbsent does not return null, then that means another thread beat this thread
     // into putting an WorkerProcessPool in the map for this key. If that's the case, then we
@@ -140,9 +155,7 @@ public class WorkerProcessPoolFactory {
     return ImmutableList.<String>builder()
         .addAll(executionArgs)
         .add(
-            paramsToUse
-                .getStartupCommand()
-                .stream()
+            paramsToUse.getStartupCommand().stream()
                 .map(Escaper::escapeAsShellString)
                 .collect(Collectors.joining(" ")))
         .build();
@@ -163,6 +176,8 @@ public class WorkerProcessPoolFactory {
   public WorkerProcess createWorkerProcess(
       ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
       throws IOException {
-    return new WorkerProcess(context.getProcessExecutor(), processParams, filesystem, tmpDir);
+    Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
+    return new WorkerProcess(
+        context.getProcessExecutor(), processParams, filesystem, stdErr, tmpDir);
   }
 }

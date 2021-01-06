@@ -1,18 +1,19 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android.toolchain.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -31,6 +32,8 @@ import org.junit.rules.ExpectedException;
 public class AndroidSdkDirectoryResolverTest {
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpDir2 = new TemporaryPaths();
+  @Rule public TemporaryPaths tmpDir3 = new TemporaryPaths();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -88,5 +91,46 @@ public class AndroidSdkDirectoryResolverTest {
             "ANDROID_SDK",
             sdkDir.resolve("also-wrong")));
     resolver.getSdkOrThrow();
+  }
+
+  @Test
+  public void testBuckConfigEntryInSdkPathSearchOrderIsUsed() throws IOException {
+    Path sdkDir = tmpDir.newFolder("sdk");
+    Path envDir = tmpDir2.newFolder("sdk");
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", envDir.toString()),
+            FakeAndroidBuckConfig.builder()
+                .setSdkPath(sdkDir.toString())
+                .setSdkPathSearchOrder("<CONFIG>, ANDROID_SDK")
+                .build());
+    assertEquals(sdkDir, resolver.getSdkOrThrow());
+  }
+
+  @Test
+  public void testEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
+    Path envDir = tmpDir.newFolder("sdk");
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", envDir.toString()),
+            FakeAndroidBuckConfig.builder().setSdkPathSearchOrder("<CONFIG>, ANDROID_SDK").build());
+    assertEquals(envDir, resolver.getSdkOrThrow());
+  }
+
+  @Test
+  public void testFirstEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
+    Path env1Dir = tmpDir.newFolder("sdk");
+    Path env2Dir = tmpDir2.newFolder("sdk");
+    Path env3Dir = tmpDir3.newFolder("sdk");
+    AndroidSdkDirectoryResolver resolver =
+        new AndroidSdkDirectoryResolver(
+            tmpDir.getRoot().getFileSystem(),
+            ImmutableMap.of("ANDROID_SDK", env1Dir.toString(), "ANDROID_HOME", env2Dir.toString(), "ANDROID_SDK_ROOT", env3Dir.toString()),
+            FakeAndroidBuckConfig.builder()
+                .setSdkPathSearchOrder("ANDROID_SDK, ANDROID_HOME, ANDROID_SDK_ROOT")
+                .build());
+    assertEquals(env1Dir, resolver.getSdkOrThrow());
   }
 }

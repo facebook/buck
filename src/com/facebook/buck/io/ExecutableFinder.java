@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io;
@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.FileFinder;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -31,10 +32,13 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
+import javax.annotation.Nullable;
 
 /**
  * Given the name of an executable, search a set of (possibly platform-specific) known locations for
@@ -132,6 +136,24 @@ public class ExecutableFinder {
     return true;
   }
 
+  // Returns Path or null, if string can not be converted to Path
+  private static final Function<String, Path> getPathSafe =
+      new Function<String, Path>() {
+        @Override
+        @Nullable
+        public Path apply(@Nullable String path) {
+          if (path == null) {
+            return null;
+          }
+          try {
+            return Paths.get(path);
+          } catch (InvalidPathException e) {
+            LOG.warn("Path '%s' is invalid: %s", path, e.getReason());
+            return null;
+          }
+        }
+      };
+
   private ImmutableSet<Path> getPaths(ImmutableMap<String, String> env) {
     ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
 
@@ -145,7 +167,8 @@ public class ExecutableFinder {
       paths.addAll(
           StreamSupport.stream(
                   Splitter.on(pathSeparator).omitEmptyStrings().split(pathEnv).spliterator(), false)
-              .map(Paths::get)
+              .map(getPathSafe)
+              .filter(Objects::nonNull)
               .iterator());
     }
 
@@ -154,8 +177,7 @@ public class ExecutableFinder {
       if (Files.exists(osXPaths)) {
         try {
           paths.addAll(
-              Files.readAllLines(osXPaths, Charset.defaultCharset())
-                  .stream()
+              Files.readAllLines(osXPaths, Charset.defaultCharset()).stream()
                   .map(Paths::get)
                   .iterator());
         } catch (IOException e) {

@@ -24,7 +24,7 @@ zip_file(
 
 zip_file(
     name = "unrolled",
-    srcs = [":source-jar"],
+    zip_srcs = [":source-jar"],
 )
 
 zip_file(
@@ -37,11 +37,166 @@ zip_file(
 )
 
 zip_file(
-    name = "zipbreak",
+    name = "excludeall",
     srcs = [
         "cake.txt",
         "source-1.0-sources.jar",
     ],
-    merge_source_zips = False,
-    zip_srcs = [":source-jar"],
+    entries_to_exclude = [
+        "cake.txt",
+        "menu.txt",
+    ],
+)
+
+zip_file(
+    name = "excludecake",
+    srcs = [
+        "cake.txt",
+    ],
+    entries_to_exclude = ["ca.e.*"],
+    zip_srcs = [
+        "source-1.0-sources.jar",
+    ],
+)
+
+zip_file(
+    name = "excludenothing",
+    srcs = [
+        "cake.txt",
+    ],
+    entries_to_exclude = [
+        "this.is.not.a.match",
+        "neither.is.this",
+    ],
+    zip_srcs = [
+        "source-1.0-sources.jar",
+    ],
+)
+
+zip_file(
+    name = "excludesnothinginsubfolder",
+    srcs = [
+        "beans",
+        "cake.txt",
+    ],
+)
+
+zip_file(
+    name = "excludesexactmatchinsubfolder",
+    srcs = [
+        "beans",
+        "cake.txt",
+    ],
+    entries_to_exclude = [
+        "beans/cheesy.txt",
+    ],
+)
+
+zip_file(
+    name = "exclude_from_zip",
+    entries_to_exclude = [
+        "cake.txt",
+    ],
+    zip_srcs = [
+        ":ziptastic",
+    ],
+)
+
+genrule(
+    name = "copy",
+    srcs = ["cake.txt"],
+    out = "copy_out",
+    cmd = "mkdir -p $OUT && cp $SRCS $OUT",
+    cmd_exe = "mkdir $OUT && copy %SRCS% %OUT%",
+)
+
+zip_file(
+    name = "copy_zip",
+    srcs = [
+        ":copy",
+    ],
+)
+
+zip_file(
+    name = "zip1",
+    srcs = [
+        "cake.txt",
+    ],
+)
+
+genrule(
+    name = "zip2_gen",
+    srcs = [
+        "duplicates/cake.txt",
+    ],
+    out = "cake.txt",
+    cmd = "cp duplicates/cake.txt $OUT",
+)
+
+zip_file(
+    name = "zip2",
+    srcs = [
+        ":zip2_gen",
+    ],
+)
+
+zip_file(
+    name = "zip3",
+    srcs = [
+        "cake.txt",
+    ],
+)
+
+zip_file(
+    name = "overwrite_duplicates",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "overwrite_duplicates_in_different_order",
+    zip_srcs = [
+        ":zip2",
+        ":zip1",
+    ],
+)
+
+zip_file(
+    name = "copy-zip-with-empty-dir",
+    zip_srcs = [
+        "zip-with-empty-dir.zip",
+    ],
+)
+
+zip_file(
+    name = "fail_on_duplicates",
+    on_duplicate_entry = "fail",
+    zip_srcs = [
+        ":zip1",
+        ":zip2",
+    ],
+)
+
+zip_file(
+    name = "append_duplicates",
+    srcs = [
+        "cake.txt",
+    ],
+    on_duplicate_entry = "append",
+    zip_srcs = [
+        ":zip1",
+        ":zip3",
+    ],
+)
+
+zip_file(
+    name = "overwrite_mixed_duplicates",
+    srcs = [
+        "cake.txt",
+    ],
+    zip_srcs = [
+        ":zip2",
+    ],
 )

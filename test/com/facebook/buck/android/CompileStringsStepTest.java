@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -20,12 +20,15 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.StringResources.Gender;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Splitter;
@@ -400,7 +403,7 @@ public class CompileStringsStepTest {
   }
 
   @Test
-  public void testSuccessfulStepExecution() throws InterruptedException, IOException {
+  public void testSuccessfulStepExecution() throws IOException {
     Path destinationDir = Paths.get("");
     Path rDotJavaSrcDir = Paths.get("");
 
@@ -460,15 +463,17 @@ public class CompileStringsStepTest {
 
     private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
 
-    public FakeProjectFileSystem() throws InterruptedException {
-      this(Paths.get(".").toAbsolutePath());
+    public FakeProjectFileSystem() {
+      this(AbsPath.of(Paths.get(".").toAbsolutePath()));
     }
 
-    private FakeProjectFileSystem(Path root) {
+    private FakeProjectFileSystem(AbsPath root) {
       super(
+          CanonicalCellName.rootCell(),
           root,
-          new DefaultProjectFilesystemDelegate(root),
-          DefaultProjectFilesystemFactory.getWindowsFSInstance());
+          new DefaultProjectFilesystemDelegate(root.getPath()),
+          DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+          TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
     }
 
     @Override

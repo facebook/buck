@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -19,8 +19,8 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.string.MoreStrings.withoutSuffix;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -63,13 +63,15 @@ public class ConfigOverrideIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Overriding repository locations from the command line "
-            + "is not supported. Please place a .buckconfig.local in the appropriate location and "
-            + "use that instead.");
-
-    workspace.runBuckCommand("targets", "--config", "repositories.secondary=../secondary");
+    ProcessResult processResult =
+        workspace.runBuckCommand("targets", "--config", "repositories.secondary=../secondary");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "Overriding repository locations from the command line "
+                + "is not supported. Please place a .buckconfig.local in the appropriate location and "
+                + "use that instead."));
   }
 
   @Test
@@ -118,9 +120,11 @@ public class ConfigOverrideIntegrationTest {
         tmp.newFile("buckconfig"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
     workspace.setUp();
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(containsString("Unknown cell"));
-    workspace.runBuckCommand("targets", "--config-file", "no_such_repo=repo//buckconfig", "//...");
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "targets", "--config-file", "no_such_repo=repo//buckconfig", "//...");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("Unknown cell"));
   }
 
   @Test

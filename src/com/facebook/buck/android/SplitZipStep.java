@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,9 +21,9 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.DalvikAwareZipSplitterFactory;
 import com.facebook.buck.android.dalvik.ZipSplitterFactory;
 import com.facebook.buck.android.dalvik.firstorder.FirstOrderHelper;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -164,8 +165,7 @@ public class SplitZipStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Set<Path> inputJarPaths =
         inputPathsToSplit.stream().map(filesystem::resolve).collect(ImmutableSet.toImmutableSet());
     Supplier<ImmutableList<ClassNode>> classes =
@@ -214,11 +214,9 @@ public class SplitZipStep implements Step {
             Files.newWriter(filesystem.resolve(secondaryJarMetaPath).toFile(), Charsets.UTF_8)) {
           writeMetaList(
               secondaryMetaInfoWriter,
-              SECONDARY_DEX_ID,
+              dexStore,
               ImmutableSet.of(),
-              outputFiles
-                  .get(dexStore)
-                  .stream()
+              outputFiles.get(dexStore).stream()
                   .map(filesystem::resolve)
                   .collect(Collectors.toList()),
               dexSplitMode.getDexStore());
@@ -234,11 +232,9 @@ public class SplitZipStep implements Step {
                 Charsets.UTF_8)) {
           writeMetaList(
               secondaryMetaInfoWriter,
-              dexStore.getName(),
-              Preconditions.checkNotNull(apkModuleMap.get(dexStore)),
-              outputFiles
-                  .get(dexStore)
-                  .stream()
+              dexStore,
+              Objects.requireNonNull(apkModuleMap.get(dexStore)),
+              outputFiles.get(dexStore).stream()
                   .map(filesystem::resolve)
                   .collect(Collectors.toList()),
               dexSplitMode.getDexStore());
@@ -263,7 +259,7 @@ public class SplitZipStep implements Step {
     return classFileName -> {
       // Drop the ".class" suffix and deobfuscate the class name before we apply our checks.
       String internalClassName =
-          Preconditions.checkNotNull(deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
+          Objects.requireNonNull(deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
 
       return primaryDexClassNames.contains(internalClassName)
           || primaryDexFilter.matches(internalClassName);
@@ -285,9 +281,7 @@ public class SplitZipStep implements Step {
 
     if (primaryDexClassesFile.isPresent()) {
       Iterable<String> classes =
-          filesystem
-              .readLines(primaryDexClassesFile.get())
-              .stream()
+          filesystem.readLines(primaryDexClassesFile.get()).stream()
               .map(String::trim)
               .filter(SplitZipStep::isNeitherEmptyNorComment)
               .collect(Collectors.toList());
@@ -315,9 +309,7 @@ public class SplitZipStep implements Step {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexHeadClassesFile.isPresent()) {
-      filesystem
-          .readLines(secondaryDexHeadClassesFile.get())
-          .stream()
+      filesystem.readLines(secondaryDexHeadClassesFile.get()).stream()
           .map(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .map(translatorFactory.createObfuscationFunction())
@@ -339,9 +331,7 @@ public class SplitZipStep implements Step {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexTailClassesFile.isPresent()) {
-      filesystem
-          .readLines(secondaryDexTailClassesFile.get())
-          .stream()
+      filesystem.readLines(secondaryDexTailClassesFile.get()).stream()
           .map(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .map(translatorFactory.createObfuscationFunction())
@@ -371,9 +361,7 @@ public class SplitZipStep implements Step {
       addScenarioClasses(translatorFactory, classesSupplier, builder, primaryDexScenarioFile.get());
     }
 
-    return builder
-        .build()
-        .stream()
+    return builder.build().stream()
         .map(input -> input + ".class")
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -398,9 +386,7 @@ public class SplitZipStep implements Step {
         translatorFactory.createDeobfuscationFunction();
 
     ImmutableList<Type> scenarioClasses =
-        filesystem
-            .readLines(scenarioFile)
-            .stream()
+        filesystem.readLines(scenarioFile).stream()
             .map(String::trim)
             .filter(SplitZipStep::isNeitherEmptyNorComment)
             .map(obfuscationFunction)
@@ -417,18 +403,18 @@ public class SplitZipStep implements Step {
   @VisibleForTesting
   static void writeMetaList(
       BufferedWriter writer,
-      String id,
+      APKModule module,
       ImmutableSet<APKModule> requires,
       List<Path> jarFiles,
       DexStore dexStore)
       throws IOException {
-    boolean isSecondaryDexStore = id.equals(SECONDARY_DEX_ID);
+    boolean isSecondaryDexStore = module.isRootModule();
     if (DexStore.RAW.equals(dexStore) && isSecondaryDexStore) {
       writer.write(".root_relative");
       writer.newLine();
     }
     if (!isSecondaryDexStore) {
-      writer.write(String.format(".id %s", id));
+      writer.write(String.format(".id %s", module.getName()));
       writer.newLine();
     }
     if (requires != null && !requires.isEmpty()) {
@@ -438,13 +424,10 @@ public class SplitZipStep implements Step {
       }
     }
     for (int i = 0; i < jarFiles.size(); i++) {
-      String filename = dexStore.fileNameForSecondary(i);
-      if (!isSecondaryDexStore) {
-        filename = dexStore.fileNameForSecondary(id, i);
-      }
+      String filename = dexStore.fileNameForSecondary(module, i);
       String jarHash = hexSha1(jarFiles.get(i));
       String containedClass = findAnyClass(jarFiles.get(i));
-      Preconditions.checkNotNull(containedClass);
+      Objects.requireNonNull(containedClass);
       writer.write(String.format("%s %s %s", filename, jarHash, containedClass));
       writer.newLine();
     }
@@ -515,12 +498,7 @@ public class SplitZipStep implements Step {
         }
         ImmutableList<Path> outputList = outputFiles.get(dexStore).asList();
         for (int i = 0; i < outputList.size(); i++) {
-          String dexName;
-          if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
-            dexName = dexSplitMode.getDexStore().fileNameForSecondary(i);
-          } else {
-            dexName = dexSplitMode.getDexStore().fileNameForSecondary(dexStore.getName(), i);
-          }
+          String dexName = dexSplitMode.getDexStore().fileNameForSecondary(dexStore, i);
           Path outputDexPath = storeRoot.resolve(dexName);
           builder.put(outputDexPath, outputList.get(i));
         }

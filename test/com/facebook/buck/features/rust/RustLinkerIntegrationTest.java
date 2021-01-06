@@ -1,27 +1,32 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
 
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.cxx.ElfFile;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -34,7 +39,7 @@ public class RustLinkerIntegrationTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void ensureRustIsAvailable() throws IOException, InterruptedException {
+  public void ensureRustIsAvailable() {
     RustAssumptions.assumeRustIsConfigured();
   }
 
@@ -164,5 +169,30 @@ public class RustLinkerIntegrationTest {
     workspace
         .runBuckCommand("run", "--config", "cxx.ld=//:generated_linker", "//:xyzzy")
         .assertSuccess();
+  }
+
+  @Test
+  public void sharedLibraryHasDefaultSoname() throws IOException {
+    assumeThat(Platform.detect(), Matchers.oneOf(Platform.FREEBSD, Platform.LINUX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
+    workspace.setUp();
+
+    Path libraryPath =
+        workspace.buildAndReturnOutput("//:shared-library-with-default-soname#shared");
+    String libraryFileName = libraryPath.getFileName().toString();
+    assertThat(libraryFileName, Matchers.matchesPattern("liblibrary-.*\\.so"));
+    assertThat(ElfFile.getSoname(libraryPath), Matchers.equalTo(Optional.of(libraryFileName)));
+  }
+
+  @Test
+  public void binaryHasNoSoname() throws IOException {
+    assumeThat(Platform.detect(), Matchers.oneOf(Platform.FREEBSD, Platform.LINUX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
+    workspace.setUp();
+
+    Path binaryPath = workspace.buildAndReturnOutput("//:binary");
+    assertThat(ElfFile.getSoname(binaryPath), Matchers.equalTo(Optional.empty()));
   }
 }

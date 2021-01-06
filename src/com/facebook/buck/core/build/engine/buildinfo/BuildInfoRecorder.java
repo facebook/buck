@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.buildinfo;
@@ -19,8 +19,7 @@ package com.facebook.buck.core.build.engine.buildinfo;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.collect.SortedSets;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -37,17 +36,13 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -151,10 +146,20 @@ public class BuildInfoRecorder {
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
+    ImmutableMap.Builder<String, String> artifactMetadata = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
-      projectFilesystem.writeContentsToPath(
-          entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
+      if (!entry.getKey().equals(BuildInfo.MetadataKey.DEP_FILE)) {
+        artifactMetadata.put(entry.getKey(), entry.getValue());
+      } else {
+        projectFilesystem.writeContentsToPath(
+            entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
+      }
     }
+
+    projectFilesystem.writeContentsToPath(
+        ObjectMappers.WRITER.writeValueAsString(artifactMetadata.build()),
+        BuildInfo.getPathToArtifactMetadataFile(buildTarget, projectFilesystem));
+
     updateBuildMetadata();
   }
 
@@ -183,38 +188,10 @@ public class BuildInfoRecorder {
 
   private ImmutableSortedSet<Path> getRecordedMetadataFiles() {
     return FluentIterable.from(metadataToWrite.keySet())
+        .filter(key -> key.equals(BuildInfo.MetadataKey.DEP_FILE))
         .transform(Paths::get)
         .transform(pathToMetadataDirectory::resolve)
         .toSortedSet(Ordering.natural());
-  }
-
-  private ImmutableSortedSet<Path> getRecordedOutputDirsAndFiles() throws IOException {
-    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-
-    // Add files from output directories.
-    for (Path output : pathsToOutputs) {
-      projectFilesystem.walkRelativeFileTree(
-          output,
-          new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-              paths.add(file);
-              return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
-              paths.add(dir);
-              return FileVisitResult.CONTINUE;
-            }
-          });
-    }
-
-    return paths.build();
-  }
-
-  private SortedSet<Path> getRecordedDirsAndFiles() throws IOException {
-    return SortedSets.union(getRecordedMetadataFiles(), getRecordedOutputDirsAndFiles());
   }
 
   public ImmutableSortedSet<Path> getRecordedPaths() {
@@ -224,22 +201,12 @@ public class BuildInfoRecorder {
         .build();
   }
 
-  public HashCode getOutputHash(FileHashCache fileHashCache) throws IOException {
+  public HashCode getOutputHash(FileHashLoader fileHashLoader) throws IOException {
     Hasher hasher = Hashing.md5().newHasher();
     for (Path path : getRecordedPaths()) {
-      hasher.putBytes(fileHashCache.get(projectFilesystem.resolve(path)).asBytes());
+      hasher.putBytes(fileHashLoader.get(projectFilesystem.resolve(path)).asBytes());
     }
     return hasher.hash();
-  }
-
-  public long getOutputSize() throws IOException {
-    long size = 0;
-    for (Path path : getRecordedDirsAndFiles()) {
-      if (projectFilesystem.isFile(path)) {
-        size += projectFilesystem.getFileSize(path);
-      }
-    }
-    return size;
   }
 
   /** @param pathToArtifact Relative path to the project root. */

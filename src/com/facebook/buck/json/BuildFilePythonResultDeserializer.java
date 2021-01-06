@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.json;
@@ -110,7 +110,21 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     ImmutableList.Builder<Object> builder = ImmutableList.builder();
     JsonToken token;
     while ((token = jp.nextToken()) != JsonToken.END_ARRAY) {
-      builder.add(deserializeRecursive(jp, token));
+      Object obj = deserializeRecursive(jp, token);
+      if (obj != null) {
+        builder.add(obj);
+      }
+      else {
+        // null elements can't be added to ImmutableList, an NPE will be thrown.
+        // Throw a meaningful exception here instead.
+        StringBuilder message = new StringBuilder();
+        message.append("null value can't be added to [");
+        for (Object element: builder.build()) {
+          message.append("'").append(element).append("'").append(", ");
+        }
+        message.append("]");
+        throw new IllegalArgumentException(message.toString());
+      }
     }
     if (token != JsonToken.END_ARRAY) {
       throw new JsonParseException(jp, "Missing expected END_ARRAY");

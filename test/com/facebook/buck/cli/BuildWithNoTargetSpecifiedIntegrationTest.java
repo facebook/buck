@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -48,7 +48,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         "`buck build` should display an error message if no targets are provided.",
         result.getStderr(),
         containsString(
-            "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html"
+            "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html"
                 + System.lineSeparator()));
   }
 
@@ -68,7 +68,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on(System.lineSeparator())
                     .join(
-                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
+                        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp")
                 + System.lineSeparator()));
@@ -97,7 +97,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on(System.lineSeparator())
                     .join(
-                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
+                        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app")
                 + System.lineSeparator()));
@@ -126,7 +126,7 @@ public class BuildWithNoTargetSpecifiedIntegrationTest {
         containsString(
             Joiner.on(System.lineSeparator())
                     .join(
-                        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html",
+                        "Must specify at least one build target. See https://buck.build/concept/build_target_pattern.html",
                         "Try building one of the following targets:",
                         "myapp my_app mi_app mon_app mein_app alias0 alias1 alias2 alias3 alias4")
                 + System.lineSeparator()));

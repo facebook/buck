@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.thrift.ArtifactMetadata;
@@ -32,15 +33,21 @@ import com.facebook.buck.artifact_cache.thrift.ContainsResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,9 +62,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -75,30 +82,41 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   public static final String PROTOCOL_HEADER = "X-Thrift-Protocol";
   public static final ThriftProtocol PROTOCOL = ThriftProtocol.COMPACT;
 
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final String hybridThriftEndpoint;
-  private final boolean distributedBuildModeEnabled;
   private final BuildId buildId;
   private final int multiFetchLimit;
   private final int concurrencyLevel;
+  private final boolean multiCheckEnabled;
+  private final String producerId;
+  private final String producerHostname;
 
   public ThriftArtifactCache(
       NetworkCacheArgs args,
       String hybridThriftEndpoint,
-      boolean distributedBuildModeEnabled,
       BuildId buildId,
       int multiFetchLimit,
-      int concurrencyLevel) {
+      int concurrencyLevel,
+      boolean multiCheckEnabled,
+      String producerId,
+      String producerHostname) {
     super(args);
+    this.unconfiguredBuildTargetFactory = args.getUnconfiguredBuildTargetFactory();
+    this.targetConfigurationSerializer = args.getTargetConfigurationSerializer();
     this.buildId = buildId;
     this.multiFetchLimit = multiFetchLimit;
     this.concurrencyLevel = concurrencyLevel;
+    this.multiCheckEnabled = multiCheckEnabled;
     this.hybridThriftEndpoint = hybridThriftEndpoint;
-    this.distributedBuildModeEnabled = distributedBuildModeEnabled;
+    this.producerId = producerId;
+    this.producerHostname = producerHostname;
   }
 
   @Override
-  protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
-    FetchResult.Builder resultBuilder = FetchResult.builder();
+  protected FetchResult fetchImpl(@Nullable BuildTarget target, RuleKey ruleKey, LazyPath output)
+      throws IOException {
+    ImmutableFetchResult.Builder resultBuilder = ImmutableFetchResult.builder();
 
     BuckCacheFetchRequest fetchRequest = new BuckCacheFetchRequest();
     com.facebook.buck.artifact_cache.thrift.RuleKey thriftRuleKey =
@@ -107,7 +125,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     fetchRequest.setRuleKey(thriftRuleKey);
     fetchRequest.setRepository(getRepository());
     fetchRequest.setScheduleType(scheduleType);
-    fetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
+
+    if (target != null) {
+      fetchRequest.setBuildTarget(target.getFullyQualifiedName());
+    }
 
     BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);
@@ -208,7 +229,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         }
 
         resultBuilder
-            .setBuildTarget(Optional.ofNullable(metadata.getBuildTarget()))
+            .setBuildTarget(
+                AbstractArtifactCacheEventFactory.getTarget(
+                    unconfiguredBuildTargetFactory,
+                    metadata.getBuildTarget(),
+                    getTargetConfigurationFromMetadata(metadata)))
             .setAssociatedRuleKeys(associatedRuleKeys)
             .setArtifactSizeBytes(readResult.getBytesRead());
         if (!metadata.isSetArtifactPayloadMd5()) {
@@ -221,8 +246,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               .equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
             String msg =
                 String.format(
-                    "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
-                    fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
+                    "The artifact fetched from cache for rule key [%s] is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+                    ruleKey,
+                    fetchResponse.getMetadata().getArtifactPayloadMd5(),
+                    readResult.getMd5Hash());
             LOG.warn(msg);
             return resultBuilder
                 .setCacheResult(CacheResult.error(getName(), getMode(), msg))
@@ -251,7 +278,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   private void processContainsResult(
-      RuleKey ruleKey, ContainsResult containsResult, MultiContainsResult.Builder resultBuilder) {
+      RuleKey ruleKey,
+      ContainsResult containsResult,
+      ImmutableMultiContainsResult.Builder resultBuilder) {
     switch (containsResult.resultType) {
       case CONTAINS:
         resultBuilder.putCacheResults(ruleKey, CacheResult.contains(getName(), getMode()));
@@ -275,7 +304,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
   private MultiContainsResult processMultiContainsHttpResponse(
       HttpResponse httpResponse, List<RuleKey> ruleKeys) throws IOException {
-    MultiContainsResult.Builder resultBuilder = MultiContainsResult.builder();
+    ImmutableMultiContainsResult.Builder resultBuilder = ImmutableMultiContainsResult.builder();
 
     if (httpResponse.statusCode() != 200) {
       LOG.warn(
@@ -350,7 +379,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     containsRequest.setRepository(getRepository());
     containsRequest.setScheduleType(scheduleType);
-    containsRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
     BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.CONTAINS);
@@ -377,10 +405,20 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
+  protected boolean isMultiCheckEnabled() {
+    return multiCheckEnabled;
+  }
+
+  @Override
   protected MultiFetchResult multiFetchImpl(Iterable<FetchRequest> requests) throws IOException {
     ImmutableList<RuleKey> keys =
         RichStream.from(requests)
             .map(FetchRequest::getRuleKey)
+            .collect(ImmutableList.toImmutableList());
+    ImmutableList<String> targets =
+        RichStream.from(requests)
+            .map(FetchRequest::getBuildTarget)
+            .map(t -> t != null ? t.getFullyQualifiedName() : "")
             .collect(ImmutableList.toImmutableList());
     ImmutableList<LazyPath> outputs =
         RichStream.from(requests)
@@ -390,12 +428,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     String joinedKeys = Joiner.on(", ").join(keys);
     LOG.verbose("Will fetch keys <%s>", joinedKeys);
 
-    BuckCacheRequest cacheRequest = createMultiFetchRequest(keys);
+    BuckCacheRequest cacheRequest = createMultiFetchRequest(keys, targets);
     try (HttpResponse httpResponse =
         fetchClient.makeRequest(
             hybridThriftEndpoint,
             toOkHttpRequest(ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest)))) {
-      return MultiFetchResult.of(
+      return ImmutableMultiFetchResult.of(
           processMultiFetchResponse(keys, outputs, cacheRequest, joinedKeys, httpResponse));
     }
   }
@@ -407,12 +445,13 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     return thriftRuleKey;
   }
 
-  private BuckCacheRequest createMultiFetchRequest(ImmutableList<RuleKey> keys) {
+  private BuckCacheRequest createMultiFetchRequest(
+      ImmutableList<RuleKey> keys, ImmutableList<String> targets) {
     BuckCacheMultiFetchRequest multiFetchRequest = new BuckCacheMultiFetchRequest();
     multiFetchRequest.setRepository(getRepository());
     multiFetchRequest.setScheduleType(scheduleType);
-    multiFetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
     keys.forEach(k -> multiFetchRequest.addToRuleKeys(toThriftRuleKey(k)));
+    targets.forEach(t -> multiFetchRequest.addToBuildTargets(t));
 
     BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.MULTI_FETCH);
@@ -439,7 +478,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
               joinedKeys);
       LOG.warn(message);
       CacheResult cacheResult = CacheResult.error(getName(), getMode(), message);
-      return keys.stream().map(k -> FetchResult.builder().setCacheResult(cacheResult).build())
+      return keys.stream()
+              .map(k -> ImmutableFetchResult.builder().setCacheResult(cacheResult).build())
           ::iterator;
     }
 
@@ -453,7 +493,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     }
   }
 
-  private ImmutableList<FetchResult.Builder> convertMultiFetchResponseToFetchResults(
+  private ImmutableList<ImmutableFetchResult.Builder> convertMultiFetchResponseToFetchResults(
       ImmutableList<RuleKey> keys,
       ImmutableList<LazyPath> outputs,
       BuckCacheRequest cacheRequest,
@@ -461,8 +501,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       ThriftArtifactCacheProtocol.Response response)
       throws IOException {
     long responseSizeBytes = httpResponse.contentLength();
-    ImmutableList<FetchResult.Builder> resultsBuilders =
-        keys.stream().map(k -> FetchResult.builder()).collect(ImmutableList.toImmutableList());
+    ImmutableList<ImmutableFetchResult.Builder> resultsBuilders =
+        keys.stream()
+            .map(k -> ImmutableFetchResult.builder())
+            .collect(ImmutableList.toImmutableList());
 
     BuckCacheResponse cacheResponse = response.getThriftData();
     resultsBuilders.forEach(b -> b.setResponseSizeBytes(responseSizeBytes));
@@ -497,7 +539,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       RuleKey ruleKey = keys.get(i);
       com.facebook.buck.artifact_cache.thrift.FetchResult fetchResponse =
           multiFetchResponse.getResults().get(i);
-      FetchResult.Builder builder = resultsBuilders.get(i);
+      ImmutableFetchResult.Builder builder = resultsBuilders.get(i);
       LOG.verbose("Handling result for key %s", ruleKey);
 
       convertSingleMultiFetchResult(
@@ -511,7 +553,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       RuleKey ruleKey,
       PayloadReader payloadReader,
       LazyPath output,
-      FetchResult.Builder builder)
+      ImmutableFetchResult.Builder builder)
       throws IOException {
     FetchResultType resultType = fetchResponse.getResultType();
     switch (resultType) {
@@ -522,6 +564,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
                 getName(), getMode(), String.format("Got bad result of type %s", resultType)));
         return;
       case MISS:
+      case MISS_IN_SLA:
+      case MISS_ONLY_IN_MEMCACHE:
+      case MISS_OUT_SLA:
+      case MISS_UNKNOWN:
         LOG.verbose("Artifact did not exist.");
         builder.setCacheResult(CacheResult.miss());
         return;
@@ -595,7 +641,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     }
 
     builder
-        .setBuildTarget(Optional.ofNullable(metadata.getBuildTarget()))
+        .setBuildTarget(
+            AbstractArtifactCacheEventFactory.getTarget(
+                unconfiguredBuildTargetFactory,
+                metadata.getBuildTarget(),
+                getTargetConfigurationFromMetadata(metadata)))
         .setAssociatedRuleKeys(associatedRuleKeys)
         .setArtifactSizeBytes(readResult.getBytesRead());
 
@@ -613,8 +663,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     if (!readResult.getMd5Hash().equals(fetchResponse.getMetadata().getArtifactPayloadMd5())) {
       String msg =
           String.format(
-              "The artifact fetched from cache is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
-              fetchResponse.getMetadata().getArtifactPayloadMd5(), readResult.getMd5Hash());
+              "The artifact fetched from cache for rule key [%s] is corrupted. ExpectedMD5=[%s] ActualMD5=[%s]",
+              ruleKey,
+              fetchResponse.getMetadata().getArtifactPayloadMd5(),
+              readResult.getMd5Hash());
       LOG.warn(msg);
       builder.setCacheResult(CacheResult.error(getName(), getMode(), msg));
       return;
@@ -630,6 +682,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             readResult.getBytesRead()));
   }
 
+  private TargetConfiguration getTargetConfigurationFromMetadata(
+      ArtifactMetadata artifactMetadata) {
+    if (Strings.isNullOrEmpty(artifactMetadata.getConfiguration())) {
+      return UnconfiguredTargetConfiguration.INSTANCE;
+    }
+    return targetConfigurationSerializer.deserialize(artifactMetadata.getConfiguration());
+  }
+
   private static ImmutableSet<RuleKey> toImmutableSet(
       List<com.facebook.buck.artifact_cache.thrift.RuleKey> ruleKeys) {
     return ImmutableSet.copyOf(
@@ -638,7 +698,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
   @Override
   protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
-    StoreResult.Builder resultBuilder = StoreResult.builder();
     ByteSource artifact =
         new ByteSource() {
           @Override
@@ -649,7 +708,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
     BuckCacheStoreRequest storeRequest = new BuckCacheStoreRequest();
     ArtifactMetadata artifactMetadata =
-        infoToMetadata(info, artifact, getRepository(), scheduleType, distributedBuildModeEnabled);
+        infoToMetadata(
+            info,
+            artifact,
+            getRepository(),
+            scheduleType,
+            producerId,
+            producerHostname,
+            artifact.size());
     storeRequest.setMetadata(artifactMetadata);
     PayloadInfo payloadInfo = new PayloadInfo();
     long artifactSizeBytes = artifact.size();
@@ -658,6 +724,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     cacheRequest.addToPayloads(payloadInfo);
     cacheRequest.setType(BuckCacheRequestType.STORE);
     cacheRequest.setStoreRequest(storeRequest);
+
+    // Handling for file system issues may lead us to upload empty manifests
+    if (artifactSizeBytes == 0 && info.isManifest()) {
+      throw new IOException(
+          String.format("Trying to upload a 0 size Manifest entry %s", info.getRuleKeys()));
+    }
 
     if (LOG.isVerboseEnabled()) {
       LOG.verbose(
@@ -669,6 +741,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest, artifact);
     Request.Builder builder = toOkHttpRequest(request);
+    ImmutableStoreResult.Builder resultBuilder = ImmutableStoreResult.builder();
     resultBuilder.setRequestSizeBytes(request.getRequestLengthBytes());
     try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
       if (httpResponse.statusCode() != 200) {
@@ -716,16 +789,21 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             getProjectFilesystem().getBuckPaths().getScratchDir(), "buckcache_artifact", ".tmp");
   }
 
-  private static ArtifactMetadata infoToMetadata(
+  private ArtifactMetadata infoToMetadata(
       ArtifactInfo info,
       ByteSource file,
       String repository,
       String scheduleType,
-      boolean distributedBuildModeEnabled)
+      String producerId,
+      String producerHostname,
+      long artifactSize)
       throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
       metadata.setBuildTarget(info.getBuildTarget().get().toString());
+      metadata.setConfiguration(
+          targetConfigurationSerializer.serialize(
+              info.getBuildTarget().get().getTargetConfiguration()));
     }
 
     metadata.setRuleKeys(
@@ -743,7 +821,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     metadata.setArtifactPayloadMd5(ThriftArtifactCacheProtocol.computeMd5Hash(file));
     metadata.setRepository(repository);
     metadata.setScheduleType(scheduleType);
-    metadata.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
+    metadata.setProducerId(producerId);
+    metadata.setProducerHostname(producerHostname);
+    metadata.setBuildTimeMs(info.getBuildTimeMs());
+    metadata.setSizeBytes(artifactSize);
 
     return metadata;
   }
@@ -775,8 +856,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   @Override
   protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
     List<com.facebook.buck.artifact_cache.thrift.RuleKey> ruleKeysThrift =
-        ruleKeys
-            .stream()
+        ruleKeys.stream()
             .map(
                 r ->
                     new com.facebook.buck.artifact_cache.thrift.RuleKey()
@@ -784,7 +864,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             .collect(Collectors.toList());
 
     BuckCacheDeleteRequest deleteRequest = new BuckCacheDeleteRequest();
-    deleteRequest.setDistributedBuildModeEnabledIsSet(distributedBuildModeEnabled);
     deleteRequest.setRepository(getRepository());
     deleteRequest.setRuleKeys(ruleKeysThrift);
     deleteRequest.setScheduleType(scheduleType);
@@ -840,7 +919,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         String cacheName =
             ThriftArtifactCache.class.getSimpleName() + "[" + storesCommaSeparated + "]";
         ImmutableList<String> cacheNames = ImmutableList.of(cacheName);
-        return CacheDeleteResult.builder().setCacheNames(cacheNames).build();
+        return CacheDeleteResult.of(cacheNames);
       }
     }
   }

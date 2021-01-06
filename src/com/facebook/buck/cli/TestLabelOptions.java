@@ -1,29 +1,30 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -88,7 +89,7 @@ class TestLabelOptions {
             // Invert the sense of anything given to --exclude.
             // This means we could --exclude !includeMe  ...lolololol
             for (Integer ordinal : excludedLabelSets.keySet()) {
-              LabelSelector original = Preconditions.checkNotNull(excludedLabelSets.get(ordinal));
+              LabelSelector original = Objects.requireNonNull(excludedLabelSets.get(ordinal));
               all.put(ordinal, original.invert());
             }
 
@@ -108,7 +109,7 @@ class TestLabelOptions {
     }
 
     List<String> defaultRawExcludedLabelSelectors =
-        buckConfig.getDefaultRawExcludedLabelSelectors();
+        buckConfig.getView(TestBuckConfig.class).getDefaultRawExcludedLabelSelectors();
     for (String raw : defaultRawExcludedLabelSelectors) {
       LabelSelector labelSelector = LabelSelector.fromString(raw).invert();
       if (labelSelector.matches(rawLabels)) {

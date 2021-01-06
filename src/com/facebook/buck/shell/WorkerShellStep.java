@@ -1,25 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
@@ -28,24 +28,25 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerJobResult;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class WorkerShellStep implements Step {
 
-  private Optional<WorkerJobParams> cmdParams;
-  private Optional<WorkerJobParams> bashParams;
-  private Optional<WorkerJobParams> cmdExeParams;
-  private WorkerProcessPoolFactory factory;
+  private final Optional<WorkerJobParams> cmdParams;
+  private final Optional<WorkerJobParams> bashParams;
+  private final Optional<WorkerJobParams> cmdExeParams;
+  private final WorkerProcessPoolFactory factory;
 
   /** Target using this worker shell step. */
-  BuildTarget buildTarget;
+  private final BuildTarget buildTarget;
 
   /**
    * Creates new shell step that uses worker process to delegate work. If platform-specific params
@@ -78,9 +79,14 @@ public class WorkerShellStep implements Step {
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
     WorkerProcessPool pool =
         factory.getWorkerProcessPool(context, paramsToUse.getWorkerProcessParams());
-    WorkerJobResult result;
-    try (BorrowedWorkerProcess process = pool.borrowWorkerProcess()) {
-      result = process.submitAndWaitForJob(getExpandedJobArgs(context));
+    WorkerJobResult result = null;
+    try {
+      result = pool.submitJob(getExpandedJobArgs(context)).get();
+    } catch (ExecutionException e) {
+      if (e.getCause() != null) {
+        Throwables.throwIfUnchecked(e.getCause());
+      }
+      throw new RuntimeException(e);
     }
 
     Verbosity verbosity = context.getVerbosity();
@@ -95,7 +101,7 @@ public class WorkerShellStep implements Step {
     if (showStdout) {
       context.postEvent(ConsoleEvent.info("%s", result.getStdout().get()));
     }
-    if (showStderr) {
+    if (showStderr || result.getExitCode() != 0) {
       if (result.getExitCode() == 0) {
         context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
       } else {

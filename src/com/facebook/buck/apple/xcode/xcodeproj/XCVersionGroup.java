@@ -1,21 +1,22 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -33,7 +34,11 @@ public class XCVersionGroup extends PBXReference {
 
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
 
-  public XCVersionGroup(String name, @Nullable String path, SourceTree sourceTree) {
+  public XCVersionGroup(
+      String name,
+      @Nullable String path,
+      SourceTree sourceTree,
+      AbstractPBXObjectFactory objectFactory) {
     super(name, path, sourceTree);
     children = new ArrayList<>();
 
@@ -43,7 +48,7 @@ public class XCVersionGroup extends PBXReference {
                 new CacheLoader<SourceTreePath, PBXFileReference>() {
                   @Override
                   public PBXFileReference load(SourceTreePath key) {
-                    PBXFileReference ref = key.createFileReference();
+                    PBXFileReference ref = key.createFileReference(objectFactory);
                     children.add(ref);
                     return ref;
                   }
@@ -57,6 +62,10 @@ public class XCVersionGroup extends PBXReference {
       return currentVersion.getExplicitFileType();
     }
     return Optional.empty();
+  }
+
+  public PBXFileReference getCurrentVersion() {
+    return currentVersion;
   }
 
   public void setCurrentVersion(PBXFileReference v) {

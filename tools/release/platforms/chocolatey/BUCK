@@ -1,5 +1,4 @@
-load("//programs:defs.bzl", "get_release_version", "get_release_timestamp")
-load("//tools/build_rules:export_files.bzl", "export_files")
+load("//programs:defs.bzl", "get_release_timestamp", "get_release_version")
 
 version = get_release_version()
 
@@ -16,7 +15,12 @@ python_binary(
     deps = [":build-lib"],
 )
 
-export_files(["VERIFICATION.TXT"])
+export_file(
+    name = "VERIFICATION.txt",
+    visibility = [
+        "PUBLIC",
+    ],
+)
 
 genrule(
     name = "chocolatey",
@@ -35,7 +39,7 @@ genrule(
         "--license-file",
         "$(location //:LICENSE)",
         "--verification-txt",
-        "$(location :VERIFICATION.TXT)",
+        "$(location :VERIFICATION.txt)",
         "--version",
         version,
         "--timestamp",

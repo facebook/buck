@@ -1,3 +1,17 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import logging
 import os
 import tempfile
@@ -5,23 +19,29 @@ import tempfile
 import dateutil.parser
 import magic
 import requests
+import time
 
 from platforms.common import ReleaseException, run
 
-MESSAGE_TEMPLATE = """\
+MESSAGE_PROMPT_TEMPLATE = """\
 # Add release notes below. Any lines starting with '#' will be ignored.
-This release as always includes many improvements and bug fixes.
+{default_message}
 
 # Commits since last release:
 #
 {commit_messages}
 """
 
+MESSAGE_TEMPLATE = """\
+Includes various improvements and bug fixes, viewable here: {html_url}
+"""
+
 
 def get_version_and_timestamp_from_release(release):
     """ Returns the version (without a 'v' prefix) and the timestamp of the release """
     release_version = release["tag_name"].lstrip("v")
-    release_timestamp = dateutil.parser.parse(release["created_at"]).strftime("%s")
+    created_at = dateutil.parser.parse(release["created_at"])
+    release_timestamp = str(int(time.mktime(created_at.timetuple())))
     return release_version, release_timestamp
 
 
@@ -44,7 +64,8 @@ def get_current_user(github_token, prefer_fb_email=True):
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     ret = response.json()
-    if not ret["email"].endswith("@fb.com") and prefer_fb_email:
+    default_email = ret["email"]
+    if default_email is None or (not default_email.endswith("@fb.com") and prefer_fb_email):
         while emails_url:
             response = requests.get(emails_url, headers=headers)
             response.raise_for_status()
@@ -52,7 +73,7 @@ def get_current_user(github_token, prefer_fb_email=True):
                 (
                     email["email"]
                     for email in response.json()
-                    if email["verified"] and email["email"].endswith("@fb.com")
+                    if email["verified"] and email["email"].endswith("@fb.com") and (email["visibility"] is None or email["visibility"].lower() == "public")
                 ),
                 None,
             )
@@ -61,6 +82,17 @@ def get_current_user(github_token, prefer_fb_email=True):
                 break
             else:
                 emails_url = response.links.get("next", {}).get("url")
+            if default_email is None:
+                default_email = next(
+                    (
+                        email["email"]
+                        for email in response.json()
+                        if email["verified"] and (email["visibility"] is None or email["visibility"].lower() == "public")
+                    ),
+                    None,
+               )
+    if ret["email"] is None and not default_email is None:
+        ret["email"] = default_email
     return ret
 
 
@@ -106,7 +138,11 @@ def get_summaries_between_releases(
     headers = get_headers(github_token)
     response = requests.get(url, headers=headers)
     response.raise_for_status()
-    return [get_summary_from_commit(commit) for commit in response.json()["commits"]]
+    js = response.json()
+    return (
+        js["html_url"],
+        [get_summary_from_commit(commit) for commit in js["commits"]],
+    )
 
 
 def get_headers(github_token):
@@ -182,19 +218,25 @@ def get_release_for_tag(repository, github_token, version_tag):
     return ret
 
 
-def prompt_for_message(summaries):
+def prompt_for_message(html_url, summaries):
     """
     Prompts the user for a release message in an editor, showing them the commits since
     last release, and returns what the user specified
 
     Args:
+        html_url:  The url to see the difference between the current commit and the
+                   commit for the previous release.
         summaries: The commit summaries to display to the user
     """
+    default_message = create_default_message(html_url)
     summaries_text = "\n".join(("# " + line for line in summaries))
+    full_message = MESSAGE_PROMPT_TEMPLATE.format(
+        default_message=default_message, commit_messages=summaries_text
+    )
     temp_fd, temp_path = tempfile.mkstemp()
     try:
         with open(temp_path, "w") as fout:
-            fout.write(MESSAGE_TEMPLATE.format(commit_messages=summaries_text))
+            fout.write(full_message)
         editor = os.environ.get("EDITOR", "vim")
         run([editor, temp_path])
         with open(temp_path, "r") as fin:
@@ -206,6 +248,10 @@ def prompt_for_message(summaries):
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+def create_default_message(html_url):
+    return MESSAGE_TEMPLATE.format(html_url=html_url)
 
 
 def add_assets(release, github_token, path):
@@ -239,7 +285,9 @@ def add_assets(release, github_token, path):
     return ret
 
 
-def create_new_release(repository, github_token, version_tag, message):
+def create_new_release(
+    repository, github_token, version_tag, message, should_prompt_for_message
+):
     """
     Creates a new release, optionally prompting the user for a release message
 
@@ -247,8 +295,11 @@ def create_new_release(repository, github_token, version_tag, message):
         repository: The github repository
         github_token: The github token that can create releases
         verison_tag: The version tag that should be created at the current 'master'
-        message: If None, prompt the user for a message, otherwise use this message
-                 for the release summary.
+        message: If None, prompt the user for a message (or create a default one),
+                 otherwise use this message for the release summary.
+        should_prompt_for_message: If false, just create a release that points to the
+                            list of changes between the last release and this one.
+                            Otherwise, prompt the user for a message.
 
     Returns:
         The github repository object
@@ -257,14 +308,18 @@ def create_new_release(repository, github_token, version_tag, message):
     if not message:
         latest_release = get_latest_release(repository, github_token)
         commit_summaries = []
+        html_url = ""
         if latest_release:
             latest_release_hash = get_commit(
                 repository, github_token, latest_release["tag_name"]
             )
-            commit_summaries = get_summaries_between_releases(
+            html_url, commit_summaries = get_summaries_between_releases(
                 repository, github_token, latest_release_hash, master_commit
             )
-        message = prompt_for_message(commit_summaries)
+        if should_prompt_for_message:
+            message = prompt_for_message(html_url, commit_summaries)
+        else:
+            message = create_default_message(html_url)
     release = create_release(
         repository, github_token, message, version_tag, master_commit
     )

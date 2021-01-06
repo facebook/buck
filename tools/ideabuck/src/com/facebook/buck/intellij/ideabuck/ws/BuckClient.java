@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.ws;
@@ -64,10 +64,9 @@ public class BuckClient {
   }
 
   public void connect() {
-    if (isConnected() || mConnecting.get()) {
+    if (isConnected() || mConnecting.getAndSet(true)) {
       return;
     }
-    mConnecting.set(true);
     ApplicationManager.getApplication()
         .executeOnPooledThread(
             new Runnable() {
@@ -75,7 +74,7 @@ public class BuckClient {
               public void run() {
                 try {
                   int port = BuckWSServerPortUtils.getPort(mProject, mProject.getBasePath());
-                  if (port == -1) {
+                  if (port < 0) {
                     String warning =
                         "Your buck server may be turned off, since the Buck daemon is on port "
                             + port
@@ -90,13 +89,10 @@ public class BuckClient {
                   }
                   // Connect to WebServer
                   connectToWebServer("localhost", port);
-                } catch (NumberFormatException e) {
-                  LOG.error(e);
-                } catch (ExecutionException e) {
-                  LOG.error(e);
-                } catch (IOException e) {
+                } catch (NumberFormatException | ExecutionException | IOException e) {
                   LOG.error(e);
                 } catch (RuntimeException e) {
+                  LOG.info(e);
                   if (!mProject.isDisposed()) {
                     BuckModule buckModule = mProject.getComponent(BuckModule.class);
                     /* FIXME(shemitz) attachIfDetached() adds a lot of listeners to the IJ message

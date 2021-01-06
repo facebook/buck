@@ -3,11 +3,14 @@ load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 standard_java_test(
     name = "file",
     deps = [
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
+        "//test/com/facebook/buck/core/filesystems:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
@@ -15,6 +18,7 @@ standard_java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
     ],
 )
 

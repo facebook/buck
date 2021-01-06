@@ -1,29 +1,30 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
 
 import com.facebook.buck.apple.xcode.XCScheme;
+import com.facebook.buck.apple.xcode.XCScheme.AdditionalActions;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.features.apple.common.SchemeActionType;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +37,9 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -73,19 +76,25 @@ class SchemeGenerator {
   private final String schemeName;
   private final Path outputDirectory;
   private final boolean parallelizeBuild;
+  private final boolean wasCreatedForAppExtension;
   private final Optional<String> runnablePath;
   private final Optional<String> remoteRunnablePath;
   private final ImmutableMap<SchemeActionType, String> actionConfigNames;
   private final ImmutableMap<PBXTarget, Path> targetToProjectPathMap;
 
   private Optional<XCScheme> outputScheme = Optional.empty();
+  private final Optional<XCScheme.LaunchAction.WatchInterface> watchInterface;
+  private final Optional<String> notificationPayloadFile;
   private final XCScheme.LaunchAction.LaunchStyle launchStyle;
   private final Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
       environmentVariables;
+  private final Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn;
   private Optional<
           ImmutableMap<
               SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
       additionalSchemeActions;
+  private final Optional<String> applicationLanguage;
+  private final Optional<String> applicationRegion;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -96,19 +105,26 @@ class SchemeGenerator {
       String schemeName,
       Path outputDirectory,
       boolean parallelizeBuild,
+      Optional<Boolean> wasCreatedForAppExtension,
       Optional<String> runnablePath,
       Optional<String> remoteRunnablePath,
       ImmutableMap<SchemeActionType, String> actionConfigNames,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
       Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables,
+      Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn,
       Optional<
               ImmutableMap<
                   SchemeActionType,
                   ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
           additionalSchemeActions,
-      XCScheme.LaunchAction.LaunchStyle launchStyle) {
+      XCScheme.LaunchAction.LaunchStyle launchStyle,
+      Optional<XCScheme.LaunchAction.WatchInterface> watchInterface,
+      Optional<String> notificationPayloadFile,
+      Optional<String> applicationLanguage,
+      Optional<String> applicationRegion) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
+    this.watchInterface = watchInterface;
     this.launchStyle = launchStyle;
     this.orderedBuildTargets = orderedBuildTargets;
     this.orderedBuildTestTargets = orderedBuildTestTargets;
@@ -116,14 +132,19 @@ class SchemeGenerator {
     this.schemeName = schemeName;
     this.outputDirectory = outputDirectory;
     this.parallelizeBuild = parallelizeBuild;
+    this.wasCreatedForAppExtension = wasCreatedForAppExtension.orElse(false);
     this.runnablePath = runnablePath;
     this.remoteRunnablePath = remoteRunnablePath;
     this.actionConfigNames = actionConfigNames;
     this.targetToProjectPathMap = targetToProjectPathMap;
     this.environmentVariables = environmentVariables;
+    this.expandVariablesBasedOn = expandVariablesBasedOn;
     this.additionalSchemeActions = additionalSchemeActions;
+    this.notificationPayloadFile = notificationPayloadFile;
+    this.applicationLanguage = applicationLanguage;
+    this.applicationRegion = applicationRegion;
 
-    LOG.debug(
+    LOG.verbose(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
         orderedBuildTargets, orderedBuildTestTargets, orderedRunTestTargets);
   }
@@ -142,15 +163,18 @@ class SchemeGenerator {
             .orElse(Optional.empty());
     if (commands.isPresent()) {
       ImmutableList<XCScheme.SchemePrePostAction> actions =
-          commands
-              .get()
-              .stream()
+          commands.get().stream()
               .map(command -> new XCScheme.SchemePrePostAction(primaryTarget, command))
               .collect(ImmutableList.toImmutableList());
       return Optional.of(actions);
     } else {
       return Optional.empty();
     }
+  }
+
+  @VisibleForTesting
+  Path getOutputDirectory() {
+    return outputDirectory;
   }
 
   @VisibleForTesting
@@ -169,7 +193,7 @@ class SchemeGenerator {
       }
       Path outputPath = outputDirectory.getParent();
       String buildableReferencePath;
-      Path projectPath = Preconditions.checkNotNull(targetToProjectPathMap.get(target));
+      Path projectPath = Objects.requireNonNull(targetToProjectPathMap.get(target));
       if (outputPath == null) {
         // Root directory project
         buildableReferencePath = projectPath.toString();
@@ -180,10 +204,10 @@ class SchemeGenerator {
       XCScheme.BuildableReference buildableReference =
           new XCScheme.BuildableReference(
               buildableReferencePath,
-              Preconditions.checkNotNull(target.getGlobalID()),
+              Objects.requireNonNull(target.getGlobalID()),
               target.getProductReference() != null
                   ? target.getProductReference().getName()
-                  : Preconditions.checkNotNull(target.getProductName()),
+                  : Objects.requireNonNull(target.getProductName()),
               blueprintName);
       buildTargetToBuildableReferenceMap.put(target, buildableReference);
     }
@@ -222,22 +246,28 @@ class SchemeGenerator {
     }
 
     ImmutableMap<SchemeActionType, ImmutableMap<String, String>> envVariables = ImmutableMap.of();
+    Map<SchemeActionType, XCScheme.BuildableReference> envVariablesBasedOn = ImmutableMap.of();
     if (environmentVariables.isPresent()) {
       envVariables = environmentVariables.get();
+      if (expandVariablesBasedOn.isPresent()) {
+        envVariablesBasedOn = expandVariablesBasedOn.get().entrySet().stream()
+          .collect(Collectors.toMap(Map.Entry::getKey, e -> buildTargetToBuildableReferenceMap.get(e.getValue())));
+      }
     }
 
     XCScheme.TestAction testAction =
         new XCScheme.TestAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.TEST)),
+            Objects.requireNonNull(actionConfigNames.get(SchemeActionType.TEST)),
             Optional.ofNullable(envVariables.get(SchemeActionType.TEST)),
+            Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.TEST)),
+            additionalCommandsForSchemeAction(
+                SchemeActionType.TEST, AdditionalActions.PRE_SCHEME_ACTIONS, primaryBuildReference),
             additionalCommandsForSchemeAction(
                 SchemeActionType.TEST,
-                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                AdditionalActions.POST_SCHEME_ACTIONS,
                 primaryBuildReference),
-            additionalCommandsForSchemeAction(
-                SchemeActionType.TEST,
-                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
-                primaryBuildReference));
+            applicationLanguage,
+            applicationRegion);
 
     for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
@@ -258,63 +288,70 @@ class SchemeGenerator {
             Optional.of(
                 new XCScheme.LaunchAction(
                     primaryBuildableReference,
-                    Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.LAUNCH)),
+                    Objects.requireNonNull(actionConfigNames.get(SchemeActionType.LAUNCH)),
                     runnablePath,
                     remoteRunnablePath,
+                    watchInterface,
                     launchStyle,
                     Optional.ofNullable(envVariables.get(SchemeActionType.LAUNCH)),
+                    Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.LAUNCH)),
                     additionalCommandsForSchemeAction(
                         SchemeActionType.LAUNCH,
-                        XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                        AdditionalActions.PRE_SCHEME_ACTIONS,
                         primaryBuildReference),
                     additionalCommandsForSchemeAction(
                         SchemeActionType.LAUNCH,
-                        XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
-                        primaryBuildReference)));
+                        AdditionalActions.POST_SCHEME_ACTIONS,
+                        primaryBuildReference),
+                    notificationPayloadFile,
+                    applicationLanguage,
+                    applicationRegion));
 
         profileAction =
             Optional.of(
                 new XCScheme.ProfileAction(
                     primaryBuildableReference,
-                    Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.PROFILE)),
+                    Objects.requireNonNull(actionConfigNames.get(SchemeActionType.PROFILE)),
                     Optional.ofNullable(envVariables.get(SchemeActionType.PROFILE)),
+                    Optional.ofNullable(envVariablesBasedOn.get(SchemeActionType.PROFILE)),
                     additionalCommandsForSchemeAction(
                         SchemeActionType.PROFILE,
-                        XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                        AdditionalActions.PRE_SCHEME_ACTIONS,
                         primaryBuildReference),
                     additionalCommandsForSchemeAction(
                         SchemeActionType.PROFILE,
-                        XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                        AdditionalActions.POST_SCHEME_ACTIONS,
                         primaryBuildReference)));
       }
     }
     XCScheme.AnalyzeAction analyzeAction =
         new XCScheme.AnalyzeAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ANALYZE)),
+            Objects.requireNonNull(actionConfigNames.get(SchemeActionType.ANALYZE)),
             additionalCommandsForSchemeAction(
                 SchemeActionType.ANALYZE,
-                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                AdditionalActions.PRE_SCHEME_ACTIONS,
                 primaryBuildReference),
             additionalCommandsForSchemeAction(
                 SchemeActionType.ANALYZE,
-                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                AdditionalActions.POST_SCHEME_ACTIONS,
                 primaryBuildReference));
 
     XCScheme.ArchiveAction archiveAction =
         new XCScheme.ArchiveAction(
-            Preconditions.checkNotNull(actionConfigNames.get(SchemeActionType.ARCHIVE)),
+            Objects.requireNonNull(actionConfigNames.get(SchemeActionType.ARCHIVE)),
             additionalCommandsForSchemeAction(
                 SchemeActionType.ARCHIVE,
-                XCScheme.AdditionalActions.PRE_SCHEME_ACTIONS,
+                AdditionalActions.PRE_SCHEME_ACTIONS,
                 primaryBuildReference),
             additionalCommandsForSchemeAction(
                 SchemeActionType.ARCHIVE,
-                XCScheme.AdditionalActions.POST_SCHEME_ACTIONS,
+                AdditionalActions.POST_SCHEME_ACTIONS,
                 primaryBuildReference));
 
     XCScheme scheme =
         new XCScheme(
             schemeName,
+            wasCreatedForAppExtension,
             Optional.of(buildAction),
             Optional.of(testAction),
             launchAction,
@@ -369,6 +406,14 @@ class SchemeGenerator {
       variableElement.setAttribute("isEnabled", "YES");
       rootElement.appendChild(variableElement);
     }
+    return rootElement;
+  }
+
+  public static Element serializeExpandVariablesBasedOn(
+    Document doc, XCScheme.BuildableReference reference) {
+    Element referenceElement = serializeBuildableReference(doc, reference);
+    Element rootElement = doc.createElement("MacroExpansion");
+    rootElement.appendChild(referenceElement);
     return rootElement;
   }
 
@@ -427,11 +472,25 @@ class SchemeGenerator {
     }
 
     if (testAction.getEnvironmentVariables().isPresent()) {
+      if (testAction.getExpandVariablesBasedOn().isPresent()) {
+        Element expandBasedOnElement =
+          serializeExpandVariablesBasedOn(doc, testAction.getExpandVariablesBasedOn().get());
+        testActionElem.appendChild(expandBasedOnElement);
+      }
+
       // disable the default override that makes Test use Launch's environment variables
       testActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, testAction.getEnvironmentVariables().get());
       testActionElem.appendChild(environmentVariablesElement);
+    }
+
+    if (testAction.getApplicationLanguage().isPresent()) {
+      testActionElem.setAttribute("language", testAction.getApplicationLanguage().get());
+    }
+
+    if (testAction.getApplicationRegion().isPresent()) {
+      testActionElem.setAttribute("region", testAction.getApplicationRegion().get());
     }
 
     return testActionElem;
@@ -466,14 +525,56 @@ class SchemeGenerator {
       productRunnableElem.appendChild(refElem);
     }
 
+    Optional<XCScheme.LaunchAction.WatchInterface> watchInterface =
+        launchAction.getWatchInterface();
+    if (watchInterface.isPresent()) {
+      Optional<String> watchInterfaceValue = Optional.empty();
+      switch (watchInterface.get()) {
+        case MAIN:
+          // excluded from scheme
+        case COMPLICATION:
+          watchInterfaceValue = Optional.of("32");
+          break;
+        case DYNAMIC_NOTIFICATION:
+          watchInterfaceValue = Optional.of("8");
+          break;
+        case STATIC_NOTIFICATION:
+          watchInterfaceValue = Optional.of("16");
+          break;
+      }
+
+      if (watchInterfaceValue.isPresent()) {
+        launchActionElem.setAttribute("launchAutomaticallySubstyle", watchInterfaceValue.get());
+      }
+    }
+
+    Optional<String> notificationPayloadFile = launchAction.getNotificationPayloadFile();
+    if (notificationPayloadFile.isPresent()) {
+      launchActionElem.setAttribute("notificationPayloadFile", notificationPayloadFile.get());
+    }
+
     XCScheme.LaunchAction.LaunchStyle launchStyle = launchAction.getLaunchStyle();
     launchActionElem.setAttribute(
         "launchStyle", launchStyle == XCScheme.LaunchAction.LaunchStyle.AUTO ? "0" : "1");
 
     if (launchAction.getEnvironmentVariables().isPresent()) {
+      if (launchAction.getExpandVariablesBasedOn().isPresent()) {
+        Element expandBasedOnElement =
+          serializeExpandVariablesBasedOn(doc, launchAction.getExpandVariablesBasedOn().get());
+        launchActionElem.appendChild(expandBasedOnElement);
+      }
+
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, launchAction.getEnvironmentVariables().get());
       launchActionElem.appendChild(environmentVariablesElement);
+    }
+
+    if (launchAction.getApplicationLanguage().isPresent()) {
+      launchActionElem.setAttribute("language", launchAction.getApplicationLanguage().get());
+    }
+
+    if (launchAction.getApplicationRegion().isPresent()) {
+      launchActionElem.setAttribute("region", launchAction.getApplicationRegion().get());
     }
 
     return launchActionElem;
@@ -493,6 +594,12 @@ class SchemeGenerator {
     productRunnableElem.appendChild(refElem);
 
     if (profileAction.getEnvironmentVariables().isPresent()) {
+      if (profileAction.getExpandVariablesBasedOn().isPresent()) {
+        Element expandBasedOnElement =
+          serializeExpandVariablesBasedOn(doc, profileAction.getExpandVariablesBasedOn().get());
+        profileActionElem.appendChild(expandBasedOnElement);
+      }
+
       // disable the default override that makes Profile use Launch's environment variables
       profileActionElem.setAttribute("shouldUseLaunchSchemeArgsEnv", "NO");
       Element environmentVariablesElement =
@@ -563,6 +670,9 @@ class SchemeGenerator {
 
     Element rootElem = doc.getDocumentElement();
     rootElem.setAttribute("LastUpgradeVersion", "9999");
+    if (scheme.getWasCreatedForExtension()) {
+      rootElem.setAttribute("wasCreatedForAppExtension", "YES");
+    }
     rootElem.setAttribute("version", "1.7");
 
     Optional<XCScheme.BuildAction> buildAction = scheme.getBuildAction();

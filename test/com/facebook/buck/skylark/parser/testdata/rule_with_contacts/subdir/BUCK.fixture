@@ -1,0 +1,3 @@
+load("//subdir:foo.bzl", "some_rule_test")
+
+some_rule_test(name = "target1", contacts = ["foo@example.com", "bar@example.com"])

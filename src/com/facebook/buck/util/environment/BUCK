@@ -9,12 +9,14 @@ PLATFORM_SRCS = [
 java_library(
     name = "platform",
     srcs = PLATFORM_SRCS,
+    # This target is pulled in by testrunner, which needs to compile against Java 8.
+    source = "8",
+    target = "8",
     visibility = [
         "PUBLIC",
     ],
     # This library is deep in the dependency tree, keep its dependency list small.
     deps = [
-        "//third-party/java/guava:guava",
     ],
 )
 

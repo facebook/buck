@@ -1,0 +1,25 @@
+python_library(
+    name = "impl",
+    srcs = ["impl.py"],
+    visibility = ["PUBLIC"],
+)
+
+def define_impl(name):
+    python_binary(
+        name = name,
+        main = name + ".py",
+        deps = [":impl"],
+        visibility = ["PUBLIC"],
+    )
+
+define_impl("unimplemented")
+
+define_impl("compiler")
+
+define_impl("archiver")
+
+define_impl("ranlib")
+
+define_impl("linker")
+
+define_impl("strip")

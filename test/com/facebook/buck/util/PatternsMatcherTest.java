@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
@@ -40,43 +40,66 @@ public class PatternsMatcherTest {
   }
 
   @Test
+  public void testMatchesAnyWithExactMatch() {
+    PatternsMatcher patternsMatcher =
+        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+
+    assertTrue(patternsMatcher.matches("test_pattern"));
+  }
+
+  @Test
+  public void testMatchesAnyWithWildcard() {
+    PatternsMatcher patternsMatcher =
+        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+
+    assertTrue(patternsMatcher.matches("pattern"));
+  }
+
+  @Test
   public void testDoesNotMatchPrefix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("test"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("test"));
+
+    assertFalse(patternsMatcher.matches("test_pattern"));
+  }
+
+  @Test
+  public void testMatchAnyWithNonMatchingPrefixReturnsFalse() {
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("test"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testSubstringMatchesPrefix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("test"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("test"));
 
     assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
 
   @Test
   public void testDoesNotMatchSuffix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("pattern"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("pattern"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testSubstringMatchesSuffix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("pattern"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("pattern"));
 
     assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
 
   @Test
   public void testDoesNotMatchInfix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("_"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("_"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testSubstringMatchesInfix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("_"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("_"));
 
     assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
@@ -91,23 +114,43 @@ public class PatternsMatcherTest {
   }
 
   @Test
+  public void testMatchesAnyDoesNotMatchPattern() {
+    PatternsMatcher patternsMatcher =
+        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+
+    assertFalse(patternsMatcher.matches("wrong_pattern"));
+  }
+
+  @Test
+  public void testMatchesAnyDoesNotMatchEmptyPatterns() {
+    assertFalse(PatternsMatcher.NONE.matches("wrong_pattern"));
+  }
+
+  @Test
+  public void testMatchesMatchesEmptyPatterns() {
+    assertTrue(PatternsMatcher.ANY.matches("wrong_pattern"));
+  }
+
+  @Test
   public void testHasPatterns() {
     PatternsMatcher patternsMatcher =
         new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
 
-    assertTrue(patternsMatcher.hasPatterns());
+    assertFalse(patternsMatcher.isMatchesAny());
+    assertFalse(patternsMatcher.isMatchesNone());
   }
 
   @Test
   public void testHasNoPatterns() {
     PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.emptyList());
 
-    assertFalse(patternsMatcher.hasPatterns());
+    assertTrue(patternsMatcher.isMatchesNone());
+    assertFalse(patternsMatcher.isMatchesAny());
   }
 
   @Test
   public void testFilterMatchingMapEntriesWithEmptyPatterns() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.emptyList());
+    PatternsMatcher patternsMatcher = PatternsMatcher.ANY;
 
     Map<String, String> entries =
         new TreeMap<String, String>() {

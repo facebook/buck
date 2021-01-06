@@ -17,12 +17,61 @@ go_library(
     deps = [":base"],
 )
 
+go_test_runner(
+    name = "runner",
+    test_runner_generator = "test_runner_generator.go",
+)
+
+go_test(
+    name = "testx",
+    package_name = "lib",
+    srcs = [
+        "lib.go",
+        "lib_test.go",
+        "resources_test.go",
+    ],
+    resources = ["testdata/input"],
+    runner = ":runner",
+    specs = {
+        "my": "spec",
+        "other": [
+            {
+                "complicated": "stuff",
+                "integer": 1,
+                "double": 1.2,
+                "boolean": True,
+            },
+        ],
+        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && $out",
+    },
+    deps = [":base"],
+)
+
 go_test(
     name = "test-success",
     package_name = "lib",
     srcs = [
         "lib.go",
         "lib_test.go",
+    ],
+    deps = [":base"],
+)
+
+go_test(
+    name = "test-with-env",
+    srcs = [
+        "env_test.go",
+    ],
+    env = {
+        "FOO": "BAR",
+    },
+    deps = [":base"],
+)
+
+go_test(
+    name = "test-with-system-env",
+    srcs = [
+        "env_test.go",
     ],
     deps = [":base"],
 )
@@ -54,6 +103,27 @@ go_test(
     name = "test-with-resources",
     srcs = ["resources_test.go"],
     resources = ["testdata/input"],
+)
+
+go_test(
+    name = "test-with-resources-directory",
+    srcs = ["resources_test.go"],
+    resources = ["testdata"],
+)
+
+go_test(
+    name = "test-with-resources-2directory",
+    srcs = ["resources_test_2level.go"],
+    resources = ["testdata"],
+)
+
+go_test(
+    name = "test-with-resources-2directory-2resources",
+    srcs = ["resources_test_2level.go"],
+    resources = [
+        "testdata/level2",
+        "testdata/level2bis",
+    ],
 )
 
 go_test(

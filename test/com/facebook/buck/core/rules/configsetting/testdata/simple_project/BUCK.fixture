@@ -6,6 +6,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -17,16 +18,18 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
     name = "cat_with_refined_config",
     srcs = select({
-        "//:bc": ["c.txt"],
         "//:b": ["b.txt"],
+        "//:bc": ["c.txt"],
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 config_setting(
@@ -34,6 +37,9 @@ config_setting(
     values = {
         "cat.file": "a",
     },
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 config_setting(
@@ -41,6 +47,9 @@ config_setting(
     values = {
         "cat.file": "b",
     },
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 config_setting(
@@ -49,6 +58,9 @@ config_setting(
         "cat.file": "b",
         "cat.file2": "c",
     },
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 genrule(
@@ -70,6 +82,9 @@ config_setting(
     values = {
         "another.option": "c",
     },
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 genrule(
@@ -79,4 +94,134 @@ genrule(
         "//:a": None,
         "//:c": "echo c > $OUT",
     }),
+)
+
+genrule(
+    name = "echo_with_concatenation_in_out",
+    out = "a" + select({
+        "//:a": "a",
+        "//:b": "b",
+    }) + "c",
+    cmd = "echo a > $OUT",
+)
+
+config_setting(
+    name = "java_version_7",
+    values = {
+        "java.version": "7",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "java_version_8",
+    values = {
+        "java.version": "8",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "java_library_with_target_version",
+    srcs = ["JavaClassWithVersion8Syntax.java"],
+    source = "1." + select({
+        "//:java_version_7": "7",
+        "//:java_version_8": "8",
+    }),
+    target = "1." + select({
+        "//:java_version_7": "7",
+        "//:java_version_8": "8",
+    }),
+)
+
+genrule(
+    name = "echo_with_concatenation_in_cmd",
+    out = "echo_out.txt",
+    cmd = "echo " + select({
+        "//:a": "a",
+        "//:b": "b",
+    }) + " > $OUT",
+)
+
+java_test(
+    name = "java_test_with_select_in_env",
+    srcs = ["JavaEnvTest.java"],
+    env = {
+        "VARC": "c",
+    } + select({
+        "//:a": {"VARA": "a"},
+        "//:b": {"VARB": "b"},
+    }),
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "java_test_with_duplicate_keys_in_select_in_env",
+    srcs = ["JavaEnvTest.java"],
+    env = {
+        "VARA": "a",
+    } + select({
+        "//:a": {"VARA": "a"},
+        "//:b": {"VARB": "b"},
+    }),
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+genrule(
+    name = "genrule_with_non_existent_src",
+    srcs = select({
+        ":a": ["a.txt"],
+        ":b": ["d.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
+)
+
+genrule(
+    name = "select_concat_list",
+    srcs = select({
+        ":a": ["a.txt"],
+        ":b": ["b.txt"],
+    }) + ["c.txt"],
+    out = "select_concat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
+)
+
+config_setting(
+    name = "str-a",
+    values = {
+        "str.value": "a",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "str-b",
+    values = {
+        "str.value": "b",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+genrule(
+    name = "select_concat_str",
+    cmd = "echo " + select({
+        ":str-a": "aa",
+        ":str-b": "bb",
+    }) + ">$OUT",
+    out = "select_concat_str_out.txt",
 )

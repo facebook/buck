@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import argparse
 import datetime
@@ -6,6 +20,7 @@ import logging
 import logging.config
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -28,11 +43,20 @@ from releases import (
 )
 
 TARGET_MACOS_VERSION = "yosemite"
-TARGET_MACOS_VERSION_SPEC = TARGET_MACOS_VERSION + "_or_later"
+TARGET_MACOS_VERSION_SPEC = TARGET_MACOS_VERSION
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser("Publish releases of buck to github")
+    parser.add_argument(
+        "--valid-git-upstreams",
+        default=(
+            "git@github.com:facebook/buck.git",
+            "https://github.com/facebook/buck.git",
+        ),
+        nargs="+",
+        help="List of valid upstreams for the git repository in order to publish",
+    )
     parser.add_argument(
         "--github-token-file",
         default=os.path.expanduser("~/.buck-github-token"),
@@ -74,6 +98,12 @@ def parse_args(args):
         ),
     )
     parser.add_argument(
+        "--no-prompt-for-message",
+        help="If set, use a default message rather than prompting for a message",
+        action="store_false",
+        dest="prompt_for_message",
+    )
+    parser.add_argument(
         "--no-build-deb",
         dest="build_deb",
         action="store_false",
@@ -110,6 +140,16 @@ def parse_args(args):
     parser.add_argument(
         "--docker-windows-host",
         help="If provided, the docker:port to connect to to build windows images",
+    )
+    parser.add_argument(
+        "--docker-windows-memory",
+        default="4g",
+        help="The memory argument to pass to docker for windows containers",
+    )
+    parser.add_argument(
+        "--docker-windows-isolation",
+        default="process",
+        help="The --isolation= argument for windows docker commands",
     )
     parser.add_argument(
         "--keep-temp-files",
@@ -165,7 +205,11 @@ def parse_args(args):
         help=(
             "Where homebrew is (e.g. /usr/local). If not specified, homebrew will be "
             "installed in a separate, temporary directory that gets cleaned up after "
-            "building (unless --keep-temp-files is specified)"
+            "building (unless --keep-temp-files is specified). If --output-dir is "
+            "specified, homebrew will be installed in a subdirectory there. This can "
+            "be useful to ensure that tap directories are preserved and can be "
+            "validated and pushed to github if a first run fails, or if a "
+            "--no-upload-asset run is done"
         ),
     )
     parser.add_argument(
@@ -176,6 +220,11 @@ def parse_args(args):
             "This is a workaround for "
             "https://github.com/chocolatey/chocolatey.org/issues/584"
         ),
+    )
+    parser.add_argument(
+        "--docker-login",
+        action="store_true",
+        help="If set, run 'docker login' using DOCKERHUB_USERNAME and DOCKERHUB_TOKEN",
     )
     parsed_kwargs = dict(parser.parse_args(args)._get_kwargs())
     if parsed_kwargs["deb_file"]:
@@ -228,8 +277,30 @@ def configure_logging():
     )
 
 
+def validate_repo_upstream(args):
+    """ Make sure we're in the right repository, not a fork """
+    output = subprocess.check_output(
+        ["git", "remote", "get-url", "origin"], encoding="utf-8"
+    ).strip()
+    if output not in args.valid_git_upstreams:
+        raise ReleaseException(
+            "Releases may only be published from the upstream OSS buck repository"
+        )
+
+
+def docker_login():
+    username = os.environ.get("DOCKERHUB_USERNAME")
+    token = os.environ.get("DOCKERHUB_TOKEN")
+    if username and token:
+        run(["docker", "login", "--username", username, "--password-stdin"], input=token)
+    else:
+        logging.error("Both DOCKERHUB_USERNAME and DOCKERHUB_TOKEN must be set to login to dockerhub")
+
+
 def validate_environment(args):
     """ Make sure we can build """
+
+    validate_repo_upstream(args)
     if args.build_deb:
         ret = docker(
             args.docker_linux_host,
@@ -299,6 +370,7 @@ def build(args, output_dir, release, github_token, homebrew_dir):
         homebrew_file = build_bottle(
             homebrew_dir,
             release,
+            args.repository,
             args.tap_repository,
             args.homebrew_target_macos_version,
             args.homebrew_target_macos_version_spec,
@@ -306,7 +378,12 @@ def build(args, output_dir, release, github_token, homebrew_dir):
         )
     if args.build_chocolatey:
         chocolatey_file = build_chocolatey(
-            args.repository, release, args.docker_windows_host, output_dir
+            args.repository,
+            release,
+            args.docker_windows_host,
+            args.docker_windows_memory,
+            args.docker_windows_isolation,
+            output_dir,
         )
 
     return deb_file, homebrew_file, chocolatey_file
@@ -335,7 +412,7 @@ def publish(
             add_assets(release, github_token, homebrew_file)
             validate_tap(homebrew_dir, args.tap_repository, args.version)
             if args.homebrew_push_tap:
-                publish_tap_changes(homebrew_dir, args.tap_repository, args.version)
+                publish_tap_changes(homebrew_dir, args.tap_repository, args.version, github_token)
             else:
                 log_about_manual_tap_push(args.tap_repository)
 
@@ -347,6 +424,10 @@ def main():
     github_token = (
         args.github_token if args.github_token else get_token(args.github_token_file)
     )
+
+    if args.docker_login:
+        docker_login()
+
     if args.chocolatey_publish:
         chocolatey_token = (
             args.chocolatey_token
@@ -367,15 +448,26 @@ def main():
             release = get_release_for_tag(args.repository, github_token, version_tag)
         else:
             release = create_new_release(
-                args.repository, github_token, version_tag, args.release_message
+                args.repository,
+                github_token,
+                version_tag,
+                args.release_message,
+                args.prompt_for_message,
             )
         if args.output_dir:
             output_dir = args.output_dir
+            if not os.path.exists(output_dir):
+                logging.info("{} does not exist. Creating it".format(output_dir))
+                os.makedirs(output_dir, exist_ok=True)
         else:
             temp_dir = tempfile.mkdtemp()
             output_dir = temp_dir
         if args.homebrew_dir:
             homebrew_dir = args.homebrew_dir
+        elif args.output_dir:
+            homebrew_dir = os.path.abspath(
+                os.path.join(output_dir, "homebrew_" + version_tag)
+            )
         else:
             temp_homebrew_dir = tempfile.mkdtemp()
             homebrew_dir = temp_homebrew_dir
@@ -393,7 +485,6 @@ def main():
             homebrew_dir,
             chocolatey_file,
         )
-
     except ReleaseException as e:
         logging.error(str(e))
     finally:

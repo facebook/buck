@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace kotlin_library}
 
 /***/
@@ -18,17 +34,13 @@
 A <code>kotlin_library()</code> rule is used to define a set of Kotlin
 files that can be compiled together. The main output of a
 {sp}<code>kotlin_library()</code> rule is a single JAR file containing all
-of the compiled class files and resources.
+of the compiled class files, as well as the static files specified in
+the <code>resources</code> argument.
 {/param}
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'srcs' /}
@@ -53,10 +65,168 @@ of the compiled class files and resources.
 {/call}
 
 {call buck.arg}
-  {param name: 'extra_arguments' /}
+  {param name: 'kotlinc_plugins' /}
   {param default: '[]' /}
   {param desc}
-  List of additional arguments to pass into the Kotlin compiler.
+  Use this to specify <a href="https://kotlinlang.org/docs/reference/compiler-plugins.html">
+  Kotlin compiler plugins</a> to use when compiling this library.
+  This takes a list of source paths, each of which will be prefixed
+  with <code>-Xplugin=</code> and passed as extra arguments to the compiler.
+  Unlike <code>free_compiler_args</code>, these can be <em>source paths</em>,
+  not just strings (though <code>free_compiler_args</code> should be used
+  to specify plugin compiler options with <code>-P</code>).
+  <p>
+  For example, if you want to use{sp}
+  <a href="https://github.com/Kotlin/kotlinx.serialization">kotlinx.serialization</a>
+  {sp}with <code>kotlin_library()</code>, you need to specify{sp}
+  <code>kotlinx-serialization-compiler-plugin.jar</code> under{sp}
+  <code>kotlinc_plugins</code> and <code>kotlinx-serialization-runtime.jar</code>{sp}
+  (which you may have to fetch from Maven) in your <code>deps</code>:
+{literal}<pre class="prettyprint lang-py">
+kotlin_library(
+    name = "example",
+    srcs = glob(["*.kt"]),
+    deps = [
+        ":kotlinx-serialization-runtime",
+    ],
+    kotlinc_plugins = [
+        # Likely copied from your $KOTLIN_HOME directory.
+        "kotlinx-serialization-compiler-plugin.jar",
+    ],
+)
+
+prebuilt_jar(
+    name = "kotlinx-serialization-runtime",
+    binary_jar = ":kotlinx-serialization-runtime-0.10.0",
+)
+
+# Note you probably want to set
+# maven_repo=http://jcenter.bintray.com/ in your .buckconfig until
+# https://github.com/Kotlin/kotlinx.serialization/issues/64
+# is closed.
+remote_file(
+    name = "kotlinx-serialization-runtime-0.10.0",
+    out = "kotlinx-serialization-runtime-0.10.0.jar",
+    url = "mvn:org.jetbrains.kotlinx:kotlinx-serialization-runtime:jar:0.10.0",
+    sha1 = "23d777a5282c1957c7ce35946374fff0adab114c"
+)
+</pre>{/literal}
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'free_compiler_args' /}
+  {param default: '[]' /}
+  {param desc}
+    A list of additional compiler arguments.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'all_warnings_as_errors' /}
+  {param default: 'false' /}
+  {param desc}
+    Report an error if there are any warnings.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'suppress_warnings' /}
+  {param default: 'false' /}
+  {param desc}
+    Generate no warnings.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'verbose' /}
+  {param default: 'false' /}
+  {param desc}
+    Enable verbose logging output.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'include_runtime' /}
+  {param default: 'false' /}
+  {param desc}
+    Include Kotlin runtime in to resulting .jar
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'jvm_target' /}
+  {param default: '1.6' /}
+  {param desc}
+    Target version of the generated JVM bytecode (1.6 or 1.8), default is 1.6
+    Possible values: "1.6", "1.8"
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'jdk_home' /}
+  {param default: 'None' /}
+  {param desc}
+    Path to JDK home directory to include into classpath, if differs from default JAVA_HOME
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'no_jdk' /}
+  {param default: 'false' /}
+  {param desc}
+    Don't include Java runtime into classpath.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'no_stdlib' /}
+  {param default: 'true' /}
+  {param desc}
+    Don't include kotlin-stdlib.jar or kotlin-reflect.jar into classpath.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'no_reflect' /}
+  {param default: 'true' /}
+  {param desc}
+    Don't include kotlin-reflect.jar into classpath.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'java_parameters' /}
+  {param default: 'false' /}
+  {param desc}
+    Generate metadata for Java 1.8 reflection on method parameters.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'api_version' /}
+  {param default: 'None' /}
+  {param desc}
+    Allow to use declarations only from the specified version of bundled libraries.
+    Possible values: "1.0", "1.1", "1.2", "1.3", "1.4 (EXPERIMENTAL)".
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'language_version' /}
+  {param default: 'None' /}
+  {param desc}
+    Provide source compatibility with specified language version.
+    Possible values: "1.0", "1.1", "1.2", "1.3", "1.4 (EXPERIMENTAL)".
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'friend_paths' /}
+  {param default: '[]' /}
+  {param desc}
+  List of source paths to pass into the Kotlin compiler as friend-paths, that is, modules
+  you can have access to internal methods.
   {/param}
 {/call}
 
@@ -69,6 +239,19 @@ of the compiled class files and resources.
   it for Java sources too.
   "javac" works only against Java sources, Kotlin sources won't have access to generated
   classes at compile time.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'kapt_ap_options' /}
+  {param desc}{literal}
+  Map of annotation processor options to pass into kapt via the apoptions plugin option. Each entry
+  should be a key value pair of the processor option and its value. Default is an empty map.
+  E.g.
+  kapt_ap_options = {
+    'someAnnotationOption': 'someValue'
+  }
+  More information here: https://kotlinlang.org/docs/reference/kapt.html{/literal}
   {/param}
 {/call}
 

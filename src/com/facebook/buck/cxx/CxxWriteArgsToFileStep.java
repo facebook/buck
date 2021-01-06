@@ -1,27 +1,29 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -47,9 +49,11 @@ class CxxWriteArgsToFileStep implements Step {
       Path argFilePath,
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
-      Path currentCellPath,
-      SourcePathResolver pathResolver) {
-    ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
+      CanonicalCellName currentCellName,
+      SourcePathResolverAdapter pathResolver,
+      boolean useUnixPathSeparator) {
+    ImmutableList<String> argFileContents =
+        stringify(args, currentCellName, pathResolver, useUnixPathSeparator);
     if (escaper.isPresent()) {
       argFileContents =
           argFileContents.stream().map(escaper.get()).collect(ImmutableList.toImmutableList());
@@ -68,14 +72,24 @@ class CxxWriteArgsToFileStep implements Step {
   }
 
   static ImmutableList<String> stringify(
-      ImmutableCollection<Arg> args, Path currentCellPath, SourcePathResolver pathResolver) {
+      ImmutableCollection<Arg> args,
+      CanonicalCellName currentCellName,
+      SourcePathResolverAdapter pathResolver,
+      boolean useUnixPathSeparator) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
         ((FileListableLinkerInputArg) arg)
-            .appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
+            .appendToCommandLineRel(
+                builder::add, currentCellName, pathResolver, useUnixPathSeparator);
       } else if (arg instanceof SourcePathArg) {
-        ((SourcePathArg) arg).appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
+        ((SourcePathArg) arg)
+            .appendToCommandLineRel(
+                builder::add, currentCellName, pathResolver, useUnixPathSeparator);
+      } else if (arg instanceof CompositeArg) {
+        ((CompositeArg) arg)
+            .appendToCommandLineRel(
+                builder::add, currentCellName, pathResolver, useUnixPathSeparator);
       } else {
         arg.appendToCommandLine(builder::add, pathResolver);
       }
@@ -84,8 +98,7 @@ class CxxWriteArgsToFileStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     if (Files.notExists(argFilePath.getParent())) {
       Files.createDirectories(argFilePath.getParent());
     }

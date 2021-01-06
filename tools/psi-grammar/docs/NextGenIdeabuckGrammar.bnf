@@ -1,0 +1,621 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+// ------------------------------------------------------------------------
+// This file is not in use by Buck, and it is not the actual Buck grammar.
+// Instead, it is a prototype for a Buck grammar that more closely matches
+// the Python2 grammar, with specific exceptions for the Starlark language,
+// which is (mostly) a subset of the Python grammar and (in the long run)
+// should enable ideabuck to correctly parse Buck files semantically.
+//
+// Switching to this grammar at once would be disruptive.  Instead, this
+// is an aspirational end goal for the ideabuck grammar.  Developers can
+// experiment with it in a live preview pane in IntelliJ using the plugins
+// Grammar-Kit + PsiViewer to verify its behavior.
+//
+// Since this will be a fairly large change, this file has copious
+// comments explaining where productions come from and, when they
+// don't match the Python 2 grammar, why they differ.
+// ------------------------------------------------------------------------
+
+// Lines directly quoting references begin with "// [Reference]":
+// * [Python2]: https://docs.python.org/2/reference/grammar.html
+// * [StarLang]: https://docs.bazel.build/versions/master/skylark/language.html
+// * [StarSpec] https://github.com/bazelbuild/starlark/blob/master/spec.md
+// * [StarOver] https://docs.bazel.build/versions/master/skylark/lib/skylark-overview.html
+//
+// For reference, the full grammar of https://docs.python.org/2/reference/grammar.html
+// appears below in comments, with Buck's grammar interspersed throughout.
+//
+// Notable differences:
+// * In some cases, short abbreviations have been expanded to full words
+//   to avoid ambiguity.  For example:  comp has been expanded to either
+//   "comprehension" or "comparison", as appropriate.
+// * Where Python2 used "test" and "expr", Buck's legacy grammar used
+//   "expression" and "simple_expression"; this translation preserves
+//   those terms.
+//
+// [StarLang:1] Differences with Python
+// [StarLang:2] In addition to the mutability restrictions, there are also differences with Python:
+// [StarLang:3]
+// [StarLang:4]   * Global variables cannot be reassigned.
+// [StarLang:5]   * for statements are not allowed at the top-level; factor them into functions instead.
+// [StarLang:6]   * Dictionaries have a deterministic order of iteration.
+// [StarLang:7]   * Recursion is not allowed.
+// [StarLang:8]   * Int type is limited to 32-bit signed integers (an overflow will throw an error).
+// [StarLang:9]   * Lists and other mutable types may be stored in dictionary keys once they are frozen.
+// [StarLang:10]   * Modifying a collection during iteration is an error. You can avoid the error by iterating over a copy of the collection, e.g. for x in list(my_list): .... You can still modify its deep contents regardless.
+// [StarLang:11]   * Global (non-function) variables must be declared before they can be used in a function, even if the function is not called until after the global variable declaration. However, it is fine to define f() before g(), even if f() calls g().
+// [StarLang:12]   * The comparison operators (<, <=, >=, >) are not defined across different types of values, e.g., you can’t compare 5 < 'foo' (however you still can compare them using == or !=). This is a difference with Python 2, but consistent with Python 3. Note that this means you are unable to sort lists that contain mixed types of values.
+// [StarLang:13]   * Tuple syntax is more restrictive. You may use a trailing comma only when the tuple is between parentheses, e.g. write (1,) instead of 1,.
+// [StarLang:14]   * Dictionary literals cannot have duplicated keys. For example, this is an error: {"a": 4, "b": 7, "a": 1}.
+// [StarLang:15]   * Variable of a comprehension may not be used after the comprehension. This is stricter than Python 2 and Python 3, which have different behavior (shadowing vs reassignment).
+// [StarLang:16]   * Strings are represented with double-quotes (e.g. when you call repr).
+// [StarLang:17]
+// [StarLang:18] The following Python features are not supported:
+// [StarLang:19]
+// [StarLang:20]   * implicit string concatenation (use explicit + operator)
+// [StarLang:21]   * Chained comparisons (e.g. 1 < x < 5)
+// [StarLang:22]   * class (see struct function)
+// [StarLang:23]   * import (see load statement)
+// [StarLang:24]   * while, yield
+// [StarLang:25]   * float and set types
+// [StarLang:26]   * generators and generator expressions
+// [StarLang:27]   * lambda and nested functions
+// [StarLang:28]   * is (use == instead)
+// [StarLang:29]   * try, raise, except, finally (see fail for fatal errors)
+// [StarLang:30]   * global, nonlocal
+// [StarLang:31]   * most builtin functions, most methods
+
+// [StarSpec:1] File = {Statement | newline} eof .
+// [StarSpec:2]
+// [StarSpec:3] Statement = DefStmt | IfStmt | ForStmt | SimpleStmt .
+// [StarSpec:4]
+// [StarSpec:5] DefStmt = 'def' identifier '(' [Parameters [',']] ')' ':' Suite .
+// [StarSpec:6] # NOTE: trailing comma is not permitted if the last argument is `'*' identifier` or `'**' identifier`.
+// [StarSpec:7]
+// [StarSpec:8] Parameters = Parameter {',' Parameter}.
+// [StarSpec:9]
+// [StarSpec:10] Parameter = identifier | identifier '=' Test | '*' identifier | '**' identifier .
+// [StarSpec:11]
+// [StarSpec:12] IfStmt = 'if' Test ':' Suite {'elif' Test ':' Suite} ['else' ':' Suite] .
+// [StarSpec:13]
+// [StarSpec:14] ForStmt = 'for' LoopVariables 'in' Expression ':' Suite .
+// [StarSpec:15]
+// [StarSpec:16] Suite = [newline indent {Statement} outdent] | SimpleStmt .
+// [StarSpec:17]
+// [StarSpec:18] SimpleStmt = SmallStmt {';' SmallStmt} [';'] '\n' .
+// [StarSpec:19] # NOTE: '\n' optional at EOF
+// [StarSpec:20]
+// [StarSpec:21] SmallStmt = ReturnStmt
+// [StarSpec:22]           | BreakStmt | ContinueStmt | PassStmt
+// [StarSpec:23]           | AssignStmt
+// [StarSpec:24]           | ExprStmt
+// [StarSpec:25]           | LoadStmt
+// [StarSpec:26]           .
+// [StarSpec:27]
+// [StarSpec:28] ReturnStmt   = 'return' [Expression] .
+// [StarSpec:29] BreakStmt    = 'break' .
+// [StarSpec:30] ContinueStmt = 'continue' .
+// [StarSpec:31] PassStmt     = 'pass' .
+// [StarSpec:32] AssignStmt   = Expression ('=' | '+=' | '-=' | '*=' | '/=' | '//=' | '%=') Expression .
+// [StarSpec:33] ExprStmt     = Expression .
+// [StarSpec:34]
+// [StarSpec:35] LoadStmt = 'load' '(' string {',' [identifier '='] string} [','] ')' .
+// [StarSpec:36]
+// [StarSpec:37] Test = IfExpr
+// [StarSpec:38]      | PrimaryExpr
+// [StarSpec:39]      | UnaryExpr
+// [StarSpec:40]      | BinaryExpr
+// [StarSpec:41]      .
+// [StarSpec:42]
+// [StarSpec:43] IfExpr = Test 'if' Test 'else' Test .
+// [StarSpec:44]
+// [StarSpec:45] PrimaryExpr = Operand
+// [StarSpec:46]             | PrimaryExpr DotSuffix
+// [StarSpec:47]             | PrimaryExpr CallSuffix
+// [StarSpec:48]             | PrimaryExpr SliceSuffix
+// [StarSpec:49]             .
+// [StarSpec:50]
+// [StarSpec:51] Operand = identifier
+// [StarSpec:52]         | int | string
+// [StarSpec:53]         | ListExpr | ListComp
+// [StarSpec:54]         | DictExpr | DictComp
+// [StarSpec:55]         | '(' [Expression [',']] ')'
+// [StarSpec:56]         .
+// [StarSpec:57]
+// [StarSpec:58] DotSuffix   = '.' identifier .
+// [StarSpec:59] SliceSuffix = '[' [Expression] [':' Test [':' Test]] ']' .
+// [StarSpec:60] CallSuffix  = '(' [Arguments [',']] ')' .
+// [StarSpec:61] # NOTE: trailing comma is not permitted if the last argument is `'*' Test` or `'**' Test`.
+// [StarSpec:62]
+// [StarSpec:63] Arguments = Argument {',' Argument} .
+// [StarSpec:64] Argument  = Test | identifier '=' Test | '*' Test | '**' Test .
+// [StarSpec:65]
+// [StarSpec:66] ListExpr = '[' [Expression [',']] ']' .
+// [StarSpec:67] ListComp = '[' Test {CompClause} ']'.
+// [StarSpec:68]
+// [StarSpec:69] DictExpr = '{' [Entries [',']] '}' .
+// [StarSpec:70] DictComp = '{' Entry {CompClause} '}' .
+// [StarSpec:71] Entries  = Entry {',' Entry} .
+// [StarSpec:72] Entry    = Test ':' Test .
+// [StarSpec:73]
+// [StarSpec:74] CompClause = 'for' LoopVariables 'in' Test | 'if' Test .
+// [StarSpec:75]
+// [StarSpec:76] UnaryExpr = '-' Test
+// [StarSpec:77]           | 'not' Test
+// [StarSpec:78]           .
+// [StarSpec:79]
+// [StarSpec:80] BinaryExpr = Test {Binop Test} .
+// [StarSpec:81]
+// [StarSpec:82] Binop = 'or'
+// [StarSpec:83]       | 'and'
+// [StarSpec:84]       | '==' | '!=' | '<' | '>' | '<=' | '>=' | 'in' | 'not' 'in'
+// [StarSpec:85]       | '|'
+// [StarSpec:86]       | '&'
+// [StarSpec:87]       | '-' | '+'
+// [StarSpec:88]       | '*' | '%' | '/' | '//'
+// [StarSpec:89]       .
+// [StarSpec:90]
+// [StarSpec:91] Expression = Test {',' Test} .
+// [StarSpec:92] # NOTE: trailing comma permitted only when within [...] or (...).
+// [StarSpec:93]
+// [StarSpec:94] LoopVariables = PrimaryExpr {',' PrimaryExpr} .
+// [StarSpec:95] ```
+// [StarSpec:96]
+// [StarSpec:97] Tokens:
+// [StarSpec:98]
+// [StarSpec:99] - spaces: newline, eof, indent, outdent.
+// [StarSpec:100] - identifier.
+// [StarSpec:101] - literals: string, int.
+// [StarSpec:102] - plus all quoted tokens such as '+=', 'return'.
+// [StarSpec:103]
+// [StarSpec:104] Notes:
+// [StarSpec:105]
+// [StarSpec:106] - Ambiguity is resolved using operator precedence.
+// [StarSpec:107] - The grammar does not enforce the legal order of params and args,
+// [StarSpec:108]   nor that the first compclause must be a 'for'.
+
+
+{
+  parserClass="com.facebook.buck.intellij.ideabuck.lang.BuckParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Buck"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.facebook.buck.intellij.ideabuck.lang.psi"
+  psiImplPackage="com.facebook.buck.intellij.ideabuck.lang.psi.impl"
+
+  elementTypeHolderClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes"
+  elementTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckElementType"
+  tokenTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckTokenType"
+
+  tokens = [
+    NONE = 'None'
+    BOOLEAN = 'regexp:(True|False)'
+
+    COMMA = ','
+    EQUAL = '='
+    DOUBLE_EQUAL = '=='
+    NOT_EQUAL = '!='
+    GREATER_THAN = '>'
+    LESS_THAN = '<'
+    GREATER_EQUAL = '>='
+    LESS_EQUAL = '<='
+    UPDATE_OPS = 'regexp:\+=|-=|\*=|/=|//=|%=|&=|\|=|\^=|<<=|>>='
+    BIT_OR = '|'
+    BIT_AND = '&'
+    BIT_XOR = '^'
+
+    SLASH = '\'
+    COLON = ':'
+    PLUS = '+'
+    MINUS = '-'
+    DIVISION = '/'
+    DIVISION_INT = '//'
+    DOT = '.'
+    SEMI_COLON = ';'
+    STAR = '*'
+    DOUBLE_STAR = '**'
+
+    LINE_COMMENT = 'regexp:#[^\r\n]*'
+
+    APOSTROPHED_STRING="regexp:'([^\\\'\r\n]|\\[^\r\n])*'?"
+    APOSTROPHED_RAW_STRING="regexp:r'[^\r\n\']*'"
+    TRIPLE_APOSTROPHED_STRING="regexp:'''.*'''"
+    TRIPLE_APOSTROPHED_RAW_STRING="regexp:r'''.*'''"
+
+    QUOTED_STRING='regexp:"([^\\"\r\n]|\\[^\r\n])*"'
+    QUOTED_RAW_STRING='regexp:r"[^\r\n"]*"'
+    TRIPLE_QUOTED_STRING='regexp:""".*"""'
+    TRIPLE_QUOTED_RAW_STRING='regexp:r""".*"""'
+
+    // As per [StarSpec] https://github.com/bazelbuild/starlark/blob/master/spec.md
+    // "The following tokens are keywords and may not be used as identifiers:"
+    AND = 'and'
+    BREAK = 'break'
+    CONTINUE = 'continue'
+    DEF = 'def'
+    ELIF = 'elif'
+    ELSE = 'else'
+    FOR = 'for'
+    IF = 'if'
+    IN = 'in'
+    LOAD = 'load'
+    NOT = 'not'
+    OR = 'or'
+    PASS = 'pass'
+    RETURN = 'return'
+
+    // As per [StarSpec] https://github.com/bazelbuild/starlark/blob/master/spec.md
+    // "The tokens below also may not be used as identifiers
+    // although they do not appear in the grammar;
+    // they are reserved as possible future keywords:"
+    AS = 'as'
+    ASSERT = 'assert'
+    CLASS = 'class'
+    DEL = 'del'
+    EXCEPT = 'except'
+    FINALLY = 'finally'
+    FROM = 'from'
+    GLOBAL = 'global'
+    IMPORT = 'import'
+    IS = 'is'
+    LAMBDA = 'lambda'
+    NONLOCAL = 'nonlocal'
+    RAISE = 'raise'
+    TRY = 'try'
+    WHILE = 'while'
+    WITH = 'with'
+    YIELD = 'yield'
+
+    L_PARENTHESES = '('
+    L_BRACKET = '['
+    L_CURLY = '{'
+    R_PARENTHESES = ')'
+    R_BRACKET = ']'
+    R_CURLY = '}'
+    PERCENT = '%'
+
+    // Starlark does not support floats, see [StarLang:25]
+    HEX_LITERAL = 'regexp:0[xX][0-9A-Fa-f]+'
+    OCTAL_LITERAL = 'regexp:0[oO][0-7]+'
+    DECIMAL_LITERAL = 'regexp:0|([1-9][0-9]*)'
+    IDENTIFIER = 'regexp:[a-zA-Z_][a-zA-Z0-9_]*'
+
+    space = 'regexp:\s+'
+  ]
+}
+
+
+// [Python2]: # Grammar for Python
+// [Python2]:
+// [Python2]: # Note:  Changing the grammar specified in this file will most likely
+// [Python2]: #        require corresponding changes in the parser module
+// [Python2]: #        (../Modules/parsermodule.c).  If you can't make the changes to
+// [Python2]: #        that module yourself, please co-ordinate the required changes
+// [Python2]: #        with someone who can; ask around on python-dev for help.  Fred
+// [Python2]: #        Drake <fdrake@acm.org> will probably be listening there.
+// [Python2]:
+// [Python2]: # NOTE WELL: You should also follow all the steps listed in PEP 306,
+// [Python2]: # "How to Change Python's Grammar"
+// [Python2]:
+// [Python2]: # Start symbols for the grammar:
+// [Python2]: #       single_input is a single interactive statement;
+// [Python2]: #       file_input is a module or sequence of commands read from an input file;
+// [Python2]: #       eval_input is the input for the eval() and input() functions.
+// [Python2]: # NB: compound_stmt in single_input is followed by extra NEWLINE!
+// [Python2]: single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
+// [Python2]: file_input: (NEWLINE | stmt)* ENDMARKER
+// [Python2]: eval_input: testlist NEWLINE* ENDMARKER
+buck_file ::= statement*
+
+// [Python2]:
+// [Python2]: decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
+// [Python2]: decorators: decorator+
+// [Python2]: decorated: decorators (classdef | funcdef)
+// No evidence that Starlark or Buck support decorators (TODO: ref?)
+
+// [Python2]: funcdef: 'def' NAME parameters ':' suite
+// [Python2]: parameters: '(' [varargslist] ')'
+function_definition ::= 'def' IDENTIFIER '(' [parameter_list] ')' ':' suite
+
+// [Python2]: varargslist: ((fpdef ['=' test] ',')*
+// [Python2]:               ('*' NAME [',' '**' NAME] | '**' NAME) |
+// [Python2]:               fpdef ['=' test] (',' fpdef ['=' test])* [','])
+// [Python2]: fpdef: NAME | '(' fplist ')'
+// [Python2]: fplist: fpdef (',' fpdef)* [',']
+// Starlark does not enforce the order of args [StarSpec:107], so
+// prefer its simpler production from [StarSpec:8] and [StarSpec:10]
+parameter_list ::= [parameter (',' parameter)* ','?]
+parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' expression]
+
+// [Python2]:
+// [Python2]: stmt: simple_stmt | compound_stmt
+statement ::= simple_statement | compound_statement
+
+// [Python2]: simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+simple_statement ::= small_statement (';' small_statement)* [';']
+
+// [Python2]: small_stmt: (expr_stmt | print_stmt  | del_stmt | pass_stmt | flow_stmt |
+// [Python2]:              import_stmt | global_stmt | exec_stmt | assert_stmt)
+small_statement ::= (load_call
+                     | expression_statement
+                     | pass_statement
+                     | flow_statement
+                     | assert_statement)
+
+// Note that the syntax of a load statement is much more restrictive than
+// a normal argument_list:  all arguments must explicitly be strings, and
+// there is no support for *args or **kwargs:  see [StarSpec:35]
+load_call ::= 'load' '(' load_target_argument (',' load_argument)+ [','] ')'
+load_target_argument ::= string
+load_argument ::= [IDENTIFIER '='] string
+
+
+// [Python2]: expr_stmt: testlist (augassign (yield_expr|testlist) |
+// [Python2]:                      ('=' (yield_expr|testlist))*)
+expression_statement ::= expression_list (augment_assignment expression_list | ('=' expression_list)*)
+
+// [Python2]: augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+// [Python2]:             '<<=' | '>>=' | '**=' | '//=')
+// [Python2]: # For normal assignments, additional restrictions enforced by the interpreter
+augment_assignment ::= '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' | '**=' | '//='
+
+// [Python2]: print_stmt: 'print' ( [ test (',' test)* [','] ] |
+// [Python2]:                       '>>' test [ (',' test)+ [','] ] )
+// Starlark does not support print
+
+// [Python2]: del_stmt: 'del' exprlist
+// Starlark does not support del (use dict.pop(), instead)
+
+// [Python2]: pass_stmt: 'pass'
+pass_statement ::= 'pass'
+
+// [Python2]: flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+flow_statement ::= break_statement | continue_statement | return_statement
+
+// [Python2]: break_stmt: 'break'
+break_statement ::= 'break'
+
+// [Python2]: continue_stmt: 'continue'
+continue_statement ::= 'continue'
+
+// [Python2]: return_stmt: 'return' [testlist]
+return_statement ::= 'return' [expression_list]
+
+// [Python2]: yield_stmt: yield_expr
+// Starlark does not support yield, see [StarLang:24]
+
+// [Python2]: raise_stmt: 'raise' [test [',' test [',' test]]]
+// Starlark does not support yield, see [StarLang:24]
+
+// [Python2]: import_stmt: import_name | import_from
+// [Python2]: import_name: 'import' dotted_as_names
+// [Python2]: import_from: ('from' ('.'* dotted_name | '.'+)
+// [Python2]:               'import' ('*' | '(' import_as_names ')' | import_as_names))
+// [Python2]: import_as_name: NAME ['as' NAME]
+// [Python2]: dotted_as_name: dotted_name ['as' NAME]
+// [Python2]: import_as_names: import_as_name (',' import_as_name)* [',']
+// [Python2]: dotted_as_names: dotted_as_name (',' dotted_as_name)*
+// [Python2]: dotted_name: NAME ('.' NAME)*
+// Starlark does not support import, see [StarLang:23], instead uses load()
+
+// [Python2]: global_stmt: 'global' NAME (',' NAME)*
+// Starlark does not use the word 'global' for global variables, see [StarLang]
+
+// [Python2]: exec_stmt: 'exec' expr ['in' test [',' test]]
+// Starlark does not support the exec statement
+
+// [Python2]: assert_stmt: 'assert' test [',' test]
+assert_statement ::= 'assert' expression [',' expression]
+
+// [Python2]:
+// [Python2]: compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+compound_statement ::= if_statement | for_statement | function_definition
+
+// [Python2]: if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+if_statement ::= 'if' expression ':' suite ('elif' expression ':' suite)* ['else' ':' suite]
+
+// [Python2]: while_stmt: 'while' test ':' suite ['else' ':' suite]
+// Starlark does not support while statements, see [StarLang:24]
+
+// [Python2]: for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+// Starlark does not support else statements on for loops, see [StarLang:24]
+for_statement ::= 'for' simple_expression_list 'in' expression_list ':' suite
+
+// [Python2]: try_stmt: ('try' ':' suite
+// [Python2]:            ((except_clause ':' suite)+
+// [Python2]:             ['else' ':' suite]
+// [Python2]:             ['finally' ':' suite] |
+// [Python2]:            'finally' ':' suite))
+// [Python2]: with_stmt: 'with' with_item (',' with_item)*  ':' suite
+// [Python2]: with_item: test ['as' expr]
+// [Python2]: # NB compile.c makes sure that the default except clause is last
+// [Python2]: except_clause: 'except' [test [('as' | ',') test]]
+// Starlark does not support try/except/finally, see [StarLang].
+
+// [Python2]: suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+suite ::= simple_statement | INDENT statement+ DEDENT
+
+// [Python2]: # Backward compatibility cruft to support:
+// [Python2]: # [ x for x in lambda: True, lambda: False if x() ]
+// [Python2]: # even while also allowing:
+// [Python2]: # lambda x: 5 if x else 2
+// [Python2]: # (But not a mix of the two)
+// [Python2]: testlist_safe: old_test [(',' old_test)+ [',']]
+// [Python2]: old_test: or_test | old_lambdef
+// [Python2]: old_lambdef: 'lambda' [varargslist] ':' old_test
+// [Python2]:
+// Starlark does not support lambda, see [StarLang:27].
+
+// [Python2]: test: or_test ['if' or_test 'else' test] | lambdef
+// Starlark does not support lambda, see [StarLang:27].
+expression ::= or_expression [ 'if' or_expression 'else' expression ]
+
+// [Python2]: or_test: and_test ('or' and_test)*
+or_expression ::= and_expression ( 'or' and_expression )*
+
+// [Python2]: and_test: not_test ('and' not_test)*
+and_expression ::= not_expression ( 'and' not_expression )*
+
+// [Python2]: not_test: 'not' not_test | comparison
+not_expression ::= 'not' not_expression | comparison_expression
+
+// [Python2]: comparison: expr (comp_op expr)*
+// Starlark does not support chained comparisons [StarLang:21]
+comparison_expression ::= simple_expression [comparison_op simple_expression]
+
+// [Python2]: comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+// Starlark does not support 'is' [StarLang:28]
+comparison_op ::=  '<' | '>' | '==' | '>=' | '<=' | '<>' | '!=' | 'in' | 'not' 'in'
+
+// [Python2]: expr: xor_expr ('|' xor_expr)*
+simple_expression ::= xor_expression ('|' xor_expression)*
+
+// [Python2]: xor_expr: and_expr ('^' and_expr)*
+xor_expression ::= bitwise_and_expression ('^' bitwise_and_expression)*
+
+// [Python2]: and_expr: shift_expr ('&' shift_expr)*
+bitwise_and_expression ::= shift_expression ('&' shift_expression)*
+
+// [Python2]: shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+shift_expression ::= arithmetic_expression (shift_op arithmetic_expression)*
+shift_op ::= '<<' | '>>'
+
+// [Python2]: arith_expr: term (('+'|'-') term)*
+arithmetic_expression ::= term_expression (arithmetic_op term_expression)*
+arithmetic_op ::= '+' | '-'
+
+// [Python2]: term: factor (('*'|'/'|'%'|'//') factor)*
+term_expression ::= factor_expression (term_op factor_expression)*
+term_op ::= '*' | '/' | '%' | '//'
+
+// [Python2]: factor: ('+'|'-'|'~') factor | power
+factor_expression ::= factor_unary_op factor_expression | power_expression
+factor_unary_op ::= '+' | '-' | '~'
+
+// [Python2]: power: atom trailer* ['**' factor]
+power_expression ::= atomic_expression expression_trailer* [ '**' factor_expression]
+
+// [Python2]: atom: ('(' [yield_expr|testlist_comp] ')' |
+// [Python2]:        '[' [listmaker] ']' |
+// [Python2]:        '{' [dictorsetmaker] '}' |
+// [Python2]:        '`' testlist1 '`' |
+// [Python2]:        NAME | NUMBER | STRING+)
+// Starlark does not support yield, see [StarLang:20].
+// TODO:  Unclear whether Starlark spec supports backticks, so leave it in for now
+atomic_expression ::= ('(' [expression_list_or_comprehension] ')'
+                       | '[' [listmaker] ']'
+                       | '{' [dictmaker] '}'
+                       | '`' expression_list '`'
+                       | IDENTIFIER | BOOLEAN | integer | NONE | string)
+
+// [Python2]: listmaker: test ( list_for | (',' test)* [','] )
+listmaker ::= expression_list_or_comprehension
+
+// [Python2]: testlist_comp: test ( comp_for | (',' test)* [','] )
+expression_list_or_comprehension ::= expression ( comprehension_for | (',' expression)* [','] )
+
+// [Python2]: lambdef: 'lambda' [varargslist] ':' test
+// Starlark does not support lambdas, see [StarLang].
+
+// [Python2]: trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+expression_trailer ::= function_trailer | subscript_trailer | dot_trailer
+function_trailer ::= '(' [argument_list] ')'
+subscript_trailer ::= '[' subscript_list ']'
+dot_trailer ::= '.' IDENTIFIER
+
+// [Python2]: subscriptlist: subscript (',' subscript)* [',']
+subscript_list ::= subscript (',' subscript)* [',']
+
+// [Python2]: subscript: '.' '.' '.' | test | [test] ':' [test] [sliceop]
+// [Python2]: sliceop: ':' [test]
+subscript ::= proper_slice | expression
+proper_slice ::= [slice_lower] ':' [slice_upper] [':' [slice_stride]]
+slice_lower ::= expression
+slice_upper ::= expression
+slice_stride ::= expression
+
+// [Python2]: exprlist: expr (',' expr)* [',']
+simple_expression_list ::= simple_expression (',' simple_expression)* [',']
+
+// [Python2]: testlist: test (',' test)* [',']
+expression_list ::= expression (',' expression)* [',']
+
+// [Python2]: dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
+// [Python2]:                   (test (comp_for | (',' test)* [','])) )
+// [StarLang]: The following Python features are not supported:
+// [StarLang]:   * float and set types
+dictmaker ::= expression ':' expression comprehension_for | (',' expression ':' expression)* [',']
+// [Python2]:
+// [Python2]: classdef: 'class' NAME ['(' [testlist] ')'] ':' suite
+// Starlark does not support classes, see [StarLang].
+
+// [Python2]:
+// [Python2]: arglist: (argument ',')* (argument [',']
+// [Python2]:                          |'*' test (',' argument)* [',' '**' test]
+// [Python2]:                          |'**' test)
+// [Python2]: # The reason that keywords are test nodes instead of NAME is that using NAME
+// [Python2]: # results in an ambiguity. ast.c makes sure it's a NAME.
+// [Python2]: argument: test [comp_for] | test '=' test
+// [Python2]:
+// Starlark does not enforce the order of args [StarSpec:107], so
+// prefer its simpler production from [StarSpec:63] and [StarSpec:64]
+argument_list ::= argument (',' argument)* ','?
+argument ::= '**' expression | '*' expression | [IDENTIFIER '='] expression
+
+// [Python2]: list_iter: list_for | list_if
+// [Python2]: list_for: 'for' exprlist 'in' testlist_safe [list_iter]
+// [Python2]: list_if: 'if' old_test [list_iter]
+// [Starlark]: The following Python features are not supported:
+// [Starlark]:   * lambda and nested functions
+// The distinction between list_{iter,for,if} and comp_{iter,for,if}
+// is that "list_for" accepts old-style lambdas, while comp_iter does not
+// Since Skylark does not support lambdas [StarLang:27], substitute ==>
+//   list_iter or comp_iter ==> comprehension_iter
+//   list_for or comp_for ==> comprehension_for
+//   list_if or comp_if ==> comprehension_if
+
+// [Python2]:
+// [Python2]: comp_iter: comp_for | comp_if
+comprehension_iter ::= comprehension_for | comprehension_if
+
+// [Python2]: comp_for: 'for' exprlist 'in' or_test [comp_iter]
+comprehension_for ::= 'for' simple_expression_list 'in' or_expression [comprehension_iter]
+
+// [Python2]: comp_if: 'if' old_test [comp_iter]
+comprehension_if ::= 'if' expression [comprehension_iter]
+
+// [Python2]:
+// [Python2]: testlist1: test (',' test)*
+// [Python2]:
+// [Python2]: # not used in grammar, but may appear in "node" passed from Parser to Compiler
+// [Python2]: encoding_decl: NAME
+// [Python2]:
+// [Python2]: yield_expr: 'yield' [testlist]
+
+string ::= APOSTROPHED_STRING
+         | APOSTROPHED_RAW_STRING
+         | TRIPLE_APOSTROPHED_STRING
+         | TRIPLE_APOSTROPHED_RAW_STRING
+         | QUOTED_STRING
+         | QUOTED_RAW_STRING
+         | TRIPLE_QUOTED_STRING
+         | TRIPLE_QUOTED_RAW_STRING
+
+integer ::= HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL

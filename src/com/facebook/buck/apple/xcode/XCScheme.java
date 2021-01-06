@@ -1,21 +1,22 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import java.util.Optional;
 
 public class XCScheme {
   private String name;
+  private boolean wasCreatedForExtension;
   private Optional<BuildAction> buildAction;
   private Optional<TestAction> testAction;
   private Optional<LaunchAction> launchAction;
@@ -34,6 +36,7 @@ public class XCScheme {
 
   public XCScheme(
       String name,
+      boolean wasCreatedForExtension,
       Optional<BuildAction> buildAction,
       Optional<TestAction> testAction,
       Optional<LaunchAction> launchAction,
@@ -41,6 +44,7 @@ public class XCScheme {
       Optional<AnalyzeAction> analyzeAction,
       Optional<ArchiveAction> archiveAction) {
     this.name = name;
+    this.wasCreatedForExtension = wasCreatedForExtension;
     this.buildAction = buildAction;
     this.testAction = testAction;
     this.launchAction = launchAction;
@@ -51,6 +55,10 @@ public class XCScheme {
 
   public String getName() {
     return name;
+  }
+
+  public boolean getWasCreatedForExtension() {
+    return wasCreatedForExtension;
   }
 
   public Optional<BuildAction> getBuildAction() {
@@ -184,15 +192,18 @@ public class XCScheme {
 
   public static class BuildActionEntry {
     public enum BuildFor {
-      RUNNING,
+      ANALYZING,
       TESTING,
+      RUNNING,
       PROFILING,
-      ARCHIVING,
-      ANALYZING;
+      ARCHIVING;
 
       public static final EnumSet<BuildFor> DEFAULT = EnumSet.allOf(BuildFor.class);
-      public static final EnumSet<BuildFor> INDEXING = EnumSet.of(TESTING, ANALYZING, ARCHIVING);
-      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(TESTING, ANALYZING);
+      public static final EnumSet<BuildFor> INDEXING_ONLY = EnumSet.of(ANALYZING);
+      public static final EnumSet<BuildFor> SCHEME_LIBRARY = EnumSet.of(ANALYZING, RUNNING);
+      public static final EnumSet<BuildFor> MAIN_EXECUTABLE =
+          EnumSet.of(ANALYZING, RUNNING, PROFILING, ARCHIVING);
+      public static final EnumSet<BuildFor> TEST_ONLY = EnumSet.of(ANALYZING, TESTING);
     }
 
     private BuildableReference buildableReference;
@@ -223,29 +234,56 @@ public class XCScheme {
       ;
     }
 
+    /** Watch Interface property in Watch app scheme used to choose which interface is launched. */
+    public enum WatchInterface {
+      /** Launches the Watch app */
+      MAIN,
+      /** Launches the Watch app's complication */
+      COMPLICATION,
+      /** Launches the Watch app's dynamic notification with notification payload */
+      DYNAMIC_NOTIFICATION,
+      /** Launches the Watch app's static notification with notification payload */
+      STATIC_NOTIFICATION,
+    }
+
     BuildableReference buildableReference;
     private final String buildConfiguration;
     private final Optional<String> runnablePath;
     private final Optional<String> remoteRunnablePath;
+    private final Optional<WatchInterface> watchInterface;
     private final LaunchStyle launchStyle;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<BuildableReference> expandVariablesBasedOn;
+    private final Optional<String> notificationPayloadFile;
+    private final Optional<String> applicationLanguage;
+    private final Optional<String> applicationRegion;
 
     public LaunchAction(
         BuildableReference buildableReference,
         String buildConfiguration,
         Optional<String> runnablePath,
         Optional<String> remoteRunnablePath,
+        Optional<WatchInterface> watchInterface,
         LaunchStyle launchStyle,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
-        Optional<ImmutableList<SchemePrePostAction>> postActions) {
+        Optional<ImmutableList<SchemePrePostAction>> postActions,
+        Optional<String> notificationPayloadFile,
+        Optional<String> applicationLanguage,
+        Optional<String> applicationRegion) {
       super(preActions, postActions);
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
       this.runnablePath = runnablePath;
       this.remoteRunnablePath = remoteRunnablePath;
+      this.watchInterface = watchInterface;
       this.launchStyle = launchStyle;
       this.environmentVariables = environmentVariables;
+      this.expandVariablesBasedOn = expandVariablesBasedOn;
+      this.notificationPayloadFile = notificationPayloadFile;
+      this.applicationLanguage = applicationLanguage;
+      this.applicationRegion = applicationRegion;
     }
 
     public BuildableReference getBuildableReference() {
@@ -264,6 +302,14 @@ public class XCScheme {
       return remoteRunnablePath;
     }
 
+    public Optional<WatchInterface> getWatchInterface() {
+      return watchInterface;
+    }
+
+    public Optional<String> getNotificationPayloadFile() {
+      return notificationPayloadFile;
+    }
+
     public LaunchStyle getLaunchStyle() {
       return launchStyle;
     }
@@ -271,23 +317,38 @@ public class XCScheme {
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
     }
+
+    public Optional<BuildableReference> getExpandVariablesBasedOn() {
+      return expandVariablesBasedOn;
+    }
+
+    public Optional<String> getApplicationLanguage() {
+      return applicationLanguage;
+    }
+
+    public Optional<String> getApplicationRegion() {
+      return applicationRegion;
+    }
   }
 
   public static class ProfileAction extends SchemeAction {
     BuildableReference buildableReference;
     private final String buildConfiguration;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<BuildableReference> expandVariablesBasedOn;
 
     public ProfileAction(
         BuildableReference buildableReference,
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions) {
       super(preActions, postActions);
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
       this.environmentVariables = environmentVariables;
+      this.expandVariablesBasedOn = expandVariablesBasedOn;
     }
 
     public BuildableReference getBuildableReference() {
@@ -301,22 +362,35 @@ public class XCScheme {
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
     }
+
+    public Optional<BuildableReference> getExpandVariablesBasedOn() {
+      return expandVariablesBasedOn;
+    }
   }
 
   public static class TestAction extends SchemeAction {
     List<TestableReference> testables;
     private final String buildConfiguration;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<BuildableReference> expandVariablesBasedOn;
+    private final Optional<String> applicationLanguage;
+    private final Optional<String> applicationRegion;
 
     public TestAction(
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
-        Optional<ImmutableList<SchemePrePostAction>> postActions) {
+        Optional<ImmutableList<SchemePrePostAction>> postActions,
+        Optional<String> applicationLanguage,
+        Optional<String> applicationRegion) {
       super(preActions, postActions);
       this.testables = new ArrayList<>();
       this.buildConfiguration = buildConfiguration;
       this.environmentVariables = environmentVariables;
+      this.expandVariablesBasedOn = expandVariablesBasedOn;
+      this.applicationLanguage = applicationLanguage;
+      this.applicationRegion = applicationRegion;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -333,6 +407,18 @@ public class XCScheme {
 
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
+    }
+
+    public Optional<BuildableReference> getExpandVariablesBasedOn() {
+      return expandVariablesBasedOn;
+    }
+
+    public Optional<String> getApplicationLanguage() {
+      return applicationLanguage;
+    }
+
+    public Optional<String> getApplicationRegion() {
+      return applicationRegion;
     }
   }
 

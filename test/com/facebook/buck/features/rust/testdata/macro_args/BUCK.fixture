@@ -1,0 +1,17 @@
+rust_binary(
+    name = "binary-args",
+    srcs = ["main.rs"],
+    rustc_flags = ["--cfg=lib_path=\"$(location :thingy)\""],
+    deps = [":my-library"],
+)
+
+rust_library(
+    name = "my-library",
+    srcs = ["lib.rs"],
+)
+
+genrule(
+    name = "thingy",
+    out = "foo.rs",
+    cmd = "echo 'fn foo() {}' > $OUT",
+)

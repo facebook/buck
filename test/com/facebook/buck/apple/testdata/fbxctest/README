@@ -1,6 +1,6 @@
-Xcode version: Xcode 9.1 Build version 9B55
-xctool commit: 746c3a042f1a781c80e5f697edba345f7b5270f5
-fbxctest commit: 2726100ddccd4fd03ffac80cab72fbbf826a87c1
+Xcode version: Xcode 10
+xctool commit: d2cf27717bb6f1181be4aeb8e390e09868d6ce5c
+fbxctest commit: 37cfbd0b9019170a6dac6724581677f1b01312d6
 
 This tool (fbxctest) needs to be updated when moving to a new Xcode version.
 There's a script for this: scripts/update-xctest.sh

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -35,11 +35,13 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.ShellStep;
@@ -47,7 +49,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.google.common.collect.ImmutableSortedSet;
@@ -65,7 +66,7 @@ public class GenAidlTest {
   private ProjectFilesystem stubFilesystem;
   private PathSourcePath pathToAidl;
   private BuildTarget target;
-  private DefaultSourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
   private String pathToAidlExecutable;
   private String pathToFrameworkAidl;
   private String importPath;
@@ -74,7 +75,8 @@ public class GenAidlTest {
   @Before
   public void setUp() throws IOException {
     stubFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Files.createDirectories(stubFilesystem.getRootPath().resolve("java/com/example/base"));
+    Files.createDirectories(
+        stubFilesystem.getRootPath().resolve("java/com/example/base").getPath());
 
     pathToAidl = FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     importPath = Paths.get("java/com/example/base").toString();
@@ -87,8 +89,8 @@ public class GenAidlTest {
             "android",
             Paths.get(""),
             Collections.emptyList(),
-            Paths.get(""),
-            Paths.get(""),
+            () -> new SimpleTool(""),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(pathToAidlExecutable),
             Paths.get(""),
@@ -98,11 +100,8 @@ public class GenAidlTest {
             Paths.get(""),
             Paths.get(""));
 
-    target =
-        BuildTargetFactory.newInstance(
-            stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
-    pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
+    pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
   }
 
   private GenAidl createGenAidlRule(ImmutableSortedSet<SourcePath> aidlSourceDeps) {
@@ -129,15 +128,15 @@ public class GenAidlTest {
 
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
-            .withBuildCellRootPath(stubFilesystem.getRootPath());
+            .withBuildCellRootPath(stubFilesystem.getRootPath().getPath());
     List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     Path outputDirectory = BuildTargetPaths.getScratchPath(stubFilesystem, target, "__%s.aidl");
     assertEquals(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory))
-            .withRecursive(true),
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), stubFilesystem, outputDirectory),
+            true),
         steps.get(2));
     assertEquals(
         MkdirStep.of(
@@ -163,14 +162,13 @@ public class GenAidlTest {
 
   @Test
   public void testTransitiveAidlDependenciesAffectTheRuleKey() throws IOException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     StackedFileHashCache hashCache =
         StackedFileHashCache.createDefaultHashCaches(
             stubFilesystem, FileHashCacheMode.LOADING_CACHE);
-    DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder);
-    stubFilesystem.touch(stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()));
+    DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);
+    stubFilesystem.touch(
+        stubFilesystem.getRootPath().resolve(pathToAidl.getRelativePath()).getPath());
 
     GenAidl genAidlRuleNoDeps = createGenAidlRule(ImmutableSortedSet.of());
     RuleKey ruleKey = factory.build(genAidlRuleNoDeps);

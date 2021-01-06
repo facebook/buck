@@ -2,6 +2,14 @@ apple_library(
     name = "Dep",
     srcs = ["strings.m"],
     exported_headers = ["strings.h"],
+    deps = [":DepResources"],
     frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
     visibility = ["PUBLIC"],
 )
+
+apple_resource(
+    name = "DepResources",
+    files = ["resource_file"],
+    dirs = [],
+)
+

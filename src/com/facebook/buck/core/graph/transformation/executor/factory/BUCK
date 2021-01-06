@@ -1,0 +1,14 @@
+java_library(
+    name = "factory",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/util/randomizedtrial:randomizedtrial",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
+    ],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.scala;
@@ -22,10 +22,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerParameters;
@@ -45,11 +45,10 @@ import java.util.stream.Collectors;
 
 public class ScalacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
-  private static final PathOrGlobMatcher JAVA_PATH_MATCHER = new PathOrGlobMatcher("**.java");
-  private static final PathOrGlobMatcher SCALA_PATH_MATCHER = new PathOrGlobMatcher("**.scala");
+  private static final PathMatcher JAVA_PATH_MATCHER = FileExtensionMatcher.of("java");
+  private static final PathMatcher SCALA_PATH_MATCHER = FileExtensionMatcher.of("scala");
 
   @AddToRuleKey private final Tool scalac;
-  private final BuildRule scalaLibraryTarget;
   @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
   @AddToRuleKey private final ImmutableList<String> extraArguments;
   @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
@@ -59,7 +58,6 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
   public ScalacToJarStepFactory(
       Tool scalac,
-      BuildRule scalaLibraryTarget,
       ImmutableList<String> configCompilerFlags,
       ImmutableList<String> extraArguments,
       ImmutableSet<BuildRule> compilerPlugins,
@@ -67,12 +65,10 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
       JavacOptions javacOptions,
       ExtraClasspathProvider extraClassPath) {
     this.scalac = scalac;
-    this.scalaLibraryTarget = scalaLibraryTarget;
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
     this.compilerPlugins =
-        compilerPlugins
-            .stream()
+        compilerPlugins.stream()
             .map(BuildRule::getSourcePathToOutput)
             .collect(ImmutableSet.toImmutableSet());
     this.javac = javac;
@@ -121,8 +117,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
-            sourceFilePaths
-                .stream()
+            sourceFilePaths.stream()
                 .filter(JAVA_PATH_MATCHER::matches)
                 .collect(Collectors.toSet()));
 
@@ -148,13 +143,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
   }
 
   @Override
-  public Tool getCompiler() {
-    return scalac;
-  }
-
-  @Override
-  public Iterable<BuildRule> getDeclaredDeps(SourcePathRuleFinder ruleFinder) {
-    return Iterables.concat(
-        super.getDeclaredDeps(ruleFinder), ImmutableList.of(scalaLibraryTarget));
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

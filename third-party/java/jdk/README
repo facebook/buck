@@ -1,0 +1,8 @@
+Compiler stub jar was created as follows:
+   buck build src/com/facebook/buck/jvm/java/abi:api-stubber
+   java -jar buck-out/gen/src/com/facebook/buck/jvm/java/abi/api-stubber.jar ${JAVA_HOME}/lib/tools.jar stub-compiler-tree-api.jar
+   <a bunch of calls to `zip -d` to delete files that aren't part of the Tree API>
+
+RT stub jar (for Java 1.8.0_181) was created on macOS as follows:
+   buck build src/com/facebook/buck/jvm/java/abi:api-stubber
+   java -jar buck-out/gen/src/com/facebook/buck/jvm/java/abi/api-stubber.jar /Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/jre/lib/rt.jar jdk8-rt-stub.jar

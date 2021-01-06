@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -22,11 +22,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.cxx.PreprocessorFlags;
@@ -40,23 +37,21 @@ import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
-import com.facebook.buck.util.RichStream;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.Optional;
 
 public class AppleLibraryDescriptionSwiftEnhancer {
-  @SuppressWarnings("unused")
   public static BuildRule createSwiftCompileRule(
       BuildTarget target,
       CellPathResolver cellRoots,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      BuildRuleParams params,
       AppleNativeTargetDescriptionArg args,
       ProjectFilesystem filesystem,
       CxxPlatform platform,
@@ -64,23 +59,22 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       SwiftBuckConfig swiftBuckConfig,
       ImmutableSet<CxxPreprocessorInput> inputs) {
 
-    SourcePathRuleFinder rulePathFinder = new SourcePathRuleFinder(graphBuilder);
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
-        DefaultSourcePathResolver.from(rulePathFinder), delegateArgsBuilder, args, target);
+        swiftBuckConfig, graphBuilder.getSourcePathResolver(), delegateArgsBuilder, args, target);
+    delegateArgsBuilder.setTargetSdkVersion(args.getTargetSdkVersion());
     SwiftLibraryDescriptionArg swiftArgs = delegateArgsBuilder.build();
 
-    Preprocessor preprocessor = platform.getCpp().resolve(graphBuilder);
+    Preprocessor preprocessor =
+        platform.getCpp().resolve(graphBuilder, target.getTargetConfiguration());
 
     ImmutableSet<BuildRule> inputDeps =
         RichStream.from(inputs)
-            .flatMap(input -> RichStream.from(input.getDeps(graphBuilder, rulePathFinder)))
+            .flatMap(input -> RichStream.from(input.getDeps(graphBuilder)))
             .toImmutableSet();
 
     ImmutableSortedSet.Builder<BuildRule> sortedDeps = ImmutableSortedSet.naturalOrder();
     sortedDeps.addAll(inputDeps);
-
-    BuildRuleParams paramsWithDeps = params.withExtraDeps(sortedDeps.build());
 
     PreprocessorFlags.Builder flagsBuilder = PreprocessorFlags.builder();
     inputs.forEach(input -> flagsBuilder.addAllIncludes(input.getIncludes()));
@@ -91,20 +85,22 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         AppleLibraryDescription.underlyingModuleCxxPreprocessorInput(
             target, graphBuilder, platform);
 
+    SwiftPlatform swiftPlatform = applePlatform.getSwiftPlatform().get();
+
     return SwiftLibraryDescription.createSwiftCompileRule(
         platform,
-        applePlatform.getSwiftPlatform().get(),
+        swiftPlatform,
         swiftBuckConfig,
         target,
-        paramsWithDeps,
         graphBuilder,
-        rulePathFinder,
         cellRoots,
         filesystem,
         swiftArgs,
         preprocessor,
         preprocessorFlags,
-        underlyingModule.isPresent());
+        underlyingModule.isPresent(),
+        args.getTargetSdkVersion()
+            .map(version -> swiftPlatform.getSwiftTarget().withTargetSdkVersion(version)));
   }
 
   /**
@@ -116,7 +112,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       ActionGraphBuilder graphBuilder,
       CxxPlatform platform,
       AppleNativeTargetDescriptionArg arg) {
-    CxxLibrary lib = (CxxLibrary) graphBuilder.requireRule(target.withFlavors());
+    CxxLibraryGroup lib = (CxxLibraryGroup) graphBuilder.requireRule(target.withFlavors());
     ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
         TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
             platform, lib, false, graphBuilder);
@@ -138,7 +134,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
   public static BuildRule createObjCGeneratedHeaderBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
@@ -146,11 +141,9 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         getObjCGeneratedHeader(buildTarget, graphBuilder, cxxPlatform, headerVisibility);
 
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
-    HeaderSymlinkTreeWithHeaderMap headerMapRule =
-        HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, outputPath, headers, ruleFinder);
 
-    return headerMapRule;
+    return HeaderSymlinkTreeWithHeaderMap.create(
+        buildTarget, projectFilesystem, outputPath, headers);
   }
 
   public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(
@@ -194,7 +187,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         break;
     }
 
-    Preconditions.checkNotNull(appleLibType);
+    Objects.requireNonNull(appleLibType);
 
     return buildTarget.withFlavors(appleLibType.getFlavor(), cxxPlatform.getFlavor());
   }

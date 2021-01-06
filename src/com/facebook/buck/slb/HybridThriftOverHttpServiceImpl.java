@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
@@ -26,6 +26,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import okhttp3.MediaType;
 import okhttp3.Request.Builder;
@@ -43,7 +44,7 @@ public class HybridThriftOverHttpServiceImpl<
     implements HybridThriftOverHttpService<ThriftRequest, ThriftResponse> {
 
   public static final MediaType HYBRID_THRIFT_STREAM_CONTENT_TYPE =
-      Preconditions.checkNotNull(MediaType.parse("application/x-hybrid-thrift-binary"));
+      Objects.requireNonNull(MediaType.parse("application/x-hybrid-thrift-binary"));
   public static final String PROTOCOL_HEADER = "X-Thrift-Protocol";
 
   private static final Logger LOG = Logger.get(HybridThriftOverHttpServiceImpl.class);
@@ -158,7 +159,7 @@ public class HybridThriftOverHttpServiceImpl<
   private static InputStream nonCloseableStream(InputStream streamToWrap) {
     return new FilterInputStream(streamToWrap) {
       @Override
-      public void close() throws IOException {
+      public void close() {
         // Do not close the underlying stream.
       }
     };
@@ -173,7 +174,7 @@ public class HybridThriftOverHttpServiceImpl<
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     args.getExecutor().shutdown();
     try {
       args.getExecutor().awaitTermination(EXECUTOR_SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);

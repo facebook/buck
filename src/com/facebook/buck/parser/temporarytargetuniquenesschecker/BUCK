@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "temporarytargetuniquenesschecker",
+    srcs = glob([
+        "*.java",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+    ],
+)

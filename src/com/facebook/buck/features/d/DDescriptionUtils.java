@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.d;
@@ -20,27 +20,28 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -52,7 +53,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
@@ -96,7 +96,7 @@ abstract class DDescriptionUtils {
   }
 
   /**
-   * Creates a {@link NativeLinkable} using sources compiled by the D compiler.
+   * Creates a {@link NativeLinkableGroup} using sources compiled by the D compiler.
    *
    * @param cellPathResolver
    * @param params build parameters for the build target
@@ -121,17 +121,12 @@ abstract class DDescriptionUtils {
       ImmutableList<String> linkerFlags,
       DIncludes includes) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
-
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
             buildTarget,
             projectFilesystem,
             params,
             graphBuilder,
-            sourcePathResolver,
-            ruleFinder,
             cxxPlatform,
             dBuckConfig,
             compilerFlags,
@@ -145,8 +140,6 @@ abstract class DDescriptionUtils {
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
-        sourcePathResolver,
-        ruleFinder,
         buildTarget,
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
@@ -154,8 +147,11 @@ abstract class DDescriptionUtils {
             projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
+        Optional.empty(),
         CxxLinkOptions.of(),
-        FluentIterable.from(params.getBuildDeps()).filter(NativeLinkable.class),
+        FluentIterable.from(params.getBuildDeps())
+            .filter(NativeLinkableGroup.class)
+            .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         /* cxxRuntimeType */ Optional.empty(),
         /* bundleLoader */ Optional.empty(),
         ImmutableSet.of(),
@@ -173,20 +169,34 @@ abstract class DDescriptionUtils {
     return baseTarget.withAppendedFlavors(SOURCE_LINK_TREE);
   }
 
-  static CxxPlatform getCxxPlatform(ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
+  static UnresolvedCxxPlatform getUnresolvedCxxPlatform(
+      ToolchainProvider toolchainProvider,
+      TargetConfiguration toolchainTargetConfiguration,
+      DBuckConfig dBuckConfig) {
     CxxPlatformsProvider cxxPlatformsProviderFactory =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class);
     return dBuckConfig
         .getDefaultCxxPlatform()
         .map(InternalFlavor::of)
-        .map(cxxPlatformsProviderFactory.getCxxPlatforms()::getValue)
-        .orElse(cxxPlatformsProviderFactory.getDefaultCxxPlatform());
+        .map(flavor -> cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms().getValue(flavor))
+        .orElse(cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform());
+  }
+
+  static CxxPlatform getCxxPlatform(
+      BuildRuleResolver resolver,
+      ToolchainProvider toolchainProvider,
+      DBuckConfig dBuckConfig,
+      TargetConfiguration targetConfiguration) {
+    return getUnresolvedCxxPlatform(toolchainProvider, targetConfiguration, dBuckConfig)
+        .resolve(resolver, targetConfiguration);
   }
 
   public static SymlinkTree createSourceSymlinkTree(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       SourceSortedSet sources) {
     Preconditions.checkState(target.getFlavors().contains(SOURCE_LINK_TREE));
@@ -196,10 +206,8 @@ abstract class DDescriptionUtils {
         projectFilesystem,
         BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
         MoreMaps.transformKeys(
-            sources.toNameMap(target, pathResolver, "srcs"),
-            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())),
-        ImmutableMultimap.of(),
-        ruleFinder);
+            sources.toNameMap(target, ruleFinder.getSourcePathResolver(), "srcs"),
+            MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())));
   }
 
   private static ImmutableMap<BuildTarget, DLibrary> getTransitiveDLibraryRules(
@@ -236,7 +244,6 @@ abstract class DDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
       String name,
@@ -256,10 +263,10 @@ abstract class DDescriptionUtils {
               }
 
               ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-              depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder));
-              depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
+              depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, graphBuilder));
+              depsBuilder.addAll(graphBuilder.filterBuildRuleInputs(src));
               for (DIncludes dIncludes : transitiveIncludes.values()) {
-                depsBuilder.addAll(dIncludes.getDeps(ruleFinder));
+                depsBuilder.addAll(dIncludes.getDeps(graphBuilder));
               }
               ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 
@@ -286,7 +293,6 @@ abstract class DDescriptionUtils {
    * @param compilerFlags flags to pass to the compiler
    * @param baseParams build parameters for the compilation
    * @param graphBuilder graphBuilder for build rules
-   * @param sourcePathResolver resolver for source paths
    * @param cxxPlatform the C++ platform to compile for
    * @param dBuckConfig the Buck configuration for D
    * @return SourcePaths of the generated object files
@@ -296,8 +302,6 @@ abstract class DDescriptionUtils {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver sourcePathResolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       ImmutableList<String> compilerFlags,
@@ -305,7 +309,9 @@ abstract class DDescriptionUtils {
       DIncludes includes) {
     ImmutableList.Builder<SourcePath> sourcePaths = ImmutableList.builder();
     for (Map.Entry<String, SourcePath> source :
-        sources.toNameMap(baseBuildTarget, sourcePathResolver, "srcs").entrySet()) {
+        sources
+            .toNameMap(baseBuildTarget, graphBuilder.getSourcePathResolver(), "srcs")
+            .entrySet()) {
       BuildTarget compileTarget =
           createDCompileBuildTarget(baseBuildTarget, source.getKey(), cxxPlatform);
       BuildRule rule =
@@ -315,7 +321,6 @@ abstract class DDescriptionUtils {
               projectFilesystem,
               baseParams,
               graphBuilder,
-              ruleFinder,
               dBuckConfig,
               compilerFlags,
               source.getKey(),

@@ -1,0 +1,33 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "listener",
+    srcs = glob(
+        ["*.java"],
+    ),
+    tests = [
+        "//test/com/facebook/buck/remoteexecution/event/listener:listener",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/event/listener/interfaces:interfaces",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/config:config",
+        "//src/com/facebook/buck/remoteexecution/event:event",
+        "//src/com/facebook/buck/remoteexecution/event/listener/model:model",
+        "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/network:network",
+        "//src/com/facebook/buck/util/unit:unit",
+        "//third-party/java/remote-apis:remote-apis",
+    ],
+)

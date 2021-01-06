@@ -1,0 +1,6 @@
+java_test(
+    name = "tip",
+    srcs = glob(["src/**/*.java"]),
+    source = "1.8",
+    target = "1.8",
+)

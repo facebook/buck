@@ -23,3 +23,20 @@ genrule(
     cmd = "cp $(location :re-exported) $OUT",
     cmd_exe = "copy $(location :re-exported) %OUT%",
 )
+
+genrule(
+    name = "copy-source_outs",
+    outs = {
+        "output": [
+            "out",
+        ],
+    },
+    cmd = "cp $(location :source) $OUT/out",
+    cmd_exe = "copy $(location :source) %OUT%\\out",
+)
+
+export_file(
+    name = "re-exported_outs",
+    src = ":copy-source_outs[output]",
+    mode = "reference",
+)

@@ -1,0 +1,126 @@
+# =========================================================
+# Lexers:
+# =========================================================
+genrule(
+    name = "lexers",
+    srcs = [
+        "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.flex",
+        "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex",
+    ],
+    out = "com",
+    cmd = (
+        "$(exe //third-party/java/grammar-kit:jflex)" +
+        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
+        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
+        " $SRCS"
+    ),
+)
+
+zip_file(
+    name = "lexers.src",
+    srcs = [
+        ":lexers",
+    ],
+)
+
+# =========================================================
+# Parsers:
+# =========================================================
+
+BNF_SRCS = [
+    "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.bnf",
+    "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf",
+]
+
+MIXIN_SRCS = [
+    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFile.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFileType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFileType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgLanguage.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementFactory.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementFactory.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgTokenType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgNamedElement.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckNamedElement.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgNamedElementImpl.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgPsiImplUtil.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BuckNamedElementImpl.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BuckPsiImplUtil.java",
+]
+
+# Because GrammarKit resolves mixins from *class* files, not *java*
+# files, there's a chicken-and-egg problem:  you can't generate a
+# correct parser without compiled versions of your mixins, but you
+# can't compile your mixins without a generated parser.  :-(
+#
+# A two-pass parser generation solves this problem by first creating
+# an incorrect parser that doesn't handle mixins properly...
+genrule(
+    name = "_pass1_parsers",
+    srcs = BNF_SRCS,
+    out = "com",
+    cmd = (
+        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
+    ),
+)
+
+# ...but when packed up as a zip file ending in ".src.zip"...
+zip_file(
+    name = "_pass1_parsers.src",
+    srcs = [":_pass1_parsers"],
+)
+
+# ...it is sufficient to use in compiling the mixins.
+java_library(
+    name = "_parser_mixins",
+    srcs = [":_pass1_parsers.src"] + MIXIN_SRCS,
+    provided_deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+    ],
+)
+
+# Then, these compiled mixins can be packaged with the parser generator...
+java_binary(
+    name = "_custom_grammarkit",
+    main_class = "org.intellij.grammar.Main",
+    deps = [
+        ":_parser_mixins",
+        "//third-party/java/grammar-kit:grammar-kit",
+    ],
+)
+
+# ...so the second pass yields a parser that correctly resolves mixins.
+genrule(
+    name = "parsers",
+    srcs = BNF_SRCS,
+    out = "com",
+    cmd = (
+        "mkdir $OUT && $(exe :_custom_grammarkit) $OUT/.. $SRCS"
+    ),
+)
+
+zip_file(
+    name = "parsers.src",
+    srcs = [
+        ":parsers",
+    ],
+)
+
+java_library(
+    name = "grammar",
+    srcs = glob(["src/**/*.java"]) + [
+        ":lexers.src",
+        ":parsers.src",
+    ],
+    provided_deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+    ],
+    resources = glob(["resources/**/*"]),
+    resources_root = "resources/",
+    visibility = ["//tools/ideabuck/..."],
+)

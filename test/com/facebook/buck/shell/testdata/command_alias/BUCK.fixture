@@ -12,11 +12,11 @@ command_alias(
 command_alias(
     name = "platform_specific",
     platform_exe = {
+        "freebsd": ":freebsd",
         "linux": ":linux",
         "macos": ":macos",
-        "windows": ":windows",
-        "freebsd": ":freebsd",
         "unknown": ":unknown",
+        "windows": ":windows",
     },
 )
 
@@ -33,6 +33,7 @@ export_file(
 export_file(
     name = "windows",
     src = "//scripts:echo.bat",
+    out = "windows.bat",
 )
 
 export_file(

@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.toolchain;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -23,27 +24,34 @@ import java.util.Optional;
 public interface ToolchainProvider {
 
   /** @throws ToolchainInstantiationException when a toolchain cannot be created */
-  Toolchain getByName(String toolchainName);
+  Toolchain getByName(String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /** @throws ToolchainInstantiationException when a toolchain cannot be created */
-  <T extends Toolchain> T getByName(String toolchainName, Class<T> toolchainClass);
+  <T extends Toolchain> T getByName(
+      String toolchainName,
+      TargetConfiguration toolchainTargetConfiguration,
+      Class<T> toolchainClass);
 
   <T extends Toolchain> Optional<T> getByNameIfPresent(
-      String toolchainName, Class<T> toolchainClass);
+      String toolchainName,
+      TargetConfiguration toolchainTargetConfiguration,
+      Class<T> toolchainClass);
 
   /** @return <code>true</code> if toolchain exists (triggering instantiation if needed) */
-  boolean isToolchainPresent(String toolchainName);
+  boolean isToolchainPresent(
+      String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /**
    * @return <code>true</code> if toolchain has already been created (without triggering
    *     instantiation)
    */
-  boolean isToolchainCreated(String toolchainName);
+  boolean isToolchainCreated(
+      String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /**
    * @return <code>true</code> if toolchain failed to instantiate (without triggering instantiation)
    */
-  boolean isToolchainFailed(String toolchainName);
+  boolean isToolchainFailed(String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 
   /**
    * Provides access to all known toolchains that support the provided capability.
@@ -57,5 +65,5 @@ public interface ToolchainProvider {
 
   /** @return the exception that was thrown during toolchain instantiation */
   Optional<ToolchainInstantiationException> getToolchainInstantiationException(
-      String toolchainName);
+      String toolchainName, TargetConfiguration toolchainTargetConfiguration);
 }

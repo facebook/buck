@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -22,17 +22,19 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -43,13 +45,15 @@ public class PrebuiltCxxLibraryBuilder
         PrebuiltCxxLibraryDescription,
         BuildRule> {
 
-  public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public PrebuiltCxxLibraryBuilder(
+      BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new PrebuiltCxxLibraryDescription(
             new ToolchainProviderBuilder()
                 .withToolchain(
                     CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                    CxxPlatformsProvider.of(
+                        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
             CxxPlatformUtils.DEFAULT_CONFIG),
         target);
@@ -61,6 +65,21 @@ public class PrebuiltCxxLibraryBuilder
 
   public PrebuiltCxxLibraryBuilder setHeaderDirs(ImmutableList<SourcePath> headerDirs) {
     getArgForPopulating().setHeaderDirs(headerDirs);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setImportLib(SourcePath lib) {
+    getArgForPopulating().setImportLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPlatformImportLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformImportLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setVersionedImportLib(VersionMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setVersionedImportLib(lib);
     return this;
   }
 
@@ -125,9 +144,14 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> linkerFlags) {
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(
+      ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setExportedLinkerFlags(linkerFlags);
     return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(String... linkerFlags) {
+    return setExportedLinkerFlags(StringWithMacrosUtils.fromStrings(Arrays.asList(linkerFlags)));
   }
 
   public PrebuiltCxxLibraryBuilder setSoname(String soname) {
@@ -150,12 +174,18 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setExportedPlatformDeps(
+      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> exportedPlatformDeps) {
+    getArgForPopulating().setExportedPlatformDeps(exportedPlatformDeps);
+    return this;
+  }
+
   public PrebuiltCxxLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
     getArgForPopulating().setSupportedPlatformsRegex(Optional.of(supportedPlatformsRegex));
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+  public PrebuiltCxxLibraryBuilder setPreferredLinkage(NativeLinkableGroup.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(linkage);
     return this;
   }
@@ -173,8 +203,7 @@ public class PrebuiltCxxLibraryBuilder
   }
 
   public PrebuiltCxxLibraryBuilder setExportedLangPlatformPreprocessorFlags(
-      ImmutableMap<
-              AbstractCxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+      ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
           exportedLangPlatformPreprocessorFlags) {
     getArgForPopulating()
         .setExportedLangPlatformPreprocessorFlags(exportedLangPlatformPreprocessorFlags);

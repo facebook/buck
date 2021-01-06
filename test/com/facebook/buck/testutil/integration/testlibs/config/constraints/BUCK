@@ -1,0 +1,61 @@
+constraint_setting(
+    name = "os",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "linux",
+    constraint_setting = ":os",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "osx",
+    constraint_setting = ":os",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_setting(
+    name = "cpu",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "x86_32",
+    constraint_setting = ":cpu",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "x86_64",
+    constraint_setting = ":cpu",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "aarch64",
+    constraint_setting = ":cpu",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+constraint_value(
+    name = "arm",
+    constraint_setting = ":cpu",
+    visibility = [
+        "PUBLIC",
+    ],
+)

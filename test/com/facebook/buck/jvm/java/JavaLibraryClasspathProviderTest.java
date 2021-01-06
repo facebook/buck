@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -26,19 +26,18 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -61,11 +60,11 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   private BuildRule d;
   private BuildRule e;
   private BuildRule z;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     filesystem = new FakeProjectFilesystem();
 
     // Create our target graph. All nodes are JavaLibrary except b
@@ -78,8 +77,11 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     bNode =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//foo:b"))
-            .setSrcs(ImmutableList.of(FakeSourcePath.of(filesystem, "foo/b.java")))
-            .setCmd("echo $(classpath //foo:d")
+            .setSrcs(
+                ImmutableList.of(
+                    FakeSourcePath.of(filesystem, "foo/b.java"),
+                    DefaultBuildTargetSourcePath.of(dNode.getBuildTarget())))
+            .setCmd("echo $(location //foo:d)")
             .setOut("b.out")
             .build();
 
@@ -92,6 +94,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             ImmutableSet.of("foo", "c.java"),
             ImmutableSet.of(eNode),
             ImmutableSet.of(eNode), // exported
+            null, // resources
             filesystem);
 
     aNode =
@@ -100,6 +103,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             ImmutableSet.of("foo", "a.java"),
             ImmutableSet.of(bNode, cNode),
             ImmutableSet.of(cNode),
+            ImmutableSet.of(DefaultBuildTargetSourcePath.of(bNode.getBuildTarget())),
             filesystem);
 
     zNode =
@@ -109,7 +113,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    resolver = graphBuilder.getSourcePathResolver();
 
     a = graphBuilder.requireRule(aNode.getBuildTarget());
     b = graphBuilder.requireRule(bNode.getBuildTarget());
@@ -179,14 +183,13 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             .add(getFullOutput(e)) // c exports e
             // b is non-java so b and d do not appear
             .build(),
-        aLib.getTransitiveClasspaths()
-            .stream()
+        aLib.getTransitiveClasspaths().stream()
             .map(resolver::getAbsolutePath)
             .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test
-  public void getTransitiveClasspathDeps() throws Exception {
+  public void getTransitiveClasspathDeps() {
     TargetNode<?> noOutputNode =
         makeRule("//no:output", ImmutableSet.of(), ImmutableSet.of(zNode), filesystem);
 
@@ -206,11 +209,8 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         ImmutableSet.of(z, c, e),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) z));
 
-    BuildRule mavenCoord =
-        new JavaLibraryBuilder(
-                BuildTargetFactory.newInstance("//has:output"),
-                filesystem,
-                HashCode.fromString("aaaa"))
+    JavaLibrary mavenCoord =
+        new JavaLibraryBuilder(BuildTargetFactory.newInstance("//has:output"), filesystem)
             .setMavenCoords("com.example:buck:1.0")
             .addDep(z.getBuildTarget())
             .build(graphBuilder);
@@ -218,7 +218,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     assertEquals(
         "Does appear if no output jar but maven coordinate present.",
         ImmutableSet.of(z, c, e, mavenCoord),
-        JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) mavenCoord));
+        JavaLibraryClasspathProvider.getTransitiveClasspathDeps(mavenCoord));
   }
 
   @Test
@@ -226,6 +226,13 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     assertThat(
         JavaLibraryClasspathProvider.getJavaLibraryDeps(ImmutableList.of(a, b, c, d, e)),
         Matchers.containsInAnyOrder(a, c, d, e));
+  }
+
+  @Test
+  public void getAllReachableJavaLibrariesFindsDepsOfGenrule() {
+    assertThat(
+        JavaLibraryClasspathProvider.getAllReachableJavaLibraries(ImmutableList.of(a)),
+        Matchers.containsInAnyOrder(a, d, c, e));
   }
 
   private Path getFullOutput(BuildRule lib) {
@@ -236,9 +243,8 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
       String target,
       Iterable<String> srcs,
       Iterable<TargetNode<?>> deps,
-      ProjectFilesystem filesystem)
-      throws Exception {
-    return makeRule(target, srcs, deps, null, filesystem);
+      ProjectFilesystem filesystem) {
+    return makeRule(target, srcs, deps, null, null, filesystem);
   }
 
   private TargetNode<?> makeRule(
@@ -246,6 +252,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
       Iterable<String> srcs,
       Iterable<TargetNode<?>> deps,
       @Nullable Iterable<TargetNode<?>> exportedDeps,
+      @Nullable Iterable<SourcePath> resources,
       ProjectFilesystem filesystem) {
     JavaLibraryBuilder builder;
     BuildTarget parsedTarget = BuildTargetFactory.newInstance(target);
@@ -262,6 +269,11 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     if (exportedDeps != null) {
       for (TargetNode<?> dep : exportedDeps) {
         builder.addExportedDep(dep.getBuildTarget());
+      }
+    }
+    if (resources != null) {
+      for (SourcePath res : resources) {
+        builder.addResource(res);
       }
     }
     return builder.build();

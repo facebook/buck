@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -58,7 +58,7 @@ public class ArtifactCacheTestUtils {
 
   public static HttpArtifactCacheEvent.Scheduled newUploadScheduledEvent(
       BuildId buildId,
-      Optional<String> target,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       StoreType storeType,
       boolean configureEvent) {
@@ -82,22 +82,22 @@ public class ArtifactCacheTestUtils {
   }
 
   public static HttpArtifactCacheEvent.Started newUploadConfiguredStartedEvent(
-      BuildId buildId, Optional<String> rulekey, ImmutableSet<RuleKey> ruleKeys) {
-    return newUploadStartedEventImpl(buildId, rulekey, ruleKeys, true);
+      BuildId buildId, Optional<BuildTarget> target, ImmutableSet<RuleKey> ruleKeys) {
+    return newUploadStartedEventImpl(buildId, target, ruleKeys, true);
   }
 
   static HttpArtifactCacheEvent.Started newUploadStartedEvent(
-      BuildId buildId, Optional<String> rulekey, ImmutableSet<RuleKey> ruleKeys) {
-    return newUploadStartedEventImpl(buildId, rulekey, ruleKeys, false);
+      BuildId buildId, Optional<BuildTarget> target, ImmutableSet<RuleKey> ruleKeys) {
+    return newUploadStartedEventImpl(buildId, target, ruleKeys, false);
   }
 
   private static HttpArtifactCacheEvent.Started newUploadStartedEventImpl(
       BuildId buildId,
-      Optional<String> rulekey,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       boolean configureEvent) {
     HttpArtifactCacheEvent.Scheduled scheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(rulekey, ruleKeys, StoreType.ARTIFACT);
+        HttpArtifactCacheEvent.newStoreScheduledEvent(target, ruleKeys, StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Started event = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
     if (configureEvent) {
       event.configure(1, 0, 0, 0, buildId);
@@ -106,7 +106,7 @@ public class ArtifactCacheTestUtils {
   }
 
   static HttpArtifactCacheEvent.Scheduled postStoreScheduled(
-      BuckEventBus eventBus, long threadId, String target, long timeInMs) {
+      BuckEventBus eventBus, long threadId, BuildTarget target, long timeInMs) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.of(target), ImmutableSet.of(), StoreType.ARTIFACT);

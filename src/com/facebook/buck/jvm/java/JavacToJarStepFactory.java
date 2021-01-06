@@ -1,31 +1,28 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
+import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,7 +34,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -46,7 +42,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private JavacOptions javacOptions;
+  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
@@ -167,20 +163,6 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   }
 
   @Override
-  public Tool getCompiler() {
-    return javac;
-  }
-
-  @Override
-  public Iterable<BuildRule> getExtraDeps(SourcePathRuleFinder ruleFinder) {
-    // If any dep of an annotation processor changes, we need to recompile, so we add those as
-    // extra deps
-    return Iterables.concat(
-        super.getExtraDeps(ruleFinder),
-        ruleFinder.filterBuildRuleInputs(javacOptions.getAnnotationProcessingParams().getInputs()));
-  }
-
-  @Override
   public void createCompileToJarStepImpl(
       ProjectFilesystem projectFilesystem,
       BuildContext context,
@@ -206,7 +188,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     boolean isSpoolingToJarEnabled =
         compilerParameters.getAbiGenerationMode().isSourceAbi()
             || (postprocessClassesCommands.isEmpty()
-                && javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR
+                && javacOptions.getSpoolMode() == JavacOptions.SpoolMode.DIRECT_TO_JAR
                 && javac instanceof Jsr199Javac);
 
     LOG.info(
@@ -251,7 +233,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       JavacPipelineState pipeline,
       BuildTarget invokingRule,
       Builder<Step> steps) {
-    boolean generatingCode = !javacOptions.getAnnotationProcessingParams().isEmpty();
+    boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     if (generatingCode && pipeline.isRunning()) {
       steps.add(
           SymlinkFileStep.of(
@@ -269,5 +251,10 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @VisibleForTesting
   public JavacOptions getJavacOptions() {
     return javacOptions;
+  }
+
+  @Override
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

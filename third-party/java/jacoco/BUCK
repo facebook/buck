@@ -1,31 +1,29 @@
 java_library(
     name = "jacoco",
+    visibility = [
+        "//src/com/facebook/buck/jvm/java/coverage:coverage",
+    ],
     exported_deps = [
         ":core",
         ":report",
-        "//third-party/java/asm:asm"
-    ],
-    visibility = [
-        "//src/com/facebook/buck/jvm/java/coverage:coverage",
+        "//third-party/java/asm:asm",
     ],
 )
 
 prebuilt_jar(
     name = "core",
-    binary_jar = "org.jacoco.core-0.8.0.jar",
+    binary_jar = "org.jacoco.core-0.8.3.201812281252.jar",
     licenses = [
         "license.html",
     ],
-    source_jar = "org.jacoco.core-0.8.0-sources.jar",
 )
 
 prebuilt_jar(
     name = "report",
-    binary_jar = "org.jacoco.report-0.8.0.jar",
+    binary_jar = "org.jacoco.report-0.8.3.201812281252.jar",
     licenses = [
         "license.html",
     ],
-    source_jar = "org.jacoco.report-0.8.0-sources.jar",
 )
 
 prebuilt_jar(

@@ -1,37 +1,39 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
@@ -39,11 +41,11 @@ import com.facebook.buck.util.ChunkAccumulator;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.io.Files;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,12 +54,16 @@ import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -66,13 +72,14 @@ import org.xml.sax.SAXException;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
-
   private static final Pattern START = Pattern.compile("^\\[\\s*RUN\\s*\\] (.*)$");
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
   private static final String NOTRUN = "notrun";
+  private static final String TEST_MARKER = "  ";
+  private static final String TEST_LIST = "testList";
 
-  private final BuildRule binary;
   private final long maxTestOutputSize;
+  private final boolean checkGTestTestList;
 
   public CxxGtestTest(
       BuildTarget buildTarget,
@@ -89,11 +96,13 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs,
-      long maxTestOutputSize) {
+      long maxTestOutputSize,
+      boolean checkGTestTestList) {
     super(
         buildTarget,
         projectFilesystem,
         params,
+        binary,
         executable,
         env,
         args,
@@ -103,24 +112,44 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         labels,
         contacts,
         runTestSeparately,
-        testRuleTimeoutMs);
-    this.binary = binary;
+        testRuleTimeoutMs,
+        CxxTestType.GTEST);
     this.maxTestOutputSize = maxTestOutputSize;
+    this.checkGTestTestList = checkGTestTestList;
   }
 
   @Override
-  public SourcePath getSourcePathToOutput() {
-    return ForwardingBuildTargetSourcePath.of(
-        getBuildTarget(), Preconditions.checkNotNull(binary.getSourcePathToOutput()));
-  }
-
-  @Override
-  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
+  protected ImmutableList<String> getShellCommand(
+      SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
+        .addAll(getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
         .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output))
         .build();
+  }
+
+  @Override
+  public ImmutableList<Step> runTests(
+      ExecutionContext executionContext,
+      TestRunningOptions options,
+      BuildContext buildContext,
+      TestReportingCallback testReportingCallback) {
+
+    ImmutableList.Builder<Step> builder =
+        ImmutableList.<Step>builder()
+            .addAll(super.runTests(executionContext, options, buildContext, testReportingCallback));
+    if (checkGTestTestList) {
+      builder.add(
+          new WriteTestListToFileStep(
+              getExecutableCommand(OutputLabel.defaultLabel())
+                  .getCommandPrefix(buildContext.getSourcePathResolver()),
+              buildContext.getBuildCellRootPath()));
+    }
+    return builder.build();
+  }
+
+  private Path getPathToTestList() {
+    return getPathToTestOutputDirectory().resolve(TEST_LIST);
   }
 
   private TestResultSummary getProgramFailureSummary(String message, String output) {
@@ -162,6 +191,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     Map<String, ChunkAccumulator> stdout = new HashMap<>();
     CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
+
     try (InputStream input = getProjectFilesystem().newFileInputStream(output);
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, decoder))) {
       String line;
@@ -174,11 +204,12 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         } else if (END.matcher(line.trim()).matches()) {
           currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
-          Preconditions.checkNotNull(stdout.get(currentTest.get())).append(line);
+          Objects.requireNonNull(stdout.get(currentTest.get())).append(line);
         }
       }
     }
 
+    Set<String> seenTests = new HashSet<>();
     NodeList testcases = doc.getElementsByTagName("testcase");
     for (int index = 0; index < testcases.getLength(); index++) {
       Node testcase = testcases.item(index);
@@ -200,6 +231,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         message = "DISABLED";
       }
 
+      seenTests.add(testFull);
+
       // Prepare the tests stdout.
       String testStdout = "";
       if (stdout.containsKey(testFull)) {
@@ -211,37 +244,86 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
               testCase, testName, type, time.longValue(), message, "", testStdout, ""));
     }
 
+    if (checkGTestTestList) {
+      summariesBuilder.addAll(
+          reportNotSeenTests(
+              getProjectFilesystem().resolve(output.resolveSibling(TEST_LIST)), seenTests));
+    }
+
     return summariesBuilder.build();
   }
 
-  // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
-  // always available to run the test.
-  @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return Stream.concat(
-        super.getRuntimeDeps(ruleFinder),
-        BuildableSupport.getDeps(getExecutableCommand(), ruleFinder)
-            .map(BuildRule::getBuildTarget));
+  private Iterable<TestResultSummary> reportNotSeenTests(Path testListPath, Set<String> seenTests)
+      throws IOException {
+
+    ImmutableList.Builder<TestResultSummary> listBuilder = ImmutableList.builder();
+    List<String> lines = Files.readLines(testListPath.toFile(), Charsets.UTF_8);
+    Optional<String> prefix = Optional.empty();
+    for (String line : lines) {
+      if (line.startsWith(TEST_MARKER)) {
+        if (!prefix.isPresent()) {
+          throw new IllegalStateException("Test name without prefix before it");
+        }
+        String testCaseName = line.substring(TEST_MARKER.length()).trim();
+        String name = prefix.get() + "." + testCaseName;
+
+        if (!seenTests.contains(name)) {
+          listBuilder.add(reportNotExecutedTest(testCaseName, prefix.get()));
+        }
+      } else {
+        if (!line.endsWith(".")) {
+          throw new IllegalStateException(
+              "Malformed test name. '" + line + "'. It should end with a dot.");
+        }
+        prefix = Optional.of(line.substring(0, line.length() - 1));
+      }
+    }
+    return listBuilder.build();
   }
 
-  @Override
-  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
-      ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions,
-      BuildContext buildContext) {
-    return ExternalTestRunnerTestSpec.builder()
-        .setTarget(getBuildTarget())
-        .setType("gtest")
-        .addAllCommand(
-            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
-        .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
-        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
-        .addAllLabels(getLabels())
-        .addAllContacts(getContacts())
-        .addAllAdditionalCoverageTargets(
-            buildContext
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
-        .build();
+  @Nonnull
+  private TestResultSummary reportNotExecutedTest(String testCaseName, String testName) {
+    return new TestResultSummary(
+        testCaseName, testName, ResultType.FAILURE, 0, "Test wasn't run", "", "", "");
+  }
+
+  private class WriteTestListToFileStep extends ShellStep {
+    private ImmutableList<String> command;
+
+    public WriteTestListToFileStep(ImmutableList<String> testCommand, Path workingDirectory) {
+      super(workingDirectory);
+      this.command = testCommand;
+    }
+
+    @Override
+    protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
+      return ImmutableList.<String>builder().addAll(command).add("--gtest_list_tests").build();
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context)
+        throws IOException, InterruptedException {
+
+      StepExecutionResult result = super.execute(context);
+      if (!result.isSuccess()) {
+        return result;
+      }
+
+      // DefaultProcessExecutor used in the super class adds ANSI codes to stdout
+      // there's no easy way to disable this behavior, so we have to clean it up here
+      String testsList = removeANSI(getStdout());
+      getProjectFilesystem().writeContentsToPath(testsList, getPathToTestList());
+
+      return StepExecutionResults.SUCCESS;
+    }
+
+    private String removeANSI(String text) {
+      return text.replaceAll("\u001b\\[\\d+m", "");
+    }
+
+    @Override
+    public String getShortName() {
+      return "Write Test List To A File";
+    }
   }
 }

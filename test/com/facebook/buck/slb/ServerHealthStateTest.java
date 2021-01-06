@@ -1,22 +1,20 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
-
-import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
 
 import java.net.URI;
 import org.junit.Assert;
@@ -56,7 +54,8 @@ public class ServerHealthStateTest {
   public void testAgainstMemoryLeak() {
     int maxSamples = 42;
     ServerHealthState state =
-        new ServerHealthState(SERVER, maxSamples, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
+        new ServerHealthState(
+            SERVER, maxSamples, ClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
     for (int i = 0; i < maxSamples * 2; ++i) {
       reportSamples(state, NOW_MILLIS, 1);
     }

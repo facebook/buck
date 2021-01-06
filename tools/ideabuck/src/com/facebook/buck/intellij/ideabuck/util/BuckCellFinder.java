@@ -1,195 +1,191 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.util;
 
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
+import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
+import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
+import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Ordering;
-import com.intellij.openapi.components.AbstractProjectComponent;
+import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-/** Cross-cell navigation helper. */
-public class BuckCellFinder extends AbstractProjectComponent {
+/**
+ * Cross-cell navigation helper.
+ *
+ * @deprecated Use either the {@link BuckCellManager} or the {@link BuckTargetLocator} for a stable
+ *     API.
+ */
+public class BuckCellFinder implements ProjectComponent {
+
   public static BuckCellFinder getInstance(Project project) {
-    return new BuckCellFinder(project);
+    return project.getComponent(BuckCellFinder.class);
   }
 
-  private BuckProjectSettingsProvider projectSettingsProvider;
+  private BuckCellManager buckCellManager;
+  private BuckTargetLocator buckTargetLocator;
 
-  public BuckCellFinder(Project project) {
-    this(project, BuckProjectSettingsProvider.getInstance(project));
+  public BuckCellFinder(BuckCellManager buckCellManager, BuckTargetLocator buckTargetLocator) {
+    this.buckCellManager = buckCellManager;
+    this.buckTargetLocator = buckTargetLocator;
   }
 
-  @VisibleForTesting
-  BuckCellFinder(Project project, BuckProjectSettingsProvider projectSettingsProvider) {
-    super(project);
-    this.projectSettingsProvider = projectSettingsProvider;
+  static BuckCell toBuckCell(Cell cell) {
+    BuckCell buckCell = new BuckCell();
+    cell.getName().ifPresent(buckCell::setName);
+    buckCell.setBuildFileName(cell.getBuildfileName());
+    buckCell.setRoot(cell.getRootPath().toString());
+    return buckCell;
   }
 
-  /** Returns the {@link BuckCell} containing the given {@link VirtualFile}. */
+  /**
+   * Returns the {@link BuckCell} with the given name. Supplying the empty string returns the
+   * default cell, regardless of what it is called.
+   *
+   * @deprecated Use {@link BuckCellManager#findCellByName(String)}.
+   */
+  @Deprecated
+  public Optional<BuckCell> findBuckCellByName(String name) {
+    return buckCellManager.findCellByName(name).map(BuckCellFinder::toBuckCell);
+  }
+
+  /**
+   * Returns the {@link BuckCell} containing the given {@link VirtualFile}.
+   *
+   * @deprecated Use {@link BuckCellManager#findCellByVirtualFile(VirtualFile)}.
+   */
+  @Deprecated
   public Optional<BuckCell> findBuckCell(VirtualFile file) {
-    return findBuckCellFromCanonicalPath(file.getCanonicalPath());
+    return buckCellManager.findCellByVirtualFile(file).map(BuckCellFinder::toBuckCell);
   }
 
-  /** Returns the {@link BuckCell} containing the given {@link Path}. */
+  /**
+   * Returns the {@link BuckCell} containing the given {@link Path}.
+   *
+   * @deprecated Use {@link BuckCellManager#findCellByPath(Path)}.
+   */
+  @Deprecated
   public Optional<BuckCell> findBuckCell(Path path) {
-    return findBuckCell(path.toFile());
+    return buckCellManager.findCellByPath(path).map(BuckCellFinder::toBuckCell);
   }
 
-  /** Returns the {@link BuckCell} containing the given {@link File}. */
+  /**
+   * Returns the {@link BuckCell} containing the given {@link File}.
+   *
+   * @deprecated Use {@link BuckCellManager#findCellByPath(Path)}.
+   */
+  @Deprecated
   public Optional<BuckCell> findBuckCell(File file) {
-    try {
-      return findBuckCellFromCanonicalPath(file.getCanonicalPath());
-    } catch (IOException e) {
-      return Optional.empty();
-    }
+    return buckCellManager.findCellByPath(file.toPath()).map(BuckCellFinder::toBuckCell);
   }
 
-  /** Returns the {@link BuckCell} from the given canonical path. */
+  /**
+   * Returns the {@link BuckCell} from the given canonical path.
+   *
+   * @deprecated Use {@link BuckCellManager#findCellByPath(Path)}.
+   */
+  @Deprecated
   public Optional<BuckCell> findBuckCellFromCanonicalPath(String canonicalPath) {
-    return projectSettingsProvider
-        .getCells()
-        .stream()
-        .filter(
-            cell -> {
-              String root = cell.getRoot();
-              return canonicalPath.equals(root) || canonicalPath.startsWith(root + File.separator);
-            })
-        .max(Ordering.natural().onResultOf(cell -> cell.getRoot().length()));
+    return buckCellManager.findCellByPath(Paths.get(canonicalPath)).map(BuckCellFinder::toBuckCell);
   }
 
-  /** Finds the Buck file most closely associated with the given file. */
+  /**
+   * Finds the Buck file most closely associated with the given file.
+   *
+   * @deprecated Use {@link BuckTargetLocator#findBuckFileForPath(Path)}.
+   */
+  @Deprecated
   public Optional<File> findBuckFile(File file) {
-    return findBuckCell(file)
-        .flatMap(
-            cell -> {
-              int cellRootLength = cell.getRoot().length();
-              String buildFilename = cell.getBuildFileName();
-              File parent = file;
-              while (parent.toString().length() >= cellRootLength) {
-                File buckFile = new File(parent, buildFilename);
-                if (buckFile.isFile()) {
-                  return Optional.ofNullable(buckFile);
-                }
-                parent = parent.getParentFile();
-              }
-              return Optional.empty();
-            });
+    return buckTargetLocator.findBuckFileForPath(file.toPath()).map(Path::toFile);
   }
 
-  /** Finds the Buck file most closely associated with the given path. */
+  /**
+   * Finds the Buck file most closely associated with the given file.
+   *
+   * @deprecated Use {@link BuckTargetLocator#findBuckFileForPath(Path)}.
+   */
+  @Deprecated
   public Optional<Path> findBuckFile(Path path) {
-    return findBuckFile(path.toFile()).map(File::toPath);
+    return buckTargetLocator.findBuckFileForPath(path);
   }
 
-  /** Finds the Buck file most closely associated with the given file. */
+  /**
+   * Finds the Buck file most closely associated with the given file.
+   *
+   * @deprecated
+   */
+  @Deprecated
   public Optional<VirtualFile> findBuckFile(VirtualFile file) {
-    return findBuckCell(file)
-        .flatMap(
-            cell -> {
-              int cellRootLength = cell.getRoot().length();
-              String buildFilename = cell.getBuildFileName();
-              VirtualFile parent = file;
-              while (parent.toString().length() >= cellRootLength) {
-                VirtualFile buckFile = parent.findChild(buildFilename);
-                if (buckFile != null && buckFile.exists() && !buckFile.isDirectory()) {
-                  return Optional.ofNullable(buckFile);
-                }
-                parent = parent.getParent();
-              }
-              return Optional.empty();
-            });
+    return buckTargetLocator.findBuckFileForVirtualFile(file);
   }
 
-  /** Finds the Buck file for the given target, starting from the given sourceFile. */
+  /** Returns the Buck cell for the given target, starting from the given sourceFile. */
+  @Deprecated
+  public Optional<BuckCell> findBuckCell(VirtualFile sourceFile, String cellName) {
+    if ("".equals(cellName)) {
+      return findBuckCell(sourceFile);
+    } else {
+      return findBuckCellByName(cellName);
+    }
+  }
+
+  /**
+   * Finds the Buck file for the given target, starting from the given sourceFile.
+   *
+   * @deprecated Use the find and resolve methods from {@link BuckTargetLocator}.
+   */
+  @Deprecated
   public Optional<VirtualFile> findBuckTargetFile(VirtualFile sourceFile, String target) {
-    Pattern pattern = Pattern.compile("^([^/]*)//([^:]*):[\\s\\S]*$");
-    Matcher matcher = pattern.matcher(target);
-    if (!matcher.matches()) {
-      return Optional.empty();
-    }
-    String cellName = matcher.group(1);
-    String pathFromCellRoot = matcher.group(2);
-
-    return findBuckCell(sourceFile)
-        .flatMap(
-            cell -> {
-              if ("".equals(cellName)) {
-                return Optional.of(cell);
-              } else {
-                return projectSettingsProvider
-                    .getCells()
-                    .stream()
-                    .filter(c -> c.getName().equals(cellName))
-                    .findFirst();
-              }
-            })
-        .flatMap(
-            cell -> {
-              return Optional.ofNullable(sourceFile.getFileSystem().findFileByPath(cell.getRoot()))
-                  .map(cellRoot -> cellRoot.findFileByRelativePath(pathFromCellRoot))
-                  .map(subDir -> subDir.findFileByRelativePath(cell.getBuildFileName()))
-                  .filter(VirtualFile::exists);
-            });
+    return BuckTarget.parse(target)
+        .flatMap(t -> buckTargetLocator.resolve(sourceFile, t))
+        .flatMap(t -> buckTargetLocator.findVirtualFileForTarget(t));
   }
 
-  /** Finds an extension file, starting from the given sourceFile. */
+  /**
+   * Finds an extension file, starting from the given sourceFile.
+   *
+   * @deprecated Use the find and resolve methods from {@link BuckTargetLocator}.
+   */
+  @Deprecated
   public Optional<VirtualFile> findExtensionFile(VirtualFile sourceFile, String target) {
-    if (target.startsWith(":")) {
-      return Optional.ofNullable(sourceFile.getParent())
-          .map(f -> f.findFileByRelativePath(target.substring(1)))
-          .filter(VirtualFile::exists);
-    }
-    Pattern pattern = Pattern.compile("^@?([^/]*)//([^:]*):([^:/]+)$");
-    Matcher matcher = pattern.matcher(target);
-    if (!matcher.matches()) {
-      return Optional.empty();
-    }
-    String cellName = matcher.group(1);
-    String pathFromCellRoot = matcher.group(2);
-    String extensionFilename = matcher.group(3);
+    return BuckTarget.parse(target)
+        .flatMap(t -> buckTargetLocator.resolve(sourceFile, t))
+        .flatMap(t -> buckTargetLocator.findVirtualFileForExtensionFile(t));
+  }
 
-    return findBuckCell(sourceFile)
-        .flatMap(
-            cell -> {
-              if ("".equals(cellName)) {
-                return Optional.of(cell);
-              } else {
-                return projectSettingsProvider
-                    .getCells()
-                    .stream()
-                    .filter(c -> c.getName().equals(cellName))
-                    .findFirst();
-              }
-            })
-        .flatMap(
-            cell -> {
-              return Optional.ofNullable(sourceFile.getFileSystem().findFileByPath(cell.getRoot()))
-                  .map(cellRoot -> cellRoot.findFileByRelativePath(pathFromCellRoot))
-                  .map(subDir -> subDir.findFileByRelativePath(extensionFilename))
-                  .filter(VirtualFile::exists);
-            });
+  /**
+   * Resolves the given {@code path} in the expected form {@code <cell>//<path>} (any target is
+   * optional/ignored).
+   *
+   * <p>Note that there is no guarantee about the type of {@code VirtualFile} returned, so users who
+   * require it to be either a directory or a file should check.
+   *
+   * @deprecated Use the find and resolve methods from {@link BuckTargetLocator}.
+   */
+  @Deprecated
+  public Optional<VirtualFile> resolveCellPath(VirtualFile sourceFile, String path) {
+    return BuckTargetPattern.parse(path)
+        .flatMap(p -> buckTargetLocator.resolve(sourceFile, p))
+        .flatMap(p -> buckTargetLocator.findVirtualFileForTargetPattern(p));
   }
 }

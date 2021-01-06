@@ -1,0 +1,2 @@
+[daemon]
+flush_events_before_exit=true

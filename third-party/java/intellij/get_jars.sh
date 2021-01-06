@@ -17,7 +17,7 @@ INTELLIJ_LIBS_TO_COPY=(
   java-impl.jar
   jdom.jar
   openapi.jar
-  picocontainer.jar
+  picocontainer-1.2.jar
   platform-api.jar
   platform-impl.jar
   serviceMessages.jar

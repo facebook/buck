@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event;
@@ -20,12 +20,14 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
@@ -34,7 +36,7 @@ public class DefaultBuckEventBusTest {
   private static final int timeoutMillis = 500;
 
   @Test
-  public void testShutdownSuccess() throws Exception {
+  public void testShutdownSuccess() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -51,7 +53,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void testShutdownFailure() throws IOException {
+  public void testShutdownFailure() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -69,7 +71,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventTimestampedThenEventCannotBePosted() throws IOException {
+  public void whenEventTimestampedThenEventCannotBePosted() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -89,7 +91,7 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() throws IOException {
+  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
@@ -98,12 +100,12 @@ public class DefaultBuckEventBusTest {
     eb.timestamp(timestamp);
     eb.post(event, timestamp);
     eb.close();
-    assertEquals(timestamp.getTimestamp(), event.getTimestamp());
+    assertEquals(timestamp.getTimestampMillis(), event.getTimestampMillis());
     assertEquals(timestamp.getNanoTime(), event.getNanoTime());
   }
 
   @Test
-  public void timestampedEventHasSeparateNanosAndMillis() throws IOException {
+  public void timestampedEventHasSeparateNanosAndMillis() {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
@@ -111,8 +113,59 @@ public class DefaultBuckEventBusTest {
     TestEvent event = new TestEvent();
     eb.post(event);
     eb.close();
-    assertEquals(event.getTimestamp(), 49152);
+    assertEquals(event.getTimestampMillis(), 49152);
     assertEquals(event.getNanoTime(), 64738);
+  }
+
+  @Test
+  public void testErrorThrownByListener() throws InterruptedException {
+    SingleErrorCatchingThreadFactory threadFactory = new SingleErrorCatchingThreadFactory();
+    DefaultBuckEventBus buckEventBus =
+        new DefaultBuckEventBus(
+            new DefaultClock(),
+            BuckEventBusForTests.BUILD_ID_FOR_TEST,
+            timeoutMillis,
+            MostExecutors.newSingleThreadExecutor(threadFactory));
+
+    buckEventBus.register(
+        new Object() {
+          @Subscribe
+          public void errorThrower(TestEvent event) {
+            throw new TestError();
+          }
+        });
+
+    try {
+      buckEventBus.post(new TestEvent());
+    } finally {
+      buckEventBus.close();
+    }
+
+    threadFactory.thread.join();
+    assertTrue(threadFactory.caught);
+  }
+
+  static class TestError extends Error {}
+
+  static class SingleErrorCatchingThreadFactory extends NamedThreadFactory {
+    public Thread thread;
+    public boolean caught = false;
+
+    public SingleErrorCatchingThreadFactory() {
+      super("test-thread");
+    }
+
+    @Override
+    public Thread newThread(Runnable r) {
+      thread = super.newThread(r);
+      thread.setUncaughtExceptionHandler(
+          (t, e) -> {
+            if (e instanceof TestError) {
+              caught = true;
+            }
+          });
+      return thread;
+    }
   }
 
   private static class SleepEvent extends AbstractBuckEvent {

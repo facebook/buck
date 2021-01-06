@@ -1,0 +1,24 @@
+cxx_library(
+    name = "cxx_lib",
+    srcs = [
+        "foo.cpp",
+    ],
+)
+
+python_library(
+    name = "lib",
+    srcs = [
+        "foo.py",
+    ],
+    deps = [
+        ":cxx_lib",
+    ],
+)
+
+python_binary(
+    name = "bin",
+    main_module = "foo",
+    deps = [
+        ":lib",
+    ],
+)

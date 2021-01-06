@@ -1,10 +1,25 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import absolute_import, division, print_function, with_statement
 
-import __builtin__
 import contextlib
 import imp
 import inspect
-from __builtin__ import __import__ as ORIGINAL_IMPORT
+
+from six.moves import builtins
+from six.moves.builtins import __import__ as ORIGINAL_IMPORT
 
 from . import util
 
@@ -35,17 +50,17 @@ class ImportWhitelistManager(object):
 
         # Override '__import__' function. It might have already been overridden if current file
         # was included by other build file, original '__import__' is stored in 'ORIGINAL_IMPORT'.
-        previous_import = __builtin__.__import__
+        previous_import = builtins.__import__
         if allow:
-            __builtin__.__import__ = ORIGINAL_IMPORT
+            builtins.__import__ = ORIGINAL_IMPORT
         else:
-            __builtin__.__import__ = self._custom_import
+            builtins.__import__ = self._custom_import
 
         try:
             yield
         finally:
-            # Restore previous '__builtin__.__import__'
-            __builtin__.__import__ = previous_import
+            # Restore previous 'builtins.__import__'
+            builtins.__import__ = previous_import
 
     def _custom_import(self, name, globals=None, locals=None, fromlist=(), level=-1):
         """Custom '__import__' function.
@@ -60,7 +75,12 @@ class ImportWhitelistManager(object):
             name = name.split(".")[0]
 
         frame = util.get_caller_frame(skip=[__name__])
+        # __import__() can be called during the call to inspect.getframeinfo() and that should
+        # be handled by the ORIGINAL_IMPORT
+        current_import = builtins.__import__
+        builtins.__import__ = ORIGINAL_IMPORT
         filename = inspect.getframeinfo(frame).filename
+        builtins.__import__ = current_import
 
         # The import will be always allowed if it was not called from a project file.
         if name in self._import_whitelist or not self._path_predicate(filename):
@@ -77,7 +97,7 @@ class ImportWhitelistManager(object):
             "Importing module {0} is forbidden. "
             "If you really need to import this module, read about "
             "the allow_unsafe_import() function documented at: "
-            "https://buckbuild.com/function/allow_unsafe_import.html".format(name)
+            "https://buck.build/function/allow_unsafe_import.html".format(name)
         )
 
     @staticmethod
@@ -89,7 +109,7 @@ class ImportWhitelistManager(object):
                 "Using function {0} is forbidden in the safe version of "
                 "module {1}. If you really need to use this function read about "
                 "allow_unsafe_import() documented at: "
-                "https://buckbuild.com/function/allow_unsafe_import.html".format(
+                "https://buck.build/function/allow_unsafe_import.html".format(
                     name, module
                 )
             )

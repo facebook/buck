@@ -1,27 +1,30 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.query.QueryFileTarget;
-import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.support.cli.config.CliConfig;
+import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
@@ -31,47 +34,92 @@ import java.io.PrintStream;
 import java.util.Objects;
 import java.util.Set;
 
-public abstract class CommandHelper {
+/** Utility class with print methods */
+public final class CommandHelper {
 
-  public static void printJSON(
-      CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndResults)
-      throws IOException {
+  private CommandHelper() {}
+
+  /**
+   * Prints target and result map's json representation into printStream.
+   *
+   * @param targetsAndResults input to query result multi map
+   * @param printStream print stream for output
+   * @throws IOException in case of IO exception during json writing operation
+   */
+  public static void printJsonOutput(
+      Multimap<String, QueryTarget> targetsAndResults, PrintStream printStream) throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
-            targetsAndResults, input -> stringify(Preconditions.checkNotNull(input)));
-    ObjectMappers.WRITER.writeValue(
-        params.getConsole().getStdOut(), targetsAndResultsNames.asMap());
+            targetsAndResults, input -> stringify(Objects.requireNonNull(input)));
+    ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
   }
 
-  public static void printJSON(CommandRunnerParams params, Set<QueryTarget> targets)
+  /**
+   * Prints targets set json representation into printStream.
+   *
+   * @param targets set of query result
+   * @param printStream print stream for output
+   * @throws IOException in case of IO exception during json writing operation
+   */
+  public static void printJsonOutput(Set<QueryTarget> targets, PrintStream printStream)
       throws IOException {
     Set<String> targetsNames =
-        targets
-            .stream()
+        targets.stream()
             .peek(Objects::requireNonNull)
             .map(CommandHelper::stringify)
             .collect(ImmutableSet.toImmutableSet());
 
-    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetsNames);
+    ObjectMappers.WRITER.writeValue(printStream, targetsNames);
   }
 
-  public static void printToConsole(
-      CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndDependencies) {
-    for (QueryTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
-      params.getConsole().getStdOut().println(stringify(target));
+  /**
+   * Prints target and dependencies map into printStream.
+   *
+   * @param targetsAndDependencies input to query result multi map
+   * @param printStream print stream for output
+   */
+  public static void print(
+      Multimap<String, QueryTarget> targetsAndDependencies, PrintStream printStream) {
+    ImmutableSortedSet.copyOf(QueryTarget::compare, targetsAndDependencies.values()).stream()
+        .map(CommandHelper::stringify)
+        .forEach(printStream::println);
+  }
+
+  /**
+   * Prints target set into printStream.
+   *
+   * @param targets set of query result
+   * @param printStream print stream for output
+   */
+  public static void print(Set<QueryTarget> targets, PrintStream printStream) {
+    targets.stream().map(CommandHelper::stringify).forEach(printStream::println);
+  }
+
+  /**
+   * Prints short description of a given command into printStream.
+   *
+   * @param command CLI command
+   * @param printStream print stream for output
+   */
+  public static void printShortDescription(Command command, PrintStream printStream) {
+    printStream.println("Description: ");
+    printStream.println("  " + command.getShortDescription());
+    printStream.println();
+  }
+
+  /**
+   * Prints a warning to terminal about --show-output being replaced by --show-outputs if the
+   * warning is enabled in the buck config and the environment supports ANSI.
+   */
+  public static void maybePrintShowOutputWarning(
+      CliConfig cliConfig, Ansi ansi, BuckEventBus buckEventBus) {
+    if (ansi.isAnsiTerminal() && cliConfig.getEnableShowOutputWarning()) {
+      buckEventBus.post(
+          ConsoleEvent.warning(
+              "--show-output is being deprecated. Use --show-outputs instead. Note that with "
+                  + "--show-outputs, multiple files may be printed for each individual build "
+                  + "target."));
     }
-  }
-
-  public static void printToConsole(CommandRunnerParams params, Set<QueryTarget> targets) {
-    for (QueryTarget target : targets) {
-      params.getConsole().getStdOut().println(stringify(target));
-    }
-  }
-
-  public static void printShortDescription(Command command, PrintStream stream) {
-    stream.println("Description: ");
-    stream.println("  " + command.getShortDescription());
-    stream.println();
   }
 
   private static String stringify(QueryTarget target) {

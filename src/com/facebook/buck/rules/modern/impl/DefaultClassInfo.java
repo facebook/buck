@@ -1,28 +1,31 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.MissingExcludeReporter;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
@@ -31,9 +34,11 @@ import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Field;
@@ -77,13 +82,15 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
           findMethodsForFields(parameterFields.keySet(), clazz);
       parameterFields.forEach(
           (field, isLazy) -> {
+            // findMethodsForFields has already verified that it found methods for any field that we
+            // think is interesting.
             Method method = parameterMethods.get(field);
             if (method == null) {
               return;
             }
             AddToRuleKey addAnnotation = method.getAnnotation(AddToRuleKey.class);
-            // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are
-            // either explicitly added or explicitly excluded.
+            // TODO(cjhopman): Require that all fields are either explicitly added or explicitly
+            // excluded.
             Optional<CustomFieldBehavior> customBehavior =
                 Optional.ofNullable(method.getDeclaredAnnotation(CustomFieldBehavior.class));
             if (addAnnotation != null && !addAnnotation.stringify()) {
@@ -97,7 +104,13 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
                   forFieldWithBehavior(
                       field, methodNullable != null || methodOptional, customBehavior));
             } else {
-              fieldsBuilder.add(excludedField(field, customBehavior));
+              ExcludeFromRuleKey excludeAnnotation = method.getAnnotation(ExcludeFromRuleKey.class);
+              if (excludeAnnotation == null) {
+                MissingExcludeReporter.reportMethodMissingAnnotation(clazz, method);
+              } else {
+                MissingExcludeReporter.reportExcludedMethod(clazz, method, excludeAnnotation);
+              }
+              fieldsBuilder.add(excludedField(field, customBehavior, excludeAnnotation));
             }
           });
     } else {
@@ -124,7 +137,14 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
               forFieldWithBehavior(
                   field, field.getAnnotation(Nullable.class) != null, customBehavior));
         } else {
-          fieldsBuilder.add(excludedField(field, customBehavior));
+          ExcludeFromRuleKey excludeAnnotation = field.getAnnotation(ExcludeFromRuleKey.class);
+          if (excludeAnnotation == null) {
+            MissingExcludeReporter.reportFieldMissingAnnotation(clazz, field);
+          } else {
+            MissingExcludeReporter.reportExcludedField(clazz, field, excludeAnnotation);
+          }
+
+          fieldsBuilder.add(excludedField(field, customBehavior, excludeAnnotation));
         }
       }
     }
@@ -137,7 +157,8 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
       Preconditions.checkArgument(
           !outerClazz.isAnonymousClass()
               && !outerClazz.isMemberClass()
-              && !outerClazz.isLocalClass());
+              && !outerClazz.isLocalClass(),
+          "Buildables must not be doubly-nested classes, consider extracting the nested class");
       for (final Field field : outerClazz.getDeclaredFields()) {
         field.setAccessible(true);
         if (!Modifier.isStatic(field.getModifiers())) {
@@ -248,10 +269,10 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
   private static boolean isImmutableBase(Class<?> clazz) {
     // Value.Immutable only has CLASS retention, so we need to detect this based on our own
     // annotations.
-    return clazz.getAnnotation(BuckStyleImmutable.class) != null
-        || clazz.getAnnotation(BuckStylePackageVisibleImmutable.class) != null
-        || clazz.getAnnotation(BuckStylePackageVisibleTuple.class) != null
-        || clazz.getAnnotation(BuckStyleTuple.class) != null;
+    return clazz.getAnnotation(RuleArg.class) != null
+        || clazz.getAnnotation(BuckStylePrehashedValue.class) != null
+        || clazz.getAnnotation(BuckStyleValueWithBuilder.class) != null
+        || clazz.getAnnotation(BuckStyleValue.class) != null;
   }
 
   @Override
@@ -286,10 +307,29 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
     if (isNullable) {
       valueTypeInfo = new NullableValueTypeInfo<>(valueTypeInfo);
     }
-    return new FieldInfo<>(field, valueTypeInfo, customBehavior);
+    return new FieldInfo<>(field, valueTypeInfo, extractCustomBehavior(customBehavior));
   }
 
-  public static FieldInfo<?> excludedField(Field field, Optional<CustomFieldBehavior> behavior) {
-    return new FieldInfo<>(field, ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE, behavior);
+  private static List<Class<? extends CustomFieldBehaviorTag>> extractCustomBehavior(
+      Optional<CustomFieldBehavior> customBehavior) {
+    return customBehavior
+        .map(customFieldBehavior -> Arrays.asList(customFieldBehavior.value()))
+        .orElse(ImmutableList.of());
+  }
+
+  private static FieldInfo<?> excludedField(
+      Field field, Optional<CustomFieldBehavior> behavior, ExcludeFromRuleKey annotation) {
+    Verify.verify(
+        annotation == null || !behavior.isPresent(),
+        "When using ExcludeFromRuleKey, custom behavior should be specified with that, not CustomFieldBehavior.");
+    return new FieldInfo<>(
+        field,
+        ValueTypeInfos.ExcludedValueTypeInfo.INSTANCE,
+        // We allow the inputs and serialization behavior to be implemented by the same class, but
+        // later on we expect to have only one entry for each custom behavior.
+        annotation == null
+            ? extractCustomBehavior(behavior)
+            : ImmutableSet.of(annotation.inputs(), annotation.serialization(), annotation.deps())
+                .asList());
   }
 }

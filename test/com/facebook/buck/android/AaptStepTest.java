@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
@@ -20,9 +21,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
@@ -36,8 +41,22 @@ import org.junit.Test;
 /** Test generation of command line flags based on creation parameters */
 public class AaptStepTest {
 
-  private Path basePath = Paths.get("/java/com/facebook/buck/example");
-  private Path proguardConfig = basePath.resolve("mock_proguard.txt");
+  private AbsPath basePath =
+      AbsPath.of(Paths.get("/java/com/facebook/buck/example").toAbsolutePath());
+  private Path proguardConfig = basePath.resolve("mock_proguard.txt").getPath();
+
+  private AaptStep buildAaptStep(
+      Path pathToGeneratedProguardConfig,
+      boolean isCrunchFiles,
+      boolean includesVectorDrawables,
+      ManifestEntries manifestEntries) {
+    return buildAaptStep(
+        pathToGeneratedProguardConfig,
+        isCrunchFiles,
+        includesVectorDrawables,
+        manifestEntries,
+        ImmutableList.of());
+  }
 
   /**
    * Build an AaptStep that can be used to generate a shell command. Should only be used for
@@ -48,14 +67,16 @@ public class AaptStepTest {
       Path pathToGeneratedProguardConfig,
       boolean isCrunchFiles,
       boolean includesVectorDrawables,
-      ManifestEntries manifestEntries) {
+      ManifestEntries manifestEntries,
+      ImmutableList<String> additionalAaptParams) {
     return new AaptStep(
+        new TestActionGraphBuilder().getSourcePathResolver(),
         AndroidPlatformTarget.of(
             "android",
-            basePath.resolve("mock_android.jar"),
+            basePath.resolve("mock_android.jar").getPath(),
             Collections.emptyList(),
-            basePath.resolve("mock_aapt_bin"),
-            Paths.get(""),
+            () -> new SimpleTool("mock_aapt_bin"),
+            new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),
@@ -65,16 +86,17 @@ public class AaptStepTest {
             Paths.get(""),
             Paths.get("")),
         /* workingDirectory */ basePath,
-        /* manifestDirectory */ basePath.resolve("AndroidManifest.xml"),
+        /* manifestDirectory */ basePath.resolve("AndroidManifest.xml").getPath(),
         /* resDirectories */ ImmutableList.of(),
         /* assetsDirectories */ ImmutableSortedSet.of(),
-        /* pathToOutputApk */ basePath.resolve("build").resolve("out.apk"),
-        /* pathToRDotDText */ basePath.resolve("r"),
+        /* pathToOutputApk */ basePath.resolve("build").resolve("out.apk").getPath(),
+        /* pathToRDotDText */ basePath.resolve("r").getPath(),
         pathToGeneratedProguardConfig,
         ImmutableList.of(),
         isCrunchFiles,
         includesVectorDrawables,
-        manifestEntries);
+        manifestEntries,
+        additionalAaptParams);
   }
 
   /**
@@ -113,8 +135,7 @@ public class AaptStepTest {
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("-G"));
-    String proguardConfigPath =
-        MorePaths.pathWithPlatformSeparators("/java/com/facebook/buck/example/mock_proguard.txt");
+    String proguardConfigPath = MorePaths.pathWithPlatformSeparators(proguardConfig);
     assertTrue(command.contains(proguardConfigPath));
   }
 
@@ -195,5 +216,19 @@ public class AaptStepTest {
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));
+  }
+
+  @Test
+  public void shouldEmitAdditionalAaptParams() {
+    AaptStep aaptStep =
+        buildAaptStep(
+            proguardConfig,
+            false,
+            false,
+            ManifestEntries.empty(),
+            ImmutableList.of("--shared-lib"));
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
+    assertTrue(command.contains("--shared-lib"));
   }
 }

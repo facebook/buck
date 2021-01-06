@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="guava-testlib">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-testlib-23.3-jre.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/guava/guava-testlib-23.3-jre-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,45 +1,51 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.Scope;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.SortedMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectSink {
+/**
+ * Base class for rulekey builders. Implements much of the logic of computing keys from {@link
+ * com.facebook.buck.core.rulekey.AddToRuleKey}-annotated fields.
+ */
+public abstract class AbstractRuleKeyBuilder<RULE_KEY> {
   private static final Logger LOG = Logger.get(AbstractRuleKeyBuilder.class);
   final RuleKeyScopedHasher scopedHasher;
 
@@ -47,9 +53,27 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
     this.scopedHasher = scopedHasher;
   }
 
-  @Override
+  /**
+   * Adds the key-value pair to the rulekey. If the builder skips adding the value, the key will
+   * also be skipped.
+   */
   public final AbstractRuleKeyBuilder<RULE_KEY> setReflectively(String key, @Nullable Object val) {
     try (Scope ignored = scopedHasher.keyScope(key)) {
+      try {
+        return setReflectively(val);
+      } catch (IOException e) {
+        throw new BuckUncheckedExecutionException(
+            e, String.format("When adding %s with value %s", key, val));
+      }
+    }
+  }
+
+  /**
+   * Adds the key-value pair to the rulekey. If the builder skips adding the value, the key will
+   * also be skipped.
+   */
+  public AbstractRuleKeyBuilder<RULE_KEY> setReflectivelyPathKey(Path key, @Nullable Object val) {
+    try (Scope ignored = scopedHasher.pathKeyScope(key)) {
       try {
         return setReflectively(val);
       } catch (IOException e) {
@@ -62,8 +86,16 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
   /** Recursively serializes the value. Serialization of the key is handled outside. */
   protected AbstractRuleKeyBuilder<RULE_KEY> setReflectively(@Nullable Object val)
       throws IOException {
+    if (val instanceof SourcePath) {
+      return setSourcePath((SourcePath) val);
+    }
+
     if (val instanceof AddsToRuleKey) {
       return setAddsToRuleKey((AddsToRuleKey) val);
+    }
+
+    if (val instanceof Action) {
+      return setAction((Action) val);
     }
 
     if (val instanceof BuildRule) {
@@ -80,14 +112,6 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
     if (val instanceof Optional) {
       Object o = ((Optional<?>) val).orElse(null);
       try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.OPTIONAL)) {
-        return setReflectively(o);
-      }
-    }
-
-    if (val instanceof OptionalInt) {
-      OptionalInt optionalInt = (OptionalInt) val;
-      @Nullable Object o = optionalInt.isPresent() ? optionalInt.getAsInt() : null;
-      try (Scope ignored = scopedHasher.wrapperScope(RuleKeyHasher.Wrapper.OPTIONAL_INT)) {
         return setReflectively(o);
       }
     }
@@ -116,6 +140,24 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
           }
         }
         return this;
+      }
+    }
+
+    if (val instanceof Stream) {
+      try (RuleKeyScopedHasher.ContainerScope containerScope =
+          scopedHasher.containerScope(RuleKeyHasher.Container.LIST)) {
+        ((Stream<?>) val)
+            .forEach(
+                o -> {
+                  try (Scope ignored = containerScope.elementScope()) {
+                    setReflectively(o);
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                });
+        return this;
+      } catch (UncheckedIOException e) {
+        throw e.getCause();
       }
     }
 
@@ -153,13 +195,24 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
       return this;
     }
 
+    if (val instanceof Multimap) {
+      try (RuleKeyScopedHasher.ContainerScope containerScope =
+          scopedHasher.containerScope(RuleKeyHasher.Container.MAP)) {
+        for (Map.Entry<?, ?> entry : ((Multimap<?, ?>) val).entries()) {
+          try (Scope ignored = containerScope.elementScope()) {
+            setReflectively(entry.getKey());
+          }
+          try (Scope ignored = containerScope.elementScope()) {
+            setReflectively(entry.getValue());
+          }
+        }
+      }
+      return this;
+    }
+
     if (val instanceof Path) {
       throw new HumanReadableException(
           "It's not possible to reliably disambiguate Paths. They are disallowed from rule keys");
-    }
-
-    if (val instanceof SourcePath) {
-      return setSourcePath((SourcePath) val);
     }
 
     if (val instanceof NonHashableSourcePathContainer) {
@@ -171,6 +224,8 @@ public abstract class AbstractRuleKeyBuilder<RULE_KEY> implements RuleKeyObjectS
   }
 
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setSingleValue(@Nullable Object val);
+
+  protected abstract AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action);
 
   protected abstract AbstractRuleKeyBuilder<RULE_KEY> setBuildRule(BuildRule rule);
 

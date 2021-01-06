@@ -1,14 +1,15 @@
 from setuptools import find_packages, setup
 
+
 setup(
     name="wheel_package",
     version="0.0.1",
     description="A sample Python project",
     long_description="A sample Python project",
-    url="https://buckbuild.com",
+    url="https://buck.build",
     author="Buck",
     license="Apache License 2.0",
-    packages=["wheel_package"],
+    packages=["wheel_package", "external_sources"],
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
         "Development Status :: 5 - Production/Stable",

@@ -1,8 +1,24 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace go_common}
 
 /***/
 {template .supported_language_version}
-Note: Buck is currently tested with (and therefore supports) version 1.10 of Go.
+Buck currently supports Go version 1.10.
 {/template}
 
 /***/
@@ -39,6 +55,19 @@ Note: Buck is currently tested with (and therefore supports) version 1.10 of Go.
   Determines whether to build and link this rule's dependencies statically or dynamically. Can be
   one of the following values: <code>static</code>, <code>static_pic</code> or <code>shared</code>.
   This argument is relevant only if the cgo extension is enabled. Otherwise, Buck ignores this argument.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .link_mode_arg}
+{call buck.arg}
+  {param name : 'link_mode' /}
+  {param default: '' /}
+  {param desc}
+  Determines the link mode (equivalent of <code>-mode</code>). Can be one of the following
+  values: <code>internal</code>, <code>external</code>.
+  If no value is provided, the mode is set automatically depending on the other args.
   {/param}
 {/call}
 {/template}
@@ -118,7 +147,7 @@ Note: Buck is currently tested with (and therefore supports) version 1.10 of Go.
 {template .more_examples}
 <p>
   For more examples, check out our <a
-  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/go/testdata/">
+  href="https://github.com/facebook/buck/tree/master/test/com/facebook/buck/features/go/testdata">
   integration tests</a>.
 </p>
 {/template}

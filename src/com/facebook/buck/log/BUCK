@@ -5,9 +5,6 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-    ],
     tests = [
         "//test/com/facebook/buck/log:log",
     ],
@@ -17,15 +14,21 @@ java_immutables_library(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/toolchain/impl:impl",
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/command:command",
         "//src/com/facebook/buck/core/cell:cell",
-        "//src/com/facebook/buck/distributed:distributed",
-        "//src/com/facebook/buck/distributed/build_client:build_client",
-        "//src/com/facebook/buck/distributed/build_slave:build_slave",
         "//src/com/facebook/buck/doctor:doctor",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/log/memory:memory",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/event/listener:listener",
+        "//src/com/facebook/buck/remoteexecution/factory:factory",
+        "//src/com/facebook/buck/remoteexecution/grpc:grpc",
+        "//src/com/facebook/buck/rules/modern/builders:builders",
         "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/support/cli/config:config",
+        "//src/com/facebook/buck/support/fix:fix",
         "//src/com/facebook/buck/util/perf:perf",
         "//test/...",
     ],
@@ -40,6 +43,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
         "//src/com/facebook/buck/log/views:views",
@@ -62,6 +66,9 @@ java_immutables_library(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/stringtemplate:stringtemplate",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/util/concurrent:concurrent",
     ],
 )
 

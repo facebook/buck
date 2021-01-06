@@ -1,28 +1,30 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.skylark.io.GlobSpec;
+import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.Globber;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
@@ -64,12 +66,7 @@ public class CachingGlobber implements Globber {
   public Set<String> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException, InterruptedException {
-    GlobSpec key =
-        GlobSpec.builder()
-            .setInclude(include)
-            .setExclude(exclude)
-            .setExcludeDirectories(excludeDirectories)
-            .build();
+    GlobSpec key = GlobSpec.of(include, exclude, excludeDirectories);
     @Nullable Set<String> expandedPaths = cache.get(key);
     if (expandedPaths == null) {
       expandedPaths = delegate.run(include, exclude, excludeDirectories);
@@ -82,8 +79,14 @@ public class CachingGlobber implements Globber {
    * @return Glob manifest that includes information about expanded paths for each requested {@link
    *     GlobSpec}.
    */
-  public ImmutableMap<GlobSpec, Set<String>> createGlobManifest() {
-    return ImmutableMap.copyOf(cache);
+  public ImmutableList<GlobSpecWithResult> createGlobManifest() {
+    final Set<Entry<GlobSpec, Set<String>>> entries = cache.entrySet();
+    ImmutableList.Builder<GlobSpecWithResult> globs =
+        ImmutableList.builderWithExpectedSize(entries.size());
+    for (Entry<GlobSpec, Set<String>> entry : entries) {
+      globs.add(GlobSpecWithResult.of(entry.getKey(), entry.getValue()));
+    }
+    return globs.build();
   }
 
   public static CachingGlobber of(Globber globber) {

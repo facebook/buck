@@ -38,7 +38,7 @@ The static content served by Buck's webserver. (See .buckconfig for details.)
 
 ### Building Buck
 
-As explained in [Downloading and Installing Buck](https://buckbuild.com/setup/install.html), you can build Buck by running ant in the directory where you checked out Buck from GitHub. If you modify Buck's source code, running ant again should be sufficient to rebuild it. If you are concerned that Buck may have gotten in some sort of bad state, run ant clean && ant to do a clean build.
+As explained in [Downloading and Installing Buck](https://buck.build/setup/install.html), you can build Buck by running ant in the directory where you checked out Buck from GitHub. If you modify Buck's source code, running ant again should be sufficient to rebuild it. If you are concerned that Buck may have gotten in some sort of bad state, run ant clean && ant to do a clean build.
 
 ### Running Tests
 
@@ -50,7 +50,7 @@ Buck's tests use JUnit and are under the test subdirectory. Here are some exampl
 - Faster way of running a specific class: use `buck test --test-selectors RemoteFileTest //test/com/facebook/buck/file:file`
 - Keeping tests' files: to avoid auto-deleting temporary directories generated for JUnit tests, use `BUCK_TEST_KEEP_TEMPORARY_PATHS=1 buck (test options...)`
 
-To find out more about testing options refer to an article about [test](https://buckbuild.com/command/test.html) command.
+To find out more about testing options refer to an article about [test](https://buck.build/command/test.html) command.
 
 ### Using the IntelliJ IDE
 

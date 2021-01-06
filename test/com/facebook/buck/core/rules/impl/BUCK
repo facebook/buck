@@ -1,26 +1,33 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "impl",
     srcs = glob(["*Test.java"]),
     deps = [
+        ":testutil",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/rules/macros:types",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/hashing:hashing",
+        "//test/com/facebook/buck/core/artifact:testutil",
         "//test/com/facebook/buck/core/build/buildable/context:testutil",
         "//test/com/facebook/buck/core/build/context:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
-        "//test/com/facebook/buck/rules:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/step:testutil",
@@ -41,5 +48,10 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/test/rule:rule",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//third-party/java/jsr:jsr305",
     ],
 )

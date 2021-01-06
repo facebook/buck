@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="light-psi-all">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/grammar-kit/light-psi-all-2018.3-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

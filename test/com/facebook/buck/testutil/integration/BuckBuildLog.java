@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testutil.integration;
@@ -56,6 +56,10 @@ public class BuckBuildLog {
     this.buildLogEntries = Preconditions.checkNotNull(buildLogEntries);
   }
 
+  public void assertTargetBuiltLocally(BuildTarget buildTarget) {
+    assertTargetBuiltLocally(buildTarget.getFullyQualifiedName());
+  }
+
   public void assertTargetBuiltLocally(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.BUILT_LOCALLY);
   }
@@ -70,7 +74,7 @@ public class BuckBuildLog {
   }
 
   public void assertTargetIsAbsent(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
     if (buildLogEntries.containsKey(buildTarget)) {
       fail(
           String.format(
@@ -83,12 +87,21 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.FETCHED_FROM_CACHE);
   }
 
+  public void assertTargetWasFetchedFromCache(BuildTarget buildTarget) {
+    assertBuildSuccessType(
+        buildTarget.getFullyQualifiedName(), BuildRuleSuccessType.FETCHED_FROM_CACHE);
+  }
+
   public void assertTargetWasFetchedFromCacheByManifestMatch(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED);
   }
 
   public void assertTargetHadMatchingInputRuleKey(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY);
+  }
+
+  public void assertTargetHadMatchingInputRuleKey(BuildTarget buildTarget) {
+    assertTargetHadMatchingInputRuleKey(buildTarget.getFullyQualifiedName());
   }
 
   public void assertTargetHadMatchingDepfileRuleKey(String buildTargetRaw) {
@@ -99,13 +112,17 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_RULE_KEY);
   }
 
+  public void assertTargetHadMatchingRuleKey(BuildTarget buildTarget) {
+    assertTargetHadMatchingRuleKey(buildTarget.getFullyQualifiedName());
+  }
+
   public void assertTargetFailed(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertEquals(BuildRuleStatus.FAIL, logEntry.status);
   }
 
-  public void assertTargetCanceled(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
+  public void assertTargetCanceled(BuildTarget buildTarget) {
+    BuildLogEntry logEntry = getLogEntry(buildTarget);
     assertEquals(BuildRuleStatus.CANCELED, logEntry.status);
   }
 
@@ -128,7 +145,7 @@ public class BuckBuildLog {
       }
 
       String buildTargetRaw = matcher.group("BuildTarget");
-      BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+      BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
 
       String statusRaw = matcher.group("Status");
       BuildRuleStatus status = BuildRuleStatus.valueOf(statusRaw);
@@ -169,7 +186,7 @@ public class BuckBuildLog {
   }
 
   public void assertNoLogEntry(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
     if (buildLogEntries.containsKey(buildTarget)) {
       fail(
           String.format(
@@ -179,7 +196,7 @@ public class BuckBuildLog {
   }
 
   public BuildLogEntry getLogEntry(String buildTargetRaw) {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(buildTargetRaw);
     if (!buildLogEntries.containsKey(buildTarget)) {
       fail(String.format("There was no build log entry for target %s", buildTargetRaw));
     }

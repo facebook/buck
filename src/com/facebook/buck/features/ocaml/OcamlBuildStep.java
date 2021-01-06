@@ -1,30 +1,32 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -43,10 +45,11 @@ public class OcamlBuildStep implements Step {
   private final BuildContext buildContext;
   private final ProjectFilesystem filesystem;
   private final OcamlBuildContext ocamlContext;
+  private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> cCompilerEnvironment;
   private final ImmutableList<String> cCompiler;
-  private final ImmutableMap<String, String> cxxCompilerEnvironment;
-  private final ImmutableList<String> cxxCompiler;
+  private final ImmutableMap<String, String> cxxLinkerEnvironment;
+  private final ImmutableList<String> cxxLinker;
   private final boolean bytecodeOnly;
 
   private final boolean hasGeneratedSources;
@@ -56,18 +59,20 @@ public class OcamlBuildStep implements Step {
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OcamlBuildContext ocamlContext,
+      BuildTarget buildTarget,
       ImmutableMap<String, String> cCompilerEnvironment,
       ImmutableList<String> cCompiler,
-      ImmutableMap<String, String> cxxCompilerEnvironment,
-      ImmutableList<String> cxxCompiler,
+      ImmutableMap<String, String> cxxLinkerEnvironment,
+      ImmutableList<String> cxxLinker,
       boolean bytecodeOnly) {
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
+    this.buildTarget = buildTarget;
     this.cCompilerEnvironment = cCompilerEnvironment;
     this.cCompiler = cCompiler;
-    this.cxxCompilerEnvironment = cxxCompilerEnvironment;
-    this.cxxCompiler = cxxCompiler;
+    this.cxxLinkerEnvironment = cxxLinkerEnvironment;
+    this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
 
     hasGeneratedSources =
@@ -191,7 +196,7 @@ public class OcamlBuildStep implements Step {
 
     ImmutableList.Builder<Arg> cCompileFlags = ImmutableList.builder();
     cCompileFlags.addAll(ocamlContext.getCCompileFlags());
-    cCompileFlags.addAll(StringArg.from(ocamlContext.getCommonCFlags()));
+    cCompileFlags.addAll(ocamlContext.getCommonCFlags());
 
     CxxPreprocessorInput cxxPreprocessorInput = ocamlContext.getCxxPreprocessorInput();
 
@@ -201,8 +206,9 @@ public class OcamlBuildStep implements Step {
       Step compileStep =
           new OcamlCCompileStep(
               getResolver(),
-              filesystem.getRootPath(),
+              filesystem,
               new OcamlCCompileStep.Args(
+                  buildTarget,
                   cCompilerEnvironment,
                   cCompiler,
                   ocamlContext.getOcamlCompiler().get(),
@@ -225,17 +231,18 @@ public class OcamlBuildStep implements Step {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
+    flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
-            filesystem.getRootPath(),
-            cxxCompilerEnvironment,
-            cxxCompiler,
+            filesystem,
+            cxxLinkerEnvironment,
+            cxxLinker,
             ocamlContext.getOcamlCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
             ocamlContext.getNativeOutput(),
+            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget),
             ocamlContext.getNativeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             linkerInputs,
@@ -251,17 +258,18 @@ public class OcamlBuildStep implements Step {
 
     ImmutableList.Builder<Arg> flags = ImmutableList.builder();
     flags.addAll(ocamlContext.getFlags());
-    flags.addAll(StringArg.from(ocamlContext.getCommonCLinkerFlags()));
+    flags.addAll(ocamlContext.getCommonCLinkerFlags());
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
-            filesystem.getRootPath(),
-            cxxCompilerEnvironment,
-            cxxCompiler,
+            filesystem,
+            cxxLinkerEnvironment,
+            cxxLinker,
             ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
             ocamlContext.getBytecodeOutput(),
+            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget),
             ocamlContext.getBytecodeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             linkerInputs,
@@ -286,7 +294,7 @@ public class OcamlBuildStep implements Step {
 
   private StepExecutionResult executeMLNativeCompilation(
       ExecutionContext context,
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs)
       throws IOException, InterruptedException {
@@ -337,7 +345,7 @@ public class OcamlBuildStep implements Step {
 
   private StepExecutionResult executeMLBytecodeCompilation(
       ExecutionContext context,
-      Path workingDirectory,
+      AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
       ImmutableList.Builder<Path> linkerInputs)
       throws IOException, InterruptedException {
@@ -386,7 +394,7 @@ public class OcamlBuildStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
-  private StepExecutionResult generateSources(ExecutionContext context, Path workingDirectory)
+  private StepExecutionResult generateSources(ExecutionContext context, AbsPath workingDirectory)
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(
@@ -443,7 +451,7 @@ public class OcamlBuildStep implements Step {
         .toList();
   }
 
-  private SourcePathResolver getResolver() {
+  private SourcePathResolverAdapter getResolver() {
     return buildContext.getSourcePathResolver();
   }
 }

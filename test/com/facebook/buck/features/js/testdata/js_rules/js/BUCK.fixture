@@ -201,6 +201,18 @@ js_bundle_genrule(
     rewrite_misc = True,
 )
 
+js_bundle_genrule(
+    name = "deps-file-genrule",
+    bash = """
+        set -e
+        echo "bundle" > "$OUT/bundle.txt"
+        cat "$DEPENDENCIES" > "$DEPENDENCIES_OUT"
+        printf "\npostprocessed\n" >> "$DEPENDENCIES_OUT"
+    """,
+    js_bundle = ":fruit-with-extras",
+    rewrite_deps_file = True,
+)
+
 js_library(
     name = "fruit_with_tests",
     srcs = [

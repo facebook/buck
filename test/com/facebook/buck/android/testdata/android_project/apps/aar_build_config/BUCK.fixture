@@ -36,3 +36,13 @@ android_aar(
         "//res/com/sample/base:base",
     ],
 )
+
+android_aar(
+    name = "app_with_relinker",
+    enable_relinker = True,
+    manifest_skeleton = "AndroidManifestSkeleton.xml",
+    deps = [
+        "//native/xdsodce:top",
+        "//res/com/sample/base:base",
+    ],
+)

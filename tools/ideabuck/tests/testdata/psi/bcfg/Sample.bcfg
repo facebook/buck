@@ -1,0 +1,28 @@
+# You are reading a .buckconfig file.
+; The semi-colon can also be used for commenting.
+       # And comments can be indented
+[foo]
+    bar = http://en.wikipedia.org/
+    baz = line \
+          continuations \
+          including \
+          "quoted strings" \
+          and multiple keys on one line
+
+    qux = r\
+       a\
+          g\
+     g\
+        e\
+          d concat\
+    enation is ok
+
+    keys#can.have ; weird-chars : "and ':' can be used instead of '='"
+
+<file:path/to/required.bcfg>
+
+<?file:path/to/optional.bcfg>
+
+[unicode]
+    beer = \U0001F37A
+    tab = \u0009

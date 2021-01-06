@@ -1,3 +1,3 @@
 pub fn whoami() {
-  println!("thing1");
+    println!("thing1");
 }

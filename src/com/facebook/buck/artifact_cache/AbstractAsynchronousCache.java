@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -20,13 +20,15 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -39,14 +41,15 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private static final Logger LOG = Logger.get(AbstractAsynchronousCache.class);
@@ -66,6 +69,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private final ArtifactCacheMode mode;
 
   private final BlockingQueue<FetchRequest> pendingFetchRequests = new LinkedBlockingQueue<>();
+
+  private final BlockingQueue<FetchRequest> pendingCheckRequests = new LinkedBlockingQueue<>();
 
   // TODO(cjhopman): Remove this error-based disabling of multiFetch, it's only here to make rollout
   // less disruptive.
@@ -104,7 +109,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     return projectFilesystem;
   }
 
-  protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;
+  protected abstract FetchResult fetchImpl(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) throws IOException;
 
   protected abstract MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
       throws IOException;
@@ -126,32 +132,67 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     return 0;
   }
 
+  protected boolean isMultiCheckEnabled() {
+    return false;
+  }
+
+  private void doMultiCheck(ImmutableMap<RuleKey, ClaimedFetchRequest> ruleKeyToRequest) {
+    try {
+      ImmutableMap<RuleKey, CacheResult> ruleKeyToResult =
+          multiContainsImpl(ruleKeyToRequest.keySet()).getCacheResults();
+      for (Map.Entry<RuleKey, CacheResult> result : ruleKeyToResult.entrySet()) {
+        CacheResult cacheResult = result.getValue();
+        ClaimedFetchRequest claimedFetchRequest = ruleKeyToRequest.get(result.getKey());
+        if (claimedFetchRequest == null) {
+          LOG.verbose("Recived cache result for not requested rule key.");
+          continue;
+        }
+        if (!cacheResult.getType().isSuccess()) {
+          // If rule key is not present in the cache, there is no point in trying to download
+          // it.
+          claimedFetchRequest.setResult(cacheResult);
+        } else {
+          // Otherwise reschedule it. It will be added to the fetch queue and it will be picked
+          // by fetching thread.
+          claimedFetchRequest.reschedule();
+        }
+      }
+    } catch (IOException e) {
+      String msg =
+          String.format(
+              "multicheck(<%s>): %s: %s",
+              Joiner.on(", ").join(ruleKeyToRequest.keySet()),
+              e.getClass().getName(),
+              e.getMessage());
+      // Some of these might already be fulfilled. That's fine, this set() call will just be
+      // ignored.
+      for (ClaimedFetchRequest request : ruleKeyToRequest.values()) {
+        request.setResult(CacheResult.error(name, mode, msg));
+      }
+    }
+  }
+
   private void doMultiFetch(ImmutableList<ClaimedFetchRequest> requests) {
     boolean gotNonError = false;
     try (CacheEventListener.MultiFetchRequestEvents requestEvents =
         eventListener.multiFetchStarted(
-            requests
-                .stream()
+            requests.stream()
                 .map(r -> r.getRequest().getBuildTarget())
                 .filter(Objects::nonNull)
                 .collect(ImmutableList.toImmutableList()),
-            requests
-                .stream()
+            requests.stream()
                 .map(r -> r.getRequest().getRuleKey())
                 .collect(ImmutableList.toImmutableList()))) {
       try {
         MultiFetchResult result =
             multiFetchImpl(
-                requests
-                    .stream()
+                requests.stream()
                     .map(ClaimedFetchRequest::getRequest)
                     .collect(ImmutableList.toImmutableList()));
         Preconditions.checkState(result.getResults().size() == requests.size());
         // MultiFetch must return a non-skipped result for at least one of the requested keys.
         Preconditions.checkState(
-            result
-                .getResults()
-                .stream()
+            result.getResults().stream()
                 .anyMatch(
                     fetchResult ->
                         fetchResult.getCacheResult().getType() != CacheResultType.SKIPPED));
@@ -167,15 +208,12 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
           }
         }
         gotNonError =
-            result
-                .getResults()
-                .stream()
+            result.getResults().stream()
                 .anyMatch(
                     fetchResult -> fetchResult.getCacheResult().getType() != CacheResultType.ERROR);
       } catch (IOException e) {
         ImmutableList<RuleKey> keys =
-            requests
-                .stream()
+            requests.stream()
                 .map(r -> r.getRequest().getRuleKey())
                 .collect(ImmutableList.toImmutableList());
         String msg =
@@ -220,7 +258,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     CacheEventListener.FetchRequestEvents requestEvents =
         eventListener.fetchStarted(request.getBuildTarget(), request.getRuleKey());
     try {
-      FetchResult fetchResult = fetchImpl(request.getRuleKey(), request.getOutput());
+      FetchResult fetchResult =
+          fetchImpl(request.getBuildTarget(), request.getRuleKey(), request.getOutput());
       result = fetchResult.getCacheResult();
       requestEvents.finished(fetchResult);
     } catch (IOException e) {
@@ -233,22 +272,89 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     request.future.set(result);
   }
 
+  private static void skipPendingRequest(ClaimedFetchRequest request) {
+    if (request != null) {
+      String ruleKey = request.getRequest().getRuleKey().toString();
+      LOG.verbose(
+          String.format(
+              "Skipping cache check for key [%s] as markAllFetchRequestsAsSkipped=true", ruleKey));
+      request.setResult(CacheResult.skipped());
+    }
+  }
+
+  private void skipAllPendingRequests() {
+    ImmutableList<ClaimedFetchRequest> requests = getCheckRequests();
+    requests.forEach(AbstractAsynchronousCache::skipPendingRequest);
+
+    while (true) {
+      ClaimedFetchRequest request = getFetchRequest();
+      if (request == null) {
+        break;
+      }
+      skipPendingRequest(request);
+    }
+  }
+
+  private void cancelRequest(ClaimedFetchRequest request, Exception e) {
+    request.setResult(CacheResult.error(getName(), getMode(), e.getMessage()));
+  }
+
+  private void cancelAllPendingRequests(Exception e) {
+    ImmutableList<ClaimedFetchRequest> requests = getCheckRequests();
+    requests.forEach(r -> cancelRequest(r, e));
+
+    while (true) {
+      ClaimedFetchRequest request = getFetchRequest();
+      if (request == null) {
+        break;
+      }
+      cancelRequest(request, e);
+    }
+
+    LOG.error(e, "Exception thrown while processing fetch requests.");
+  }
+
+  private void processCheck() {
+    try {
+      if (markAllFetchRequestsAsSkipped) {
+        // Build is finished/terminated, all pending fetch requests should be set to skipped state.
+        skipAllPendingRequests();
+        return;
+      }
+
+      ImmutableList<ClaimedFetchRequest> requests = getCheckRequests();
+      if (requests.isEmpty()) {
+        return;
+      } else if (requests.size() == 1) {
+        // If there is just single fetch request get it directly
+        try (ClaimedFetchRequest request = requests.get(0)) {
+          doFetch(request.getRequest());
+        }
+      } else {
+        ImmutableMap.Builder<RuleKey, ClaimedFetchRequest> requestsBuilder = ImmutableMap.builder();
+        try {
+          for (ClaimedFetchRequest request : requests) {
+            requestsBuilder.put(request.getRequest().getRuleKey(), request);
+          }
+          ImmutableMap<RuleKey, ClaimedFetchRequest> ruleKeyToRequest = requestsBuilder.build();
+          doMultiCheck(ruleKeyToRequest);
+        } finally {
+          requests.forEach(ClaimedFetchRequest::close);
+        }
+      }
+    } catch (Exception e) {
+      // If any exception is thrown in trying to process requests, just fulfill everything with an
+      // error.
+      cancelAllPendingRequests(e);
+    }
+  }
+
   private void processFetch() {
     try {
       if (markAllFetchRequestsAsSkipped) {
         // Build is finished/terminated, all pending fetch requests should be set to skipped state.
-        while (true) {
-          ClaimedFetchRequest request = getFetchRequest();
-          if (request == null) {
-            return;
-          }
-          String ruleKey = request.getRequest().getRuleKey().toString();
-          LOG.verbose(
-              String.format(
-                  "Skipping cache fetch for key [%s] as markAllFetchRequestsAsSkipped=true",
-                  ruleKey));
-          request.setResult(CacheResult.skipped());
-        }
+        skipAllPendingRequests();
+        return;
       }
 
       int multiFetchLimit =
@@ -282,11 +388,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     } catch (Exception e) {
       // If any exception is thrown in trying to process requests, just fulfill everything with an
       // error.
-      ClaimedFetchRequest request;
-      while ((request = getFetchRequest()) != null) {
-        request.setResult(CacheResult.error(getName(), getMode(), e.getMessage()));
-      }
-      LOG.error(e, "Exception thrown while processing fetch requests.");
+      cancelAllPendingRequests(e);
     }
   }
 
@@ -315,7 +417,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     }
 
     private FetchRequest getRequest() {
-      return Preconditions.checkNotNull(request);
+      return Objects.requireNonNull(request);
     }
 
     public void setResult(CacheResult result) {
@@ -338,17 +440,40 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     return new ClaimedFetchRequest(request);
   }
 
+  private ImmutableList<ClaimedFetchRequest> getCheckRequests() {
+    int numberOfCheckRequests = pendingCheckRequests.size();
+    ArrayList<FetchRequest> pendingCheckRequestsRequests = new ArrayList<>(numberOfCheckRequests);
+    ArrayList<ClaimedFetchRequest> claimedCheckRequest = new ArrayList<>(numberOfCheckRequests);
+    pendingCheckRequests.drainTo(pendingCheckRequestsRequests);
+    for (FetchRequest pendingCheckRequestsRequest : pendingCheckRequestsRequests) {
+      claimedCheckRequest.add(new ClaimedFetchRequest(pendingCheckRequestsRequest));
+    }
+
+    return ImmutableList.copyOf(claimedCheckRequest);
+  }
+
   @SuppressWarnings("CheckReturnValue")
   private void addFetchRequest(FetchRequest fetchRequest) {
     pendingFetchRequests.add(fetchRequest);
     fetchExecutorService.submit(this::processFetch);
   }
 
+  @SuppressWarnings("CheckReturnValue")
+  private void addCheckRequest(FetchRequest fetchRequest) {
+    pendingCheckRequests.add(fetchRequest);
+    fetchExecutorService.submit(this::processCheck);
+  }
+
   @Override
   public final ListenableFuture<CacheResult> fetchAsync(
       @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     SettableFuture<CacheResult> future = SettableFuture.create();
-    addFetchRequest(new FetchRequest(target, ruleKey, output, future));
+    FetchRequest fetchRequest = new FetchRequest(target, ruleKey, output, future);
+    if (isMultiCheckEnabled()) {
+      addCheckRequest(fetchRequest);
+    } else {
+      addFetchRequest(fetchRequest);
+    }
     return future;
   }
 
@@ -363,7 +488,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public final ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
     if (!getCacheReadMode().isWritable()) {
       return Futures.immediateFuture(null);
     }
@@ -371,9 +496,10 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     long artifactSizeBytes = getFileSize(output.getPath());
     if (artifactExceedsMaximumSize(artifactSizeBytes)) {
       LOG.info(
-          "Artifact too big so not storing it in the %s cache. " + "file=[%s] buildTarget=[%s]",
-          name, output.getPath(), info.getBuildTarget());
-      return Futures.immediateFuture(null);
+          "Artifact too big so not storing it in the %s cache. "
+              + "file=[%s] buildTarget=[%s] size=[%d]",
+          name, output.getPath(), info.getBuildTarget(), artifactSizeBytes);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     Path tmp;
@@ -381,7 +507,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
       tmp = getPathForArtifact(output);
     } catch (IOException e) {
       LOG.error(e, "Failed to store artifact in temp file: " + output.getPath());
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     StoreEvents events = eventListener.storeScheduled(info, artifactSizeBytes);
@@ -391,7 +517,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
           try {
             StoreResult result = storeImpl(info, tmp);
             requestEvents.finished(result);
-            return null;
+            return Unit.UNIT;
           } catch (IOException e) {
             String msg =
                 String.format(
@@ -404,10 +530,10 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   @Override
-  public final ListenableFuture<Void> store(
+  public final ListenableFuture<Unit> store(
       ImmutableList<Pair<ArtifactInfo, BorrowablePath>> artifacts) {
     if (!getCacheReadMode().isWritable()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     ImmutableList.Builder<Pair<ArtifactInfo, Path>> matchedArtifactsBuilder =
@@ -441,7 +567,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     ImmutableList<Pair<ArtifactInfo, Path>> matchedArtifacts = matchedArtifactsBuilder.build();
 
     if (matchedArtifacts.isEmpty()) {
-      return Futures.immediateFuture(null);
+      return Futures.immediateFuture(Unit.UNIT);
     }
 
     ImmutableList<Long> artifactSizesInBytes = artifactSizesInBytesBuilder.build();
@@ -477,7 +603,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
             }
           }
 
-          return null;
+          return Unit.UNIT;
         });
   }
 
@@ -595,12 +721,11 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractFetchResult {
+  @BuckStyleValueWithBuilder
+  interface FetchResult {
     Optional<Long> getResponseSizeBytes();
 
-    Optional<String> getBuildTarget();
+    Optional<BuildTarget> getBuildTarget();
 
     Optional<ImmutableSet<RuleKey>> getAssociatedRuleKeys();
 
@@ -612,26 +737,23 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractMultiContainsResult {
+  @BuckStyleValueWithBuilder
+  interface MultiContainsResult {
     Optional<Long> getResponseSizeBytes();
 
     ImmutableMap<RuleKey, CacheResult> getCacheResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractMultiFetchResult {
+  @BuckStyleValue
+  interface MultiFetchResult {
     /** At least one of the results must be non-skipped. */
     ImmutableList<FetchResult> getResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractStoreResult {
+  @BuckStyleValueWithBuilder
+  interface StoreResult {
     Optional<Long> getRequestSizeBytes();
 
     Optional<String> getArtifactContentHash();

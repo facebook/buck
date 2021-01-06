@@ -1,0 +1,7 @@
+InvocationInfo {"buildId":"2ef9b523-fc4e-48a3-aa9f-baab9ca36386","superConsoleEnabled":true,"isDaemon":true,"subCommand":"buildcommand","watchmanVersion":"something","commandArgs":["build","-c","foo.bar=baz","buck"],"buckLogDir":"buck-out/log","timestampMillis":1558451933604,"isRemoteExecution":false,"repository":"repo"}
+ParseStarted {"timestampMillis":1558451934866}
+ParseFinished {"timestampMillis":1558451935251}
+BuildFinished {"timestampMillis":1558452025981}
+PerfTimesStats {"pythonTimeMs":1622,"initTimeMs":1465,"processingTimeMs":542,"parseTimeMs":385,"actionGraphTimeMs":830,"rulekeyTimeMs":343,"totalRulekeyTimeMs":7318,"fetchTimeMs":573,"buildTimeMs":88984,"installTimeMs":0}
+Cache.Stats {"cacheHitsPerMode":{"thrift_over_http":0},"cacheErrorsPerMode":{"thrift_over_http":0},"totalCacheHits":0,"totalCacheErrors":0,"totalCacheMisses":1635,"totalCacheIgnores":23,"totalCacheLocalKeyUnchangedHits":0,"successUploadCount":0,"failureUploadCount":0}
+ExitCode {"exitCode":0}

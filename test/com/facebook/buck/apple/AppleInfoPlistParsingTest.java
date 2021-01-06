@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -57,6 +57,54 @@ public class AppleInfoPlistParsingTest {
     }
 
     assertThat(bundleID, is(equalTo(Optional.empty())));
+  }
+
+  @Test
+  public void infoPlistParsingReturnsBundleType() throws IOException {
+    Optional<String> bundleType;
+
+    try (InputStream in =
+        getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
+      Preconditions.checkState(in != null);
+      bundleType = AppleInfoPlistParsing.getBundleTypeFromPlistStream(Paths.get("Test"), in);
+    }
+    assertThat(bundleType, is(equalTo(Optional.of("APPL"))));
+
+    try (InputStream in =
+        getClass()
+            .getResourceAsStream(
+                "testdata/apple_library_shared/Libraries/TestLibrary/Info.plist")) {
+      Preconditions.checkState(in != null);
+      bundleType = AppleInfoPlistParsing.getBundleTypeFromPlistStream(Paths.get("Test"), in);
+    }
+    assertThat(bundleType, is(equalTo(Optional.of("FMWK"))));
+  }
+
+  @Test
+  public void infoPlistParsingReturnsIsNotWatchOSApp() throws IOException {
+    Optional<Boolean> isWatchOSApp;
+
+    try (InputStream in =
+        getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
+      Preconditions.checkState(in != null);
+      isWatchOSApp = AppleInfoPlistParsing.isWatchOSAppFromPlistStream(Paths.get("Test"), in);
+    }
+
+    assertThat(isWatchOSApp, is(equalTo(Optional.of(Boolean.FALSE))));
+  }
+
+  @Test
+  public void infoPlistParsingReturnsIsWatchOSApp() throws IOException {
+    Optional<Boolean> isWatchOSApp;
+
+    try (InputStream in =
+        getClass()
+            .getResourceAsStream("testdata/watch_application_bundle/WatchApplication/Info.plist")) {
+      Preconditions.checkState(in != null);
+      isWatchOSApp = AppleInfoPlistParsing.isWatchOSAppFromPlistStream(Paths.get("Test"), in);
+    }
+
+    assertThat(isWatchOSApp, is(equalTo(Optional.of(Boolean.TRUE))));
   }
 
   @Test

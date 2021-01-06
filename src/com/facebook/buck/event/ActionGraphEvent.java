@@ -1,23 +1,21 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.core.model.actiongraph.ActionGraph;
-import java.util.Optional;
 import java.util.OptionalInt;
 
 /** Base class for events about building up the action graph from the target graph. */
@@ -43,15 +41,11 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
   }
 
   public static Finished finished(Started started) {
-    return new Finished(started, OptionalInt.empty(), Optional.empty());
+    return new Finished(started, OptionalInt.empty());
   }
 
   public static Finished finished(Started started, int count) {
-    return new Finished(started, OptionalInt.of(count), Optional.empty());
-  }
-
-  public static Finished finished(Started started, int count, ActionGraph actionGraph) {
-    return new Finished(started, OptionalInt.of(count), Optional.of(actionGraph));
+    return new Finished(started, OptionalInt.of(count));
   }
 
   public static class Started extends ActionGraphEvent {
@@ -68,12 +62,10 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
 
   public static class Finished extends ActionGraphEvent {
     private OptionalInt nodeCount;
-    private Optional<ActionGraph> actionGraph;
 
-    public Finished(Started started, OptionalInt count, Optional<ActionGraph> graph) {
+    public Finished(Started started, OptionalInt count) {
       super(started.getEventKey());
       nodeCount = count;
-      actionGraph = graph;
     }
 
     @Override
@@ -83,10 +75,6 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
 
     public OptionalInt getNodeCount() {
       return nodeCount;
-    }
-
-    public Optional<ActionGraph> getActionGraph() {
-      return actionGraph;
     }
   }
 
@@ -127,10 +115,6 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
 
     public static MissWithEmptyCache missWithEmptyCache() {
       return new MissWithEmptyCache();
-    }
-
-    public static MissWithTargetGraphHashMatch missWithTargetGraphHashMatch() {
-      return new MissWithTargetGraphHashMatch();
     }
 
     public static MissWithTargetGraphDifference missWithTargetGraphDifference() {

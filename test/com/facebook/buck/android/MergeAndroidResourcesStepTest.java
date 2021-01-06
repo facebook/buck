@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -27,9 +27,11 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
-import com.facebook.buck.android.aapt.FakeRDotTxtEntryWithID;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
+import com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -38,12 +40,10 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +60,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.StringContains;
@@ -71,9 +71,12 @@ import org.junit.rules.ExpectedException;
 public class MergeAndroidResourcesStepTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  private List<RDotTxtEntry> createTestingFakesWithIds(List<RDotTxtEntry> ls) {
+    return ls.stream().map(RDotTxtEntryUtil::matchId).collect(Collectors.toList());
+  }
+
   @Test
-  public void testGenerateRDotJavaForMultipleSymbolsFiles()
-      throws IOException, DuplicateResourceException {
+  public void testGenerateRDotJavaForMultipleSymbolsFiles() throws DuplicateResourceException {
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
 
     // Merge everything into the same package space.
@@ -129,8 +132,7 @@ public class MergeAndroidResourcesStepTest {
   }
 
   @Test
-  public void testGenerateRDotJavaForWithStyleables()
-      throws IOException, DuplicateResourceException {
+  public void testGenerateRDotJavaForWithStyleables() throws DuplicateResourceException {
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
 
     // Merge everything into the same package space.
@@ -189,49 +191,43 @@ public class MergeAndroidResourcesStepTest {
 
     System.out.println(resources);
 
-    ImmutableList<FakeRDotTxtEntryWithID> fakeRDotTxtEntryWithIDS =
+    ImmutableList<RDotTxtEntry> fakeRDotTxtEntryWithIDS =
         ImmutableList.of(
-            new FakeRDotTxtEntryWithID(INT, ATTR, "android_layout_gravity", "0x07f01005"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "background", "0x07f01006"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "backgroundSplit", "0x07f01007"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "backgroundStacked", "0x07f01008"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "layout_heightPercent", "0x07f01009"),
-            new FakeRDotTxtEntryWithID(INT, ATTR, "listLayout", "0x07f01002"),
-            new FakeRDotTxtEntryWithID(INT, ID, "a1", "0x07f01003"),
-            new FakeRDotTxtEntryWithID(INT, ID, "a2", "0x07f01004"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, ATTR, "android_layout_gravity", "0x07f01005"),
+            FakeEntry.createWithId(INT, ATTR, "background", "0x07f01006"),
+            FakeEntry.createWithId(INT, ATTR, "backgroundSplit", "0x07f01007"),
+            FakeEntry.createWithId(INT, ATTR, "backgroundStacked", "0x07f01008"),
+            FakeEntry.createWithId(INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
+            FakeEntry.createWithId(INT, ATTR, "layout_heightPercent", "0x07f01009"),
+            FakeEntry.createWithId(INT, ATTR, "listLayout", "0x07f01002"),
+            FakeEntry.createWithId(INT, ID, "a1", "0x07f01003"),
+            FakeEntry.createWithId(INT, ID, "a2", "0x07f01004"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "ActionBar", "{ 0x07f01006,0x07f01007,0x07f01008 }"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBar_background", "0"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_background", "0"),
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "ActionBarLayout", "{ 0x010100f2,0x07f01005 }"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
-            new FakeRDotTxtEntryWithID(
-                INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
+            FakeEntry.createWithId(INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "AlertDialog", "{ 0x010100f2,0x07f01001,0x7f01003b }"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_android_layout", "0"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
-            new FakeRDotTxtEntryWithID(INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_android_layout", "0"),
+            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
+            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
+            FakeEntry.createWithId(
                 INT_ARRAY, STYLEABLE, "PercentLayout_Layout", "{ 0x00000000,0x07f01009 }"),
-            new FakeRDotTxtEntryWithID(
-                INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
-            new FakeRDotTxtEntryWithID(
+            FakeEntry.createWithId(INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
+            FakeEntry.createWithId(
                 INT, STYLEABLE, "PercentLayout_Layout_layout_heightPercent", "1"));
 
-    IntStream.range(0, resources.size())
-        .forEach(
-            action -> {
-              assertEquals(fakeRDotTxtEntryWithIDS.get(action), resources.get(action));
-            });
+    assertEquals(createTestingFakesWithIds(resources), fakeRDotTxtEntryWithIDS);
   }
 
   @Test
   public void testGenerateRDotJavaForMultipleSymbolsFilesWithDuplicates()
-      throws IOException, DuplicateResourceException {
+      throws DuplicateResourceException {
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
 
     // Merge everything into the same package space.
@@ -264,7 +260,7 @@ public class MergeAndroidResourcesStepTest {
     thrown.expectMessage("Resource 'c1' (string) is duplicated across: ");
 
     BuildTarget resTarget = BuildTargetFactory.newInstance("//:res1");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     MergeAndroidResourcesStep.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
@@ -312,12 +308,10 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(resTarget)
             .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.res1")
@@ -327,7 +321,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
@@ -377,12 +371,10 @@ public class MergeAndroidResourcesStepTest {
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource resource =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(target)
             .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.facebook")
@@ -392,7 +384,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(resource),
             ImmutableList.of(uberRDotTxt),
             Paths.get("output"),
@@ -462,12 +454,10 @@ public class MergeAndroidResourcesStepTest {
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource resource =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(target)
             .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.facebook")
@@ -477,7 +467,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(resource),
             ImmutableList.of(uberRDotTxt),
             Paths.get("output"),
@@ -522,12 +512,10 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("com.package1")
@@ -535,7 +523,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("com.package2")
@@ -546,7 +534,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            buildRuleResolver.getSourcePathResolver(),
             resourceDeps,
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
@@ -575,12 +563,10 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("com.package1")
@@ -588,7 +574,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("com.package2")
@@ -599,7 +585,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            buildRuleResolver.getSourcePathResolver(),
             resourceDeps,
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
@@ -645,12 +631,10 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -659,7 +643,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("res2")
@@ -669,7 +653,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res1, res2),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
@@ -715,12 +699,10 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -729,7 +711,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("res2")
@@ -739,7 +721,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res1, res2),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
@@ -773,12 +755,10 @@ public class MergeAndroidResourcesStepTest {
             ImmutableList.of("int id id1 0x7f020000")));
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -788,7 +768,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res1),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
@@ -822,12 +802,10 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -837,7 +815,7 @@ public class MergeAndroidResourcesStepTest {
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             filesystem,
-            resolver,
+            graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res1),
             Paths.get("output"),
             /* forceFinalResourceIds */ true,
@@ -861,8 +839,6 @@ public class MergeAndroidResourcesStepTest {
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
@@ -883,7 +859,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("package")
@@ -892,7 +868,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("package")
@@ -902,7 +878,7 @@ public class MergeAndroidResourcesStepTest {
     ImmutableList<HasAndroidResourceDeps> resourceDeps = ImmutableList.of(res1, res2);
 
     checkDuplicatesDetected(
-        resolver,
+        graphBuilder.getSourcePathResolver(),
         filesystem,
         resourceDeps,
         EnumSet.noneOf(RType.class),
@@ -911,7 +887,7 @@ public class MergeAndroidResourcesStepTest {
         Optional.empty());
 
     checkDuplicatesDetected(
-        resolver,
+        graphBuilder.getSourcePathResolver(),
         filesystem,
         resourceDeps,
         EnumSet.of(RType.STRING),
@@ -920,7 +896,7 @@ public class MergeAndroidResourcesStepTest {
         Optional.empty());
 
     checkDuplicatesDetected(
-        resolver,
+        graphBuilder.getSourcePathResolver(),
         filesystem,
         resourceDeps,
         EnumSet.allOf(RType.class),
@@ -929,7 +905,7 @@ public class MergeAndroidResourcesStepTest {
         Optional.empty());
 
     checkDuplicatesDetected(
-        resolver,
+        graphBuilder.getSourcePathResolver(),
         filesystem,
         resourceDeps,
         EnumSet.allOf(RType.class),
@@ -939,14 +915,14 @@ public class MergeAndroidResourcesStepTest {
   }
 
   private void checkDuplicatesDetected(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       FakeProjectFilesystem filesystem,
       ImmutableList<HasAndroidResourceDeps> resourceDeps,
       EnumSet<RType> rtypes,
       ImmutableList<String> duplicateResources,
       ImmutableList<String> ignoredDuplicates,
       Optional<List<String>> duplicateWhitelist)
-      throws IOException, InterruptedException {
+      throws IOException {
 
     Optional<Path> duplicateWhitelistPath =
         duplicateWhitelist.map(

@@ -1,18 +1,8 @@
 java_library(
     name = "arg",
-    srcs = [
-        "CommonDescriptionArg.java",
-        "HasContacts.java",
-        "HasDeclaredDeps.java",
-        "HasDefaultPlatform.java",
-        "HasDepsQuery.java",
-        "HasProvidedDeps.java",
-        "HasProvidedDepsQuery.java",
-        "HasSrcs.java",
-        "HasTestTimeout.java",
-        "HasTests.java",
-        "Hint.java",
-    ],
+    srcs = glob(["*.java"]),
+    required_for_source_only_abi = True,
+    visibility = ["PUBLIC"],
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
@@ -21,6 +11,4 @@ java_library(
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",
     ],
-    required_for_source_only_abi = True,
-    visibility = ["PUBLIC"],
 )

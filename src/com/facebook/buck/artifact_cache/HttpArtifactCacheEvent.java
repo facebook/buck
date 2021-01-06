@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -19,7 +19,7 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,9 +28,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** Event produced for HttpArtifactCache operations containing different stats. */
 public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
@@ -40,7 +40,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   protected HttpArtifactCacheEvent(
       EventKey eventKey,
       ArtifactCacheEvent.Operation operation,
-      Optional<String> target,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCacheEvent.InvocationType invocationType,
       StoreType storeType) {
@@ -60,7 +60,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   public static Scheduled newStoreScheduledEvent(
-      Optional<String> target, ImmutableSet<RuleKey> ruleKeys, StoreType storeType) {
+      Optional<BuildTarget> target, ImmutableSet<RuleKey> ruleKeys, StoreType storeType) {
     return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys, storeType);
   }
 
@@ -81,7 +81,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     public Scheduled(
         ArtifactCacheEvent.Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         StoreType storeType) {
       super(
@@ -120,9 +120,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          targets.size() == 1
-              ? Optional.of(targets.iterator().next().getFullyQualifiedName())
-              : Optional.empty(),
+          targets.size() == 1 ? Optional.of(Iterables.getOnlyElement(targets)) : Optional.empty(),
           ruleKeys,
           ArtifactCacheEvent.InvocationType.SYNCHRONOUS,
           storeType);
@@ -161,12 +159,13 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    public Finished(Started event, Optional<String> target, HttpArtifactCacheEventFetchData data) {
+    public Finished(
+        Started event, Optional<BuildTarget> target, HttpArtifactCacheEventFetchData data) {
       super(
           event.getEventKey(),
           CACHE_MODE,
           event.getOperation(),
-          Preconditions.checkNotNull(target),
+          Objects.requireNonNull(target),
           event.getRuleKeys(),
           event.getInvocationType(),
           data.getFetchResult(),
@@ -219,7 +218,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         long threadId,
         BuildId buildId) {
       super.configure(timestampMillis, nanoTime, userThreadNanoTime, threadId, buildId);
-      requestDurationMillis = timestampMillis - startedEvent.getTimestamp();
+      requestDurationMillis = timestampMillis - startedEvent.getTimestampMillis();
     }
 
     @Override
@@ -231,7 +230,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       private final Started startedEvent;
       private HttpArtifactCacheEventFetchData.Builder fetchDataBuilder;
       private HttpArtifactCacheEventStoreData.Builder storeDataBuilder;
-      private Optional<String> target;
+      private Optional<BuildTarget> target;
 
       private Builder(Started event) {
         this.startedEvent = event;
@@ -243,7 +242,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       public HttpArtifactCacheEvent.Finished build() {
         if (startedEvent.getOperation() == Operation.FETCH) {
           RuleKey requestsRuleKey =
-              Preconditions.checkNotNull(Iterables.getFirst(startedEvent.getRuleKeys(), null));
+              Objects.requireNonNull(Iterables.getFirst(startedEvent.getRuleKeys(), null));
           fetchDataBuilder.setRequestedRuleKey(requestsRuleKey);
           return new HttpArtifactCacheEvent.Finished(
               startedEvent, target, fetchDataBuilder.build());
@@ -267,34 +266,40 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         return this;
       }
 
-      public Builder setTarget(Optional<String> target) {
+      public Builder setTarget(Optional<BuildTarget> target) {
         this.target = target;
         return this;
       }
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHttpArtifactCacheEventFetchData {
+  @BuckStyleValueWithBuilder
+  public interface HttpArtifactCacheEventFetchData {
     Optional<Long> getResponseSizeBytes();
 
     Optional<CacheResult> getFetchResult();
 
     RuleKey getRequestedRuleKey();
 
+    // TODO(cjhopman): This is in the CacheResult already.
     Optional<String> getArtifactContentHash();
 
+    // TODO(cjhopman): This is in the CacheResult already.
     Optional<Long> getArtifactSizeBytes();
 
     Optional<String> getErrorMessage();
 
     ImmutableSet<RuleKey> getAssociatedRuleKeys();
+
+    class Builder extends ImmutableHttpArtifactCacheEventFetchData.Builder {}
+
+    static Builder builder() {
+      return new Builder();
+    }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHttpArtifactCacheEventStoreData {
+  @BuckStyleValueWithBuilder
+  public interface HttpArtifactCacheEventStoreData {
     Optional<Long> getRequestSizeBytes();
 
     Optional<Boolean> wasStoreSuccessful();
@@ -308,6 +313,12 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     Optional<String> getErrorMessage();
 
     StoreType getStoreType();
+
+    class Builder extends ImmutableHttpArtifactCacheEventStoreData.Builder {}
+
+    static Builder builder() {
+      return new Builder();
+    }
   }
 
   static class MultiFetchStarted extends Started {

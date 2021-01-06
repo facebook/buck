@@ -1,0 +1,52 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_binary(
+    name = "TestAppBinary1",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        "//Libraries:Dep1",
+        "//Libraries:Dep2",
+    ],
+)
+
+apple_bundle(
+    name = "TestApp1",
+    binary = ":TestAppBinary1",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestAppBinary1"],
+)
+
+xcode_workspace_config(
+    name = "workspace1",
+    src_target = "//Apps:TestApp1",
+)
+
+apple_binary(
+    name = "TestAppBinary2",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        "//Libraries:Dep2",
+        "//Libraries:Dep3",
+    ],
+)
+
+apple_bundle(
+    name = "TestApp2",
+    binary = ":TestAppBinary2",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestAppBinary2"],
+)
+
+xcode_workspace_config(
+    name = "workspace2",
+    src_target = "//Apps:TestApp2",
+)

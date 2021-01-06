@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.tools.consistency;
@@ -26,7 +26,6 @@ import com.facebook.buck.log.thrift.rulekeys.NonHashedPath;
 import com.facebook.buck.log.thrift.rulekeys.Pattern;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Sha1;
-import com.facebook.buck.log.thrift.rulekeys.SourceRoot;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
@@ -108,9 +107,6 @@ public class RuleKeyDifferTest {
                 String.format("archive_path_%s", valueSeed),
                 String.format("member_path_%s", valueSeed),
                 String.format("hash_%s", valueSeed))));
-    ret.put(
-        String.format("source_root_%s", id),
-        Value.sourceRoot(new SourceRoot(String.format("source_root_%s", valueSeed))));
     ret.put(
         String.format("build_rule_type_%s", id),
         Value.buildRuleType(new BuildRuleType(String.format("rule_type_%s", valueSeed))));

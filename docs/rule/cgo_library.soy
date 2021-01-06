@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace cgo_libraru}
 
 /***/
@@ -20,17 +36,12 @@ dependencies. The outputs are linked into go executable in the last step (compil
 The 'go build' command would collect the cgo directives from the source files, however
 with buck the flags needs to be passed in the cgo_library manually
 
-This rule borrows from cxx_binary since C/C++ sources are being compiled.
+This rule borrows from {call buck.cxx_binary /} since C/C++ sources are being compiled.
 {/param}
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call go_common.package_name_arg /}
 

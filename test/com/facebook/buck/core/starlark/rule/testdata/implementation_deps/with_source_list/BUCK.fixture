@@ -1,0 +1,32 @@
+load("//with_source_list:defs.bzl", "noop", "write_file")
+
+write_file(
+    name = "default",
+    content = "default_file_contents",
+    executable = False,
+    filename = "default_file",
+)
+
+write_file(
+    name = "hidden",
+    content = "hidden_file_contents",
+    executable = False,
+    filename = "hidden_file",
+)
+
+write_file(
+    name = "other",
+    content = "other_file_contents",
+    executable = False,
+    filename = "other_file",
+)
+
+noop(name = "with_default_srcs")
+
+noop(
+    name = "with_explicit_srcs",
+    srcs = [
+        "some_src.txt",
+        "//with_source_list:other",
+    ],
+)

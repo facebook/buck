@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -27,13 +27,12 @@ import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
@@ -41,7 +40,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -55,6 +53,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
@@ -432,8 +431,8 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.resourcesContents,
             currentBuildState.modularDexesContents);
 
-    // TODO(cjhopman): fix exo install when library is renamed but content remains the same.
-    // checkExoInstall(0, 0, 1, 0);
+    // Note: zero libs installed.  The content is already on device, so only metadata changes.
+    checkExoInstall(0, 0, 0, 0, 0);
   }
 
   @Test
@@ -471,6 +470,29 @@ public class ExopackageInstallerIntegrationTest {
             currentBuildState.modularDexesContents);
 
     checkExoInstall(0, 0, 0, 0, 0);
+  }
+
+  @Test
+  public void testExoInstallWithDuplicateNativeLibs() throws Exception {
+    setDefaultFullBuildState();
+
+    checkExoInstall(1, 2, 2, 3, 2);
+
+    currentBuildState =
+        new ExoState(
+            currentBuildState.apkContent,
+            currentBuildState.manifestContent,
+            currentBuildState.secondaryDexesContents,
+            ImmutableSortedMap.of(
+                "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libone.so", "libfake\n",
+                "libs/" + SdkConstants.ABI_INTEL_ATOM + "/libtwo.so", "libfake\n",
+                "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libone.so", "libfake\n",
+                "libs/" + SdkConstants.ABI_ARMEABI_V7A + "/libtwo.so", "libfake\n"),
+            currentBuildState.resourcesContents,
+            currentBuildState.modularDexesContents);
+
+    // Note: Just one lib installed.  They are identical, so we only install 1.
+    checkExoInstall(0, 0, 1, 0, 0);
   }
 
   private void debug(String msg) {
@@ -511,8 +533,6 @@ public class ExopackageInstallerIntegrationTest {
       int expectedResourcesInstalled,
       int expectedModulesInstalled)
       throws Exception {
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(null);
-
     ExpectedStateBuilder builder = new ExpectedStateBuilder();
 
     writeFakeApk(currentBuildState.apkContent);
@@ -564,7 +584,7 @@ public class ExopackageInstallerIntegrationTest {
               libsContents.get(k));
           expectedMetadata
               .append(prefix)
-              .append(k.substring(k.lastIndexOf("/") + 1, k.length() - 3))
+              .append(k, k.lastIndexOf("/") + 1, k.length() - 3)
               .append(" native-")
               .append(libHash)
               .append(".so");
@@ -585,8 +605,8 @@ public class ExopackageInstallerIntegrationTest {
 
     Optional<ExopackageInfo.ResourcesInfo> resourcesInfo = Optional.empty();
     if (!currentBuildState.resourcesContents.isEmpty()) {
-      ExopackageInfo.ResourcesInfo.Builder resourcesInfoBuilder =
-          ExopackageInfo.ResourcesInfo.builder();
+      ImmutableList.Builder<ExopackagePathAndHash> resourcesPaths = ImmutableList.builder();
+
       int n = 0;
       Iterator<String> resourcesContents = currentBuildState.resourcesContents.iterator();
       StringBuilder expectedMetadata = new StringBuilder();
@@ -599,7 +619,7 @@ public class ExopackageInstallerIntegrationTest {
         writeFile(resourcePath, content);
         Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
         writeFile(hashPath, resourceHash.getHash());
-        resourcesInfoBuilder.addResourcesPaths(
+        resourcesPaths.add(
             ExopackagePathAndHash.of(
                 FakeSourcePath.of(filesystem, resourcePath),
                 FakeSourcePath.of(filesystem, hashPath)));
@@ -607,7 +627,7 @@ public class ExopackageInstallerIntegrationTest {
         prefix = "\n";
         builder.addExoFile("resources/" + resourceHash + ".apk", content);
       }
-      resourcesInfo = Optional.of(resourcesInfoBuilder.build());
+      resourcesInfo = Optional.of(ExopackageInfo.ResourcesInfo.of(resourcesPaths.build()));
       builder.addExoFile("resources/metadata.txt", expectedMetadata.toString());
     }
 
@@ -642,18 +662,17 @@ public class ExopackageInstallerIntegrationTest {
       moduleInfo = Optional.of(moduleInfoBuilder.build());
     }
 
-    ApkInfo apkInfo =
-        ApkInfo.builder()
-            .setApkPath(apkSourcePath)
-            .setManifestPath(manifestSourcePath)
-            .setExopackageInfo(
+    HasInstallableApk.ApkInfo apkInfo =
+        ImmutableApkInfo.of(
+            manifestSourcePath,
+            apkSourcePath,
+            Optional.of(
                 ExopackageInfo.builder()
                     .setDexInfo(dexInfo)
                     .setNativeLibsInfo(nativeLibsInfo)
                     .setResourcesInfo(resourcesInfo)
                     .setModuleInfo(moduleInfo)
-                    .build())
-            .build();
+                    .build()));
     device.setAllowedInstallCounts(
         expectedApksInstalled,
         expectedDexesInstalled,
@@ -663,7 +682,11 @@ public class ExopackageInstallerIntegrationTest {
     try {
       assertTrue(
           new ExopackageInstaller(
-                  pathResolver, executionContext, filesystem, FAKE_PACKAGE_NAME, device)
+                  new TestActionGraphBuilder().getSourcePathResolver(),
+                  executionContext,
+                  filesystem,
+                  FAKE_PACKAGE_NAME,
+                  device)
               .doInstall(apkInfo, null));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -686,17 +709,14 @@ public class ExopackageInstallerIntegrationTest {
             }));
     assertEquals(expectedState.expectedApkState, installedApks);
     Map<String, String> installedFiles =
-        testDevice
-            .getInstalledFiles()
-            .entrySet()
-            .stream()
+        testDevice.getInstalledFiles().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     entry -> entry.getKey().toString(),
                     entry -> {
                       try {
                         return Files.toString(
-                            Preconditions.checkNotNull(entry.getValue()).toFile(), Charsets.UTF_8);
+                            Objects.requireNonNull(entry.getValue()).toFile(), Charsets.UTF_8);
                       } catch (IOException e) {
                         throw new RuntimeException(e);
                       }
@@ -719,11 +739,7 @@ public class ExopackageInstallerIntegrationTest {
       zf.write(apkContent.getBytes(Charsets.US_ASCII), 0, apkContent.length());
       zf.closeEntry();
     }
-    try {
-      ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(executionContext);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(executionContext);
   }
 
   private String createFakeManifest(String manifestContent) {

@@ -1,23 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableSet;
+import com.google.devtools.build.lib.vfs.UnixGlob;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
@@ -40,11 +41,22 @@ public class HybridGlobber implements Globber {
   public Set<String> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException, InterruptedException {
+    checkPatternsForError(include);
+    checkPatternsForError(exclude);
     Optional<ImmutableSet<String>> watchmanResult =
         watchmanGlobber.run(include, exclude, excludeDirectories);
     if (watchmanResult.isPresent()) {
       return watchmanResult.get();
     }
     return fallbackGlobber.run(include, exclude, excludeDirectories);
+  }
+
+  private void checkPatternsForError(Collection<String> include) {
+    for (String pattern : include) {
+      String error = UnixGlob.checkPatternForError(pattern);
+      if (error != null) {
+        throw new IllegalArgumentException(error + " (in glob pattern '" + pattern + "')");
+      }
+    }
   }
 }

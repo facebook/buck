@@ -1,0 +1,10 @@
+java_library(
+    name = "eventhandler",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    exported_deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/event:interfaces",
+        "//third-party/java/bazel:bazel",
+    ],
+)

@@ -3,16 +3,17 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "config",
     srcs = [
-        "AbstractCachingBuildEngineBuckConfig.java",
-        "AbstractResourceAwareSchedulingInfo.java",
+        "CachingBuildEngineBuckConfig.java",
+        "ResourceAwareSchedulingInfo.java",
+    ],
+    visibility = [
+        "PUBLIC",
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/build/engine/type:type",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/resources:resources",
         "//src/com/facebook/buck/core/rules/impl:impl",
-    ],
-    visibility = [
-        "PUBLIC",
+        "//src/com/facebook/buck/util:util",
     ],
 )

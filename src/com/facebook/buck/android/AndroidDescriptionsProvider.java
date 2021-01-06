@@ -1,27 +1,27 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
@@ -35,19 +35,18 @@ import org.pf4j.Extension;
 public class AndroidDescriptionsProvider implements DescriptionProvider {
 
   @Override
-  public Collection<DescriptionWithTargetGraph<?>> getDescriptions(
-      DescriptionCreationContext context) {
+  public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     SandboxExecutionStrategy sandboxExecutionStrategy = context.getSandboxExecutionStrategy();
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig config = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
+
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
     DxConfig dxConfig = new DxConfig(config);
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(config, Platform.detect());
-    ApkConfig apkConfig = new ApkConfig(config);
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
@@ -60,38 +59,42 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
             javaConfig,
-            androidBuckConfig,
             proGuardConfig,
+            androidBuckConfig,
             config,
             cxxBuckConfig,
             dxConfig,
-            apkConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig)),
         new AndroidBuildConfigDescription(toolchainProvider),
         new AndroidBundleDescription(
             javaConfig,
-            androidBuckConfig,
             proGuardConfig,
+            androidBuckConfig,
             config,
             cxxBuckConfig,
             dxConfig,
-            apkConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(androidBuckConfig)),
         new AndroidInstrumentationApkDescription(
-            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, apkConfig, toolchainProvider),
-        new AndroidInstrumentationTestDescription(config),
+            javaConfig,
+            proGuardConfig,
+            cxxBuckConfig,
+            dxConfig,
+            toolchainProvider,
+            androidBuckConfig),
+        new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
-        new AndroidPrebuiltAarDescription(toolchainProvider),
-        new AndroidResourceDescription(androidBuckConfig),
+        new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig),
+        new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
-        new NdkLibraryDescription(),
+        new NdkLibraryDescription(toolchainProvider),
+        new NdkToolchainDescription(),
         new GenAidlDescription(),
-        new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
+        new ApkGenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
   }
 }

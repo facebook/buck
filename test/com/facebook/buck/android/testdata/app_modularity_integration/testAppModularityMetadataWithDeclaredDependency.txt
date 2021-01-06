@@ -1,0 +1,30 @@
+CLASSES
+  dex
+    com/facebook/sample/Sample
+    com/facebook/sample/Sample2
+    com/facebook/sample/Sample3
+    com/sample/app/MyApplication
+  small_inner_class_with_no_resource_deps
+    com/facebook/sample/SmallWithInnerClass
+    com/facebook/sample/SmallWithInnerClass$Inner
+  small_with_no_resource_deps
+    com/facebook/sample/Small
+TARGETS
+  dex
+    //java/com/sample/app:app
+    //java/com/sample/lib:lib
+    //res/com/sample/asset_only:asset_only
+    //res/com/sample/base:base
+    //res/com/sample/title:title
+    //res/com/sample/top:top
+  small_inner_class_with_no_resource_deps
+    //java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps
+  small_with_no_resource_deps
+    //java/com/sample/small:small_with_no_resource_deps
+DEPS
+  dex
+  small_inner_class_with_no_resource_deps
+    dex
+  small_with_no_resource_deps
+    dex
+    small_inner_class_with_no_resource_deps

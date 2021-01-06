@@ -1,29 +1,29 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.TypeParameterTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.SimpleTreeVisitor;
@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -86,7 +87,7 @@ class TreeBackedEnter {
     }
 
     private TreePath getCurrentPath() {
-      return Preconditions.checkNotNull(currentPath);
+      return Objects.requireNonNull(currentPath);
     }
 
     public void enter(CompilationUnitTree compilationUnitTree) {
@@ -155,7 +156,7 @@ class TreeBackedEnter {
     private TreeBackedPackageElement enterPackageElement() {
       CompilationUnitTree compilationUnitTree = getCurrentPath().getCompilationUnit();
       PackageElement packageElement =
-          (PackageElement) Preconditions.checkNotNull(javacTrees.getElement(getCurrentPath()));
+          (PackageElement) Objects.requireNonNull(javacTrees.getElement(getCurrentPath()));
       TreeBackedPackageElement treeBackedPackageElement =
           elements.enterElement(packageElement, this::newTreeBackedPackage);
       if (compilationUnitTree
@@ -171,7 +172,7 @@ class TreeBackedEnter {
     public Void scan(Element e, @Nullable Void aVoid) {
       TreePath previousPath = currentPath;
       Tree previousTree = currentTree;
-      currentTree = Preconditions.checkNotNull(elementTreeFinder).getTree(e);
+      currentTree = Objects.requireNonNull(elementTreeFinder).getTree(e);
       currentPath = currentTree == null ? null : new TreePath(currentPath, currentTree);
       try {
         if (currentPath != null && javacTrees.getElement(currentPath) != e) {
@@ -214,11 +215,17 @@ class TreeBackedEnter {
       // elements.
       List<? extends Element> fromTree =
           ((ClassTree) path.getLeaf())
-              .getMembers()
-              .stream()
-              .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
-              .filter(element -> element != null) // Null can happen for static initializers
-              .collect(Collectors.toList());
+              .getMembers().stream()
+                  // Top level blocks (static initializers and anonymous blocks) are only used at
+                  // runtime, so we can safely skip them for ABI generation purposes. In Java 9 and
+                  // later, it's actually necessary to skip them, as getElement will attempt to
+                  // attribute the parent class node when given block nodes, effectively doing an
+                  // analyze compiler phase, which we need to avoid. In Java 8 and earlier,
+                  // getElement
+                  // just returns null in these cases.
+                  .filter(tree -> tree.getKind() != Kind.BLOCK)
+                  .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
+                  .collect(Collectors.toList());
       Set<? extends Element> fromTreeSet = new HashSet<>(fromTree);
 
       List<Element> result = new ArrayList<>();

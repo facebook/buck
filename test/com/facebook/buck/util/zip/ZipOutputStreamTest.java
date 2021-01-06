@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.zip;
@@ -221,7 +221,7 @@ public class ZipOutputStreamTest {
     public void compressionCanBeSetOnAPerFileBasisAndIsHonoured() throws IOException {
       // Create some input that can be compressed.
       String packageName = getClass().getPackage().getName().replace('.', '/');
-      URL sample = Resources.getResource(packageName + "/sample-bytes.properties");
+      URL sample = Resources.getResource(packageName + "/sample-bytes.dat");
       byte[] input = Resources.toByteArray(sample);
 
       try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode)) {
@@ -267,12 +267,12 @@ public class ZipOutputStreamTest {
     public void packingALargeFileShouldGenerateTheSameOutputAsReferenceImpl() throws IOException {
       File reference = File.createTempFile("reference", ".zip");
       String packageName = getClass().getPackage().getName().replace('.', '/');
-      URL sample = Resources.getResource(packageName + "/macbeth.properties");
+      URL sample = Resources.getResource(packageName + "/macbeth.dat");
       byte[] input = Resources.toByteArray(sample);
 
       try (CustomZipOutputStream out = ZipOutputStreams.newOutputStream(output, mode);
           ZipOutputStream ref = new ZipOutputStream(new FileOutputStream(reference))) {
-        CustomZipEntry entry = new CustomZipEntry("macbeth.properties");
+        CustomZipEntry entry = new CustomZipEntry("macbeth.dat");
         entry.setTime(System.currentTimeMillis());
         out.putNextEntry(entry);
         ref.putNextEntry(entry);
@@ -283,7 +283,7 @@ public class ZipOutputStreamTest {
       // Make sure the output is valid.
       try (ZipInputStream in = new ZipInputStream(Files.newInputStream(output))) {
         ZipEntry entry = in.getNextEntry();
-        assertEquals("macbeth.properties", entry.getName());
+        assertEquals("macbeth.dat", entry.getName());
         assertArrayEquals(input, ByteStreams.toByteArray(in));
         assertNull(in.getNextEntry());
       }

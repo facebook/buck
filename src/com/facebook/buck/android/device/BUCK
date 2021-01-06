@@ -1,0 +1,7 @@
+java_library(
+    name = "device",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

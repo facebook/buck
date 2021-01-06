@@ -1,25 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.Verbosity;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -28,7 +28,7 @@ public class SuperConsoleConfig {
   private static final String SECTION_NAME = "ui";
   private static final int DEFAULT_THREAD_LINE_LIMIT = 10;
   private static final long DEFAULT_BUILD_RULE_MINIMUM_DURATION_MILLIS = 0;
-  private static final int DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW = 0;
+  private static final int DEFAULT_NUMBER_OF_SLOW_RULES_TO_SHOW = 10;
 
   /** Whether the super console is forced on, off or should we auto detect it */
   private enum Mode {
@@ -103,11 +103,9 @@ public class SuperConsoleConfig {
   /**
    * Whether the SuperConsole is enabled
    *
-   * @param console the console configuration being used
-   * @param platform the platform we are running on
-   * @return whether the output should be presented using the super console style
+   * @return whether the output should be presented using the super superConsole style
    */
-  public boolean isEnabled(Console console, Platform platform) {
+  public boolean isEnabled(Ansi ansi, Verbosity verbosity) {
     Mode mode = delegate.getEnum(SECTION_NAME, "superconsole", Mode.class).orElse(Mode.AUTO);
     switch (mode) {
       case ENABLED:
@@ -115,10 +113,9 @@ public class SuperConsoleConfig {
       case DISABLED:
         return false;
       case AUTO:
-        return Platform.WINDOWS != platform
-            && console.getAnsi().isAnsiTerminal()
-            && !console.getVerbosity().shouldPrintCommand()
-            && console.getVerbosity().shouldPrintStandardInformation();
+        return ansi.isAnsiTerminal()
+            && !verbosity.shouldPrintCommand()
+            && verbosity.shouldPrintStandardInformation();
       default:
         throw new IllegalArgumentException("Unhandled case: " + mode);
     }

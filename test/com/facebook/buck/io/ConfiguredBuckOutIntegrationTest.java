@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -48,7 +48,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void outputPathsUseConfiguredBuckOut() throws IOException {
+  public void outputPathsUseConfiguredBuckOut() {
     String buckOut = "new-buck-out";
     Path output = workspace.buildAndReturnOutput("-c", "project.buck_out=" + buckOut, "//:dummy");
     assertTrue(Files.exists(output));
@@ -56,7 +56,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void configuredBuckOutAffectsRuleKey() throws IOException {
+  public void configuredBuckOutAffectsRuleKey() {
     String out =
         workspace
             .runBuckCommand("targets", "--show-rulekey", "//:dummy")
@@ -90,7 +90,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void verifyTogglingConfiguredBuckOut() throws IOException {
+  public void verifyTogglingConfiguredBuckOut() {
     assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
     workspace
         .runBuckBuild(
@@ -139,7 +139,7 @@ public class ConfiguredBuckOutIntegrationTest {
   }
 
   @Test
-  public void targetsShowOutput() throws IOException {
+  public void targetsShowOutput() {
     String output =
         workspace
             .runBuckCommand(
@@ -148,11 +148,11 @@ public class ConfiguredBuckOutIntegrationTest {
             .getStdout()
             .trim();
     output = Splitter.on(' ').splitToList(output).get(1);
-    assertThat(MorePaths.pathWithUnixSeparators(output), Matchers.startsWith("something/"));
+    assertThat(PathFormatter.pathWithUnixSeparators(output), Matchers.startsWith("something/"));
   }
 
   @Test
-  public void targetsShowOutputCompatSymlink() throws IOException {
+  public void targetsShowOutputCompatSymlink() {
     assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
     String output =
         workspace
@@ -168,19 +168,19 @@ public class ConfiguredBuckOutIntegrationTest {
             .getStdout()
             .trim();
     output = Splitter.on(' ').splitToList(output).get(1);
-    assertThat(MorePaths.pathWithUnixSeparators(output), Matchers.startsWith("buck-out/gen/"));
+    assertThat(PathFormatter.pathWithUnixSeparators(output), Matchers.startsWith("buck-out/gen/"));
   }
 
   @Test
-  public void buildShowOutput() throws IOException {
+  public void buildShowOutput() {
     Path output = workspace.buildAndReturnOutput("-c", "project.buck_out=something", "//:dummy");
     assertThat(
-        MorePaths.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
+        PathFormatter.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
         Matchers.startsWith("something/"));
   }
 
   @Test
-  public void buildShowOutputCompatSymlink() throws IOException {
+  public void buildShowOutputCompatSymlink() {
     assumeThat(Platform.detect(), Matchers.not(Matchers.is(Platform.WINDOWS)));
     Path output =
         workspace.buildAndReturnOutput(
@@ -190,7 +190,7 @@ public class ConfiguredBuckOutIntegrationTest {
             "project.buck_out_compat_link=true",
             "//:dummy");
     assertThat(
-        MorePaths.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
+        PathFormatter.pathWithUnixSeparators(workspace.getDestPath().relativize(output)),
         Matchers.startsWith("buck-out/gen/"));
   }
 }

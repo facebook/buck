@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,13 +22,16 @@ import com.android.tools.r8.D8Command;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
+import com.android.tools.r8.utils.AbortException;
+import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Verbosity;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -60,7 +63,7 @@ public class DxStep extends ShellStep {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
     NO_OPTIMIZE,
 
-    /** Specify the {@code --force-jumbo} flag when running {@code dx}. */
+    /** Force the dexer to emit jumbo string references */
     FORCE_JUMBO,
 
     /**
@@ -74,8 +77,14 @@ public class DxStep extends ShellStep {
 
     /** Run DX with the --no-locals flag. */
     NO_LOCALS,
+    /** Disable java 8 desugaring when running D8 dexing tool. */
+    NO_DESUGAR,
     ;
   }
+
+  public static final int SUCCESS_EXIT_CODE = 0;
+  public static final int FAILURE_EXIT_CODE = 1;
+  public static final int DEX_REFERENCE_OVERFLOW_EXIT_CODE = 2;
 
   /** Available tools to create dex files * */
   public static final String DX = "dx";
@@ -92,12 +101,16 @@ public class DxStep extends ShellStep {
 
   private final ProjectFilesystem filesystem;
   private final AndroidPlatformTarget androidPlatformTarget;
+  @VisibleForTesting final @Nullable Collection<Path> classpathFiles;
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
   private final Optional<String> maxHeapSize;
   private final String dexTool;
   private final boolean intermediate;
+  // used to differentiate different dexing buckets (if any)
+  private final Optional<String> bucketId;
+  private final Optional<Integer> minSdkVersion;
 
   @Nullable private Collection<String> resourcesReferencedInCode;
 
@@ -117,7 +130,7 @@ public class DxStep extends ShellStep {
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
-        DX);
+        D8);
   }
 
   /**
@@ -162,15 +175,54 @@ public class DxStep extends ShellStep {
       Optional<String> maxHeapSize,
       String dexTool,
       boolean intermediate) {
+    this(
+        filesystem,
+        androidPlatformTarget,
+        outputDexFile,
+        filesToDex,
+        options,
+        maxHeapSize,
+        dexTool,
+        intermediate,
+        null,
+        Optional.empty(),
+        Optional.empty() /* minSdkVersion */);
+  }
+
+  /**
+   * @param outputDexFile path to the file where the generated classes.dex should go.
+   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
+   *     files, or a directory of .class files.
+   * @param options to pass to {@code dx}.
+   * @param maxHeapSize The max heap size used for out of process dex.
+   * @param dexTool the tool used to perform dexing.
+   * @param classpathFiles specifies classpath for interface static and default methods desugaring.
+   * @param minSdkVersion
+   */
+  public DxStep(
+      ProjectFilesystem filesystem,
+      AndroidPlatformTarget androidPlatformTarget,
+      Path outputDexFile,
+      Iterable<Path> filesToDex,
+      EnumSet<Option> options,
+      Optional<String> maxHeapSize,
+      String dexTool,
+      boolean intermediate,
+      @Nullable Collection<Path> classpathFiles,
+      Optional<String> bucketId,
+      Optional<Integer> minSdkVersion) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
+    this.classpathFiles = classpathFiles;
     this.outputDexFile = filesystem.resolve(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
     this.maxHeapSize = maxHeapSize;
     this.dexTool = dexTool;
     this.intermediate = intermediate;
+    this.bucketId = bucketId;
+    this.minSdkVersion = minSdkVersion;
 
     Preconditions.checkArgument(
         !options.contains(Option.RUN_IN_PROCESS)
@@ -188,6 +240,7 @@ public class DxStep extends ShellStep {
     String dx = androidPlatformTarget.getDxExecutable().toString();
 
     if (dexTool.equals(D8)) {
+      // FIXME: We use the dx description for this rule, even if d8 is in use.
       context.postEvent(
           ConsoleEvent.fine("Using %s instead of D8. D8 can only be used in-process.", dx));
     }
@@ -229,6 +282,13 @@ public class DxStep extends ShellStep {
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       commandArgs.add("--verbose");
     }
+
+    // min api flag if known
+    minSdkVersion.ifPresent(
+        minApi -> {
+          commandArgs.add("--min-sdk-version");
+          commandArgs.add(Integer.toString(minApi));
+        });
 
     commandArgs.add("--output");
     commandArgs.add(filesystem.resolve(outputDexFile).toString());
@@ -301,7 +361,24 @@ public class DxStep extends ShellStep {
                     options.contains(Option.NO_OPTIMIZE)
                         ? CompilationMode.DEBUG
                         : CompilationMode.RELEASE)
-                .setOutput(output, OutputMode.DexIndexed);
+                .setOutput(output, OutputMode.DexIndexed)
+                .setDisableDesugaring(options.contains(Option.NO_DESUGAR))
+                .setInternalOptionsModifier(
+                    (InternalOptions opt) -> {
+                      opt.testing.forceJumboStringProcessing = options.contains(Option.FORCE_JUMBO);
+                    });
+
+        bucketId.ifPresent(builder::setBucketId);
+        minSdkVersion.ifPresent(builder::setMinApiLevel);
+
+        if (classpathFiles != null && !classpathFiles.isEmpty()) {
+          // classpathFiles is needed only for D8 java 8 desugar
+          ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
+          for (Path classpathFile : classpathFiles) {
+            absolutePaths.add(filesystem.getPathForRelativeExistingPath(classpathFile));
+          }
+          builder.addClasspathFiles(absolutePaths.build());
+        }
         D8Command d8Command = builder.build();
         com.android.tools.r8.D8.run(d8Command);
 
@@ -313,19 +390,21 @@ public class DxStep extends ShellStep {
         }
 
         resourcesReferencedInCode = d8Command.getDexItemFactory().computeReferencedResources();
-        return 0;
-      } catch (CompilationFailedException | IOException e) {
-        context.postEvent(
-            ConsoleEvent.severe(
-                String.join(
-                    System.lineSeparator(),
-                    diagnosticsHandler
-                        .diagnostics
-                        .stream()
-                        .map(Diagnostic::getDiagnosticMessage)
-                        .collect(ImmutableList.toImmutableList()))));
+        return SUCCESS_EXIT_CODE;
+      } catch (CompilationFailedException e) {
+        if (isOverloadedDexException(e)) {
+          context.getConsole().printErrorText(e.getMessage());
+          return DEX_REFERENCE_OVERFLOW_EXIT_CODE;
+        } else {
+          postCompilationFailureToConsole(context, diagnosticsHandler);
+          e.printStackTrace(context.getStdErr());
+          return FAILURE_EXIT_CODE;
+        }
+      } catch (IOException e) {
+        postCompilationFailureToConsole(context, diagnosticsHandler);
         e.printStackTrace(context.getStdErr());
-        return 1;
+
+        return FAILURE_EXIT_CODE;
       }
     } else if (DX.equals(dexTool)) {
       ImmutableList<String> argv = getShellCommandInternal(context);
@@ -346,7 +425,7 @@ public class DxStep extends ShellStep {
         com.android.dx.command.dexer.Main.Arguments arguments =
             new com.android.dx.command.dexer.Main.Arguments();
         com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main(dxContext);
-        arguments.parseCommandLine(args.toArray(new String[args.size()]), dxContext);
+        arguments.parseCommandLine(args.toArray(new String[0]), dxContext);
         int returncode = dexer.run(arguments);
         String stdErrOutput = stderr.toString();
         if (!stdErrOutput.isEmpty()) {
@@ -358,11 +437,27 @@ public class DxStep extends ShellStep {
         return returncode;
       } catch (IOException e) {
         e.printStackTrace(context.getStdErr());
-        return 1;
+        return FAILURE_EXIT_CODE;
       }
     } else {
-      return 1;
+      return FAILURE_EXIT_CODE;
     }
+  }
+
+  private boolean isOverloadedDexException(CompilationFailedException e) {
+    return e.getCause() instanceof AbortException
+        && e.getCause().getMessage().contains("Cannot fit requested classes in a single dex file");
+  }
+
+  private void postCompilationFailureToConsole(
+      ExecutionContext context, D8DiagnosticsHandler diagnosticsHandler) {
+    context.postEvent(
+        ConsoleEvent.severe(
+            String.join(
+                System.lineSeparator(),
+                diagnosticsHandler.diagnostics.stream()
+                    .map(Diagnostic::getDiagnosticMessage)
+                    .collect(ImmutableList.toImmutableList()))));
   }
 
   @Override
@@ -443,5 +538,9 @@ public class DxStep extends ShellStep {
     public int getCharCount() {
       return mCharCounter;
     }
+  }
+
+  public Path getOutputDexFile() {
+    return outputDexFile;
   }
 }

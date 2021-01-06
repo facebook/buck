@@ -1,0 +1,43 @@
+load("//:defs.bzl", "eat", "menu")
+
+# Run any of the following:
+#   buck build //:sushi[ika]
+#   buck build //:sushi[maguro]
+#   buck build //:sushi[unagi]
+#   buck build //:sushi[yellowtail]
+#   buck build //:sushi[ebi]
+menu(
+    name = "sushi",
+    foods = [
+        "ika",
+        "maguro",
+        "unagi",
+        "yellowtail",
+        "ebi",
+    ],
+)
+
+# Named outputs can be used in srcs of any other rule
+export_file(
+    name = "unagi",
+    src = ":sushi[unagi]",
+    out = "yummy.txt",
+)
+
+eat(
+    name = "i_ate_it",
+    srcs = [
+        ":sushi[maguro]",
+        ":sushi[yellowtail]",
+        ":unagi",
+    ],
+    out = "out.txt",
+)
+
+eat(
+    name = "i_ate_ika",
+    srcs = [
+        ":sushi[ika]",
+    ],
+    out = "delicious.txt",
+)

@@ -1,23 +1,23 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -83,20 +83,6 @@ public class XzStep implements Step {
   }
 
   /**
-   * Creates an XzStep to compress a file with XZ compression level {@value
-   * #DEFAULT_COMPRESSION_LEVEL}.
-   *
-   * <p>The destination file will be {@code sourceFile} with the added {@code .xz} extension.
-   *
-   * <p>Decompression will require 5MiB of RAM.
-   *
-   * @param sourceFile file to compress
-   */
-  public XzStep(ProjectFilesystem filesystem, Path sourceFile) {
-    this(filesystem, sourceFile, DEFAULT_COMPRESSION_LEVEL);
-  }
-
-  /**
    * Creates an XzStep to compress a file with the given XZ compression level and output path.
    *
    * <p>Decompression will require up to 64MiB of RAM.
@@ -132,8 +118,7 @@ public class XzStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     boolean deleteSource = false;
     try (InputStream in = filesystem.newFileInputStream(sourceFile);
         OutputStream out = filesystem.newFileOutputStream(destinationFile);

@@ -10,13 +10,13 @@ standard_java_test(
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/file:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util/timing:testutil",
@@ -35,16 +35,12 @@ java_library(
             "FakeBuckConfig.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/config:config",
-        "//src/com/facebook/buck/util/config:config",
-    ],
     visibility = [
         "//test/...",
     ],
     deps = [
-        ":FakeBuckConfig",
         "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
@@ -53,26 +49,34 @@ java_library(
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
+    exported_deps = [
+        ":FakeBuckConfig",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/util/config:config",
+    ],
 )
 
 java_library(
     name = "FakeBuckConfig",
     srcs = ["FakeBuckConfig.java"],
-    exported_deps = [
-        "//src/com/facebook/buck/core/config:config",
-        "//src/com/facebook/buck/util/config:config",
-    ],
     visibility = [
         "//test/...",
     ],
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/cell/impl:impl",
-        "//src/com/facebook/buck/parser:rule_pattern",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/util/config:testutil",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/util/config:config",
     ],
 )

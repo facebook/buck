@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavaPaths;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -51,7 +51,7 @@ public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
   public static final String JAR = ".jar";
   public static final String POM = ".pom";
-  public static final String SRC_JAR = Javac.SRC_JAR;
+  public static final String SRC_JAR = JavaPaths.SRC_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
 
@@ -146,7 +146,7 @@ public class PublishCommandIntegrationTest {
     assertTrue(
         stdOut, stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
     assertTrue(stdOut, stdOut.contains(MorePaths.pathWithPlatformSeparators("/foo#maven.jar")));
-    assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
+    assertTrue(stdOut, stdOut.contains(JavaPaths.SRC_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 
@@ -187,8 +187,7 @@ public class PublishCommandIntegrationTest {
   }
 
   private static ImmutableSortedSet<ZipEntry> getZipFilesFiltered(File zipFile) throws IOException {
-    return getZipContents(zipFile)
-        .stream()
+    return getZipContents(zipFile).stream()
         .filter(zipEntry -> !zipEntry.isDirectory())
         .filter(zipEntry -> !zipEntry.getName().startsWith("META-INF"))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(ZipEntry::getName)));
@@ -207,8 +206,7 @@ public class PublishCommandIntegrationTest {
     return zipEntries.build();
   }
 
-  private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs)
-      throws IOException {
+  private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs) {
     return workspace.runBuckCommand(
         FluentIterable.from(new String[] {"publish"})
             .append(extraArgs)

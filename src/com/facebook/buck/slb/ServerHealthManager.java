@@ -1,22 +1,23 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
@@ -25,12 +26,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -103,6 +106,11 @@ public class ServerHealthManager {
     getBestServerCache.refresh(this);
   }
 
+  public void reportException(URI server, IOException exp) {
+    Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
+    Preconditions.checkNotNull(servers.get(server)).reportException(exp);
+  }
+
   public void reportRequestSuccess(URI server) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
     servers.get(server).reportRequestSuccess(clock.currentTimeMillis());
@@ -119,18 +127,20 @@ public class ServerHealthManager {
               "No servers available. High latency/errors reported: [%s]",
               Joiner.on(", ")
                   .join(
-                      servers
-                          .entrySet()
-                          .stream()
+                      servers.entrySet().stream()
                           .map(
                               e ->
                                   String.format(
-                                      "%s (%d ms limit: %dms, error %.2f in last %d requests",
+                                      "%s (%d ms limit: %dms, error %.2f in last %d requests with cause %s",
                                       e.getKey().toString(),
                                       e.getValue().getLastReportedLatency(),
                                       maxAcceptableLatencyMillis,
                                       e.getValue().getLastReportedErrorPercentage(),
-                                      e.getValue().getLastReportedSamples()))
+                                      e.getValue().getLastReportedSamples(),
+                                      e.getValue().getLastException() != null
+                                          ? MoreThrowables.getInitialCause(
+                                              e.getValue().getLastException())
+                                          : "No underlying exception"))
                           .sorted()
                           .collect(Collectors.toList()))));
     } catch (ExecutionException e) {
@@ -139,15 +149,16 @@ public class ServerHealthManager {
   }
 
   private Optional<URI> calculateBestServer() {
-    ServerHealthManagerEventData.Builder data =
-        ServerHealthManagerEventData.builder().setServerPoolName(serverPoolName);
-    Map<URI, PerServerData.Builder> allPerServerData = new HashMap<>();
+    ImmutableServerHealthManagerEventData.Builder data =
+        ImmutableServerHealthManagerEventData.builder().setServerPoolName(serverPoolName);
+    Map<URI, ImmutablePerServerData.Builder> allPerServerData = new HashMap<>();
     try {
       long epochMillis = clock.currentTimeMillis();
       List<Pair<URI, Long>> serverLatencies = new ArrayList<>();
       for (ServerHealthState state : servers.values()) {
         URI server = state.getServer();
-        PerServerData.Builder perServerData = PerServerData.builder().setServer(server);
+        ImmutablePerServerData.Builder perServerData =
+            ImmutablePerServerData.builder().setServer(server);
         allPerServerData.put(server, perServerData);
 
         float errorPercentage = state.getErrorPercentage(epochMillis, errorCheckTimeRangeMillis);
@@ -159,17 +170,17 @@ public class ServerHealthManager {
         }
       }
 
-      if (serverLatencies.size() == 0) {
+      if (serverLatencies.isEmpty()) {
         data.setNoHealthyServersAvailable(true);
         return Optional.empty();
       }
 
       serverLatencies.sort(LATENCY_COMPARATOR);
       URI bestServer = serverLatencies.get(0).getFirst();
-      Preconditions.checkNotNull(allPerServerData.get(bestServer)).setBestServer(true);
+      Objects.requireNonNull(allPerServerData.get(bestServer)).setBestServer(true);
       return Optional.of(bestServer);
     } finally {
-      for (PerServerData.Builder builder : allPerServerData.values()) {
+      for (ImmutablePerServerData.Builder builder : allPerServerData.values()) {
         data.addPerServerData(builder.build());
       }
       eventBus.post(new ServerHealthManagerEvent(data.build()));

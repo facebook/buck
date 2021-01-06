@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,14 +22,15 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.util.stream.RichStream;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.stream.Stream;
 
 /**
@@ -56,13 +57,11 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       AndroidBinary apkUnderTest,
-      ImmutableSortedSet<JavaLibrary> rulesToExcludeFromDex,
       AndroidGraphEnhancementResult enhancementResult,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
-      Optional<ExopackageInfo> exopackageInfo,
-      int apkCompressionLevel) {
+      Optional<ExopackageInfo> exopackageInfo) {
     super(
         buildTarget,
         projectFilesystem,
@@ -84,11 +83,12 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),
         EnumSet.noneOf(ExopackageMode.class),
-        rulesToExcludeFromDex,
+        ImmutableSet::of,
         enhancementResult,
-        OptionalInt.empty(),
+        XzStep.DEFAULT_COMPRESSION_LEVEL,
         false,
         false,
+        Optional.empty(),
         apkUnderTest.getManifestEntries(),
         apkUnderTest.getJavaRuntimeLauncher(),
         true,
@@ -97,8 +97,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         nativeFilesInfo,
         resourceFilesInfo,
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()),
-        exopackageInfo,
-        apkCompressionLevel);
+        exopackageInfo);
     this.apkUnderTest = apkUnderTest;
   }
 
@@ -112,7 +111,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
   }
 
   @Override
-  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return RichStream.of(apkUnderTest.getBuildTarget()).concat(super.getRuntimeDeps(ruleFinder));
+  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
+    return RichStream.of(apkUnderTest.getBuildTarget())
+        .concat(super.getRuntimeDeps(buildRuleResolver));
   }
 }

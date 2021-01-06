@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -81,42 +81,42 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
     LogRecord record = new LogRecord(LEVEL, "Build started");
-    record.setMillis(started.getTimestamp());
+    record.setMillis(started.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     LogRecord record = new LogRecord(LEVEL, "Build finished");
-    record.setMillis(finished.getTimestamp());
+    record.setMillis(finished.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleStarted(BuildRuleEvent.Started started) {
     LogRecord record = new LogRecord(LEVEL, started.toString());
-    record.setMillis(started.getTimestamp());
+    record.setMillis(started.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleFinished(BuildRuleEvent.Finished finished) {
     LogRecord record = new LogRecord(LEVEL, finished.toLogMessage());
-    record.setMillis(finished.getTimestamp());
+    record.setMillis(finished.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleResumed(BuildRuleEvent.Resumed resumed) {
     LogRecord record = new LogRecord(LEVEL, resumed.toString());
-    record.setMillis(resumed.getTimestamp());
+    record.setMillis(resumed.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleSuspended(BuildRuleEvent.Suspended suspended) {
     LogRecord record = new LogRecord(LEVEL, suspended.toString());
-    record.setMillis(suspended.getTimestamp());
+    record.setMillis(suspended.getTimestampMillis());
     LOG.log(record);
   }
 

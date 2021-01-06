@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.versioncontrol;
@@ -22,9 +22,10 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.Threads;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -88,7 +89,7 @@ public class VersionControlStatsGenerator {
         x -> {
           synchronized (this) {
             this.fastStats =
-                FastVersionControlStats.of(
+                ImmutableFastVersionControlStats.of(
                     x.getCurrentRevisionId(),
                     x.getBaseBookmarks(),
                     x.getBranchedFromMasterRevisionId(),
@@ -97,40 +98,65 @@ public class VersionControlStatsGenerator {
         });
   }
 
-  public void generateStatsAsync(
-      boolean shouldGenerate, ExecutorService executorService, BuckEventBus buckEventBus) {
-    executorService.submit(
+  /**
+   * Generate {@link FullVersionControlStats}. The parameters define which mode is generated
+   *
+   * @param shouldUploadBuildReport if this buck build will upload a full build report then we
+   *     generate {@link FullVersionControlStats}, otherwise just generate {@link
+   *     SlowVersionControlStats}.
+   * @param shouldPreGenerate if true, return a {@link FastVersionControlStats} regardless of {@code
+   *     shouldUploadBuildReport}'s value
+   * @param buckEventBus the eventBus to which post the {@link VersionControlStatsEvent}
+   * @param executorService to which this future is attached to. Preferably a diskIO executor
+   *     Service.
+   */
+  public ListenableFuture<Optional<FullVersionControlStats>> generateStatsAsync(
+      boolean shouldUploadBuildReport,
+      boolean shouldPreGenerate,
+      BuckEventBus buckEventBus,
+      ListeningExecutorService executorService) {
+    Mode mode = shouldUploadBuildReport ? Mode.FULL : Mode.SLOW;
+
+    if (shouldPreGenerate) {
+      mode = Mode.PREGENERATED;
+    }
+
+    return generateStatsAsync(mode, buckEventBus, executorService);
+  }
+
+  /**
+   * Generate {@code VersionControlStats} in a thread to avoid blocking I/O in the main thread.
+   * Depending on the mode given, the type returned is:
+   *
+   * <ul>
+   *   <li>Mode.PREGENERATED => {@link CommonFastVersionControlStats}
+   *   <li>Mode.FAST => {@link FastVersionControlStats}
+   *   <li>Mode.SLOW => {@link SlowVersionControlStats}
+   *   <li>Mode.FULL => {@link FullVersionControlStats}
+   * </ul>
+   */
+  private ListenableFuture<Optional<FullVersionControlStats>> generateStatsAsync(
+      Mode mode, BuckEventBus buckEventBus, ListeningExecutorService executorService) {
+    return executorService.submit(
         () -> {
           try {
-            Optional<? extends CommonFastVersionControlStats> fastVersionControlStats;
+            Optional<FullVersionControlStats> versionControlStats;
             try (SimplePerfEvent.Scope ignored =
                 SimplePerfEvent.scope(buckEventBus, "gen_source_control_info")) {
-              fastVersionControlStats =
-                  generateStats(shouldGenerate ? Mode.FAST : Mode.PREGENERATED);
+              versionControlStats = generateStats(mode);
             }
-            fastVersionControlStats.ifPresent(
-                x -> buckEventBus.post(new FastVersionControlStatsEvent(x)));
-            if (shouldGenerate) {
-              executorService.submit(
-                  () -> {
-                    try {
-                      Optional<? extends CommonSlowVersionControlStats> versionControlStats;
-                      try (SimplePerfEvent.Scope ignored =
-                          SimplePerfEvent.scope(buckEventBus, "gen_source_control_info")) {
-                        versionControlStats = generateStats(Mode.SLOW);
-                      }
-                      versionControlStats.ifPresent(
-                          x -> buckEventBus.post(new VersionControlStatsEvent(x)));
-                    } catch (InterruptedException e) {
-                      LOG.warn(
-                          e, "Failed to generate VC stats due to being interrupted. Skipping..");
-                      Threads.interruptCurrentThread(); // Re-set interrupt flag
-                    }
-                  });
-            }
+            versionControlStats.ifPresent(
+                x -> {
+                  buckEventBus.post(new FastVersionControlStatsEvent(x));
+                  if (mode == Mode.SLOW || mode == Mode.FULL) {
+                    buckEventBus.post(new VersionControlStatsEvent(x));
+                  }
+                });
+            return versionControlStats;
           } catch (InterruptedException e) {
             LOG.warn(e, "Failed to generate VC stats due to being interrupted. Skipping..");
             Threads.interruptCurrentThread(); // Re-set interrupt flag
+            return Optional.empty();
           }
         });
   }
@@ -175,7 +201,7 @@ public class VersionControlStatsGenerator {
         }
         if (mode.hasDiff && diff == null) {
           diff =
-              versionControlCmdLineInterface.diffBetweenRevisionsOrAbsent(
+              versionControlCmdLineInterface.diffBetweenRevisions(
                   fastStats.getBranchedFromMasterRevisionId(), fastStats.getCurrentRevisionId());
           versionControlStatsBuilder.setDiff(diff);
         }
@@ -183,7 +209,7 @@ public class VersionControlStatsGenerator {
         LOG.warn("Failed to gather some source control stats.");
       }
       versionControlStats = versionControlStatsBuilder.build();
-      LOG.info("Stats generated successfully. \n%s", versionControlStats);
+      LOG.info("Version Control Stats generated successfully.");
     }
     return Optional.ofNullable(versionControlStats);
   }

@@ -17,12 +17,11 @@ class FailingUnitTest {
 
     @Test
     fun testOneFailing() {
-        assertTrue("2 does not equal 4", 2 == 4);
+        assertTrue("2 does not equal 4", 2 == 4)
     }
-
 
     @Test
     fun testOnePassing() {
-        assertTrue("null is equal to null", null == null);
+        assertTrue("null is equal to null", null == null)
     }
 }

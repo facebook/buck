@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -23,7 +23,7 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.testutil.ParameterizedTests;
@@ -38,7 +38,6 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,31 +68,8 @@ public class CxxRawHeadersIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "raw_headers", tmp);
     workspace.setUp();
-    String posix_config =
-        "[cxx]\n"
-            + "  untracked_headers=error\n"
-            + "  untracked_headers_whitelist=/usr/include/.*\n"
-            + "  cppflags = -Wall -Werror\n"
-            + "  cxxppflags = -Wall -Werror\n"
-            + "  cflags = -Wall -Werror\n"
-            + "  cxxflags = -Wall -Werror\n";
-    String windows_config =
-        "[cxx]\n"
-            + "  untracked_headers=error\n"
-            + "  untracked_headers_whitelist=\"C:/Program Files (x86)/.*\", \"c:/program files (x86)/.*\"\n"
-            + "  cc=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cc_type=windows\n"
-            + "  cpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cpp_type=windows\n"
-            + "  cxx=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cxx_type=windows\n"
-            + "  cxxpp=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/cl.exe\"\n"
-            + "  cxxpp_type=windows\n"
-            + "  ld=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/link.exe\"\n"
-            + "  linker_platform=windows\n"
-            + "  ar=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/lib.exe\"\n"
-            + "  archiver_platform=windows\n"
-            + "  ranlib=\"C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/bin/amd64/lib.exe\"\n";
+    String posix_config = "<file:./posix.buckconfig>\n";
+    String windows_config = "<file:./windows.buckconfig>\n";
     String config = Platform.detect() == Platform.WINDOWS ? windows_config : posix_config;
     workspace.writeContentsToPath(config, ".buckconfig");
 
@@ -102,8 +78,8 @@ public class CxxRawHeadersIntegrationTest {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
 
-    target1 = BuildTargetFactory.newInstance(workspace.getDestPath(), "//depfiles1:test");
-    target2 = BuildTargetFactory.newInstance(workspace.getDestPath(), "//depfiles2/test:test");
+    target1 = BuildTargetFactory.newInstance("//depfiles1:test");
+    target2 = BuildTargetFactory.newInstance("//depfiles2/test:test");
 
     CxxSourceRuleFactory cxxSourceRuleFactory1 =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target1, cxxPlatform);
@@ -112,11 +88,11 @@ public class CxxRawHeadersIntegrationTest {
 
     runCommand("build", "//depfiles1:test").assertSuccess();
     compileTarget1 = cxxSourceRuleFactory1.createCompileBuildTarget(source);
-    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget1.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget1);
 
     compileTarget2 = cxxSourceRuleFactory2.createCompileBuildTarget(source);
     runCommand("build", "//depfiles2/test:test").assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget2.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget2);
   }
 
   @Test
@@ -245,17 +221,21 @@ public class CxxRawHeadersIntegrationTest {
   }
 
   @Test
-  public void headersUsage() {
-    Exception caughtException = null;
-    try {
-      runCommand("targets", "//lib5:lib5");
-    } catch (Exception e) {
-      caughtException = e;
-    }
-    Assert.assertTrue(caughtException != null);
+  public void headersUsage() throws IOException {
+    ProcessResult processResult = runCommand("targets", "//lib5:lib5");
+    processResult.assertFailure();
     assertThat(
-        caughtException.getMessage(),
+        processResult.getStderr(),
         containsString("Cannot use `headers` and `raw_headers` in the same rule"));
+  }
+
+  @Test
+  public void includeDirectories() throws IOException {
+    runCommand("build", "//app:app1").assertSuccess();
+    runCommand("build", "//app:app2").assertSuccess();
+    runCommand("build", "//app:app3").assertSuccess();
+    runCommand("build", "//app:app4").assertSuccess();
+    runCommand("build", "//app:app5").assertSuccess();
   }
 
   private ProcessResult runCommand(String... args) throws IOException {

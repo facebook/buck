@@ -1,0 +1,164 @@
+platform(
+    name = "osx_x86_64",
+    constraint_values = [
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "linux_aarch64",
+    constraint_values = [
+        "buck//config/constraints:linux",
+        "buck//config/constraints:aarch64",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "linux_arm",
+    constraint_values = [
+        "buck//config/constraints:arm",
+        "buck//config/constraints:linux",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "osx_config",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "osx_x86-64_config",
+    constraint_values = [
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "osx_x86-64_config_with_a",
+    constraint_values = [
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
+    ],
+    values = {
+        "cat.file": "a",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "osx_x86-64_config_with_ab",
+    constraint_values = [
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
+    ],
+    values = {
+        "cat.file": "a",
+        "cat.file2": "b",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "linux_aarch64_config",
+    constraint_values = [
+        "buck//config/constraints:linux",
+        "buck//config/constraints:aarch64",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "a_on_osx",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+    values = {
+        "cat.file": "a",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "b_on_linux_aarch64",
+    constraint_values = [
+        "buck//config/constraints:linux",
+        "buck//config/constraints:aarch64",
+    ],
+    values = {
+        "cat.file": "b",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+genrule(
+    name = "cat",
+    srcs = select({
+        ":osx_config": ["a.txt"],
+        ":linux_aarch64_config": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
+)
+
+genrule(
+    name = "cat_with_constraints_and_values",
+    srcs = select({
+        ":a_on_osx": ["a.txt"],
+        ":b_on_linux_aarch64": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
+)
+
+genrule(
+    name = "cat_with_specialized_constraints",
+    srcs = select({
+        ":osx_config": ["a.txt"],
+        ":osx_x86-64_config": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
+)
+
+genrule(
+    name = "cat_with_specialized_config",
+    srcs = select({
+        ":osx_x86-64_config_with_a": ["a.txt"],
+        ":osx_x86-64_config_with_ab": ["b.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
+)

@@ -1,14 +1,14 @@
-This is the .proto file needed to generate java class files for GenerateConfigStep.java 
-to create BundleConfig.pb file. 
+Bundletool is a command-line tool to manipulate and build Android App Bundles - https://g.co/androidappbundle
+We use it to build the final android bundle, after building each bundle module
 
-Acquired from https://github.com/google/bundletool/blob/master/src/main/proto/config.proto
-Release Number: 0.4.2
+Built from source from https://github.com/google/bundletool, 
+commit SHA 8f922cf4b24bb1714d06cfa303d8e79e81b71a91 with the following modifications:
 
-files.proto and targeting.proto are needed to generate java classes of Assets and NativeLibraries
-and the targeting elements.
+* Patch to allow the output file from BuildBundleCommand to be overwritten: 
+  https://github.com/google/bundletool/pull/139
 
-Acquired from https://github.com/google/bundletool/blob/master/src/main/proto/files.proto
-and https://github.com/google/bundletool/blob/master/src/main/proto/targeting.proto
-Release Number: 0.4.2
+* Modified jar manually to remove obfuscated files from the 
+  shadow/bundletool/com/android/tools/r8 package, which have mixed case. Due
+  to a bug in Buck, these paths cause an internal error on Windows.
 
-To generate those classes, run update.sh
+Release Number: 0.12.0 + patch

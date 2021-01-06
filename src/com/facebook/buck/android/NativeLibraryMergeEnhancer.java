@@ -1,50 +1,47 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.CxxLibrary;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
-import com.facebook.buck.cxx.PrebuiltCxxLibrary;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.elf.Elf;
 import com.facebook.buck.cxx.toolchain.elf.ElfSection;
@@ -52,22 +49,24 @@ import com.facebook.buck.cxx.toolchain.elf.ElfSymbolTable;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -75,6 +74,7 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -93,6 +93,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -117,120 +118,164 @@ class NativeLibraryMergeEnhancer {
   private NativeLibraryMergeEnhancer() {}
 
   @SuppressWarnings("PMD.PrematureDeclaration")
-  static NativeLibraryMergeEnhancementResult enhance(
+  public static NativeLibraryMergeEnhancementResult enhance(
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       Map<String, List<Pattern>> mergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
-      ImmutableMultimap<APKModule, NativeLinkable> linkables,
-      ImmutableMultimap<APKModule, NativeLinkable> linkablesAssets) {
+      ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables) {
 
-    NativeLibraryMergeEnhancementResult.Builder builder =
-        NativeLibraryMergeEnhancementResult.builder();
+    ImmutableMap.Builder<TargetCpuType, NativeLinkableEnhancementResult> mergedLinkablesBuilder =
+        ImmutableMap.builder();
 
-    ImmutableSet<APKModule> modules =
-        ImmutableSet.<APKModule>builder()
-            .addAll(linkables.keySet())
-            .addAll(linkablesAssets.keySet())
-            .build();
+    ImmutableSet<TargetCpuType> platforms = nativeLinkables.keySet();
 
-    Stream<? extends NativeLinkable> allModulesLinkables = Stream.empty();
-    ImmutableSet.Builder<NativeLinkable> linkableAssetSetBuilder = ImmutableSet.builder();
-    for (APKModule module : modules) {
-      allModulesLinkables = Stream.concat(allModulesLinkables, linkables.get(module).stream());
-      allModulesLinkables =
-          Stream.concat(allModulesLinkables, linkablesAssets.get(module).stream());
-      linkableAssetSetBuilder.addAll(linkablesAssets.get(module));
-    }
-
-    // Sort by build target here to ensure consistent behavior.
-    Iterable<NativeLinkable> allLinkables =
-        allModulesLinkables
-            .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
-            .collect(ImmutableList.toImmutableList());
-
-    ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
-    Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
-        makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetSet);
-
-    ImmutableSortedMap.Builder<String, String> sonameMapBuilder = ImmutableSortedMap.naturalOrder();
+    Map<String, String> sonameMapBuilder = new HashMap<>();
     ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder =
         ImmutableSetMultimap.builder();
-    makeSonameMap(
-        // sonames can *theoretically* differ per-platform, but right now they don't on Android,
-        // so just pick the first platform and use that to get all the sonames.
-        nativePlatforms.values().iterator().next().getCxxPlatform(),
-        linkableMembership,
-        sonameMapBuilder,
-        sonameTargetsBuilder,
-        graphBuilder);
-    builder.setSonameMapping(sonameMapBuilder.build());
+
+    SonameMapBuilder mapBuilder =
+        (isActuallyMerged, originalName, mergedName, targetName) -> {
+          if (isActuallyMerged) {
+            sonameMapBuilder.put(originalName, mergedName);
+          }
+          if (targetName.isPresent()) {
+            String actualName = isActuallyMerged ? mergedName : originalName;
+            sonameTargetsBuilder.put(actualName, targetName.get());
+          }
+        };
+
+    for (TargetCpuType cpuType : platforms) {
+      NativeLinkableEnhancementResult baseResult = nativeLinkables.get(cpuType);
+      CxxPlatform cxxPlatform = nativePlatforms.get(cpuType).getCxxPlatform();
+
+      Multimap<APKModule, NativeLinkable> linkables = baseResult.getNativeLinkables();
+      Multimap<APKModule, NativeLinkable> assetLinkables = baseResult.getNativeLinkableAssets();
+
+      ImmutableSet<APKModule> modules =
+          ImmutableSet.<APKModule>builder()
+              .addAll(linkables.keySet())
+              .addAll(assetLinkables.keySet())
+              .build();
+
+      Stream<? extends NativeLinkable> allModulesLinkables = Stream.empty();
+      ImmutableSet.Builder<NativeLinkable> linkableAssetSetBuilder = ImmutableSet.builder();
+      for (APKModule module : modules) {
+        allModulesLinkables = Stream.concat(allModulesLinkables, linkables.get(module).stream());
+        allModulesLinkables =
+            Stream.concat(allModulesLinkables, assetLinkables.get(module).stream());
+        linkableAssetSetBuilder.addAll(assetLinkables.get(module));
+      }
+
+      // Sort by build target here to ensure consistent behavior.
+      Iterable<NativeLinkable> allLinkables =
+          allModulesLinkables
+              .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
+              .collect(ImmutableList.toImmutableList());
+
+      ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
+      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
+          makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetSet);
+
+      Iterable<MergedNativeLibraryConstituents> orderedConstituents =
+          getOrderedMergedConstituents(buildTarget, graphBuilder, linkableMembership);
+
+      Optional<NativeLinkable> glueLinkable = Optional.empty();
+      if (nativeLibraryMergeGlue.isPresent()) {
+        BuildRule rule = graphBuilder.getRule(nativeLibraryMergeGlue.get());
+        if (!(rule instanceof NativeLinkableGroup)) {
+          throw new RuntimeException(
+              "Native library merge glue "
+                  + rule.getBuildTarget()
+                  + " for application "
+                  + buildTarget
+                  + " is not linkable.");
+        }
+        glueLinkable =
+            Optional.of(((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder));
+      }
+
+      Set<MergedLibNativeLinkable> mergedLinkables =
+          createLinkables(
+              nativePlatforms.get(cpuType).getCxxPlatform(),
+              cellPathResolver,
+              cxxBuckConfig,
+              graphBuilder,
+              buildTarget,
+              projectFilesystem,
+              glueLinkable,
+              nativeLibraryMergeLocalizedSymbols.map(ImmutableSortedSet::copyOf),
+              orderedConstituents);
+
+      ImmutableMap.Builder<NativeLinkable, APKModule> linkableToModuleMapBuilder =
+          ImmutableMap.builder();
+      for (Map.Entry<APKModule, NativeLinkable> entry : linkables.entries()) {
+        linkableToModuleMapBuilder.put(entry.getValue(), entry.getKey());
+      }
+      for (Map.Entry<APKModule, NativeLinkable> entry : assetLinkables.entries()) {
+        linkableToModuleMapBuilder.put(entry.getValue(), entry.getKey());
+      }
+      ImmutableMap<NativeLinkable, APKModule> linkableToModuleMap =
+          linkableToModuleMapBuilder.build();
+
+      ImmutableMultimap.Builder<APKModule, NativeLinkable> moduleLinkablesBuilder =
+          ImmutableListMultimap.builder();
+      ImmutableMultimap.Builder<APKModule, NativeLinkable> moduleAssetLinkablesBuilder =
+          ImmutableListMultimap.builder();
+
+      for (MergedLibNativeLinkable linkable : mergedLinkables) {
+        APKModule module = getModuleForLinkable(linkable, linkableToModuleMap);
+        if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetSet)) {
+          moduleLinkablesBuilder.put(module, linkable);
+        } else if (linkableAssetSet.containsAll(linkable.constituents.getLinkables())) {
+          moduleAssetLinkablesBuilder.put(module, linkable);
+        }
+
+        for (NativeLinkable constituent : linkable.constituents.getLinkables()) {
+          constituent
+              .getSharedLibraries(graphBuilder)
+              .forEach(
+                  (soname, libraryPath) -> {
+                    Optional<String> targetName =
+                        libraryPath instanceof BuildTargetSourcePath
+                            ? Optional.of(
+                                ((BuildTargetSourcePath) libraryPath)
+                                    .getTarget()
+                                    .getUnflavoredBuildTarget()
+                                    .toString())
+                            : Optional.empty();
+
+                    mapBuilder.accept(
+                        linkable.constituents.isActuallyMerged(),
+                        soname,
+                        linkable.getSoname(),
+                        targetName);
+                  });
+        }
+      }
+
+      mergedLinkablesBuilder.put(
+          cpuType,
+          NativeLinkableEnhancementResult.of(
+              moduleLinkablesBuilder.build(), moduleAssetLinkablesBuilder.build()));
+    }
+
     ImmutableSortedMap.Builder<String, ImmutableSortedSet<String>> finalSonameTargetsBuilder =
         ImmutableSortedMap.naturalOrder();
     sonameTargetsBuilder
         .build()
         .asMap()
         .forEach((k, v) -> finalSonameTargetsBuilder.put(k, ImmutableSortedSet.copyOf(v)));
-    builder.setSharedObjectTargets(finalSonameTargetsBuilder.build());
 
-    Iterable<MergedNativeLibraryConstituents> orderedConstituents =
-        getOrderedMergedConstituents(buildTarget, graphBuilder, linkableMembership);
-
-    Optional<NativeLinkable> glueLinkable = Optional.empty();
-    if (nativeLibraryMergeGlue.isPresent()) {
-      BuildRule rule = graphBuilder.getRule(nativeLibraryMergeGlue.get());
-      if (!(rule instanceof NativeLinkable)) {
-        throw new RuntimeException(
-            "Native library merge glue "
-                + rule.getBuildTarget()
-                + " for application "
-                + buildTarget
-                + " is not linkable.");
-      }
-      glueLinkable = Optional.of(((NativeLinkable) rule));
-    }
-
-    Set<MergedLibNativeLinkable> mergedLinkables =
-        createLinkables(
-            cellPathResolver,
-            cxxBuckConfig,
-            graphBuilder,
-            pathResolver,
-            ruleFinder,
-            buildTarget,
-            projectFilesystem,
-            glueLinkable,
-            nativeLibraryMergeLocalizedSymbols.map(ImmutableSortedSet::copyOf),
-            orderedConstituents);
-
-    ImmutableMap.Builder<NativeLinkable, APKModule> linkableToModuleMapBuilder =
-        ImmutableMap.builder();
-    for (Map.Entry<APKModule, NativeLinkable> entry : linkables.entries()) {
-      linkableToModuleMapBuilder.put(entry.getValue(), entry.getKey());
-    }
-    for (Map.Entry<APKModule, NativeLinkable> entry : linkablesAssets.entries()) {
-      linkableToModuleMapBuilder.put(entry.getValue(), entry.getKey());
-    }
-    ImmutableMap<NativeLinkable, APKModule> linkableToModuleMap =
-        linkableToModuleMapBuilder.build();
-
-    for (MergedLibNativeLinkable linkable : mergedLinkables) {
-      APKModule module = getModuleForLinkable(linkable, linkableToModuleMap);
-      if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetSet)) {
-        builder.putMergedLinkables(module, linkable);
-      } else if (linkableAssetSet.containsAll(linkable.constituents.getLinkables())) {
-        builder.putMergedLinkablesAssets(module, linkable);
-      }
-    }
-
-    return builder.build();
+    return ImmutableNativeLibraryMergeEnhancementResult.of(
+        mergedLinkablesBuilder.build(),
+        ImmutableSortedMap.copyOf(sonameMapBuilder),
+        finalSonameTargetsBuilder.build());
   }
 
   private static APKModule getModuleForLinkable(
@@ -248,7 +293,7 @@ class NativeLibraryMergeEnhancer {
             .append(linkable)
             .append(" has inconsistent application module mappings: ");
         for (NativeLinkable innerConstituent : linkable.constituents.getLinkables()) {
-          APKModule innerConstituentModule = linkableToModuleMap.get(constituent);
+          APKModule innerConstituentModule = linkableToModuleMap.get(innerConstituent);
           sb.append(innerConstituent).append(" -> ").append(innerConstituentModule).append(", ");
         }
         throw new RuntimeException(
@@ -258,7 +303,7 @@ class NativeLibraryMergeEnhancer {
                 + sb);
       }
     }
-    return Preconditions.checkNotNull(module);
+    return Objects.requireNonNull(module);
   }
 
   private static Map<NativeLinkable, MergedNativeLibraryConstituents> makeConstituentMap(
@@ -272,8 +317,8 @@ class NativeLibraryMergeEnhancer {
       String mergeSoname = mergeConfigEntry.getKey();
       List<Pattern> patterns = mergeConfigEntry.getValue();
 
-      MergedNativeLibraryConstituents.Builder constituentsBuilder =
-          MergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
+      ImmutableMergedNativeLibraryConstituents.Builder constituentsBuilder =
+          ImmutableMergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
 
       for (Pattern pattern : patterns) {
         for (NativeLinkable linkable : allLinkables) {
@@ -294,9 +339,9 @@ class NativeLibraryMergeEnhancer {
 
       for (NativeLinkable linkable : constituents.getLinkables()) {
         if (linkableMembership.containsKey(linkable)) {
-          throw new RuntimeException(
+          throw new HumanReadableException(
               String.format(
-                  "When processing %s, attempted to merge %s into both %s and %s",
+                  "Error: When processing %s, attempted to merge %s into both %s and %s",
                   buildTarget, linkable, linkableMembership.get(linkable), constituents));
         }
         linkableMembership.put(linkable, constituents);
@@ -311,7 +356,7 @@ class NativeLibraryMergeEnhancer {
         StringBuilder sb = new StringBuilder();
         sb.append(
             String.format(
-                "When processing %s, merged lib '%s' contains both asset and non-asset libraries.\n",
+                "Error: When processing %s, merged lib '%s' contains both asset and non-asset libraries.\n",
                 buildTarget, constituents));
         for (NativeLinkable linkable : constituents.getLinkables()) {
           sb.append(
@@ -319,53 +364,33 @@ class NativeLibraryMergeEnhancer {
                   "  %s -> %s\n",
                   linkable, linkableAssetSet.contains(linkable) ? "asset" : "not asset"));
         }
-        throw new RuntimeException(sb.toString());
+        throw new HumanReadableException(sb.toString());
       }
     }
 
     for (NativeLinkable linkable : allLinkables) {
       if (!linkableMembership.containsKey(linkable)) {
         linkableMembership.put(
-            linkable, MergedNativeLibraryConstituents.builder().addLinkables(linkable).build());
+            linkable,
+            ImmutableMergedNativeLibraryConstituents.builder().addLinkables(linkable).build());
       }
     }
     return linkableMembership;
   }
 
-  private static void makeSonameMap(
-      CxxPlatform anyAndroidCxxPlatform,
-      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership,
-      ImmutableSortedMap.Builder<String, String> sonameMapBuilder,
-      ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder,
-      ActionGraphBuilder graphBuilder) {
-    for (Map.Entry<NativeLinkable, MergedNativeLibraryConstituents> entry :
-        linkableMembership.entrySet()) {
-      Optional<String> mergedName = entry.getValue().getSoname();
-      for (Map.Entry<String, SourcePath> sonameEntry :
-          entry.getKey().getSharedLibraries(anyAndroidCxxPlatform, graphBuilder).entrySet()) {
-        String origName = sonameEntry.getKey();
-        SourcePath sourcePath = sonameEntry.getValue();
-        boolean isActuallyMerged = entry.getValue().isActuallyMerged();
-        if (isActuallyMerged) {
-          sonameMapBuilder.put(origName, mergedName.get());
-        }
-        if (sourcePath instanceof BuildTargetSourcePath) {
-          String actualName = isActuallyMerged ? mergedName.get() : origName;
-          sonameTargetsBuilder.put(
-              actualName,
-              ((BuildTargetSourcePath) sourcePath)
-                  .getTarget()
-                  .getUnflavoredBuildTarget()
-                  .toString());
-        }
-      }
-    }
+  /** A simple helper interface for building the soname map. */
+  interface SonameMapBuilder {
+    void accept(
+        boolean isActuallyMerged,
+        String originalName,
+        String mergedName,
+        Optional<String> targetName);
   }
 
   /** Topo-sort the constituents objects so we can process deps first. */
   private static Iterable<MergedNativeLibraryConstituents> getOrderedMergedConstituents(
       BuildTarget buildTarget,
-      BuildRuleResolver ruleResolver,
+      ActionGraphBuilder graphBuilder,
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership) {
     MutableDirectedGraph<MergedNativeLibraryConstituents> graph = new MutableDirectedGraph<>();
     for (MergedNativeLibraryConstituents constituents : linkableMembership.values()) {
@@ -374,11 +399,11 @@ class NativeLibraryMergeEnhancer {
         // For each dep of each constituent of each merged lib...
         for (NativeLinkable dep :
             Iterables.concat(
-                constituentLinkable.getNativeLinkableDeps(ruleResolver),
-                constituentLinkable.getNativeLinkableExportedDeps(ruleResolver))) {
+                constituentLinkable.getNativeLinkableDeps(graphBuilder),
+                constituentLinkable.getNativeLinkableExportedDeps(graphBuilder))) {
           // If that dep is in a different merged lib, add a dependency.
           MergedNativeLibraryConstituents mergedDep =
-              Preconditions.checkNotNull(linkableMembership.get(dep));
+              Objects.requireNonNull(linkableMembership.get(dep));
           if (mergedDep != constituents) {
             graph.addEdge(constituents, mergedDep);
           }
@@ -392,10 +417,7 @@ class NativeLibraryMergeEnhancer {
     for (ImmutableSet<MergedNativeLibraryConstituents> fullCycle : graph.findCycles()) {
       HashSet<MergedNativeLibraryConstituents> partialCycle = new LinkedHashSet<>();
       MergedNativeLibraryConstituents item = fullCycle.iterator().next();
-      while (true) {
-        if (partialCycle.contains(item)) {
-          break;
-        }
+      while (!partialCycle.contains(item)) {
         partialCycle.add(item);
         item =
             Sets.intersection(ImmutableSet.copyOf(graph.getOutgoingNodesFor(item)), fullCycle)
@@ -404,7 +426,9 @@ class NativeLibraryMergeEnhancer {
       }
 
       StringBuilder cycleString = new StringBuilder().append("[ ");
+      StringBuilder depString = new StringBuilder();
       boolean foundStart = false;
+      MergedNativeLibraryConstituents prevMember = null;
       for (MergedNativeLibraryConstituents member : partialCycle) {
         if (member == item) {
           foundStart = true;
@@ -413,26 +437,87 @@ class NativeLibraryMergeEnhancer {
           cycleString.append(member);
           cycleString.append(" -> ");
         }
+        if (prevMember != null) {
+          Set<Pair<String, String>> depEdges =
+              getRuleDependencies(graphBuilder, linkableMembership, prevMember, member);
+          depString.append(formatRuleDependencies(depEdges, prevMember, member));
+        }
+        prevMember = member;
       }
       cycleString.append(item);
       cycleString.append(" ]");
-      throw new RuntimeException(
-          "Dependency cycle detected when merging native libs for "
+
+      Set<Pair<String, String>> depEdges =
+          getRuleDependencies(
+              graphBuilder, linkableMembership, Objects.requireNonNull(prevMember), item);
+      depString.append(formatRuleDependencies(depEdges, Objects.requireNonNull(prevMember), item));
+
+      throw new HumanReadableException(
+          "Error: Dependency cycle detected when merging native libs for "
               + buildTarget
               + ": "
-              + cycleString);
+              + cycleString
+              + "\n"
+              + depString);
     }
 
     return TopologicalSort.sort(graph);
   }
 
+  /**
+   * Calculates the actual target dependency edges between two merged libraries. Returns them as
+   * strings for printing.
+   */
+  private static Set<Pair<String, String>> getRuleDependencies(
+      ActionGraphBuilder graphBuilder,
+      Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership,
+      MergedNativeLibraryConstituents from,
+      MergedNativeLibraryConstituents to) {
+
+    // We do this work again because we want to avoid storing extraneous information on the
+    // normal path. We know we're iterating over a cycle, so we can afford to do some work to
+    // figure out the actual targets causing it.
+    Set<Pair<String, String>> buildTargets = new LinkedHashSet<>();
+    for (NativeLinkable sourceLinkable : from.getLinkables()) {
+      for (NativeLinkable targetLinkable :
+          Iterables.concat(
+              sourceLinkable.getNativeLinkableDeps(graphBuilder),
+              sourceLinkable.getNativeLinkableExportedDeps(graphBuilder))) {
+        if (linkableMembership.get(targetLinkable) == to) {
+          // Normalize to string names for printing.
+          buildTargets.add(
+              new Pair<>(
+                  sourceLinkable.getBuildTarget().toString(),
+                  targetLinkable.getBuildTarget().toString()));
+        }
+      }
+    }
+    return buildTargets;
+  }
+
+  private static String formatRuleDependencies(
+      Set<Pair<String, String>> edges,
+      MergedNativeLibraryConstituents from,
+      MergedNativeLibraryConstituents to) {
+    StringBuilder depString = new StringBuilder();
+    depString.append("Dependencies between ").append(from).append(" and ").append(to).append(":\n");
+    for (Pair<String, String> ruleEdge : edges) {
+      depString
+          .append("  ")
+          .append(ruleEdge.getFirst())
+          .append(" -> ")
+          .append(ruleEdge.getSecond())
+          .append("\n");
+    }
+    return depString.toString();
+  }
+
   /** Create the final Linkables that will be passed to the later stages of graph enhancement. */
   private static Set<MergedLibNativeLinkable> createLinkables(
+      CxxPlatform cxxPlatform,
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       Optional<NativeLinkable> glueLinkable,
@@ -454,19 +539,16 @@ class NativeLibraryMergeEnhancer {
       if (!constituents.isActuallyMerged()) {
         // There is only one target
         BuildTarget target = preMergeLibs.iterator().next().getBuildTarget();
-        if (!target.getCellPath().equals(projectFilesystem.getRootPath())) {
-          // Switch the target project filesystem
-          targetProjectFilesystem = graphBuilder.getRule(target).getProjectFilesystem();
-        }
+        // Switch the target project filesystem
+        targetProjectFilesystem = graphBuilder.getRule(target).getProjectFilesystem();
       }
 
       MergedLibNativeLinkable mergedLinkable =
           new MergedLibNativeLinkable(
+              cxxPlatform,
               cellPathResolver,
               cxxBuckConfig,
               graphBuilder,
-              pathResolver,
-              ruleFinder,
               baseBuildTarget,
               targetProjectFilesystem,
               constituents,
@@ -495,7 +577,7 @@ class NativeLibraryMergeEnhancer {
       Function<NativeLinkable, Iterable<? extends NativeLinkable>> depType,
       Map<NativeLinkable, MergedLibNativeLinkable> alreadyMerged) {
     // Using IdentityHashMap as a hash set.
-    Map<MergedLibNativeLinkable, Void> structuralDeps = new HashMap<>();
+    Map<MergedLibNativeLinkable, Unit> structuralDeps = new HashMap<>();
     for (NativeLinkable linkable : constituents.getLinkables()) {
       for (NativeLinkable dep : depType.apply(linkable)) {
         MergedLibNativeLinkable mappedDep = alreadyMerged.get(dep);
@@ -507,13 +589,11 @@ class NativeLibraryMergeEnhancer {
           throw new RuntimeException(
               "Can't find mapped dep of " + dep + " for " + linkable + ".  This is a bug.");
         }
-        structuralDeps.put(mappedDep, null);
+        structuralDeps.put(mappedDep, Unit.UNIT);
       }
     }
     // Sort here to ensure consistent ordering, because the build target depends on the order.
-    return structuralDeps
-        .keySet()
-        .stream()
+    return structuralDeps.keySet().stream()
         .sorted(Comparator.comparing(MergedLibNativeLinkable::getBuildTarget))
         .collect(ImmutableList.toImmutableList());
   }
@@ -522,10 +602,9 @@ class NativeLibraryMergeEnhancer {
    * Data object for internal use, representing the source libraries getting merged together into
    * one DSO. Libraries not being merged will have one linkable and no soname.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractMergedNativeLibraryConstituents
-      implements Comparable<AbstractMergedNativeLibraryConstituents> {
+  @BuckStyleValueWithBuilder
+  abstract static class MergedNativeLibraryConstituents
+      implements Comparable<MergedNativeLibraryConstituents> {
     public abstract Optional<String> getSoname();
 
     public abstract ImmutableSet<NativeLinkable> getLinkables();
@@ -553,21 +632,24 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public int compareTo(AbstractMergedNativeLibraryConstituents other) {
+    public int compareTo(MergedNativeLibraryConstituents other) {
       return toString().compareTo(other.toString());
     }
   }
 
-  @Value.Immutable(copy = true)
-  @BuckStyleImmutable
-  abstract static class AbstractNativeLibraryMergeEnhancementResult {
-    public abstract ImmutableMultimap<APKModule, NativeLinkable> getMergedLinkables();
+  /** A data object to hold the result of native library merge enhancement. */
+  @BuckStyleValue
+  abstract static class NativeLibraryMergeEnhancementResult {
+    /** A {@link NativeLinkableEnhancementResult} for each cpu type. */
+    public abstract ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult>
+        getMergedLinkables();
 
-    public abstract ImmutableMultimap<APKModule, NativeLinkable> getMergedLinkablesAssets();
-
+    /** Contains a map of original soname to merged soname. */
     public abstract ImmutableSortedMap<String, String> getSonameMapping();
 
-    /** This is for human consumption only. */
+    /**
+     * This is for human consumption only. It records all the build targets merged into each lib.
+     */
     public abstract ImmutableSortedMap<String, ImmutableSortedSet<String>> getSharedObjectTargets();
   }
 
@@ -576,10 +658,9 @@ class NativeLibraryMergeEnhancer {
    * enhancement. It represents a single merged library.
    */
   private static class MergedLibNativeLinkable implements NativeLinkable {
+    private final CxxPlatform cxxPlatform;
     private final CxxBuckConfig cxxBuckConfig;
     private final ActionGraphBuilder graphBuilder;
-    private final SourcePathResolver pathResolver;
-    private final SourcePathRuleFinder ruleFinder;
     private final ProjectFilesystem projectFilesystem;
     private final MergedNativeLibraryConstituents constituents;
     private final Optional<NativeLinkable> glueLinkable;
@@ -591,11 +672,10 @@ class NativeLibraryMergeEnhancer {
     // Note: update constructBuildTarget whenever updating new fields.
 
     MergedLibNativeLinkable(
+        CxxPlatform cxxPlatform,
         CellPathResolver cellPathResolver,
         CxxBuckConfig cxxBuckConfig,
         ActionGraphBuilder graphBuilder,
-        SourcePathResolver pathResolver,
-        SourcePathRuleFinder ruleFinder,
         BuildTarget baseBuildTarget,
         ProjectFilesystem projectFilesystem,
         MergedNativeLibraryConstituents constituents,
@@ -603,11 +683,10 @@ class NativeLibraryMergeEnhancer {
         List<MergedLibNativeLinkable> orderedExportedDeps,
         Optional<NativeLinkable> glueLinkable,
         Optional<ImmutableSortedSet<String>> symbolsToLocalize) {
+      this.cxxPlatform = cxxPlatform;
       this.cellPathResolver = cellPathResolver;
       this.cxxBuckConfig = cxxBuckConfig;
       this.graphBuilder = graphBuilder;
-      this.pathResolver = pathResolver;
-      this.ruleFinder = ruleFinder;
       this.projectFilesystem = projectFilesystem;
       this.constituents = constituents;
       this.glueLinkable = glueLinkable;
@@ -666,12 +745,12 @@ class NativeLibraryMergeEnhancer {
     }
 
     // TODO(dreiss): Maybe cache this and other methods?  Would have to be per-platform.
-    String getSoname(CxxPlatform platform) {
+    String getSoname() {
       if (constituents.isActuallyMerged()) {
         return constituents.getSoname().get();
       }
       ImmutableMap<String, SourcePath> shared =
-          constituents.getLinkables().iterator().next().getSharedLibraries(platform, graphBuilder);
+          constituents.getLinkables().iterator().next().getSharedLibraries(graphBuilder);
       Preconditions.checkState(shared.size() == 1);
       return shared.keySet().iterator().next();
     }
@@ -698,14 +777,12 @@ class NativeLibraryMergeEnhancer {
         // If we're merging, construct a base target in the app's directory.
         // This ensure that all apps in this directory will
         // have a chance to share the target.
-        UnflavoredBuildTarget baseUnflavored = baseBuildTarget.getUnflavoredBuildTarget();
-        UnflavoredBuildTarget unflavored =
-            ImmutableUnflavoredBuildTarget.builder()
-                .from(baseUnflavored)
-                .setShortName(
-                    "merged_lib_" + Flavor.replaceInvalidCharacters(constituents.getSoname().get()))
-                .build();
-        initialTarget = ImmutableBuildTarget.of(unflavored);
+        initialTarget =
+            baseBuildTarget
+                .withoutFlavors()
+                .withShortName(
+                    "merged_lib_"
+                        + Flavor.replaceInvalidCharacters(constituents.getSoname().get()));
       }
 
       // Two merged libs (for different apps) can have the same constituents,
@@ -757,27 +834,14 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
-        BuildRuleResolver ruleResolver) {
-      return getMappedDeps(x -> x.getNativeLinkableDeps(ruleResolver));
+        ActionGraphBuilder graphBuilder) {
+      return getMappedDeps(x -> x.getNativeLinkableDeps(graphBuilder));
     }
 
     @Override
     public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
-        BuildRuleResolver ruleResolver) {
-      return getMappedDeps(x -> x.getNativeLinkableExportedDeps(ruleResolver));
-    }
-
-    @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableDepsForPlatform(
-        CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-      return getMappedDeps(l -> l.getNativeLinkableDepsForPlatform(cxxPlatform, ruleResolver));
-    }
-
-    @Override
-    public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
-        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-      return getMappedDeps(
-          l -> l.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
+        ActionGraphBuilder graphBuilder) {
+      return getMappedDeps(x -> x.getNativeLinkableExportedDeps(graphBuilder));
     }
 
     private Iterable<? extends NativeLinkable> getMappedDeps(
@@ -788,7 +852,7 @@ class NativeLibraryMergeEnhancer {
         for (NativeLinkable dep : depType.apply(linkable)) {
           // Don't try to depend on ourselves.
           if (!constituents.getLinkables().contains(dep)) {
-            builder.add(Preconditions.checkNotNull(mergedDepMap.get(dep)));
+            builder.add(Objects.requireNonNull(mergedDepMap.get(dep)));
           }
         }
       }
@@ -798,10 +862,10 @@ class NativeLibraryMergeEnhancer {
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
-        CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ActionGraphBuilder graphBuilder) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration) {
 
       // This path gets taken for a force-static library.
       if (type == Linker.LinkableDepType.STATIC_PIC) {
@@ -809,7 +873,7 @@ class NativeLibraryMergeEnhancer {
         for (NativeLinkable linkable : constituents.getLinkables()) {
           builder.add(
               linkable.getNativeLinkableInput(
-                  cxxPlatform, Linker.LinkableDepType.STATIC_PIC, graphBuilder));
+                  Linker.LinkableDepType.STATIC_PIC, graphBuilder, targetConfiguration));
         }
         return NativeLinkableInput.concat(builder.build());
       }
@@ -818,9 +882,7 @@ class NativeLibraryMergeEnhancer {
       Preconditions.checkArgument(type == Linker.LinkableDepType.SHARED);
 
       ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-      // TODO(dreiss): Should we cache the output of getSharedLibraries per-platform?
-      ImmutableMap<String, SourcePath> sharedLibraries =
-          getSharedLibraries(cxxPlatform, graphBuilder);
+      ImmutableMap<String, SourcePath> sharedLibraries = getSharedLibraries(graphBuilder);
       for (SourcePath sharedLib : sharedLibraries.values()) {
         // If we have a shared library, our dependents should link against it.
         // Might be multiple shared libraries if prebuilts are included.
@@ -829,36 +891,28 @@ class NativeLibraryMergeEnhancer {
 
       // If our constituents have exported linker flags, our dependents should use them.
       for (NativeLinkable linkable : constituents.getLinkables()) {
-        if (linkable instanceof CxxLibrary) {
-          argsBuilder.addAll(
-              ((CxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform, graphBuilder));
-        } else if (linkable instanceof PrebuiltCxxLibrary) {
-          argsBuilder.addAll(
-              StringArg.from(((PrebuiltCxxLibrary) linkable).getExportedLinkerFlags(cxxPlatform)));
-        }
+        argsBuilder.addAll(linkable.getExportedLinkerFlags(graphBuilder));
       }
 
       // If our constituents have post exported linker flags, our dependents should use them.
       for (NativeLinkable linkable : constituents.getLinkables()) {
-        if (linkable instanceof CxxLibrary) {
-          argsBuilder.addAll(
-              ((CxxLibrary) linkable).getExportedPostLinkerFlags(cxxPlatform, graphBuilder));
-        } else if (linkable instanceof PrebuiltCxxLibrary) {
-          argsBuilder.addAll(
-              StringArg.from(
-                  ((PrebuiltCxxLibrary) linkable).getExportedPostLinkerFlags(cxxPlatform)));
-        }
+        argsBuilder.addAll(linkable.getExportedPostLinkerFlags(graphBuilder));
       }
 
-      return NativeLinkableInput.of(argsBuilder.build(), ImmutableList.of(), ImmutableList.of());
+      return NativeLinkableInput.of(argsBuilder.build(), ImmutableSet.of(), ImmutableSet.of());
+    }
+
+    @Override
+    public Optional<NativeLinkTarget> getNativeLinkTarget(
+        ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
+      return Optional.empty();
     }
 
     private NativeLinkableInput getImmediateNativeLinkableInput(
         CxxPlatform cxxPlatform,
         ActionGraphBuilder graphBuilder,
-        SourcePathResolver pathResolver,
-        SourcePathRuleFinder ruleFinder) {
-      Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+        TargetConfiguration targetConfiguration) {
+      Linker linker = cxxPlatform.getLd().resolve(graphBuilder, targetConfiguration);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
       if (glueLinkable.isPresent() && constituents.isActuallyMerged()) {
@@ -866,28 +920,34 @@ class NativeLibraryMergeEnhancer {
       }
 
       for (NativeLinkable linkable : Iterables.concat(usingGlue, constituents.getLinkables())) {
-        if (linkable instanceof NativeLinkTarget) {
+        Optional<NativeLinkTarget> nativeLinkTarget =
+            linkable.getNativeLinkTarget(graphBuilder, true);
+        if (nativeLinkTarget.isPresent()) {
           // If this constituent is a NativeLinkTarget, use its input to get raw objects and
           // linker flags.
           builder.add(
-              ((NativeLinkTarget) linkable)
-                  .getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver, ruleFinder));
+              nativeLinkTarget
+                  .get()
+                  .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver()));
         } else {
           // Otherwise, just get the static pic output.
           NativeLinkableInput staticPic =
               linkable.getNativeLinkableInput(
-                  cxxPlatform, Linker.LinkableDepType.STATIC_PIC, graphBuilder);
+                  Linker.LinkableDepType.STATIC_PIC, graphBuilder, targetConfiguration);
           builder.add(
               staticPic.withArgs(
-                  FluentIterable.from(staticPic.getArgs())
-                      .transformAndConcat(arg -> linker.linkWhole(arg, pathResolver))));
+                  ImmutableList.copyOf(
+                      FluentIterable.from(staticPic.getArgs())
+                          .transformAndConcat(
+                              arg ->
+                                  linker.linkWhole(arg, graphBuilder.getSourcePathResolver())))));
         }
       }
       return NativeLinkableInput.concat(builder.build());
     }
 
     @Override
-    public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    public NativeLinkableGroup.Linkage getPreferredLinkage() {
       // If we have any non-static constituents, our preferred linkage is shared
       // (because stuff in Android is shared by default).  That's the common case.
       // If *all* of our constituents are force_static=True, we will also be preferred static.
@@ -895,33 +955,28 @@ class NativeLibraryMergeEnhancer {
       // It's also possible that multiple force_static libs could be merged,
       // but that has no effect.
       for (NativeLinkable linkable : constituents.getLinkables()) {
-        if (linkable.getPreferredLinkage(cxxPlatform, graphBuilder) != Linkage.STATIC) {
-          return Linkage.SHARED;
+        if (linkable.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC) {
+          return NativeLinkableGroup.Linkage.SHARED;
         }
       }
 
-      return Linkage.STATIC;
+      return NativeLinkableGroup.Linkage.STATIC;
     }
 
     @Override
-    public ImmutableMap<String, SourcePath> getSharedLibraries(
-        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-      if (getPreferredLinkage(cxxPlatform, graphBuilder) == Linkage.STATIC) {
+    public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
+      if (getPreferredLinkage() == NativeLinkableGroup.Linkage.STATIC) {
         return ImmutableMap.of();
       }
 
       ImmutableMap<String, SourcePath> originalSharedLibraries =
-          constituents
-              .getLinkables()
-              .iterator()
-              .next()
-              .getSharedLibraries(cxxPlatform, graphBuilder);
+          constituents.getLinkables().iterator().next().getSharedLibraries(graphBuilder);
       if (canUseOriginal
           || (!constituents.isActuallyMerged() && originalSharedLibraries.isEmpty())) {
         return originalSharedLibraries;
       }
 
-      String soname = getSoname(cxxPlatform);
+      String soname = getSoname();
       BuildRule rule =
           graphBuilder.computeIfAbsent(
               getBuildTargetForPlatform(cxxPlatform),
@@ -931,31 +986,34 @@ class NativeLibraryMergeEnhancer {
                       cxxPlatform,
                       projectFilesystem,
                       graphBuilder,
-                      pathResolver,
-                      ruleFinder,
                       target,
                       Linker.LinkType.SHARED,
                       Optional.of(soname),
-                      BuildTargetPaths.getGenPath(
-                          projectFilesystem, target, "%s/" + getSoname(cxxPlatform)),
+                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/" + getSoname()),
                       ImmutableList.of(),
                       // Android Binaries will use share deps by default.
                       Linker.LinkableDepType.SHARED,
+                      Optional.empty(),
                       CxxLinkOptions.of(),
                       Iterables.concat(
-                          getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
-                          getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder)),
+                          getNativeLinkableDeps(graphBuilder),
+                          getNativeLinkableExportedDeps(graphBuilder)),
                       Optional.empty(),
                       Optional.empty(),
                       ImmutableSet.of(),
                       ImmutableSet.of(),
                       getImmediateNativeLinkableInput(
-                          cxxPlatform, graphBuilder, pathResolver, ruleFinder),
+                          cxxPlatform, graphBuilder, target.getTargetConfiguration()),
                       constituents.isActuallyMerged()
                           ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
                           : Optional.empty(),
                       cellPathResolver));
-      return ImmutableMap.of(soname, rule.getSourcePathToOutput());
+      return ImmutableMap.of(soname, Objects.requireNonNull(rule.getSourcePathToOutput()));
+    }
+
+    @Override
+    public boolean shouldBeLinkedInAppleTestAndHost() {
+      return false;
     }
   }
 

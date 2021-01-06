@@ -1,21 +1,24 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.concurrent;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +32,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
+import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -36,6 +41,27 @@ public class MoreFutures {
 
   /** Utility class: do not instantiate. */
   private MoreFutures() {}
+
+  /**
+   * Combine the {@param first} and {@param second} listenable futures, returning a listenable
+   * future that wraps the result of these futures as a {@link Pair}.
+   */
+  public static <U, V> ListenableFuture<Pair<U, V>> combinedFutures(
+      ListenableFuture<U> first,
+      ListenableFuture<V> second,
+      ListeningExecutorService executorService) {
+
+    Callable<Pair<U, V>> pairComputation =
+        new Callable<Pair<U, V>>() {
+          @Override
+          public Pair<U, V> call() throws Exception {
+            return new Pair<U, V>(first.get(), second.get());
+          }
+        };
+    ListenableFuture<Pair<U, V>> pairFuture =
+        Futures.whenAllSucceed(first, second).call(pairComputation, executorService);
+    return pairFuture;
+  }
 
   /**
    * Invoke multiple callables on the provided executor and wait for all to return successfully. An
@@ -114,9 +140,10 @@ public class MoreFutures {
     }
   }
 
-  public static <V> ListenableFuture<Void> addListenableCallback(
+  /** Add a callback to a listenable future */
+  public static <V> ListenableFuture<Unit> addListenableCallback(
       ListenableFuture<V> future, FutureCallback<? super V> callback, Executor executor) {
-    SettableFuture<Void> waiter = SettableFuture.create();
+    SettableFuture<Unit> waiter = SettableFuture.create();
     Futures.addCallback(
         future,
         new FutureCallback<V>() {
@@ -127,7 +154,7 @@ public class MoreFutures {
             } catch (Throwable thrown) {
               waiter.setException(thrown);
             } finally {
-              waiter.set(null);
+              waiter.set(Unit.UNIT);
             }
           }
 
@@ -138,12 +165,32 @@ public class MoreFutures {
             } catch (Throwable thrown) {
               waiter.setException(thrown);
             } finally {
-              waiter.set(null);
+              waiter.set(Unit.UNIT);
             }
           }
         },
         executor);
     return waiter;
+  }
+
+  /**
+   * Waits for the given future to complete and returns the result. On interrupt, this method throws
+   * {@link CancellationException}. All exceptions thrown are wrapped with {@link
+   * com.facebook.buck.core.exceptions.BuckUncheckedExecutionException}
+   *
+   * @param future the {@link Future} to wait for
+   * @param <V> the result type of the {@link Future}
+   * @return the result of the {@link Future} when completed
+   */
+  public static <V> V getUncheckedInterruptibly(Future<V> future) {
+    try {
+      return future.get();
+    } catch (InterruptedException e) {
+      throw new CancellationException(
+          String.format("Future was cancelled with InterruptedException: %s", e));
+    } catch (ExecutionException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
   }
 
   public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {
@@ -158,15 +205,23 @@ public class MoreFutures {
    *     error.
    */
   public static <V> FutureCallback<V> finallyCallback(Runnable runnable) {
+    return finallyCallback(ignored -> runnable.run());
+  }
+
+  /**
+   * @return a {@link FutureCallback} which executes the given {@link Consumer} on both success and
+   *     error. This just makes it simpler to add unconditional callbacks.
+   */
+  public static <V> FutureCallback<V> finallyCallback(Consumer<ListenableFuture<V>> callable) {
     return new FutureCallback<V>() {
       @Override
       public void onSuccess(@Nullable V result) {
-        runnable.run();
+        callable.accept(Futures.immediateFuture(result));
       }
 
       @Override
       public void onFailure(@Nonnull Throwable t) {
-        runnable.run();
+        callable.accept(Futures.immediateFailedFuture(t));
       }
     };
   }

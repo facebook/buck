@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -21,6 +21,8 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,11 +39,11 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.jvm.java.testutil.Bootclasspath;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -56,6 +58,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -109,17 +112,35 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
   private ProjectWorkspace workspace;
 
-  private ProjectFilesystem filesystem;
-
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+  }
+
+  @Test
+  public void testBootclasspathIsPassedCorrectly() throws IOException {
+    setUpProjectWorkspaceForScenario("bootclasspath");
+    workspace.addBuckConfigLocalOption(
+        "java",
+        "bootclasspath-8",
+        Joiner.on(":").join("boot.jar", "other.jar", Bootclasspath.getJdk8StubJarPath()));
+    ProcessResult processResult =
+        workspace.runBuckBuild(
+            "--config",
+            "java.source_level=8",
+            "--config",
+            "java.target_level=8",
+            "-v",
+            "5",
+            "//:lib");
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(), allOf(containsString("boot.jar"), containsString("other.jar")));
   }
 
   @Test
   public void testBuildJavaLibraryWithoutSrcsAndVerifyAbi()
-      throws InterruptedException, IOException, CompressorException {
+      throws IOException, CompressorException {
     setUpProjectWorkspaceForScenario("abi");
     workspace.enableDirCache();
 
@@ -127,7 +148,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:no_srcs");
     ProcessResult buildResult = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
-    Path outputPath = CompilerOutputPaths.of(target, filesystem).getOutputJarPath().get();
+    Path outputPath =
+        CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getOutputJarPath().get();
     Path outputFile = workspace.getPath(outputPath);
     assertTrue(Files.exists(outputFile));
     // TODO(mbolin): When we produce byte-for-byte identical JAR files across builds, do:
@@ -141,7 +163,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.verify();
 
     // Verify the build cache.
-    Path buildCache = workspace.getPath(filesystem.getBuckPaths().getCacheDir());
+    Path buildCache =
+        workspace.getPath(workspace.getProjectFileSystem().getBuckPaths().getCacheDir());
     assertTrue(Files.isDirectory(buildCache));
 
     ArtifactCache dirCache =
@@ -174,15 +197,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     // Run `buck build` again.
     ProcessResult buildResult2 = workspace.runBuckCommand("build", target.getFullyQualifiedName());
-    buildResult2.assertSuccess("Successful build should exit with 0.");
-    assertTrue(Files.isRegularFile(outputFile));
-
-    ZipFile outputZipFile = new ZipFile(outputFile.toFile());
-    assertEquals(
-        "The output file will be an empty zip if it is read from the build cache.",
-        0,
-        outputZipFile.stream().count());
-    outputZipFile.close();
+    // TODO: this should be enforced and we should fail.
+    buildResult2.assertSuccess("Build succeeds even when cache is corrupted.");
 
     // Run `buck clean` followed by `buck build` yet again, but this time, specify `--no-cache`.
     ProcessResult cleanResult2 = workspace.runBuckCommand("clean", "--keep-cache");
@@ -190,7 +206,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult buildResult3 =
         workspace.runBuckCommand("build", "--no-cache", target.getFullyQualifiedName());
     buildResult3.assertSuccess();
-    outputZipFile = new ZipFile(outputFile.toFile());
+    ZipFile outputZipFile = new ZipFile(outputFile.toFile());
     assertNotEquals(
         "The contents of the file should no longer be pulled from the corrupted build cache.",
         0,
@@ -287,7 +303,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path outputFile =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, target, "lib__%s__output/" + target.getShortName() + ".jar"));
+                workspace.getProjectFileSystem(),
+                target,
+                "lib__%s__output/" + target.getShortName() + ".jar"));
     assertTrue(Files.exists(outputFile));
 
     ImmutableSet.Builder<String> jarContents = ImmutableSet.builder();
@@ -316,29 +334,17 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path utilRuleKeyPath =
-        BuildTargetPaths.getScratchPath(filesystem, utilTarget, ".%s/metadata/build/RULE_KEY");
-    String utilRuleKey = getContents(utilRuleKeyPath);
-    Path utilAbiRuleKeyPath =
-        BuildTargetPaths.getScratchPath(
-            filesystem, utilTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
-    String utilAbiRuleKey = getContents(utilAbiRuleKeyPath);
-
-    Path bizRuleKeyPath =
-        BuildTargetPaths.getScratchPath(filesystem, bizTarget, ".%s/metadata/build/RULE_KEY");
-    String bizRuleKey = getContents(bizRuleKeyPath);
-    Path bizAbiRuleKeyPath =
-        BuildTargetPaths.getScratchPath(
-            filesystem, bizTarget, ".%s/metadata/build/INPUT_BASED_RULE_KEY");
-    String bizAbiRuleKey = getContents(bizAbiRuleKeyPath);
-
     Path utilOutputPath =
         BuildTargetPaths.getGenPath(
-            filesystem, utilTarget, "lib__%s__output/" + utilTarget.getShortName() + ".jar");
+            workspace.getProjectFileSystem(),
+            utilTarget,
+            "lib__%s__output/" + utilTarget.getShortName() + ".jar");
     long utilJarSize = Files.size(workspace.getPath(utilOutputPath));
     Path bizOutputPath =
         BuildTargetPaths.getGenPath(
-            filesystem, bizTarget, "lib__%s__output/" + bizTarget.getShortName() + ".jar");
+            workspace.getProjectFileSystem(),
+            bizTarget,
+            "lib__%s__output/" + bizTarget.getShortName() + ".jar");
     FileTime bizJarLastModified = Files.getLastModifiedTime(workspace.getPath(bizOutputPath));
 
     // TODO(mbolin): Run uber-biz.jar and verify it prints "Hello World!\n".
@@ -350,13 +356,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:biz");
     buildResult2.assertSuccess("Successful build should exit with 0.");
 
-    assertThat(utilRuleKey, not(equalTo(getContents(utilRuleKeyPath))));
-    assertThat(utilAbiRuleKey, not(equalTo(getContents(utilAbiRuleKeyPath))));
-    workspace.getBuildLog().assertTargetBuiltLocally(utilTarget.toString());
-
-    assertThat(bizRuleKey, not(equalTo(getContents(bizRuleKeyPath))));
-    assertEquals(bizAbiRuleKey, getContents(bizAbiRuleKeyPath));
-    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(bizTarget.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(utilTarget);
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(bizTarget);
 
     assertThat(
         "util.jar should have been rewritten, so its file size should have changed.",
@@ -406,21 +407,41 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // Confirm that we got an input based rule key hit on B#abi, C#abi, D#abi
     workspace
         .getBuildLog()
-        .assertTargetWasFetchedFromCache(
-            b.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+        .assertTargetWasFetchedFromCache(b.withFlavors(JavaAbis.CLASS_ABI_FLAVOR));
     workspace
         .getBuildLog()
-        .assertTargetWasFetchedFromCache(
-            c.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+        .assertTargetWasFetchedFromCache(c.withFlavors(JavaAbis.CLASS_ABI_FLAVOR));
     workspace
         .getBuildLog()
-        .assertTargetWasFetchedFromCache(
-            d.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+        .assertTargetWasFetchedFromCache(d.withFlavors(JavaAbis.CLASS_ABI_FLAVOR));
 
     // Confirm that B, C, and D were not re-built
     workspace.getBuildLog().assertNoLogEntry(b.getFullyQualifiedName());
     workspace.getBuildLog().assertNoLogEntry(c.getFullyQualifiedName());
     workspace.getBuildLog().assertNoLogEntry(d.getFullyQualifiedName());
+  }
+
+  @Test
+  public void testJavaBinaryPullsInJavaLibraryRuntimeDepsAfterClean() throws IOException {
+    compileAgainstAbisOnly();
+    setUpProjectWorkspaceForScenario("depends_on_runtime_deps");
+    workspace.enableDirCache();
+
+    // Build binary A
+    ProcessResult firstBuildResult = workspace.runBuckBuild("//:binary_a");
+    firstBuildResult.assertSuccess("Successful build should exit with 0.");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:binary_b");
+
+    // Perform clean
+    ProcessResult cleanResult = workspace.runBuckCommand("clean", "--keep-cache");
+    cleanResult.assertSuccess("Successful clean should exit with 0.");
+
+    // Rebuild binary A, but hitting cache.
+    ProcessResult secondBuildResult = workspace.runBuckBuild("//:binary_a");
+    secondBuildResult.assertSuccess("Successful second build should exit with 0.");
+
+    // Require runtime dep was built again.
+    workspace.getBuildLog().assertTargetBuiltLocally("//:binary_b");
   }
 
   @Test
@@ -523,6 +544,71 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
     workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:main");
     workspace.getBuildLog().assertTargetBuiltLocally("//:annotation_processor_lib");
+  }
+
+  @Test
+  public void testJavacPluginCrashesShouldCrashBuck() throws IOException {
+    setUpProjectWorkspaceForScenario("javac_plugin_crashes");
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+
+    // Java 8 swallows exceptions coming from javac plugin code during plugin init, and returns
+    // failure from the `JavacTask`. Java 9+ allows these user plugin code exceptions to propagate
+    // directly out of the `JavacTask` invocation, and there's no way to distinguish these
+    // exceptions from other exceptions originating from javac itself. So we end up with different
+    // exit codes depending on Buck's Java version.
+    ExitCode expectedExitCode =
+        (JavaVersion.getMajorVersion() <= 8) ? ExitCode.BUILD_ERROR : ExitCode.FATAL_GENERIC;
+    buildResult.assertExitCode("MyPlugin won't let you build this", expectedExitCode);
+  }
+
+  @Test
+  public void testJavacPluginFileChangeThatDoesNotModifyCodeDoesNotCauseRebuild()
+      throws IOException {
+    setUpProjectWorkspaceForScenario("javac_plugin");
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:util");
+
+    // Edit a source file in the javac plugin in a way that doesn't change the ABI
+    workspace.replaceFileContents("JavacPlugin.java", "doStuff();", "doStuff(); /* false */");
+
+    // Run `buck build` again.
+    ProcessResult buildResult2 = workspace.runBuckCommand("build", "//:main");
+    buildResult2.assertSuccess("Successful build should exit with 0.");
+
+    // If all goes well, we'll rebuild //:javac_plugin because of the source change,
+    // and then rebuild //:main because the code of the annotation processor has changed
+    workspace.getBuildLog().assertTargetHadMatchingRuleKey("//:util");
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:javac_plugin_lib");
+  }
+
+  @Test
+  public void testMixedAnnotationProcessorAndJavaPlugins() throws IOException {
+    setUpProjectWorkspaceForScenario("mixed_javac_plugin_annotation_processors");
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:jp_util");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:ap_util");
   }
 
   @Test
@@ -661,7 +747,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path bizClassUsageFilePath =
-        BuildTargetPaths.getGenPath(filesystem, bizTarget, "lib__%s__output/used-classes.json");
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
 
     List<String> lines = Files.readAllLines(workspace.getPath(bizClassUsageFilePath), UTF_8);
 
@@ -669,10 +756,21 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     String utilJarPath;
     if (compileAgainstAbis.equals(TRUE)) {
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//:util#class-abi");
       utilJarPath =
-          MorePaths.pathWithPlatformSeparators("buck-out/gen/util#class-abi/util-abi.jar");
+          MorePaths.pathWithPlatformSeparators(
+              BuildTargetPaths.getGenPath(
+                  workspace.getProjectFileSystem(),
+                  utilTarget,
+                  "%s/" + utilTarget.getShortName() + "-abi.jar"));
     } else {
-      utilJarPath = MorePaths.pathWithPlatformSeparators("buck-out/gen/lib__util__output/util.jar");
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//:util");
+      utilJarPath =
+          MorePaths.pathWithPlatformSeparators(
+              BuildTargetPaths.getGenPath(
+                  workspace.getProjectFileSystem(),
+                  utilTarget,
+                  "lib__%s__output/" + utilTarget.getShortName() + ".jar"));
     }
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
@@ -728,19 +826,32 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     buildResult.assertSuccess("Successful build should exit with 0.");
 
     Path bizClassUsageFilePath =
-        BuildTargetPaths.getGenPath(filesystem, bizTarget, "lib__%s__output/used-classes.json");
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
 
     String usedClasses = getContents(workspace.getPath(bizClassUsageFilePath));
 
     String utilJarPath;
     if (compileAgainstAbis.equals(TRUE)) {
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util#class-abi");
       utilJarPath =
           MorePaths.pathWithPlatformSeparators(
-              "/away_cell/buck-out/gen/util/util#class-abi/util-abi.jar");
+              "/away_cell/"
+                  + BuildTargetPaths.getGenPath(
+                          workspace.getProjectFileSystem(),
+                          utilTarget,
+                          "%s/" + utilTarget.getShortName() + "-abi.jar")
+                      .toString());
     } else {
+      BuildTarget utilTarget = BuildTargetFactory.newInstance("//util:util");
       utilJarPath =
-          MorePaths.pathWithPlatformSeparators(
-              "/away_cell/buck-out/gen/util/lib__util__output/util.jar");
+          "/away_cell/"
+              + MorePaths.pathWithPlatformSeparators(
+                  BuildTargetPaths.getGenPath(
+                          workspace.getProjectFileSystem(),
+                          utilTarget,
+                          "lib__%s__output/" + utilTarget.getShortName() + ".jar")
+                      .toString());
     }
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
@@ -784,8 +895,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     for (Path filename :
         new Path[] {
-          BuildTargetPaths.getGenPath(filesystem, binaryTarget, "%s.jar"),
-          BuildTargetPaths.getGenPath(filesystem, binary2Target, "%s.jar")
+          BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binaryTarget, "%s.jar"),
+          BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binary2Target, "%s.jar")
         }) {
       Path file = workspace.getPath(filename);
       try (ZipArchive zipArchive = new ZipArchive(file, /* for writing? */ false)) {
@@ -838,7 +949,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertTrue(Files.exists(classesDir));
     assertTrue(Files.isDirectory(classesDir));
@@ -860,7 +973,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -868,7 +983,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         ImmutableList.copyOf(classesDir.toFile().listFiles()),
         hasSize(0));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
     ZipInputStream zip = new ZipInputStream(new FileInputStream(jarPath.toFile()));
     assertThat(zip.getNextEntry().getName(), is("META-INF/"));
@@ -879,6 +996,102 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testCustomJavacPerTarget() throws IOException {
+    setUpProjectWorkspaceForScenario("custom_javac");
+
+    String javacTarget = "//python:javac";
+    String libTarget = "//java:lib_with_custom_javac";
+
+    BuildTarget target = BuildTargetFactory.newInstance(libTarget);
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
+
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
+
+    assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
+    ArrayList<String> classFiles = new ArrayList<>();
+    for (File file : classesDir.toFile().listFiles()) {
+      classFiles.add(file.getName());
+    }
+    assertThat(
+        "There should be 2 class files saved to disk from the compiler", classFiles, hasSize(2));
+    assertThat(classFiles, hasItem("JavacMain.class"));
+    assertThat(classFiles, hasItem("Extra.class"));
+
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
+    assertTrue(Files.exists(jarPath));
+
+    // Check that normal and member classes were removed as expected.
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileExists("JavacMain.class");
+    zipInspector.assertFileExists("Extra.class");
+
+    // Test that editing the custom compiler causes rebuilds correctly.
+    workspace.replaceFileContents("python/javac.py", "Extra.class", "Extra2.class");
+    result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
+  }
+
+  @Test
+  public void testCustomJavacInBuckConfig() throws IOException {
+    setUpProjectWorkspaceForScenario("custom_javac");
+
+    String javacTarget = "//python:javac";
+    String libTarget = "//root_java:lib_with_default_javac";
+
+    workspace.addBuckConfigLocalOption("tools", "javac", "//python:javac");
+
+    BuildTarget target = BuildTargetFactory.newInstance(libTarget);
+    ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
+
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
+
+    assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
+    ArrayList<String> classFiles = new ArrayList<>();
+    for (File file : classesDir.toFile().listFiles()) {
+      classFiles.add(file.getName());
+    }
+    assertThat(
+        "There should be 2 class files saved to disk from the compiler", classFiles, hasSize(2));
+    assertThat(classFiles, hasItem("JavacMain.class"));
+    assertThat(classFiles, hasItem("Extra.class"));
+
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
+    assertTrue(Files.exists(jarPath));
+
+    // Check that normal and member classes were removed as expected.
+    ZipInspector zipInspector = new ZipInspector(jarPath);
+    zipInspector.assertFileExists("JavacMain.class");
+    zipInspector.assertFileExists("Extra.class");
+
+    // Test that editing the custom compiler causes rebuilds correctly.
+    workspace.replaceFileContents("python/javac.py", "Extra.class", "Extra2.class");
+    result = workspace.runBuckBuild(target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    workspace.getBuildLog().assertTargetBuiltLocally(javacTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(libTarget);
+  }
+
+  @Test
   public void testSpoolClassFilesDirectlyToJarWithRemoveClasses() throws IOException {
     setUpProjectWorkspaceForScenario("spool_class_files_directly_to_jar_with_remove_classes");
 
@@ -886,7 +1099,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -896,7 +1111,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             .collect(Collectors.toList()),
         hasSize(0));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -918,10 +1135,14 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult result = workspace.runBuckBuild(target.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat("Classes directory should exist.", Files.exists(classesDir), is(Boolean.TRUE));
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue("Jar should exist.", Files.exists(jarPath));
 
     // Check that normal and member classes were removed as expected.
@@ -944,7 +1165,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     result.assertSuccess();
 
-    Path classesDir = workspace.getPath(CompilerOutputPaths.of(target, filesystem).getClassesDir());
+    Path classesDir =
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getClassesDir());
 
     assertThat(Files.exists(classesDir), is(Boolean.TRUE));
     assertThat(
@@ -953,7 +1176,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         hasSize(0));
 
     Path sourcesDir =
-        workspace.getPath(CompilerOutputPaths.of(target, filesystem).getAnnotationPath());
+        workspace.getPath(
+            CompilerOutputPaths.of(target, workspace.getProjectFileSystem()).getAnnotationPath());
 
     assertThat(Files.exists(sourcesDir), is(Boolean.TRUE));
     assertThat(
@@ -961,7 +1185,9 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         ImmutableList.copyOf(sourcesDir.toFile().listFiles()),
         hasSize(2));
 
-    Path jarPath = workspace.getPath(CompilerOutputPaths.getOutputJarPath(target, filesystem));
+    Path jarPath =
+        workspace.getPath(
+            CompilerOutputPaths.getOutputJarPath(target, workspace.getProjectFileSystem()));
     assertTrue(Files.exists(jarPath));
 
     ZipInspector zipInspector = new ZipInspector(jarPath);
@@ -1046,14 +1272,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     assertThat(
         result.getStderr(),
         Matchers.stringContainsInOrder(
-            "Build failed:",
             "The annotation processor com.example.buck.AnnotationProcessor has crashed.",
-            "java.lang.RuntimeException: java.lang.IllegalArgumentException: Test crash!   |\n|  at com.example.buck.AnnotationProcessor.process(AnnotationProcessor.java:22) |\n|  ...", // Buck frames have been stripped properly
+            "java.lang.RuntimeException: java.lang.IllegalArgumentException: Test crash!   |\n|  at com.example.buck.AnnotationProcessor.process(AnnotationProcessor.java:19) |\n|  ...", // Buck frames have been stripped properly
             "Caused by: java.lang.IllegalArgumentException: Test crash!", // Without then stripping
             // out the caused
             // exception!
-            "    When running <javac>.",
-            "    When building rule //:main."));
+            "When running <javac>.",
+            "When building rule //:main."));
   }
 
   @Test

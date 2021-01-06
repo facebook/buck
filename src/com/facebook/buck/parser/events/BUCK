@@ -9,6 +9,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/parser/api:api",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//third-party/java/guava:guava",
     ],

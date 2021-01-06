@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "knowntypes",
+    deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/starlark/knowntypes:knowntypes",
+        "//test/com/facebook/buck/skylark/function:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

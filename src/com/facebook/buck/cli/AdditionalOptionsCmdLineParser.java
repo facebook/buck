@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -29,6 +29,7 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.IllegalAnnotationError;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.ParserProperties;
 import org.kohsuke.args4j.spi.FieldSetter;
 import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Setters;
@@ -60,7 +61,13 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
    * @see CmdLineParser#CmdLineParser(Object)
    */
   public AdditionalOptionsCmdLineParser(PluginManager pluginManager, Object bean) {
-    super(null);
+    /**
+     * Disable '@' syntax. We convert this ourselves in {@link BuckArgsMethods#expandAtFiles}, so
+     * options passed to parseArgument() should already be properly expanded. This allows us to have
+     * things like `buck run @file //:script -- @this_goes_to_the_script`, as @file is expanded
+     * before hitting this method.
+     */
+    super(null, ParserProperties.defaults().withAtSyntax(false));
     this.pluginManager = pluginManager;
 
     // This is copied in simplified form from CmdLineParser constructor and put here to save the
@@ -115,9 +122,7 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
     if (f.isAnnotationPresent(PluginBasedSubCommands.class)) {
       PluginBasedSubCommands optionAnnotation = f.getAnnotation(PluginBasedSubCommands.class);
       ImmutableList<Object> commands =
-          pluginManager
-              .getExtensions(optionAnnotation.factoryClass())
-              .stream()
+          pluginManager.getExtensions(optionAnnotation.factoryClass()).stream()
               .map(PluginBasedSubCommandFactory::createSubCommand)
               .collect(ImmutableList.toImmutableList());
 

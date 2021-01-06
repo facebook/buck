@@ -1,24 +1,25 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.dotnet;
 
-import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -27,26 +28,33 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class CsharpLibraryCompile extends ShellStep {
-  private static final Path CSC = Paths.get("csc");
+  private final Tool csharpCompiler;
+  private final SourcePathResolverAdapter pathResolver;
   private final Path output;
   private final ImmutableSortedSet<Path> srcs;
   private final ImmutableList<Either<Path, String>> references;
   private final FrameworkVersion version;
   private final ImmutableListMultimap<Path, String> resources;
+  private final ImmutableList<String> compilerFlags;
 
   public CsharpLibraryCompile(
+      SourcePathResolverAdapter pathResolver,
+      Tool csharpCompiler,
       Path output,
       ImmutableSortedSet<Path> srcs,
       ImmutableList<Either<Path, String>> references,
       ImmutableListMultimap<Path, String> resources,
-      FrameworkVersion version) {
+      FrameworkVersion version,
+      ImmutableList<String> compilerFlags) {
     super(output.getParent());
+    this.pathResolver = pathResolver;
+    this.csharpCompiler = csharpCompiler;
     this.references = references;
     this.resources = resources;
     this.version = version;
+    this.compilerFlags = compilerFlags;
     Preconditions.checkState(output.isAbsolute());
 
     this.output = output;
@@ -55,12 +63,15 @@ public class CsharpLibraryCompile extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    Path csc = new ExecutableFinder().getExecutable(CSC, context.getEnvironment());
-    DotnetFramework netFramework =
-        DotnetFramework.resolveFramework(context.getEnvironment(), version);
+    DotnetFramework netFramework = DotnetFramework.resolveFramework(version);
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add(csc.toAbsolutePath().toString()).add("/target:library").add("/out:" + output);
+
+    args.addAll(csharpCompiler.getCommandPrefix(pathResolver));
+    args.add("/noconfig");
+    args.add("/nostdlib");
+    args.add("/deterministic");
+    args.add("/target:library").add("/out:" + output);
 
     for (Either<Path, String> ref : references) {
       args.add("/reference:" + resolveReference(netFramework, ref));
@@ -76,6 +87,8 @@ public class CsharpLibraryCompile extends ShellStep {
         srcs.stream()
             .map(input -> Escaper.escapeAsShellString(input.toAbsolutePath().toString()))
             .collect(ImmutableSet.toImmutableSet()));
+
+    args.addAll(compilerFlags);
 
     return args.build();
   }

@@ -1,25 +1,23 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.parameter_extractors.ProjectGeneratorParameters;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.ProjectGenerationEvent;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.PluginBasedCommand;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommand;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommands;
@@ -66,7 +64,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       name = "--ide",
       usage =
           "The type of IDE for which to generate a project. You may specify it in the "
-              + ".buckconfig file. Please refer to https://buckbuild.com/concept/buckconfig.html#project")
+              + ".buckconfig file. Please refer to https://buck.build/concept/buckconfig.html#project")
   @Nullable
   private String ide = null;
 
@@ -96,10 +94,11 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     String projectIde =
-        (ide == null) ? getIdeFromBuckConfig(params.getBuckConfig()).orElse(null) : ide;
+        ide == null
+            ? getIdeFromBuckConfig(params.getBuckConfig()).map(String::toLowerCase).orElse(null)
+            : ide.toLowerCase();
 
     if (projectIde == null) {
       throw new CommandLineException("project IDE is not specified in Buck config or --ide");
@@ -128,7 +127,19 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       ProjectSubCommand subCommand = subcommands.get(projectIde);
 
       ProjectGeneratorParameters projectGeneratorParameters =
-          new ProjectGeneratorParametersImplementation(params);
+          ImmutableProjectGeneratorParameters.of(
+              params,
+              dryRun,
+              withTests,
+              withoutTests,
+              withoutDependenciesTests,
+              getEnableParserProfiling(),
+              arguments ->
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCells().getRootCell(),
+                      params.getClientWorkingDir(),
+                      arguments,
+                      params.getBuckConfig()));
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       ExitCode result;
@@ -173,7 +184,8 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
     if (!Paths.get(pathToScript).isAbsolute()) {
       pathToScript =
           params
-              .getCell()
+              .getCells()
+              .getRootCell()
               .getFilesystem()
               .getPathForRelativePath(pathToScript)
               .toAbsolutePath()
@@ -190,7 +202,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(arguments))
                     .put("BUCK_PROJECT_TYPE", projectIde)
                     .build())
-            .setDirectory(params.getCell().getFilesystem().getRootPath())
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath())
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(
@@ -226,45 +238,5 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
   @Override
   public String getShortDescription() {
     return "generates project configuration files for an IDE";
-  }
-
-  private class ProjectGeneratorParametersImplementation
-      extends CommandRunnerParametersImplementation implements ProjectGeneratorParameters {
-
-    private ProjectGeneratorParametersImplementation(CommandRunnerParams parameters) {
-      super(parameters);
-    }
-
-    @Override
-    public boolean isDryRun() {
-      return dryRun;
-    }
-
-    @Override
-    public boolean isWithTests() {
-      return withTests;
-    }
-
-    @Override
-    public boolean isWithoutTests() {
-      return withoutTests;
-    }
-
-    @Override
-    public boolean isWithoutDependenciesTests() {
-      return withoutDependenciesTests;
-    }
-
-    @Override
-    public boolean getEnableParserProfiling() {
-      return ProjectCommand.this.getEnableParserProfiling();
-    }
-
-    @Override
-    public Function<Iterable<String>, ImmutableList<TargetNodeSpec>> getArgsParser() {
-      return arguments ->
-          parseArgumentsAsTargetNodeSpecs(
-              parameters.getCell().getCellPathResolver(), parameters.getBuckConfig(), arguments);
-    }
   }
 }

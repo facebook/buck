@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="PLUGIN_MODULE" version="4">
-  <component name="DevKit.ModuleBuildProperties" url="file://$MODULE_DIR$/META-INF/plugin.xml" />
+  <component name="DevKit.ModuleBuildProperties" url="file://$MODULE_DIR$/resources/META-INF/plugin.xml" />
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/tests/unit" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/tests/integration" isTestSource="true" />
@@ -14,11 +13,19 @@
     <orderEntry type="jdk" jdkName="IDEA SDK" jdkType="IDEA JDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jetty" level="project" />
-    <orderEntry type="library" name="buck-lib" level="project" />
-    <orderEntry type="module" module-name="buck" />
-    <orderEntry type="library" name="test-lib" level="project" />
-    <orderEntry type="library" name="jackson-mrbean-2.7.8" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="android" level="project" />
-    <orderEntry type="library" name="gson" level="project" />
+    <orderEntry type="library" name="ideabuck-lib" level="project" />
+    <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
+    <orderEntry type="library" scope="TEST" name="guava-testlib" level="project" />
+    <orderEntry type="module-library">
+      <library name="ideabuck-dependencies-on-buck">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/src/com/facebook/buck/event/external/lib__external_lib__output/external_lib.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/src/com/facebook/buck/test/result/type/lib__type__output/type.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module" module-name="psi-grammar" />
   </component>
 </module>

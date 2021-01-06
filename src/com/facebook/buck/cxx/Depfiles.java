@@ -1,50 +1,74 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.CharBuffer;
 import java.nio.file.Path;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 /** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
+// TODO(cjhopman): This should be better documented about the format it is expecting.
 class Depfiles {
 
   private Depfiles() {}
+
+  public static Predicate<SourcePath> getCoveredByDepFilePredicate(
+      Optional<PreprocessorDelegate> preprocessorDelegate,
+      Optional<CompilerDelegate> compilerDelegate) {
+    ImmutableSet.Builder<SourcePath> nonDepFileInputsBuilder = ImmutableSet.builder();
+    if (preprocessorDelegate.isPresent()) {
+      preprocessorDelegate.get().getNonDepFileInputs(nonDepFileInputsBuilder::add);
+    }
+    if (compilerDelegate.isPresent()) {
+      compilerDelegate.get().getNonDepFileInputs(nonDepFileInputsBuilder::add);
+    }
+    ImmutableSet<SourcePath> nonDepFileInputs = nonDepFileInputsBuilder.build();
+    return path ->
+        !nonDepFileInputs.contains(path)
+            && (!(path instanceof PathSourcePath)
+                || !((PathSourcePath) path).getRelativePath().isAbsolute());
+  }
 
   private enum State {
     LOOKING_FOR_TARGET,
@@ -61,6 +85,17 @@ class Depfiles {
   private static final String WHITESPACE_CHARS = " \n\r\t";
   private static final String ESCAPED_TARGET_CHARS = ": #";
   private static final String ESCAPED_PREREQ_CHARS = " #";
+  private static final String UNTRACKED_HEADER_ERROR_TIPS =
+      "Untracked headers detected. Please reference these headers "
+          + System.lineSeparator()
+          + "from \"headers\", \"exported_headers\" or \"raw_headers\" "
+          + System.lineSeparator()
+          + "in the appropriate build rule.";
+  private static final String UNTRACKED_HEADER_ERROR_DETAILED_SUGGESTION =
+      System.lineSeparator()
+          + "Consider using -c cxx.detailed_untracked_header_messages=true "
+          + System.lineSeparator()
+          + "to get more information about these headers.";
 
   /**
    * Parses the input as a .d Makefile as emitted by {@code gcc -MD} and returns the (target, [dep,
@@ -172,11 +207,12 @@ class Depfiles {
     }
   }
 
-  private static List<String> getRawUsedHeadersFromDepfile(
+  private static ImmutableList<String> getRawUsedHeadersFromDepfile(
       ProjectFilesystem filesystem,
       Path sourceDepFile,
       Path inputPath,
-      DependencyTrackingMode dependencyTrackingMode)
+      DependencyTrackingMode dependencyTrackingMode,
+      boolean useUnixPathSeparator)
       throws IOException {
     switch (dependencyTrackingMode) {
       case MAKEFILE:
@@ -191,7 +227,11 @@ class Depfiles {
           // the rule key. The correct way to handle this is likely to support macros in
           // preprocessor/compiler flags at which point we can use the entries for these files in
           // the depfile to verify that the user properly references these files via the macros.
-          int inputIndex = prereqs.indexOf(inputPath.toString());
+          int inputIndex =
+              prereqs.indexOf(
+                  useUnixPathSeparator
+                      ? PathFormatter.pathWithUnixSeparators(inputPath)
+                      : inputPath.toString());
           Preconditions.checkState(
               inputIndex != -1,
               "Could not find input source (%s) in dep file prereqs (%s)",
@@ -200,15 +240,17 @@ class Depfiles {
           ImmutableList<String> includes = prereqs.subList(inputIndex + 1, prereqs.size());
           return includes;
         }
+      case SHOW_HEADERS:
       case SHOW_INCLUDES:
         // An intermediate depfile in `show_include` mode contains a source file + used headers
         // (see CxxPreprocessAndCompileStep for details).
         // So, we "strip" the the source file first.
         List<String> srcAndIncludes = filesystem.readLines(sourceDepFile);
         List<String> includes = srcAndIncludes.subList(1, srcAndIncludes.size());
-        return includes;
+        // We don't require the tree structure here, we remove the spaces
+        return includes.stream().map(String::trim).collect(ImmutableList.toImmutableList());
       case NONE:
-        return Collections.emptyList();
+        return ImmutableList.<String>of();
       default:
         // never happens
         throw new IllegalStateException();
@@ -238,12 +280,14 @@ class Depfiles {
   public static ImmutableList<Path> parseAndVerifyDependencies(
       BuckEventBus eventBus,
       ProjectFilesystem filesystem,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path sourceDepFile,
       Path inputPath,
       Path outputPath,
-      DependencyTrackingMode dependencyTrackingMode)
+      DependencyTrackingMode dependencyTrackingMode,
+      boolean useUnixPathSeparator)
       throws IOException, HeaderVerificationException {
     // Process the dependency file, fixing up the paths, and write it out to it's final location.
     // The paths of the headers written out to the depfile are the paths to the symlinks from the
@@ -255,30 +299,46 @@ class Depfiles {
     try (SimplePerfEvent.Scope perfEvent =
         SimplePerfEvent.scope(
             eventBus,
-            PerfEventId.of("depfile-parse"),
+            SimplePerfEvent.PerfEventId.of("depfile-parse"),
             ImmutableMap.of("input", inputPath, "output", outputPath))) {
 
       List<String> headers =
           getRawUsedHeadersFromDepfile(
-              filesystem, sourceDepFile, inputPath, dependencyTrackingMode);
+              filesystem, sourceDepFile, inputPath, dependencyTrackingMode, useUnixPathSeparator);
 
       return normalizeAndVerifyHeaders(
-          eventBus, filesystem, headerPathNormalizer, headerVerification, inputPath, headers);
+          eventBus,
+          filesystem,
+          pathResolver,
+          headerPathNormalizer,
+          headerVerification,
+          inputPath,
+          headers,
+          sourceDepFile,
+          dependencyTrackingMode);
     }
   }
 
   private static ImmutableList<Path> normalizeAndVerifyHeaders(
       BuckEventBus eventBus,
       ProjectFilesystem filesystem,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       HeaderVerification headerVerification,
       Path inputPath,
-      List<String> headers)
+      List<String> headers,
+      Path sourceDepFile,
+      DependencyTrackingMode dependencyTrackingMode)
       throws IOException, HeaderVerificationException {
     ImmutableList.Builder<Path> resultBuilder = ImmutableList.builder();
+    UntrackedHeaderReporterWithFallback untrackedHeaderReporter =
+        new UntrackedHeaderReporterWithFallback(
+            dependencyTrackingMode, filesystem, headerPathNormalizer, sourceDepFile, inputPath);
+    List<String> errors = new ArrayList<String>();
     for (String rawHeader : headers) {
       Path header = filesystem.resolve(rawHeader).normalize();
-      Optional<Path> absolutePath = headerPathNormalizer.getAbsolutePathForUnnormalizedPath(header);
+      Optional<Path> absolutePath =
+          headerPathNormalizer.getAbsolutePathForUnnormalizedPath(pathResolver, header);
       Optional<Path> repoRelativePath = filesystem.getPathRelativeToProjectRoot(header);
       if (absolutePath.isPresent()) {
         Preconditions.checkState(absolutePath.get().isAbsolute());
@@ -291,22 +351,30 @@ class Depfiles {
         // Check again with the real path with all symbolic links resolved.
         header = header.toRealPath();
         if (!(headerVerification.isWhitelisted(header.toString()))) {
-          String errorMessage =
-              String.format(
-                  "%s: included an untracked header \"%s\"\n\n"
-                      + "Please reference this header file from \"headers\", \"exported_headers\" or \"raw_headers\" \n"
-                      + "in the appropriate build rule.",
-                  inputPath, repoRelativePath.orElse(header));
-          eventBus.post(
-              ConsoleEvent.create(
-                  headerVerification.getMode() == HeaderVerification.Mode.ERROR
-                      ? Level.SEVERE
-                      : Level.WARNING,
-                  errorMessage));
-          if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
-            throw new HeaderVerificationException(errorMessage);
-          }
+          String errorMessage = untrackedHeaderReporter.getErrorReport(pathResolver, header);
+          errors.add(errorMessage);
         }
+      }
+    }
+    // Check if any errors occurred and report them
+    if (!errors.isEmpty()) {
+      String errorMessage =
+          String.format(
+              "%s%n%n%s",
+              errors.stream()
+                  .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator())),
+              UNTRACKED_HEADER_ERROR_TIPS);
+      if (!untrackedHeaderReporter.isDetailed()) {
+        errorMessage += UNTRACKED_HEADER_ERROR_DETAILED_SUGGESTION;
+      }
+      eventBus.post(
+          ConsoleEvent.create(
+              headerVerification.getMode() == HeaderVerification.Mode.ERROR
+                  ? Level.SEVERE
+                  : Level.WARNING,
+              errorMessage));
+      if (headerVerification.getMode() == HeaderVerification.Mode.ERROR) {
+        throw new HeaderVerificationException(errorMessage);
       }
     }
     return resultBuilder.build();

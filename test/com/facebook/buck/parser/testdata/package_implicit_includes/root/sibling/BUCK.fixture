@@ -1,0 +1,9 @@
+load("//:get_suffix.bzl", "get_suffix")
+
+export_file(
+    name = "{}__{}".format(
+        implicit_package_symbol("NAME", "missing"),
+        get_suffix("NAME", "missing"),
+    ),
+    src = "export.txt",
+)

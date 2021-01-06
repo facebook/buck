@@ -1,26 +1,28 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -30,11 +32,13 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class KotlinBuckConfig {
+/** A kotlin-specific "view" of BuckConfig. */
+public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
-
   private static final String SECTION = "kotlin";
+  public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
+  public static final String PROPERTY_ABI_GENERATION_MODE = "abi_generation_mode";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
@@ -54,6 +58,7 @@ public class KotlinBuckConfig {
               delegate.getPathSourcePath(getPathToStdlibJar()),
               delegate.getPathSourcePath(getPathToReflectJar()),
               delegate.getPathSourcePath(getPathToScriptRuntimeJar()),
+              delegate.getPathSourcePath(getPathToAnnotationsJar()),
               delegate.getPathSourcePath(getPathToCompilerJar()));
 
       return new JarBackedReflectedKotlinc(
@@ -67,7 +72,19 @@ public class KotlinBuckConfig {
             getPathToStdlibJar(),
             getPathToReflectJar(),
             getPathToScriptRuntimeJar(),
-            getPathToCompilerJar()));
+            getPathToCompilerJar(),
+            getPathToTrove4jJar(),
+            getPathToAnnotationsJar()));
+  }
+
+  public boolean shouldCompileAgainstAbis() {
+    return delegate.getBooleanValue(SECTION, PROPERTY_COMPILE_AGAINST_ABIS, false);
+  }
+
+  public AbiGenerationMode getAbiGenerationMode() {
+    return delegate
+        .getEnum(SECTION, PROPERTY_ABI_GENERATION_MODE, AbiGenerationMode.class)
+        .orElse(AbiGenerationMode.CLASS);
   }
 
   Path getPathToCompilerBinary() {
@@ -108,12 +125,7 @@ public class KotlinBuckConfig {
    * @return the Kotlin runtime jar path
    */
   Path getPathToStdlibJar() {
-    try {
-      return getPathToJar("kotlin-stdlib");
-    } catch (HumanReadableException e) {
-      // TODO: Check if kt version < 1.1
-      return getPathToJar("kotlin-runtime");
-    }
+    return getPathToJar("kotlin-stdlib");
   }
 
   /**
@@ -140,16 +152,25 @@ public class KotlinBuckConfig {
    * @return the Kotlin compiler jar path
    */
   Path getPathToCompilerJar() {
-    try {
-      return getPathToJar("kotlin-compiler-embeddable");
-    } catch (HumanReadableException e) {
-      LOG.warn(
-          "kotlin-compiler-embeddable.jar was not found in "
-              + kotlinHome
-              + " directory, this"
-              + " may result in kapt not working properly. Proceeding with kotlin-compiler.jar");
-      return getPathToJar("kotlin-compiler");
-    }
+    return getPathToJar("kotlin-compiler");
+  }
+
+  /**
+   * Get the path to the trove4j jar, which is required by the compiler jar.
+   *
+   * @return the trove4j jar path
+   */
+  Path getPathToTrove4jJar() {
+    return getPathToJar("trove4j");
+  }
+
+  /**
+   * Get the path to the annotations jar, which is required by the compiler jar.
+   *
+   * @return the annotations jar path
+   */
+  Path getPathToAnnotationsJar() {
+    return getPathToJar("annotations-13.0");
   }
 
   /**
@@ -158,23 +179,21 @@ public class KotlinBuckConfig {
    * @return the Kotlin annotation processing jar path
    */
   Path getPathToAnnotationProcessingJar() {
+    return getPathToJar("kotlin-annotation-processing");
+  }
+
+  /** @return the path to the Kotlin compiler abi generation plugin jar. */
+  @Nullable
+  Path getPathToAbiGenerationPluginJar() {
     try {
-      return getPathToJar("kotlin-annotation-processing-gradle");
+      return getPathToJar("jvm-abi-gen");
     } catch (HumanReadableException e) {
       LOG.warn(
-          "kotlin-annotation-processing-gradle.jar was not found in "
+          "jvm-abi-gen.jar was not found in "
               + kotlinHome
-              + " directory, searching for kotlin-annotation-processing-maven.jar");
-      try {
-        return getPathToJar("kotlin-annotation-processing-maven");
-      } catch (HumanReadableException er) {
-        LOG.warn(
-            "kotlin-annotation-processing-maven.jar was not found in "
-                + kotlinHome
-                + " directory, this"
-                + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar");
-        return getPathToJar("kotlin-annotation-processing");
-      }
+              + " directory, this"
+              + " means that source ABIs will not be generated.");
+      return null;
     }
   }
 
@@ -246,5 +265,10 @@ public class KotlinBuckConfig {
       throw new HumanReadableException(
           "Could not resolve kotlin home directory, Consider setting KOTLIN_HOME.", io);
     }
+  }
+
+  @Override
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 }

@@ -1,26 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.HasDeclaredDeps;
-import com.facebook.buck.core.description.arg.HasDefaultPlatform;
-import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,22 +24,26 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -78,15 +78,24 @@ public class RustBinaryDescription
       BuildRuleParams params,
       RustBinaryDescriptionArg args) {
     CxxDeps allDeps =
-        CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
+        CxxDeps.builder()
+            .addDeps(args.getDeps())
+            .addDeps(args.getNamedDeps().values())
+            .addPlatformDeps(args.getPlatformDeps())
+            .build();
     Linker.LinkableDepType linkStyle =
         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle());
 
     RustBinaryDescription.Type type =
         BINARY_TYPE.getFlavorAndValue(buildTarget).map(Entry::getValue).orElse(Type.STATIC);
 
-    RustToolchain rustToolchain = getRustToolchain();
-    RustPlatform rustPlatform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
+    RustToolchain rustToolchain = getRustToolchain(buildTarget.getTargetConfiguration());
+    RustPlatform rustPlatform =
+        RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
+
+    StringWithMacrosConverter converter =
+        RustCompileUtils.getMacroExpander(context, buildTarget, rustPlatform.getCxxPlatform());
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
@@ -96,29 +105,37 @@ public class RustBinaryDescription
         rustBuckConfig,
         rustPlatform,
         args.getCrate(),
+        args.getEdition(),
         args.getFeatures(),
-        Stream.of(rustPlatform.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
+        ImmutableSortedMap.copyOf(Maps.transformValues(args.getEnv(), converter::convert)),
+        Stream.of(
+                rustPlatform.getRustBinaryFlags().stream(),
+                args.getRustcFlags().stream().map(converter::convert))
             .flatMap(x -> x)
+            .map(x -> (Arg) x)
             .iterator(),
-        args.getLinkerFlags().iterator(),
+        args.getLinkerFlags().stream().map(converter::convert).iterator(),
         linkStyle,
         args.isRpath(),
         args.getSrcs(),
+        args.getMappedSrcs(),
         args.getCrateRoot(),
         ImmutableSet.of("main.rs"),
         type.getCrateType(),
-        allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()));
+        allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()),
+        args.getNamedDeps());
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractRustBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        RustCompileUtils.getPlatformParseTimeDeps(getRustToolchain(), buildTarget, constructorArg));
+        RustCompileUtils.getPlatformParseTimeDeps(
+            getRustToolchain(buildTarget.getTargetConfiguration()), buildTarget, constructorArg));
   }
 
   protected enum Type implements FlavorConvertible {
@@ -166,39 +183,28 @@ public class RustBinaryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), BINARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getRustToolchain(toolchainTargetConfiguration).getRustPlatforms(), BINARY_TYPE));
   }
 
-  private RustToolchain getRustToolchain() {
-    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
+  private RustToolchain getRustToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractRustBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
-    @Value.NaturalOrder
-    ImmutableSortedSet<String> getFeatures();
+  @RuleArg
+  interface AbstractRustBinaryDescriptionArg extends RustCommonArgs, HasTests, HasVersionUniverse {
 
-    ImmutableList<String> getRustcFlags();
-
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<Linker.LinkableDepType> getLinkStyle();
-
-    Optional<String> getCrate();
-
-    Optional<SourcePath> getCrateRoot();
 
     @Value.Default
     default boolean isRpath() {
       return true;
-    }
-
-    @Value.Default
-    default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
-      return PatternMatchedCollection.of();
     }
   }
 }

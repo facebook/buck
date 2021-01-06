@@ -28,8 +28,6 @@
  */
 package com.facebook.buck.jvm.java.coverage;
 
-import static java.util.stream.Collectors.joining;
-
 import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -39,6 +37,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -124,8 +123,7 @@ public class ReportGenerator {
   private void createReport(IBundleCoverage bundleCoverage) throws IOException {
     Set<String> unknownFormats = Sets.difference(reportFormats, KNOWN_REPORT_FORMATS);
     if (!unknownFormats.isEmpty()) {
-      throw new RuntimeException(
-          "Unable to parse formats: " + reportFormats.stream().collect(joining(",")));
+      throw new RuntimeException("Unable to parse formats: " + String.join(",", reportFormats));
     }
 
     // Create a concrete report visitors based on some supplied
@@ -218,7 +216,7 @@ public class ReportGenerator {
 
   private static Properties loadProperties(String filename) throws IOException {
     try (InputStream inputStream = new FileInputStream(filename)) {
-      try (Reader reader = new InputStreamReader(inputStream, "utf8")) {
+      try (Reader reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
         Properties result = new Properties();
         result.load(reader);
         return result;

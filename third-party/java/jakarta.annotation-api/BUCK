@@ -1,0 +1,9 @@
+prebuilt_jar(
+    name = "jakarta.annotation-api",
+    binary_jar = "jakarta.annotation-api-1.3.4.jar",
+    licenses = [
+        "LICENSE.md",
+    ],
+    source_jar = "jakarta.annotation-api-1.3.4-sources.jar",
+    visibility = ["PUBLIC"],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -25,16 +25,15 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
@@ -64,8 +63,8 @@ import javax.annotation.Nullable;
  * rule keys. Concrete implementations may tweak behavior of the builder, and at the very minimum
  * should implement {@link #setAddsToRuleKey(AddsToRuleKey)}, and {@link #setBuildRule(BuildRule)}.
  *
- * <p>This class implements {@link RuleKeyObjectSink} interface which is the primary mechanism of
- * how {@link RuleKeyFactory} and {@link AddsToRuleKey} classes feed the builder.
+ * <p>This class implements {@link AbstractRuleKeyBuilder} interface which is the primary mechanism
+ * of how {@link RuleKeyFactory} and {@link AddsToRuleKey} classes feed the builder.
  *
  * <p>Each element fed to the builder is a (key, value) pair. Keys are always simple strings,
  * typically the name of a field annotated with {@link AddToRuleKey}. Values on the other hand may
@@ -85,28 +84,22 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   private static final Logger logger = Logger.get(RuleKeyBuilder.class);
 
   private final SourcePathRuleFinder ruleFinder;
-  private final SourcePathResolver resolver;
   private final FileHashLoader hashLoader;
   private final CountingRuleKeyHasher<RULE_KEY> hasher;
 
   public RuleKeyBuilder(
       SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
       FileHashLoader hashLoader,
       CountingRuleKeyHasher<RULE_KEY> hasher) {
     super(new DefaultRuleKeyScopedHasher<>(hasher));
     this.ruleFinder = ruleFinder;
-    this.resolver = resolver;
     this.hashLoader = hashLoader;
     this.hasher = hasher;
   }
 
   public RuleKeyBuilder(
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver resolver,
-      FileHashLoader hashLoader,
-      RuleKeyHasher<RULE_KEY> hasher) {
-    this(ruleFinder, resolver, hashLoader, new CountingRuleKeyHasher<>(hasher));
+      SourcePathRuleFinder ruleFinder, FileHashLoader hashLoader, RuleKeyHasher<RULE_KEY> hasher) {
+    this(ruleFinder, hashLoader, new CountingRuleKeyHasher<>(hasher));
   }
 
   @VisibleForTesting
@@ -140,6 +133,13 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     return hasher;
   }
 
+  /** To be called from {@link #setAction(Action)}. */
+  final RuleKeyBuilder<RULE_KEY> setActionRuleKey(RuleKey ruleKey) {
+    try (Scope ignored = scopedHasher.wrapperScope(Wrapper.ACTION)) {
+      return setSingleValue(ruleKey);
+    }
+  }
+
   /** To be called from {@link #setBuildRule(BuildRule)}. */
   final RuleKeyBuilder<RULE_KEY> setBuildRuleKey(RuleKey ruleKey) {
     try (Scope ignored = scopedHasher.wrapperScope(Wrapper.BUILD_RULE)) {
@@ -162,6 +162,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    * {@link #setSourcePathAsRule}.
    */
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       Path relativePath = resolver.getRelativePath(sourcePath);
       Optional<HashCode> precomputedHash =
@@ -180,8 +181,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
         return setPath(resolver.getFilesystem(sourcePath), ideallyRelativePath);
       }
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
-      return setArchiveMemberPath(
-          resolver.getFilesystem(sourcePath), resolver.getRelativeArchiveMemberPath(sourcePath));
+      return setArchiveMemberSourcePath((ArchiveMemberSourcePath) sourcePath);
     } else {
       throw new UnsupportedOperationException(
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());
@@ -205,18 +205,34 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     return this;
   }
 
+  private RuleKeyBuilder<RULE_KEY> setArchiveMemberSourcePath(
+      ArchiveMemberSourcePath archiveSourcePath) throws IOException {
+    Path relativeArchivePath =
+        ruleFinder
+            .getSourcePathResolver()
+            .getRelativePath(archiveSourcePath.getArchiveSourcePath());
+    Preconditions.checkArgument(!relativeArchivePath.isAbsolute());
+    hasher.putArchiveMemberPath(
+        relativeArchivePath,
+        archiveSourcePath.getMemberPath(),
+        hashLoader.getForArchiveMember(
+            ruleFinder.getSourcePathResolver().getFilesystem(archiveSourcePath),
+            relativeArchivePath,
+            archiveSourcePath.getMemberPath()));
+    return this;
+  }
+
   // Paths get added as a combination of the file name and file hash. If the path is absolute
   // then we only include the file name (assuming that it represents a tool of some kind
   // that's being used for compilation or some such). This does mean that if a user renames a
   // file without changing the contents, we have a cache miss. We're going to assume that this
   // doesn't happen that often in practice.
-  @Override
   public RuleKeyBuilder<RULE_KEY> setPath(Path absolutePath, Path ideallyRelative)
       throws IOException {
     // TODO(simons): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
     if (ideallyRelative.isAbsolute()) {
-      logger.warn(
+      logger.info(
           "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
       ideallyRelative = ideallyRelative.getFileName();
     }
@@ -232,22 +248,18 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     return this;
   }
 
-  private RuleKeyBuilder<RULE_KEY> setArchiveMemberPath(
-      ProjectFilesystem filesystem, ArchiveMemberPath relativeArchiveMemberPath)
-      throws IOException {
-    Preconditions.checkArgument(!relativeArchiveMemberPath.isAbsolute());
-    hasher.putArchiveMemberPath(
-        relativeArchiveMemberPath, hashLoader.get(filesystem, relativeArchiveMemberPath));
-    return this;
-  }
-
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath).toString());
+      hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof ArchiveMemberSourcePath) {
-      hasher.putNonHashingPath(resolver.getRelativeArchiveMemberPath(sourcePath).toString());
+      ArchiveMemberSourcePath archiveSourcePath = (ArchiveMemberSourcePath) sourcePath;
+      Path relativeArchivePath = resolver.getRelativePath(archiveSourcePath.getArchiveSourcePath());
+      Preconditions.checkArgument(!relativeArchivePath.isAbsolute());
+      hasher.putArchiveMemberPath(
+          relativeArchivePath, archiveSourcePath.getMemberPath(), HashCode.fromInt(0));
     } else {
       throw new UnsupportedOperationException(
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());
@@ -277,8 +289,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
       hasher.putRuleKey((RuleKey) val);
     } else if (val instanceof BuildTarget) {
       hasher.putBuildTarget((BuildTarget) val);
-    } else if (val instanceof SourceRoot) {
-      hasher.putSourceRoot((SourceRoot) val);
     } else if (val instanceof Sha1HashCode) {
       hasher.putSha1((Sha1HashCode) val);
     } else if (val instanceof byte[]) {

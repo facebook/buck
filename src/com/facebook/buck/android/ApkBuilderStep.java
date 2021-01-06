@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -20,12 +20,13 @@ import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -57,8 +58,8 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
   private final boolean debugMode;
   private final ImmutableList<String> javaRuntimeLauncher;
-  private final int apkCompressionLevel;
   private final AppBuilderBase appBuilderBase;
+  private final AndroidSdkLocation androidSdkLocation;
 
   /**
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
@@ -68,7 +69,6 @@ public class ApkBuilderStep implements Step {
    * @param nativeLibraryDirectories List of paths to native directories.
    * @param zipFiles List of paths to zipfiles to be included into the apk.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
-   * @param apkCompressionLevel
    */
   public ApkBuilderStep(
       ProjectFilesystem filesystem,
@@ -83,7 +83,7 @@ public class ApkBuilderStep implements Step {
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       boolean debugMode,
       ImmutableList<String> javaRuntimeLauncher,
-      int apkCompressionLevel) {
+      AndroidSdkLocation androidSdkLocation) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -94,14 +94,13 @@ public class ApkBuilderStep implements Step {
     this.zipFiles = zipFiles;
     this.debugMode = debugMode;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.apkCompressionLevel = apkCompressionLevel;
     this.appBuilderBase =
         new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
+    this.androidSdkLocation = androidSdkLocation;
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     PrintStream output = null;
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
@@ -117,8 +116,7 @@ public class ApkBuilderStep implements Step {
               filesystem.getPathForRelativePath(dexFile).toFile(),
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
-              output,
-              apkCompressionLevel);
+              output);
       builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
@@ -167,9 +165,7 @@ public class ApkBuilderStep implements Step {
     args.addAll(javaRuntimeLauncher);
     args.add(
         "-classpath",
-        // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
-        // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
-        "$ANDROID_HOME/tools/lib/sdklib.jar",
+        androidSdkLocation.getSdkRootPath().toString() + "/tools/lib/sdklib.jar",
         "com.android.sdklib.build.ApkBuilderMain");
     args.add(String.valueOf(pathToOutputApkFile));
     args.add("-v" /* verbose */);

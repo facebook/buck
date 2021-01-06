@@ -1,0 +1,20 @@
+python_library(
+    name = "six",
+    srcs = [
+        "six.py",
+    ],
+    base_module = "",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+export_file(
+    name = "six.py",
+    visibility = [
+        "PUBLIC",
+    ],
+)

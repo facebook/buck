@@ -1,0 +1,12 @@
+{
+  "//example:five": [
+    "//example:six"
+  ],
+  "//example:one": [
+    "//example:five",
+    "//example:four",
+    "//example:six",
+    "//example:three",
+    "//example:two"
+  ]
+}

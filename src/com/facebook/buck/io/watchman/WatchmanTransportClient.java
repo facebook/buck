@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
@@ -71,7 +71,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     try {
       long startTimeNanos = clock.nanoTime();
       Optional<Map<String, Object>> result =
-          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, POLL_TIME_NANOS, query);
+          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, query);
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
       return result;
@@ -92,10 +92,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   private synchronized void showDisabledWarning(long timeoutNanos) {
-    if (disabledWarningShown) {
-      return;
-    }
-    if (console.getVerbosity().isSilent()) {
+    if (disabledWarningShown || console.getVerbosity().isSilent()) {
       return;
     }
     if (timeoutNanos < 0) {
@@ -111,14 +108,11 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   private Optional<Map<String, Object>> waitForQueryNotifyingUserIfSlow(
-      ListenableFuture<Optional<Map<String, Object>>> future,
-      long timeoutNanos,
-      long pollTimeNanos,
-      List<Object> query)
+      ListenableFuture<Optional<Map<String, Object>>> future, long timeoutNanos, List<Object> query)
       throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
     try {
-      return future.get(Math.min(timeoutNanos, pollTimeNanos), TimeUnit.NANOSECONDS);
+      return future.get(Math.min(timeoutNanos, POLL_TIME_NANOS), TimeUnit.NANOSECONDS);
     } catch (TimeoutException e) {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
@@ -142,13 +136,13 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
   @SuppressWarnings("unchecked")
   private Optional<Map<String, Object>> sendWatchmanQuery(List<Object> query) throws IOException {
-    LOG.debug("Sending query: %s", query);
+    LOG.verbose("Sending query: %s", query);
     bserSerializer.serializeToStream(query, transport.getOutputStream());
     Object response = bserDeserializer.deserializeBserValue(transport.getInputStream());
     LOG.verbose("Got response: %s", response);
     Map<String, Object> responseMap = (Map<String, Object>) response;
     if (responseMap == null) {
-      LOG.error("Unrecognized Watchman response: %s", response);
+      LOG.error("Unrecognized Watchman response");
       return Optional.empty();
     }
     return Optional.of(responseMap);

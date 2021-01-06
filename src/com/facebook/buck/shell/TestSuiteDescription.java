@@ -1,29 +1,29 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.test.rule.TestRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -56,9 +56,7 @@ public class TestSuiteDescription implements DescriptionWithTargetGraph<TestSuit
   private void validateTestDepsAreTestRules(BuildTarget buildTarget, BuildRuleParams params) {
     // "tests" are added to build deps via reflection
     ImmutableList<String> invalidTargets =
-        params
-            .getBuildDeps()
-            .stream()
+        params.getBuildDeps().stream()
             .filter(r -> !(r instanceof TestRule || r instanceof TestSuite))
             .limit(5) // Too much more and it gets hard to read....
             .map(r -> r.getBuildTarget().getFullyQualifiedName())
@@ -73,9 +71,8 @@ public class TestSuiteDescription implements DescriptionWithTargetGraph<TestSuit
   }
 
   /** Args for test_suite */
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractTestSuiteDescriptionArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractTestSuiteDescriptionArg extends BuildRuleArg {
     /** Test or TestSuite targets that should be invoked when this rule run through buck test */
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getTests();

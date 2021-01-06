@@ -1,54 +1,58 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.IOException;
@@ -59,11 +63,14 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
+import java.util.Map.Entry;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 public class AndroidResourceDescription
-    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<AndroidResourceDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<AndroidResourceDescriptionArg> {
 
   private static final ImmutableSet<String> NON_ASSET_FILENAMES =
       ImmutableSet.of(
@@ -71,8 +78,8 @@ public class AndroidResourceDescription
 
   private final AndroidBuckConfig androidBuckConfig;
 
-  @VisibleForTesting
-  static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR = InternalFlavor.of("resources-symlink-tree");
+  public static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
+      InternalFlavor.of("resources-symlink-tree");
 
   public static final Flavor ANDROID_RESOURCE_INDEX_FLAVOR =
       InternalFlavor.of("android-resource-index");
@@ -82,7 +89,11 @@ public class AndroidResourceDescription
 
   public static final Flavor AAPT2_COMPILE_FLAVOR = InternalFlavor.of("aapt2_compile");
 
-  public AndroidResourceDescription(AndroidBuckConfig androidBuckConfig) {
+  private final ToolchainProvider toolchainProvider;
+
+  public AndroidResourceDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
   }
 
@@ -99,22 +110,17 @@ public class AndroidResourceDescription
       BuildRuleParams params,
       AndroidResourceDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(buildTarget, projectFilesystem, ruleFinder, args.getRes(), "res");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getRes(), "res");
     } else if (flavors.contains(ASSETS_SYMLINK_TREE_FLAVOR)) {
-      return createSymlinkTree(
-          buildTarget, projectFilesystem, ruleFinder, args.getAssets(), "assets");
+      return createSymlinkTree(buildTarget, projectFilesystem, args.getAssets(), "assets");
     }
 
     // Only allow android resource and library rules as dependencies.
     Optional<BuildRule> invalidDep =
-        params
-            .getDeclaredDeps()
-            .get()
-            .stream()
+        params.getDeclaredDeps().get().stream()
             .filter(rule -> !(rule instanceof AndroidResource || rule instanceof AndroidLibrary))
             .findFirst();
     if (invalidDep.isPresent()) {
@@ -131,10 +137,10 @@ public class AndroidResourceDescription
     // hashing the contents of the entire resources directory, we try to filter out anything that
     // doesn't look like a resource.  This means when our resources are supplied from another rule,
     // we have to resort to some hackery to make sure things work correctly.
-    Pair<Optional<SymlinkTree>, Optional<SourcePath>> resInputs =
+    Pair<Optional<MappedSymlinkTree>, Optional<SourcePath>> resInputs =
         collectInputSourcePaths(
             graphBuilder, buildTarget, RESOURCES_SYMLINK_TREE_FLAVOR, args.getRes());
-    Pair<Optional<SymlinkTree>, Optional<SourcePath>> assetsInputs =
+    Pair<Optional<MappedSymlinkTree>, Optional<SourcePath>> assetsInputs =
         collectInputSourcePaths(
             graphBuilder, buildTarget, ASSETS_SYMLINK_TREE_FLAVOR, args.getAssets());
 
@@ -147,13 +153,19 @@ public class AndroidResourceDescription
       AndroidPlatformTarget androidPlatformTarget =
           context
               .getToolchainProvider()
-              .getByName(AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+              .getByName(
+                  AndroidPlatformTarget.DEFAULT_NAME,
+                  buildTarget.getTargetConfiguration(),
+                  AndroidPlatformTarget.class);
+      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
-          androidPlatformTarget,
-          ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(resDir.get())),
-          resDir.get());
+          graphBuilder,
+          aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+          resDir.get(),
+          androidBuckConfig.getSkipCrunchPngsDefault().orElse(false),
+          androidBuckConfig.getFailOnLegacyAaptErrors());
     }
 
     params =
@@ -161,11 +173,11 @@ public class AndroidResourceDescription
             Iterables.concat(
                 resInputs
                     .getSecond()
-                    .map(ruleFinder::filterBuildRuleInputs)
+                    .map(graphBuilder::filterBuildRuleInputs)
                     .orElse(ImmutableSet.of()),
                 assetsInputs
                     .getSecond()
-                    .map(ruleFinder::filterBuildRuleInputs)
+                    .map(graphBuilder::filterBuildRuleInputs)
                     .orElse(ImmutableSet.of())));
 
     if (flavors.contains(ANDROID_RESOURCE_INDEX_FLAVOR)) {
@@ -185,23 +197,22 @@ public class AndroidResourceDescription
         // step.
         params.withDeclaredDeps(
             AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
-        ruleFinder,
+        graphBuilder,
         graphBuilder.getAllRules(args.getDeps()),
         resInputs.getSecond().orElse(null),
-        resInputs.getFirst().map(SymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
+        resInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getPackage().orElse(null),
         assetsInputs.getSecond().orElse(null),
-        assetsInputs.getFirst().map(SymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
+        assetsInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         args.getResourceUnion(),
         androidBuckConfig.isGrayscaleImageProcessingEnabled());
   }
 
-  private SymlinkTree createSymlinkTree(
+  private MappedSymlinkTree createSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> symlinkAttribute,
       String outputDirName) {
     ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
@@ -215,7 +226,9 @@ public class AndroidResourceDescription
         // not cached or tracked in any way.
         Preconditions.checkArgument(
             symlinkAttribute.get().getLeft() instanceof PathSourcePath,
-            "Resource or asset symlink tree can only be built for a PathSourcePath");
+            "Resource or asset symlink tree can only be built for a PathSourcePath (%s for %s)",
+            symlinkAttribute.get().getLeft(),
+            buildTarget);
         PathSourcePath path = (PathSourcePath) symlinkAttribute.get().getLeft();
         links = collectInputFiles(path.getFilesystem(), path.getRelativePath());
       } else {
@@ -223,74 +236,16 @@ public class AndroidResourceDescription
             RichStream.from(symlinkAttribute.get().getRight().entrySet())
                 .map(e -> new AbstractMap.SimpleEntry<>(Paths.get(e.getKey()), e.getValue()))
                 .filter(e -> isPossibleResourcePath(e.getKey()))
-                .collect(ImmutableMap.toImmutableMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
       }
     }
     Path symlinkTreeRoot =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(outputDirName);
-    return new SymlinkTree(
-        "android_res",
-        buildTarget,
-        projectFilesystem,
-        symlinkTreeRoot,
-        links,
-        ImmutableMultimap.of(),
-        ruleFinder);
+    return new MappedSymlinkTree(
+        "android_res", buildTarget, projectFilesystem, symlinkTreeRoot, links);
   }
 
-  public static Optional<SourcePath> getResDirectoryForProject(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    AndroidResourceDescriptionArg arg = node.getConstructorArg();
-    if (arg.getProjectRes().isPresent()) {
-      return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectRes().get()));
-    }
-    if (!arg.getRes().isPresent()) {
-      return Optional.empty();
-    }
-    if (arg.getRes().get().isLeft()) {
-      return Optional.of(arg.getRes().get().getLeft());
-    } else {
-      return getResDirectory(graphBuilder, node);
-    }
-  }
-
-  public static Optional<SourcePath> getAssetsDirectoryForProject(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    AndroidResourceDescriptionArg arg = node.getConstructorArg();
-    if (arg.getProjectAssets().isPresent()) {
-      return Optional.of(PathSourcePath.of(node.getFilesystem(), arg.getProjectAssets().get()));
-    }
-    if (!arg.getAssets().isPresent()) {
-      return Optional.empty();
-    }
-    if (arg.getAssets().get().isLeft()) {
-      return Optional.of(arg.getAssets().get().getLeft());
-    } else {
-      return getAssetsDirectory(graphBuilder, node);
-    }
-  }
-
-  private static Optional<SourcePath> getResDirectory(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    return collectInputSourcePaths(
-            graphBuilder,
-            node.getBuildTarget(),
-            RESOURCES_SYMLINK_TREE_FLAVOR,
-            node.getConstructorArg().getRes())
-        .getSecond();
-  }
-
-  private static Optional<SourcePath> getAssetsDirectory(
-      ActionGraphBuilder graphBuilder, TargetNode<AndroidResourceDescriptionArg> node) {
-    return collectInputSourcePaths(
-            graphBuilder,
-            node.getBuildTarget(),
-            ASSETS_SYMLINK_TREE_FLAVOR,
-            node.getConstructorArg().getAssets())
-        .getSecond();
-  }
-
-  private static Pair<Optional<SymlinkTree>, Optional<SourcePath>> collectInputSourcePaths(
+  private static Pair<Optional<MappedSymlinkTree>, Optional<SourcePath>> collectInputSourcePaths(
       ActionGraphBuilder graphBuilder,
       BuildTarget resourceRuleTarget,
       Flavor symlinkTreeFlavor,
@@ -307,8 +262,8 @@ public class AndroidResourceDescription
       }
     }
     BuildTarget symlinkTreeTarget = resourceRuleTarget.withFlavors(symlinkTreeFlavor);
-    SymlinkTree symlinkTree;
-    symlinkTree = (SymlinkTree) graphBuilder.requireRule(symlinkTreeTarget);
+    MappedSymlinkTree symlinkTree;
+    symlinkTree = (MappedSymlinkTree) graphBuilder.requireRule(symlinkTreeTarget);
     return new Pair<>(Optional.of(symlinkTree), Optional.of(symlinkTree.getSourcePathToOutput()));
   }
 
@@ -378,7 +333,8 @@ public class AndroidResourceDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     if (flavors.isEmpty()) {
       return true;
     }
@@ -394,9 +350,19 @@ public class AndroidResourceDescription
     return false;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractAndroidResourceDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellNameResolver cellRoots,
+      AndroidResourceDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    AndroidTools.addParseTimeDepsToAndroidTools(
+        toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
+  }
+
+  @RuleArg
+  interface AbstractAndroidResourceDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> getRes();
 
     Optional<Either<SourcePath, ImmutableSortedMap<String, SourcePath>>> getAssets();

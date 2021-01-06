@@ -1,34 +1,33 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -37,16 +36,20 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class HaskellPrebuiltLibraryDescription
@@ -69,6 +72,8 @@ public class HaskellPrebuiltLibraryDescription
 
       private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache =
           new TransitiveCxxPreprocessorInputCache(this);
+      private final PlatformMappedCache<NativeLinkableInfo> linkableCache =
+          new PlatformMappedCache<>();
 
       @Override
       public Iterable<BuildRule> getCompileDeps(HaskellPlatform platform) {
@@ -101,53 +106,36 @@ public class HaskellPrebuiltLibraryDescription
         }
         HaskellPackage pkg = pkgBuilder.build();
 
-        return HaskellCompileInput.builder()
-            .addAllFlags(args.getExportedCompilerFlags())
-            .addPackages(pkg)
-            .build();
+        return ImmutableHaskellCompileInput.of(args.getExportedCompilerFlags(), pkg);
       }
 
       @Override
       public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
-        return HaskellHaddockInput.builder()
-            .addAllInterfaces(ImmutableList.of())
-            .addAllOutputDirs(ImmutableList.of())
-            .build();
+        return ImmutableHaskellHaddockInput.of(ImmutableList.of(), ImmutableList.of());
       }
 
-      @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableDeps(
-          BuildRuleResolver ruleResolver) {
-        return ImmutableList.of();
-      }
-
-      @Override
-      public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
-          BuildRuleResolver ruleResolver) {
-        return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
-      }
-
-      @Override
       public NativeLinkableInput getNativeLinkableInput(
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ActionGraphBuilder graphBuilder) {
+          ActionGraphBuilder graphBuilder,
+          TargetConfiguration targetConfiguration) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(SourcePathArg.from(args.getSharedLibs().values()));
         } else {
-          Linker linker = cxxPlatform.getLd().resolve(resolver);
+          Linker linker = cxxPlatform.getLd().resolve(resolver, targetConfiguration);
           ImmutableList<Arg> libArgs =
               SourcePathArg.from(
                   args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());
           if (forceLinkWhole) {
-            DefaultSourcePathResolver pathResolver =
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
             libArgs =
                 RichStream.from(libArgs)
-                    .flatMap(lib -> RichStream.from(linker.linkWhole(lib, pathResolver)))
+                    .flatMap(
+                        lib ->
+                            RichStream.from(
+                                linker.linkWhole(lib, graphBuilder.getSourcePathResolver())))
                     .toImmutableList();
           }
           builder.addAllArgs(libArgs);
@@ -156,14 +144,51 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        return Linkage.ANY;
+      public Optional<Iterable<? extends NativeLinkableGroup>> getOmnibusPassthroughDeps(
+          CxxPlatform platform, ActionGraphBuilder graphBuilder) {
+        // Haskell prebuilt libraries don't have platform-specific deps so just return all of them.
+        return Optional.of(getAllLinkableDeps());
       }
 
       @Override
-      public ImmutableMap<String, SourcePath> getSharedLibraries(
+      public NativeLinkable getNativeLinkable(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        return args.getSharedLibs();
+        return linkableCache.get(
+            cxxPlatform,
+            () -> {
+              ImmutableList<NativeLinkable> exportedDeps =
+                  getAllLinkableDeps()
+                      .transform(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                      .toList();
+              return new NativeLinkableInfo(
+                  buildTarget,
+                  getType(),
+                  ImmutableList.of(),
+                  exportedDeps,
+                  Linkage.ANY,
+                  new NativeLinkableInfo.Delegate() {
+                    @Override
+                    public NativeLinkableInput computeInput(
+                        ActionGraphBuilder graphBuilder,
+                        Linker.LinkableDepType type,
+                        boolean forceLinkWhole,
+                        TargetConfiguration targetConfiguration) {
+                      return getNativeLinkableInput(
+                          cxxPlatform, type, forceLinkWhole, graphBuilder, targetConfiguration);
+                    }
+
+                    @Override
+                    public ImmutableMap<String, SourcePath> getSharedLibraries(
+                        ActionGraphBuilder graphBuilder) {
+                      return args.getSharedLibs();
+                    }
+                  },
+                  NativeLinkableInfo.defaults());
+            });
+      }
+
+      public FluentIterable<NativeLinkableGroup> getAllLinkableDeps() {
+        return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkableGroup.class);
       }
 
       @Override
@@ -190,10 +215,8 @@ public class HaskellPrebuiltLibraryDescription
     };
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractHaskellPrebuiltLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  @RuleArg
+  interface AbstractHaskellPrebuiltLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     String getVersion();
 
     @Value.Default

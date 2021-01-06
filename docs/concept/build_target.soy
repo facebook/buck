@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace buck.build_target}
 
 /***/
@@ -10,65 +26,143 @@
       A string that is used to identify a build rule in a project.
     {/param}
     {param content}
+   
+<p>
+A <em>build target</em> is a string that identifies a build rule in your
+project. Build targets are used as arguments 
+to Buck commands, such as {call buck.cmd_build /} and {call buck.cmd_run /}.
+Build targets are also used as arguments 
+to {call buck.concept_link}{param page: 'build_rule' /}{param name: 'build rules' /}{/call} to 
+enable one build rule to reference another.  For example, a build rule 
+might use a build target to reference another rule in order to specify 
+that rule as a <em>dependency</em>.
+</p>
 
-A <em>build target</em> is a string that is used to
-identify a build rule in your project.
+
+<h4>Fully-qualified build targets</h4>
 
 <p>
-Here is an example of a fully-qualified build target:
+Here is an example of a <em>fully-qualified</em> build target:
+</p>
 
-<pre>&#x2F/java/com/facebook/share:ui</pre>
+<p>
+<pre>
+{literal}
+&#x2F/java/com/facebook/share:ui
+{/literal}
+</pre>
+</p>
 
+<p>
 A fully-qualified build target has three components:
+</p>
 
 <ol>
-  <li>The <code>&#x2F/</code> prefix indicates that this path is
-      relative to the root of your project.
-  <li>The <code>java/com/facebook/share</code> component between
-      the <code>&#x2F/</code> prefix and the colon (<code>:</code>) indicates
-      that the {call buck.build_file /} (typically named <code>BUCK</code>) is located 
-      in the directory{sp} <code>java/com/facebook/share</code>.
-  <li>The <code>ui</code> after the colon (<code>:</code>) indicates the name
-      of the build rule within the build file.
-      Build rule names must be unique within a build file.
+  <li>
+    The <code>&#x2f/</code> prefix indicates that the subsequent path is from
+    the <em>root</em> of your project. You can use 
+    the {call buck.cmd_root /} command to identify the root of your project. 
+  </li>
+  <li>
+    The <code>java/com/facebook/share</code> between the <code>&#x2f/</code> prefix 
+    and the colon (<code>:</code>) indicates that 
+    the {call buck.build_file /} (usually named <code>BUCK</code>)
+    is located in the directory{sp} <code>java/com/facebook/share</code>.
+  </li>
+  <li>
+    The <code>ui</code> after the colon (<code>:</code>) indicates 
+    the name of the build rule within the build file. Build rule names must
+    be unique within a build file. By <em>name</em> we mean, more
+    formally, the value of the <code>name</code> argument to the build
+    rule.
+  </li>
 </ol>
 
-The full regular expression of a valid build target is as follows:
+<p>
+Note that the name of the build file itself&mdash;usually
+BUCK&mdash;does <em>not</em> occur in the build target. All build files
+within a given Buck project must have the same name&mdash;defined 
+in the {call buckconfig.buildfile_name /} entry of <code>.buckconfig</code>. 
+Therefore, it is unnecessary to include the name in the target.
+</p>
+
+<p>
+The full regular expression for a fully-qualified build target is as follows:
+</p>
+
 {literal}
 <pre>
 [A-Za-z0-9._-]*//[A-Za-z0-9/._-]*:[A-Za-z0-9_/.=,@~+-]+
-|- cell name -|  | package path | |--- target name ---|
+|- cell name -|  | package path | |--- rule name ----|
 </pre>
 {/literal}
 
-A relative build target can be used to reference another build target within
-the same <a href="build_file.html">build file</a>. A relative build target
-starts with a colon (<code>:</code>) and is followed by only the third
-component (or <em>short name</em>) of the fully-qualified build target. For example,
-within <code>java/com/facebook/share/BUCK</code>, <code>:ui</code> can be
-used to reference <code>&#x2F/java/com/facebook/share:ui</code>:
+<p>
+In Buck, a <em>cell</em> defines a directory tree of one or more
+Buck packages. For more information about Buck cells and their
+relationship to packages and projects, see 
+the {call buck.key_concepts_link}{param rendered_text: 'Key Concepts' /}{/call} topic.
+</p>
 
-{literal}<pre class="prettyprint lang-py">
-# This is in java/com/facebook/share/BUCK.
+<p>
+<strong>NOTE:</strong> All target paths are assumed to start from
+the root of the Buck project. Buck does not support specifying a
+target path that starts from a directory below the root. Although the
+double forward slash (<code>//</code>) that prefixes target paths 
+can be ommitted when specifying a target from the command line 
+(see <strong>Pro Tips</strong> below), Buck still assumes that the path 
+is from the root. Buck does support <em>relative</em> build paths, 
+but in Buck, that concept refers to specifying build 
+targets <em>from within</em> a build file. See <strong>Relative build
+targets</strong> below for more details.
+</p>
+
+
+<h4>Relative build targets</h4>
+
+<p>
+A <em>relative</em> build target can be used to reference 
+a {call buck.build_rule /} <em>within the same {call buck.build_file /}</em>. 
+A relative build target starts with a colon (<code>:</code>) and is followed by
+only the third component (or <em>short name</em>) of the fully-qualified
+build target. 
+</p>
+
+<p>
+The following snippet from a build file shows an example of using a
+relative path.
+</p>
+
+<p>
+<pre class="prettyprint lang-py">
+{literal}
+#
+# Assume this rule is in //java/com/facebook/share/BUCK
+#
 java_binary(
   name = 'ui_jar',
   deps = [
-    # This would be the same as using:
-    # <code>'&#x2F;/java/com/facebook/share:ui'</code>
+    #
+    # The following target path
+    #
+    #   &#x2F;/java/com/facebook/share:ui
+    #
+    # is the same as using the following relative path.
+    #
     ':ui',
   ],
 )
-</pre>{/literal}
+{/literal}
+</pre>
+</p>
 
-Build targets are frequently used as arguments to build rules and to
-the command-line interface for Buck.
 
 <h2>Command-line Pro Tips</h2>
 
 <p>
 Here are some ways that you can reduce your typing 
-when you specify build targets as command-line arguments to the {call buck.cmd_build /} command. 
-
+when you specify build targets as command-line arguments to the {call
+buck.cmd_build /} or {call buck.cmd_run /} commands. 
 </p>
 
 <p>
@@ -76,7 +170,13 @@ Consider the following example of a fully-qualified build target used
 with the <code>buck build</code> command:
 </p>
 
-<pre>buck build &#x2F;/java/com/facebook/share:share</pre>
+<p>
+<pre>
+{literal}
+buck build &#x2F;/java/com/facebook/share:share
+{/literal}
+</pre>
+</p>
 
 <p>
 Although Buck is always strict when parsing build targets in build
@@ -84,20 +184,40 @@ files, Buck is flexible when parsing build targets on the command-line.
 Specifically, the leading <code>//</code> is optional on the command line, so the above could be:
 </p>
 
-<pre>buck build java/com/facebook/share:share</pre>
+<p>
+<pre>
+{literal}
+buck build java/com/facebook/share:share
+{/literal}
+</pre>
+</p>
+
 
 <p>
 Also, if there is a forward slash before the colon, it is ignored, so this could also be written as:
 </p>
 
-<pre>buck build java/com/facebook/share/:share</pre>
+<p>
+<pre>
+{literal}
+buck build java/com/facebook/share/:share
+{/literal}
+</pre>
+</p>
+
 
 <p>
 which enables you to produce the red text shown below using
 tab-completion, which dramatically reduces how much you need to type:
 </p>
 
-<pre>buck build <span class="com">java/com/facebook/share/</span>:share</pre>
+<p>
+<pre>
+{literal}
+buck build <span class="com">java/com/facebook/share/</span>:share
+{/literal}
+</pre>
+</p>
 
 <p>
 Finally, if the final path element matches the value specified after the colon, it can be omitted:
@@ -109,14 +229,27 @@ buck build java/com/facebook/share/
 </pre>
 
 <p>
-which makes the build target even easier to tab-complete! For this reason, the name of the build rule for the
+which makes the build target even easier to tab-complete. For this reason, the name of the build rule for the
 primary deliverable in a build file is often named the same as the parent directory. 
 That way, it can be built from the command-line with less typing.
 </p>
 
+
 <h2>See also</h2>
 
-{call buck.build_target_pattern /} 
+<p>
+Buck supports the ability to define <strong><em>aliases</em> for build targets</strong>; 
+using aliases can improve brevity when specifying targets on the Buck 
+command line.  For more information, see the {call buckconfig.alias /} section 
+in the documentation for {call buck.buckconfig_link /}. 
+</p>
+
+<p>
+A <strong>{call buck.build_target_pattern /}</strong> is a string that
+describes a set of one or more build targets.  For example, the 
+pattern <code>//...</code> is used to build an entire project. For more
+information, see the <strong>Build Target Pattern</strong> topic.
+</p>
 
     {/param}
   {/call}

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -20,17 +20,19 @@ import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Arrays;
@@ -49,13 +51,13 @@ abstract class GoAssumptions {
   private static final Pattern VERSION_PATTERN =
       Pattern.compile("^go version go(\\d+)\\.(\\d+).*$");
 
-  public static void assumeGoCompilerAvailable() throws IOException {
+  public static void assumeGoCompilerAvailable() {
     Throwable exception = null;
     try {
       ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
       FakeBuckConfig.Builder baseConfig = FakeBuckConfig.builder();
-      String goRoot = System.getenv("GOROOT");
+      String goRoot = EnvVariablesProvider.getSystemEnv().get("GOROOT");
       if (goRoot != null) {
         baseConfig.setSections("[go]", "  root = " + goRoot);
         // This should really act like some kind of readonly bind-mount onto the real filesystem.
@@ -70,7 +72,8 @@ abstract class GoAssumptions {
                   .withToolchain(
                       CxxPlatformsProvider.DEFAULT_NAME,
                       CxxPlatformsProvider.of(
-                          CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS))
+                          CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+                          CxxPlatformUtils.DEFAULT_PLATFORMS))
                   .build(),
               ToolchainCreationContext.of(
                   ImmutableMap.of(),
@@ -78,7 +81,8 @@ abstract class GoAssumptions {
                   new FakeProjectFilesystem(),
                   executor,
                   new ExecutableFinder(),
-                  TestRuleKeyConfigurationFactory.create()))
+                  TestRuleKeyConfigurationFactory.create()),
+              UnconfiguredTargetConfiguration.INSTANCE)
           .get()
           .getDefaultPlatform()
           .getCompiler();
@@ -86,6 +90,34 @@ abstract class GoAssumptions {
       exception = e;
     }
     assumeNoException(exception);
+  }
+
+  public static List<Integer> getActualVersionNumbers() throws IOException, InterruptedException {
+    List<Integer> actualVersionNumbers = null;
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    ProcessExecutor.Result goToolResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand("go", "version").build(),
+            EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeoutHandler */ Optional.empty());
+    if (goToolResult.getExitCode() == 0) {
+      String versionOut = goToolResult.getStdout().get().trim();
+      Matcher matcher = VERSION_PATTERN.matcher(versionOut);
+      if (matcher.matches()) {
+        actualVersionNumbers =
+            IntStream.range(1, 3)
+                .mapToObj(matcher::group)
+                .map(Integer::valueOf)
+                .collect(Collectors.toList());
+      } else {
+        throw new HumanReadableException("Unknown version: " + versionOut);
+      }
+    } else {
+      throw new HumanReadableException(goToolResult.getStderr().get());
+    }
+    return actualVersionNumbers;
   }
 
   public static void assumeGoVersionAtLeast(String minimumVersion) {
@@ -98,30 +130,8 @@ abstract class GoAssumptions {
         minimumVersionNumbers.size() >= 2);
     Throwable exception = null;
     List<Integer> actualVersionNumbers = null;
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
     try {
-      ProcessExecutor.Result goToolResult =
-          processExecutor.launchAndExecute(
-              ProcessExecutorParams.builder().addCommand("go", "version").build(),
-              EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-              /* stdin */ Optional.empty(),
-              /* timeOutMs */ Optional.empty(),
-              /* timeoutHandler */ Optional.empty());
-      if (goToolResult.getExitCode() == 0) {
-        String versionOut = goToolResult.getStdout().get().trim();
-        Matcher matcher = VERSION_PATTERN.matcher(versionOut);
-        if (matcher.matches()) {
-          actualVersionNumbers =
-              IntStream.range(1, 3)
-                  .mapToObj(matcher::group)
-                  .map(Integer::valueOf)
-                  .collect(Collectors.toList());
-        } else {
-          exception = new HumanReadableException("Unknown version: " + versionOut);
-        }
-      } else {
-        exception = new HumanReadableException(goToolResult.getStderr().get());
-      }
+      actualVersionNumbers = GoAssumptions.getActualVersionNumbers();
     } catch (Exception e) {
       exception = e;
     }

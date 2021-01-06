@@ -3,11 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "context",
     srcs = [
-        "AbstractBuildContext.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
-        "//src/com/facebook/buck/event:interfaces",
+        "BuildContext.java",
     ],
     visibility = [
         "PUBLIC",
@@ -15,5 +11,9 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/jvm/core:packagefinder",
         "//third-party/java/pf4j:pf4j",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/event:interfaces",
     ],
 )

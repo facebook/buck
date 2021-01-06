@@ -1,0 +1,18 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "model",
+    srcs = glob(
+        ["*.java"],
+    ),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src-gen:protobuf",
+        "//src/com/facebook/buck/rules/modern/config:config",
+    ],
+)

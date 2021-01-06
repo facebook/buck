@@ -17,6 +17,7 @@ python_library(
     deps = [
         "//third-party/py/pathlib:pathlib",
         "//third-party/py/pywatchman:pywatchman",
+        "//third-party/py/six:six",
     ],
 )
 
@@ -42,6 +43,7 @@ python_test(
         "//third-party/py:typing",
         "//third-party/py/pathlib:pathlib",
         "//third-party/py/pywatchman:pywatchman",
+        "//third-party/py/six:six",
     ],
 )
 

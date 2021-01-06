@@ -1,25 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.support.cli.args;
 
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,11 +29,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,19 +48,17 @@ public class BuckArgsMethods {
     // Utility class.
   }
 
-  private static Iterable<String> getArgsFromTextFile(Path argsPath) throws IOException {
-    return Files.readAllLines(argsPath, Charsets.UTF_8)
-        .stream()
+  private static Iterable<String> getArgsFromTextFile(AbsPath argsPath) throws IOException {
+    return Files.readAllLines(argsPath.getPath(), Charsets.UTF_8).stream()
         .filter(line -> !line.isEmpty())
         .collect(ImmutableList.toImmutableList());
   }
 
-  private static Iterable<String> getArgsFromPythonFile(Path argsPath, String suffix)
+  private static Iterable<String> getArgsFromPythonFile(AbsPath argsPath, String suffix)
       throws IOException {
     Process proc =
         Runtime.getRuntime()
-            .exec(
-                new String[] {"python", argsPath.toAbsolutePath().toString(), "--flavors", suffix});
+            .exec(new String[] {"python", argsPath.toString(), "--flavors", suffix});
     try (InputStream input = proc.getInputStream();
         OutputStream output = proc.getOutputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
@@ -68,9 +66,9 @@ public class BuckArgsMethods {
     }
   }
 
-  private static Iterable<String> getArgsFromPath(Path argsPath, Optional<String> flavors)
+  private static Iterable<String> getArgsFromPath(AbsPath argsPath, Optional<String> flavors)
       throws IOException {
-    if (!argsPath.toAbsolutePath().toString().endsWith(".py")) {
+    if (!argsPath.toString().endsWith(".py")) {
       if (flavors.isPresent()) {
         throw new HumanReadableException(
             "Flavors can only be used with python scripts that will output a config. If the file you "
@@ -95,7 +93,7 @@ public class BuckArgsMethods {
    * @return args array with AT-files expanded.
    */
   public static ImmutableList<String> expandAtFiles(
-      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping) {
+      Iterable<String> args, ImmutableMap<CellName, AbsPath> cellMapping) {
     // LinkedHashSet is used to preserve insertion order, so that a path can be printed
     Set<String> expansionPath = new LinkedHashSet<>();
     return expandFlagFilesRecursively(args, cellMapping, expansionPath);
@@ -107,7 +105,9 @@ public class BuckArgsMethods {
    * <p>Loops are not allowed and result in runtime exception.
    */
   private static ImmutableList<String> expandFlagFilesRecursively(
-      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath) {
+      Iterable<String> args,
+      ImmutableMap<CellName, AbsPath> cellMapping,
+      Set<String> expansionPath) {
     Iterator<String> argsIterator = args.iterator();
     ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
@@ -135,7 +135,7 @@ public class BuckArgsMethods {
 
   /** Recursively expands flag files into a list of command line flags. */
   private static ImmutableList<String> expandFlagFile(
-      String nextFlagFile, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath) {
+      String nextFlagFile, ImmutableMap<CellName, AbsPath> cellMapping, Set<String> expansionPath) {
     if (expansionPath.contains(nextFlagFile)) {
       // expansion path is a linked hash set, so it preserves order
       throw new HumanReadableException(
@@ -154,11 +154,12 @@ public class BuckArgsMethods {
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
-  private static Iterable<String> expandFile(String arg, ImmutableMap<CellName, Path> cellMapping) {
+  private static Iterable<String> expandFile(
+      String arg, ImmutableMap<CellName, AbsPath> cellMapping) {
     BuckCellArg argfile = BuckCellArg.of(arg);
     String[] parts = argfile.getArg().split("#", 2);
     String unresolvedArgsPath = parts[0];
-    Path projectRoot = null;
+    AbsPath projectRoot;
 
     // Try to resolve the name to a path if present
     if (argfile.getCellName().isPresent()) {
@@ -173,10 +174,10 @@ public class BuckArgsMethods {
     } else {
       projectRoot = cellMapping.get(CellName.ROOT_CELL_NAME);
     }
-    Preconditions.checkNotNull(projectRoot, "Project root not resolved");
-    Path argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
+    Objects.requireNonNull(projectRoot, "Project root not resolved");
+    AbsPath argsPath = projectRoot.resolve(Paths.get(unresolvedArgsPath));
 
-    if (!Files.exists(argsPath)) {
+    if (!Files.exists(argsPath.getPath())) {
       throw new HumanReadableException(
           "The file "
               + unresolvedArgsPath

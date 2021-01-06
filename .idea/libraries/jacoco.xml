@@ -1,13 +1,10 @@
 <component name="libraryTable">
   <library name="jacoco">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.core-0.8.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.report-0.8.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.core-0.8.3.201812281252.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.report-0.8.3.201812281252.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.core-0.8.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.report-0.8.0-sources.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

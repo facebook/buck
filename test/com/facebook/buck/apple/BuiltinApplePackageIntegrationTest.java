@@ -1,30 +1,30 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -38,6 +38,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.collect.ImmutableList;
@@ -53,12 +54,12 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class BuiltinApplePackageIntegrationTest {
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
 
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -85,15 +86,15 @@ public class BuiltinApplePackageIntegrationTest {
         .runBuckCommand("build", appTarget.getUnflavoredBuildTarget().getFullyQualifiedName())
         .assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(appTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(appTarget);
 
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget.getFullyQualifiedName());
-    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget);
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     Path templateDir =
         TestDataHelper.getTestDataScenario(this, "simple_application_bundle_no_debug");
@@ -123,7 +124,7 @@ public class BuiltinApplePackageIntegrationTest {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     ZipInspector zipInspector =
         new ZipInspector(
@@ -142,7 +143,7 @@ public class BuiltinApplePackageIntegrationTest {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     ZipInspector zipInspector =
         new ZipInspector(
@@ -199,28 +200,56 @@ public class BuiltinApplePackageIntegrationTest {
     }
   }
 
-  @Test
-  public void packageHasProperStructureForLegacyWatch() throws IOException, InterruptedException {
+  @Test(timeout = 150000)
+  public void watchAppHasProperArch() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "legacy_watch_application_bundle", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
-    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
-    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
+    workspace.addBuckConfigLocalOption("apple", "watchsimulator_target_sdk_version", "2.0");
 
-    Path destination = workspace.getDestPath();
+    ImmutableList<Pair<String, ImmutableList<String>>> platforms =
+        ImmutableList.of(
+            new Pair<>("watchos-armv7k", ImmutableList.of("armv7k")),
+            new Pair<>("watchos-arm64_32", ImmutableList.of("arm64_32")),
+            new Pair<>("watchos-arm64_32,watchos-armv7k", ImmutableList.of("arm64_32", "armv7k")));
+    for (Pair<String, ImmutableList<String>> platformInfo : platforms) {
+      BuildTarget target =
+          BuildTargetFactory.newInstance("//:DemoWatchApp#" + platformInfo.getFirst());
+      workspace
+          .runBuckCommand(
+              "build", "-c", "apple.dry_run_code_signing=true", target.getFullyQualifiedName())
+          .assertSuccess();
+      Path outputPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(
+                  filesystem,
+                  target.withAppendedFlavors(
+                      InternalFlavor.of("dwarf-and-dsym"),
+                      InternalFlavor.of("no-include-frameworks")),
+                  "%s"));
 
-    ArchiveFormat.ZIP
-        .getUnarchiver()
-        .extractArchive(
-            new DefaultProjectFilesystemFactory(),
-            workspace.getPath(BuildTargetPaths.getGenPath(filesystem, packageTarget, "%s.ipa")),
-            destination,
-            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+      Path binaryPath = outputPath.resolve("DemoWatchApp.app/DemoWatchApp");
+      ImmutableList<String> command =
+          ImmutableList.of("lipo", binaryPath.toString(), "-verify_arch");
+      ImmutableList.Builder<String> fullCommandBuilder = ImmutableList.builder();
+      ImmutableList<String> fullCommand =
+          fullCommandBuilder.addAll(command).addAll(platformInfo.getSecond()).build();
+      System.err.println(String.format("%s", fullCommand.toString()));
+      ProcessExecutor.Result result = workspace.runCommand(fullCommand);
+      assertEquals(0, result.getExitCode());
 
-    Path stub = destination.resolve("WatchKitSupport/WK");
-    assertTrue(Files.isExecutable(stub));
-    assertFalse(Files.isDirectory(destination.resolve("Symbols")));
+      Path extensionPath =
+          outputPath.resolve(
+              "DemoWatchApp.app/PlugIns/DemoWatchAppExtension.appex/DemoWatchAppExtension");
+      command = ImmutableList.of("lipo", extensionPath.toString(), "-verify_arch");
+      fullCommandBuilder = ImmutableList.builder();
+      fullCommand = fullCommandBuilder.addAll(command).addAll(platformInfo.getSecond()).build();
+      result = workspace.runCommand(fullCommand);
+      assertEquals(0, result.getExitCode());
+
+      Path stubInsideBundle = outputPath.resolve("DemoWatchApp.app/_WatchKitStub/WK");
+      assertTrue(Files.exists(stubInsideBundle));
+    }
   }
 
   @Test
@@ -289,5 +318,36 @@ public class BuiltinApplePackageIntegrationTest {
         .runBuckBuild("-c", "apple.cache_bundles_and_packages=false", "//:DemoAppPackage")
         .assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally("//:DemoAppPackage");
+  }
+
+  @Test
+  public void testPackageWithoutDefaultPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
+  }
+
+  @Test
+  public void testPackageWithoutDefaultPlatformAndFlavorOverride() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage#thisshouldfail");
+    // Assert a flavor on the target wins
+    workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertFailure();
+
+    packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
+    // Assert a flavor from configuration the target loses
+    workspace
+        .runBuckCommand(
+            "build",
+            packageTarget.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
   }
 }

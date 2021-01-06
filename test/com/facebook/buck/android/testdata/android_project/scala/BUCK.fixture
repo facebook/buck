@@ -1,19 +1,19 @@
 prebuilt_jar(
     name = "scala-library",
-    binary_jar = "scala-library-2.11.7.jar",
+    binary_jar = "scala-library-2.13.0.jar",
     visibility = ["PUBLIC"],
 )
 
 prebuilt_jar(
     name = "scala-reflect",
-    binary_jar = "scala-reflect-2.11.7.jar",
+    binary_jar = "scala-reflect-2.13.0.jar",
     visibility = ["PUBLIC"],
     deps = [":scala-library"],
 )
 
 prebuilt_jar(
     name = "scala-compiler-lib",
-    binary_jar = "scala-compiler-2.11.7.jar",
+    binary_jar = "scala-compiler-2.13.0.jar",
     visibility = ["PUBLIC"],
     deps = [
         ":scala-library",

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache;
@@ -55,52 +55,52 @@ public final class InstrumentingCacheStatsTracker implements CacheStatsTracker {
   }
 
   @Override
-  public Long getTotalHitCount() {
+  public long getTotalHitCount() {
     return totalHitCount.longValue();
   }
 
   @Override
-  public Long getTotalMissCount() {
+  public long getTotalMissCount() {
     return totalMissCount.longValue();
   }
 
   @Override
-  public Long getTotalMissMatchCount() {
+  public long getTotalMissMatchCount() {
     return totalMissMatchCount.longValue();
   }
 
   @Override
-  public Long getTotalEvictionCount() {
+  public long getTotalEvictionCount() {
     return totalEvictionCount.longValue();
   }
 
   @Override
-  public Long getTotalInvalidationCount() {
+  public long getTotalInvalidationCount() {
     return totalInvalidationCount.longValue();
   }
 
   @Override
-  public Long getTotalLoadSuccessCount() {
+  public long getTotalLoadSuccessCount() {
     return totalLoadSuccessCount.longValue();
   }
 
   @Override
-  public Long getTotalLoadExceptionCount() {
+  public long getTotalLoadExceptionCount() {
     return totalLoadExceptionCount.longValue();
   }
 
   @Override
-  public Long getTotalRetrievalTime() {
+  public long getTotalRetrievalTime() {
     return totalRetrievalTime.longValue();
   }
 
   @Override
-  public Long getTotalLoadTime() {
+  public long getTotalLoadTime() {
     return totalLoadTime.longValue();
   }
 
   @Override
-  public Long getTotalMissTime() {
+  public long getTotalMissTime() {
     return totalMissTime.longValue();
   }
 
@@ -109,7 +109,7 @@ public final class InstrumentingCacheStatsTracker implements CacheStatsTracker {
    *     requests have been made
    */
   @Override
-  public Long getAverageRetrievalTime() {
+  public long getAverageRetrievalTime() {
     long totalRequest =
         totalHitCount.longValue() + totalMissCount.longValue() + totalMissMatchCount.longValue();
     return totalRequest > 0 ? totalRetrievalTime.longValue() / totalRequest : 0;
@@ -120,7 +120,7 @@ public final class InstrumentingCacheStatsTracker implements CacheStatsTracker {
    *     have been made
    */
   @Override
-  public Long getAverageMissTime() {
+  public long getAverageMissTime() {
     long totalRequest =
         totalHitCount.longValue() + totalMissCount.longValue() + totalMissMatchCount.longValue();
     return totalRequest > 0 ? totalMissTime.longValue() / totalRequest : 0;
@@ -131,7 +131,7 @@ public final class InstrumentingCacheStatsTracker implements CacheStatsTracker {
    *     have been made
    */
   @Override
-  public Long getAverageLoadTime() {
+  public long getAverageLoadTime() {
     long totalRequest =
         totalHitCount.longValue() + totalMissCount.longValue() + totalMissMatchCount.longValue();
     return totalRequest > 0 ? totalLoadTime.longValue() / totalRequest : 0;

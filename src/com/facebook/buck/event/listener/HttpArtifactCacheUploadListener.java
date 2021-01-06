@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -68,10 +68,10 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
     ++outstandingUploads;
     if (outstandingUploads == 1) {
-      lastUploadStartMillis = event.getTimestamp();
+      lastUploadStartMillis = event.getTimestampMillis();
     }
     if (firstUploadMillis == -1) {
-      firstUploadMillis = event.getTimestamp();
+      firstUploadMillis = event.getTimestampMillis();
     }
   }
 
@@ -86,9 +86,9 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
     if (event.getStoreData().getArtifactSizeBytes().isPresent()) {
       totalUploadedBytes += event.getStoreData().getArtifactSizeBytes().get();
     }
-    lastUploadFinishMillis = event.getTimestamp();
+    lastUploadFinishMillis = event.getTimestampMillis();
     if (outstandingUploads == 0) {
-      totalNetworkTimeMillis += event.getTimestamp() - lastUploadStartMillis;
+      totalNetworkTimeMillis += event.getTimestampMillis() - lastUploadStartMillis;
     }
 
     sendCounterSnapshotIfFinished();
@@ -96,7 +96,7 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
   @Subscribe
   public synchronized void onBuildFinished(BuildEvent.Finished event) {
-    buildFinishMillis = event.getTimestamp();
+    buildFinishMillis = event.getTimestampMillis();
     sendCounterSnapshotIfFinished();
   }
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace buck.targets}
 
 /***/
@@ -14,140 +30,228 @@
 
 {call buck.command}
 {param overview}
-Lists the build targets available in the current project.
+<p>
+List information about the build targets in the current project.
+</p>
 
 <p>
-
-The following will print all build targets in the project (sorted
- alphabetically) to standard out:
-
-<pre>buck targets</pre>
-
-This command can be handy in programmatic tasks, such as running all of the
-Java tests under <code>&#x2F;/java/com/myproject</code>:
-
-{literal}<pre>
-buck targets --type java_test | \
-  grep '&#x2F;/java/com/myproject' | \
-  xargs buck test
-</pre>{/literal}
+<pre>
+buck targets &lt;{call buck.build_target /}> | &lt;{call buck.build_target_pattern /}> ...
+</pre>
+</p>
 
 <p>
+The <code>buck targets</code> command must take at least one parameter:
+a {call buck.build_target /} or {call buck.build_target_pattern /} or a
+combination of these.
+</p>
 
-A list of rules can also be passed into <code>buck targets</code> and Buck will
-only print out target information for those rules.  For example:
+<p>
+The following prints all build targets in the project (sorted
+alphabetically) to standard out:
+</p>
 
-{literal}<pre>
+<p>
+<pre>
+{literal}
+buck targets //...
+{/literal}
+</pre>
+</p>
+
+<p>
+You can pass a list of targets to <code>buck targets</code>, and Buck
+prints information only for those targets. For example, the following
+command line prints the target <code>main</code> from 
+the <code>BUCK</code> file in the root of the Buck project and all the
+targets from the <code>BUCK</code> file in the subdirectory <code>myclass</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+buck targets //:main //myclass:
+{/literal}
+</pre>
+</p>
+
+<p>
+The <code>buck targets</code> command is commonly used with 
+the <code>--show-output</code> option to obtain the output paths for the
+build artifacts for Buck targets.
+</p>
+
+<p>
+<pre>
+{literal}
 buck targets --show-output &#x2F;/java/com/myproject:binary
 > &#x2F;/java/com/myproject:binary buck-out/gen/java/com/myproject/binary.apk
-</pre>{/literal}
+{/literal}
+</pre>
+</p>
+
 
 {/param}
+
 
 {param params}
 {call buck.param}
   {param name: 'type' /}
   {param desc}
-  The types of target to filter by.  For example:
   <p>
-  <pre>
-    buck targets --type java_test java_binary
-  </pre>
+    The types of target by which to filter.  For example:
+  </p>
+
+<p>
+<pre>
+{literal}
+buck targets &#x2F;/java/com/myproject/... --type java_test java_binary
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that the <code>--type</code> parameter comes <em>after</em> the
+specified targets.
+</p>
+
+<p>
+This parameter can be handy in programmatic tasks, such as running all of
+the Java tests under <code>&#x2F;/java/com/myproject</code>:
+</p>
+
+<p>
+<pre>
+{literal}
+buck targets &#x2F;/java/com/myproject/... --type java_test | xargs buck test
+{/literal}
+</pre>
+</p>
+
+
   {/param}
 {/call}
+
 
 {call buck.param}
   {param name: 'referenced-file' /}
   {param desc}
-  Filters targets by the list of rules that include
-  {sp}<code>referenced-file</code> in their transitive closure.
 
   <p>
+  Filters targets by the list of rules that include the specified file
+  in their transitive closure.
+  </p>
 
-  For example, if a developer wanted to run all tests that could be affected by
-  particular file, they would run:
   <p>
-{literal}<pre>
-buck targets --type java_test \
+  For example, to run all tests that could be affected by a particular
+  file, you could use:
+  </p>
+
+<p>
+<pre>
+{literal}
+buck targets &#x2F;/java/com/myproject/... --type java_test \
   --referenced-file java/com/example/Foo.java |
   xargs buck test
-</pre>{/literal}
+{/literal}
+</pre>
+</p>
+
   {/param}
 {/call}
+
 
 {call buck.param}
   {param name: 'json' /}
   {param desc}
-  Print JSON representation of each target.
-  
-  <p><p>
-
-  In addition, the JSON includes the list of 'direct_dependencies' for each target, which may include additional
-  dependencies for targets whose descriptions implement ImplicitDepsInferringDescription. The fully qualified
-  names of targets are given.
 
   <p>
+  Print a JSON representation of each target.
+  </p>
 
-  For example, when resolving a genrule, the direct dependencies includes 
-  both the build targets in 'deps' as well as any build targets in a 
-  script associated with the genrule.
+  <p>
+  In addition, the JSON includes a list of <code>direct_dependencies</code> for 
+  each target, which may include additional dependencies for targets
+  whose descriptions implement <code>ImplicitDepsInferringDescription</code>. The
+  fully qualified names of targets are given.
+  </p>
+
+  <p>
+  For example, when resolving a genrule, the direct dependencies
+  includes both the build targets in <code>deps</code> as well as any
+  build targets in a script associated with the genrule.
+  </p>
+
   {/param}
 {/call}
+
 
 {call buck.param}
   {param name: 'output-attributes' /}
   {param desc}
-  Specify attributes used in JSON representation.
 
   <p>
+  Specify the attributes used in the JSON representation.
+  </p>
 
-  Omitting this option results in showing all attributes.
+  <p>
+  If you omit this option, Buck shows all attributes.
+  </p>
 
   {/param}
 {/call}
+
 
 {call buck.param}
   {param name: 'print0' /}
   {param desc}
-  Delimit targets using the ASCII NUL character (when <code>--json</code> is not specified).
-  This facilitates use with <code>xargs</code>:
   <p>
-{literal}<pre>
+  Delimit targets using the ASCII NUL character if <code>--json</code> is not specified.
+  This facilitates use with <code>xargs</code>:
+  </p>
+
+<p>
+<pre>
+{literal}
 buck targets --print0 | xargs -0 buck build
-</pre>{/literal}
-    {/param}
-  {/call}
+{/literal}
+</pre>
+</p>
+
+  {/param}
+{/call}
+
 
 {call buck.param}
   {param name: 'resolve-alias' /}
   {param desc}
-  Print the fully-qualified build target for the specified alias[es].  This
-  command also accepts build targets.  See  <a
-  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> for more
-  information.
+
+  <p>
+  Print the fully-qualified build target for the specified alias[es]. 
+  This command also accepts build targets. For more information, 
+  see {call buckconfig.alias /} in the <code>.buckconfig</code> documentation.
+  </p>
+
   {/param}
 {/call}
 
-{call buck.param}
-  {param name: 'show-output' /}
-  {param desc}
-  Prints the relative path(s) to the output for each rule after the rule name. If the rule generates
-  generated sources as well as producing an output artifact, the output artifact will be printed
-  first, followed by the generated source path (if any).
-  {/param}
-{/call}
+
+{call command_common.show_output_param /}
 
 
 {call buck.param}
   {param name: 'show-rulekey' /}
   {param desc}
+
   <p>
-  Prints the {call buck.concept_link}{param page: 'rule_keys' /}{param name: 'rule keys' /}{/call},
+  Print the {call buck.concept_link}{param page: 'rule_keys' /}{param name: 'rule keys' /}{/call},
   for the specified targets. 
   </p>
+
   <p>
-  For example, if you have a rule named <code>main</code> defined in the build file
-  in your current directory, the following command prints its rule key.
+  For example, if you have a rule named <code>main</code> defined in the
+  build file in your current directory, the following command prints its
+  rule key.
   </p>
 
 <p>
@@ -174,6 +278,7 @@ buck targets --show-rulekey ':main'
 {call buck.param}
   {param name: 'show-transitive-rulekeys' /}
   {param desc}
+
   <p>
   When specified in conjunction with <code>--show-rulekey</code>, 
   prints the {call buck.concept_link}{param page: 'rule_keys' /}{param name: 'rule keys' /}{/call} for 
@@ -202,13 +307,23 @@ buck targets --show-rulekey --show-transitive-rulekeys ':main'
 {call buck.param}
   {param name: 'show-target-hash' /}
   {param desc}
-  Prints each rule's target hash after the rule name. A target hash is created by finding all of the
-  transitive dependencies of the given target and hashing all of their attributes and files they
-  reference. For more details about how the referenced files are hashed see the {sp}
-  <code>--target-hash-file-mode</code> flag. The format of the data that is hashed is undocumented
-  and can change between Buck versions. Target hashes can be used to detect which targets are
-  affected when source files of BUCK files change: if a target is affected, its target hash will
-  be different after the change from what it was before.
+
+  <p>
+  Print each rule's target hash after the rule's name. Target hashes can
+  be used to detect which targets are affected when source files in BUCK
+  files change: if a target is affected, its target hash will be
+  different after the change from what it was before.
+  </p>
+
+  <p>
+  A target hash is created by finding all the transitive dependencies of
+  the given target and hashing all their attributes and the files they
+  reference. For more details about how the referenced files are hashed
+  see the {sp} <code>--target-hash-file-mode</code> flag. <em>The format
+  of the data that is hashed is undocumented and can change between Buck
+  versions.</em> 
+  </p>
+
   {/param}
 {/call}
 
@@ -216,31 +331,63 @@ buck targets --show-rulekey --show-transitive-rulekeys ':main'
 {call buck.param}
   {param name: 'target-hash-file-mode' /}
   {param desc}
-  Modifies how target hashes are computed. Can be either <code>PATHS_AND_CONTENTS</code> or {sp}
-  <code>PATHS_ONLY</code>. If set to <code>PATHS_AND_CONTENTS</code> (the default), the contents of
-  all files referenced from the targets will be used to compute the target hash. If set to {sp}
-  <code>PATHS_ONLY</code>, only files' paths contribute to the hash. <code>PATHS_ONLY</code> will
-  generally be faster because it does not need to read all of the referenced files, but it will not
-  detect file changes automatically. See <code>--target-hash-modified-paths</code> for another way
-  to handle changes to referenced files without losing the performance benefits.
+
+  <p>
+  Modify how target hashes are computed. 
+  </p>
+
+  <p>
+  Can be set to either <code>PATHS_AND_CONTENTS</code> or {sp}<code>PATHS_ONLY</code>. 
+  </p>
+
+  <p>
+  If set to <code>PATHS_AND_CONTENTS</code> (the default), the contents of
+  all files referenced from the targets will be used to compute the target hash. 
+  </p>
+
+  <p>
+  If set to {sp} <code>PATHS_ONLY</code>, only files' paths contribute to the 
+  hash. <code>PATHS_ONLY</code> will generally be faster because it does not 
+  need to read all of the referenced files, but it will not detect file
+  changes automatically. See <code>--target-hash-modified-paths</code> for 
+  another way to handle changes to referenced files without losing
+  the performance benefits.
+  </p>
+
   {/param}
 {/call}
 
 {call buck.param}
   {param name: 'target-hash-modified-paths' /}
   {param desc}
-  Modifies how target hashes are computed. This option is only effective when {sp}
-  <code>--target-hash-file-mode</code> is set to <code>PATHS_ONLY</code>, otherwise the actual
-  contents of the files are used to detect modifications and this option is ignored. If a target
-  or its dependencies reference a file from this set, the target's hash will be different than if
-  this option was omitted. Otherwise, the target's hash will be the same as if this option was
-  omitted. This option can be used to detect changes in referenced files if the list of modified
-  files is available from an external source, for example a source control system.
+
+  <p>
+  Modify how target hashes are computed. 
+  </p>
+
+  <p>
+  If a target or its dependencies reference a file from the specified set of
+  paths, the target's hash will be different than if this option had
+  been omitted. Otherwise, the target's hash will be the same as if this
+  option was omitted. 
+  </p>
+
+  <p>
+  This option can be used to detect changes in referenced files if the
+  list of modified files is available from an external source, such as a
+  source control system.
+  </p>
+
+  <p>
+  This option is effective only when {sp} <code>--target-hash-file-mode</code> is 
+  set to <code>PATHS_ONLY</code>. Otherwise, the actual contents of the
+  files are used to detect modifications and this option is ignored. 
+  </p>
+
   {/param}
 {/call}
 
-{/param}
-
+  {/param}
 {/call}
 
     {/param}  // content

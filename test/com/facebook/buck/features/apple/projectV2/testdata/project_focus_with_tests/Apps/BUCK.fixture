@@ -1,0 +1,22 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_bundle(
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestAppBinary"],
+)
+
+apple_binary(
+    name = "TestAppBinary",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        "//Dep1:Dep1",
+    ],
+)

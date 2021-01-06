@@ -1,0 +1,190 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package facebook.remote_execution;
+
+import "google/protobuf/wrappers.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "RemoteExecutionMetadataProto";
+option java_package = "com.facebook.buck.remoteexecution.proto";
+
+// Contains tracing information.
+message TraceInfo {
+  // ID for all the trace information corresponding to the current session.
+  string trace_id = 1;
+
+  // ID of an edge that needs to be closed (ie, added a end point).
+  string edge_id = 2;
+}
+
+// RESessionID uniquely identifies a full remote execution session.
+message RESessionID {
+  string id = 1;
+}
+
+// Present if the execution was started by buck.
+message BuckInfo {
+  // The buck build id of the command starting the remote execution session.
+  string build_id = 1;
+  // Name of the Build Rule that's being executed
+  string rule_name = 2;
+  // Auxiliary tag set for builds with non-standard configurations.
+  string auxiliary_build_tag = 3;
+  // Prefix for the top level target that was passed to 'buck build'
+  // If multiple targets were passed, this is the common prefix (if there is one)
+  // Note: project_prefix is not necessarily the same as the prefix for the specific action
+  // that is being executed right now
+  string project_prefix = 4;
+  // Buck version
+  string version = 5;
+}
+
+// Data about the client that wants to start the session - may be ignored if
+// the RESessionID (and associated CreatorInfo) is already known.
+message CreatorInfo {
+  string username = 1;
+  // Freeform string that a client (e.g. an IDE, CI) may set to identify itself.
+  string client_type = 2;
+}
+
+// Information related with the ExecutionEngine involved in this request.
+message ExecutionEngineInfo {
+  string hostname = 1;
+}
+
+// Information related to any Worker involved in this request.
+message WorkerInfo {
+  string hostname = 1;
+
+  // Absolute path in the FS where the execution is running.
+  string execution_path = 2;
+}
+
+message ManifoldBucket {
+  string name = 1;
+}
+
+message CasClientInfo {
+  enum CasStreamingMode {
+    BUCKETS = 0;
+    HTTP = 1;
+  }
+
+  // Name of the tool reaching the CAS, eg, buck, worker, engine, ...
+  string name = 1;
+  // This is the execution id from the worker or sandcastle id
+  string job_id = 2;
+  // Passed from the client to decide which streaming mode to use
+  CasStreamingMode streaming_mode = 3;
+  // This allows overriding the manifold bucket
+  ManifoldBucket manifold_bucket = 4;
+}
+
+message CapabilityValue {
+  string value = 1;
+}
+
+// minimal worker requirements which should be satisfied to execute a given action
+message WorkerRequirements {
+  enum WorkerPlatformType {
+    LINUX = 0;
+    ANDROID_EMULATOR = 1;
+  }
+
+  enum WorkerSize {
+    SMALL = 0;
+    MEDIUM = 1;
+    LARGE = 2;
+    XLARGE = 3;
+    XXLARGE = 4;
+  }
+
+  WorkerSize worker_size = 1;
+  WorkerPlatformType platform_type = 2;
+  // Indicates if execution engine should try to execute current action with more powerful requirements
+  bool should_try_larger_worker_on_oom = 3;
+
+  // Canaried workers have a "testing" capability (with a random value). This
+  // should be set when we want the request to go to a specific canaried worker.
+  CapabilityValue testing = 4;
+  CapabilityValue task_name = 5;
+}
+
+// Information about the job that generated an action. Unknown fields can simply be left empty.
+message ClientJobInfo {
+  // Deployment stage of the job producing this action (e.g. prod).
+  string deployment_stage = 1;
+
+  // Job identifier.
+  string instance_id = 2;
+
+  // Job group identifier (aka nonce), if it's part of group of jobs.
+  string group_id = 3;
+
+  // Job tenant.
+  string client_side_tenant = 4;
+}
+
+// Optional context for an Action. May change between Actions from same RE Session if multiple jobs
+// are associated with same Session.
+message ClientActionInfo {
+  // Name of repository.
+  string repository = 1;
+  // High-level schedule type (continuous, user etc.) of job that triggered sending the action.
+  string schedule_type = 2;
+  // Freeform label identifying groups of jobs triggering actions.
+  string re_session_label = 3;
+
+  // Tells workers of this tenant type to give priority to this action.
+  // Note: it might still be picked up by a different worker
+  string tenant_id = 4;
+}
+
+// Executed action information
+message ExecutedActionInfo {
+  int64 cpu_stat_usage_usec = 1;
+  int64 cpu_stat_user_usec = 2;
+  int64 cpu_stat_system_usec = 3;
+  // Whether we should fallback to local retry if this action fails with exit code 1.
+  // Fallback means we don't trust if this action failed and it may be flaky.
+  google.protobuf.BoolValue is_fallback_enabled_for_completed_action = 4;
+}
+
+message DebugInfo {
+  uint32 pause_before_clean_timeout = 1;
+}
+
+// This is propagated in GRPC header "re-metadata-bin".
+message RemoteExecutionMetadata {
+  RESessionID re_session_id = 1;
+  BuckInfo buck_info = 2;
+  TraceInfo trace_info = 3;
+  CreatorInfo creator_info = 4;
+  ExecutionEngineInfo engine_info = 5;
+  WorkerInfo worker_info = 6;
+  CasClientInfo cas_client_info = 7;
+  WorkerRequirements worker_requirements = 8;
+  // 9 - Do not use, deprecated field.
+  ClientActionInfo client_action_info = 10;
+  ExecutedActionInfo executed_action_info = 11;
+  DebugInfo debug_info = 12;
+  ClientJobInfo client_job_info = 13;
+
+  // 1000-2000 reserved for RE internal protobufs.
+}

@@ -1,8 +1,8 @@
 prebuilt_jar(
     name = "protobuf",
-    binary_jar = "protobuf-java-3.5.1.jar",
+    binary_jar = "protobuf-java-3.7.0.jar",
     licenses = ["LICENSE"],
-    source_jar = "protobuf-java-3.5.1-sources.jar",
+    source_jar = "protobuf-java-3.7.0-sources.jar",
     visibility = ["PUBLIC"],
     deps = [],
 )
@@ -11,18 +11,17 @@ prebuilt_jar(
     name = "protobuf-lite",
     binary_jar = "protobuf-lite-3.0.1.jar",
     licenses = ["LICENSE"],
+    provided = True,
     source_jar = "protobuf-lite-3.0.1-sources.jar",
     visibility = ["PUBLIC"],
-    provided = True,
     deps = [],
 )
 
 prebuilt_jar(
     name = "protobuf-util",
-    binary_jar = "protobuf-java-util-3.5.1.jar",
+    binary_jar = "protobuf-java-util-3.7.0.jar",
     licenses = ["LICENSE"],
-    source_jar = "protobuf-java-util-3.5.1-sources.jar",
+    source_jar = "protobuf-java-util-3.7.0-sources.jar",
     visibility = ["PUBLIC"],
     deps = [],
 )
-

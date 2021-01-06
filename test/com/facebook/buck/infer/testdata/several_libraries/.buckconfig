@@ -1,0 +1,8 @@
+[java]
+    abi_generation_mode = source
+    compile_against_abis = true
+    jar_spool_mode = direct_to_jar
+
+[infer_java]
+  # TODO(arr): switch to 'latest' when supported by infer wrapper
+  version=5941f2dee2c3a54d756207479996920a43b08810

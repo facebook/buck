@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,14 +19,16 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -45,30 +47,32 @@ public class SharedLibraryInterfacePlatforms {
     }
 
     Path ndkDir = androidNdk.get().getNdkRootPath();
-    NdkCompilerType compilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
     String ndkVersion = androidNdk.get().getNdkVersion();
+    NdkCompilerType compilerType = NdkCxxPlatforms.getDefaultCompilerTypeForNdk(ndkVersion);
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
     String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
     String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
     NdkCxxPlatformCompiler compiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(compilerType)
-            .setVersion(compilerVersion)
-            .setGccVersion(gccVersion)
-            .build();
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkPlatforms =
+        NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion);
+    ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             cxxBuckConfig,
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             filesystem,
             ndkDir,
             compiler,
-            NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+            NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion),
             NdkCxxRuntimeType.DYNAMIC,
             AndroidNdkHelper.getDefaultCpuAbis(ndkVersion),
             Platform.detect());
     // Just return one of the NDK platforms, which should be enough to test shared library interface
     // functionality.
-    return Optional.of(ndkPlatforms.values().iterator().next().getCxxPlatform());
+    return Optional.of(
+        ndkPlatforms
+            .values()
+            .iterator()
+            .next()
+            .getCxxPlatform()
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE));
   }
 }

@@ -1,22 +1,24 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testrunner;
 
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.environment.PlatformType;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,12 +49,32 @@ public abstract class BaseRunner {
   // new features.
   protected static final String[] RUNNER_CAPABILITIES = {"simple_test_selector"};
 
+  /**
+   * Flag indicating whether strings coming from external sources should be processed to remove
+   * carriage return characters (\r).
+   *
+   * <p>This is necessary for XML processing since XML specification consider \n as a line separator
+   * and XML transformers can represent \r characters in various ways.
+   */
+  private static final boolean NEED_TO_REMOVE_CR =
+      Platform.detect().getType() == PlatformType.WINDOWS;
+
+  private static String removeCRIfNeeded(String text) {
+    if (NEED_TO_REMOVE_CR) {
+      return text.replace("\r\n", "\n").replace('\r', '\n');
+    }
+    return text;
+  }
+
   protected File outputDirectory;
   protected List<String> testClassNames;
   protected long defaultTestTimeoutMillis;
   protected TestSelectorList testSelectorList;
   protected boolean isDryRun;
   protected boolean shouldExplainTestSelectors;
+
+  private final TestXmlEscaper attributeEscaper = TestXmlEscaper.ATTRIBUTE_ESCAPER;
+  private final TestXmlEscaper contentEscaper = TestXmlEscaper.CONTENT_ESCAPER;
 
   public abstract void run() throws Throwable;
 
@@ -72,13 +94,18 @@ public abstract class BaseRunner {
     Element root = doc.createElement("testcase");
     root.setAttribute("name", testClassName);
     root.setAttribute("runner_capabilities", getRunnerCapabilities());
+    root.setAttribute("testprotocol", "1.0");
     doc.appendChild(root);
 
     for (TestResult result : results) {
       Element test = doc.createElement("test");
 
       // suite attribute
-      test.setAttribute("suite", result.testClassName);
+      test.setAttribute(
+          "suite",
+          (result.testMethodName == null && result.testClassName.equals("null"))
+              ? testClassName
+              : result.testClassName);
 
       // name attribute
       test.setAttribute("name", result.testMethodName);
@@ -98,23 +125,25 @@ public abstract class BaseRunner {
       Throwable failure = result.failure;
       if (failure != null) {
         String message = failure.getMessage();
-        test.setAttribute("message", message);
+        test.setAttribute("message", attributeEscaper.escape(message));
 
         String stacktrace = stackTraceToString(failure);
-        test.setAttribute("stacktrace", stacktrace);
+        test.setAttribute("stacktrace", attributeEscaper.escape(stacktrace));
       }
 
       // stdout, if non-empty.
       if (result.stdOut != null) {
         Element stdOutEl = doc.createElement("stdout");
-        stdOutEl.appendChild(doc.createTextNode(result.stdOut));
+        stdOutEl.appendChild(
+            doc.createTextNode(contentEscaper.escape(removeCRIfNeeded(result.stdOut))));
         test.appendChild(stdOutEl);
       }
 
       // stderr, if non-empty.
       if (result.stdErr != null) {
         Element stdErrEl = doc.createElement("stderr");
-        stdErrEl.appendChild(doc.createTextNode(result.stdErr));
+        stdErrEl.appendChild(
+            doc.createTextNode(contentEscaper.escape(removeCRIfNeeded(result.stdErr))));
         test.appendChild(stdErrEl);
       }
 

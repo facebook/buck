@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace buckconfig}
 
 /**
@@ -52,29 +68,24 @@
  * @param section The section the entry is in.
  */
 {template .section_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}"><code>[{$section}]</code></a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}"><code>[{$section}]</code></a>
 {/template}
 
-/***/
-{template .dx_threads}
-{call .entry_link}
-  {param section : 'dx' /}
-  {param entry : 'threads' /}
-{/call}
+/**
+ * @param title Text for heading that appears in rendered content
+ * @param id    ID string that is used to link to the heading. See
+ *              .heading_link template.
+ */
+{template .section_concept_h2}
+  <h2 id="{$id}">{$title}&nbsp;<a class="inline-link" href="#{$id}">#</a></h2>
 {/template}
 
-/***/
-{template .httpserver}
-{call .section_link}
-  {param section: 'httpserver' /}
-{/call}
-{/template}
-
-/***/
-{template .maven_repositories}
-{call .section_link}
-  {param section: 'maven_repositories' /}
-{/call}
+/**
+ * @param id             ID string for the heading to link to. See .heading template.
+ * @param rendered_text  The rendered text for the link.
+ */
+{template .section_concept_link}
+  <a href="#{$id}"><strong>{$rendered_text}</strong></a><br>
 {/template}
 
 /**
@@ -83,24 +94,615 @@
  * @param? link_text The text of the link
  */
 {template .entry_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}{$section}.{$entry}{/if}</a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}<code>[{$section}].{$entry}</code>{/if}</a>
 {/template}
+
+/*** GENERATED ***/
+/***/
+{template .adb}
+{call .section_link}
+  {param section: 'adb' /}
+{/call}
+{/template}
+
+
+/***/
+{template .alias}
+{call .section_link}
+  {param section: 'alias' /}
+{/call}
+{/template}
+
+
+/***/
+{template .android}
+{call .section_link}
+  {param section: 'android' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple}
+{call .section_link}
+  {param section: 'apple' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build}
+{call .section_link}
+  {param section: 'build' /}
+{/call}
+{/template}
+
+
+/***/
+{template .buildfile}
+{call .section_link}
+  {param section: 'buildfile' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache}
+{call .section_link}
+  {param section: 'cache' /}
+{/call}
+{/template}
+
+
+/***/
+{template .client}
+{call .section_link}
+  {param section: 'client' /}
+{/call}
+{/template}
+
+
+/***/
+{template .color}
+{call .section_link}
+  {param section: 'color' /}
+{/call}
+{/template}
+
+
+/***/
+{template .credentials}
+{call .section_link}
+  {param section: 'credentials' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx}
+{call .section_link}
+  {param section: 'cxx' /}
+{/call}
+{/template}
+
+
+/***/
+{template .d}
+{call .section_link}
+  {param section: 'd' /}
+{/call}
+{/template}
+
+
+/***/
+{template .doctor}
+{call .section_link}
+  {param section: 'doctor' /}
+{/call}
+{/template}
+
+
+/***/
+{template .download}
+{call .section_link}
+  {param section: 'download' /}
+{/call}
+{/template}
+
+
+/***/
+{template .dx}
+{call .section_link}
+  {param section: 'dx' /}
+{/call}
+{/template}
+
+
+/***/
+{template .export_file}
+{call .section_link}
+  {param section: 'export_file' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go}
+{call .section_link}
+  {param section: 'go' /}
+{/call}
+{/template}
+
+
+/***/
+{template .groovy}
+{call .section_link}
+  {param section: 'groovy' /}
+{/call}
+{/template}
+
+
+/***/
+{template .halide}
+{call .section_link}
+  {param section: 'halide' /}
+{/call}
+{/template}
+
+
+/***/
+{template .httpserver}
+{call .section_link}
+  {param section: 'httpserver' /}
+{/call}
+{/template}
+
+
+/***/
+{template .incompatible}
+{call .section_link}
+  {param section: 'incompatible' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij}
+{call .section_link}
+  {param section: 'intellij' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java}
+{call .section_link}
+  {param section: 'java' /}
+{/call}
+{/template}
+
+
+/***/
+{template .kotlin}
+{call .section_link}
+  {param section: 'kotlin' /}
+{/call}
+{/template}
+
+
+/***/
+{template .log}
+{call .section_link}
+  {param section: 'log' /}
+{/call}
+{/template}
+
+
+/***/
+{template .lua}
+{call .section_link}
+  {param section: 'lua' /}
+{/call}
+{/template}
+
+
+/***/
+{template .maven_repositories}
+{call .section_link}
+  {param section: 'maven_repositories' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk}
+{call .section_link}
+  {param section: 'ndk' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml}
+{call .section_link}
+  {param section: 'ocaml' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser}
+{call .section_link}
+  {param section: 'parser' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project}
+{call .section_link}
+  {param section: 'project' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python}
+{call .section_link}
+  {param section: 'python' /}
+{/call}
+{/template}
+
+
+/***/
+{template .repositories}
+{call .section_link}
+  {param section: 'repositories' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources}
+{call .section_link}
+  {param section: 'resources' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_per_rule}
+{call .section_link}
+  {param section: 'resources_per_rule' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust}
+{call .section_link}
+  {param section: 'rust' /}
+{/call}
+{/template}
+
+
+/***/
+{template .sandbox}
+{call .section_link}
+  {param section: 'sandbox' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test}
+{call .section_link}
+  {param section: 'test' /}
+{/call}
+{/template}
+
+
+/***/
+{template .thrift}
+{call .section_link}
+  {param section: 'thrift' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools}
+{call .section_link}
+  {param section: 'tools' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui}
+{call .section_link}
+  {param section: 'ui' /}
+{/call}
+{/template}
+
+
+/***/
+{template .worker}
+{call .section_link}
+  {param section: 'worker' /}
+{/call}
+{/template}
+
+
+/***/
+{template .adb_adb_restart_on_failure}
+{call .entry_link}
+  {param section: 'adb' /}
+  {param entry: 'adb_restart_on_failure' /}
+{/call}
+{/template}
+
+
+/***/
+{template .adb_multi_install_mode}
+{call .entry_link}
+  {param section: 'adb' /}
+  {param entry: 'multi_install_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .android_build_tools_version}
+{call .entry_link}
+  {param section: 'android' /}
+  {param entry: 'build_tools_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .android_compile_sdk_version}
+{call .entry_link}
+  {param section: 'android' /}
+  {param entry: 'compile_sdk_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .android_sdk_path}
+{call .entry_link}
+  {param section: 'android' /}
+  {param entry: 'sdk_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_asset_catalog_validation}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'asset_catalog_validation' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_code_sign_identities_command}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'code_sign_identities_command' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_codesign}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'codesign' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_codesign_timeout}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'codesign_timeout' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_default_debug_info_format_for_binaries}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'default_debug_info_format_for_binaries' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_default_debug_info_format_for_libraries}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'default_debug_info_format_for_libraries' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_default_debug_info_format_for_tests}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'default_debug_info_format_for_tests' /}
+{/call}
+{/template}
+
 
 /***/
 {template .apple_device_helper_path}
 {call .entry_link}
-  {param section : 'apple' /}
-  {param entry : 'device_helper_path' /}
+  {param section: 'apple' /}
+  {param entry: 'device_helper_path' /}
 {/call}
 {/template}
+
+
+/***/
+{template .apple_ipa_compression_level}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'ipa_compression_level' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_package_command}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'package_command' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_package_extension}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'package_extension' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_provisioning_profile_read_command}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'provisioning_profile_read_command' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_provisioning_profile_search_path}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'provisioning_profile_search_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_replacement}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'replacement' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_target_sdk_version}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'target_sdk_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_test_log}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'test_log' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_toolchains_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'toolchains_override' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_use_flavored_cxx_sections}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'use_flavored_cxx_sections' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_use_header_maps_in_xcode}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'use_header_maps_in_xcode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_version_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'version_override' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_xcode_developer_dir}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'xcode_developer_dir' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_xcode_developer_dir_for_tests}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'xcode_developer_dir_for_tests' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_xcode_tool_name_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'xcode_tool_name_override' /}
+{/call}
+{/template}
+
+
+/***/
+{template .apple_xctool_default_destination_specifier}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: 'xctool_default_destination_specifier' /}
+{/call}
+{/template}
+
 
 /***/
 {template .apple_xctool_path}
 {call .entry_link}
-  {param section : 'apple' /}
-  {param entry : 'xctool_path' /}
+  {param section: 'apple' /}
+  {param entry: 'xctool_path' /}
 {/call}
 {/template}
+
 
 /***/
 {template .apple_xctool_zip_target}
@@ -110,45 +712,24 @@
 {/call}
 {/template}
 
+
 /***/
-{template .apple_package_command}
+{template .build_artifact_cache_size_limit}
 {call .entry_link}
-  {param section: 'apple' /}
-  {param entry: '*_package_command' /}
+  {param section: 'build' /}
+  {param entry: 'artifact_cache_size_limit' /}
 {/call}
 {/template}
 
+
 /***/
-{template .apple_package_extension}
+{template .build_delete_temporaries}
 {call .entry_link}
-  {param section: 'apple' /}
-  {param entry: '*_package_extension' /}
+  {param section: 'build' /}
+  {param entry: 'delete_temporaries' /}
 {/call}
 {/template}
 
-/***/
-{template .apple_toolchains_override}
-{call .entry_link}
-  {param section: 'apple' /}
-  {param entry: '*_toolchains_override' /}
-{/call}
-{/template}
-
-/***/
-{template .apple_replacement}
-{call .entry_link}
-  {param section: 'apple' /}
-  {param entry: '*_replacement' /}
-{/call}
-{/template}
-
-/***/
-{template .apple_xcode_tool_name_override}
-{call .entry_link}
-  {param section: 'apple' /}
-  {param entry: '*_xcode_tool_name_override' /}
-{/call}
-{/template}
 
 /***/
 {template .build_depfiles}
@@ -158,6 +739,79 @@
 {/call}
 {/template}
 
+
+/***/
+{template .build_engine}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'engine' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_max_depfile_cache_entries}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'max_depfile_cache_entries' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_network_threads}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'network_threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_rule_key_caching}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'rule_key_caching' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_thread_core_ratio}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'thread_core_ratio' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_thread_core_ratio_max_threads}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'thread_core_ratio_max_threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_thread_core_ratio_min_threads}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'thread_core_ratio_min_threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .build_thread_core_ratio_reserved_cores}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'thread_core_ratio_reserved_cores' /}
+{/call}
+{/template}
+
+
 /***/
 {template .build_threads}
 {call .entry_link}
@@ -165,6 +819,16 @@
   {param entry: 'threads' /}
 {/call}
 {/template}
+
+
+/***/
+{template .build_type}
+{call .entry_link}
+  {param section: 'build' /}
+  {param entry: 'type' /}
+{/call}
+{/template}
+
 
 /***/
 {template .buildfile_includes}
@@ -174,6 +838,241 @@
 {/call}
 {/template}
 
+
+/***/
+{template .buildfile_name}
+{call .entry_link}
+  {param section: 'buildfile' /}
+  {param entry: 'name' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_action_graph_cache_check_enabled}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'action_graph_cache_check_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_dir}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'dir' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_dir_cache_names}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'dir_cache_names' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_dir_max_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'dir_max_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_dir_mode}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'dir_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_client_tls_cert}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_client_tls_cert' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_client_tls_key}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_client_tls_key' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_connect_timeout_seconds}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_connect_timeout_seconds' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_error_message_format}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_error_message_format' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_error_message_limit}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_error_message_limit' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_max_concurrent_writes}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_max_concurrent_writes' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_max_store_attempts}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_max_store_attempts' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_max_store_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_max_store_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_mode}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_read_headers}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_read_headers' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_read_timeout_seconds}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_read_timeout_seconds' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_store_retry_interval_millis}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_store_retry_interval_millis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_timeout_seconds}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_timeout_seconds' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_url}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_url' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_write_headers}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_write_headers' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_write_timeout_seconds}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_write_timeout_seconds' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_http_writer_shutdown_timeout_seconds}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_writer_shutdown_timeout_seconds' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_hybrid_thrift_endpoint}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'hybrid_thrift_endpoint' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_load_balancing_type}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'load_balancing_type' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_max_action_graph_cache_entries}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'max_action_graph_cache_entries' /}
+{/call}
+{/template}
+
+
 /***/
 {template .cache_mode}
 {call .entry_link}
@@ -181,6 +1080,7 @@
   {param entry: 'mode' /}
 {/call}
 {/template}
+
 
 /***/
 {template .cache_serve_local_cache}
@@ -190,6 +1090,340 @@
 {/call}
 {/template}
 
+
+/***/
+{template .cache_served_local_cache_mode}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'served_local_cache_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_error_check_time_range_millis}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_error_check_time_range_millis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_health_check_internal_millis}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_health_check_internal_millis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_latency_check_time_range_millis}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_latency_check_time_range_millis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_max_acceptable_latency_millis}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_max_acceptable_latency_millis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_max_error_percentage}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_max_error_percentage' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_ping_endpoint}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_ping_endpoint' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_server_pool}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_server_pool' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_slb_timeout_millis}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'slb_timeout_millis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_sqlite_cache_names}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'sqlite_cache_names' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_sqlite_inlined_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'sqlite_inlined_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_sqlite_max_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'sqlite_max_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_sqlite_mode}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'sqlite_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_two_level_cache_enabled}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'two_level_cache_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_two_level_cache_maximum_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'two_level_cache_maximum_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cache_two_level_cache_minimum_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'two_level_cache_minimum_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .client_id}
+{call .entry_link}
+  {param section: 'client' /}
+  {param entry: 'id' /}
+{/call}
+{/template}
+
+
+/***/
+{template .client_skipactiongraphcache}
+{call .entry_link}
+  {param section: 'client' /}
+  {param entry: 'skipactiongraphcache' /}
+{/call}
+{/template}
+
+
+/***/
+{template .color_ui}
+{call .entry_link}
+  {param section: 'color' /}
+  {param entry: 'ui' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_ar}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'ar' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_archiver_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'archiver_platform' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_arflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'arflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_as}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'as' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_asflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'asflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_aspp}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'aspp' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_asppflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'asppflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cache_links}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cache_links' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cc}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cc' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cpp}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cpp' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cppflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cppflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cxx}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cxx' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cxxflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cxxflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cxxpp}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cxxpp' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_cxxppflags}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'cxxppflags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_default_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'default_platform' /}
+{/call}
+{/template}
+
+
+/***/
+{template .cxx_default_reexport_all_header_dependencies}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'default_reexport_all_header_dependencies' /}
+{/call}
+{/template}
+
+
 /***/
 {template .cxx_gtest_dep}
 {call .entry_link}
@@ -198,212 +1432,231 @@
 {/call}
 {/template}
 
+
 /***/
-{template .kotlin_kotlinc}
+{template .cxx_host_platform}
 {call .entry_link}
-  {param section: 'kotlin' /}
-  {param entry: 'kotlinc' /}
+  {param section: 'cxx' /}
+  {param entry: 'host_platform' /}
 {/call}
 {/template}
 
+
 /***/
-{template .kotlin_external}
+{template .cxx_independent_shlib_interfaces}
 {call .entry_link}
-  {param section: 'kotlin' /}
-  {param entry: 'external' /}
+  {param section: 'cxx' /}
+  {param entry: 'independent_shlib_interfaces' /}
 {/call}
 {/template}
 
+
 /***/
-{template .kotlin_kotlin_home}
+{template .cxx_ld}
 {call .entry_link}
-  {param section: 'kotlin' /}
-  {param entry: 'kotlin_home' /}
+  {param section: 'cxx' /}
+  {param entry: 'ld' /}
 {/call}
 {/template}
 
+
 /***/
-{template .lua_cxx_library}
+{template .cxx_ldflags}
 {call .entry_link}
-    {param section: 'lua' /}
-    {param entry: 'cxx_library' /}
+  {param section: 'cxx' /}
+  {param entry: 'ldflags' /}
 {/call}
 {/template}
 
+
 /***/
-{template .ndk_compiler}
+{template .cxx_link_weight}
 {call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'compiler' /}
+  {param section: 'cxx' /}
+  {param entry: 'link_weight' /}
 {/call}
 {/template}
 
+
 /***/
-{template .project_parallel_parsing}
+{template .cxx_linker_platform}
 {call .entry_link}
-    {param section: 'project' /}
-    {param entry: 'parallel_parsing' /}
+  {param section: 'cxx' /}
+  {param entry: 'linker_platform' /}
 {/call}
 {/template}
 
+
 /***/
-{template .python_interpreter}
+{template .cxx_pch_enabled}
 {call .entry_link}
-    {param section: 'python' /}
-    {param entry: 'interpreter' /}
+  {param section: 'cxx' /}
+  {param entry: 'pch_enabled' /}
 {/call}
 {/template}
 
+
 /***/
-{template .python_package_style}
+{template .cxx_ranlibflags}
 {call .entry_link}
-    {param section: 'python' /}
-    {param entry: 'package_style' /}
+  {param section: 'cxx' /}
+  {param entry: 'ranlibflags' /}
 {/call}
 {/template}
 
+
 /***/
-{template .test_rule_timeout}
+{template .cxx_shlib_interfaces}
 {call .entry_link}
-    {param section: 'test' /}
-    {param entry: 'rule_timeout' /}
+  {param section: 'cxx' /}
+  {param entry: 'shlib_interfaces' /}
 {/call}
 {/template}
 
+
 /***/
-{template .test_external_runner}
+{template .cxx_should_remap_host_platform}
 {call .entry_link}
-    {param section: 'test' /}
-    {param entry: 'external_runner' /}
+  {param section: 'cxx' /}
+  {param entry: 'should_remap_host_platform' /}
 {/call}
 {/template}
 
+
 /***/
-{template .thrift_compiler}
+{template .cxx_untracked_headers}
 {call .entry_link}
-    {param section: 'thrift' /}
-    {param entry: 'compiler' /}
+  {param section: 'cxx' /}
+  {param entry: 'untracked_headers' /}
 {/call}
 {/template}
 
+
 /***/
-{template .ui_thread_line_limit}
+{template .cxx_untracked_headers_whitelist}
 {call .entry_link}
-    {param section: 'ui' /}
-    {param entry: 'thread_line_limit' /}
+  {param section: 'cxx' /}
+  {param entry: 'untracked_headers_whitelist' /}
 {/call}
 {/template}
 
-/***/
-{template .tools_javac}
-{call buckconfig.entry_link}
-  {param section: 'tools' /}
-  {param entry: 'javac' /}
-{/call}
-{/template}
 
 /***/
-{template .tools_java_jar}
-{call buckconfig.entry_link}
-  {param section: 'tools' /}
-  {param entry: 'java_jar' /}
-{/call}
-{/template}
-
-/***/
-{template .alias}
-{call .section_link}
-  {param section: 'alias' /}
-{/call}
-{/template}
-
-/***/
-{template .java_src_roots}
+{template .d_base_compiler_flags}
 {call .entry_link}
-    {param section: 'java' /}
-    {param entry: 'src_roots' /}
+  {param section: 'd' /}
+  {param entry: 'base_compiler_flags' /}
 {/call}
 {/template}
 
+
 /***/
-{template .java_abi_generation_mode}
+{template .d_compiler}
 {call .entry_link}
-    {param section: 'java' /}
-    {param entry: 'abi_generation_mode' /}
+  {param section: 'd' /}
+  {param entry: 'compiler' /}
 {/call}
 {/template}
 
+
 /***/
-{template .android_build_tools_version}
+{template .d_library_path}
 {call .entry_link}
-    {param section: 'android' /}
-    {param entry: 'build_tools_version' /}
+  {param section: 'd' /}
+  {param entry: 'library_path' /}
 {/call}
 {/template}
 
+
 /***/
-{template .android_target}
+{template .d_linker_flags}
 {call .entry_link}
-    {param section: 'android' /}
-    {param entry: 'target' /}
+  {param section: 'd' /}
+  {param entry: 'linker_flags' /}
 {/call}
 {/template}
 
+
 /***/
-{template .android_sdk_path}
+{template .doctor_endpoint_extra_request_args}
 {call .entry_link}
-    {param section: 'android' /}
-    {param entry: 'sdk_path' /}
+  {param section: 'doctor' /}
+  {param entry: 'endpoint_extra_request_args' /}
 {/call}
 {/template}
 
+
 /***/
-{template .ndk_version}
+{template .doctor_endpoint_timeout_ms}
 {call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'ndk_version' /}
+  {param section: 'doctor' /}
+  {param entry: 'endpoint_timeout_ms' /}
 {/call}
 {/template}
 
+
 /***/
-{template .ndk_path}
+{template .doctor_endpoint_url}
 {call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'ndk_path' /}
+  {param section: 'doctor' /}
+  {param entry: 'endpoint_url' /}
 {/call}
 {/template}
 
+
 /***/
-{template .ndk_repository_path}
+{template .doctor_protocol}
 {call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'ndk_repository_path' /}
+  {param section: 'doctor' /}
+  {param entry: 'protocol' /}
 {/call}
 {/template}
 
+
 /***/
-{template .default_android_manifest_path}
+{template .doctor_report_extra_info_command}
 {call .entry_link}
-    {param section: 'intellij' /}
-    {param entry: 'default_android_manifest_path' /}
+  {param section: 'doctor' /}
+  {param entry: 'report_extra_info_command' /}
 {/call}
 {/template}
 
+
 /***/
-{template .generate_android_manifest}
+{template .doctor_report_max_size}
 {call .entry_link}
-    {param section: 'intellij' /}
-    {param entry: 'generate_android_manifest' /}
+  {param section: 'doctor' /}
+  {param entry: 'report_max_size' /}
 {/call}
 {/template}
 
+
 /***/
-{template .python_native_link_strategy}
+{template .doctor_report_max_upload_retries}
 {call .entry_link}
-  {param section: 'python' /}
-  {param entry: 'native_link_strategy' /}
+  {param section: 'doctor' /}
+  {param entry: 'report_max_upload_retries' /}
 {/call}
 {/template}
+
+
+/***/
+{template .doctor_report_timeout_ms}
+{call .entry_link}
+  {param section: 'doctor' /}
+  {param entry: 'report_timeout_ms' /}
+{/call}
+{/template}
+
+
+/***/
+{template .doctor_report_upload_path}
+{call .entry_link}
+  {param section: 'doctor' /}
+  {param entry: 'report_upload_path' /}
+{/call}
+{/template}
+
 
 /***/
 {template .download_in_build}
@@ -413,4 +1666,1402 @@
 {/call}
 {/template}
 
+
+/***/
+{template .download_maven_repo}
+{call .entry_link}
+  {param section: 'download' /}
+  {param entry: 'maven_repo' /}
+{/call}
+{/template}
+
+
+/***/
+{template .download_max_number_of_retries}
+{call .entry_link}
+  {param section: 'download' /}
+  {param entry: 'max_number_of_retries' /}
+{/call}
+{/template}
+
+
+/***/
+{template .download_proxy}
+{call .entry_link}
+  {param section: 'download' /}
+  {param entry: 'proxy' /}
+{/call}
+{/template}
+
+
+/***/
+{template .dx_max_heap_size}
+{call .entry_link}
+  {param section: 'dx' /}
+  {param entry: 'max_heap_size' /}
+{/call}
+{/template}
+
+
+/***/
+{template .dx_max_threads}
+{call .entry_link}
+  {param section: 'dx' /}
+  {param entry: 'max_threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .dx_threads}
+{call .entry_link}
+  {param section: 'dx' /}
+  {param entry: 'threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .export_file_input_directory_action}
+{call .entry_link}
+  {param section: 'export_file' /}
+  {param entry: 'input_directory_action' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_assembler}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'assembler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_compiler}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'compiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_linker}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'linker' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_packer}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'packer' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_prefix}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'prefix' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_project_path}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'project_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_root}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'root' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_tool}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'tool' /}
+{/call}
+{/template}
+
+
+/***/
+{template .go_vendor_path}
+{call .entry_link}
+  {param section: 'go' /}
+  {param entry: 'vendor_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .groovy_groovy_home}
+{call .entry_link}
+  {param section: 'groovy' /}
+  {param entry: 'groovy_home' /}
+{/call}
+{/template}
+
+
+/***/
+{template .halide_target}
+{call .entry_link}
+  {param section: 'halide' /}
+  {param entry: 'target' /}
+{/call}
+{/template}
+
+
+/***/
+{template .halide_xcode_compile_script}
+{call .entry_link}
+  {param section: 'halide' /}
+  {param entry: 'xcode_compile_script' /}
+{/call}
+{/template}
+
+
+/***/
+{template .httpserver_port}
+{call .entry_link}
+  {param section: 'httpserver' /}
+  {param entry: 'port' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_aggregate_android_resource_modules}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'aggregate_android_resource_modules' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_android_module_sdk_name}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'android_module_sdk_name' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_android_module_sdk_type}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'android_module_sdk_type' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_android_resource_module_aggregation_limit}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'android_resource_module_aggregation_limit' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_default_android_manifest_path}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'default_android_manifest_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_default_min_android_sdk_version}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'default_min_android_sdk_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_extra_compiler_output_modules_path}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'extra_compiler_output_modules_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_generated_sources_label_map}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'generated_sources_label_map' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_include_transitive_dependencies}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'include_transitive_dependencies' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_java_module_sdk_name}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'java_module_sdk_name' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_java_module_sdk_type}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'java_module_sdk_type' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_jdk_name}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'jdk_name' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_jdk_type}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'jdk_type' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_module_group_name}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'module_group_name' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_project_compiler_output_url}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'project_compiler_output_url' /}
+{/call}
+{/template}
+
+
+/***/
+{template .intellij_remove_unused_libraries}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'remove_unused_libraries' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_abi_generation_mode}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'abi_generation_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_duplicates_log_level}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'duplicates_log_level' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_extra_arguments}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'extra_arguments' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_jar_spool_mode}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'jar_spool_mode' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_skip_checking_missing_deps}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'skip_checking_missing_deps' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_source_level}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'source_level' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_src_roots}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'src_roots' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_target_level}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'target_level' /}
+{/call}
+{/template}
+
+
+/***/
+{template .java_unused_dependencies_action}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'unused_dependencies_action' /}
+{/call}
+{/template}
+
+
+/***/
+{template .kotlin_external}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'external' /}
+{/call}
+{/template}
+
+
+/***/
+{template .kotlin_kotlin_home}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'kotlin_home' /}
+{/call}
+{/template}
+
+
+/***/
+{template .kotlin_kotlinc}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'kotlinc' /}
+{/call}
+{/template}
+
+
+/***/
+{template .log_build_details_commands}
+{call .entry_link}
+  {param section: 'log' /}
+  {param entry: 'build_details_commands' /}
+{/call}
+{/template}
+
+
+/***/
+{template .log_build_details_template}
+{call .entry_link}
+  {param section: 'log' /}
+  {param entry: 'build_details_template' /}
+{/call}
+{/template}
+
+
+/***/
+{template .log_compress_traces}
+{call .entry_link}
+  {param section: 'log' /}
+  {param entry: 'compress_traces' /}
+{/call}
+{/template}
+
+
+/***/
+{template .log_machine_readable_logger_enabled}
+{call .entry_link}
+  {param section: 'log' /}
+  {param entry: 'machine_readable_logger_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .log_max_traces}
+{call .entry_link}
+  {param section: 'log' /}
+  {param entry: 'max_traces' /}
+{/call}
+{/template}
+
+
+/***/
+{template .lua_cxx_library}
+{call .entry_link}
+  {param section: 'lua' /}
+  {param entry: 'cxx_library' /}
+{/call}
+{/template}
+
+
+/***/
+{template .lua_extension}
+{call .entry_link}
+  {param section: 'lua' /}
+  {param entry: 'extension' /}
+{/call}
+{/template}
+
+
+/***/
+{template .lua_lua}
+{call .entry_link}
+  {param section: 'lua' /}
+  {param entry: 'lua' /}
+{/call}
+{/template}
+
+
+/***/
+{template .lua_native_starter_library}
+{call .entry_link}
+  {param section: 'lua' /}
+  {param entry: 'native_starter_library' /}
+{/call}
+{/template}
+
+
+/***/
+{template .lua_starter_type}
+{call .entry_link}
+  {param section: 'lua' /}
+  {param entry: 'starter_type' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_app_platform}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'app_platform' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_app_platform_per_cpu_abi}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'app_platform_per_cpu_abi' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_clang_version}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'clang_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_compiler}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'compiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_cpu_abis}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'cpu_abis' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_cxx_runtime}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'cxx_runtime' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_cxx_runtime_type}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'cxx_runtime_type' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_gcc_version}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'gcc_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_ndk_path}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'ndk_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_ndk_repository_path}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'ndk_repository_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ndk_ndk_version}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'ndk_version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_debug}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'debug' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_deptool}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'deptool' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_interopincludes}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'interopincludes' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_lexcompiler}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'lexcompiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_ocamlbytecodecompiler}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'ocamlbytecodecompiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_ocamlcompiler}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'ocamlcompiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ocaml_yacccompiler}
+{call .entry_link}
+  {param section: 'ocaml' /}
+  {param entry: 'yacccompiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser_default_build_file_syntax}
+{call .entry_link}
+  {param section: 'parser' /}
+  {param entry: 'default_build_file_syntax' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser_disable_implicit_native_rules}
+{call .entry_link}
+  {param section: 'parser' /}
+  {param entry: 'disable_implicit_native_rules' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser_polyglot_parsing_enabled}
+{call .entry_link}
+  {param section: 'parser' /}
+  {param entry: 'polyglot_parsing_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser_python_interpreter}
+{call .entry_link}
+  {param section: 'parser' /}
+  {param entry: 'python_interpreter' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser_python_path}
+{call .entry_link}
+  {param section: 'parser' /}
+  {param entry: 'python_path' /}
+{/call}
+{/template}
+
+
+/***/
+{template .parser_warn_about_deprecated_syntax}
+{call .entry_link}
+  {param section: 'parser' /}
+  {param entry: 'warn_about_deprecated_syntax' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_allow_symlinks}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'allow_symlinks' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_build_file_import_whitelist}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'build_file_import_whitelist' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_build_file_search_method}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'build_file_search_method' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_generate_android_manifest}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'generate_android_manifest' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_glob_handler}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'glob_handler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_ide}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'ide' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_ide_force_kill}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'ide_force_kill' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_ignore}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'ignore' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_initial_targets}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'initial_targets' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_motd}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'motd' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_parallel_parsing}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'parallel_parsing' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_parsing_threads}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'parsing_threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_post_process}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'post_process' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_pre_process}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'pre_process' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_shared_libraries_in_bundles}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'shared_libraries_in_bundles' /}
+{/call}
+{/template}
+
+
+/***/
+{template .project_watchman_query_timeout_ms}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'watchman_query_timeout_ms' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_inplace_interpreter_flags}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'inplace_interpreter_flags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_interpreter}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'interpreter' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_library}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'library' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_native_link_strategy}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'native_link_strategy' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_package_style}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'package_style' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_path_to_pex_executor}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'path_to_pex_executor' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_pex_extension}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'pex_extension' /}
+{/call}
+{/template}
+
+
+/***/
+{template .python_version}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'version' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_default_cpu_amount}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'default_cpu_amount' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_default_disk_io_amount}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'default_disk_io_amount' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_default_memory_amount}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'default_memory_amount' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_default_network_io_amount}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'default_network_io_amount' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_managed_thread_count}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'managed_thread_count' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_max_disk_io_resource}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'max_disk_io_resource' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_max_memory_resource}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'max_memory_resource' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_max_network_io_resource}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'max_network_io_resource' /}
+{/call}
+{/template}
+
+
+/***/
+{template .resources_resource_aware_scheduling_enabled}
+{call .entry_link}
+  {param section: 'resources' /}
+  {param entry: 'resource_aware_scheduling_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_compiler}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'compiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_default_edition}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'default_edition' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_force_rlib}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'force_rlib' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_incremental}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'incremental' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_prefer_static_libs}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'prefer_static_libs' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_remap_src_paths}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'remap_src_paths' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_rustc_binary_flags}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'rustc_binary_flags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_rustc_flags}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'rustc_flags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_rustc_library_flags}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'rustc_library_flags' /}
+{/call}
+{/template}
+
+
+/***/
+{template .rust_unflavored_binaries}
+{call .entry_link}
+  {param section: 'rust' /}
+  {param entry: 'unflavored_binaries' /}
+{/call}
+{/template}
+
+
+/***/
+{template .sandbox_darwin_sandbox_enabled}
+{call .entry_link}
+  {param section: 'sandbox' /}
+  {param entry: 'darwin_sandbox_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .sandbox_genrule_sandbox_enabled}
+{call .entry_link}
+  {param section: 'sandbox' /}
+  {param entry: 'genrule_sandbox_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_external_runner}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'external_runner' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_incl_no_location_classes}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'incl_no_location_classes' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_parallel_external_test_spec_computation_enabled}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'parallel_external_test_spec_computation_enabled' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_rule_timeout}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'rule_timeout' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_thread_utilization_ratio}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'thread_utilization_ratio' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_threads}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'threads' /}
+{/call}
+{/template}
+
+
+/***/
+{template .test_timeout}
+{call .entry_link}
+  {param section: 'test' /}
+  {param entry: 'timeout' /}
+{/call}
+{/template}
+
+
+/***/
+{template .thrift_compiler}
+{call .entry_link}
+  {param section: 'thrift' /}
+  {param entry: 'compiler' /}
+{/call}
+{/template}
+
+
+/***/
+{template .thrift_compiler2}
+{call .entry_link}
+  {param section: 'thrift' /}
+  {param entry: 'compiler2' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_compiler_class_name}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'compiler_class_name' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_java_for_tests}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'java_for_tests' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_javac}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'javac' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_javac_jar}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'javac_jar' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_proguard}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'proguard' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_proguardagentpath}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'proguardagentpath' /}
+{/call}
+{/template}
+
+
+/***/
+{template .tools_proguardmaxheapsize}
+{call .entry_link}
+  {param section: 'tools' /}
+  {param entry: 'proguardmaxheapsize' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_always_sort_threads_by_time}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'always_sort_threads_by_time' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_enable_show_output_warning}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'enable_show_output_warning' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_error_message_augmentations}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'error_message_augmentations' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_relativize_targets_to_working_directory}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'relativize_targets_to_working_directory' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_superconsole}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'superconsole' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_thread_line_limit}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'thread_line_limit' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_thread_line_limit_on_error}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'thread_line_limit_on_error' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_thread_line_limit_on_warning}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'thread_line_limit_on_warning' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_truncate_failing_command}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'truncate_failing_command' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_warn_on_config_file_overrides}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'warn_on_config_file_overrides' /}
+{/call}
+{/template}
+
+
+/***/
+{template .ui_warn_on_config_file_overrides_ignored_files}
+{call .entry_link}
+  {param section: 'ui' /}
+  {param entry: 'warn_on_config_file_overrides_ignored_files' /}
+{/call}
+{/template}
+
+
+/***/
+{template .worker_persistent}
+{call .entry_link}
+  {param section: 'worker' /}
+  {param entry: 'persistent' /}
+{/call}
+{/template}
+
+/*** END GENERATED ***/
+
 {/namespace}
+

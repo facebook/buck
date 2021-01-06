@@ -1,0 +1,25 @@
+genrule(
+    name = "non_config_rule",
+    srcs = select({
+        ":a": ["a.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+java_library(
+    name = "a",
+)
+
+genrule(
+    name = "non_config_setting_rule",
+    srcs = select({
+        ":b": ["a.txt"],
+    }),
+    out = "cat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)
+
+platform(
+    name = "b",
+)

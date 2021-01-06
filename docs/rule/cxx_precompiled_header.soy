@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace cxx_precompiled_header}
 
 /***/
@@ -17,10 +33,8 @@
 {param overview}
   <p>
   A <code>cxx_precompiled_header</code> rule specifies a single header file that can be
-  precompiled and made available for use in other build rules such as a{sp}
-  {call buck.cxx_library /}{sp}
-  or a{sp}
-  <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary</code></a>.
+  precompiled and made available for use in other build rules such as 
+  a {call buck.cxx_library /} or a {call buck.cxx_binary /}.
   </p>
 
   <p>
@@ -47,12 +61,7 @@
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-    A descriptive name for the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name: 'src' /}

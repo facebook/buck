@@ -9,13 +9,11 @@ prebuilt_jar(
 
 java_library(
     name = "jetty",
-    exported_deps = [
-        ":jetty-all",
-    ],
     visibility = [
         "//src/com/facebook/buck/httpserver:",
-        "//tools/ideabuck:ideabuck-lib",
+        "//test/com/facebook/buck/artifact_cache:artifact_cache",
         "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/core/toolchain/rule:",
         "//test/com/facebook/buck/doctor:",
         "//test/com/facebook/buck/event/listener:",
         "//test/com/facebook/buck/event/listener/integration:",
@@ -23,7 +21,12 @@ java_library(
         "//test/com/facebook/buck/httpserver:",
         "//test/com/facebook/buck/maven:maven",
         "//test/com/facebook/buck/maven:testutil",
+        "//test/com/facebook/buck/support/build/report:report",
         "//test/com/facebook/buck/testutil/integration:",
+        "//tools/ideabuck:ideabuck-lib",
     ],
     deps = [],
+    exported_deps = [
+        ":jetty-all",
+    ],
 )

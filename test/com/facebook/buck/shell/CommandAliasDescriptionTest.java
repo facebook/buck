@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -29,23 +29,25 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -57,7 +59,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.function.Function;
 import org.junit.Rule;
 import org.junit.Test;
@@ -111,7 +112,7 @@ public class CommandAliasDescriptionTest {
             result
                 .graphBuilder()
                 .getRuleWithType(delegate, BinaryBuildRule.class)
-                .getExecutableCommand()
+                .getExecutableCommand(OutputLabel.defaultLabel())
                 .getCommandPrefix(result.sourcePathResolver())));
     assertThat(result.getRuntimeDeps(), hasItem(delegate));
   }
@@ -293,7 +294,7 @@ public class CommandAliasDescriptionTest {
 
   @Test
   public void eitherExeOrPlatformExeMustBePresent() {
-    exception.expect(HumanReadableException.class);
+    exception.expect(Exception.class);
     builder().buildResult().getCommandPrefix();
   }
 
@@ -337,7 +338,7 @@ public class CommandAliasDescriptionTest {
     CommandAliasBuilder.BuildResult result =
         builder.setPlatformExe(Platform.WINDOWS, subCommand).buildResult();
 
-    Tool tool = result.commandAlias().getExecutableCommand();
+    Tool tool = result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel());
     ImmutableList<String> commandPrefix = tool.getCommandPrefix(result.sourcePathResolver());
     assertEquals(commandPrefix.subList(1, commandPrefix.size()), ImmutableList.copyOf(args));
     assertEquals(tool.getEnvironment(result.sourcePathResolver()), ImmutableMap.of("EF", "gh"));
@@ -407,7 +408,8 @@ public class CommandAliasDescriptionTest {
         platform -> {
           CommandAliasBuilder.BuildResult result =
               builder(platform).setPlatformExe(platformExe).buildResult();
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     RuleKey windows = ruleKeyForPlatform.apply(Platform.WINDOWS);
@@ -425,7 +427,8 @@ public class CommandAliasDescriptionTest {
           CommandAliasBuilder.BuildResult result =
               builder().setExe(new TestBinaryBuilder(delegate, arg, "").build()).buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
@@ -438,7 +441,8 @@ public class CommandAliasDescriptionTest {
           CommandAliasBuilder.BuildResult result =
               builder().setExe(new TestBinaryBuilder(delegate, "", env).build()).buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
@@ -455,7 +459,8 @@ public class CommandAliasDescriptionTest {
                   .setPlatformExe(Platform.MACOS, new TestBinaryBuilder(unused, arg, "").build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
@@ -470,7 +475,8 @@ public class CommandAliasDescriptionTest {
                   .setPlatformExe(Platform.LINUX, new TestBinaryBuilder(delegate, "", env).build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
@@ -486,10 +492,36 @@ public class CommandAliasDescriptionTest {
                       Platform.UNKNOWN, new TestBinaryBuilder(delegate, arg, "").build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForArg.apply("abc"), ruleKeyForArg.apply("def"));
+  }
+
+  @Test
+  public void supportsEnvWithExeMacro() {
+    ImmutableMap<String, StringWithMacros> env =
+        ImmutableSortedMap.of(
+            "apples",
+            StringWithMacrosUtils.format("some"),
+            "pears",
+            StringWithMacrosUtils.format(
+                "%s",
+                ExecutableMacro.of(
+                    BuildTargetWithOutputs.of(macroTarget, OutputLabel.defaultLabel()))));
+
+    CommandAliasBuilder.BuildResult result =
+        builder()
+            .setExe(new ShBinaryBuilder(delegate).setMain(FakeSourcePath.of("sh/binary")).build())
+            .setEnv(env)
+            .addTarget(new ShBinaryBuilder(macroTarget).setMain(FakeSourcePath.of("exe")).build())
+            .buildResult();
+
+    assertThat(
+        result.getEnvironment(),
+        equalTo(ImmutableSortedMap.of("apples", "some", "pears", result.pathOf(macroTarget))));
+    assertThat(result.getRuntimeDeps(), hasItem(macroTarget));
   }
 
   @Test
@@ -503,7 +535,8 @@ public class CommandAliasDescriptionTest {
                   .setPlatformExe(Platform.MACOS, new TestBinaryBuilder(unused, "", env).build())
                   .buildResult();
 
-          return ruleKey(result, result.commandAlias().getExecutableCommand());
+          return ruleKey(
+              result, result.commandAlias().getExecutableCommand(OutputLabel.defaultLabel()));
         };
 
     assertNotEquals(ruleKeyForEnv.apply("abc"), ruleKeyForEnv.apply("def"));
@@ -526,14 +559,10 @@ public class CommandAliasDescriptionTest {
   }
 
   private static RuleKey ruleKey(CommandAliasBuilder.BuildResult result, Object value) {
-    SourcePathResolver pathResolver = result.sourcePathResolver();
     SourcePathRuleFinder ruleFinder = result.ruleFinder();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
     return new UncachedRuleKeyBuilder(
-            ruleFinder,
-            pathResolver,
-            hashCache,
-            new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder))
+            ruleFinder, hashCache, new TestDefaultRuleKeyFactory(hashCache, ruleFinder))
         .setReflectively("key", value)
         .build(RuleKey::new);
   }
@@ -547,13 +576,8 @@ public class CommandAliasDescriptionTest {
     }
 
     @Override
-    public Tool getExecutableCommand() {
+    public Tool getExecutableCommand(OutputLabel outputLabel) {
       return tool;
-    }
-
-    @Override
-    public SortedSet<BuildRule> getBuildDeps() {
-      return ImmutableSortedSet.of();
     }
   }
 

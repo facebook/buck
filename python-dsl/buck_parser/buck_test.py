@@ -1,3 +1,17 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import itertools
 import os
 import shutil
@@ -41,7 +55,7 @@ def fake_path(fake_path_class, path, glob_results={}):
     # FakePath's members.
     result = fake_path_class(path)
     result.glob_results = {}
-    for pattern, paths in glob_results.iteritems():
+    for pattern, paths in glob_results.items():
         result.glob_results[pattern] = [result / fake_path_class(p) for p in paths]
     return result
 
@@ -277,6 +291,7 @@ class TestBuckSubdirGlobMixin(object):
             None,
             False,
             False,
+            {},
         )
         search_base = self.fake_path(
             "foo",
@@ -314,6 +329,7 @@ class TestBuckSubdirGlobMixin(object):
             None,
             False,
             False,
+            {},
         )
         search_base = self.fake_path(
             "foo", glob_results={"lib/bar/*.h": ["lib/bar/A.h", "lib/bar/B.h"]}

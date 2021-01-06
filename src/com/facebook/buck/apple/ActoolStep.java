@@ -1,24 +1,25 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -38,10 +39,11 @@ class ActoolStep extends ShellStep {
   private final Path outputPlist;
   private final Optional<String> appIcon;
   private final Optional<String> launchImage;
+  private final Optional<String> productType;
   private final AppleAssetCatalogsCompilationOptions compilationOptions;
 
   public ActoolStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       String applePlatformName,
       String targetSDKVersion,
       ImmutableMap<String, String> environment,
@@ -51,6 +53,7 @@ class ActoolStep extends ShellStep {
       Path outputPlist,
       Optional<String> appIcon,
       Optional<String> launchImage,
+      Optional<String> productType,
       AppleAssetCatalogsCompilationOptions compilationOptions) {
     super(workingDirectory);
     this.applePlatformName = applePlatformName;
@@ -62,6 +65,7 @@ class ActoolStep extends ShellStep {
     this.outputPlist = outputPlist;
     this.appIcon = appIcon;
     this.launchImage = launchImage;
+    this.productType = productType;
     this.compilationOptions = compilationOptions;
   }
 
@@ -101,6 +105,10 @@ class ActoolStep extends ShellStep {
 
     if (launchImage.isPresent()) {
       commandBuilder.add("--launch-image", launchImage.get());
+    }
+
+    if (productType.isPresent()) {
+      commandBuilder.add("--product-type", productType.get());
     }
 
     if (compilationOptions.getNotices()) {

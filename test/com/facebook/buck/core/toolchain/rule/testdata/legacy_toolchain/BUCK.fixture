@@ -1,0 +1,22 @@
+load(":defs.bzl", "dummy_csharp")
+
+http_file(
+    name = "dummy_csc.sh",
+    urls = ["http://<HOST>:<PORT>/csc.sh"],
+    sha256 = "805d182b5bf809b000107bf96008ea78fad32d3872ab63cc621245a0aae9a7fc",
+    executable = True,
+)
+
+http_file(
+    name = "dummy_csc.bat",
+    urls = ["http://<HOST>:<PORT>/csc.bat"],
+    sha256 = "789580315dfe6c422b19f890202ea8fc8c7f329202b7d0fe640f7090c435fde9",
+    executable = True,
+)
+
+legacy_toolchain(
+    name = "dotnet",
+    toolchain_name = "dotnet-toolchain",
+)
+
+dummy_csharp(name = "dummy", toolchain = ":dotnet", src = "In.cs")

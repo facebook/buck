@@ -1,23 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.AnnotatedTypeTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -27,6 +26,7 @@ import com.sun.source.tree.Tree.Kind;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
+import java.util.Objects;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
@@ -60,7 +60,7 @@ abstract class TreePathScannerForTypeResolution<R, P> extends TreePathScanner<R,
   @Nullable
   public final R visitMemberSelect(MemberSelectTree node, P p) {
     TreePath referencingPath = getCurrentPath();
-    Element referencedElement = Preconditions.checkNotNull(trees.getElement(referencingPath));
+    Element referencedElement = Objects.requireNonNull(trees.getElement(referencingPath));
     return resolveElement(referencingPath, referencedElement, p);
   }
 
@@ -68,7 +68,7 @@ abstract class TreePathScannerForTypeResolution<R, P> extends TreePathScanner<R,
   @Nullable
   public final R visitIdentifier(IdentifierTree node, P p) {
     TreePath referencingPath = getCurrentPath();
-    Element referencedElement = Preconditions.checkNotNull(trees.getElement(referencingPath));
+    Element referencedElement = Objects.requireNonNull(trees.getElement(referencingPath));
     return resolveElement(referencingPath, referencedElement, p);
   }
 

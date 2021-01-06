@@ -1,23 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -35,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
@@ -157,6 +158,11 @@ public class JarBuilder {
         throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
       }
 
+      // Clean up any open file handles that we may have
+      for (JarEntryContainer sourceContainer : sourceContainers) {
+        sourceContainer.close();
+      }
+
       return 0;
     }
   }
@@ -260,7 +266,7 @@ public class JarBuilder {
     // Collect all services together for later merging and addition to the output jar
     if (isService(entryName)) {
       try (InputStream entryInputStream =
-          Preconditions.checkNotNull(entrySupplier.getInputStreamSupplier().get())) {
+          Objects.requireNonNull(entrySupplier.getInputStreamSupplier().get())) {
         Set<String> existingServices =
             services.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
         existingServices.add(

@@ -1,0 +1,60 @@
+sh_binary(
+    name = "node1",
+    main = "node",
+    resources = [
+        "binaries/linux_node_executable",
+        "binaries/os_x_node_executable",
+        "file with spaces in its name",
+        ":resource1",
+        ":resource2",
+        "//node:stuff",
+        "@subnode//:stuff",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+sh_binary(
+    name = "node2",
+    main = "node",
+    resources = [
+        "binaries/linux_node_executable",
+        "binaries/os_x_node_executable",
+        "file with spaces in its name",
+        ":resource1",
+        ":resource2",
+        "//:stuff",
+        "@subnode//:stuff",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+sh_binary(
+    name = "conflicts",
+    main = "node",
+    resources = [
+        "resource1",
+        ":resource1",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+export_file(
+    name = "resource1",
+    src = "stuff.txt",
+)
+
+export_file(
+    name = "resource2",
+    src = "foo/stuff.txt",
+)
+
+export_file(
+    name = "stuff",
+    src = "stuff.txt",
+)

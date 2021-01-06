@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -51,11 +50,11 @@ public class CalculateSourceAbiIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "source_abi", tmp);
     workspace.setUp();
 
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test
@@ -66,7 +65,7 @@ public class CalculateSourceAbiIntegrationTest {
 
     // Make sure we built the source ABI
     BuildTarget abiTarget = BuildTargetFactory.newInstance("//:lib#source-abi");
-    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget);
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(
@@ -97,7 +96,7 @@ public class CalculateSourceAbiIntegrationTest {
   }
 
   @Test
-  public void testErrorsReportedGracefully() throws IOException {
+  public void testErrorsReportedGracefully() {
     ProcessResult buildResult = workspace.runBuckBuild("//:main-errors");
     buildResult.assertFailure();
     assertThat(
@@ -118,7 +117,7 @@ public class CalculateSourceAbiIntegrationTest {
 
     // Make sure we built the source ABI
     BuildTarget abiTarget = BuildTargetFactory.newInstance("//:lib-stripped#source-abi");
-    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget);
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(

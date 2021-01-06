@@ -1,0 +1,10 @@
+[repositories]
+  root_cell = .
+  child_cell = cell
+
+[rule_analysis]
+  mode = PROVIDER_COMPATIBLE
+
+[parser]
+  default_build_file_syntax = SKYLARK
+  user_defined_rules = enabled

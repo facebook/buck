@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.tools.consistency;
@@ -69,10 +69,11 @@ public class RuleKeyDiffer {
           "Root nodes in %s do not match root nodes in %s. %s vs %s",
           originalFile.filename, newFile.filename, originalTargets, newTargets);
     }
+    int visitId = 1;
     for (Map.Entry<String, RuleKeyNode> entry : originalFile.rootNodes.entrySet()) {
-      printDiff(originalFile, entry.getValue(), newFile, newFile.rootNodes.get(entry.getKey()));
-      originalFile.resetVisits();
-      newFile.resetVisits();
+      printDiff(
+          originalFile, entry.getValue(), newFile, newFile.rootNodes.get(entry.getKey()), visitId);
+      visitId++;
     }
     return printer.hasChanges();
   }
@@ -81,18 +82,19 @@ public class RuleKeyDiffer {
       ParsedRuleKeyFile originalFile,
       RuleKeyNode originalRuleKey,
       ParsedRuleKeyFile newFile,
-      RuleKeyNode newRuleKey)
+      RuleKeyNode newRuleKey,
+      int visitId)
       throws MaxDifferencesException, GraphTraversalException {
     if (originalRuleKey.ruleKey.key.equals(newRuleKey.ruleKey.key)) {
       return;
     }
 
-    if (originalRuleKey.visited && newRuleKey.visited) {
+    if (originalRuleKey.lastVisitId == visitId && newRuleKey.lastVisitId == visitId) {
       return;
     }
 
-    originalRuleKey.visited = true;
-    newRuleKey.visited = true;
+    originalRuleKey.lastVisitId = visitId;
+    newRuleKey.lastVisitId = visitId;
 
     Set<String> originalRuleKeyProperties = originalRuleKey.ruleKey.values.keySet();
     Set<String> newRuleKeyProperties = newRuleKey.ruleKey.values.keySet();
@@ -160,7 +162,6 @@ public class RuleKeyDiffer {
         case PATTERN:
         case BYTE_ARRAY:
         case ARCHIVE_MEMBER_PATH:
-        case SOURCE_ROOT:
         case BUILD_RULE_TYPE:
         case BUILD_TARGET:
         case TARGET_PATH:
@@ -271,7 +272,7 @@ public class RuleKeyDiffer {
       // Only recurse if we've got the same name, otherwise we can already tell
       // where the divergence happened
       propertiesSoFar.recordEmptyChange();
-      printDiff(originalFile, nextOriginalRuleKey, newFile, nextNewRuleKey);
+      printDiff(originalFile, nextOriginalRuleKey, newFile, nextNewRuleKey, 1);
     } else {
       // If the rule keys are significantly different, just print their names out
       propertiesSoFar.changed(originalFile, originalValue, newFile, newValue);

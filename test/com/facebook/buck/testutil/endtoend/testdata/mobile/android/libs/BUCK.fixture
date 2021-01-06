@@ -1,0 +1,25 @@
+prebuilt_jar(
+    name = "buck-android-support",
+    binary_jar = "buck-android-support.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "junit",
+    binary_jar = "junit-4.12.jar",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//android/libs:hamcrest",
+        "//android/libs:java-hamcrest",
+    ],
+)
+
+prebuilt_jar(
+    name = "hamcrest",
+    binary_jar = "hamcrest-junit-2.0.0.0.jar",
+)
+
+prebuilt_jar(
+    name = "java-hamcrest",
+    binary_jar = "java-hamcrest-2.0.0.0.jar",
+)

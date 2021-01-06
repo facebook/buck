@@ -1,23 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import com.sun.source.tree.ArrayTypeTree;
 import com.sun.source.tree.CompilationUnitTree;
@@ -36,6 +35,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -78,7 +78,7 @@ class PostEnterCanonicalizer {
   }
 
   public ExecutableElement getCanonicalElement(ExecutableElement element) {
-    return Preconditions.checkNotNull(elements.getCanonicalElement(element));
+    return Objects.requireNonNull(elements.getCanonicalElement(element));
   }
 
   public List<TypeMirror> getCanonicalTypes(
@@ -152,8 +152,7 @@ class PostEnterCanonicalizer {
                         underlyingTypeArgs,
                         treePath,
                         tree == null ? null : ((ParameterizedTypeTree) tree).getTypeArguments())
-                    .stream()
-                    .toArray(TypeMirror[]::new);
+                    .toArray(new TypeMirror[0]);
           }
 
           // While it is not possible to have a DeclaredType with an enclosing ErrorType (the only
@@ -235,13 +234,15 @@ class PostEnterCanonicalizer {
       case OTHER:
       case UNION:
       case INTERSECTION:
+        // Temporary. Remove once migration to Java 10/11 is complete.
+        // $CASES-OMITTED$
       default:
         throw new UnsupportedOperationException();
     }
   }
 
   private TypeMirror getUnderlyingType(TreePath treePath) {
-    return Preconditions.checkNotNull(javacTrees.getTypeMirror(treePath));
+    return Objects.requireNonNull(javacTrees.getTypeMirror(treePath));
   }
 
   private TypeMirror getInferredType(TreePath treePath) throws CompilerErrorException {
@@ -251,9 +252,7 @@ class PostEnterCanonicalizer {
         {
           ParameterizedTypeTree parameterizedTypeTree = (ParameterizedTypeTree) tree;
           TypeMirror[] typeArguments =
-              parameterizedTypeTree
-                  .getTypeArguments()
-                  .stream()
+              parameterizedTypeTree.getTypeArguments().stream()
                   .map(
                       arg -> {
                         TreePath argPath = new TreePath(treePath, arg);
@@ -344,7 +343,7 @@ class PostEnterCanonicalizer {
           ArtificialPackageElement packageElement =
               (ArtificialPackageElement)
                   elements.getCanonicalElement(
-                      Preconditions.checkNotNull(
+                      Objects.requireNonNull(
                           javacTrees.getElement(new TreePath(treePath.getCompilationUnit()))));
           return types.getDeclaredType(elements.getOrCreateTypeElement(packageElement, identifier));
         }
@@ -383,7 +382,7 @@ class PostEnterCanonicalizer {
 
           @Override
           public Object visitEnumConstant(VariableElement c, Void aVoid) {
-            return Preconditions.checkNotNull(elements.getCanonicalElement(c));
+            return Objects.requireNonNull(elements.getCanonicalElement(c));
           }
 
           @Override

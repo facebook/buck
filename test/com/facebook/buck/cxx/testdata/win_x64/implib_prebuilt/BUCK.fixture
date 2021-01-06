@@ -1,0 +1,31 @@
+prebuilt_cxx_library(
+    name = "implib_prebuilt",
+    exported_headers = ["MathLibrary.h"],
+    header_namespace = "implib",
+    import_lib = "implib_prebuilt.lib",
+    shared_lib = "implib_prebuilt.dll",
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "helloworld_static",
+    srcs = ["HelloWorldLibrary.cpp"],
+    exported_headers = ["HelloWorldLibrary.h"],
+    preferred_linkage = "static",
+)
+
+cxx_binary(
+    name = "app",
+    srcs = ["HelloWorldMathClient.cpp"],
+    link_style = "shared",
+    deps = [
+        ":helloworld_static",
+        ":implib_prebuilt",
+    ],
+)
+
+genrule(
+    name = "log",
+    out = "log.txt",
+    cmd_exe = "\"$(exe :app#windows-x86_64)\" > %OUT%",
+)

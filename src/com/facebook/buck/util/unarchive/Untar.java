@@ -1,23 +1,26 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.unarchive;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -26,11 +29,13 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -78,6 +83,7 @@ public class Untar extends Unarchiver {
       ProjectFilesystem filesystem,
       Path filesystemRelativePath,
       Optional<Path> stripPath,
+      PatternsMatcher entriesToExclude,
       ExistingFileMode existingFileMode)
       throws IOException {
     return extractArchive(
@@ -86,6 +92,7 @@ public class Untar extends Unarchiver {
         filesystemRelativePath,
         stripPath,
         existingFileMode,
+        entriesToExclude,
         Platform.detect() == Platform.WINDOWS);
   }
 
@@ -96,6 +103,7 @@ public class Untar extends Unarchiver {
       Path filesystemRelativePath,
       Optional<Path> stripPath,
       ExistingFileMode existingFileMode,
+      PatternsMatcher entriesToExclude,
       boolean writeSymlinksAfterCreatingFiles)
       throws IOException {
 
@@ -112,7 +120,11 @@ public class Untar extends Unarchiver {
     try (TarArchiveInputStream archiveStream = getArchiveInputStream(archiveFile)) {
       TarArchiveEntry entry;
       while ((entry = archiveStream.getNextTarEntry()) != null) {
-        Path destFile = Paths.get(entry.getName());
+        String entryName = entry.getName();
+        if (entriesToExclude.matches(entryName)) {
+          continue;
+        }
+        Path destFile = Paths.get(entryName);
         Path destPath;
         if (stripPath.isPresent()) {
           if (!destFile.startsWith(stripPath.get())) {
@@ -176,7 +188,8 @@ public class Untar extends Unarchiver {
       ProjectFilesystem filesystem, Set<Path> dirsToTidy, ImmutableSet<Path> createdFiles)
       throws IOException {
     for (Path directory : dirsToTidy) {
-      for (Path foundFile : filesystem.getDirectoryContents(directory)) {
+      for (Path foundFile :
+          filesystem.asView().getFilesUnderPath(directory, EnumSet.noneOf(FileVisitOption.class))) {
         if (!createdFiles.contains(foundFile) && !dirsToTidy.contains(foundFile)) {
           filesystem.deleteRecursivelyIfExists(foundFile);
         }
@@ -293,12 +306,19 @@ public class Untar extends Unarchiver {
   }
 
   /** Sets the modification time and the execution bit on a file */
-  private void setAttributes(ProjectFilesystem filesystem, Path path, TarArchiveEntry entry) {
-    File file = filesystem.getRootPath().resolve(path).toFile();
+  private void setAttributes(ProjectFilesystem filesystem, Path path, TarArchiveEntry entry)
+      throws IOException {
+    AbsPath filePath = filesystem.getRootPath().resolve(path);
+    File file = filePath.toFile();
     file.setLastModified(entry.getModTime().getTime());
     Set<PosixFilePermission> posixPermissions = MorePosixFilePermissions.fromMode(entry.getMode());
     if (posixPermissions.contains(PosixFilePermission.OWNER_EXECUTE)) {
-      file.setExecutable(true, true);
+      // setting posix file permissions on a symlink does not work, so use File API instead
+      if (entry.isSymbolicLink()) {
+        file.setExecutable(true, true);
+      } else {
+        MostFiles.makeExecutable(filePath.getPath());
+      }
     }
   }
 

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -37,7 +37,11 @@ import com.facebook.buck.artifact_cache.thrift.FetchResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.artifact_cache.thrift.RuleKey;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -76,38 +80,37 @@ public class ThriftArtifactCacheTest {
   @Rule public TemporaryPaths tempPaths = new TemporaryPaths();
 
   @Test
-  public void testFetchResponseWithoutPayloadInfo() throws IOException, InterruptedException {
+  public void testFetchResponseWithoutPayloadInfo() throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     metadata.addToRuleKeys(new RuleKey().setHashString("012345"));
     testWithMetadataAndPayloadInfo(metadata, false);
   }
 
   @Test
-  public void testFetchResponseWithCorruptedRuleKeys() throws IOException, InterruptedException {
+  public void testFetchResponseWithCorruptedRuleKeys() throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     metadata.addToRuleKeys(new RuleKey().setHashString("123\uFFFF"));
     testWithMetadata(metadata);
   }
 
   @Test
-  public void testFetchResponseWithUnevenRuleKeyHash() throws IOException, InterruptedException {
+  public void testFetchResponseWithUnevenRuleKeyHash() throws IOException {
     ArtifactMetadata metadata = new ArtifactMetadata();
     metadata.addToRuleKeys(new RuleKey().setHashString("akjdasadasdas"));
     testWithMetadata(metadata);
   }
 
   @Test
-  public void testFetchResponseWithEmptyMetadata() throws IOException, InterruptedException {
+  public void testFetchResponseWithEmptyMetadata() throws IOException {
     testWithMetadata(new ArtifactMetadata());
   }
 
   @Test
-  public void testFetchResponseWithoutMetadata() throws IOException, InterruptedException {
+  public void testFetchResponseWithoutMetadata() throws IOException {
     testWithMetadata(null);
   }
 
-  private void testWithMetadata(@Nullable ArtifactMetadata artifactMetadata)
-      throws IOException, InterruptedException {
+  private void testWithMetadata(@Nullable ArtifactMetadata artifactMetadata) throws IOException {
     testWithMetadataAndPayloadInfo(artifactMetadata, true);
   }
 
@@ -120,13 +123,20 @@ public class ThriftArtifactCacheTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(
+                TargetConfigurationSerializerForTests.create(cellPathResolver))
+            .setUnconfiguredBuildTargetFactory(
+                target ->
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -138,7 +148,15 @@ public class ThriftArtifactCacheTest {
             .build();
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
+        new ThriftArtifactCache(
+            networkArgs,
+            "/nice_as_well",
+            new BuildId("aabb"),
+            0,
+            0,
+            false,
+            "test://",
+            "hostname")) {
       Path artifactPath = tempPaths.newFile().toAbsolutePath();
       CacheResult result =
           Futures.getUnchecked(
@@ -223,7 +241,7 @@ public class ThriftArtifactCacheTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 
   @Test
@@ -240,13 +258,20 @@ public class ThriftArtifactCacheTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(
+                TargetConfigurationSerializerForTests.create(cellPathResolver))
+            .setUnconfiguredBuildTargetFactory(
+                target ->
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -325,8 +350,16 @@ public class ThriftArtifactCacheTest {
     responseRef.set(response);
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
-      MultiFetchResult result = cache.multiFetchImpl(requests);
+        new ThriftArtifactCache(
+            networkArgs,
+            "/nice_as_well",
+            new BuildId("aabb"),
+            0,
+            0,
+            false,
+            "test://",
+            "hostname")) {
+      AbstractAsynchronousCache.MultiFetchResult result = cache.multiFetchImpl(requests);
       assertEquals(4, result.getResults().size());
       assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());
       assertEquals(
@@ -354,13 +387,20 @@ public class ThriftArtifactCacheTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(
+                TargetConfigurationSerializerForTests.create(cellPathResolver))
+            .setUnconfiguredBuildTargetFactory(
+                target ->
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -401,8 +441,16 @@ public class ThriftArtifactCacheTest {
     responseRef.set(response);
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 1, 1)) {
-      MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
+        new ThriftArtifactCache(
+            networkArgs,
+            "/nice_as_well",
+            new BuildId("aabb"),
+            1,
+            1,
+            false,
+            "test://",
+            "hostname")) {
+      AbstractAsynchronousCache.MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
       assertEquals(4, result.getCacheResults().size());
       assertEquals(CacheResultType.MISS, result.getCacheResults().get(key0).getType());
       assertEquals(CacheResultType.CONTAINS, result.getCacheResults().get(key1).getType());
@@ -426,19 +474,26 @@ public class ThriftArtifactCacheTest {
   }
 
   @Test
-  public void testDelete() throws Exception {
+  public void testDelete() {
     HttpService storeClient = new TestHttpService(this::makeSuccessfulDeleteResponse);
     TestHttpService fetchClient = new TestHttpService();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tempPaths.getRoot());
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READWRITE)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(
+                TargetConfigurationSerializerForTests.create(cellPathResolver))
+            .setUnconfiguredBuildTargetFactory(
+                target ->
+                    new ParsingUnconfiguredBuildTargetViewFactory()
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -450,7 +505,15 @@ public class ThriftArtifactCacheTest {
             .build();
 
     try (ThriftArtifactCache cache =
-        new ThriftArtifactCache(networkArgs, "/nice_as_well", false, new BuildId("aabb"), 0, 0)) {
+        new ThriftArtifactCache(
+            networkArgs,
+            "/nice_as_well",
+            new BuildId("aabb"),
+            0,
+            0,
+            false,
+            "test://",
+            "hostname")) {
       CacheDeleteResult result =
           Futures.getUnchecked(
               cache.deleteAsync(

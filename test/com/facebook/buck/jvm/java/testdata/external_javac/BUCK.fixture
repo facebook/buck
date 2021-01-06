@@ -1,0 +1,5 @@
+sh_binary(
+    name = "real-javac.sh",
+    main = "real-javac.sh",
+    visibility = ["PUBLIC"],
+)

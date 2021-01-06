@@ -72,6 +72,9 @@ prebuilt_jar(
 
 android_library(
     name = "robolectric",
+    visibility = [
+        "PUBLIC",
+    ],
     exported_deps = [
         ":android",
         ":annotations",
@@ -83,6 +86,11 @@ android_library(
         ":shadows-core",
         ":utils",
     ],
+)
+
+filegroup(
+    name = "robolectric_dir",
+    srcs = glob(["*.jar"]),
     visibility = [
         "PUBLIC",
     ],

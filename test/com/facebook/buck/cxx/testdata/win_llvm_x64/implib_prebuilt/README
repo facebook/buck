@@ -1,0 +1,7 @@
+To generate the prebuilt library used in these tests:
+
+1. Create a new Visual Studio static library solution name "implib_prebuilt"
+2. Copy ../implib/MathLibrary.h and ../implib/MathLibrary.cpp into the solution
+3. Build solution
+4. Grab implib_prebuilt.lib, implib_prebuilt.dll, and implib_prebuilt.pdb from
+    the x64/Release output folder

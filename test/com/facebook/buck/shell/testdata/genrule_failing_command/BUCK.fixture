@@ -2,4 +2,16 @@ genrule(
     name = "fail",
     out = "fail",
     bash = "false; echo >&2 hi",
+    cmd_exe = "exit 1",
+)
+
+genrule(
+    name = "fail_outs",
+    outs = {
+        "fail": [
+            "fail",
+        ],
+    },
+    bash = "false; echo >&2 hi",
+    cmd_exe = "exit 1",
 )

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testrunner;
@@ -54,7 +54,7 @@ public class AssumptionViolationsTest {
     shouldPassWithASimplePassingTest("Junit");
   }
 
-  private void shouldPassWithASimplePassingTest(String type) throws IOException {
+  private void shouldPassWithASimplePassingTest(String type) {
     ProcessResult result =
         workspace.runBuckCommand("test", "--all", "--filter", "com.example.PassingTest" + type);
     result.assertSuccess();
@@ -76,7 +76,7 @@ public class AssumptionViolationsTest {
     shouldFailIfOneTestFails("TestNG", 0);
   }
 
-  private void shouldFailIfOneTestFails(String type, int numSkipped) throws IOException {
+  private void shouldFailIfOneTestFails(String type, int numSkipped) {
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -100,7 +100,7 @@ public class AssumptionViolationsTest {
   }
 
   @Test
-  public void shouldIndicateAssumptionViolations() throws IOException {
+  public void shouldIndicateAssumptionViolations() {
     ProcessResult result =
         workspace.runBuckCommand(
             "test",
@@ -124,7 +124,7 @@ public class AssumptionViolationsTest {
   }
 
   @Test
-  public void shouldIndicateAssumptionViolationsBeforeClass() throws IOException {
+  public void shouldIndicateAssumptionViolationsBeforeClass() {
     ProcessResult result = workspace.runBuckCommand("test", "//test:tests3");
     result.assertSuccess();
     String output = result.getStderr();

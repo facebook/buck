@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.halide;
@@ -28,14 +28,16 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -55,8 +57,8 @@ public class HalideLibraryBuilder
   public HalideLibraryBuilder(
       BuildTarget target,
       HalideBuckConfig halideBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new HalideLibraryDescription(
             new ToolchainProviderBuilder()
@@ -89,34 +91,35 @@ public class HalideLibraryBuilder
                     ImmutableMap.of(
                         HalideBuckConfig.HALIDE_XCODE_COMPILE_SCRIPT_KEY,
                         path.toString(),
-                        String.format("target_%s", CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()),
+                        String.format("target_%s", CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR),
                         "halide-target")))
             .setFilesystem(filesystem)
             .build();
     return new HalideBuckConfig(buckConfig);
   }
 
-  public static CxxPlatform createDefaultPlatform() {
-    return CxxPlatform.builder()
-        .from(CxxPlatformUtils.DEFAULT_PLATFORM)
-        .setFlagMacros(ImmutableMap.of("TEST_MACRO", "test_macro_expansion"))
-        .build();
+  public static UnresolvedCxxPlatform createDefaultPlatform() {
+    return new StaticUnresolvedCxxPlatform(
+        CxxPlatform.builder()
+            .from(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .setFlagMacros(ImmutableMap.of("TEST_MACRO", "test_macro_expansion"))
+            .build());
   }
 
   // The #halide-compiler version of the HalideLibrary rule expects to be able
   // to find a CxxFlavor to use when building for the host architecture.
   // AbstractCxxSourceBuilder doesn't create the default host flavor, so we "override"
   // the createDefaultPlatforms() method here.
-  public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
+  public static FlavorDomain<UnresolvedCxxPlatform> createDefaultPlatforms() {
     Flavor hostFlavor = CxxPlatforms.getHostFlavor();
-    CxxPlatform hostCxxPlatform =
-        CxxPlatform.builder().from(CxxPlatformUtils.DEFAULT_PLATFORM).setFlavor(hostFlavor).build();
+    UnresolvedCxxPlatform hostCxxPlatform =
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(hostFlavor);
 
-    CxxPlatform defaultCxxPlatform = createDefaultPlatform();
+    UnresolvedCxxPlatform defaultCxxPlatform = createDefaultPlatform();
 
     return new FlavorDomain<>(
         "C/C++ Platform",
-        ImmutableMap.<Flavor, CxxPlatform>builder()
+        ImmutableMap.<Flavor, UnresolvedCxxPlatform>builder()
             .put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform)
             .put(hostCxxPlatform.getFlavor(), hostCxxPlatform)
             .build());

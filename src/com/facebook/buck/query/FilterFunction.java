@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +41,7 @@ import com.google.common.collect.ImmutableList;
  *
  * <pre>expr ::= FILTER '(' WORD ',' expr ')'</pre>
  */
-public class FilterFunction extends RegexFilterFunction {
+public class FilterFunction<NODE_TYPE> extends RegexFilterFunction<QueryTarget, NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -63,18 +64,21 @@ public class FilterFunction extends RegexFilterFunction {
   }
 
   @Override
-  protected QueryExpression getExpressionToEval(ImmutableList<Argument> args) {
+  protected QueryExpression<NODE_TYPE> getExpressionToEval(
+      ImmutableList<Argument<NODE_TYPE>> args) {
     return args.get(1).getExpression();
   }
 
   @Override
-  protected String getPattern(ImmutableList<Argument> args) {
+  protected String getPattern(ImmutableList<Argument<NODE_TYPE>> args) {
     return args.get(0).getWord();
   }
 
   @Override
   protected String getStringToFilter(
-      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) {
+      QueryEnvironment<NODE_TYPE> env,
+      ImmutableList<Argument<NODE_TYPE>> args,
+      QueryTarget target) {
     return target.toString();
   }
 }

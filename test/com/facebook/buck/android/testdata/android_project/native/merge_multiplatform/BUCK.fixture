@@ -1,0 +1,63 @@
+cxx_library(
+    name = "top",
+    srcs = ["top.c"],
+    platform_deps = [
+        [
+            "x86",
+            [":libx86"],
+        ],
+        [
+            "arm",
+            [":libarm"],
+        ],
+    ],
+    soname = "libtop.so",
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "libx86",
+    srcs = ["x86.c"],
+    soname = "libx86.so",
+    supported_platforms_regex = "^android-x86.*",
+    visibility = ["PUBLIC"],
+    deps = [":prex86"],
+)
+
+cxx_library(
+    name = "libarm",
+    srcs = ["arm.c"],
+    soname = "libarm.so",
+    supported_platforms_regex = "^android-arm.*",
+    visibility = ["PUBLIC"],
+    deps = [":prearm"],
+)
+
+prebuilt_cxx_library(
+    name = "prex86",
+    force_static = True,
+    platform_static_lib = [
+        [
+            "x86",
+            ":secretprebuilt#android-x86,static",
+        ],
+    ],
+    supported_platforms_regex = "^android-x86.*",
+)
+
+prebuilt_cxx_library(
+    name = "prearm",
+    force_static = True,
+    platform_static_lib = [
+        [
+            "arm",
+            ":secretprebuilt#android-armv7,static",
+        ],
+    ],
+    supported_platforms_regex = "^android-arm.*",
+)
+
+cxx_library(
+    name = "secretprebuilt",
+    srcs = ["secret.c"],
+)

@@ -1,0 +1,52 @@
+java_library(
+    name = "l1",
+    srcs = ["L1.java"],
+    deps = ["buck//third-party/java/jsr:jsr305"],
+)
+
+java_library(
+    name = "l1-provided-exported",
+    exported_provided_deps = [":l1"],
+)
+
+java_library(
+    name = "l2",
+    srcs = ["L2.java"],
+    exported_deps = [":l1"],
+    deps = ["buck//third-party/java/jsr:jsr305"],
+)
+
+android_library(
+    name = "android-smoke-test",
+    srcs = ["AndroidSmokeTest.java"],
+    deps = [":l2"],
+)
+
+java_library(
+    name = "java-smoke-test",
+    srcs = ["JavaSmokeTest.java"],
+    deps = [":l2"],
+)
+
+java_library(
+    name = "java-provided-dep-test",
+    srcs = ["JavaProvidedDepTest.java"],
+    provided_deps = [":l1"],
+    deps = ["buck//third-party/java/jsr:jsr305"],
+)
+
+java_library(
+    name = "java-exported-provided-dep-test",
+    srcs = ["JavaProvidedDepTest.java"],
+    deps = [
+        "buck//third-party/java/jsr:jsr305",
+        ":l1-provided-exported",
+    ],
+)
+
+java_library(
+    name = "empty-srcs-test",
+    srcs = [],
+    resources = ["resources/resource.txt"],
+    deps = [":java-smoke-test"],
+)

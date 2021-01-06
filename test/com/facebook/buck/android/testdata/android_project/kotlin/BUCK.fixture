@@ -1,5 +1,0 @@
-prebuilt_jar(
-    name = "runtime",
-    binary_jar = "kotlin-runtime.jar",
-    visibility = ["PUBLIC"],
-)

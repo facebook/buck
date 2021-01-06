@@ -1,39 +1,36 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.common;
 
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.modern.HasCustomInputsLogic;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.keys.AbstractRuleKeyBuilder;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
-import com.facebook.buck.rules.keys.RuleKeyScopedHasher;
-import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
+import com.facebook.buck.rules.keys.NoopRuleKeyScopedHasher;
 import com.facebook.buck.util.Memoizer;
-import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -112,42 +109,18 @@ public final class BuildableSupport {
     private final SourcePathRuleFinder ruleFinder;
 
     public DepsBuilder(SourcePathRuleFinder ruleFinder) {
-      super(
-          new RuleKeyScopedHasher() {
-            @Override
-            public Scope keyScope(String key) {
-              return () -> {};
-            }
-
-            @Override
-            public Scope wrapperScope(RuleKeyHasher.Wrapper wrapper) {
-              return () -> {};
-            }
-
-            @Override
-            public ContainerScope containerScope(RuleKeyHasher.Container container) {
-              return new ContainerScope() {
-                @Override
-                public void close() {}
-
-                @Override
-                public Scope elementScope() {
-                  return () -> {};
-                }
-              };
-            }
-          });
+      super(NoopRuleKeyScopedHasher.INSTANCE);
       this.ruleFinder = ruleFinder;
       this.streamBuilder = Stream.builder();
     }
 
     @Override
-    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
+    protected AbstractRuleKeyBuilder<Stream<BuildRule>> setSingleValue(@Nullable Object val) {
       return this;
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<Stream<BuildRule>> setSingleValue(@Nullable Object val) {
+    protected AbstractRuleKeyBuilder<Stream<BuildRule>> setAction(Action action) {
       return this;
     }
 
@@ -190,42 +163,18 @@ public final class BuildableSupport {
     private final Stream.Builder<SourcePath> streamBuilder;
 
     public InputsBuilder() {
-      super(
-          new RuleKeyScopedHasher() {
-            @Override
-            public Scope keyScope(String key) {
-              return () -> {};
-            }
-
-            @Override
-            public Scope wrapperScope(RuleKeyHasher.Wrapper wrapper) {
-              return () -> {};
-            }
-
-            @Override
-            public ContainerScope containerScope(RuleKeyHasher.Container container) {
-              return new ContainerScope() {
-                @Override
-                public void close() {}
-
-                @Override
-                public Scope elementScope() {
-                  return () -> {};
-                }
-              };
-            }
-          });
+      super(NoopRuleKeyScopedHasher.INSTANCE);
       this.streamBuilder = Stream.builder();
-    }
-
-    @Override
-    public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
-      return this;
     }
 
     @Override
     protected AbstractRuleKeyBuilder<Stream<SourcePath>> setSingleValue(@Nullable Object val) {
       return this;
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setAction(Action action) {
+      throw new RuntimeException("cannot derive inputs from Action");
     }
 
     @Override

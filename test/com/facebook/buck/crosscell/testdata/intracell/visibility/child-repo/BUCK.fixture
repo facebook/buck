@@ -3,3 +3,19 @@ genrule(
     out = "baz.txt",
     cmd = "echo \"$(location @parent//:top)\" > $OUT",
 )
+
+export_file(
+    name = "dummy.c",
+)
+
+export_file(
+    name = "reexported-dummy.c",
+    src = ":dummy.c",
+)
+
+apple_library(
+    name = "child-apple-library",
+    deps = [
+        "parent//just-a-directory:jad-apple-library",
+    ],
+)

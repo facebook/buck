@@ -1,25 +1,32 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.impl;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -33,6 +40,7 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,11 +52,13 @@ public class AndroidPlatformTargetProducer {
 
   /** @param platformId for the platform, such as "Google Inc.:Google APIs:16" */
   public static AndroidPlatformTarget getTargetForId(
+      ProjectFilesystem filesystem,
       String platformId,
       AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidSdkLocation androidSdkLocation,
-      Optional<Path> aaptOverride,
-      Optional<Path> aapt2Override) {
+      Optional<Supplier<Tool>> aaptOverride,
+      Optional<ToolProvider> aapt2Override,
+      AdbToolchain adbToolchain) {
 
     Matcher platformMatcher = PLATFORM_TARGET_PATTERN.matcher(platformId);
     if (platformMatcher.matches()) {
@@ -60,7 +70,13 @@ public class AndroidPlatformTargetProducer {
         platformTargetFactory = new AndroidWithoutGoogleApisFactory();
       }
       return platformTargetFactory.newInstance(
-          androidBuildToolsLocation, androidSdkLocation, apiLevel, aaptOverride, aapt2Override);
+          filesystem,
+          androidBuildToolsLocation,
+          androidSdkLocation,
+          apiLevel,
+          aaptOverride,
+          aapt2Override,
+          adbToolchain);
     } else {
       String messagePrefix =
           String.format("The Android SDK for '%s' could not be found. ", platformId);
@@ -71,25 +87,31 @@ public class AndroidPlatformTargetProducer {
   }
 
   public static AndroidPlatformTarget getDefaultPlatformTarget(
+      ProjectFilesystem filesystem,
       AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidSdkLocation androidSdkLocation,
-      Optional<Path> aaptOverride,
-      Optional<Path> aapt2Override) {
+      Optional<Supplier<Tool>> aaptOverride,
+      Optional<ToolProvider> aapt2Override,
+      AdbToolchain platformToolsLocation) {
     return getTargetForId(
+        filesystem,
         AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET,
         androidBuildToolsLocation,
         androidSdkLocation,
         aaptOverride,
-        aapt2Override);
+        aapt2Override,
+        platformToolsLocation);
   }
 
   private interface Factory {
     AndroidPlatformTarget newInstance(
+        ProjectFilesystem filesystem,
         AndroidBuildToolsLocation androidBuildToolsLocation,
         AndroidSdkLocation androidSdkLocation,
         String apiLevel,
-        Optional<Path> aaptOverride,
-        Optional<Path> aapt2Override);
+        Optional<Supplier<Tool>> aaptOverride,
+        Optional<ToolProvider> aapt2Override,
+        AdbToolchain adbToolchain);
   }
 
   /**
@@ -99,13 +121,15 @@ public class AndroidPlatformTargetProducer {
    */
   @VisibleForTesting
   static AndroidPlatformTarget createFromDefaultDirectoryStructure(
+      ProjectFilesystem filesystem,
       String name,
       AndroidBuildToolsLocation androidBuildToolsLocation,
       AndroidSdkLocation androidSdkLocation,
       String platformDirectoryPath,
       Set<Path> additionalJarPaths,
-      Optional<Path> aaptOverride,
-      Optional<Path> aapt2Override) {
+      Optional<Supplier<Tool>> aaptOverride,
+      Optional<ToolProvider> aapt2Override,
+      AdbToolchain adbToolchain) {
     Path androidSdkDir = androidSdkLocation.getSdkRootPath();
     if (!androidSdkDir.isAbsolute()) {
       throw new HumanReadableException(
@@ -139,24 +163,19 @@ public class AndroidPlatformTargetProducer {
     // This is the directory under the Android SDK directory that contains the dx script, jack,
     // jill, and binaries.
     Path buildToolsDir = androidBuildToolsLocation.getBuildToolsPath();
+    Path buildToolsBinDir = androidBuildToolsLocation.getBuildToolsBinPath();
+    String version = buildToolsDir.getFileName().toString();
 
-    // This is the directory under the Android SDK directory that contains the aapt, aidl, and
-    // zipalign binaries. Before Android SDK Build-tools 23.0.0_rc1, this was the same as
-    // buildToolsDir above.
-    Path buildToolsBinDir;
-    if (buildToolsDir.resolve("bin").toFile().exists()) {
-      // Android SDK Build-tools >= 23.0.0_rc1 have executables under a new bin directory.
-      buildToolsBinDir = buildToolsDir.resolve("bin");
-    } else {
-      // Android SDK Build-tools < 23.0.0_rc1 have executables under the build-tools directory.
-      buildToolsBinDir = buildToolsDir;
-    }
-
-    Path zipAlignExecutable = androidSdkDir.resolve("tools/zipalign").toAbsolutePath();
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
+    Path zipAlignExecutable =
+        androidSdkDir.resolve("tools/zipalign" + binaryExtension).toAbsolutePath();
     if (!zipAlignExecutable.toFile().exists()) {
       // Android SDK Build-tools >= 19.1.0 have zipalign under the build-tools directory.
       zipAlignExecutable =
-          androidSdkDir.resolve(buildToolsBinDir).resolve("zipalign").toAbsolutePath();
+          androidSdkDir
+              .resolve(buildToolsBinDir)
+              .resolve("zipalign" + binaryExtension)
+              .toAbsolutePath();
     }
 
     Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
@@ -170,11 +189,27 @@ public class AndroidPlatformTargetProducer {
         androidJar.toAbsolutePath(),
         bootclasspathEntries,
         aaptOverride.orElse(
-            androidSdkDir.resolve(buildToolsBinDir).resolve("aapt").toAbsolutePath()),
+            () ->
+                VersionedTool.of(
+                    "aapt" + binaryExtension,
+                    PathSourcePath.of(
+                        filesystem,
+                        androidSdkDir
+                            .resolve(androidBuildToolsLocation.getAaptPath())
+                            .toAbsolutePath()),
+                    version)),
         aapt2Override.orElse(
-            androidSdkDir.resolve(buildToolsBinDir).resolve("aapt2").toAbsolutePath()),
-        androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
-        androidSdkDir.resolve(buildToolsBinDir).resolve("aidl").toAbsolutePath(),
+            new ConstantToolProvider(
+                VersionedTool.of(
+                    "aapt2" + binaryExtension,
+                    PathSourcePath.of(
+                        filesystem,
+                        androidSdkDir
+                            .resolve(androidBuildToolsLocation.getAapt2Path())
+                            .toAbsolutePath()),
+                    version))),
+        adbToolchain.getAdbPath(),
+        androidSdkDir.resolve(buildToolsBinDir).resolve("aidl" + binaryExtension).toAbsolutePath(),
         zipAlignExecutable,
         buildToolsDir
             .resolve(Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx")
@@ -192,11 +227,13 @@ public class AndroidPlatformTargetProducer {
 
     @Override
     public AndroidPlatformTarget newInstance(
+        ProjectFilesystem filesystem,
         AndroidBuildToolsLocation androidBuildToolsLocation,
         AndroidSdkLocation androidSdkLocation,
         String apiLevel,
-        Optional<Path> aaptOverride,
-        Optional<Path> aapt2Override) {
+        Optional<Supplier<Tool>> aaptOverride,
+        Optional<ToolProvider> aapt2Override,
+        AdbToolchain adbToolchain) {
       // TODO(natthu): Use Paths instead of Strings everywhere in this file.
       Path androidSdkDir = androidSdkLocation.getSdkRootPath();
       File addonsParentDir = androidSdkDir.resolve("add-ons").toFile();
@@ -205,7 +242,7 @@ public class AndroidPlatformTargetProducer {
 
       if (addonsParentDir.isDirectory()) {
         String[] addonsApiDirs =
-            addonsParentDir.list((dir, name1) -> apiDirPattern.matcher(name1).matches());
+            addonsParentDir.list((dir, name) -> apiDirPattern.matcher(name).matches());
         Arrays.sort(
             addonsApiDirs,
             new Comparator<String>() {
@@ -238,13 +275,15 @@ public class AndroidPlatformTargetProducer {
             }
 
             return createFromDefaultDirectoryStructure(
+                filesystem,
                 "Google Inc.:Google APIs:" + apiLevel,
                 androidBuildToolsLocation,
                 androidSdkLocation,
                 "platforms/android-" + apiLevel,
                 additionalJarPaths.build(),
                 aaptOverride,
-                aapt2Override);
+                aapt2Override,
+                adbToolchain);
           }
         }
       }
@@ -262,19 +301,23 @@ public class AndroidPlatformTargetProducer {
   private static class AndroidWithoutGoogleApisFactory implements Factory {
     @Override
     public AndroidPlatformTarget newInstance(
+        ProjectFilesystem filesystem,
         AndroidBuildToolsLocation androidBuildToolsLocation,
         AndroidSdkLocation androidSdkLocation,
         String apiLevel,
-        Optional<Path> aaptOverride,
-        Optional<Path> aapt2Override) {
+        Optional<Supplier<Tool>> aaptOverride,
+        Optional<ToolProvider> aapt2Override,
+        AdbToolchain adbToolchain) {
       return createFromDefaultDirectoryStructure(
+          filesystem,
           "android-" + apiLevel,
           androidBuildToolsLocation,
           androidSdkLocation,
           "platforms/android-" + apiLevel,
           /* additionalJarPaths */ ImmutableSet.of(),
           aaptOverride,
-          aapt2Override);
+          aapt2Override,
+          adbToolchain);
     }
   }
 

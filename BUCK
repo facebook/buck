@@ -1,6 +1,14 @@
-load("//tools/build_rules:export_files.bzl", "export_files")
+export_file(
+    name = "LICENSE",
+    visibility = [
+        "PUBLIC",
+    ],
+)
 
-export_files([
-    "LICENSE",
-    "README.md",
-])
+export_file(
+    name =
+        "README.md",
+    visibility = [
+        "PUBLIC",
+    ],
+)

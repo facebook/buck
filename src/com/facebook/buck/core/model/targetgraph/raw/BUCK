@@ -1,0 +1,21 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "raw",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/model/targetgraph/raw:raw",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/rules/visibility:visibility",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation/model:model",
+    ],
+)

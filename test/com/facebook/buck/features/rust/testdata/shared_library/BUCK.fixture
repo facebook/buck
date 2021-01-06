@@ -1,0 +1,12 @@
+rust_binary(
+    name = "binary",
+    srcs = ["binary.rs"],
+    crate = "binary",
+)
+
+rust_library(
+    name = "shared-library-with-default-soname",
+    srcs = ["library.rs"],
+    crate = "library",
+    preferred_linkage = "shared",
+)

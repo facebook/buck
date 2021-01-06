@@ -1,0 +1,24 @@
+load("//:defs.bzl", "my_rule", "write")
+
+my_rule(
+    name = "no_defaults",
+    int = 1,
+    int_list = [
+        3,
+        4,
+    ],
+    string = "foo_value",
+    string_list = [
+        "foo",
+        "baz",
+    ],
+    labels = ["foo", "bar", "foo"],
+    licenses = ["//foo:LICENSE", "//foo:LICENSE2", "//foo:LICENSE"],
+)
+
+my_rule(
+    name = "defaults",
+)
+
+write(name = "LICENSE", filename = "LICENSE")
+write(name = "LICENSE2", filename = "LICENSE2")

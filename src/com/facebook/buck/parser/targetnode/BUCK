@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "targetnode",
+    srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/parser/targetnode:targetnode"],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/description/metadata:metadata",
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/parser/manifest:manifest",
+        "//third-party/java/guava:guava",
+    ],
+)

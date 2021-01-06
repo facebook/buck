@@ -1,24 +1,23 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.jvm.java.plugin.adapter.ElementsExtendedImpl;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.facebook.buck.util.liteinfersupport.PropagatesNullable;
 import com.sun.source.util.Trees;
 import java.io.Writer;
@@ -26,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
@@ -288,16 +288,14 @@ class TreeBackedElements extends ElementsExtendedImpl {
 
   @Override
   public PackageElement getPackageOf(Element type) {
-    return Preconditions.checkNotNull(
+    return Objects.requireNonNull(
         getCanonicalElement(javacElements.getPackageOf(getJavacElement(type))));
   }
 
   @Override
   public List<? extends Element> getAllMembers(TypeElement type) {
     if (type instanceof TreeBackedTypeElement) {
-      return javacElements
-          .getAllMembers(getJavacElement(type))
-          .stream()
+      return javacElements.getAllMembers(getJavacElement(type)).stream()
           .map(this::getCanonicalElement)
           .collect(Collectors.toList());
     }

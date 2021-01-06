@@ -1,0 +1,12 @@
+# Normal syntax: required
+<file:required.bcfg>
+
+# Alternate syntax: optional
+<?file:optional.bcfg>
+
+<file:no_comments_required.bcfg>
+
+[foo]
+    bar = baz
+
+<?file:no_comments_optional.bcfg>

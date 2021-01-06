@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="android" name="Android">
+      <configuration>
+        <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../../buck-out/android/java/code/modules_with_java_8/gen" />
+        <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../../buck-out/android/java/code/modules_with_java_8/gen" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="" />
+        <option name="LIBRARY_PROJECT" value="true" />
+        <option name="PROJECT_TYPE" value="1" />
+        <option name="UPDATE_PROPERTY_FILES" value="false" />
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
+        <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules_with_java_8/gen">
+      <sourceFolder url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules_with_java_8/gen" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/tip/src" isTestSource="true" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

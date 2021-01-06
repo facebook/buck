@@ -1,0 +1,39 @@
+# Can start file with a comment
+
+# Comments can go here, at the section level
+[one]
+    # Comments can go here, at the property level
+    foo = you # but this is not a comment
+    bar = no comment is necessary
+    # One
+    # or
+    # more
+    baz = multiple comments ok
+
+; Semicolons
+; are
+; comments,
+; too
+[two]
+  foo = no comments
+  ; multiple
+  ; lines
+  ; of comments
+  bar = for this
+  baz = this ; is not a comment
+
+# File imports can also have comments
+<file:some_are_required.bcfg>
+
+; using # or ;
+<?file:some_are_optional.bcfg>
+
+
+[naked]
+  foo = no
+  bar = comments
+  baz = required
+
+; Can end with a comment
+# or two
+; if you like

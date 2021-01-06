@@ -20,4 +20,57 @@ genrule(
   sleep 2
   echo "pub const INFO: &'static str = \\"this is generated info\\";" > $OUT
   """,
+    visibility = ["PUBLIC"],
+)
+
+rust_binary(
+    name = "gen_submod",
+    srcs = [
+        "gen_submod.rs",
+    ],
+    mapped_srcs = {
+        ":generated": "generated.rs",
+    },
+)
+
+rust_test(
+    name = "gen_submod-test",
+    srcs = [
+        "gen_submod.rs",
+    ],
+    crate_root = "gen_submod.rs",
+    mapped_srcs = {
+        ":generated": "generated.rs",
+    },
+)
+
+rust_binary(
+    name = "generated_top",
+    srcs = ["src/included.rs"],
+    mapped_srcs = {
+        ":generate-main": "src/main.rs",
+    },
+)
+
+rust_binary(
+    name = "generated_top_crateroot",
+    srcs = ["src/included.rs"],
+    crate_root = "src/foobar.rs",
+    mapped_srcs = {
+        ":generate-main": "src/foobar.rs",
+    },
+)
+
+genrule(
+    name = "generate-main",
+    out = "out.rs",
+    cmd = """
+echo '
+include!("included.rs");
+
+fn main() {
+    println!("generated main, included {}", INCLUDED);
+}
+' > $OUT
+""",
 )

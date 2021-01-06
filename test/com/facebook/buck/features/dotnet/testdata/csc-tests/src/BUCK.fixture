@@ -3,7 +3,7 @@ csharp_library(
     srcs = ["Hello.cs"],
     framework_ver = "net45",
     deps = [
-        "System.dll",
+        "mscorlib.dll",
     ],
 )
 
@@ -15,7 +15,7 @@ csharp_library(
         "world.txt": "greeting.txt",
     },
     deps = [
-        "System.dll",
+        "mscorlib.dll",
     ],
 )
 
@@ -24,7 +24,7 @@ csharp_library(
     srcs = ["Hello.cs"],
     framework_ver = "net45",
     deps = [
-        "System.dll",
+        "mscorlib.dll",
         "//lib:log4net",
     ],
 )
@@ -34,7 +34,7 @@ csharp_library(
     srcs = ["Hello2.cs"],
     framework_ver = "net45",
     deps = [
-        "System.dll",
+        "mscorlib.dll",
         ":prebuilt",
         ":simple",
     ],

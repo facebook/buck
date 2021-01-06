@@ -1,20 +1,22 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import com.android.common.SdkConstants;
 import com.android.common.sdklib.build.ApkBuilder;
@@ -22,13 +24,19 @@ import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
+import com.android.tools.build.bundletool.commands.BuildBundleCommand;
+import com.android.tools.build.bundletool.model.BundleModule;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -37,103 +45,143 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.annotation.Nullable;
 
-/**
- * Merges resources into a final Android App Bundle. This code is based off of the now deprecated
- * apkbuilder tool:
- */
+/** Merges resources into a final Android App Bundle using bundletool. */
 public class AabBuilderStep implements Step {
 
   private final ProjectFilesystem filesystem;
-  private final Path pathToOutputApkFile;
+  private final Path pathToOutputAabFile;
+  private final Optional<Path> pathToBundleConfigFile;
+  private BuildTarget buildTarget;
   private final boolean debugMode;
-  private final int apkCompressionLevel;
-  private final Path tempBundleConfig;
   private static final Pattern PATTERN_NATIVELIB_EXT =
       Pattern.compile("^.+\\.so$", Pattern.CASE_INSENSITIVE);
   private static final Pattern PATTERN_BITCODELIB_EXT =
       Pattern.compile("^.+\\.bc$", Pattern.CASE_INSENSITIVE);
   private final ImmutableSet<ModuleInfo> modulesInfo;
-  private final AppBuilderBase appBuilderBase;
-  private final ImmutableSet<String> moduleNames;
 
   /**
    * @param modulesInfo A set of ModuleInfo containing information about modules to be built within
    *     this bundle
-   * @param pathToOutputApkFile Path to output our APK to.
+   * @param pathToOutputAabFile Path to output our AAB to.
    * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
-   * @param apkCompressionLevel
    */
   public AabBuilderStep(
       ProjectFilesystem filesystem,
-      Path pathToOutputApkFile,
-      Path pathToKeystore,
-      Supplier<KeystoreProperties> keystorePropertiesSupplier,
+      Path pathToOutputAabFile,
+      Optional<Path> pathToBundleConfigFile,
+      BuildTarget buildTarget,
       boolean debugMode,
-      int apkCompressionLevel,
-      Path tempBundleConfig,
-      ImmutableSet<ModuleInfo> modulesInfo,
-      ImmutableSet<String> moduleNames) {
+      ImmutableSet<ModuleInfo> modulesInfo) {
     this.filesystem = filesystem;
-    this.pathToOutputApkFile = pathToOutputApkFile;
+    this.pathToOutputAabFile = pathToOutputAabFile;
+    this.pathToBundleConfigFile = pathToBundleConfigFile;
+    this.buildTarget = buildTarget;
     this.debugMode = debugMode;
-    this.apkCompressionLevel = apkCompressionLevel;
-    this.tempBundleConfig = tempBundleConfig;
     this.modulesInfo = modulesInfo;
-    this.moduleNames = moduleNames;
-    this.appBuilderBase =
-        new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
+  }
+
+  private ImmutableList<Path> getModulesPaths() {
+    ImmutableList.Builder<Path> modulesPathsBuilder = new Builder<>();
+
+    for (ModuleInfo moduleInfo : modulesInfo) {
+      Path moduleGenPath = getPathForModule(moduleInfo);
+      modulesPathsBuilder.add(filesystem.getPathForRelativePath(moduleGenPath));
+    }
+    return modulesPathsBuilder.build();
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     PrintStream output = null;
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
     }
 
-    try {
-      AppBuilderBase.PrivateKeyAndCertificate privateKeyAndCertificate =
-          appBuilderBase.createKeystoreProperties();
-      File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
-      fakeResApk.createNewFile();
-      @SuppressWarnings("null")
-      ApkBuilder builder =
-          new ApkBuilder(
-              filesystem.getPathForRelativePath(pathToOutputApkFile).toFile(),
-              fakeResApk,
-              null,
-              privateKeyAndCertificate.privateKey,
-              privateKeyAndCertificate.certificate,
-              output,
-              apkCompressionLevel);
-      builder.setDebugMode(debugMode);
+    File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
+    for (ModuleInfo moduleInfo : modulesInfo) {
       Set<String> addedFiles = new HashSet<>();
       Set<Path> addedSourceFiles = new HashSet<>();
-      for (ModuleInfo moduleInfo : modulesInfo) {
-        addModule(builder, moduleInfo, addedFiles, addedSourceFiles);
+      StepExecutionResult moduleBuildResult =
+          addModule(
+              context,
+              getPathForModule(moduleInfo),
+              fakeResApk,
+              output,
+              moduleInfo,
+              addedFiles,
+              addedSourceFiles);
+      if (!moduleBuildResult.isSuccess()) {
+        return moduleBuildResult;
       }
-      builder.addFile(
-          filesystem.getPathForRelativePath(tempBundleConfig).toFile(), "BundleConfig.pb");
+    }
+
+    BuildBundleCommand.Builder bundleBuilder =
+        BuildBundleCommand.builder()
+            .setOutputPath(filesystem.getPathForRelativePath(pathToOutputAabFile))
+            .setOverwriteOutput(true)
+            .setModulesPaths(getModulesPaths());
+
+    if (pathToBundleConfigFile.isPresent()) {
+      bundleBuilder.setBundleConfig(pathToBundleConfigFile.get());
+    }
+    bundleBuilder.build().execute();
+    return StepExecutionResults.SUCCESS;
+  }
+
+  private void addFile(
+      IArchiveBuilder builder,
+      Path file,
+      String destination,
+      Set<String> addedFiles,
+      Set<Path> addedSourceFiles)
+      throws SealedApkException, DuplicateFileException, ApkCreationException {
+
+    if (addedFiles.contains(destination) || addedSourceFiles.contains(file)) {
+      return;
+    }
+    builder.addFile(file.toFile(), destination);
+    addedFiles.add(destination);
+    addedSourceFiles.add(file);
+  }
+
+  private Path getPathForModule(ModuleInfo moduleInfo) {
+    return BuildTargetPaths.getGenPathForBaseName(filesystem, buildTarget)
+        .resolve(String.format("%s.zip", moduleInfo.getModuleName()));
+  }
+
+  private StepExecutionResult addModule(
+      ExecutionContext context,
+      Path moduleGenPath,
+      File fakeResApk,
+      @Nullable PrintStream verboseStream,
+      ModuleInfo moduleInfo,
+      Set<String> addedFiles,
+      Set<Path> addedSourceFiles)
+      throws IOException {
+
+    try {
+      ApkBuilder moduleBuilder =
+          new ApkBuilder(
+              filesystem.getPathForRelativePath(moduleGenPath).toFile(),
+              filesystem.getPathForRelativePath(fakeResApk.getPath()).toFile(),
+              null,
+              null,
+              null,
+              verboseStream);
+      addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles);
       // Build the APK
-      builder.sealApk();
-    } catch (ApkCreationException
-        | KeyStoreException
-        | NoSuchAlgorithmException
-        | SealedApkException
-        | UnrecoverableKeyException e) {
-      context.logError(e, "Error when creating APK at: %s.", pathToOutputApkFile);
+      moduleBuilder.sealApk();
+    } catch (ApkCreationException | SealedApkException e) {
+      context.logError(e, "Error when creating APK at: %s.", moduleGenPath);
       return StepExecutionResults.ERROR;
     } catch (DuplicateFileException e) {
       throw new HumanReadableException(
@@ -144,89 +192,46 @@ public class AabBuilderStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
-  private void addFile(
-      IArchiveBuilder builder,
-      Path file,
-      String destination,
-      boolean isZip,
+  private void addModuleFiles(
+      ApkBuilder moduleBuilder,
+      ModuleInfo moduleInfo,
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)
-      throws SealedApkException, DuplicateFileException, ApkCreationException {
-    if (!isZip && (addedFiles.contains(destination) || addedSourceFiles.contains(file))) {
-      return;
-    }
-    builder.addFile(file.toFile(), destination);
-    addedFiles.add(destination);
-    addedSourceFiles.add(file);
-  }
-
-  private void addModule(
-      ApkBuilder builder, ModuleInfo moduleInfo, Set<String> addedFiles, Set<Path> addedSourceFiles)
       throws ApkCreationException, DuplicateFileException, SealedApkException, IOException {
-    String moduleName = moduleInfo.getModuleName();
+
+    moduleBuilder.setDebugMode(debugMode);
     if (moduleInfo.getDexFile() != null) {
       for (Path dexFile : moduleInfo.getDexFile()) {
-        if (moduleName.equals("base")) {
-          addFile(
-              builder,
-              filesystem.getPathForRelativePath(dexFile),
-              getDexFileName(moduleName, addedFiles),
-              false,
-              addedFiles,
-              addedSourceFiles);
-        } else {
-          addFile(
-              builder,
-              filesystem.getPathForRelativePath(dexFile),
-              Paths.get(moduleName).resolve("assets").resolve(dexFile.getFileName()).toString(),
-              false,
-              addedFiles,
-              addedSourceFiles);
-        }
+        addFile(
+            moduleBuilder,
+            filesystem.getPathForRelativePath(dexFile),
+            getDexFileName(addedFiles),
+            addedFiles,
+            addedSourceFiles);
       }
     }
     if (moduleInfo.getResourceApk() != null) {
-      if (moduleName.equals("base")) {
+      if (moduleInfo.isBaseModule()) {
         packageFile(
-            builder,
+            moduleBuilder,
             moduleInfo.getResourceApk().toFile(),
-            resolve(moduleName, ""),
+            resolve(null, ""),
             addedFiles,
             addedSourceFiles);
       } else {
         processFileForResource(
-            builder,
+            moduleBuilder,
             filesystem.getPathForRelativePath(moduleInfo.getResourceApk()).toFile(),
             "",
-            moduleName,
             addedFiles,
             addedSourceFiles);
       }
     }
-    if (moduleInfo.getTempAssets() != null) {
-      addFile(
-          builder,
-          filesystem.getPathForRelativePath(moduleInfo.getTempAssets()),
-          Paths.get(moduleName).resolve("assets.pb").toString(),
-          false,
-          addedFiles,
-          addedSourceFiles);
-    }
-    if (moduleInfo.getTempNatives() != null) {
-      addFile(
-          builder,
-          filesystem.getPathForRelativePath(moduleInfo.getTempNatives()),
-          Paths.get(moduleName).resolve("native.pb").toString(),
-          false,
-          addedFiles,
-          addedSourceFiles);
-    }
     if (moduleInfo.getNativeLibraryDirectories() != null) {
       for (Path nativeLibraryDirectory : moduleInfo.getNativeLibraryDirectories()) {
         addNativeLibraries(
-            builder,
+            moduleBuilder,
             filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile(),
-            moduleName,
             addedFiles,
             addedSourceFiles);
       }
@@ -235,10 +240,9 @@ public class AabBuilderStep implements Step {
       for (Path assetDirectory : moduleInfo.getAssetDirectories().keySet()) {
         String subFolderName = moduleInfo.getAssetDirectories().get(assetDirectory);
         addSourceFolder(
-            builder,
+            moduleBuilder,
             filesystem.getPathForRelativePath(assetDirectory).toFile(),
-            subFolderName.isEmpty() ? moduleName : resolve(moduleName, subFolderName),
-            moduleName,
+            subFolderName.isEmpty() ? "" : resolve(null, subFolderName),
             addedFiles,
             addedSourceFiles);
       }
@@ -249,9 +253,9 @@ public class AabBuilderStep implements Step {
           continue;
         }
         packageFile(
-            builder,
+            moduleBuilder,
             filesystem.getPathForRelativePath(zipFile).toFile(),
-            resolve(moduleName, ""),
+            resolve(null, ""),
             addedFiles,
             addedSourceFiles);
       }
@@ -260,9 +264,9 @@ public class AabBuilderStep implements Step {
       for (Path jarFileThatMayContainResources : moduleInfo.getJarFilesThatMayContainResources()) {
         Path jarFile = filesystem.getPathForRelativePath(jarFileThatMayContainResources);
         packageFile(
-            builder,
+            moduleBuilder,
             filesystem.getPathForRelativePath(jarFile).toFile(),
-            resolve(moduleName, ""),
+            resolve(null, ""),
             addedFiles,
             addedSourceFiles);
       }
@@ -273,7 +277,6 @@ public class AabBuilderStep implements Step {
       ApkBuilder builder,
       File sourceFolder,
       String destination,
-      String moduleName,
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)
       throws ApkCreationException, DuplicateFileException, SealedApkException {
@@ -283,8 +286,7 @@ public class AabBuilderStep implements Step {
         return;
       }
       for (File file : files) {
-        processFileForResource(
-            builder, file, destination, moduleName, addedFiles, addedSourceFiles);
+        processFileForResource(builder, file, destination, addedFiles, addedSourceFiles);
       }
     } else {
       if (sourceFolder.exists()) {
@@ -299,75 +301,63 @@ public class AabBuilderStep implements Step {
       IArchiveBuilder builder,
       File file,
       String path,
-      String moduleName,
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)
       throws DuplicateFileException, ApkCreationException, SealedApkException {
     path = resolve(path, file.getName());
     if (file.isDirectory() && ApkBuilder.checkFolderForPackaging(file.getName())) {
-      if (file.getName().equals("res")) {
-        path = resolve(moduleName, "res");
+      if (file.getName().equals(BundleModule.RESOURCES_DIRECTORY.toString())) {
+        path = resolve(null, BundleModule.RESOURCES_DIRECTORY.toString());
       }
       File[] files = file.listFiles();
       if (files == null) {
         return;
       }
       for (File contentFile : files) {
-        processFileForResource(
-            builder, contentFile, path, moduleName, addedFiles, addedSourceFiles);
+        processFileForResource(builder, contentFile, path, addedFiles, addedSourceFiles);
       }
     } else if (!file.isDirectory() && ApkBuilder.checkFileForPackaging(file.getName())) {
       if (file.getName().endsWith(".dex")) {
+        addFile(builder, file.toPath(), getDexFileName(addedFiles), addedFiles, addedSourceFiles);
+      } else if (file.getName().equals(BundleModule.MANIFEST_FILENAME)) {
         addFile(
             builder,
             file.toPath(),
-            getDexFileName(moduleName, addedFiles),
-            false,
+            Paths.get(BundleModule.MANIFEST_DIRECTORY.toString())
+                .resolve(file.getName())
+                .toString(),
             addedFiles,
             addedSourceFiles);
-      } else if (file.getName().equals("AndroidManifest.xml")) {
+      } else if (file.getName()
+          .equals(BundleModule.SpecialModuleEntry.RESOURCE_TABLE.getPath().toString())) {
         addFile(
             builder,
             file.toPath(),
-            Paths.get(moduleName).resolve("manifest").resolve(file.getName()).toString(),
-            false,
-            addedFiles,
-            addedSourceFiles);
-      } else if (file.getName().equals("resources.pb")) {
-        addFile(
-            builder,
-            file.toPath(),
-            Paths.get(moduleName).resolve(file.getName()).toString(),
-            false,
+            Paths.get(file.getName()).toString(),
             addedFiles,
             addedSourceFiles);
       } else {
-        addFile(builder, file.toPath(), path, false, addedFiles, addedSourceFiles);
+        addFile(builder, file.toPath(), path, addedFiles, addedSourceFiles);
       }
     }
   }
 
-  private String getDexFileName(String moduleName, Set<String> addedFiles) {
+  private String getDexFileName(Set<String> addedFiles) {
     int ind = 1;
-    String possibleName = Paths.get(moduleName).resolve("dex").resolve("classes.dex").toString();
+    String possibleName = Paths.get("dex").resolve("classes.dex").toString();
     while (addedFiles.contains(possibleName)) {
       ind++;
-      possibleName =
-          Paths.get(moduleName).resolve("dex").resolve("classes" + ind + ".dex").toString();
+      possibleName = Paths.get("dex").resolve("classes" + ind + ".dex").toString();
     }
     return possibleName;
   }
 
-  private String resolve(String path, String fileName) {
+  private String resolve(@Nullable String path, String fileName) {
     return path == null ? fileName : path + File.separator + fileName;
   }
 
   private void addNativeLibraries(
-      ApkBuilder builder,
-      File nativeFolder,
-      String moduleName,
-      Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      ApkBuilder builder, File nativeFolder, Set<String> addedFiles, Set<Path> addedSourceFiles)
       throws ApkCreationException, SealedApkException, DuplicateFileException {
     if (!nativeFolder.isDirectory()) {
       if (nativeFolder.exists()) {
@@ -393,12 +383,11 @@ public class AabBuilderStep implements Step {
           continue;
         }
         Path libPath =
-            Paths.get(moduleName)
-                .resolve(SdkConstants.FD_APK_NATIVE_LIBS)
+            Paths.get(BundleModule.LIB_DIRECTORY.toString())
                 .resolve(abi.getName())
                 .resolve(lib.getName());
 
-        addFile(builder, lib.toPath(), libPath.toString(), false, addedFiles, addedSourceFiles);
+        addFile(builder, lib.toPath(), libPath.toString(), addedFiles, addedSourceFiles);
       }
     }
   }
@@ -424,17 +413,77 @@ public class AabBuilderStep implements Step {
       Enumeration<? extends ZipEntry> zipEntryEnumeration = zipFile.entries();
       while (zipEntryEnumeration.hasMoreElements()) {
         ZipEntry entry = zipEntryEnumeration.nextElement();
-        String location =
-            entry.getName().equals("AndroidManifest.xml") ? resolve("manifest", "") : "";
-        addFile(
-            builder,
-            convertZipEntryToFile(zipFile, entry).toPath(),
-            destination + location + entry.getName(),
-            true,
-            addedFiles,
-            addedSourceFiles);
+
+        if (isEntryPackageable(entry)) {
+
+          String location = resolveFileInModule(entry);
+          addFile(
+              builder,
+              convertZipEntryToFile(zipFile, entry).toPath(),
+              destination + location + entry.getName(),
+              addedFiles,
+              addedSourceFiles);
+        }
       }
     }
+  }
+
+  /**
+   * Defines if a zip entry should be packaged in the final bundle.
+   *
+   * @param entry
+   * @return true if entry should be packaged
+   */
+  private boolean isEntryPackageable(ZipEntry entry) {
+    return isDirectoryEntryPackageable(entry) || isFileEntryPackageable(entry);
+  }
+
+  private boolean isDirectoryEntryPackageable(ZipEntry entry) {
+    return entry.isDirectory() && ApkBuilder.checkFolderForPackaging(entry.getName());
+  }
+
+  private boolean isFileEntryPackageable(ZipEntry entry) {
+    return ApkBuilder.checkFileForPackaging(entry.getName())
+        && isValidMetaInfEntry(entry.getName());
+  }
+
+  // We should filter out anything from META-INF (except for the ones responsible for the
+  // apk validation itself). As described on:
+  // https://android.googlesource.com/platform/sdk/+/e162064a7b5db1eecec34271bc7e2a4296181ea6/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java#105
+  // and https://source.android.com/security/apksigning/v2#v1-verification
+  private boolean isValidMetaInfEntry(String entryName) {
+    String metaInfDir = "META-INF";
+    if (!entryName.startsWith(metaInfDir)) {
+      // Not a meta inf file, so it's valid concerning this check
+      return true;
+    }
+
+    return entryName.equals(metaInfDir + File.separator + "CERT.SF")
+        || entryName.equals(metaInfDir + File.separator + "MANIFEST.MF")
+        || entryName.equals(metaInfDir + File.separator + "CERT.RSA");
+  }
+
+  private String resolveFileInModule(ZipEntry entry) {
+    String location;
+    String fileSeparator = "/";
+    String empty = "";
+
+    if (entry.getName().equals(BundleModule.MANIFEST_FILENAME)) {
+      location = resolve(BundleModule.MANIFEST_DIRECTORY.toString(), empty);
+
+    } else if (entry.getName().startsWith(BundleModule.LIB_DIRECTORY.toString() + fileSeparator)
+        || entry.getName().startsWith(BundleModule.RESOURCES_DIRECTORY.toString() + fileSeparator)
+        || entry.getName().startsWith(BundleModule.ASSETS_DIRECTORY.toString() + fileSeparator)
+        || entry.getName().startsWith(BundleModule.DEX_DIRECTORY.toString() + fileSeparator)
+        || entry.getName().endsWith(".pb")) {
+      // They are already in the right folder
+      location = empty;
+
+    } else {
+      location = resolve(BundleModule.ROOT_DIRECTORY.toString(), empty);
+    }
+
+    return location;
   }
 
   private File convertZipEntryToFile(ZipFile zipFile, ZipEntry ze) throws IOException {
@@ -442,15 +491,29 @@ public class AabBuilderStep implements Step {
     File tempFile = tempFilePath.toFile();
     tempFile.deleteOnExit();
     try (InputStream in = zipFile.getInputStream(ze)) {
-      Files.copy(in, tempFilePath);
+      Files.copy(in, tempFilePath, REPLACE_EXISTING);
     }
     return tempFile;
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    String summaryOfModules = Joiner.on(',').join(moduleNames);
-    return String.format("Build a Bundle contains following modules: %s", summaryOfModules);
+    ImmutableList.Builder<String> args =
+        ImmutableList.<String>builder()
+            .add("bundletool")
+            .add("build-bundle")
+            .add("--output")
+            .add("\"" + filesystem.getPathForRelativePath(pathToOutputAabFile).toString() + "\"")
+            .add("--overwrite")
+            .add("true")
+            .add("--modules")
+            .add("\"" + Joiner.on(",").join(getModulesPaths()) + "\"");
+
+    if (pathToBundleConfigFile.isPresent()) {
+      args.add("--config").add("\"" + pathToBundleConfigFile.get().toString() + "\"");
+    }
+
+    return Joiner.on(" ").join(args.build());
   }
 
   @Override

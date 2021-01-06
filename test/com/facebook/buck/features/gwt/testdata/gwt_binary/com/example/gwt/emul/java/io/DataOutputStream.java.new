@@ -1,0 +1,6 @@
+package java.io;
+
+// new comment will cause it recompile
+public class DataOutputStream {
+  public DataOutputStream(OutputStream out) {}
+}

@@ -1,0 +1,34 @@
+load("//:defs.bzl", "output_rule", "output_rule_with_default")
+
+output_rule(
+    name = "with_contents",
+    contents = "some contents",
+    output = "some_out.txt",
+)
+
+output_rule(
+    name = "without_contents",
+    output = "some_out.txt",
+)
+
+output_rule(
+    name = "invalid_path",
+    output = "foo\0bar.txt",
+)
+
+output_rule(
+    name = "parent_path",
+    output = "../foo.txt",
+)
+
+output_rule(
+    name = "dot_path",
+    output = ".",
+)
+
+output_rule(
+    name = "empty_path",
+    output = "",
+)
+
+output_rule_with_default(name = "with_contents_and_default")

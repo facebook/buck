@@ -1,0 +1,55 @@
+constraint_setting(
+    name = "cs",
+)
+
+constraint_value(
+    name = "cv-t",
+    constraint_setting = ":cs",
+)
+
+config_setting(
+    name = "c-t",
+    constraint_values = [
+        ":cv-t",
+    ],
+)
+
+constraint_value(
+    name = "cv-h",
+    constraint_setting = ":cs",
+)
+
+config_setting(
+    name = "c-h",
+    constraint_values = [
+        ":cv-h",
+    ],
+)
+
+platform(
+    name = "t",
+    constraint_values = [
+        ":cv-t",
+    ],
+)
+
+platform(
+    name = "h",
+    constraint_values = [
+        ":cv-h",
+    ],
+)
+
+python_binary(
+    name = "b",
+    main = select({
+        ":c-h": "b-host.py",
+        ":c-t": "b-target.py",
+    }),
+)
+
+genrule(
+    name = "g",
+    out = "out.txt",
+    cmd = "$(exe_target :b)> $OUT",
+)

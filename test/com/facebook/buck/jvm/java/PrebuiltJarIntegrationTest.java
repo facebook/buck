@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -45,7 +44,7 @@ public class PrebuiltJarIntegrationTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
-  public void outputIsPlacedInCorrectFolder() throws IOException, InterruptedException {
+  public void outputIsPlacedInCorrectFolder() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt", temp);
     workspace.setUp();
@@ -54,9 +53,10 @@ public class PrebuiltJarIntegrationTest {
 
     Path localPath =
         BuildTargetPaths.getGenPath(
-            workspace.asCell().getFilesystem(),
-            BuildTargetFactory.newInstance("//:jar_from_gen"),
-            "");
+                workspace.asCell().getFilesystem(),
+                BuildTargetFactory.newInstance("//:jar_from_gen"),
+                "%s")
+            .getParent();
     Path expectedRoot = workspace.resolve(localPath);
 
     assertTrue(output.startsWith(expectedRoot));
@@ -74,21 +74,18 @@ public class PrebuiltJarIntegrationTest {
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.getFullyQualifiedName());
+    buildLog.assertTargetBuiltLocally(target);
 
     result = workspace.runBuckBuild("//:depends_on_jar");
     result.assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetHadMatchingRuleKey(target.getFullyQualifiedName());
+    buildLog.assertTargetHadMatchingRuleKey(target);
 
     // We expect the binary jar to have a different hash to the stub jar.
     Path binaryJar = workspace.getPath("junit.jar");
     HashCode originalHash = MorePaths.asByteSource(binaryJar).hash(Hashing.sha1());
     Path expectedOut =
-        BuildTargetPaths.getGenPath(
-                TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
-                abiTarget,
-                "%s")
+        BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), abiTarget, "%s")
             .resolve(String.format("%s-abi.jar", abiTarget.getShortName()));
     Path abiJar = workspace.getPath(expectedOut.toString());
     HashCode abiHash = MorePaths.asByteSource(abiJar).hash(Hashing.sha1());

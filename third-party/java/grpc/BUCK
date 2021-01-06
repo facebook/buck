@@ -1,24 +1,66 @@
-load("//tools/build_rules:file_alias.bzl", "file_alias")
+load(
+    "//tools/build_rules:file_alias.bzl",
+    "file_alias",
+)
 
 prebuilt_jar(
     name = "grpc-context",
-    binary_jar = "grpc-context-1.11.0.jar",
-    licenses = ["LICENSE"],
-    source_jar = "grpc-context-1.11.0-sources.jar",
-    visibility = ["PUBLIC"],
-    deps = [],
+    binary_jar = "grpc-context-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-context-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)
+
+prebuilt_jar(
+    name = "perfmark-api",
+    binary_jar = "perfmark-api-0.20.1.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "perfmark-api-0.20.1-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)
+
+prebuilt_jar(
+    name = "grpc-api",
+    binary_jar = "grpc-api-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-api-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":perfmark-api",
+    ],
 )
 
 prebuilt_jar(
     name = "grpc-core",
-    binary_jar = "grpc-core-1.10.1.jar",
-    licenses = ["LICENSE"],
-    source_jar = "grpc-core-1.10.1-sources.jar",
-    visibility = ["PUBLIC"],
+    binary_jar = "grpc-core-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-core-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
+        ":grpc-api",
         ":grpc-context",
-        "//third-party/java/guava:guava",
         "//third-party/java/gson:gson",
+        "//third-party/java/guava:guava",
         "//third-party/java/opencensus:opencensus-api",
         "//third-party/java/opencensus:opencensus-contrib-grpc-metrics",
     ],
@@ -26,25 +68,33 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-protobuf",
-    binary_jar = "grpc-protobuf-1.10.1.jar",
-    licenses = ["LICENSE"],
-    source_jar = "grpc-protobuf-1.10.1-sources.jar",
-    visibility = ["PUBLIC"],
+    binary_jar = "grpc-protobuf-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-protobuf-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":grpc-core",
         ":grpc-protobuf-lite",
+        "//third-party/java/guava:guava",
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/protobuf:protobuf-util",
-        "//third-party/java/guava:guava",
     ],
 )
 
 prebuilt_jar(
     name = "grpc-protobuf-lite",
-    binary_jar = "grpc-protobuf-lite-1.11.0.jar",
-    licenses = ["LICENSE"],
-    source_jar = "grpc-protobuf-lite-1.11.0-sources.jar",
-    visibility = ["PUBLIC"],
+    binary_jar = "grpc-protobuf-lite-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-protobuf-lite-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":grpc-core",
         "//third-party/java/guava:guava",
@@ -53,28 +103,52 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-stub",
-    binary_jar = "grpc-stub-1.10.1.jar",
-    licenses = ["LICENSE"],
-    source_jar = "grpc-stub-1.10.1-sources.jar",
-    visibility = ["PUBLIC"],
+    binary_jar = "grpc-stub-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-stub-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":grpc-core",
     ],
 )
 
 prebuilt_jar(
-    name = "grpc-netty",
-    binary_jar = "grpc-netty-1.10.1.jar",
-    licenses = ["LICENSE"],
-    source_jar = "grpc-netty-1.10.1-sources.jar",
-    visibility = ["PUBLIC"],
+    name = "grpc-netty-shaded",
+    binary_jar = "grpc-netty-shaded-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-netty-shaded-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":grpc-core",
-        "//third-party/java/netty:netty",
+        "//third-party/java/netty-handler:netty-handler",
+        "//third-party/java/netty-tcnative:netty-tcnative",
+    ],
+)
+
+prebuilt_jar(
+    name = "grpc-testing",
+    binary_jar = "grpc-testing-1.24.0.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "grpc-testing-1.24.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":grpc-core",
     ],
 )
 
 file_alias(
-    name="protobuf-plugin",
-    source="protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
+    name = "protobuf-plugin",
+    source = "protoc-gen-grpc-java-1.10.1-osx-x86_64.exe",
 )

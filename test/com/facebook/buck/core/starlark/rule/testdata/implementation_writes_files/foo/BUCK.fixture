@@ -1,0 +1,46 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(
+    name = "exe",
+    content = "exe content",
+    executable = True,
+    filename = "bar/exe.sh",
+)
+
+my_rule(
+    name = "text",
+    content = "text content",
+    executable = False,
+    filename = "bar/text.txt",
+)
+
+my_rule(
+    name = "with_spaces",
+    content = "with spaces content",
+    executable = False,
+    filename = "bar/with spaces.txt",
+)
+
+my_rule(
+    name = "exe_string_output",
+    as_string = True,
+    content = "exe content",
+    executable = True,
+    filename = "bar/exe.sh",
+)
+
+my_rule(
+    name = "text_string_output",
+    as_string = True,
+    content = "text content",
+    executable = False,
+    filename = "bar/text.txt",
+)
+
+my_rule(
+    name = "with_spaces_string_output",
+    as_string = True,
+    content = "with spaces content",
+    executable = False,
+    filename = "bar/with spaces.txt",
+)

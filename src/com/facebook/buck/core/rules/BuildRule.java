@@ -1,60 +1,51 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
-import com.facebook.buck.core.rules.provider.BuildRuleInfoProvider;
-import com.facebook.buck.core.rules.provider.BuildRuleInfoProviderCollection;
-import com.facebook.buck.core.rules.provider.MissingProviderException;
+import com.facebook.buck.core.rulekey.AllowsNonAnnotatedFields;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.step.Step;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 @JsonAutoDetect(
-  fieldVisibility = JsonAutoDetect.Visibility.NONE,
-  getterVisibility = JsonAutoDetect.Visibility.NONE,
-  setterVisibility = JsonAutoDetect.Visibility.NONE
-)
-public interface BuildRule extends Comparable<BuildRule> {
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
+public interface BuildRule
+    extends Comparable<BuildRule>, AllowsNonAnnotatedFields, BuildEngineAction, HasNameAndType {
+  // We allow non-@AddToRuleKey annotated fields in BuildRule because they are so extensively used
+  // for non-action-y things (like Provider-type things).
 
+  @Override
   BuildTarget getBuildTarget();
 
-  @JsonProperty("name")
-  @JsonView(JsonViews.MachineReadableLog.class)
+  @Override
   default String getFullyQualifiedName() {
     return getBuildTarget().getFullyQualifiedName();
   }
-
-  @JsonProperty("type")
-  @JsonView(JsonViews.MachineReadableLog.class)
-  String getType();
 
   /**
    * @return the set of rules that must be built before this rule. Normally, this matches the value
@@ -99,18 +90,12 @@ public interface BuildRule extends Comparable<BuildRule> {
    * representation is up to date. This means that these rules can take advantage of {@link
    * com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey} to prevent rebuilding.
    */
+  @Override
   @JsonIgnore
   boolean isCacheable();
 
   /** Whether this {@link BuildRule} may have any steps to build. */
   boolean hasBuildSteps();
-
-  /**
-   * Add additional details when calculating this rule's {@link RuleKey} which isn't available via
-   * reflection.
-   */
-  @SuppressWarnings("unused")
-  default void appendToRuleKey(RuleKeyObjectSink sink) {}
 
   @Override
   default int compareTo(BuildRule that) {
@@ -128,47 +113,14 @@ public interface BuildRule extends Comparable<BuildRule> {
    * to be cached, it must update its BuildRuleResolver when a new action graph is constructed to
    * avoid leaking the entire action graph it was originally associated with.
    */
-  @SuppressWarnings("unused")
-  void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver);
+  void updateBuildRuleResolver(BuildRuleResolver ruleResolver);
 
   /**
-   * Whether the BuildRule is implemented with {@link BuildRuleInfoProvider}. This will be removed
-   * once all {@link BuildRule} have been converted to using providers
+   * @return true if this rule should only be allowed to be executed via Remote Execution if it
+   *     satisfies input size limits.
    */
-  boolean hasProviders();
-
-  /**
-   * Exposes information about the BuildRule to BuildRules that depend on this BuildRule during
-   * action graph construction. If {@link #hasProviders()} is {@code false},
-   * UnsupportedOperationException will be thrown.
-   *
-   * @param providerKey the key to the provider desired
-   * @param <T> the type of the provider
-   * @return the provider of the type desired from this BuildRule
-   * @throws MissingProviderException if the required provider is not present
-   */
-  <T extends BuildRuleInfoProvider> T getProvider(BuildRuleInfoProvider.ProviderKey providerKey)
-      throws MissingProviderException;
-
-  /**
-   * Exposes all the providers about this BuildRule to BuildRules that depend on this BuildRule
-   * during action graph construction. If {@link #hasProviders()} is {@code false}, {@link
-   * UnsupportedOperationException} will be thrown.
-   *
-   * @return an immutable BuildRuleInfoProviderCollection containing all providers for this
-   *     BuildRule
-   */
-  BuildRuleInfoProviderCollection getProviderCollection();
-
-  /**
-   * @return true if this rule, and all rules which that depend on it, should be built locally i.e.
-   *     on the machine that initiated a build instead of one of the remote workers taking part in
-   *     the distributed build.
-   */
-  default boolean shouldBuildLocally() {
-    return false;
+  @Override
+  default boolean shouldRespectInputSizeLimitForRemoteExecution() {
+    return true;
   }
 }

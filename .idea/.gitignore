@@ -12,6 +12,7 @@
 !/encodings.xml
 !/fileTemplates
 !/google-java-format.xml
+!/ideabuck/cells.xml
 !/kotlinc.xml
 !/misc.xml
 !/modules.xml

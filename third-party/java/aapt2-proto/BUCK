@@ -1,0 +1,14 @@
+prebuilt_jar(
+    name = "prebuilt",
+    binary_jar = "aapt2-proto-0.4.0.jar",
+)
+
+java_library(
+    name = "aapt2-proto",
+    srcs = [],
+    visibility = ["PUBLIC"],
+    exported_deps = [
+        ":prebuilt",
+        "//third-party/java/protobuf:protobuf",
+    ],
+)

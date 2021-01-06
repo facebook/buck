@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templateSet group="Buck">
+
+  <!-- Top-level declarations -->
+  <template
+    name="load" value="load(&quot;$location$&quot;, &quot;$symbol$&quot;)$END$"
+    description="Insert load() directive to import a symbol from an extension file"
+    toReformat="false"
+    toShortenFQNames="false">
+    <variable name="location" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="symbol" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_DECLARATION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <!-- Common expressions -->
+
+  <template
+    name="glob"
+    value="glob([&quot;$include$&quot;,], exclude = [&quot;$exclude$&quot;], include_dotfiles=$dotfiles$)"
+    description="Expand glob() function with default named parameters"
+    toReformat="false"
+    toShortenFQNames="false">
+    <variable name="include" expression="" defaultValue="&quot;**/*.java&quot;" alwaysStopAt="true"/>
+    <variable name="exclude" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="dotfiles" expression="" defaultValue="&quot;False&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_EXPRESSION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="read_config2"
+    value="read_config(&quot;$section$&quot;, &quot;$field$&quot;)$END$"
+    description="Expand read_config() function"
+    toReformat="false"
+
+    toShortenFQNames="false">
+    <variable name="section" expression="" defaultValue="&quot;section&quot;" alwaysStopAt="true"/>
+    <variable name="field" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_EXPRESSION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="read_config3"
+    value="read_config(&quot;$section$&quot;, &quot;$field$&quot;, $default$)$END$"
+    description="Expand read_config() function with a default value"
+    toReformat="false"
+
+    toShortenFQNames="false">
+    <variable name="section" expression="" defaultValue="&quot;section&quot;" alwaysStopAt="true"/>
+    <variable name="field" expression="" defaultValue="&quot;field&quot;" alwaysStopAt="true"/>
+    <variable name="default" expression="" defaultValue="&quot;None&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_EXPRESSION" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <!-- Some of the most common named arguments for rules -->
+
+  <template
+    name="name" value="name = &quot;$name$&quot;$END$"
+    description="Expand name keyword to string"
+    toReformat="true"
+    toShortenFQNames="false">
+    <variable name="name" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="srcsg" value="srcs = glob$END$"
+    description="Expand srcs keyword to glob"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="srcsl" value="srcs = [ &quot;$END$&quot;, ]"
+    description="Expand srcs keyword to list of source files"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="deps" value="deps = [ &quot;$END$&quot;, ]"
+    description="Expand deps keyword to list of targets"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="exported_deps" value="exported_deps = [ &quot;$END$&quot;, ]"
+    description="exported_deps keyword to list of targets"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="provided_deps" value="provided_deps = [ &quot;$END$&quot;, ]"
+    description="Expand provided_deps keyword to list of targets"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="resourcesg" value="resources = glob$END$"
+    description="Expand resources keyword to glob"
+    toReformat="false"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="resourcesl" value="resources = [ &quot;$END$&quot;, ]"
+    description="Expand resources keyword to list of sources"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="tests" value="tests = [ &quot;$END$&quot;, ]"
+    description="Expand tests keyword to list of targets"
+    toReformat="true"
+    toShortenFQNames="false">
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+  <template
+    name="visibility" value="visibility = [ &quot;$pattern$&quot; ]"
+    description="Expand visibility keyword to list of target patterns"
+    toReformat="false"
+    toShortenFQNames="false">
+    <variable name="pattern" expression="" defaultValue="&quot;PUBLIC&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="BUCK_NAMED_ARGUMENT" value="true"/>
+      <option name="OTHER" value="false"/>
+    </context>
+  </template>
+
+</templateSet>

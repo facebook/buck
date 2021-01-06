@@ -1,0 +1,91 @@
+rust_library(
+    name = "common",
+    srcs = ["common.rs"],
+    edition = "2015",
+)
+
+rust_library(
+    name = "rust2015",
+    srcs = ["rust2015.rs"],
+    edition = "2015",
+    deps = [":common"],
+)
+
+rust_library(
+    name = "rust2018",
+    srcs = ["rust2018.rs"],
+    edition = "2018",
+    deps = [":common"],
+)
+
+rust_binary(
+    name = "bin2015",
+    srcs = ["bin2015.rs"],
+    edition = "2015",
+    deps = [":rust2018"],
+)
+
+rust_binary(
+    name = "bin2018",
+    srcs = ["bin2018.rs"],
+    edition = "2018",
+    deps = [":rust2015"],
+)
+
+rust_test(
+    name = "test2015",
+    srcs = ["test2015.rs"],
+    edition = "2015",
+    deps = [":rust2018"],
+)
+
+rust_test(
+    name = "test2018",
+    srcs = ["test2018.rs"],
+    edition = "2018",
+    deps = [":rust2015"],
+)
+
+# Test default editions
+
+rust_library(
+    name = "rust2015-default",
+    srcs = ["rust2015.rs"],
+    crate_root = "rust2015.rs",
+    deps = [":common"],
+)
+
+rust_binary(
+    name = "bin2015-default",
+    srcs = ["bin2015.rs"],
+    crate_root = "bin2015.rs",
+    deps = [":rust2018"],
+)
+
+rust_test(
+    name = "test2015-default",
+    srcs = ["test2015.rs"],
+    crate_root = "test2015.rs",
+    deps = [":rust2018"],
+)
+
+rust_library(
+    name = "rust2018-default",
+    srcs = ["rust2018.rs"],
+    crate_root = "rust2018.rs",
+    deps = [":common"],
+)
+
+rust_binary(
+    name = "bin2018-default",
+    srcs = ["bin2018.rs"],
+    crate_root = "bin2018.rs",
+    deps = [":rust2015"],
+)
+
+rust_test(
+    name = "test2018-default",
+    srcs = ["test2018.rs"],
+    crate_root = "test2018.rs",
+    deps = [":rust2015"],
+)

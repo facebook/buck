@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "provider",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/skylark/function:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

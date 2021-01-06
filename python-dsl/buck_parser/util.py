@@ -1,3 +1,17 @@
+# Copyright (c) Facebook, Inc. and its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Buck agnostic utility functions.
 """
 
@@ -10,6 +24,8 @@ import os
 import subprocess
 import sys
 from collections import namedtuple
+
+from six import PY3
 
 
 def is_in_dir(filepath, directory):
@@ -41,7 +57,12 @@ def get_caller_frame(skip=None):
 def cygwin_adjusted_path(path):
     """Convert windows paths to unix paths if running within cygwin."""
     if sys.platform == "cygwin":
-        return subprocess.check_output(["cygpath", path]).rstrip()
+        cygwin_path = subprocess.check_output(["cygpath", path]).rstrip()
+        if PY3:
+            # in Python 3 check_output returns bytes, which should be decoded
+            # into strings before returned back to the client
+            cygwin_path = cygwin_path.decode("ascii")
+        return cygwin_path
     else:
         return path
 

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 TEST_SRCS = [
     "*Test.java",
@@ -9,10 +9,24 @@ java_test(
     srcs = glob(
         TEST_SRCS,
     ),
+    env = {
+        "TEST_BUCK": "$(location //programs:buck)",
+    },
     deps = [
         "//programs:buck",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/doctor:doctor",
+        "//src/com/facebook/buck/doctor/config:config",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/features/python:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/endtoend:testutil",
         "//third-party/java/junit:junit",

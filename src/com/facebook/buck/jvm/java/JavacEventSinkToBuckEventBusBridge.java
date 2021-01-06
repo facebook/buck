@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -23,16 +23,17 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
+import com.facebook.buck.jvm.java.AnnotationProcessingEvent.Operation;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.infer.annotation.Assertions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -152,10 +153,10 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
                 buildTarget, annotationProcessorName, operationAsString, round, isLastRound));
     AnnotationProcessingEvent.Finished finished =
         new AnnotationProcessingEvent.Finished(
-            Preconditions.checkNotNull(startedEventKey),
+            Objects.requireNonNull(startedEventKey),
             buildTarget,
             annotationProcessorName,
-            AnnotationProcessingEvent.Operation.valueOf(operationAsString),
+            Operation.valueOf(operationAsString),
             round,
             isLastRound);
     eventBus.post(finished);

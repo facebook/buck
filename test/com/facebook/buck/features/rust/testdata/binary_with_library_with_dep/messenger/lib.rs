@@ -6,7 +6,9 @@ pub struct Messenger {
 
 impl Messenger {
     pub fn new(message: &str) -> Messenger {
-        Messenger { message: message.to_string(), }
+        Messenger {
+            message: message.to_string(),
+        }
     }
 
     pub fn deliver(&self) {

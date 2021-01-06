@@ -1,0 +1,23 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "artifact",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/artifact:artifact",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/stream:stream",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/analysis/action:action",
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+        "//src/com/facebook/buck/core/starlark/rule/artifact:artifact",
+    ],
+)

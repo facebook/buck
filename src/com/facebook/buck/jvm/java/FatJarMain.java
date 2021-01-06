@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /**
@@ -24,7 +24,7 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.liteinfersupport.Preconditions;
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class FatJarMain {
 
@@ -50,7 +51,7 @@ public class FatJarMain {
    */
   private static void updateEnvironment(Map<String, String> env, Path libDir) {
     String librarySearchPathName = getLibrarySearchPathName();
-    String originalLibPath = System.getenv(librarySearchPathName);
+    String originalLibPath = getEnvValue(librarySearchPathName);
     String newlibPath =
         libDir + (originalLibPath == null ? "" : File.pathSeparator + originalLibPath);
     env.put(librarySearchPathName, newlibPath);
@@ -83,6 +84,7 @@ public class FatJarMain {
     return cmd;
   }
 
+  @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
   public static void main(String[] args) throws Exception {
     Class<?> clazz = FatJarMain.class;
     ClassLoader classLoader = clazz.getClassLoader();
@@ -124,18 +126,47 @@ public class FatJarMain {
    * @return the platform specific environment variable for setting the native library search path.
    */
   private static String getLibrarySearchPathName() {
-    String platform = Preconditions.checkNotNull(System.getProperty("os.name"));
+    String platform = getOsPlatform();
     if (platform.startsWith("Linux")) {
       return "LD_LIBRARY_PATH";
     } else if (platform.startsWith("Mac OS")) {
       return "DYLD_LIBRARY_PATH";
-    } else if (platform.startsWith("Windows")) {
+    } else if (isWindowsOs(platform)) {
       return "PATH";
     } else {
       System.err.println(
           "WARNING: using \"LD_LIBRARY_PATH\" for unrecognized platform " + platform);
       return "LD_LIBRARY_PATH";
     }
+  }
+
+  @Nullable
+  // Avoid using EnvVariablesProvider to avoid extra dependencies.
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
+  private static String getEnvValue(String envVariableName) {
+    if (isWindowsOs(getOsPlatform())) {
+      return findMapValueIgnoreKeyCase(envVariableName, System.getenv());
+    } else {
+      return System.getenv(envVariableName);
+    }
+  }
+
+  @Nullable
+  private static String findMapValueIgnoreKeyCase(String key, Map<String, String> map) {
+    for (Map.Entry<String, String> entry : map.entrySet()) {
+      if (entry.getKey().equalsIgnoreCase(key)) {
+        return entry.getValue();
+      }
+    }
+    return null;
+  }
+
+  private static String getOsPlatform() {
+    return Objects.requireNonNull(System.getProperty("os.name"));
+  }
+
+  private static boolean isWindowsOs(String osPlatform) {
+    return osPlatform.startsWith("Windows");
   }
 
   /**

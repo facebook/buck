@@ -1,18 +1,19 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.util.filesystem;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -21,11 +22,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -196,7 +197,7 @@ public class FileSystemMap<T> {
       //   1. Remove a path that has been found as a leaf in the trie (easy case).
       //   2. Support prefix removal as well (i.e.: if we want to remove an intermediate node.
 
-      if (stack.size() == 0) {
+      if (stack.isEmpty()) {
         // this can only happen if path we are trying to remove is empty
         return;
       }
@@ -221,11 +222,10 @@ public class FileSystemMap<T> {
     }
   }
 
-  @SuppressWarnings("NullableProblems")
   private void removeChild(Entry<T> parent, Path childPath) {
     map.remove(childPath);
     Entry<T> child = parent.subLevels.remove(childPath);
-    if (parent.subLevels.size() == 0) {
+    if (parent.subLevels.isEmpty()) {
       parent.subLevels = null;
     }
 
@@ -234,13 +234,8 @@ public class FileSystemMap<T> {
       return;
     }
 
-    child
-        .subLevels
-        .keySet()
-        .stream()
-        // copy collection of keys first to avoid removing from them while iterating
-        .collect(Collectors.toList())
-        .forEach(cp -> removeChild(child, cp));
+    // copy collection of keys first to avoid removing from them while iterating
+    new ArrayList<>(child.subLevels.keySet()).forEach(cp -> removeChild(child, cp));
   }
 
   /** Empties the trie leaving only the root node available. */

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace cxx_genrule}
 
 /***/
@@ -26,7 +42,7 @@ Buck environment, specifically those related to the C/C++ toolchain.
 <p>
 The information exposed through these tools and configuration options is a reflection of: 
 Buck's built-in settings, 
-the settings in {call buck.concept_link}{param page: 'buckconfig' /}{param name: '.buckconfig and .buckconfig.local' /}{/call},
+the settings in {call buck.buckconfig_link /} and <code>.buckconfig.local</code>,
 and the result of various command-line overrides specified through 
 the {sp}{call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '<code>--config</code>' /}{/call} command-line option.  
 </p>
@@ -74,12 +90,7 @@ buck build :cxx_gr_name#default
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call genrule_common.srcs_arg /}
 
@@ -174,10 +185,13 @@ buck build :cxx_gr_name#default
 
     <p>
     It is also possible to expand references to other rules within the
-    shell command, using a subset of the builtin {call buck.string_parameter_macros /}.  
+    shell command, using the following subset of the 
+    builtin {call buck.string_parameter_macros /}.  
     Note that all build rules expanded in the command are automatically 
     considered to be dependencies of the <code>genrule()</code>.
     </p>
+
+   {call genrule_common.abs_path_note /}
 
     <dl>
 

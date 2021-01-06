@@ -6,7 +6,7 @@ prebuilt_jar(
     ],
     visibility = [
         "//src/com/facebook/buck/rules/modern/...",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/easymock:easymock",
-        "//third-party/java/bazel:skylark-lang",
     ],
 )

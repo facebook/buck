@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,23 +19,18 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.unarchive.ArchiveFormat;
-import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -54,12 +49,12 @@ public class ExternalJavac implements Javac {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return javac.get().getCommandPrefix(resolver);
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return javac.get().getEnvironment(resolver);
   }
 
@@ -85,10 +80,11 @@ public class ExternalJavac implements Javac {
   @Override
   public Invocation newBuildInvocation(
       JavacExecutionContext context,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> pluginFields,
+      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       Path workingDirectory,
@@ -119,12 +115,10 @@ public class ExternalJavac implements Javac {
         Preconditions.checkArgument(
             abiGenerationMode == AbiGenerationMode.CLASS,
             "Cannot compile ABI jars with external javac");
-        ImmutableList.Builder<String> command = ImmutableList.builder();
-        command.addAll(javac.get().getCommandPrefix(sourcePathResolver));
         ImmutableList<Path> expandedSources;
         try {
           expandedSources =
-              getExpandedSourcePaths(
+              JavaPaths.extractArchivesAndGetPaths(
                   context.getProjectFilesystem(),
                   context.getProjectFilesystemFactory(),
                   javaSourceFilePaths,
@@ -133,6 +127,19 @@ public class ExternalJavac implements Javac {
           throw new HumanReadableException(
               "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
         }
+
+        // For consistency with javax.tools.JavaCompiler, if no sources are specified, then do
+        // nothing. Although it seems reasonable to treat this case as an error, we have a situation
+        // in KotlincToJarStepFactory where we need to categorically add a JavacStep in the event
+        // that an annotation processor for the kotlin_library() dynamically generates some .java
+        // files that need to be compiled. Often, the annotation processors will do no such thing
+        // and the JavacStep that was added will have no work to do.
+        if (expandedSources.isEmpty()) {
+          return 0;
+        }
+
+        ImmutableList.Builder<String> command = ImmutableList.builder();
+        command.addAll(javac.get().getCommandPrefix(sourcePathResolverAdapter));
 
         try {
           FluentIterable<String> escapedPaths =
@@ -163,7 +170,7 @@ public class ExternalJavac implements Javac {
               ProcessExecutorParams.builder()
                   .setCommand(command.build())
                   .setEnvironment(context.getEnvironment())
-                  .setDirectory(context.getProjectFilesystem().getRootPath().toAbsolutePath())
+                  .setDirectory(context.getProjectFilesystem().getRootPath().getPath())
                   .build();
           ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
           exitCode = result.getExitCode();
@@ -180,35 +187,5 @@ public class ExternalJavac implements Javac {
         // Nothing to do
       }
     };
-  }
-
-  private ImmutableList<Path> getExpandedSourcePaths(
-      ProjectFilesystem projectFilesystem,
-      ProjectFilesystemFactory projectFilesystemFactory,
-      ImmutableSet<Path> javaSourceFilePaths,
-      Path workingDirectory)
-      throws InterruptedException, IOException {
-
-    // Add sources file or sources list to command
-    ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
-      String pathString = path.toString();
-      if (pathString.endsWith(".java")) {
-        sources.add(path);
-      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ImmutableList<Path> zipPaths =
-            ArchiveFormat.ZIP
-                .getUnarchiver()
-                .extractArchive(
-                    projectFilesystemFactory,
-                    projectFilesystem.resolve(path),
-                    projectFilesystem.resolve(workingDirectory),
-                    ExistingFileMode.OVERWRITE);
-        sources.addAll(
-            zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());
-      }
-    }
-    return sources.build();
   }
 }

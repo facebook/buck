@@ -1,25 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.bundle.GenerateAssetsStep;
-import com.facebook.buck.android.bundle.GenerateBundleConfigStep;
-import com.facebook.buck.android.bundle.GenerateNativeStep;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
@@ -27,27 +24,26 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -66,15 +62,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Supplier;
 
 class AndroidBinaryBuildable implements AddsToRuleKey {
-  /**
-   * The filename of the solidly compressed libraries if compressAssetLibraries is set to true. This
-   * file can be found in assets/lib.
-   */
-  private static final String SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME = "libs.xzs";
 
   /**
    * This is the path from the root of the APK that should contain the metadata.txt and
@@ -93,6 +83,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey final boolean packageAssetLibraries;
   @AddToRuleKey final boolean compressAssetLibraries;
+  @AddToRuleKey final Optional<CompressionAlgorithm> assetCompressionAlgorithm;
 
   @AddToRuleKey private final Optional<RedexOptions> redexOptions;
 
@@ -101,7 +92,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // TODO(cjhopman): Redex shouldn't do that, or this list should be constructed more carefully.
   private final ImmutableList<SourcePath> additionalRedexInputs;
 
-  @AddToRuleKey private final OptionalInt xzCompressionLevel;
+  @AddToRuleKey private final int xzCompressionLevel;
 
   @AddToRuleKey private final SourcePath keystorePath;
   @AddToRuleKey private final SourcePath keystorePropertiesPath;
@@ -114,11 +105,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   // Post-process resource compression
   @AddToRuleKey private final boolean isCompressResources;
 
-  @AddToRuleKey private final int apkCompressionLevel;
-
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
   private final boolean isApk;
+  // Path to Bundles config file
+  @AddToRuleKey private final Optional<SourcePath> bundleConfigFilePath;
 
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
@@ -136,9 +127,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Optional<RedexOptions> redexOptions,
       ImmutableList<SourcePath> additionalRedexInputs,
       EnumSet<ExopackageMode> exopackageModes,
-      OptionalInt xzCompressionLevel,
+      int xzCompressionLevel,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
+      Optional<CompressionAlgorithm> assetCompressionAlgorithm,
       Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
       boolean isCompressResources,
@@ -147,7 +139,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
-      int apkCompressionLevel,
+      Optional<SourcePath> bundleConfigFilePath,
       boolean isApk) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
@@ -168,15 +160,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.nativeFilesInfo = nativeFilesInfo;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
+    this.assetCompressionAlgorithm = assetCompressionAlgorithm;
     this.resourceFilesInfo = resourceFilesInfo;
-    this.apkCompressionLevel = apkCompressionLevel;
+    this.bundleConfigFilePath = bundleConfigFilePath;
     this.isApk = isApk;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver pathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
@@ -209,7 +202,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths =
         dexFilesInfo.getMapOfModuleToSecondaryDexSourcePaths();
 
-    ModuleInfo.Builder baseModuleInfo = ModuleInfo.builder();
+    ImmutableModuleInfo.Builder baseModuleInfo = ImmutableModuleInfo.builder();
     baseModuleInfo.setModuleName("base");
 
     for (APKModule module : apkModules) {
@@ -232,7 +225,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         .map(pathResolver::getRelativePath)
         .forEach(zipFiles::add);
 
-    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)) {
+    if (ExopackageMode.enabledForNativeLibraries(exopackageModes)
+        && !ExopackageMode.enabledForArch64(exopackageModes)) {
       // We need to include a few dummy native libraries with our application so that Android knows
       // to run it as 32-bit.  Android defaults to 64-bit when no libraries are provided at all,
       // causing us to fail to load our 32-bit exopackage native libraries later.
@@ -252,16 +246,14 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             .addAll(dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver))
             .build();
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path signedApkPath = getSignedApkPath();
     Path pathToKeystore = resolver.getAbsolutePath(keystorePath);
     Supplier<KeystoreProperties> keystoreProperties =
         getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
     ImmutableSet<Path> thirdPartyJars =
-        resourceFilesInfo
-            .pathsToThirdPartyJars
-            .stream()
+        resourceFilesInfo.pathsToThirdPartyJars.stream()
             .map(resolver::getAbsolutePath)
             .collect(ImmutableSet.toImmutableSet());
     if (isApk) {
@@ -279,19 +271,11 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               keystoreProperties,
               false,
               javaRuntimeLauncher.getCommandPrefix(pathResolver),
-              apkCompressionLevel));
+              androidSdkLocation));
     } else {
-      Path tempBundleConfig =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__BundleConfig__%s__.pb");
-      steps.add(new GenerateBundleConfigStep(getProjectFilesystem(), tempBundleConfig));
-
       ImmutableSet<String> moduleNames =
           apkModules.stream().map(APKModule::getName).collect(ImmutableSet.toImmutableSet());
 
-      Path tempAssets =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__assets__base__%s__.pb");
       for (Path path : dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver)) {
         if (path.getFileName().toString().equals("additional_dexes")) {
           File[] assetFiles = path.toFile().listFiles();
@@ -317,42 +301,25 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           baseModuleInfo.putAssetDirectories(path, "");
         }
       }
-      steps.add(
-          new GenerateAssetsStep(
-              getProjectFilesystem(),
-              tempAssets,
-              baseModuleInfo.build().getAssetDirectories().keySet()));
-
-      Path tempNative =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__native__base__%s__.pb");
-      steps.add(
-          new GenerateNativeStep(
-              getProjectFilesystem(),
-              tempNative,
-              baseModuleInfo.build().getNativeLibraryDirectories()));
 
       baseModuleInfo
           .setResourceApk(pathResolver.getAbsolutePath(resourceFilesInfo.resourcesApkPath))
           .addDexFile(pathResolver.getRelativePath(dexFilesInfo.primaryDexPath))
           .setJarFilesThatMayContainResources(thirdPartyJars)
-          .setZipFiles(zipFiles.build())
-          .setTempAssets(tempAssets)
-          .setTempNatives(tempNative);
+          .setZipFiles(zipFiles.build());
 
       modulesInfo.add(baseModuleInfo.build());
+
+      Optional<Path> bundleConfigPath = bundleConfigFilePath.map(pathResolver::getAbsolutePath);
 
       steps.add(
           new AabBuilderStep(
               getProjectFilesystem(),
               getSignedApkPath(),
-              pathToKeystore,
-              keystoreProperties,
+              bundleConfigPath,
+              buildTarget,
               false,
-              apkCompressionLevel,
-              tempBundleConfig,
-              modulesInfo.build(),
-              moduleNames));
+              modulesInfo.build()));
     }
 
     // The `ApkBuilderStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -420,10 +387,10 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSet.Builder<Path> nativeLibraryAsAssetDirectories,
       ImmutableSet.Builder<Path> moduleResourcesDirectories,
       ImmutableList.Builder<Step> steps,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       BuildContext context,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
-      ModuleInfo.Builder baseModuleInfo,
+      ImmutableModuleInfo.Builder baseModuleInfo,
       ImmutableSet.Builder<ModuleInfo> modulesInfo) {
     boolean addThisModule = false;
     ImmutableMap.Builder<Path, String> assetDirectoriesBuilderForThisModule =
@@ -455,6 +422,16 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           nativeLibraryDirectoriesBuilderForThisModule);
     }
 
+    // Package prebuilt libs which need to be loaded by `System.loadLibrary` in the standard dir,
+    // even in exopackage builds.
+    if (nativeFilesInfo.nativeLibsDirForSystemLoader.isPresent() && module.isRootModule()) {
+      addThisModule = true;
+      Path relativePath =
+          pathResolver.getRelativePath(nativeFilesInfo.nativeLibsDirForSystemLoader.get());
+      nativeLibraryDirectoriesBuilder.add(relativePath);
+      nativeLibraryDirectoriesBuilderForThisModule.add(relativePath);
+    }
+
     if (shouldPackageAssetLibraries) {
       addThisModule = true;
       addNativeLibraryAsAssetDirectory(
@@ -482,40 +459,20 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
           .addAllDexFile(dexFileDirectoriesBuilderForThisModule.build());
     } else {
       String moduleName = module.getName();
-      Path tempAssets =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__assets__" + moduleName + "__%s__.pb");
-      steps.add(
-          new GenerateAssetsStep(
-              getProjectFilesystem(),
-              tempAssets,
-              assetDirectoriesBuilderForThisModule.build().keySet()));
-
-      Path tempNative =
-          BuildTargetPaths.getGenPath(
-              getProjectFilesystem(), buildTarget, "__native__" + moduleName + "__%s__.pb");
-      steps.add(
-          new GenerateNativeStep(
-              getProjectFilesystem(),
-              tempNative,
-              nativeLibraryDirectoriesBuilderForThisModule.build()));
-
       modulesInfo.add(
-          ModuleInfo.of(
+          ImmutableModuleInfo.of(
               moduleName,
               resourcesDirectoryForThisModule,
               dexFileDirectoriesBuilderForThisModule.build(),
               assetDirectoriesBuilderForThisModule.build(),
-              tempAssets,
               nativeLibraryDirectoriesBuilderForThisModule.build(),
-              tempNative,
               ImmutableSet.<Path>builder().build(),
               ImmutableSet.<Path>builder().build()));
     }
   }
 
   private void addDexFileDirectories(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       APKModule module,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
       ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule,
@@ -547,7 +504,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private void addNativeDirectory(
       boolean shouldPackageAssetLibraries,
       APKModule module,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilder,
       ImmutableSet.Builder<Path> nativeLibraryDirectoriesBuilderForThisModule) {
     nativeLibraryDirectoriesBuilder.add(
@@ -681,13 +638,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       // Concat and xz compress.
       Path libOutputBlob = libSubdirectory.resolve("libraries.blob");
       steps.add(new ConcatStep(getProjectFilesystem(), outputAssetLibrariesBuilder, libOutputBlob));
-      int compressionLevel = xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL);
       steps.add(
-          new XzStep(
+          CompressionAlgorithmCreator.createCompressionStep(
+              assetCompressionAlgorithm.orElse(CompressionAlgorithm.XZ),
               getProjectFilesystem(),
               libOutputBlob,
-              libSubdirectory.resolve(SOLID_COMPRESSED_ASSET_LIBRARY_FILENAME),
-              compressionLevel));
+              libSubdirectory,
+              xzCompressionLevel));
     }
   }
 
@@ -754,7 +711,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
-      SourcePathResolver resolver, Path pathToKeystore) {
+      SourcePathResolverAdapter resolver, Path pathToKeystore) {
     return MoreSuppliers.memoize(
         () -> {
           try {
@@ -780,7 +737,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private Iterable<Step> createRedexSteps(
       BuildContext context,
       BuildableContext buildableContext,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Supplier<KeystoreProperties> keystoreProperties,
       Path apkToRedexAndAlign,
       Path redexedApk) {
@@ -806,7 +763,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   }
 
   private CopyStep createCopyProguardFilesStep(
-      SourcePathResolver pathResolver, SourcePath proguardTextFilesPath) {
+      SourcePathResolverAdapter pathResolver, SourcePath proguardTextFilesPath) {
     return CopyStep.forDirectory(
         getProjectFilesystem(),
         pathResolver.getRelativePath(proguardTextFilesPath),
@@ -835,32 +792,51 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   /** The APK at this path will be jar signed, but not zipaligned. */
   private Path getSignedApkPath() {
-    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".signed.apk"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".signed.apk")
+            .replaceAll("\\.unsigned\\.aab$", ".signed.aab"));
   }
 
   /** The APK at this path will be zipaligned and jar signed. */
   private Path getZipalignedApkPath() {
-    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".zipaligned.apk"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".zipaligned.apk")
+            .replaceAll("\\.unsigned\\.aab$", ".signed.aab"));
   }
 
   /** The APK at this path will be zipaligned and v2 signed. */
   Path getFinalApkPath() {
-    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".apk"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".apk")
+            .replaceAll("\\.unsigned\\.aab$", ".aab"));
   }
 
   /** The APK at this path will have compressed resources, but will not be zipaligned. */
   private Path getCompressedResourcesApkPath() {
-    return Paths.get(getUnsignedApkPath().replaceAll("\\.unsigned\\.apk$", ".compressed.apk"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".compressed.apk")
+            .replaceAll("\\.unsigned\\.aab$", ".compressed.aab"));
   }
 
   private String getUnsignedApkPath() {
-    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.unsigned.apk")
-        .toString();
+    return getPath("%s.unsigned." + getExtension()).toString();
+  }
+
+  private String getExtension() {
+    return isApk ? "apk" : "aab";
+  }
+
+  private Path getPath(String format) {
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
   private Path getRedexedApkPath() {
     Path path = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
-    return path.resolve(getBuildTarget().getShortName() + ".redex.apk");
+    return path.resolve(getBuildTarget().getShortName() + ".redex." + getExtension());
   }
 
   /**

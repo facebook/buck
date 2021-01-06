@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "configurations",
+    srcs = glob(["*Test.java"]),
+    labels = ["long_running"],
+    resources = glob(
+        ["testdata/**"],
+    ),
+    deps = [
+        # Use python_binary in tests
+        "//src/com/facebook/buck/features/python:python",
+        "//src/com/facebook/buck/features/python/toolchain/impl:impl",
+        # Test util
+        "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/test:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
+        "//src/com/facebook/buck/util/string:string",
+    ],
+)

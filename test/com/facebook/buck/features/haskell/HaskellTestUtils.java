@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
@@ -22,11 +22,12 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -43,8 +44,11 @@ class HaskellTestUtils {
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setPackager(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setHaddock(new ConstantToolProvider(new CommandTool.Builder().build()))
-          .setHaskellVersion(HaskellVersion.of(8))
+          .setHaskellVersion(ImmutableHaskellVersion.of(8))
           .setShouldCacheLinks(true)
+          .setShouldUseArgsfile(false)
+          .setSupportExposePackage(false)
+          .setArchiveContents(ArchiveContents.NORMAL)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setGhciScriptTemplate(
               () -> {
@@ -102,12 +106,12 @@ class HaskellTestUtils {
     ExecutableFinder executableFinder = new ExecutableFinder();
     Optional<Path> compilerOptional =
         executableFinder.getOptionalExecutable(
-            Paths.get("ghc"), ImmutableMap.copyOf(System.getenv()));
+            Paths.get("ghc"), EnvVariablesProvider.getSystemEnv());
     assumeTrue(compilerOptional.isPresent());
 
     // Find the major version of the haskell compiler.
     ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
-    Process process = Runtime.getRuntime().exec(cmd.toArray(new String[cmd.size()]));
+    Process process = Runtime.getRuntime().exec(cmd.toArray(new String[0]));
     String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
     Pattern versionPattern = Pattern.compile(".*version ([0-9]+).*");
     Matcher matcher = versionPattern.matcher(output.trim());
@@ -116,7 +120,7 @@ class HaskellTestUtils {
             "Cannot match version from `ghc --version` output (using %s): %s",
             versionPattern, output),
         matcher.matches());
-    return HaskellVersion.of(Integer.valueOf(matcher.group(1)));
+    return ImmutableHaskellVersion.of(Integer.valueOf(matcher.group(1)));
   }
 
   static String formatHaskellConfig(HaskellVersion version) {

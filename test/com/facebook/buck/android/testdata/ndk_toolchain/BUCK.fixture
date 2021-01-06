@@ -1,0 +1,25 @@
+android_binary(
+    name = "fat_apk",
+    keystore = ":debug",
+    manifest = "AndroidManifest.xml",
+    deps = [":native"],
+)
+
+keystore(
+    name = "debug",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "native",
+    srcs = ["native.cpp"],
+)
+
+python_binary(
+    name = "objdump",
+    main = "objdump.py",
+    visibility = ["PUBLIC"],
+    deps = ["//tools:impl"],
+)

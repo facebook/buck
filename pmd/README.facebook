@@ -4,6 +4,6 @@ Open Source README for PMD and dependencies
 pmd_extensions-1.0-SNAPSHOT.jar
 ===============================
 
-Built from: https://github.com/jkeljo/pmd_extensions/commits/master
-License: Apache 2.0 (https://github.com/jkeljo/pmd_extensions/blob/master/LICENSE.txt)
-Revision: 3e6cb60542a641696c68e74cce29290491483f4e
+Built from: https://github.com/LiveRamp/pmd_extensions
+License: Apache 2.0 (https://github.com/LiveRamp/pmd_extensions/blob/master/LICENSE.txt)
+Revision: 35974327e81bf86e4e597cfd6449b3320f145def

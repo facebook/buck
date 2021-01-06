@@ -1,26 +1,28 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
@@ -39,6 +41,7 @@ import java.lang.management.OperatingSystemMXBean;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -48,7 +51,7 @@ public abstract class ShellStep implements Step {
   private static final Logger LOG = Logger.get(ShellStep.class);
   private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
-  /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
+  /** Defined lazily by {@link #getShellCommand(ExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
 
   /**
@@ -73,7 +76,7 @@ public abstract class ShellStep implements Step {
   private long endTime = 0L;
 
   protected ShellStep(Path workingDirectory) {
-    this.workingDirectory = Preconditions.checkNotNull(workingDirectory);
+    this.workingDirectory = Objects.requireNonNull(workingDirectory);
     this.stdout = Optional.empty();
     this.stderr = Optional.empty();
 
@@ -82,12 +85,16 @@ public abstract class ShellStep implements Step {
     }
   }
 
+  protected ShellStep(AbsPath workingDirectory) {
+    this(workingDirectory.getPath());
+  }
+
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws InterruptedException, IOException {
     ImmutableList<String> command = getShellCommand(context);
-    if (command.size() == 0) {
-      return StepExecutionResult.of(0);
+    if (command.isEmpty()) {
+      return StepExecutionResults.SUCCESS;
     }
 
     // Kick off a Process in which this ShellCommand will be run.
@@ -108,7 +115,8 @@ public abstract class ShellStep implements Step {
 
     double initialLoad = OS_JMX.getSystemLoadAverage();
     startTime = System.currentTimeMillis();
-    int exitCode = launchAndInteractWithProcess(context, builder.build());
+    ProcessExecutor.Result result = launchAndInteractWithProcess(context, builder.build());
+    int exitCode = getExitCodeFromResult(context, result);
     endTime = System.currentTimeMillis();
     double endLoad = OS_JMX.getSystemLoadAverage();
 
@@ -128,7 +136,11 @@ public abstract class ShellStep implements Step {
           stderr.orElse(""));
     }
 
-    return StepExecutionResult.of(exitCode, stderr);
+    return StepExecutionResult.builder()
+        .setExitCode(exitCode)
+        .setExecutedCommand(result.getCommand())
+        .setStderr(stderr)
+        .build();
   }
 
   @VisibleForTesting
@@ -156,7 +168,8 @@ public abstract class ShellStep implements Step {
   }
 
   @VisibleForTesting
-  int launchAndInteractWithProcess(ExecutionContext context, ProcessExecutorParams params)
+  ProcessExecutor.Result launchAndInteractWithProcess(
+      ExecutionContext context, ProcessExecutorParams params)
       throws InterruptedException, IOException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
 
@@ -181,7 +194,7 @@ public abstract class ShellStep implements Step {
       context.postEvent(ConsoleEvent.warning("%s", stderr.get()));
     }
 
-    return getExitCodeFromResult(context, result);
+    return result;
   }
 
   protected void addOptions(ImmutableSet.Builder<Option> options) {
@@ -214,7 +227,8 @@ public abstract class ShellStep implements Step {
   }
 
   @SuppressWarnings("unused")
-  protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
+  protected Optional<String> getStdin(ExecutionContext context)
+      throws InterruptedException, IOException {
     return Optional.empty();
   }
 

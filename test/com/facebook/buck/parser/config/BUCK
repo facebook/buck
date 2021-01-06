@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "config",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/parser/config:config",
+        "//src/com/facebook/buck/parser/options:options",
+        "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

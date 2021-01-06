@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.resources;
@@ -311,7 +311,7 @@ public class ResourcesXml extends ResChunk {
     String shortNs = nsMap.get(namespace);
     int nameIndex = buf.getInt(4);
     String name = strings.getString(nameIndex);
-    int resValue = refMap.isPresent() ? refMap.get().getRef(nameIndex) : -1;
+    int resValue = refMap.map(ref -> ref.getRef(nameIndex)).orElse(-1);
     int rawValueIndex = buf.getInt(8);
     String rawValue = rawValueIndex < 0 ? null : strings.getOutputNormalizedString(rawValueIndex);
     int attrType = buf.get(15);

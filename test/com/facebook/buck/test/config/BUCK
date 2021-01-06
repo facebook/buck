@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "config",
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/test/config:config",
+        "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

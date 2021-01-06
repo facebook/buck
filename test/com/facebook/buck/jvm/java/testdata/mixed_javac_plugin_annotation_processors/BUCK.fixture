@@ -1,0 +1,71 @@
+java_library(
+    name = "main",
+    srcs = [
+        "Main.java",
+    ],
+    plugins = [
+        ":javac_plugin",
+        ":annotation_processor",
+    ],
+)
+
+java_annotation_processor(
+    name = "annotation_processor",
+    processor_class = "com.example.AnnotationProcessor",
+    deps = [
+        ":annotation_processor_lib",
+    ],
+)
+
+java_library(
+    name = "annotation_processor_lib",
+    srcs = [
+        "AnnotationProcessor.java",
+    ],
+    deps = [
+        ":ap_util",
+    ],
+)
+
+java_plugin(
+    name = "javac_plugin",
+    plugin_name = "MyPlugin",
+    deps = [
+        ":javac_plugin_lib",
+    ],
+)
+
+java_library(
+    name = "javac_plugin_lib",
+    srcs = [
+        "JavacPlugin.java",
+    ],
+    provided_deps = [
+        ":compiler-tree-api",
+    ],
+    resources = ["resources/META-INF/services/com.sun.source.util.Plugin"],
+    resources_root = "resources",
+    deps = [
+        ":jp_util",
+    ],
+)
+
+prebuilt_jar(
+    name = "compiler-tree-api",
+    binary_jar = "stub-compiler-tree-api.jar",
+    visibility = ["PUBLIC"],
+)
+
+java_library(
+    name = "ap_util",
+    srcs = [
+        "ApUtil.java",
+    ],
+)
+
+java_library(
+    name = "jp_util",
+    srcs = [
+        "JpUtil.java",
+    ],
+)

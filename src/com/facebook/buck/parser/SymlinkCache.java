@@ -1,30 +1,33 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -34,6 +37,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -48,7 +52,7 @@ class SymlinkCache {
    * Build rule input files (e.g., paths in {@code srcs}) whose paths contain an element which
    * exists in {@code symlinkExistenceCache}.
    */
-  private final Set<Path> buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
+  private final Set<AbsPath> buildInputPathsUnderSymlink = Sets.newConcurrentHashSet();
 
   /**
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly checking for the
@@ -56,7 +60,7 @@ class SymlinkCache {
    */
   private final Map<Path, Optional<Path>> symlinkExistenceCache = new ConcurrentHashMap<>();
 
-  private final Map<Path, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
+  private final Map<CanonicalCellName, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
       new ConcurrentHashMap<>();
 
   public SymlinkCache(BuckEventBus eventBus, DaemonicParserState daemonicParserState) {
@@ -65,7 +69,7 @@ class SymlinkCache {
   }
 
   public void registerInputsUnderSymlinks(
-      Cell currentCell, Cell targetCell, Path buildFile, TargetNode<?> node) throws IOException {
+      Cell currentCell, Cell targetCell, AbsPath buildFile, TargetNode<?> node) throws IOException {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =
@@ -96,8 +100,7 @@ class SymlinkCache {
     }
 
     ParserConfig.AllowSymlinks allowSymlinks =
-        Preconditions.checkNotNull(
-            cellSymlinkAllowability.get(node.getBuildTarget().getCellPath()));
+        Objects.requireNonNull(cellSymlinkAllowability.get(node.getBuildTarget().getCell()));
     if (allowSymlinks == ParserConfig.AllowSymlinks.FORBID) {
       throw new HumanReadableException(
           "Target %s contains input files under a path which contains a symbolic link "
@@ -131,11 +134,13 @@ class SymlinkCache {
   private Map<Path, Path> inputFilesUnderSymlink(
       // We use Collection<Path> instead of Iterable<Path> to prevent
       // accidentally passing in Path, since Path itself is Iterable<Path>.
-      Collection<Path> inputs, ProjectFilesystem projectFilesystem) throws IOException {
+      Collection<ForwardRelativePath> inputs, ProjectFilesystem projectFilesystem)
+      throws IOException {
     Map<Path, Path> newSymlinksEncountered = new HashMap<>();
-    for (Path input : inputs) {
-      for (int i = 1; i < input.getNameCount(); i++) {
-        Path subpath = input.subpath(0, i);
+    for (ForwardRelativePath input : inputs) {
+      Path inputPath = input.toPath(projectFilesystem.getFileSystem());
+      for (int i = 1; i < inputPath.getNameCount(); i++) {
+        Path subpath = inputPath.subpath(0, i);
         Optional<Path> resolvedSymlink = symlinkExistenceCache.get(subpath);
         if (resolvedSymlink != null) {
           if (resolvedSymlink.isPresent()) {
@@ -161,9 +166,10 @@ class SymlinkCache {
     return newSymlinksEncountered;
   }
 
-  public void registerCell(Path root, Cell cell) {
+  public void registerCell(Cell cell) {
     cellSymlinkAllowability.put(
-        root, cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
+        cell.getCanonicalName(),
+        cell.getBuckConfig().getView(ParserConfig.class).getAllowSymlinks());
   }
 
   public void close() {
@@ -172,9 +178,9 @@ class SymlinkCache {
           "Cleaning cache of build files with inputs under symlink %s",
           buildInputPathsUnderSymlink);
     }
-    Set<Path> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
+    Set<AbsPath> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
-    for (Path buildFilePath : buildInputPathsUnderSymlinkCopy) {
+    for (AbsPath buildFilePath : buildInputPathsUnderSymlinkCopy) {
       daemonicParserState.invalidatePath(buildFilePath);
     }
   }

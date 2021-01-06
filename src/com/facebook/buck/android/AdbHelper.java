@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,26 +22,28 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.RealAndroidDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreSuppliers;
@@ -49,9 +51,10 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -63,8 +66,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -76,6 +81,7 @@ import javax.annotation.Nullable;
 
 /** Helper for executing commands over ADB, especially for multiple devices. */
 public class AdbHelper implements AndroidDevicesHelper {
+  private static final Logger log = Logger.get(AdbHelper.class);
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
@@ -160,7 +166,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(getBuckEventBus(), "set_up_adb_call")) {
       devices = getDevices(quiet);
-      if (devices.size() == 0) {
+      if (devices.isEmpty()) {
         throw new HumanReadableException("Didn't find any attached Android devices/emulators.");
       }
     }
@@ -175,7 +181,7 @@ public class AdbHelper implements AndroidDevicesHelper {
                     try (SimplePerfEvent.Scope ignored =
                         SimplePerfEvent.scope(
                             getBuckEventBus(),
-                            PerfEventId.of("adbCall " + description),
+                            SimplePerfEvent.PerfEventId.of("adbCall " + description),
                             "device_serial",
                             device.getSerialNumber())) {
                       return func.apply(device);
@@ -253,7 +259,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public void installApk(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet,
@@ -264,8 +270,14 @@ public class AdbHelper implements AndroidDevicesHelper {
       getBuckEventBus().post(started);
     }
     AtomicBoolean success = new AtomicBoolean();
+    Set<String> deviceLocales = new HashSet<>();
     try (Scope ignored =
         () -> {
+          ImmutableMap.Builder<String, String> deviceInfo = ImmutableMap.builder();
+          if (!deviceLocales.isEmpty()) {
+            deviceInfo.put(
+                InstallEvent.Finished.DEVICE_INFO_LOCALES, Joiner.on(',').join(deviceLocales));
+          }
           if (!quiet) {
             getBuckEventBus()
                 .post(
@@ -275,9 +287,55 @@ public class AdbHelper implements AndroidDevicesHelper {
                         Optional.empty(),
                         Optional.of(
                             AdbHelper.tryToExtractPackageNameFromManifest(
-                                pathResolver, hasInstallableApk.getApkInfo()))));
+                                pathResolver, hasInstallableApk.getApkInfo())),
+                        deviceInfo.build()));
           }
         }) {
+
+      adbCall(
+          "Get device locale",
+          (device) -> {
+            try {
+              // It's a bit tortuous to get the locale; there are 6 separate properties
+              // we need to check to accurately record this.
+
+              // First try "persist.sys" properties, which are the user's chosen language.
+              String locale = device.getProperty("persist.sys.locale");
+              // Try persist.sys.language + persist.sys.country
+              if (Strings.isNullOrEmpty(locale)) {
+                String language = device.getProperty("persist.sys.language");
+                if (!Strings.isNullOrEmpty(language)) {
+                  String country = device.getProperty("persist.sys.country");
+                  if (!Strings.isNullOrEmpty(country)) {
+                    locale = language + "-" + country;
+                  }
+                }
+              }
+              // Next try ro.product.locale properties which are the default system locale
+              if (Strings.isNullOrEmpty(locale)) {
+                locale = device.getProperty("ro.product.locale");
+              }
+              if (Strings.isNullOrEmpty(locale)) {
+                String language = device.getProperty("ro.product.locale.language");
+                String country = device.getProperty("ro.product.locale.region");
+
+                // Default to en-US if all else fails
+                if (Strings.isNullOrEmpty(language)) {
+                  language = "en";
+                }
+                if (Strings.isNullOrEmpty(country)) {
+                  country = "US-presumed";
+                }
+                locale = language = "-" + country;
+              }
+              deviceLocales.add(locale);
+            } catch (Exception e) {
+              // Don't log.
+            }
+            return true;
+          },
+          true);
+
       Optional<ExopackageInfo> exopackageInfo = hasInstallableApk.getApkInfo().getExopackageInfo();
       if (exopackageInfo.isPresent()) {
         // TODO(dreiss): Support SD installation.
@@ -291,7 +349,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
   @Override
   public void startActivity(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       @Nullable String activity,
       boolean waitForDebugger)
@@ -346,7 +404,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   /**
    * Uninstall apk from all matching devices.
    *
-   * @see #installApk(SourcePathResolver, HasInstallableApk, boolean, boolean, String)
+   * @see #installApk(SourcePathResolverAdapter, HasInstallableApk, boolean, boolean, String)
    */
   @Override
   public void uninstallApp(String packageName, boolean shouldKeepUserData)
@@ -371,7 +429,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   public static String tryToExtractPackageNameFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
     return tryToExtractPackageNameFromManifest(pathToManifest);
   }
@@ -430,15 +488,13 @@ public class AdbHelper implements AndroidDevicesHelper {
           serialMatches = device.getSerialNumber().equals(getEnvironment().get(SERIAL_NUMBER_ENV));
         }
 
-        boolean deviceTypeMatches;
-        if (emulatorsOnly.isPresent()) {
-          // Only devices of specific type are accepted:
-          // either real devices only or emulators only.
-          deviceTypeMatches = (emulatorsOnly.get() == createDevice(device).isEmulator());
-        } else {
-          // All online devices match.
-          deviceTypeMatches = true;
-        }
+        // Only devices of specific type are accepted:
+        // either real devices only or emulators only.
+        // All online devices match.
+        boolean deviceTypeMatches =
+            emulatorsOnly
+                .map(isEmulatorOnly -> (isEmulatorOnly == createDevice(device).isEmulator()))
+                .orElse(true);
         passed = serialMatches && deviceTypeMatches;
       }
 
@@ -499,8 +555,9 @@ public class AdbHelper implements AndroidDevicesHelper {
       // ADB was already initialized, we're fine, so just ignore.
     }
 
-    AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(androidPlatformTarget.getAdbExecutable().toString(), false);
+    String adbExecutable = androidPlatformTarget.getAdbExecutable().toString();
+    log.debug("Using %s to create AndroidDebugBridge", adbExecutable);
+    AndroidDebugBridge adb = AndroidDebugBridge.createBridge(adbExecutable, false);
     if (adb == null) {
       context
           .getConsole()
@@ -523,17 +580,42 @@ public class AdbHelper implements AndroidDevicesHelper {
     if (devicesSupplierForTests.isPresent()) {
       return devicesSupplierForTests.get().get();
     }
+
+    // TODO(nga): use something else
+    UnconfiguredTargetConfiguration toolchainTargetConfiguration =
+        UnconfiguredTargetConfiguration.INSTANCE;
+
     // Initialize adb connection.
     AndroidDebugBridge adb;
     try {
       adb =
           createAdb(
               toolchainProvider.getByName(
-                  AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+                  AndroidPlatformTarget.DEFAULT_NAME,
+                  toolchainTargetConfiguration,
+                  AndroidPlatformTarget.class),
               contextSupplier.get(),
               options.getAdbTimeout());
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
+    }
+    if (adb == null) {
+      // Try resetting state and reconnecting
+      printError("Unable to reconnect to existing server, starting a new one");
+      try {
+        AndroidDebugBridge.disconnectBridge();
+        AndroidDebugBridge.terminate();
+        adb =
+            createAdb(
+                toolchainProvider.getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    AndroidPlatformTarget.class),
+                contextSupplier.get(),
+                options.getAdbTimeout());
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
     if (adb == null) {
       printError("Failed to create adb connection.");
@@ -556,6 +638,28 @@ public class AdbHelper implements AndroidDevicesHelper {
       printError("No devices found with adb, restarting adb-server.");
       adb.restart();
       devices = filterDevices(adb.getDevices());
+    }
+    if (devices == null && restartAdbOnFailure) {
+      printError("No devices found with adb after restart, terminating and restarting adb-server.");
+      AndroidDebugBridge.disconnectBridge();
+      AndroidDebugBridge.terminate();
+      try {
+        adb =
+            createAdb(
+                toolchainProvider.getByName(
+                    AndroidPlatformTarget.DEFAULT_NAME,
+                    toolchainTargetConfiguration,
+                    AndroidPlatformTarget.class),
+                contextSupplier.get(),
+                options.getAdbTimeout());
+        if (adb == null) {
+          printError("Failed to re-create adb connection.");
+          return ImmutableList.of();
+        }
+        devices = filterDevices(adb.getDevices());
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
     if (devices == null) {
       return ImmutableList.of();
@@ -601,7 +705,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkExopackage(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean quiet,
       @Nullable String processName)
@@ -621,7 +725,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   }
 
   private void installApkDirectly(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HasInstallableApk hasInstallableApk,
       boolean installViaSd,
       boolean quiet)

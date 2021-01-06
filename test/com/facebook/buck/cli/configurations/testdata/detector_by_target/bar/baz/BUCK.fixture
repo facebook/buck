@@ -1,0 +1,9 @@
+genrule(
+    name = "baz",
+    out = "out.txt",
+    cmd = select({
+        "//:bar-c": "echo bar-p> $OUT",
+        "//:foo-c": "echo foo-p> $OUT",
+        "DEFAULT": "echo default-p> $OUT",
+    }),
+)

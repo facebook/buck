@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -35,8 +35,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
@@ -44,13 +42,14 @@ import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.GnuArchiver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +63,7 @@ import org.junit.Test;
 public class ArchiveTest {
   private static final Path AR = Paths.get("ar");
   private static final Path RANLIB = Paths.get("ranlib");
-  private static final Path DEFAULT_OUTPUT = Paths.get("foo/libblah.a");
+  private static final String DEFAULT_OUTPUT_FILE_NAME = "libblah.a";
   private static final ImmutableList<SourcePath> DEFAULT_INPUTS =
       ImmutableList.of(
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
@@ -77,8 +76,7 @@ public class ArchiveTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
         FakeFileHashCache.createFromStrings(
@@ -93,9 +91,9 @@ public class ArchiveTest {
 
     // Generate a rule key for the defaults.
     RuleKey defaultRuleKey =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
-                Archive.from(
+                new Archive(
                     target,
                     projectFilesystem,
                     ruleFinder,
@@ -104,15 +102,15 @@ public class ArchiveTest {
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
                     ArchiveContents.NORMAL,
-                    DEFAULT_OUTPUT,
+                    DEFAULT_OUTPUT_FILE_NAME,
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
-                Archive.from(
+                new Archive(
                     target,
                     projectFilesystem,
                     ruleFinder,
@@ -123,16 +121,16 @@ public class ArchiveTest {
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
                     ArchiveContents.NORMAL,
-                    DEFAULT_OUTPUT,
+                    DEFAULT_OUTPUT_FILE_NAME,
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
     RuleKey outputChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
-                Archive.from(
+                new Archive(
                     target,
                     projectFilesystem,
                     ruleFinder,
@@ -141,16 +139,16 @@ public class ArchiveTest {
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
                     ArchiveContents.NORMAL,
-                    Paths.get("different"),
+                    "different",
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
     RuleKey inputChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
-                Archive.from(
+                new Archive(
                     target,
                     projectFilesystem,
                     ruleFinder,
@@ -159,16 +157,16 @@ public class ArchiveTest {
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
                     ArchiveContents.NORMAL,
-                    DEFAULT_OUTPUT,
+                    DEFAULT_OUTPUT_FILE_NAME,
                     ImmutableList.of(FakeSourcePath.of("different")),
                     /* cacheable */ true));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
     RuleKey archiverTypeChange =
-        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .build(
-                Archive.from(
+                new Archive(
                     target,
                     projectFilesystem,
                     ruleFinder,
@@ -177,38 +175,33 @@ public class ArchiveTest {
                     DEFAULT_RANLIB,
                     ImmutableList.of(),
                     ArchiveContents.NORMAL,
-                    DEFAULT_OUTPUT,
+                    DEFAULT_OUTPUT_FILE_NAME,
                     DEFAULT_INPUTS,
                     /* cacheable */ true));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
   }
 
   @Test
-  public void flagsArePropagated() throws Exception {
+  public void flagsArePropagated() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Archive archive =
-        Archive.from(
+        new Archive(
             target,
             projectFilesystem,
-            ruleFinder,
+            resolver,
             DEFAULT_ARCHIVER,
-            ImmutableList.of("-foo"),
+            ImmutableList.of(StringArg.of("-foo")),
             DEFAULT_RANLIB,
-            ImmutableList.of("-bar"),
+            ImmutableList.of(StringArg.of("-bar")),
             ArchiveContents.NORMAL,
-            DEFAULT_OUTPUT,
+            DEFAULT_OUTPUT_FILE_NAME,
             ImmutableList.of(FakeSourcePath.of("simple.o")),
             /* cacheable */ true);
 
     BuildContext buildContext =
-        BuildContext.builder()
-            .from(FakeBuildContext.NOOP_CONTEXT)
-            .setSourcePathResolver(pathResolver)
-            .build();
+        FakeBuildContext.NOOP_CONTEXT.withSourcePathResolver(resolver.getSourcePathResolver());
 
     ImmutableList<Step> steps = archive.getBuildSteps(buildContext, new FakeBuildableContext());
     Step archiveStep = FluentIterable.from(steps).filter(ArchiveStep.class).first().get();
@@ -221,7 +214,7 @@ public class ArchiveTest {
   }
 
   @Test
-  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() throws Exception {
+  public void testThatBuildTargetSourcePathDepsAndPathsArePropagated() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -237,18 +230,17 @@ public class ArchiveTest {
             .build(graphBuilder);
 
     // Build the archive using a normal input the outputs of the genrules above.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     Archive archive =
-        Archive.from(
+        new Archive(
             target,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             DEFAULT_ARCHIVER,
             ImmutableList.of(),
             DEFAULT_RANLIB,
             ImmutableList.of(),
             ArchiveContents.NORMAL,
-            DEFAULT_OUTPUT,
+            DEFAULT_OUTPUT_FILE_NAME,
             ImmutableList.of(
                 FakeSourcePath.of("simple.o"),
                 genrule1.getSourcePathToOutput(),

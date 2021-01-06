@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -37,8 +37,8 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -53,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,12 +63,9 @@ public class AppleBinaryIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private ProjectFilesystem filesystem;
-
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -83,7 +81,9 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
     assertThat(
@@ -106,7 +106,9 @@ public class AppleBinaryIntegrationTest {
             .withFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor());
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(false));
     assertThat(
@@ -115,21 +117,20 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testAppleBinaryUsesDefaultsFromConfig() throws Exception {
+  public void testAppleBinaryUsesDefaultPlatformFromArgs() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "apple_binary_with_config_default_platform", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-            .withAppendedFlavors(InternalFlavor.of("iphoneos-arm64"));
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
     assertThat(
@@ -140,8 +141,7 @@ public class AppleBinaryIntegrationTest {
         containsString("ARM64"));
   }
 
-  @Test
-  public void testAppleBinaryUsesDefaultsFromArgs() throws Exception {
+  public void testAppleBinaryRespectsFlavorOverrides() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
@@ -149,20 +149,45 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_platform", tmp);
     workspace.setUp();
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance("//Apps/TestApp:TestApp")
-            .withAppendedFlavors(InternalFlavor.of("iphoneos-arm64"));
-    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    // buckconfig override is ignored
+    workspace
+        .runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
-    assertThat(Files.exists(outputPath), is(true));
-    assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
+    BuildTarget simTarget = target.withFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
+    workspace.runBuckCommand("build", simTarget.getFullyQualifiedName()).assertSuccess();
+    Path simOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), simTarget, "%s"));
+    assertThat(Files.exists(simOutputPath), is(true));
+    assertThat(Files.exists(Paths.get(simOutputPath + "-LinkMap.txt")), is(true));
     assertThat(
-        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        workspace.runCommand("file", simOutputPath.toString()).getStdout().get(),
         containsString("executable"));
     assertThat(
-        workspace.runCommand("otool", "-hv", outputPath.toString()).getStdout().get(),
-        containsString("ARM64"));
+        workspace.runCommand("otool", "-hv", simOutputPath.toString()).getStdout().get(),
+        containsString("X86_64"));
+
+    BuildTarget fatTarget =
+        target.withFlavors(
+            InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("iphonesimulator-i386"));
+    workspace.runBuckCommand("build", fatTarget.getFullyQualifiedName()).assertSuccess();
+
+    Path fatOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
+    assertThat(Files.exists(fatOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", fatOutputPath.toString()).getStdout().get(),
+        containsString("executable"));
+    ProcessExecutor.Result lipoVerifyResult =
+        workspace.runCommand("lipo", fatOutputPath.toString(), "-verify_arch", "i386", "x86_64");
+    assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 
   @Test
@@ -179,7 +204,9 @@ public class AppleBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//Apps/TestApp:TestAppWithNonstandardMain");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -232,7 +259,9 @@ public class AppleBinaryIntegrationTest {
       BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestAppWithEntitlements");
       workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-      Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+      Path outputPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
       assertThat(Files.exists(outputPath), is(true));
       assertThat(
           workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -251,7 +280,9 @@ public class AppleBinaryIntegrationTest {
           BuildTargetFactory.newInstance("//Apps/TestApp:TestAppWithEntitlements#macosx-x86_64");
       workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-      Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+      Path outputPath =
+          workspace.getPath(
+              BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
       assertThat(Files.exists(outputPath), is(true));
       assertThat(
           workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -277,7 +308,9 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.isDirectory(Paths.get(outputPath + "-lto")), is(true));
     assertThat(
@@ -301,7 +334,7 @@ public class AppleBinaryIntegrationTest {
     Path outputPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                workspace.getProjectFileSystem(),
                 BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64")
                     .withAppendedFlavors(AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s"));
@@ -310,7 +343,7 @@ public class AppleBinaryIntegrationTest {
     Path bundlePath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                workspace.getProjectFileSystem(),
                 target.withAppendedFlavors(
                     AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
                     AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
@@ -329,6 +362,28 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("file", frameworkBinaryPath.toString()).getStdout().get(),
         containsString("dynamically linked shared library"));
+  }
+
+  @Test
+  public void testAppleBinaryWithFatLTO() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_binary_with_fatlto", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(Files.exists(Paths.get(outputPath + "-lto")), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
   }
 
   @Test
@@ -351,14 +406,14 @@ public class AppleBinaryIntegrationTest {
             AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
     Path outputPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(appTarget.getShortName() + ".app"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(outputPath.resolve("Info.plist")), is(true));
 
     Path dsymPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(appTarget.getShortName() + ".app.dSYM"));
     assertThat(Files.exists(dsymPath), is(true));
     assertThat(
@@ -389,14 +444,14 @@ public class AppleBinaryIntegrationTest {
             AppleDebugFormat.NONE.getFlavor());
     Path outputPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(appTarget.getShortName() + ".app"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(Files.exists(outputPath.resolve("Info.plist")), is(true));
 
     Path dsymPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(appTarget.getShortName() + ".app.dSYM"));
     assertThat(Files.exists(dsymPath), is(false));
   }
@@ -414,14 +469,16 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp#macosx-x86_64");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
       throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
@@ -438,7 +495,9 @@ public class AppleBinaryIntegrationTest {
             .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -447,7 +506,218 @@ public class AppleBinaryIntegrationTest {
     // Check binary contains statically linked Swift runtime
     assertThat(
         workspace.runCommand("nm", outputPath.toString()).getStdout().get(),
-        containsString("T _swift_retain"));
+        containsString("U _swift_bridgeObjectRetain"));
+  }
+
+  @Nonnull
+  private String getMacDylibSymbolTable(
+      String dylibTargetName, String dylibName, ProjectWorkspace workspace) throws Exception {
+    BuildTarget dylibTarget =
+        BuildTargetFactory.newInstance(dylibTargetName)
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("shared"));
+
+    Path dylibDirOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), dylibTarget, "%s"));
+    Path dylibOutputPath = dylibDirOutputPath.resolve(dylibName);
+    assertThat(Files.exists(dylibOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", dylibOutputPath.toString()).getStdout().get(),
+        containsString("dynamically linked shared library"));
+
+    return workspace.runCommand("nm", dylibOutputPath.toString()).getStdout().get();
+  }
+
+  @Nonnull
+  private String buildAndGetMacBinarySymbolTable(String appTargetName, ProjectWorkspace workspace)
+      throws Exception {
+    BuildTarget binaryTarget =
+        BuildTargetFactory.newInstance(appTargetName)
+            .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
+    workspace.runBuckCommand("build", binaryTarget.getFullyQualifiedName()).assertSuccess();
+
+    Path binaryOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binaryTarget, "%s"));
+    assertThat(Files.exists(binaryOutputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", binaryOutputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    return workspace.runCommand("nm", binaryOutputPath.toString()).getStdout().get();
+  }
+
+  private void runLinkGroupTestForSingleDylib(
+      String appTargetName, String dylibTargetName, String dylibName) throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_single_dylib", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary contains symbols _only_ from A and not from B, C
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable(appTargetName, workspace);
+    assertThat(binarySymbolTable, containsString("T _get_value_from_a"));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that dylib contains symbols _only_ from B, C and not from A
+    String dylibSymbolTable = getMacDylibSymbolTable(dylibTargetName, dylibName, workspace);
+    assertThat(dylibSymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_c"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsForExhaustiveMapWithSingleDylib() throws Exception {
+    runLinkGroupTestForSingleDylib(
+        "//Apps/TestApp:ExhaustiveApp", "//Apps/TestApp:ExhaustiveDylib", "ExhaustiveDylib.dylib");
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsForCatchAllMapWithSingleDylib() throws Exception {
+    runLinkGroupTestForSingleDylib(
+        "//Apps/TestApp:CatchAllApp", "//Apps/TestApp:CatchAllDylib", "CatchAllDylib.dylib");
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithLabelFilterWithTreeTraversal() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_with_label_filter_with_tree_traversal", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary contains symbols _only_ from A and not from B, C (infra labelled)
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
+    assertThat(binarySymbolTable, containsString("T _get_value_from_a"));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that dylib contains symbols _only_ from B, C (infra labelled) and not from A
+    String dylibSymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:InfraDylib", "Infra.dylib", workspace);
+    assertThat(dylibSymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_c"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithLabelFilterWithNodeTraversal() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_with_label_filter_with_node_traversal", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary contains symbols _only_ from C and not from A, B (product labelled)
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(binarySymbolTable, containsString("T _get_value_from_c"));
+
+    // Check that dylib contains symbols _only_ from A, B (product labelled) and not from C
+    String dylibSymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:ProductDylib", "Product.dylib", workspace);
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylibSymbolTable, not(containsString("T _get_value_from_c")));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupWithCuttingGenruleBranchEnabled() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_with_genrule", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, containsString("T _get_value_from_b"));
+
+    String dylibSymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib", "Dylib.dylib", workspace);
+    assertThat(dylibSymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylibSymbolTable, not(containsString("T _get_value_from_b")));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithMultipleDylibs() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary does _not_ contain any symbols from the libraries
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that Dylib1 only contains symbols from //Apps/Libs:B
+    String dylib1SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertThat(dylib1SymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylib1SymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylib1SymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that Dylib2 contains symbols from //Apps/Libs:A and //Apps/Libs:C
+    String dylib2SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylib2SymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_c"));
+  }
+
+  @Test
+  public void testAppleBinaryWithLinkGroupsWithMultipleDylibsWithDuplicateSymbols()
+      throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_link_groups_multiples_dylibs_with_duplicate_symbols", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+
+    // Check that binary does _not_ contain any symbols from the libraries
+    String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_b")));
+    // NOTE: Even though C will be linked
+    assertThat(binarySymbolTable, not(containsString("T _get_value_from_c")));
+
+    // Check that Dylib1 contains symbols from //Apps/Libs:B and //Apps/Libs:C (marked DUPLICATE)
+    String dylib1SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
+    assertThat(dylib1SymbolTable, not(containsString("T _get_value_from_a")));
+    assertThat(dylib1SymbolTable, containsString("T _get_value_from_b"));
+    assertThat(dylib1SymbolTable, containsString("T _get_value_from_c"));
+
+    // Check that Dylib2 contains symbols from //Apps/Libs:A and //Apps/Libs:C (marked DUPLICATE)
+    String dylib2SymbolTable =
+        getMacDylibSymbolTable("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_a"));
+    assertThat(dylib2SymbolTable, not(containsString("T _get_value_from_b")));
+    assertThat(dylib2SymbolTable, containsString("T _get_value_from_c"));
   }
 
   @Test
@@ -465,7 +735,9 @@ public class AppleBinaryIntegrationTest {
             .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -488,7 +760,7 @@ public class AppleBinaryIntegrationTest {
     Path bundlePath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem,
+                workspace.getProjectFileSystem(),
                 target.withAppendedFlavors(
                     AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
                     AppleDescriptions.INCLUDE_FRAMEWORKS_FLAVOR),
@@ -526,7 +798,9 @@ public class AppleBinaryIntegrationTest {
             .withAppendedFlavors(InternalFlavor.of("macosx-x86_64"));
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -566,9 +840,12 @@ public class AppleBinaryIntegrationTest {
 
     Path projectRoot = tmp.getRoot().toRealPath();
 
-    Path inputPath = projectRoot.resolve(buildTarget.getBasePath());
+    Path inputPath =
+        projectRoot.resolve(
+            buildTarget.getCellRelativeBasePath().getPath().toPath(projectRoot.getFileSystem()));
     Path outputPath =
-        projectRoot.resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"));
+        projectRoot.resolve(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), buildTarget, "%s"));
 
     assertIsSymbolicLink(outputPath.resolve("Header.h"), inputPath.resolve("Header.h"));
     assertIsSymbolicLink(outputPath.resolve("TestApp/Header.h"), inputPath.resolve("Header.h"));
@@ -584,7 +861,9 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//Apps/TestApp:TestApp");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path outputPath = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(outputPath), is(true));
     assertThat(
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
@@ -645,7 +924,8 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
             target.withFlavors(
                 InternalFlavor.of("iphonesimulator-x86_64"),
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
@@ -653,7 +933,12 @@ public class AppleBinaryIntegrationTest {
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
-    outputPath = BuildTargetPaths.getGenPath(filesystem, target, "%s");
+    outputPath =
+        BuildTargetPaths.getGenPath(
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+            target,
+            "%s");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
@@ -683,7 +968,8 @@ public class AppleBinaryIntegrationTest {
 
     Path outputPath =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
             target.withFlavors(
                 InternalFlavor.of("iphonesimulator-x86_64"),
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
@@ -693,7 +979,10 @@ public class AppleBinaryIntegrationTest {
         workspace.getPath(Paths.get("second").resolve(outputPath)));
     outputPath =
         BuildTargetPaths.getGenPath(
-            filesystem, target.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()), "%s");
+            FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+            target.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()),
+            "%s");
     MoreAsserts.assertContentsEqual(
         workspace.getPath(Paths.get("first").resolve(outputPath)),
         workspace.getPath(Paths.get("second").resolve(outputPath)));
@@ -701,7 +990,8 @@ public class AppleBinaryIntegrationTest {
     if (debugFormat != AppleDebugFormat.DWARF) {
       Path strippedPath =
           BuildTargetPaths.getGenPath(
-              filesystem,
+              FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                  BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
               target
                   .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
                   .withAppendedFlavors(
@@ -742,7 +1032,9 @@ public class AppleBinaryIntegrationTest {
             "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path output = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path output =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(output), is(true));
     assertThat(
         workspace.runCommand("file", output.toString()).getStdout().get(),
@@ -772,7 +1064,8 @@ public class AppleBinaryIntegrationTest {
     Path output =
         workspace.getPath(
             AppleDsym.getDsymOutputPath(
-                dsymTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()), filesystem));
+                dsymTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
+                workspace.getProjectFileSystem()));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
         workspace, output, Optional.of(ImmutableList.of("i386", "x86_64")));
   }
@@ -802,7 +1095,7 @@ public class AppleBinaryIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path output =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app.dSYM")
                 .resolve("Contents/Resources/DWARF")
                 .resolve(target.getShortName()));
@@ -811,7 +1104,7 @@ public class AppleBinaryIntegrationTest {
 
     Path binaryOutput =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app")
                 .resolve(target.getShortName()));
     assertThat(Files.exists(binaryOutput), equalTo(true));
@@ -839,7 +1132,7 @@ public class AppleBinaryIntegrationTest {
             AppleDebugFormat.DWARF.getFlavor(), AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path output =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app")
                 .resolve(target.getShortName()));
     assertThat(Files.exists(output), equalTo(true));
@@ -878,14 +1171,14 @@ public class AppleBinaryIntegrationTest {
 
     Path binaryOutput =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app")
                 .resolve(target.getShortName()));
 
     Path delegateFileOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    workspace.getProjectFileSystem(),
                     binaryTarget.withFlavors(
                         platformFlavor,
                         InternalFlavor.of("compile-" + sanitize("AppDelegate.m.o"))),
@@ -895,7 +1188,7 @@ public class AppleBinaryIntegrationTest {
     Path mainFileOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    workspace.getProjectFileSystem(),
                     binaryTarget.withFlavors(
                         platformFlavor, InternalFlavor.of("compile-" + sanitize("main.m.o"))),
                     "%s")
@@ -935,14 +1228,14 @@ public class AppleBinaryIntegrationTest {
 
     Path binaryOutput =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app")
                 .resolve(target.getShortName()));
 
     Path delegateFileOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    workspace.getProjectFileSystem(),
                     binaryTarget.withFlavors(
                         platformFlavor,
                         InternalFlavor.of("compile-" + sanitize("AppDelegate.m.o")),
@@ -953,7 +1246,7 @@ public class AppleBinaryIntegrationTest {
     Path mainFileOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    workspace.getProjectFileSystem(),
                     binaryTarget.withFlavors(
                         platformFlavor,
                         InternalFlavor.of("compile-" + sanitize("main.m.o")),
@@ -996,14 +1289,14 @@ public class AppleBinaryIntegrationTest {
 
     Path binaryOutput =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app")
                 .resolve(target.getShortName()));
 
     Path delegateFileOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    workspace.getProjectFileSystem(),
                     binaryTarget.withFlavors(
                         platformFlavor,
                         InternalFlavor.of("compile-" + sanitize("AppDelegate.m.o")),
@@ -1014,7 +1307,7 @@ public class AppleBinaryIntegrationTest {
     Path mainFileOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                    filesystem,
+                    workspace.getProjectFileSystem(),
                     binaryTarget.withFlavors(
                         platformFlavor,
                         InternalFlavor.of("compile-" + sanitize("main.m.o")),
@@ -1048,7 +1341,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(filesystem, target, "%s")
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
                     .resolve(target.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(target.getShortName()))),
@@ -1057,7 +1350,7 @@ public class AppleBinaryIntegrationTest {
         Files.exists(
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
-                        filesystem,
+                        workspace.getProjectFileSystem(),
                         target.withFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor()),
                         "%s")
                     .resolve(target.getShortName() + ".app.dSYM")
@@ -1067,7 +1360,8 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(filesystem, target.withFlavors(), "%s")
+                BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(), target.withFlavors(), "%s")
                     .resolve(target.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(target.getShortName()))),
@@ -1078,7 +1372,7 @@ public class AppleBinaryIntegrationTest {
             AppleDebugFormat.NONE.getFlavor(), AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path binaryOutput =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(target.getShortName() + ".app")
                 .resolve(target.getShortName()));
     assertThat(Files.exists(binaryOutput), equalTo(true));
@@ -1112,7 +1406,7 @@ public class AppleBinaryIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path dwarfPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                 .resolve(appTarget.getShortName() + ".app.dSYM")
                 .resolve("Contents/Resources/DWARF")
                 .resolve(appTarget.getShortName()));
@@ -1141,7 +1435,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(filesystem, appTarget, "%s")
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
                     .resolve(appTarget.getShortName() + ".app.dSYM")
                     .resolve("Contents/Resources/DWARF")
                     .resolve(appTarget.getShortName()))),
@@ -1168,14 +1462,14 @@ public class AppleBinaryIntegrationTest {
         "Has link map for i386 arch.",
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(filesystem, target, "%s-LinkMap")
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s-LinkMap")
                     .resolve(
                         singleArchI386Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
     assertTrue(
         "Has link map for x86_64 arch.",
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(filesystem, target, "%s-LinkMap")
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s-LinkMap")
                     .resolve(
                         singleArchX8664Target.getShortNameAndFlavorPostfix() + "-LinkMap.txt"))));
   }
@@ -1239,7 +1533,9 @@ public class AppleBinaryIntegrationTest {
             "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path output = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
+    Path output =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"));
     assertThat(Files.exists(output), is(true));
     assertThat(
         workspace.runCommand("file", output.toString()).getStdout().get(),
@@ -1247,6 +1543,40 @@ public class AppleBinaryIntegrationTest {
     ProcessExecutor.Result lipoVerifyResult =
         workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
+  }
+
+  @Test
+  public void testSwiftStdlibsAreCopiedWithSwiftOnlyInAppExtension() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_stdlibs_in_extension", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//:TestApp#iphonesimulator-x86_64,no-linkermap");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path frameworks =
+        tmp.getRoot()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem(),
+                    BuildTargetFactory.newInstance(
+                        "//:TestApp#dwarf-and-dsym,iphonesimulator-x86_64,no-include-frameworks,no-linkermap"),
+                    "%s"))
+            .resolve("TestApp.app")
+            .resolve("Frameworks");
+
+    assertTrue(
+        "the Frameworks directory should be created within the app bundle",
+        Files.exists(frameworks));
+
+    Path libSwiftCore = frameworks.resolve("libswiftCore.dylib");
+    assertTrue(
+        "the Swift stdlibs should be copied to the Frameworks directory",
+        Files.exists(libSwiftCore));
   }
 
   @Test

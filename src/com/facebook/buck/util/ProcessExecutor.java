@@ -1,28 +1,30 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -113,16 +115,18 @@ public interface ProcessExecutor {
     /** @return false if process is killed, or true if it is alive. */
     boolean isAlive();
 
+    ImmutableList<String> getCommand();
+
     /**
      * Output stream that maps into stdin of the process. You'd write into process' stdin using it.
      */
-    OutputStream getOutputStream();
+    OutputStream getStdin();
 
     /** Input stream that maps into stdout of the process. You'd read process' stdout from it. */
-    InputStream getInputStream();
+    InputStream getStdout();
 
     /** Input stream that maps into stderr of the process. You'd read process' stderr from it. */
-    InputStream getErrorStream();
+    InputStream getStderr();
   }
 
   /**
@@ -132,9 +136,11 @@ public interface ProcessExecutor {
   @VisibleForTesting
   class LaunchedProcessImpl implements LaunchedProcess {
     public final Process process;
+    public final ImmutableList<String> command;
 
-    public LaunchedProcessImpl(Process process) {
+    public LaunchedProcessImpl(Process process, List<String> command) {
       this.process = process;
+      this.command = ImmutableList.copyOf(command);
     }
 
     @Override
@@ -143,17 +149,22 @@ public interface ProcessExecutor {
     }
 
     @Override
-    public OutputStream getOutputStream() {
+    public ImmutableList<String> getCommand() {
+      return command;
+    }
+
+    @Override
+    public OutputStream getStdin() {
       return process.getOutputStream();
     }
 
     @Override
-    public InputStream getInputStream() {
+    public InputStream getStdout() {
       return process.getInputStream();
     }
 
     @Override
-    public InputStream getErrorStream() {
+    public InputStream getStderr() {
       return process.getErrorStream();
     }
   }
@@ -168,21 +179,27 @@ public interface ProcessExecutor {
     private final boolean timedOut;
     private final Optional<String> stdout;
     private final Optional<String> stderr;
+    public final ImmutableList<String> command;
 
     public Result(
-        int exitCode, boolean timedOut, Optional<String> stdout, Optional<String> stderr) {
+        int exitCode,
+        boolean timedOut,
+        Optional<String> stdout,
+        Optional<String> stderr,
+        ImmutableList<String> command) {
       this.exitCode = exitCode;
       this.timedOut = timedOut;
       this.stdout = stdout;
       this.stderr = stderr;
+      this.command = command;
     }
 
-    public Result(int exitCode, String stdout, String stderr) {
-      this(exitCode, /* timedOut */ false, Optional.of(stdout), Optional.of(stderr));
+    public Result(int exitCode, String stdout, String stderr, ImmutableList<String> command) {
+      this(exitCode, /* timedOut */ false, Optional.of(stdout), Optional.of(stderr), command);
     }
 
-    public Result(int exitCode) {
-      this(exitCode, /* timedOut */ false, Optional.empty(), Optional.empty());
+    public Result(int exitCode, ImmutableList<String> command) {
+      this(exitCode, /* timedOut */ false, Optional.empty(), Optional.empty(), command);
     }
 
     public int getExitCode() {
@@ -201,14 +218,27 @@ public interface ProcessExecutor {
       return stderr;
     }
 
+    public ImmutableList<String> getCommand() {
+      return command;
+    }
+
     public String getMessageForUnexpectedResult(String subject) {
       return getMessageForResult(subject + " finished with unexpected result");
     }
 
     public String getMessageForResult(String message) {
       return String.format(
-          "%s:\n" + "exit code: %s\n" + "stdout:\n" + "%s" + "\n" + "stderr:\n" + "%s" + "\n",
+          "%s:\n"
+              + "exit code: %s\n"
+              + "command: %s\n"
+              + "stdout:\n"
+              + "%s"
+              + "\n"
+              + "stderr:\n"
+              + "%s"
+              + "\n",
           message,
+          MoreStrings.truncatePretty(getCommand().toString()),
           getExitCode(),
           MoreStrings.truncatePretty(getStdout().orElse("")),
           MoreStrings.truncatePretty(getStderr().orElse("")));

@@ -1,12 +1,17 @@
+
+[python]
+    interpreter = python3
+    pex_flags = "--python-shebang=/usr/bin/env python3"
 [repositories]
     buck = .
-    bazel_skylib = ./third-party/skylark/bazel-skylib
+    buck_bazel_skylib = ./third-party/skylark/bazel-skylib
 [java]
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.
     src_roots = src, test
     source_level = 8
     target_level = 8
+    bootclasspath-8 = third-party/java/jdk/jdk8-rt-stub.jar
     jar_spool_mode = direct_to_jar
     abi_generation_mode = source_only
     # There is some nondeterminism with the Immutables processor that causes verification to
@@ -14,10 +19,16 @@
     # (instead of as a separate step), this can become an error again:
     source_abi_verification_mode = fail
     compile_against_abis = True
+[kotlin]
+  # TODO: Put this in a shared location so Kotlin code under src/
+  # does not depend on files under test/. We should probably update the
+  # version of the Kotlin toolchain we use, as well.
+  kotlin_home = test/com/facebook/buck/toolchains/kotlin/kotlinc/
 [alias]
     buck = //programs:buck
+    buck-local = //programs:buck-local
     buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
-    eden = //test/com/facebook/buck/eden/cli:cli_bin
+    eden = //test/com/facebook/buck/edenfs/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
     ideabuck = //tools/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
@@ -65,12 +76,15 @@
     watchman_cursor = clock_id
     glob_handler = watchman
     embedded_cell_buck_out_enabled = true
+    buck_out_include_target_config_hash = true
 [test]
     ; Maximum timeout of 90 seconds per test.
     timeout = 90000
 [resources]
     resource_aware_scheduling_enabled = true
+
 [ui]
   build_rule_minimum_duration_millis=500
 [parser]
   default_build_file_syntax=skylark
+

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace buck.audit}
 
 /**
@@ -64,11 +80,61 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
     {param nodash: true /}
     {param desc}
     <p>
-    List the aliases declared in {call buck.concept_buckconfig /} and <code>.buckconfig.local</code>.
+    List the aliases declared in {call buck.buckconfig_link /} and <code>.buckconfig.local</code>.
     This command lists only the aliases, not their values. To see the values, use the <code>buck audit config</code> command.
     </p>
    {/param}
   {/call}
+
+  {call buck.audit.param}
+    {param name: 'buck audit cell' /}
+    {param nodash: true /}
+    {param desc}
+
+    <p>
+    List the absolute paths to the cells that are specified in 
+    the {call buckconfig.repositories /} section of 
+    the <code>.buckconfig</code> file that is in 
+    the root of the current cell. The path to each cell is prefixed
+    with the specified alias for that cell. For example:
+<p>
+<pre>
+{literal}
+$ buck audit cell 
+buck: /Users/buxster/local/buck
+bazel_skylib: /Users/buxster/local/buck/third-party/skylark/bazel-skylib
+{/literal}
+</pre>
+</p>
+
+<p>
+(In this example, <code>buxster</code> is the name of the current user.)
+</p>
+
+    <p>
+    If you specify the <code>--paths-only</code> parameter, Buck outputs
+    only the absolute paths to the cells, without the aliases.
+    </p>
+
+<p>
+<pre>
+{literal}
+$ buck audit cell --paths-only
+/Users/buxster/local/buck
+/Users/buxster/local/buck/third-party/skylark/bazel-skylib
+{/literal}
+</pre>
+</p>
+
+    <p>
+      If your <code>.buckconfig</code> does not contain 
+      a <code>[repositories]</code> section, 
+      then <code>buck audit cell</code> doesn't return any output.
+    </p>
+
+   {/param}
+  {/call}
+
 
   {call buck.param}
     {param name: 'classpath <targets>' /}
@@ -227,30 +293,8 @@ cxx.cxx&#9;/usr/bin/g++
     Print the Python signature for the specified rule.
     </p>
 
-<p>
-<pre>
-{literal}
-buck audit ruletype remote_file
-{/literal}
-</pre>
-</p>
-
-<p>
-<pre>
-{literal}
-def remote_file (
-    name,
-    sha1,
-    url,
-    labels = None,
-    licenses = None,
-    out = None,
-    type = None,
-):
-    ...
-{/literal}
-</pre>
-</p>
+/***/
+{call buckaudit.example_ruletype /}
 
     {/param}
   {/call}
@@ -262,6 +306,15 @@ def remote_file (
     <p>
     List all the rules that Buck supports, in alphabetical order.
     </p>
+
+<p>
+<strong>Example</strong>
+</p>
+
+<p>
+The following example prints <em>all</em> the rules that Buck supports.
+Note that the output is truncated for brevity.
+</p>
 
 <p>
 <pre>
@@ -292,6 +345,12 @@ apple_binary
 {/literal}
 </pre>
 </p>
+
+<p>
+<strong>Example</strong>
+</p>
+
+{call buckaudit.example_ruletypes /}
 
     {/param}
   {/call}
@@ -583,7 +642,7 @@ buck audit dependencies --json /&#x2F;examples:two /&#x2F;examples:three
 <p>
 <ul>
 <li>{call buck.concept_link}{param page: 'build_file' /}{param name: 'Build File' /}{/call}</li>
-<li>{call buck.concept_link}{param page: 'buckconfig' /}{param name: 'buckconfig' /}{/call}</li>
+<li>{call buck.buckconfig_link /}</li>
 </ul>
 </p>
 

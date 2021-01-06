@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -19,11 +19,11 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.AbstractExecutionStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -45,11 +45,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 
 public final class ProGuardObfuscateStep extends ShellStep {
+  public static final int DEFAULT_OPTIMIZATION_PASSES = 1;
 
   enum SdkProguardType {
     DEFAULT,
@@ -84,10 +84,10 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Optional<String> proguardAgentPath,
       Set<Path> customProguardConfigs,
       SdkProguardType sdkProguardConfig,
-      OptionalInt optimizationPasses,
+      int optimizationPasses,
       Optional<List<String>> proguardJvmArgs,
       Map<Path, Path> inputAndOutputEntries,
-      Set<Path> additionalLibraryJarsForProguard,
+      ImmutableSet<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
       BuildableContext buildableContext,
       BuildContext buildContext,
@@ -280,7 +280,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
     private final Map<Path, Path> inputAndOutputEntries;
     private final ImmutableSet<Path> additionalLibraryJarsForProguard;
     private final SdkProguardType sdkProguardConfig;
-    private final OptionalInt optimizationPasses;
+    private final int optimizationPasses;
     private final Path proguardDirectory;
     private final Path pathToProGuardCommandLineArgsFile;
 
@@ -299,9 +299,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
         AndroidPlatformTarget androidPlatformTarget,
         Set<Path> customProguardConfigs,
         SdkProguardType sdkProguardConfig,
-        OptionalInt optimizationPasses,
+        int optimizationPasses,
         Map<Path, Path> inputAndOutputEntries,
-        Set<Path> additionalLibraryJarsForProguard,
+        ImmutableSet<Path> additionalLibraryJarsForProguard,
         Path proguardDirectory,
         Path pathToProGuardCommandLineArgsFile) {
       super("write_proguard_command_line_parameters");
@@ -312,15 +312,15 @@ public final class ProGuardObfuscateStep extends ShellStep {
       this.sdkProguardConfig = sdkProguardConfig;
       this.optimizationPasses = optimizationPasses;
       this.inputAndOutputEntries = ImmutableMap.copyOf(inputAndOutputEntries);
-      this.additionalLibraryJarsForProguard = ImmutableSet.copyOf(additionalLibraryJarsForProguard);
+      this.additionalLibraryJarsForProguard = additionalLibraryJarsForProguard;
       this.proguardDirectory = proguardDirectory;
       this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
     }
 
     @Override
-    public StepExecutionResult execute(ExecutionContext context)
-        throws IOException, InterruptedException {
-      String proGuardArguments = Joiner.on('\n').join(getParameters(filesystem.getRootPath()));
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      String proGuardArguments =
+          Joiner.on('\n').join(getParameters(filesystem.getRootPath().getPath()));
       filesystem.writeContentsToPath(proGuardArguments, pathToProGuardCommandLineArgsFile);
 
       return StepExecutionResults.SUCCESS;
@@ -339,9 +339,7 @@ public final class ProGuardObfuscateStep extends ShellStep {
       switch (sdkProguardConfig) {
         case OPTIMIZED:
           args.add("-include").add(androidPlatformTarget.getOptimizedProguardConfig().toString());
-          if (optimizationPasses.isPresent()) {
-            args.add("-optimizationpasses").add(String.valueOf(optimizationPasses.getAsInt()));
-          }
+          args.add("-optimizationpasses").add(String.valueOf(optimizationPasses));
           break;
         case DEFAULT:
           args.add("-include").add(androidPlatformTarget.getProguardConfig().toString());

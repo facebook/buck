@@ -1,0 +1,10 @@
+java_library(
+    name = "testutil",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
+    ],
+)

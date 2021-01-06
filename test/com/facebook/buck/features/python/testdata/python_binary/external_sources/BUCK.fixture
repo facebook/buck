@@ -1,5 +1,26 @@
+python_library(
+    name = "python_lib",
+    srcs = ["python_lib.py"],
+    visibility = ["PUBLIC"],
+)
+
+python_library(
+    name = "python_lib_with_init_py",
+    srcs = [
+        "__init__.py",
+        "python_lib.py",
+    ],
+    visibility = ["PUBLIC"],
+)
+
 prebuilt_python_library(
     name = "whl_dep",
     binary_src = "wheel_package-0.0.1-py2-none-any.whl",
-    visibility = ["//..."],
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_python_library(
+    name = "whl_dep_copy",
+    binary_src = "wheel_package-0.0.1-py2-none-any-copy.whl",
+    visibility = ["PUBLIC"],
 )

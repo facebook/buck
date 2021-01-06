@@ -1,23 +1,23 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.base.Preconditions;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -34,7 +34,7 @@ public class SelectorKey {
   private @Nullable final BuildTarget buildTarget;
 
   public SelectorKey(BuildTarget buildTarget) {
-    this.buildTarget = Preconditions.checkNotNull(buildTarget);
+    this.buildTarget = Objects.requireNonNull(buildTarget);
   }
 
   private SelectorKey() {
@@ -46,7 +46,7 @@ public class SelectorKey {
   }
 
   public BuildTarget getBuildTarget() {
-    Preconditions.checkNotNull(buildTarget, "Default condition has no build target");
+    Objects.requireNonNull(buildTarget, "Default condition has no build target");
     return buildTarget;
   }
 
@@ -58,5 +58,22 @@ public class SelectorKey {
   @Override
   public String toString() {
     return buildTarget == null ? DEFAULT_KEYWORD : buildTarget.getFullyQualifiedName();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SelectorKey that = (SelectorKey) o;
+    return Objects.equals(buildTarget, that.buildTarget);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(buildTarget);
   }
 }

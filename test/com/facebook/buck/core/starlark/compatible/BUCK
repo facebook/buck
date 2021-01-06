@@ -1,0 +1,26 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "compatible",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/starlark/compatible:compatible",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = ["//test/..."],
+    exported_deps = [
+        "//src/com/facebook/buck/core/starlark/compatible:compatible",
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
+    ],
+)

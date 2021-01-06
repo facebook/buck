@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.versions;
 
 import static org.junit.Assert.assertFalse;
@@ -20,7 +21,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -28,10 +32,8 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
-import com.facebook.buck.parser.BuildTargetPattern;
-import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,8 +47,6 @@ public class TargetNodeTranslatorTest {
 
   private static final CellPathResolver CELL_PATH_RESOLVER =
       TestCellPathResolver.get(new FakeProjectFilesystem());
-  private static final BuildTargetPatternParser<BuildTargetPattern> PATTERN =
-      BuildTargetPatternParser.fullyQualified();
 
   @Test
   public void translate() {
@@ -60,7 +60,8 @@ public class TargetNodeTranslatorTest {
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+        new TargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(d);
@@ -94,7 +95,8 @@ public class TargetNodeTranslatorTest {
             .setExportedDeps(ImmutableSortedSet.of(c))
             .build();
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+        new TargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
@@ -116,7 +118,8 @@ public class TargetNodeTranslatorTest {
     ImmutableMap<BuildTarget, Version> selectedVersions =
         ImmutableMap.of(BuildTargetFactory.newInstance("//:b"), Version.of("1.0"));
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+        new TargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.empty();
@@ -140,7 +143,8 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+        new TargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -153,7 +157,8 @@ public class TargetNodeTranslatorTest {
           }
         };
     assertThat(
-        translator.translatePair(CELL_PATH_RESOLVER, PATTERN, new Pair<>("hello", a)),
+        translator.translatePair(
+            CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, new Pair<>("hello", a)),
         Matchers.equalTo(Optional.of(new Pair<>("hello", b))));
   }
 
@@ -162,7 +167,8 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+        new TargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -176,7 +182,9 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateBuildTargetSourcePath(
-            CELL_PATH_RESOLVER, PATTERN, DefaultBuildTargetSourcePath.of(a)),
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
+            DefaultBuildTargetSourcePath.of(a)),
         Matchers.equalTo(Optional.of(DefaultBuildTargetSourcePath.of(b))));
   }
 
@@ -185,7 +193,8 @@ public class TargetNodeTranslatorTest {
     BuildTarget a = BuildTargetFactory.newInstance("//:a");
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     TargetNodeTranslator translator =
-        new TargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableList.of()) {
+        new TargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableList.of(), new TestCellBuilder().build()) {
           @Override
           public Optional<BuildTarget> translateBuildTarget(BuildTarget target) {
             return Optional.of(b);
@@ -199,8 +208,8 @@ public class TargetNodeTranslatorTest {
         };
     assertThat(
         translator.translateSourceWithFlags(
-            CELL_PATH_RESOLVER,
-            PATTERN,
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
             SourceWithFlags.of(DefaultBuildTargetSourcePath.of(a), ImmutableList.of("-flag"))),
         Matchers.equalTo(
             Optional.of(
@@ -219,8 +228,8 @@ public class TargetNodeTranslatorTest {
 
           @Override
           public Optional<Integer> translateTargets(
-              CellPathResolver cellPathResolver,
-              BuildTargetPatternParser<BuildTargetPattern> pattern,
+              CellNameResolver cellPathResolver,
+              BaseName targetBaseName,
               TargetNodeTranslator translator,
               Integer val) {
             return Optional.of(0);
@@ -230,8 +239,10 @@ public class TargetNodeTranslatorTest {
         new FixedTargetNodeTranslator(
             new DefaultTypeCoercerFactory(),
             ImmutableList.of(integerTranslator),
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertThat(
-        translator.translate(CELL_PATH_RESOLVER, PATTERN, 12), Matchers.equalTo(Optional.of(0)));
+        translator.translate(CELL_PATH_RESOLVER.getCellNameResolver(), BaseName.ROOT, 12),
+        Matchers.equalTo(Optional.of(0)));
   }
 }

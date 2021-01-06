@@ -1,30 +1,32 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,7 +42,7 @@ import java.util.function.Function;
  * rule R uses a precompiled header rule P, then all of P's {@code deps} will get merged into R's
  * {@code deps} list.
  */
-public class CxxPrecompiledHeaderTemplate extends PreInclude {
+public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidPackageable {
   CxxPrecompiledHeaderTemplate(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -70,10 +72,9 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
 
-    DepsBuilder depsBuilder = new DepsBuilder(ruleFinder);
+    DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 
     Preprocessor preprocessor = preprocessorDelegateForCxxRule.getPreprocessor();
 
@@ -99,7 +100,7 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
       depsBuilder.add(rule);
     }
 
-    depsBuilder.add(requireAggregatedDepsRule(cxxPlatform, graphBuilder, ruleFinder));
+    depsBuilder.add(requireAggregatedDepsRule(cxxPlatform, graphBuilder));
     depsBuilder.add(preprocessorDelegate);
 
     return requirePrecompiledHeader(
@@ -109,9 +110,20 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude {
         sourceType,
         compilerFlags,
         depsBuilder,
-        getBuildTarget().getUnflavoredBuildTarget(),
-        ImmutableSortedSet.of(
-            cxxPlatform.getFlavor(), InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
+        getBuildTarget()
+            .withFlavors(
+                cxxPlatform.getFlavor(),
+                InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
         graphBuilder);
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
+  }
+
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    collector.addNativeLinkable(this);
   }
 }

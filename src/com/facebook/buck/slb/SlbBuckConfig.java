@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
@@ -25,9 +25,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.net.URI;
 import java.util.Optional;
+import javax.net.ssl.HostnameVerifier;
 import okhttp3.Connection;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
+import okhttp3.tls.HandshakeCertificates;
 
 public class SlbBuckConfig {
 
@@ -72,18 +74,45 @@ public class SlbBuckConfig {
   }
 
   public ClientSideSlb createClientSideSlb(Clock clock, BuckEventBus eventBus) {
-    return new ClientSideSlb(createConfig(clock, eventBus), createOkHttpClientBuilder());
+    return new ClientSideSlb(
+        createConfig(clock, eventBus),
+        createOkHttpClientBuilder(Optional.empty(), Optional.empty()));
+  }
+
+  public ClientSideSlb createClientSideSlb(
+      Clock clock,
+      BuckEventBus eventBus,
+      Optional<HandshakeCertificates> handshakeCertificates,
+      Optional<HostnameVerifier> hostnameVerifier) {
+    return new ClientSideSlb(
+        createConfig(clock, eventBus),
+        createOkHttpClientBuilder(handshakeCertificates, hostnameVerifier));
   }
 
   public Optional<ClientSideSlb> tryCreatingClientSideSlb(Clock clock, BuckEventBus eventBus) {
     ClientSideSlbConfig config = createConfig(clock, eventBus);
     return ClientSideSlb.isSafeToCreate(config)
-        ? Optional.of(new ClientSideSlb(config, createOkHttpClientBuilder()))
+        ? Optional.of(
+            new ClientSideSlb(
+                config, createOkHttpClientBuilder(Optional.empty(), Optional.empty())))
         : Optional.empty();
   }
 
-  private OkHttpClient.Builder createOkHttpClientBuilder() {
+  private OkHttpClient.Builder createOkHttpClientBuilder(
+      Optional<HandshakeCertificates> handshakeCertificates,
+      Optional<HostnameVerifier> hostnameVerifier) {
     OkHttpClient.Builder clientBuilder = new OkHttpClient().newBuilder();
+
+    // Add client TLS information if present
+    if (handshakeCertificates.isPresent()) {
+      clientBuilder.sslSocketFactory(
+          handshakeCertificates.get().sslSocketFactory(),
+          handshakeCertificates.get().trustManager());
+    }
+    if (hostnameVerifier.isPresent()) {
+      clientBuilder.hostnameVerifier(hostnameVerifier.get());
+    }
+
     clientBuilder
         .networkInterceptors()
         .add(
@@ -107,8 +136,8 @@ public class SlbBuckConfig {
   }
 
   private ClientSideSlbConfig createConfig(Clock clock, BuckEventBus eventBus) {
-    ClientSideSlbConfig.Builder configBuilder =
-        ClientSideSlbConfig.builder()
+    ImmutableClientSideSlbConfig.Builder configBuilder =
+        ImmutableClientSideSlbConfig.builder()
             .setServerPoolName("buckconfig_" + parentSection)
             .setClock(clock)
             .setServerPool(getServerPool())

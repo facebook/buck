@@ -8,6 +8,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/log/views:views",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",

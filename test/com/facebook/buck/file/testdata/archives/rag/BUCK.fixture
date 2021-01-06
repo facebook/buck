@@ -1,0 +1,3 @@
+load(":defs.bzl", "expect_path")
+
+expect_path(name = "expect_path", dep = "//:out_specified")

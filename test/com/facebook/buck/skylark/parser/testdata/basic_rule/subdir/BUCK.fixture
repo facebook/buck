@@ -1,0 +1,11 @@
+load("//subdir:defs.bzl", "macro", "some_rule")
+
+some_rule(
+    name = "target1",
+    attr1 = 3,
+)
+
+macro(
+    name = "target2",
+    attr1 = 4,
+)

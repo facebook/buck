@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Aliases</key>
+  <array>
+    <string>Local</string>
+  </array>
+  <key>CFBundleIdentifier</key>
+  <string>tc-03_21-2018_05_10.swift.20180510</string>
+  <key>CompatibilityVersion</key>
+  <integer>2</integer>
+  <key>CompatibilityVersionDisplayString</key>
+  <string>Xcode 8.0</string>
+  <key>CreatedDate</key>
+  <date>2018-05-10T16:37:53Z</date>
+  <key>DisplayName</key>
+  <string>Local Swift Development Snapshot 2018-05-10</string>
+  <key>OverrideBuildSettings</key>
+  <dict>
+    <key>ENABLE_BITCODE</key>
+    <string>NO</string>
+    <key>SWIFT_DISABLE_REQUIRED_ARCLITE</key>
+    <string>YES</string>
+    <key>SWIFT_LINK_OBJC_RUNTIME</key>
+    <string>YES</string>
+  </dict>
+  <key>ReportProblemURL</key>
+  <string>https://bugs.swift.org/</string>
+  <key>ShortDisplayName</key>
+  <string>Local Swift Development Snapshot</string>
+  <key>Version</key>
+  <string>swift-LOCAL-2018-05-10-a</string>
+</dict>
+</plist>

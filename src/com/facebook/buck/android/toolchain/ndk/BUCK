@@ -1,12 +1,11 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
 
 java_immutables_library(
     name = "ndk",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-        "//src/com/facebook/buck/cxx/toolchain:toolchain",
-    ],
     tests = [
         "//test/com/facebook/buck/android/toolchain/ndk/impl:impl",
     ],
@@ -14,6 +13,10 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
 )

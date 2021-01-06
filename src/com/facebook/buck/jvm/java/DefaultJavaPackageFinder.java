@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +31,7 @@ import java.util.LinkedList;
 
 public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
+  private final ProjectFilesystem projectFilesystem;
   /**
    * Each element in this set is a path prefix from the root of the repository.
    *
@@ -45,7 +47,10 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
   private final ImmutableSet<String> pathElements;
 
   public DefaultJavaPackageFinder(
-      ImmutableSortedSet<String> pathsFromRoot, ImmutableSet<String> pathElements) {
+      ProjectFilesystem projectFilesystem,
+      ImmutableSortedSet<String> pathsFromRoot,
+      ImmutableSet<String> pathElements) {
+    this.projectFilesystem = projectFilesystem;
     this.pathsFromRoot = pathsFromRoot;
     this.pathElements = pathElements;
   }
@@ -90,7 +95,7 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
    *     elements indicate individual directory names (and therefore cannot contain slashes).
    */
   public static DefaultJavaPackageFinder createDefaultJavaPackageFinder(
-      Iterable<String> pathPatterns) {
+      ProjectFilesystem projectFilesystem, Iterable<String> pathPatterns) {
     ImmutableSortedSet.Builder<String> pathsFromRoot = ImmutableSortedSet.reverseOrder();
     ImmutableSet.Builder<String> pathElements = ImmutableSet.builder();
     for (String pattern : pathPatterns) {
@@ -111,7 +116,8 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
         pathElements.add(pattern);
       }
     }
-    return new DefaultJavaPackageFinder(pathsFromRoot.build(), pathElements.build());
+    return new DefaultJavaPackageFinder(
+        projectFilesystem, pathsFromRoot.build(), pathElements.build());
   }
 
   @Override
@@ -122,10 +128,19 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
   @Override
   public String findJavaPackage(BuildTarget buildTarget) {
-    return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+    return findJavaPackage(
+        buildTarget
+            .getCellRelativeBasePath()
+            .getPath()
+            .toPath(projectFilesystem.getFileSystem())
+            .resolve("removed"));
   }
 
   public static String findJavaPackageWithPackageFolder(Path packageFolder) {
+    // If the folder is not under the project root, don't be smart to guess the package name
+    if (packageFolder.startsWith("..")) {
+      return "";
+    }
     return packageFolder.toString().replace(File.separatorChar, '.');
   }
 }

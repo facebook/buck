@@ -1,39 +1,46 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasProvidedDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.infer.InferConfig;
+import com.facebook.buck.infer.InferNullsafe;
+import com.facebook.buck.infer.UnresolvedInferPlatform;
+import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasSources;
@@ -42,6 +49,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -53,10 +61,12 @@ import org.immutables.value.Value;
 public class JavaLibraryDescription
     implements DescriptionWithTargetGraph<JavaLibraryDescriptionArg>,
         Flavored,
-        VersionPropagator<JavaLibraryDescriptionArg> {
+        VersionPropagator<JavaLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<JavaLibraryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
+          InferNullsafe.INFER_NULLSAFE,
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
@@ -67,15 +77,29 @@ public class JavaLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
+  private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
 
   public JavaLibraryDescription(
       ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.defaultJavaCompilerFactory =
+        new JavaConfiguredCompilerFactory(this.javaBuckConfig, this.javacFactory);
+  }
+
+  private Optional<UnresolvedInferPlatform> unresolvedInferPlatform(
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider
+        .getByNameIfPresent(
+            InferToolchain.DEFAULT_NAME, toolchainTargetConfiguration, InferToolchain.class)
+        .map(InferToolchain::getDefaultPlatform);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
@@ -91,15 +115,43 @@ public class JavaLibraryDescription
       BuildRuleParams params,
       JavaLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            context
+                .getToolchainProvider()
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            graphBuilder,
+            args);
+
+    if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
+      return InferNullsafe.create(
+          buildTarget,
+          projectFilesystem,
+          graphBuilder,
+          javacOptions,
+          defaultJavaCompilerFactory.getExtraClasspathProvider(
+              toolchainProvider, buildTarget.getTargetConfiguration()),
+          unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+              .orElseThrow(
+                  () ->
+                      new HumanReadableException(
+                          "Cannot use #nullsafe flavor: infer platform not configured")),
+          InferConfig.of(javaBuckConfig.getDelegate()));
+    }
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
-      BuildTarget unflavored = ImmutableBuildTarget.of(buildTarget.getUnflavoredBuildTarget());
+      BuildTarget unflavored = buildTarget.withoutFlavors();
       BuildRule baseLibrary = graphBuilder.requireRule(unflavored);
 
       JarShape shape =
@@ -109,9 +161,7 @@ public class JavaLibraryDescription
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
       ImmutableSet<SourcePath> sources =
-          summary
-              .getPackagedRules()
-              .stream()
+          summary.getPackagedRules().stream()
               .filter(HasSources.class::isInstance)
               .map(rule -> ((HasSources) rule).getSources())
               .flatMap(Collection::stream)
@@ -124,13 +174,11 @@ public class JavaLibraryDescription
       // Might as well add them as deps. *sigh*
       ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
       // Sourcepath deps
-      deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
+      deps.addAll(graphBuilder.filterBuildRuleInputs(sources));
       // Classpath deps
       deps.add(baseLibrary);
       deps.addAll(
-          summary
-              .getClasspath()
-              .stream()
+          summary.getClasspath().stream()
               .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());
@@ -173,17 +221,6 @@ public class JavaLibraryDescription
       }
     }
 
-    JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            context
-                .getToolchainProvider()
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                .getJavacOptions(),
-            buildTarget,
-            projectFilesystem,
-            graphBuilder,
-            args);
-
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         DefaultJavaLibrary.rulesBuilder(
                 buildTarget,
@@ -191,9 +228,7 @@ public class JavaLibraryDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
-                new JavaConfiguredCompilerFactory(
-                    javaBuckConfig, JavacFactory.getDefault(toolchainProvider)),
+                defaultJavaCompilerFactory,
                 javaBuckConfig,
                 args)
             .setJavacOptions(javacOptions)
@@ -218,6 +253,23 @@ public class JavaLibraryDescription
           args.getMavenCoords(),
           args.getMavenPomTemplate());
     }
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellNameResolver cellRoots,
+      JavaLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+
+    unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+        .ifPresent(
+            p ->
+                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                    targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg
@@ -245,9 +297,11 @@ public class JavaLibraryDescription
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getSourceOnlyAbiDeps();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getRuntimeDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJavaLibraryDescriptionArg extends CoreArg {}
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.toolchain.impl;
@@ -66,17 +66,23 @@ public class AppleToolchainDiscoveryTest {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
     ImmutableMap<String, AppleToolchain> expected =
         ImmutableMap.of(
-            "com.facebook.foo.toolchain.XcodeDefault",
-            AppleToolchain.builder()
-                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
-                .setVersion("23B456")
-                .setPath(root.resolve("Toolchains/foo.xctoolchain"))
-                .build(),
             "com.facebook.bar.toolchain.XcodeDefault",
             AppleToolchain.builder()
                 .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
                 .setVersion("23B456")
                 .setPath(root.resolve("Toolchains/bar.xctoolchain"))
+                .build(),
+            "tc-03_21-2018_05_10.swift.20180510",
+            AppleToolchain.builder()
+                .setIdentifier("tc-03_21-2018_05_10.swift.20180510")
+                // .setVersion("swift-LOCAL-2018-05-10-a")
+                .setPath(root.resolve("Toolchains/baz.xctoolchain"))
+                .build(),
+            "com.facebook.foo.toolchain.XcodeDefault",
+            AppleToolchain.builder()
+                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+                .setVersion("23B456")
+                .setPath(root.resolve("Toolchains/foo.xctoolchain"))
                 .build());
 
     assertThat(
@@ -91,17 +97,23 @@ public class AppleToolchainDiscoveryTest {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
     ImmutableMap<String, AppleToolchain> expected =
         ImmutableMap.of(
-            "com.facebook.foo.toolchain.XcodeDefault",
-            AppleToolchain.builder()
-                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
-                .setVersion("23B456")
-                .setPath(root.resolve("Toolchains/foo.xctoolchain"))
-                .build(),
             "com.facebook.bar.toolchain.XcodeDefault",
             AppleToolchain.builder()
                 .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
                 .setVersion("23B456")
                 .setPath(root.resolve("Toolchains/bar.xctoolchain"))
+                .build(),
+            "tc-03_21-2018_05_10.swift.20180510",
+            AppleToolchain.builder()
+                .setIdentifier("tc-03_21-2018_05_10.swift.20180510")
+                // .setVersion("swift-LOCAL-2018-05-10-a")
+                .setPath(root.resolve("Toolchains/baz.xctoolchain"))
+                .build(),
+            "com.facebook.foo.toolchain.XcodeDefault",
+            AppleToolchain.builder()
+                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+                .setVersion("23B456")
+                .setPath(root.resolve("Toolchains/foo.xctoolchain"))
                 .build());
 
     assertThat(
@@ -115,17 +127,23 @@ public class AppleToolchainDiscoveryTest {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
     ImmutableMap<String, AppleToolchain> expected =
         ImmutableMap.of(
-            "com.facebook.foo.toolchain.XcodeDefault",
-            AppleToolchain.builder()
-                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
-                .setVersion("23B456")
-                .setPath(root.resolve("Toolchains/foo.xctoolchain"))
-                .build(),
             "com.facebook.bar.toolchain.XcodeDefault",
             AppleToolchain.builder()
                 .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
                 .setVersion("23B456")
                 .setPath(root.resolve("Toolchains/bar.xctoolchain"))
+                .build(),
+            "tc-03_21-2018_05_10.swift.20180510",
+            AppleToolchain.builder()
+                .setIdentifier("tc-03_21-2018_05_10.swift.20180510")
+                // .setVersion("swift-LOCAL-2018-05-10-a")
+                .setPath(root.resolve("Toolchains/baz.xctoolchain"))
+                .build(),
+            "com.facebook.foo.toolchain.XcodeDefault",
+            AppleToolchain.builder()
+                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+                .setVersion("23B456")
+                .setPath(root.resolve("Toolchains/foo.xctoolchain"))
                 .build());
 
     assertThat(
@@ -141,6 +159,7 @@ public class AppleToolchainDiscoveryTest {
     Path tempRoot = temp.getRoot().toPath();
     MostFiles.copyRecursively(root, tempRoot);
     Files.delete(tempRoot.resolve("Toolchains/foo.xctoolchain/ToolchainInfo.plist"));
+    Files.delete(tempRoot.resolve("Toolchains/baz.xctoolchain/Info.plist"));
     Files.write(
         tempRoot.resolve("Toolchains/bar.xctoolchain/Info.plist"),
         ImmutableList.of("Not a valid plist"),
@@ -191,17 +210,22 @@ public class AppleToolchainDiscoveryTest {
 
     ImmutableMap<String, AppleToolchain> expected =
         ImmutableMap.of(
-            "com.facebook.foo.toolchain.XcodeDefault",
-            AppleToolchain.builder()
-                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
-                .setVersion("23B456")
-                .setPath(root.resolve("Toolchains/foo.xctoolchain").toAbsolutePath())
-                .build(),
             "com.facebook.bar.toolchain.XcodeDefault",
             AppleToolchain.builder()
                 .setIdentifier("com.facebook.bar.toolchain.XcodeDefault")
                 .setVersion("23B456")
                 .setPath(root.resolve("Toolchains/bar.xctoolchain").toAbsolutePath())
+                .build(),
+            "tc-03_21-2018_05_10.swift.20180510",
+            AppleToolchain.builder()
+                .setIdentifier("tc-03_21-2018_05_10.swift.20180510")
+                .setPath(root.resolve("Toolchains/baz.xctoolchain").toAbsolutePath())
+                .build(),
+            "com.facebook.foo.toolchain.XcodeDefault",
+            AppleToolchain.builder()
+                .setIdentifier("com.facebook.foo.toolchain.XcodeDefault")
+                .setVersion("23B456")
+                .setPath(root.resolve("Toolchains/foo.xctoolchain").toAbsolutePath())
                 .build());
 
     try {

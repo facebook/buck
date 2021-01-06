@@ -1,15 +1,31 @@
 prebuilt_jar(
     name = "okhttp",
-    binary_jar = "okhttp-3.9.0.jar",
+    binary_jar = "okhttp-3.11.0.jar",
     javadoc_url = "http://square.github.io/okhttp/3.x/okhttp/",
     licenses = [
         "LICENSE.txt",
     ],
-    source_jar = "okhttp-3.9.0-sources.jar",
+    source_jar = "okhttp-3.11.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//third-party/java/okio:okio",
+    ],
+)
+
+prebuilt_jar(
+    name = "okhttp-tls",
+    binary_jar = "okhttp-tls-3.11.0.jar",
+    javadoc_url = "http://square.github.io/okhttp/3.x/okhttp/",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    source_jar = "okhttp-tls-3.11.0-sources.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/okhttp:okhttp",
     ],
 )

@@ -15,47 +15,47 @@
 """Skylib module containing a library rule for aggregating rules files."""
 
 SkylarkLibraryInfo = provider(
-    'Information on contained Skylark rules.',
-    fields={
-      'srcs': 'Top level rules files.',
-      'transitive_srcs': 'Transitive closure of rules files required for ' +
-          'interpretation of the srcs',
+    "Information on contained Skylark rules.",
+    fields = {
+        "srcs": "Top level rules files.",
+        "transitive_srcs": "Transitive closure of rules files required for " +
+                           "interpretation of the srcs",
     },
 )
 
 def _skylark_library_impl(ctx):
-  all_files = depset(ctx.files.srcs, order="postorder")
-  for dep in ctx.attr.deps:
-    all_files += dep.files
-  return [
-      # All dependent files should be listed in both `files` and in `runfiles`;
-      # this ensures that a `skylark_library` can be referenced as `data` from
-      # a separate program, or from `tools` of a genrule().
-      DefaultInfo(
-          files=all_files,
-          runfiles=ctx.runfiles(files=list(all_files)),
-      ),
+    all_files = depset(ctx.files.srcs, order = "postorder")
+    for dep in ctx.attr.deps:
+        all_files += dep.files
+    return [
+        # All dependent files should be listed in both `files` and in `runfiles`;
+        # this ensures that a `skylark_library` can be referenced as `data` from
+        # a separate program, or from `tools` of a genrule().
+        DefaultInfo(
+            files = all_files,
+            runfiles = ctx.runfiles(files = all_files.to_list()),
+        ),
 
-      # We also define our own provider struct, for aggregation and testing.
-      SkylarkLibraryInfo(
-          srcs=ctx.files.srcs,
-          transitive_srcs=all_files,
-      ),
-  ]
+        # We also define our own provider struct, for aggregation and testing.
+        SkylarkLibraryInfo(
+            srcs = ctx.files.srcs,
+            transitive_srcs = all_files,
+        ),
+    ]
 
 skylark_library = rule(
-    implementation=_skylark_library_impl,
-    attrs={
+    implementation = _skylark_library_impl,
+    attrs = {
         "srcs": attr.label_list(
-            allow_files=[".bzl"],
+            allow_files = [".bzl"],
         ),
         "deps": attr.label_list(
-            allow_files=[".bzl"],
-            providers=[
+            allow_files = [".bzl"],
+            providers = [
                 [SkylarkLibraryInfo],
             ],
-        )
-    }
+        ),
+    },
 )
 """Creates a logical collection of Skylark .bzl files.
 
@@ -86,7 +86,7 @@ Example:
   `checkstyle/BUILD`:
 
   ```python
-  load("@bazel_skylib//:skylark_library.bzl", "skylark_library")
+  load("@buck_bazel_skylib//:skylark_library.bzl", "skylark_library")
 
   skylark_library(
       name = "checkstyle-rules",
@@ -97,7 +97,7 @@ Example:
   `lua/BUILD`:
 
   ```python
-  load("@bazel_skylib//:skylark_library.bzl", "skylark_library")
+  load("@buck_bazel_skylib//:skylark_library.bzl", "skylark_library")
 
   skylark_library(
       name = "lua-rules",

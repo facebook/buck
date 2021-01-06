@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.log;
@@ -61,6 +61,9 @@ public class GlobalStateManager {
   private final ConcurrentMap<String, java.io.Writer> commandIdToLogFileHandlerWriter;
   private final ConcurrentMap<String, Boolean> commandIdToIsSuperconsoleEnabled;
   private final ConcurrentMap<String, Boolean> commandIdToIsDaemon;
+  private final ConcurrentMap<String, Boolean> commandIdToIsRemoteExecution;
+
+  private String repository;
 
   public static GlobalStateManager singleton() {
     return SINGLETON;
@@ -73,6 +76,8 @@ public class GlobalStateManager {
     this.commandIdToLogFileHandlerWriter = new ConcurrentHashMap<>();
     this.commandIdToIsSuperconsoleEnabled = new ConcurrentHashMap<>();
     this.commandIdToIsDaemon = new ConcurrentHashMap<>();
+    this.commandIdToIsRemoteExecution = new ConcurrentHashMap<>();
+    this.repository = "";
 
     ReferenceCountedWriter defaultWriter =
         createReferenceCountedWriter(
@@ -83,7 +88,10 @@ public class GlobalStateManager {
                     "launch",
                     ImmutableList.of(),
                     ImmutableList.of(),
-                    LogConfigSetup.DEFAULT_SETUP.getLogDir())
+                    LogConfigSetup.DEFAULT_SETUP.getLogDir(),
+                    false,
+                    "",
+                    "")
                 .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
   }
@@ -95,6 +103,8 @@ public class GlobalStateManager {
       Verbosity consoleHandlerVerbosity) {
     long threadId = Thread.currentThread().getId();
     String commandId = info.getCommandId();
+
+    repository = info.getRepository();
 
     ReferenceCountedWriter defaultWriter = createReferenceCountedWriter(info.getLogFilePath());
     ReferenceCountedWriter newWriter = defaultWriter.newReference();
@@ -115,6 +125,7 @@ public class GlobalStateManager {
     }
     commandIdToIsSuperconsoleEnabled.put(commandId, info.getSuperConsoleEnabled());
     commandIdToIsDaemon.put(commandId, info.getIsDaemon());
+    commandIdToIsRemoteExecution.put(commandId, info.getIsRemoteExecution());
 
     return new LoggerIsMappedToThreadScope() {
       @Override
@@ -135,6 +146,7 @@ public class GlobalStateManager {
         commandIdToConsoleHandlerLevel.remove(commandId);
         commandIdToIsSuperconsoleEnabled.remove(commandId);
         commandIdToIsDaemon.remove(commandId);
+        commandIdToIsRemoteExecution.remove(commandId);
 
         // Tear down the shared state.
         // NOTE: Avoid iterator in case there's a concurrent change to this map.
@@ -252,8 +264,16 @@ public class GlobalStateManager {
     return commandIdToIsDaemon::get;
   }
 
+  public CommandIdToIsRemoteExecutionMapper getCommandIdToIsRemoteExecutionMapper() {
+    return commandIdToIsRemoteExecution::get;
+  }
+
   public CommandIdToIsSuperConsoleEnabledMapper getCommandIdToIsSuperConsoleEnabledMapper() {
     return commandIdToIsSuperconsoleEnabled::get;
+  }
+
+  public String getRepository() {
+    return repository;
   }
 
   /**

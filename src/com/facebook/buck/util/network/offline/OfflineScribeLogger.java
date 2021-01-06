@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.network.offline;
@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.ScribeLogger;
+import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -48,6 +49,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -103,12 +105,12 @@ public class OfflineScribeLogger extends ScribeLogger {
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       BuildId buildId) {
-    Preconditions.checkNotNull(scribeLogger);
-    Preconditions.checkNotNull(blacklistCategories);
+    Objects.requireNonNull(scribeLogger);
+    Objects.requireNonNull(blacklistCategories);
     Preconditions.checkArgument(maxScribeOfflineLogsKB > 0);
-    Preconditions.checkNotNull(projectFilesystem);
-    Preconditions.checkNotNull(buckEventBus);
-    Preconditions.checkNotNull(buildId);
+    Objects.requireNonNull(projectFilesystem);
+    Objects.requireNonNull(buckEventBus);
+    Objects.requireNonNull(buildId);
 
     this.scribeLogger = scribeLogger;
     this.blacklistCategories = blacklistCategories;
@@ -138,13 +140,14 @@ public class OfflineScribeLogger extends ScribeLogger {
   }
 
   @Override
-  public ListenableFuture<Void> log(String category, Iterable<String> lines) {
-    ListenableFuture<Void> upload = scribeLogger.log(category, lines);
+  public ListenableFuture<Unit> log(
+      String category, Iterable<String> lines, Optional<Integer> bucket) {
+    ListenableFuture<Unit> upload = scribeLogger.log(category, lines, bucket);
     Futures.addCallback(
         upload,
-        new FutureCallback<Void>() {
+        new FutureCallback<Unit>() {
           @Override
-          public void onSuccess(Void result) {
+          public void onSuccess(Unit result) {
             if (startedSendingStored.compareAndSet(false, true) && !startedStoring) {
               sendStoredLogs();
             }
@@ -163,8 +166,7 @@ public class OfflineScribeLogger extends ScribeLogger {
               try {
                 scribeData =
                     ObjectMappers.WRITER
-                        .writeValueAsString(
-                            ScribeData.builder().setCategory(category).setLines(lines).build())
+                        .writeValueAsString(ImmutableScribeData.of(category, lines, bucket))
                         .getBytes(Charsets.UTF_8);
               } catch (Exception e) {
                 if (categoriesReportedAnError.add(category)) {
@@ -321,7 +323,7 @@ public class OfflineScribeLogger extends ScribeLogger {
 
         // Read and submit.
         int scribeLinesInFile = 0;
-        List<ListenableFuture<Void>> logFutures = new LinkedList<>();
+        List<ListenableFuture<Unit>> logFutures = new LinkedList<>();
         Map<String, CategoryData> logReadData = new HashMap<>();
         try {
           boolean interrupted = false;

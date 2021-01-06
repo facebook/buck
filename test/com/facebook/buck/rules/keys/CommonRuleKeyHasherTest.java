@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -21,6 +21,9 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -30,12 +33,11 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -58,10 +60,9 @@ public final class CommonRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
   private static final BuildTarget TARGET_2 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+      BuildTargetFactory.newInstance("//example/base:one#flavor");
 
   private CommonRuleKeyHasherTest() {}
 
@@ -115,32 +116,31 @@ public final class CommonRuleKeyHasherTest {
                     "Path<42/42, 42>", h -> h.putPath(Paths.get("42/42"), HashCode.fromInt(42))),
                 pair.apply(
                     "ArchiveMember<:, 0>",
-                    h -> h.putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(0))),
+                    h -> h.putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(0))),
                 pair.apply(
                     "ArchiveMember<:, 0>",
-                    h -> h.putArchiveMemberPath(newArchiveMember("", ""), HashCode.fromInt(42))),
+                    h ->
+                        h.putArchiveMemberPath(Paths.get(""), Paths.get(""), HashCode.fromInt(42))),
                 pair.apply(
                     "ArchiveMember<42:42, 0>",
-                    h -> h.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(0))),
+                    h ->
+                        h.putArchiveMemberPath(
+                            Paths.get("42"), Paths.get("42"), HashCode.fromInt(0))),
                 pair.apply(
                     "ArchiveMember<42:42, 42>",
                     h ->
-                        h.putArchiveMemberPath(newArchiveMember("42", "42"), HashCode.fromInt(42))),
+                        h.putArchiveMemberPath(
+                            Paths.get("42"), Paths.get("42"), HashCode.fromInt(42))),
                 pair.apply(
                     "ArchiveMember<42/42:42/42, 42>",
                     h ->
                         h.putArchiveMemberPath(
-                            newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))),
-                pair.apply("NonHashingPath<>", h -> h.putNonHashingPath("")),
-                pair.apply("NonHashingPath<42>", h -> h.putNonHashingPath("42")),
+                            Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))),
+                pair.apply("NonHashingPath<>", h -> h.putNonHashingPath(Paths.get(""))),
+                pair.apply("NonHashingPath<42>", h -> h.putNonHashingPath(Paths.get("42"))),
                 pair.apply(
                     "NonHashingPath<4>, NonHashingPath<2>",
-                    h -> h.putNonHashingPath("4").putNonHashingPath("2")),
-                pair.apply("SourceRoot<>", h -> h.putSourceRoot(new SourceRoot(""))),
-                pair.apply("SourceRoot<42>", h -> h.putSourceRoot(new SourceRoot("42"))),
-                pair.apply(
-                    "SourceRoot<4>, SourceRoot<2>",
-                    h -> h.putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2"))),
+                    h -> h.putNonHashingPath(Paths.get("4")).putNonHashingPath(Paths.get("2"))),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_1), h -> h.putRuleKey(RULE_KEY_1)),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_2), h -> h.putRuleKey(RULE_KEY_2)),
                 pair.apply("RuleType<>", h -> h.putRuleType(RuleType.of("", RuleType.Kind.BUILD))),
@@ -165,7 +165,6 @@ public final class CommonRuleKeyHasherTest {
                 pair.apply("Container<MAP, 42>", h -> h.putContainer(Container.MAP, 42)),
                 pair.apply("Wrapper<SUPPLIER>", h -> h.putWrapper(Wrapper.SUPPLIER)),
                 pair.apply("Wrapper<OPTIONAL>", h -> h.putWrapper(Wrapper.OPTIONAL)),
-                pair.apply("Wrapper<OPTIONAL_INT>", h -> h.putWrapper(Wrapper.OPTIONAL_INT)),
                 pair.apply("Wrapper<EITHER_LEFT>", h -> h.putWrapper(Wrapper.EITHER_LEFT)),
                 pair.apply("Wrapper<EITHER_RIGHT>", h -> h.putWrapper(Wrapper.EITHER_RIGHT)),
                 pair.apply("Wrapper<BUILD_RULE>", h -> h.putWrapper(Wrapper.BUILD_RULE)),
@@ -229,8 +228,14 @@ public final class CommonRuleKeyHasherTest {
 
     @BeforeClass
     public static void setupFileSystems() {
-      filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
-      filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+      filesystem1 =
+          new FakeProjectFilesystem(
+              CanonicalCellName.rootCell(),
+              AbsPath.of(Paths.get("first", "root").toAbsolutePath()));
+      filesystem2 =
+          new FakeProjectFilesystem(
+              CanonicalCellName.rootCell(),
+              AbsPath.of(Paths.get("other", "root").toAbsolutePath()));
     }
 
     @Test
@@ -316,24 +321,18 @@ public final class CommonRuleKeyHasherTest {
     public void testConsistencyForArchiveMemberPath() {
       assertEquals(
           newHasher()
-              .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+              .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
               .hash(),
           newHasher()
-              .putArchiveMemberPath(newArchiveMember("42/42", "42/42"), HashCode.fromInt(42))
+              .putArchiveMemberPath(Paths.get("42/42"), Paths.get("42/42"), HashCode.fromInt(42))
               .hash());
     }
 
     @Test
     public void testConsistencyForNonHashingPath() {
       assertEquals(
-          newHasher().putNonHashingPath("42").hash(), newHasher().putNonHashingPath("42").hash());
-    }
-
-    @Test
-    public void testConsistencyForSourceRoot() {
-      assertEquals(
-          newHasher().putSourceRoot(new SourceRoot("42")).hash(),
-          newHasher().putSourceRoot(new SourceRoot("42")).hash());
+          newHasher().putNonHashingPath(Paths.get("42")).hash(),
+          newHasher().putNonHashingPath(Paths.get("42")).hash());
     }
 
     @Test

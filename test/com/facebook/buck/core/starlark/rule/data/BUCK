@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "data",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//src/com/facebook/buck/core/starlark/rule/data:data",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/starlark/compatible:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

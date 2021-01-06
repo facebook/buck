@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file;
@@ -19,14 +19,12 @@ package com.facebook.buck.file;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -35,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,13 +45,13 @@ public class HttpArchiveDescriptionTest {
   public @Rule ExpectedException thrown = ExpectedException.none();
 
   private HttpArchiveDescription description;
-  private SingleThreadedActionGraphBuilder graphBuilder;
+  private ActionGraphBuilder graphBuilder;
   private ProjectFilesystem filesystem;
   private TargetGraph targetGraph;
 
   @Before
   public void setUp() {
-    description = new HttpArchiveDescription((eventBus, uri, output) -> false);
+    description = new HttpArchiveDescription();
     graphBuilder = new TestActionGraphBuilder();
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryDir.getRoot());
     targetGraph = TargetGraph.EMPTY;
@@ -73,9 +70,7 @@ public class HttpArchiveDescriptionTest {
 
   private Path getOutputPath(HttpArchive buildRule) {
     graphBuilder.computeIfAbsent(buildRule.getBuildTarget(), t -> buildRule);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-    return pathResolver.getAbsolutePath(buildRule.getSourcePathToOutput());
+    return graphBuilder.getSourcePathResolver().getAbsolutePath(buildRule.getSourcePathToOutput());
   }
 
   @Test
@@ -91,7 +86,9 @@ public class HttpArchiveDescriptionTest {
 
     Assert.assertEquals(
         filesystem.resolve(
-            filesystem.getBuckPaths().getGenDir().resolve(Paths.get("foo", "bar", "baz", "baz"))),
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//foo/bar:baz"), "%s")
+                .resolve("baz")),
         getOutputPath(buildRule));
   }
 
@@ -109,10 +106,9 @@ public class HttpArchiveDescriptionTest {
 
     Assert.assertEquals(
         filesystem.resolve(
-            filesystem
-                .getBuckPaths()
-                .getGenDir()
-                .resolve(Paths.get("foo", "bar", "baz", "my_cool_exe"))),
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//foo/bar:baz"), "%s")
+                .resolve("my_cool_exe")),
         getOutputPath(buildRule));
   }
 

@@ -5,7 +5,7 @@
       <configuration>
         <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/modules/dep1/gen" />
         <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/modules/dep1/gen" />
-        <option name="RES_FOLDERS_RELATIVE_PATH" value="file://$MODULE_DIR$/../../buck-out/gen/modules/dep1/dep1#resources-symlink-tree/res" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="/../../buck-out/gen/modules/dep1/dep1#resources-symlink-tree/res" />
         <option name="LIBRARY_PROJECT" value="true" />
         <option name="PROJECT_TYPE" value="1" />
         <option name="UPDATE_PROPERTY_FILES" value="false" />
@@ -29,7 +29,7 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 25 Platform" jdkType="AndroidSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="library_modules_dep1_extra_classpath" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//modules/dep1:dep2#dummy_r_dot_java" scope="COMPILE" level="project" />
     <orderEntry type="module" module-name="buck_out_extra_intellij_output_modules_dep1" scope="COMPILE" />
   </component>
 </module>

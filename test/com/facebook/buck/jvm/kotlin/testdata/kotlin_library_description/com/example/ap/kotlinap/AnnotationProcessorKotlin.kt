@@ -1,9 +1,7 @@
 package com.example.ap.kotlinap
 
+import com.google.auto.service.AutoService
 import java.io.File
-import java.io.OutputStreamWriter
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import javax.annotation.processing.*
 import javax.lang.model.SourceVersion
 import javax.lang.model.element.TypeElement
@@ -12,6 +10,7 @@ import com.example.ap.kotlinannotation.KotlinAnnotation
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 
+@AutoService(Processor::class)
 class AnnotationProcessorKotlin : AbstractProcessor() {
 
     override fun getSupportedAnnotationTypes(): MutableSet<String> {

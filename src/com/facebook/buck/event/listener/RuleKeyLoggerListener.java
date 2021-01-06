@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -23,17 +23,18 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,11 +42,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
-import org.immutables.value.Value;
 
 public class RuleKeyLoggerListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyLoggerListener.class);
@@ -56,7 +57,9 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   private final ExecutorService outputExecutor;
   private final int minLinesForAutoFlush;
   private final ProjectFilesystem projectFilesystem;
-  private final BackgroundTaskManager bgTaskManager;
+  private final TaskManagerCommandScope managerScope;
+  private final Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader;
+
   private final Object lock;
 
   @GuardedBy("lock")
@@ -66,15 +69,24 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      BackgroundTaskManager bgTaskManager) {
-    this(projectFilesystem, info, outputExecutor, bgTaskManager, DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
+      TaskManagerCommandScope managerScope,
+      Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader) {
+    this(
+        projectFilesystem,
+        info,
+        outputExecutor,
+        managerScope,
+        ruleKeyLogFileUploader,
+        DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
   }
 
+  @VisibleForTesting
   public RuleKeyLoggerListener(
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      BackgroundTaskManager bgTaskManager,
+      TaskManagerCommandScope managerScope,
+      Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader,
       int minLinesForAutoFlush) {
     this.projectFilesystem = projectFilesystem;
     this.minLinesForAutoFlush = minLinesForAutoFlush;
@@ -82,7 +94,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     this.lock = new Object();
     this.outputExecutor = outputExecutor;
     this.logLines = new ArrayList<>();
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
+    this.ruleKeyLogFileUploader = ruleKeyLogFileUploader;
   }
 
   @Subscribe
@@ -98,9 +111,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     }
 
     List<String> newLogLines =
-        event
-            .getRuleKeys()
-            .stream()
+        event.getRuleKeys().stream()
             .map(key -> String.format("http\t%s\t%s", key.toString(), cacheResultType.toString()))
             .collect(Collectors.toList());
     synchronized (lock) {
@@ -175,13 +186,17 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   @Override
   public void close() {
     submitFlushLogLines();
+
+    RuleKeyLoggerListenerCloseArgs args =
+        ImmutableRuleKeyLoggerListenerCloseArgs.of(
+            outputExecutor,
+            ruleKeyLogFileUploader,
+            info.getLogDirectoryPath().resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME));
+
     BackgroundTask<RuleKeyLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.<RuleKeyLoggerListenerCloseArgs>builder()
-            .setAction(new RuleKeyLoggerListenerCloseAction())
-            .setActionArgs(RuleKeyLoggerListenerCloseArgs.of(outputExecutor))
-            .setName("RuleKeyLoggerListener_close")
-            .build();
-    bgTaskManager.schedule(task);
+        BackgroundTask.of(
+            "RuleKeyLoggerListener_close", new RuleKeyLoggerListenerCloseAction(), args);
+    managerScope.schedule(task);
   }
 
   /**
@@ -195,6 +210,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       args.getOutputExecutor().shutdown();
       try {
         args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
+        args.getRuleKeyLogFileUploader()
+            .ifPresent(uploader -> uploader.uploadRuleKeyLogFile(args.getRuleKeyLogFilePath()));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
@@ -202,10 +219,12 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   }
 
   /** Arguments to {@link RuleKeyLoggerListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRuleKeyLoggerListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class RuleKeyLoggerListenerCloseArgs {
     public abstract ExecutorService getOutputExecutor();
+
+    public abstract Optional<RuleKeyLogFileUploader> getRuleKeyLogFileUploader();
+
+    public abstract Path getRuleKeyLogFilePath();
   }
 }

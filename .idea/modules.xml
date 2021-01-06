@@ -2,12 +2,13 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/third-party/java/aosp/aosp.iml" filepath="$PROJECT_DIR$/third-party/java/aosp/aosp.iml" />
       <module fileurl="file://$PROJECT_DIR$/buck.iml" filepath="$PROJECT_DIR$/buck.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/consistency_checker/consistency_checker.iml" filepath="$PROJECT_DIR$/tools/consistency_checker/consistency_checker.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/documentation_generator/documentation_generator.iml" filepath="$PROJECT_DIR$/tools/documentation_generator/documentation_generator.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/build/modules/modules.iml" filepath="$PROJECT_DIR$/tools/build/modules/modules.iml" />
+      <module fileurl="file://$PROJECT_DIR$/src/com/facebook/buck/multitenant/multitenant.iml" filepath="$PROJECT_DIR$/src/com/facebook/buck/multitenant/multitenant.iml" />
       <module fileurl="file://$PROJECT_DIR$/programs/programs.iml" filepath="$PROJECT_DIR$/programs/programs.iml" />
+      <module fileurl="file://$PROJECT_DIR$/skunkworks/protobuck/protobuck.iml" filepath="$PROJECT_DIR$/skunkworks/protobuck/protobuck.iml" />
       <module fileurl="file://$PROJECT_DIR$/python-dsl/python-dsl.iml" filepath="$PROJECT_DIR$/python-dsl/python-dsl.iml" />
       <module fileurl="file://$PROJECT_DIR$/scripts/scripts.iml" filepath="$PROJECT_DIR$/scripts/scripts.iml" />
     </modules>

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -27,13 +27,13 @@ import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -73,8 +73,7 @@ public class IjSourceRootSimplifierTest {
       @Override
       public Path findJavaPackageFolder(Path pathRelativeToProjectRoot) {
         // The Path given here is a path to a file, not a folder.
-        pathRelativeToProjectRoot =
-            Preconditions.checkNotNull(pathRelativeToProjectRoot.getParent());
+        pathRelativeToProjectRoot = Objects.requireNonNull(pathRelativeToProjectRoot.getParent());
         if (packageMap.containsKey(pathRelativeToProjectRoot)) {
           return packageMap.get(pathRelativeToProjectRoot);
         }
@@ -89,7 +88,12 @@ public class IjSourceRootSimplifierTest {
 
       @Override
       public String findJavaPackage(BuildTarget buildTarget) {
-        return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+        return findJavaPackage(
+            buildTarget
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPathDefaultFileSystem()
+                .resolve("removed"));
       }
     };
   }

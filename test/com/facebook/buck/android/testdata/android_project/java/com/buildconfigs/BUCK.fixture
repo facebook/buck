@@ -36,6 +36,6 @@ genrule(
     ]),
     cmd = " && ".join([
         "$(exe //third-party/smali:baksmali) d -o %TMP% $(location :app)",
-        "for /R %TMP% %i in (*.smali) do echo %i >> %OUT%",
+        "for /R %TMP% %%i in (*.smali) do echo %%i >> %OUT%",
     ]),
 )

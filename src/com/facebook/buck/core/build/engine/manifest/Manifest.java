@@ -1,28 +1,29 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.manifest;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -144,32 +145,43 @@ public class Manifest {
   /** Hash the files pointed to by the source paths. */
   @VisibleForTesting
   static HashCode hashSourcePathGroup(
-      FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
+      FileHashLoader fileHashLoader,
+      SourcePathResolverAdapter resolver,
+      ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {
-      return hashSourcePath(paths.get(0), fileHashCache, resolver);
+      return hashSourcePath(paths.get(0), fileHashLoader, resolver);
     }
     Hasher hasher = Hashing.md5().newHasher();
     for (SourcePath path : paths) {
-      hasher.putBytes(hashSourcePath(path, fileHashCache, resolver).asBytes());
+      hasher.putBytes(hashSourcePath(path, fileHashLoader, resolver).asBytes());
     }
     return hasher.hash();
   }
 
   private static HashCode hashSourcePath(
-      SourcePath path, FileHashCache fileHashCache, SourcePathResolver resolver)
+      SourcePath path, FileHashLoader fileHashLoader, SourcePathResolverAdapter resolver)
       throws IOException {
     if (path instanceof ArchiveMemberSourcePath) {
-      return fileHashCache.get(
-          resolver.getFilesystem(path), resolver.getRelativeArchiveMemberPath(path));
+      ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) path;
+      return fileHashLoader.getForArchiveMember(
+          resolver.getFilesystem(path),
+          resolver.getRelativePath(archiveMemberSourcePath.getArchiveSourcePath()),
+          archiveMemberSourcePath.getMemberPath());
     } else {
-      return fileHashCache.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
+      return fileHashLoader.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
     }
   }
 
+  private static ArchiveMemberPath getArchiveMemberPath(
+      SourcePathResolverAdapter resolver, ArchiveMemberSourcePath archivePath) {
+    return ArchiveMemberPath.of(
+        resolver.getRelativePath(archivePath.getArchiveSourcePath()), archivePath.getMemberPath());
+  }
+
   private boolean hashesMatch(
-      FileHashCache fileHashCache,
-      SourcePathResolver resolver,
+      FileHashLoader fileHashLoader,
+      SourcePathResolverAdapter resolver,
       ImmutableListMultimap<String, SourcePath> universe,
       int[] hashIndices)
       throws IOException {
@@ -182,7 +194,7 @@ public class Manifest {
       }
       HashCode onDiskHeaderHash;
       try {
-        onDiskHeaderHash = hashSourcePathGroup(fileHashCache, resolver, candidates);
+        onDiskHeaderHash = hashSourcePathGroup(fileHashLoader, resolver, candidates);
       } catch (NoSuchFileException e) {
         return false;
       }
@@ -196,10 +208,12 @@ public class Manifest {
 
   /**
    * @return the {@link RuleKey} of the entry that matches the on disk hashes provided by {@code
-   *     fileHashCache}.
+   *     fileHashLoader}.
    */
   public Optional<RuleKey> lookup(
-      FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableSet<SourcePath> universe)
+      FileHashLoader fileHashLoader,
+      SourcePathResolverAdapter resolver,
+      ImmutableSet<SourcePath> universe)
       throws IOException {
     // Create a set of all paths we care about.
     ImmutableSet.Builder<String> interestingPathsBuilder = new ImmutableSet.Builder<>();
@@ -212,55 +226,65 @@ public class Manifest {
 
     // Create a multimap from paths we care about to SourcePaths that maps to them.
     ImmutableListMultimap<String, SourcePath> mappedUniverse =
-        index(universe, sourcePathToManifestHeaderFunction(resolver), interestingPaths::contains);
+        index(
+            universe,
+            path -> sourcePathToManifestHeader(path, resolver),
+            interestingPaths::contains);
 
     // Find a matching entry.
     for (Pair<RuleKey, int[]> entry : entries) {
-      if (hashesMatch(fileHashCache, resolver, mappedUniverse, entry.getSecond())) {
+      if (hashesMatch(fileHashLoader, resolver, mappedUniverse, entry.getSecond())) {
         return Optional.of(entry.getFirst());
       }
     }
     return Optional.empty();
   }
 
-  private static Function<SourcePath, String> sourcePathToManifestHeaderFunction(
-      SourcePathResolver resolver) {
-    return input -> sourcePathToManifestHeader(input, resolver);
+  private static String sourcePathToManifestHeader(
+      SourcePath input, SourcePathResolverAdapter resolver) {
+    return sourcePathToManifestPathKey(input, resolver).toString();
   }
 
-  private static String sourcePathToManifestHeader(SourcePath input, SourcePathResolver resolver) {
+  /**
+   * Converting Path to String is expensive when using BuckUnixPath so if we just need a key
+   * representation of a manifest path, use the corresponding Path/ArchiveMemberPath.
+   */
+  private static Object sourcePathToManifestPathKey(
+      SourcePath input, SourcePathResolverAdapter resolver) {
     if (input instanceof ArchiveMemberSourcePath) {
-      return resolver.getRelativeArchiveMemberPath(input).toString();
+      return getArchiveMemberPath(resolver, (ArchiveMemberSourcePath) input);
     } else {
-      return resolver.getRelativePath(input).toString();
+      return resolver.getRelativePath(input);
     }
   }
 
   /** Adds a new output file to the manifest. */
   public void addEntry(
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       RuleKey key,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       ImmutableSet<SourcePath> universe,
       ImmutableSet<SourcePath> inputs)
       throws IOException {
 
     // Construct the input sub-paths that we care about.
-    ImmutableSet<String> inputPaths =
-        RichStream.from(inputs).map(sourcePathToManifestHeaderFunction(resolver)).toImmutableSet();
+    ImmutableSet<Object> inputPaths =
+        RichStream.from(inputs)
+            .map(path -> sourcePathToManifestPathKey(path, resolver))
+            .toImmutableSet();
 
     // Create a multimap from paths we care about to SourcePaths that maps to them.
-    ImmutableListMultimap<String, SourcePath> sortedUniverse =
-        index(universe, sourcePathToManifestHeaderFunction(resolver), inputPaths::contains);
+    ImmutableListMultimap<Object, SourcePath> sortedUniverse =
+        index(universe, path -> sourcePathToManifestPathKey(path, resolver), inputPaths::contains);
 
     // Record the Entry.
     int index = 0;
     int[] hashIndices = new int[inputs.size()];
-    for (String relativePath : inputPaths) {
+    for (Object relativePath : inputPaths) {
       ImmutableList<SourcePath> paths = sortedUniverse.get(relativePath);
       Preconditions.checkState(!paths.isEmpty());
       hashIndices[index++] =
-          addHash(relativePath, hashSourcePathGroup(fileHashCache, resolver, paths));
+          addHash(relativePath.toString(), hashSourcePathGroup(fileHashLoader, resolver, paths));
     }
     entries.add(new Pair<>(key, hashIndices));
   }
@@ -318,10 +342,6 @@ public class Manifest {
   }
 
   public ManifestStats getStats() {
-    return ManifestStats.builder()
-        .setNumDepFiles(entries.size())
-        .setNumInputs(inputs.size())
-        .setNumHashes(hashes.size())
-        .build();
+    return ImmutableManifestStats.of(entries.size(), hashes.size(), inputs.size());
   }
 }

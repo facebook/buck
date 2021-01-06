@@ -1,0 +1,100 @@
+android_library(
+    name = "test_code",
+    srcs = ["AppTest.java"],
+    provided_deps = [
+        "//android/java/com/facebook/buck/demo:lib",
+    ],
+    deps = [
+        "//android/libs:junit",
+    ],
+)
+
+android_library(
+    name = "with_exo",
+    srcs = ["WithExo.java"],
+    deps = [
+        "//android/instrumentation_tests/com/facebook/buck/demo:build_config",
+        "//android/libs:buck-android-support",
+    ],
+)
+
+android_build_config(
+    name = "build_config",
+    package = "com.facebook.buck.demo",
+    values = [],
+)
+
+android_manifest(
+    name = "manifest",
+    skeleton = "AndroidManifest.xml",
+)
+
+android_binary(
+    name = "just_app-exo",
+    exopackage_modes = ["secondary_dex"],
+    keystore = "//android/keystores:debug",
+    manifest = "//android/instrumentation_tests/com/facebook/buck/demo:manifest",
+    primary_dex_patterns = [
+        "^com/facebook/buck/demo/WithExo^",
+        "^com/facebook/buck/demo/BuildConfig^",
+        "^com/facebook/buck/android/support/exopackage/",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//android/instrumentation_tests/com/facebook/buck/demo:with_exo",
+        "//android/java/com/facebook/buck/demo:lib",
+    ],
+)
+
+android_binary(
+    name = "test_and_app_together-apk",
+    keystore = "//android/keystores:debug",
+    manifest = "//android/instrumentation_tests/com/facebook/buck/demo:manifest",
+    deps = [
+        "//android/instrumentation_tests/com/facebook/buck/demo:test_code",
+        "//android/instrumentation_tests/com/facebook/buck/demo:with_exo",
+        "//android/java/com/facebook/buck/demo:lib",
+    ],
+)
+
+android_instrumentation_test(
+    name = "test_and_app_together",
+    apk = "//android/instrumentation_tests/com/facebook/buck/demo:test_and_app_together-apk",
+)
+
+android_binary(
+    name = "test_and_app_together-apk-exo",
+    exopackage_modes = ["secondary_dex"],
+    keystore = "//android/keystores:debug",
+    manifest = "//android/instrumentation_tests/com/facebook/buck/demo:manifest",
+    primary_dex_patterns = [
+        "^com/facebook/buck/demo/WithExo^",
+        "^com/facebook/buck/demo/BuildConfig^",
+        "^com/facebook/buck/android/support/exopackage/",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//android/instrumentation_tests/com/facebook/buck/demo:test_code",
+        "//android/instrumentation_tests/com/facebook/buck/demo:with_exo",
+        "//android/java/com/facebook/buck/demo:lib",
+    ],
+)
+
+android_instrumentation_test(
+    name = "test_and_app_together-exo",
+    apk = "//android/instrumentation_tests/com/facebook/buck/demo:test_and_app_together-apk-exo",
+)
+
+android_instrumentation_apk(
+    name = "just_test-apk",
+    apk = "//android/instrumentation_tests/com/facebook/buck/demo:just_app-exo",
+    manifest = "//android/instrumentation_tests/com/facebook/buck/demo:manifest",
+    deps = [
+        "//android/instrumentation_tests/com/facebook/buck/demo:test_code",
+    ],
+)
+
+android_instrumentation_test(
+    name = "test_and_app_split-exo",
+    apk = "//android/instrumentation_tests/com/facebook/buck/demo:just_test-apk",
+)

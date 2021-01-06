@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "spec",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/parser/spec:spec",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+    ],
+)

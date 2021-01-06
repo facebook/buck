@@ -43,6 +43,38 @@ android_binary(
     ],
 )
 
+android_binary(
+    name = "instrumentation_test-apk",
+    application_module_configs = {
+        "mod": [
+            ":module-lib",
+        ],
+    },
+    exopackage_modes = [
+        "secondary_dex",
+    ],
+    keystore = ":debug_keystore",
+    manifest = "TestAndroidManifest.xml",
+    primary_dex_patterns = [
+        "^exotest/AppShell^",
+        "^exotest/BuildConfig^",
+        "^exotest/ThisIsATest^",
+        "^com/facebook/buck/android/support/exopackage/",
+    ],
+    use_split_dex = True,
+    deps = [
+        ":app-lib",
+        ":main-lib",
+        ":module-lib",
+        ":test-lib",
+    ],
+)
+
+android_instrumentation_test(
+    name = "instrumentation_test",
+    apk = ":instrumentation_test-apk",
+)
+
 android_library(
     name = "app-lib",
     srcs = ["AppShell.java"],
@@ -50,6 +82,14 @@ android_library(
         ":buck-android-support",
         ":build_config",
         ":res-real-name",
+    ],
+)
+
+android_library(
+    name = "test-lib",
+    srcs = ["ThisIsATest.java"],
+    deps = [
+        ":junit",
     ],
 )
 
@@ -138,6 +178,25 @@ android_resource(
 prebuilt_jar(
     name = "buck-android-support",
     binary_jar = "buck-android-support.jar",
+)
+
+prebuilt_jar(
+    name = "junit",
+    binary_jar = "test_libs/junit-4.12.jar",
+    deps = [
+        ":hamcrest",
+        ":java-hamcrest",
+    ],
+)
+
+prebuilt_jar(
+    name = "hamcrest",
+    binary_jar = "test_libs/hamcrest-junit-2.0.0.0.jar",
+)
+
+prebuilt_jar(
+    name = "java-hamcrest",
+    binary_jar = "test_libs/java-hamcrest-2.0.0.0.jar",
 )
 
 keystore(

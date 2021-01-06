@@ -2,7 +2,7 @@ java_binary(
     name = "grammar-kit",
     main_class = "org.intellij.grammar.Main",
     visibility = [
-        "PUBLIC",
+        "//tools/psi-grammar/...",
     ],
     deps = [
         ":grammar-kit_prebuilt",
@@ -12,9 +12,9 @@ java_binary(
 
 java_binary(
     name = "jflex",
-    main_class = "JFlex.Main",
+    main_class = "jflex.Main",
     visibility = [
-        "PUBLIC",
+        "//tools/psi-grammar/...",
     ],
     deps = [
         ":jflex_prebuilt",
@@ -23,15 +23,28 @@ java_binary(
 
 prebuilt_jar(
     name = "grammar-kit_prebuilt",
-    binary_jar = "grammar-kit.jar",
+    binary_jar = "grammar-kit-2019.1.jar",
 )
 
 prebuilt_jar(
     name = "light-psi_prebuilt",
-    binary_jar = "light-psi-all.jar",
+    binary_jar = "light-psi-all-2018.3-SNAPSHOT.jar",
 )
+
+# JFlex artifacts downloaded by the IntelliJ GrammarKit plugin (v2017.1.7),
+# using the "Run JFlex Generator..." action (enabled in '*.flex' files).
 
 prebuilt_jar(
     name = "jflex_prebuilt",
-    binary_jar = "JFlex.jar",
+    binary_jar = "jflex-1.7.0-2.jar",
+)
+
+filegroup(
+    name = "idea-flex.skeleton",
+    srcs = [
+        "idea-flex.skeleton",
+    ],
+    visibility = [
+        "//tools/psi-grammar/...",
+    ],
 )

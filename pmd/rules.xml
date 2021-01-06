@@ -11,8 +11,14 @@
   for ruleset definitions. Note that Buck is currently built with PMD 5.0.3.
   -->
 
-  <rule ref="rulesets/java/basic.xml" />
-  <rule ref="rulesets/java/empty.xml" />
+  <rule ref="rulesets/java/basic.xml">
+    <exclude name="CollapsibleIfStatements" />
+  </rule>
+
+  <rule ref="rulesets/java/empty.xml">
+    <exclude name="EmptyCatchBlock" />
+    <exclude name="EmptyWhileStmt" />
+  </rule>
 
   <rule ref="rulesets/java/imports.xml">
     <!--
@@ -56,13 +62,14 @@
     <exclude name="RedundantFieldInitializer" />
     <exclude name="UseStringBufferForStringAppends" />
     <exclude name="SimplifyStartsWith" />
+    <exclude name="PrematureDeclaration" />
   </rule>
 
-  <rule name="BuckStyleImmutableMustBePackagePrivate"
-        message="@BuckStyleImmutable value types must be package-private"
+  <rule name="RuleArgMustBePackagePrivate"
+        message="@RuleArg value types must be package-private"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
         language="java">
-    <description>Value types decorated with @BuckStyleImmutable must be package-private (i.e., not public or private).
+    <description>Value types decorated with @RuleArg must be package-private (i.e., not public or private).
 
 The build will automatically generate a public subclass or implementation of your value type. All clients should use that API, so the parent value type should limit its visibility as much as possible.</description>
     <priority>1</priority>
@@ -71,9 +78,8 @@ The build will automatically generate a public subclass or implementation of you
         <value>
           <![CDATA[
             //ClassOrInterfaceDeclaration[@PackagePrivate='false']
-              [preceding-sibling::Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']
               [ancestor::*/Annotation/MarkerAnnotation/Name
-                [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]
+                [@Image='RuleArg']]
           ]]>
         </value>
       </property>
@@ -81,22 +87,19 @@ The build will automatically generate a public subclass or implementation of you
     <example>
       <![CDATA[
 // OK
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface AbstractFoo {
 
 }
 
 // Bad: uses public visibility
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 public class AbstractBar {
 
 }
 
 // Bad: uses public visibility
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 public interface AbstractBaz {
 
 }
@@ -104,11 +107,61 @@ public interface AbstractBaz {
   ]]>
     </example>
   </rule>
-  <rule name="BuckStyleImmutableNameMustStartWithAbstract"
-        message="Name of @BuckStyleImmutable value types must start with Abstract"
+  <rule name="BuckImmutablesMustNotHaveValueImmutableAnnotation"
+    message="
+Value types decorated with @RuleArg or @ImmutableInfo should not use @Value.Immutable
+in any way"
         class="net.sourceforge.pmd.lang.rule.XPathRule"
         language="java">
-    <description>Value types decorated with @BuckStyleImmutable must have a name starting with 'Abstract'
+        <description> Using @Value.Immutable is forbidden when using @RuleArg or @ImmutableInfo.</description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <![CDATA[
+//Annotation[
+    following-sibling::ClassOrInterfaceDeclaration[
+      preceding-sibling::Annotation//Name
+      [@Image='ImmutableInfo' or @Image='RuleArg']
+    ]
+  ]/*[
+    Name/@Image='Value.Immutable'
+  ]
+          ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+      <![CDATA[
+// OK: No @Value.Immutable
+@RuleArg
+abstract class AbstractOk1 {
+}
+
+// OK: No @Value.Immutable
+@ImmutableInfo
+abstract class Ok2 {
+}
+
+// Bad: using @Value.Immutable
+@Value.Immutable
+@RuleArg
+abstract class AbstractBad1 {
+}
+
+// Bad: using @Value.Immutable
+@Value.Immutable
+@ImmutableInfo
+abstract class Bad2 {
+}
+      ]]>
+    </example>
+  </rule>
+  <rule name="RuleArgNameMustStartWithAbstract"
+        message="Name of @RuleArg value types must start with Abstract"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+    <description>Value types decorated with @RuleArg must have a name starting with 'Abstract'
 
 The build will automatically generate a subclass or implementation of your value type without 'Abstract' in the name.</description>
     <priority>1</priority>
@@ -117,9 +170,8 @@ The build will automatically generate a subclass or implementation of your value
         <value>
           <![CDATA[
             //ClassOrInterfaceDeclaration[not(starts-with(@Image,'Abstract'))]
-              [preceding-sibling::Annotation/MarkerAnnotation/Name/@Image='Value.Immutable']
               [ancestor::*/Annotation/MarkerAnnotation/Name
-                [@Image='BuckStyleImmutable' or @Image='BuckStyleTuple']]
+                [@Image='RuleArg']]
           ]]>
         </value>
       </property>
@@ -127,20 +179,126 @@ The build will automatically generate a subclass or implementation of your value
     <example>
       <![CDATA[
 // OK
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface AbstractFoo {
 
 }
 
 // Bad: name does not start with Abstract
-@Value.Immutable
-@BuckStyleImmutable
+@RuleArg
 interface Bar {
 
 }
       ]]>
     </example>
+  </rule>
+  <rule name="BuckStyleImmutablesMustNotHaveDefaultsImplicitlyOverridden"
+        message="
+Value types decorated with @BuckStyleValue variants must specify all of 'builder', 'copy', 'prehash'
+ and 'intern' when overriding defaults"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+    <description>Using @Value.Immutable with @BuckStyleValue variants must specify all of 'builder',
+        'copy', 'prehash' and 'intern' when overriding defaults</description>
+    <priority>1</priority>
+    <properties>
+        <property name="xpath">
+            <value>
+                <![CDATA[
+//Annotation[
+    following-sibling::ClassOrInterfaceDeclaration[
+      preceding-sibling::Annotation//Name
+      [@Image='BuckStyleValue' or @Image='BuckStylePrehashedValue' or @Image='BuckStyleValueWithBuilder']
+    ]
+  ]/*[
+    Name/@Image='Value.Immutable'
+    and (not(MemberValuePairs/MemberValuePair/@Image="builder")
+         or not(MemberValuePairs/MemberValuePair/@Image="copy")
+         or not(MemberValuePairs/MemberValuePair/@Image="prehash")
+         or not(MemberValuePairs/MemberValuePair/@Image="intern"))
+  ]
+          ]]>
+            </value>
+        </property>
+    </properties>
+    <example>
+        <![CDATA[
+// OK: No @Value.Immutable
+@BuckStyleValue
+abstract class Ok1 {
+}
+
+// OK: all overriden
+@BuckStylePrehashedValue
+@Value.Immutable(builder = false, copy = false, prehash = true, intern = true)
+abstract class Ok2 {
+}
+
+// OK: No @Value.Immutable
+@BuckStyleValueWithBuilder
+abstract class Ok3 {
+}
+
+// Bad: using @Value.Immutable
+@Value.Immutable
+@BuckStyleValue
+abstract class Bad1 {
+}
+
+// Bad: using @Value.Immutable
+@Value.Immutable
+@BuckStylePrehashedValue
+abstract class Bad2 {
+}
+
+// Bad: using @Value.Immutable partially overriden
+@Value.Immutable(intern = true)
+@BuckStyleValueWithBuilder
+abstract class Bad3 {
+}
+      ]]>
+    </example>
+  </rule>
+  <rule name="NoRawUseofValueImmutable"
+        message="Direct use of @Value.Immutable without being adjacent to a @BuckStyleValue variant is forbidden"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+        <description>Use of @Value.Immutable without overriding defaults 'builder', 'copy',
+            and 'intern' is forbidden. Either use one of existing BuckStyleValues, or override
+            these defaults.</description>
+        <priority>1</priority>
+        <properties>
+          <property name="xpath">
+            <value>
+                <![CDATA[
+//Annotation[
+    following-sibling::ClassOrInterfaceDeclaration[
+      not (preceding-sibling::Annotation//Name
+      [@Image='BuckStyleValue' or @Image='BuckStylePrehashedValue' or @Image='BuckStyleValueWithBuilder'])
+    ]
+  ]/*[
+    Name/@Image='Value.Immutable'
+  ]
+          ]]>
+            </value>
+          </property>
+        </properties>
+        <example>
+          <![CDATA[
+// OK
+@Value.Immutable(builder = false, copy = false, prehash = true, intern = true)
+@BuckStyleValue
+interface Foo {
+
+}
+
+// Bad: does not belong beside buck style immutables
+@Value.Immutable(copy=false, builder=false, prehash=true)
+interface Bar {
+
+}
+      ]]>
+      </example>
   </rule>
   <!-- Blacklist docs: http://liveramp.com/engineering/using-pmd-to-blacklist-unsafe-methods/ -->
   <rule name="BlacklistedDefaultCharsetMethods"
@@ -262,5 +420,18 @@ class Foo {
 }
       ]]>
     </example>
+  </rule>
+  <rule name="BlacklistedSystemGetenv"
+    message="Use com.facebook.buck.util.environment.EnvVariablesProvider instead of System.getenv()"
+    class="com.liveramp.pmd_extensions.BlacklistMethods">
+    <description>
+      System.getenv() returns environment variables with names that may be case-insensitive on some
+      OSes (for example, Windows). EnvVariablesProvider.getSystemEnv() returns unified variables
+      with names converted to upper cases.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistMethods.BlacklistedMethods" value="System:getenv:0;com.facebook.buck.util.environment.EnvVariablesProvider:getSystemEnv"/>
+    </properties>
   </rule>
 </ruleset>

@@ -1,12 +1,11 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_library_with_plugins",
+)
 
 java_library_with_plugins(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-    ],
     tests = [
         "//test/com/facebook/buck/android/toolchain/ndk/impl:impl",
     ],
@@ -20,9 +19,16 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
+        "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/toolchain/ndk:ndk",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
     ],
 )

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.FluentIterable;
@@ -119,5 +120,24 @@ public class JavaLibraryClasspathProvider {
       classpathEntries.addAll(library.getImmediateClasspaths());
     }
     return classpathEntries.build();
+  }
+
+  /** Return the classpath, including traversing any provided_deps edges and non-java edges */
+  public static ImmutableSet<JavaLibrary> getAllReachableJavaLibraries(
+      Iterable<? extends BuildRule> rules) {
+    ImmutableSet.Builder<JavaLibrary> builder = ImmutableSet.builder();
+    AbstractBreadthFirstTraversal.traverse(
+        rules,
+        (BuildRule rule) -> {
+          ImmutableSet.Builder<BuildRule> children = ImmutableSet.builder();
+          children.addAll(rule.getBuildDeps());
+          if (rule instanceof JavaLibrary) {
+            JavaLibrary javaLibrary = (JavaLibrary) rule;
+            builder.add(javaLibrary);
+            children.addAll(javaLibrary.getDepsForTransitiveClasspathEntries());
+          }
+          return children.build();
+        });
+    return builder.build();
   }
 }

@@ -172,8 +172,12 @@ function _buck_completion_try_project() {
 }
 
 function _buck_completion_try_run() {
-  _buck_completion_try_long_arg "--help --no-cache --verbose" \
-    || _buck_completion_try_target "$@"
+  if [ "${#words[@]}" -gt 8 ]; then
+    _buck_completion_try_file_or_folder "$@"
+  else
+    _buck_completion_try_long_arg "--help --no-cache --verbose" \
+      || _buck_completion_try_target "$@"
+  fi
 }
 
 function _buck_completion_try_targets() {
@@ -264,8 +268,22 @@ function _buck_completion_try_file() {
   [[ "${#COMPREPLY[@]}" > 0 ]]
 }
 
+function _buck_completion_try_file_or_folder() {
+  local -a raw_files; raw_files=( $(compgen -A file -- "$word") )
+  for p in "${raw_files[@]}"; do
+    if [[ -d "$p" ]]; then
+      _buck_completion_add_reply "$p/"
+    else
+      _buck_completion_add_reply "$p"
+    fi
+  done
+
+  # Set return status
+  [[ "${#COMPREPLY[@]}" > 0 ]]
+}
+
 function _buck_completion_try_arg_file() {
-  path="$1"
+  path="$1"  
   local -a raw_files; raw_files=( $(compgen -A file -- "$path") )
   for p in "${raw_files[@]}"; do
     if [[ -d "$p" ]]; then

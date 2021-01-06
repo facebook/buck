@@ -1,26 +1,28 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -28,10 +30,11 @@ import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,15 +43,15 @@ import org.pf4j.PluginManager;
 
 public class TestCellBuilder {
 
-  private ProjectFilesystem filesystem;
+  @Nullable private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
   private CellConfig cellConfig;
   private Map<String, String> environment = new HashMap<>();
   @Nullable private ToolchainProvider toolchainProvider = null;
+  private Map<CanonicalCellName, ProjectFilesystem> cells = new HashMap<>();
 
   public TestCellBuilder() {
-    filesystem = new FakeProjectFilesystem();
-    cellConfig = CellConfig.of();
+    cellConfig = CellConfig.EMPTY_INSTANCE;
   }
 
   public TestCellBuilder setFilesystem(ProjectFilesystem filesystem) {
@@ -76,7 +79,15 @@ public class TestCellBuilder {
     return this;
   }
 
-  public Cell build() {
+  public TestCellBuilder addCell(CanonicalCellName cell, ProjectFilesystem projectFilesystem) {
+    Preconditions.checkState(this.cells.put(cell, projectFilesystem) == null);
+    return this;
+  }
+
+  public Cells build() {
+    ProjectFilesystem filesystem =
+        this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
+
     BuckConfig config =
         buckConfig == null
             ? FakeBuckConfig.builder().setFilesystem(filesystem).build()
@@ -92,21 +103,23 @@ public class TestCellBuilder {
         toolchainProvider == null
             ? new DefaultToolchainProviderFactory(
                 pluginManager, environmentCopy, processExecutor, executableFinder)
-            : (buckConfig, filesystem, ruleKeyConfiguration) -> toolchainProvider;
+            : (buckConfig, filesystemIgnore, ruleKeyConfiguration) -> toolchainProvider;
 
     DefaultCellPathResolver rootCellCellPathResolver =
-        DefaultCellPathResolver.of(filesystem.getRootPath(), config.getConfig());
+        DefaultCellPathResolver.create(filesystem.getRootPath(), config.getConfig());
 
-    return LocalCellProviderFactory.create(
-            filesystem,
-            config,
-            cellConfig,
-            rootCellCellPathResolver.getPathMapping(),
-            rootCellCellPathResolver,
-            TestBuckModuleManagerFactory.create(pluginManager),
-            toolchainProviderFactory,
-            new DefaultProjectFilesystemFactory())
-        .getCellByPath(filesystem.getRootPath());
+    return new Cells(
+        LocalCellProviderFactory.create(
+                filesystem,
+                config,
+                cellConfig,
+                rootCellCellPathResolver.getPathMapping(),
+                rootCellCellPathResolver,
+                TestBuckModuleManagerFactory.create(pluginManager),
+                toolchainProviderFactory,
+                new DefaultProjectFilesystemFactory(),
+                new ParsingUnconfiguredBuildTargetViewFactory())
+            .getCellByPath(filesystem.getRootPath()));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {

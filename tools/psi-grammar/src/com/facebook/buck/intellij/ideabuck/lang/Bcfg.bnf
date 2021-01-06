@@ -1,0 +1,107 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" buck kiBASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+{
+  parserClass="com.facebook.buck.intellij.ideabuck.lang.BcfgParser"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Bcfg"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.facebook.buck.intellij.ideabuck.lang.psi"
+  psiImplPackage="com.facebook.buck.intellij.ideabuck.lang.psi.impl"
+
+  elementTypeHolderClass="com.facebook.buck.intellij.ideabuck.lang.psi.BcfgTypes"
+  elementTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BcfgElementType"
+  tokenTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BcfgTokenType"
+
+  psiImplUtilClass="com.facebook.buck.intellij.ideabuck.lang.psi.impl.BcfgPsiImplUtil"
+
+  tokens = [
+    EOL = 'regexp:\r|\n|\r\n'
+    WHITE_SPACE = 'regexp:([\ \t\f]|\\(\r|\n|\r\n))+'
+    COMMENT = 'regexp:[#;][^\r\n]*'
+    L_BRACKET = '['
+    R_BRACKET = ']'
+    REQUIRED_FILE = '<file:'
+    OPTIONAL_FILE = '<?file:'
+    END_INLINE = '>'
+    ASSIGN = 'regexp:[:=]'
+    SECTION_NAME_FRAGMENT = 'regexp:([^\\\s\r\n\]]|\\[^\r\n])+'
+    PROPERTY_NAME_FRAGMENT = 'regexp:([^\\\s\r\n:=]|\\[^\r\n])+'
+    PROPERTY_VALUE_FRAGMENT = 'regexp:([^\\\s\r\n]|\\[^\r\n])+'
+    FILE_PATH = 'regexp:[^>\r\n]+'
+  ]
+}
+
+bcfgFile ::= (section | inline)* COMMENT*
+
+// Include leading comments so they get bundled with section
+section ::= COMMENT* section_header property* {
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BcfgNamedElement"
+  methods=[
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
+
+section_header ::= '[' section_name ']' {
+  pin = 2
+}
+section_name ::= SECTION_NAME_FRAGMENT* {
+  methods=[
+    getFragments
+    getValue
+  ]
+}
+
+// Include leading comments so they get bundled with property
+property ::= COMMENT* property_name ASSIGN property_value PROPERTY_END {
+  pin = 2
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BcfgNamedElement"
+  methods=[
+    getName
+    getNameIdentifier
+    setName
+    getSection
+    getSectionName
+    getValue
+  ]
+}
+
+property_name ::= PROPERTY_NAME_FRAGMENT+ {
+  methods = [
+    getFragments
+    getValue
+  ]
+}
+
+property_value ::= PROPERTY_VALUE_FRAGMENT* {
+  methods = [
+    getFragments
+    getValue
+  ]
+}
+
+// Include leading comments so they get bundled with inline
+inline ::= COMMENT* (REQUIRED_FILE | OPTIONAL_FILE) FILE_PATH END_INLINE {
+  methods = [
+    isRequired
+    getVirtualFile
+    getPath
+  ]
+}

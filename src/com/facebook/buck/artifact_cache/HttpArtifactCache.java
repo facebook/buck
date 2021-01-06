@@ -1,21 +1,24 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
@@ -27,9 +30,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -47,16 +53,28 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
    */
   private static final Logger LOG = Logger.get(HttpArtifactCache.class);
 
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
+
   public HttpArtifactCache(NetworkCacheArgs args) {
     super(args);
+    this.unconfiguredBuildTargetFactory = args.getUnconfiguredBuildTargetFactory();
+    this.targetConfigurationSerializer = args.getTargetConfigurationSerializer();
   }
 
   @Override
-  protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
-    FetchResult.Builder resultBuilder = FetchResult.builder();
+  protected FetchResult fetchImpl(@Nullable BuildTarget target, RuleKey ruleKey, LazyPath output)
+      throws IOException {
+    ImmutableFetchResult.Builder resultBuilder = ImmutableFetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
+
+    String getParams = "";
+    if (target != null) {
+      getParams = "?target=" + URLEncoder.encode(target.getFullyQualifiedName(), "UTF-8");
+    }
+
     try (HttpResponse response =
-        fetchClient.makeRequest("/artifacts/key/" + ruleKey, requestBuilder)) {
+        fetchClient.makeRequest("/artifacts/key/" + ruleKey + getParams, requestBuilder)) {
       resultBuilder.setResponseSizeBytes(response.contentLength());
 
       try (DataInputStream input =
@@ -84,14 +102,18 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             getProjectFilesystem()
                 .createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
 
-        FetchResponseReadResult fetchedData;
+        HttpArtifactCacheBinaryProtocol.FetchResponseReadResult fetchedData;
         try (OutputStream tempFileOutputStream = getProjectFilesystem().newFileOutputStream(temp)) {
           fetchedData =
               HttpArtifactCacheBinaryProtocol.readFetchResponse(input, tempFileOutputStream);
         }
 
         resultBuilder
-            .setBuildTarget(ArtifactCacheEvent.getTarget(fetchedData.getMetadata()))
+            .setBuildTarget(
+                AbstractArtifactCacheEventFactory.getTarget(
+                    unconfiguredBuildTargetFactory,
+                    targetConfigurationSerializer,
+                    fetchedData.getMetadata()))
             .setResponseSizeBytes(fetchedData.getResponseSizeBytes())
             .setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
 
@@ -134,7 +156,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
   @Override
   protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
-    StoreResult.Builder resultBuilder = StoreResult.builder();
+    ImmutableStoreResult.Builder resultBuilder = ImmutableStoreResult.builder();
 
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
@@ -165,7 +187,8 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
           @Override
           public void writeTo(BufferedSink bufferedSink) throws IOException {
-            StoreWriteResult writeResult = storeRequest.write(bufferedSink.outputStream());
+            HttpArtifactCacheBinaryProtocol.StoreWriteResult writeResult =
+                storeRequest.write(bufferedSink.outputStream());
             resultBuilder.setArtifactContentHash(
                 writeResult.getArtifactContentHashCode().toString());
           }

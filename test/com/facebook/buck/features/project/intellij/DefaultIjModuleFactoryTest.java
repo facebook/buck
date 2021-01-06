@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -33,18 +33,16 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
-import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -57,6 +55,7 @@ import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
 import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.TestFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.groovy.GroovyLibraryBuilder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
@@ -65,7 +64,7 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.kotlin.FauxKotlinLibraryBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.jvm.scala.FauxScalaLibraryBuilder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -396,7 +395,7 @@ public class DefaultIjModuleFactoryTest {
     IjFolder folder = module.getFolders().iterator().next();
     assertEquals(Paths.get("kotlin/com/example/base"), folder.getPath());
     assertFalse(folder instanceof TestFolder);
-    assertFalse(folder.getWantsPackagePrefix());
+    assertTrue(folder.getWantsPackagePrefix());
   }
 
   @Test
@@ -404,7 +403,7 @@ public class DefaultIjModuleFactoryTest {
     IjModuleFactory factory = createIjModuleFactory();
 
     TargetNode<?> scalaLib =
-        FauxKotlinLibraryBuilder.createBuilder(
+        FauxScalaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//scala/com/example/base:base"))
             .addSrc(Paths.get("scala/com/example/base/File.scala"))
             .build();
@@ -626,7 +625,13 @@ public class DefaultIjModuleFactoryTest {
 
   @Test
   public void testAndroidPrebuiltAar() {
-    SourcePath androidSupportBinaryPath = FakeSourcePath.of("third_party/java/support/support.aar");
+    SourcePath androidSupportBinaryPath =
+        FakeSourcePath.of(
+            BuildTargetPaths.getScratchPath(
+                    new FakeProjectFilesystem(),
+                    BuildTargetFactory.newInstance("//third_party/java/support:support#aar_unzip"),
+                    "__unpack_%s__")
+                .resolve("classes.jar"));
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =
@@ -638,13 +643,12 @@ public class DefaultIjModuleFactoryTest {
             .build();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+    SourcePathResolverAdapter sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     IjLibraryFactoryResolver ijLibraryFactoryResolver =
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getRelativePath(path);
+            return sourcePathResolverAdapter.getRelativePath(path);
           }
 
           @Override
@@ -661,7 +665,7 @@ public class DefaultIjModuleFactoryTest {
     assertTrue(library.isPresent());
     assertEquals(
         library.get().getBinaryJars(),
-        ImmutableSet.of(sourcePathResolver.getRelativePath(androidSupportBinaryPath)));
+        ImmutableSet.of(sourcePathResolverAdapter.getRelativePath(androidSupportBinaryPath)));
     assertEquals(library.get().getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
     assertEquals(library.get().getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
   }
@@ -672,35 +676,19 @@ public class DefaultIjModuleFactoryTest {
 
   private IjModuleFactory createIjModuleFactory(BuckConfig buckConfig) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    IjProjectConfig projectConfig =
+    IjProjectConfig.Builder builder =
         buckConfig == null
-            ? IjProjectBuckConfig.create(
-                FakeBuckConfig.builder().build(),
-                AggregationMode.AUTO,
-                null,
-                "",
-                "",
-                false,
-                false,
-                false,
-                false,
-                true,
-                false)
-            : IjProjectBuckConfig.create(
-                buckConfig,
-                AggregationMode.AUTO,
-                null,
-                "",
-                "",
-                false,
-                false,
-                false,
-                false,
-                true,
-                false);
+            ? IjTestProjectConfig.createBuilder(FakeBuckConfig.builder().build())
+            : IjTestProjectConfig.createBuilder(buckConfig);
+    IjProjectConfig projectConfig =
+        builder
+            .setKeepModuleFilesInModuleDirsEnabled(false)
+            .setExcludeArtifactsEnabled(false)
+            .build();
     JavaPackageFinder packageFinder =
         (buckConfig == null)
-            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+                projectFilesystem, Collections.emptyList())
             : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
@@ -749,6 +737,12 @@ public class DefaultIjModuleFactoryTest {
               }
 
               @Override
+              public Optional<Path> getKaptAnnotationOutputPath(
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
+                return Optional.empty();
+              }
+
+              @Override
               public Optional<Path> getCompilerOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
@@ -756,7 +750,7 @@ public class DefaultIjModuleFactoryTest {
             },
             projectConfig,
             packageFinder);
-    return new DefaultIjModuleFactory(projectFilesystem, typeRegistry);
+    return new DefaultIjModuleFactory(projectFilesystem, projectConfig, typeRegistry);
   }
 
   @Test

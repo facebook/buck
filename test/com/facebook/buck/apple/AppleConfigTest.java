@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -21,8 +21,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -141,7 +143,7 @@ public class AppleConfigTest {
                 "iphoneos_package_command = echo $OUT")
             .build()
             .getView(AppleConfig.class);
-    Optional<ApplePackageConfig> packageConfig =
+    Optional<AppleConfig.ApplePackageConfig> packageConfig =
         config.getPackageConfigForPlatform(ApplePlatform.IPHONEOS);
     assertThat(packageConfig.get().getCommand(), equalTo("echo $OUT"));
     assertThat(packageConfig.get().getExtension(), equalTo("api"));
@@ -195,5 +197,25 @@ public class AppleConfigTest {
     /* make sure that we have a sane default of 300s when the value is not specified */
     AppleConfig config = FakeBuckConfig.builder().build().getView(AppleConfig.class);
     assertThat(config.getCodesignTimeout(), equalTo(Duration.ofSeconds(300)));
+  }
+
+  @Test
+  public void testShouldWorkAroundDsymutilLTOStackOverflowBug() {
+    AppleConfig configExplicitTrue =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "work_around_dsymutil_lto_stack_overflow_bug = true")
+            .build()
+            .getView(AppleConfig.class);
+    assertTrue(configExplicitTrue.shouldWorkAroundDsymutilLTOStackOverflowBug());
+
+    AppleConfig configExplicitFalse =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "work_around_dsymutil_lto_stack_overflow_bug = false")
+            .build()
+            .getView(AppleConfig.class);
+    assertFalse(configExplicitFalse.shouldWorkAroundDsymutilLTOStackOverflowBug());
+
+    AppleConfig configUnset = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    assertFalse(configUnset.shouldWorkAroundDsymutilLTOStackOverflowBug());
   }
 }

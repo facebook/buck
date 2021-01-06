@@ -1,0 +1,14 @@
+java_library(
+    name = "handler",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/support/exceptions/handler:handler",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+    ],
+)

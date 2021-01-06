@@ -1,0 +1,25 @@
+apple_binary(
+    name = "TestExtensionBinary",
+    srcs = ["main.swift"],
+    frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
+)
+
+apple_bundle(
+    name = "TestExtension",
+    binary = ":TestExtensionBinary",
+    extension = "appex",
+    info_plist = "Info-Extension.plist",
+)
+
+apple_binary(
+    name = "TestAppBinary",
+    srcs = ["main.m"],
+)
+
+apple_bundle(
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestExtension"],
+)

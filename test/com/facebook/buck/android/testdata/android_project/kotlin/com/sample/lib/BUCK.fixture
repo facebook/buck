@@ -47,13 +47,13 @@ android_library(
 )
 
 android_library(
-    name = "lib_extra_kotlinc_arguments",
+    name = "lib_free_compiler_args",
     srcs = glob([
         "Activity.kt",
         "Sample.kt",
         "Sample2.kt",
     ]),
-    extra_kotlinc_arguments = [
+    free_compiler_args = [
         "-Xplugin=",
     ],
     language = "KOTLIN",

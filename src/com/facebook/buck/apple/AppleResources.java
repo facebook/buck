@@ -1,23 +1,26 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -62,14 +65,16 @@ public class AppleResources {
         .toSet();
   }
 
-  public static <T> AppleBundleResources collectResourceDirsAndFiles(
+  /** Collect resource dirs and files */
+  public static <T extends ConstructorArg> AppleBundleResources collectResourceDirsAndFiles(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       BuildRuleResolver resolver,
       Optional<AppleDependenciesCache> cache,
       TargetNode<T> targetNode,
       AppleCxxPlatform appleCxxPlatform,
-      RecursiveDependenciesMode mode) {
+      RecursiveDependenciesMode mode,
+      Predicate<BuildTarget> filter) {
     AppleBundleResources.Builder builder = AppleBundleResources.builder();
 
     Iterable<TargetNode<?>> resourceNodes =
@@ -84,12 +89,16 @@ public class AppleResources {
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?> resourceNode : resourceNodes) {
-      @SuppressWarnings("unchecked")
-      TargetNode<Object> node = (TargetNode<Object>) resourceNode;
+      if (!filter.test(resourceNode.getBuildTarget())) {
+        continue;
+      }
 
       @SuppressWarnings("unchecked")
-      HasAppleBundleResourcesDescription<Object> description =
-          (HasAppleBundleResourcesDescription<Object>) node.getDescription();
+      TargetNode<BuildRuleArg> node = (TargetNode<BuildRuleArg>) resourceNode;
+
+      @SuppressWarnings("unchecked")
+      HasAppleBundleResourcesDescription<BuildRuleArg> description =
+          (HasAppleBundleResourcesDescription<BuildRuleArg>) node.getDescription();
 
       description.addAppleBundleResources(builder, node, filesystem, resolver);
     }

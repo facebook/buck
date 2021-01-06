@@ -1,0 +1,17 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "interfaces",
+    srcs = glob(
+        ["*.java"],
+    ),
+    visibility = [
+        "PUBLIC",
+    ],
+    exported_deps = [
+        "//src-gen:protobuf",
+    ],
+)

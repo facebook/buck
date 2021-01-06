@@ -1,21 +1,22 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -23,6 +24,7 @@ import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
+import com.facebook.buck.jvm.java.abi.SourceVersionUtils;
 import com.facebook.buck.jvm.java.abi.StubGenerator;
 import com.facebook.buck.jvm.java.abi.source.api.FrontendOnlyJavacTaskProxy;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -36,9 +38,7 @@ import com.facebook.buck.jvm.java.tracing.JavacPhaseEventLogger;
 import com.facebook.buck.jvm.java.tracing.TracingTaskListener;
 import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.zip.JarBuilder;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +57,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -73,11 +74,13 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 
 class Jsr199JavacInvocation implements Javac.Invocation {
-
   private static final Logger LOG = Logger.get(Jsr199JavacInvocation.class);
   private static final ListeningExecutorService threadPool =
       MoreExecutors.listeningDecorator(
           Executors.newCachedThreadPool(new NamedThreadFactory("javac")));
+
+  static final String NO_JAVA_FILES_ERROR_MESSAGE =
+      "No Java files provided for library compilation";
 
   private final Supplier<JavaCompiler> compilerConstructor;
   private final JavacExecutionContext context;
@@ -85,7 +88,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
   private final BuildTarget libraryTarget;
   private final AbiGenerationMode abiCompatibilityMode;
   private final ImmutableList<String> options;
-  private final ImmutableList<JavacPluginJsr199Fields> pluginFields;
+  private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
+  private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
   private final ImmutableSortedSet<Path> javaSourceFilePaths;
   private final Path pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
@@ -102,7 +106,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       JavacExecutionContext context,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> pluginFields,
+      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
       boolean trackClassUsage,
@@ -121,7 +126,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
             : JavaAbis.getLibraryTarget(invokingRule);
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
-    this.pluginFields = pluginFields;
+    this.annotationProcessors = annotationProcessors;
+    this.javacPlugins = javacPlugins;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.trackClassUsage = trackClassUsage;
@@ -240,7 +246,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           buildSourceOnlyAbi
               ? JavaAbis.getSourceOnlyAbiJar(libraryTarget)
               : JavaAbis.getSourceAbiJar(libraryTarget);
-      JarParameters jarParameters = Preconditions.checkNotNull(abiJarParameters);
+      JarParameters jarParameters = Objects.requireNonNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
@@ -307,7 +313,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     }
 
     private void switchToFullJarIfRequested() throws InterruptedException, ExecutionException {
-      Preconditions.checkNotNull(targetEvent).close();
+      Objects.requireNonNull(targetEvent).close();
 
       // Make a new event to capture the time spent waiting for the next stage in the
       // pipeline (or for the pipeline to realize it's done)
@@ -320,8 +326,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       targetEvent.close();
 
       // Now start tracking the full jar
-      Preconditions.checkNotNull(tracingBridge).setBuildTarget(libraryTarget);
-      Preconditions.checkNotNull(phaseEventLogger).setBuildTarget(libraryTarget);
+      Objects.requireNonNull(tracingBridge).setBuildTarget(libraryTarget);
+      Objects.requireNonNull(phaseEventLogger).setBuildTarget(libraryTarget);
       targetEvent =
           new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), libraryTarget.toString());
     }
@@ -371,9 +377,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     }
 
     private boolean buildSuccessful() {
-      return diagnostics
-          .getDiagnostics()
-          .stream()
+      return diagnostics.getDiagnostics().stream()
           .noneMatch(diag -> diag.getKind() == Diagnostic.Kind.ERROR);
     }
 
@@ -419,7 +423,8 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     try {
                       success = javacTask.call();
                     } catch (IllegalStateException ex) {
-                      if (ex.getLocalizedMessage().equals("no source files")) {
+                      if (ex.getLocalizedMessage().equals("no source files")
+                          || ex.getLocalizedMessage().equals("error: no source files")) {
                         success = true;
                       }
                     }
@@ -456,7 +461,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
                     return newJarBuilder(libraryJarParameters)
                         .createJarFile(
-                            Preconditions.checkNotNull(
+                            Objects.requireNonNull(
                                 context
                                     .getProjectFilesystem()
                                     .getPathForRelativePath(libraryJarParameters.getJarPath())));
@@ -502,7 +507,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
               compiler.getStandardFileManager(null, null, null);
           addCloseable(standardFileManager);
 
-          StandardJavaFileManager fileManager;
+          // Ensure plugins are loaded from their own classloader.
+          PluginFactory pluginFactory =
+              new PluginFactory(
+                  compiler.getClass().getClassLoader(), context.getClassLoaderCache());
+
+          PluginLoaderJavaFileManager fileManager;
           if (libraryJarParameters != null) {
             Path directToJarPath =
                 context
@@ -514,10 +524,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     directToJarPath,
                     libraryJarParameters.getRemoveEntryPredicate());
             addCloseable(inMemoryFileManager);
-            fileManager = inMemoryFileManager;
+            fileManager =
+                new PluginLoaderJavaFileManager(inMemoryFileManager, pluginFactory, javacPlugins);
           } else {
             inMemoryFileManager = null;
-            fileManager = standardFileManager;
+            fileManager =
+                new PluginLoaderJavaFileManager(standardFileManager, pluginFactory, javacPlugins);
           }
 
           Iterable<? extends JavaFileObject> compilationUnits;
@@ -578,9 +590,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     javacTask,
                     ruleInfoFactory.create(fileManager),
                     () ->
-                        diagnostics
-                            .getDiagnostics()
-                            .stream()
+                        diagnostics.getDiagnostics().stream()
                             .anyMatch(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR),
                     abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
           }
@@ -606,7 +616,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                   invokingRule);
           addCloseable(processorFactory);
 
-          javacTask.setProcessors(processorFactory.createProcessors(pluginFields));
+          javacTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
           lazyJavacTask = javacTask;
         } catch (IOException e) {
           LOG.error(e);
@@ -619,7 +629,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
 
     private JarBuilder newJarBuilder(JarParameters jarParameters) {
       JarBuilder jarBuilder = new JarBuilder();
-      Preconditions.checkNotNull(inMemoryFileManager).writeToJar(jarBuilder);
+      Objects.requireNonNull(inMemoryFileManager).writeToJar(jarBuilder);
       return jarBuilder
           .setObserver(new LoggingJarBuilderObserver(context.getEventSink()))
           .setEntriesToJar(
@@ -636,6 +646,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
         Set<Path> javaSourceFilePaths)
         throws IOException {
       List<JavaFileObject> compilationUnits = new ArrayList<>();
+      boolean seenZipOrJarSources = false;
       for (Path path : javaSourceFilePaths) {
         String pathString = path.toString();
         if (pathString.endsWith(".java")) {
@@ -643,10 +654,12 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           Iterable<? extends JavaFileObject> javaFileObjects =
               fileManager.getJavaFileObjects(absolutifier.apply(path).toFile());
           compilationUnits.add(Iterables.getOnlyElement(javaFileObjects));
-        } else if (pathString.endsWith(Javac.SRC_ZIP) || pathString.endsWith(Javac.SRC_JAR)) {
+        } else if (pathString.endsWith(JavaPaths.SRC_ZIP)
+            || pathString.endsWith(JavaPaths.SRC_JAR)) {
           // For a Zip of .java files, create a JavaFileObject for each .java entry.
           ZipFile zipFile = new ZipFile(absolutifier.apply(path).toFile());
           boolean hasZipFileBeenUsed = false;
+          seenZipOrJarSources = true;
           for (Enumeration<? extends ZipEntry> entries = zipFile.entries();
               entries.hasMoreElements(); ) {
             ZipEntry entry = entries.nextElement();
@@ -663,6 +676,17 @@ class Jsr199JavacInvocation implements Javac.Invocation {
           }
         }
       }
+
+      // Bail now if none of the given files were Java files - we don't want to run non-Java files
+      // through javac and it's unlikely that this was the user's intention.
+      //
+      // If we've seen a source zip file that was empty, allow it. Annotation processor rules
+      // generate zip files of java sources which may not contain any java files if there were no
+      // annotations to process. Since this process is automated, it doesn't make sense to raise
+      // a human-facing error message in that case.
+      if (!seenZipOrJarSources && !javaSourceFilePaths.isEmpty() && compilationUnits.isEmpty()) {
+        throw new HumanReadableException(NO_JAVA_FILES_ERROR_MESSAGE);
+      }
       return compilationUnits;
     }
   }
@@ -673,26 +697,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
       if (option.equals("-target")) {
         foundTarget = true;
       } else if (foundTarget) {
-        switch (option) {
-          case "1.3":
-            return SourceVersion.RELEASE_3;
-          case "1.4":
-            return SourceVersion.RELEASE_4;
-          case "1.5":
-          case "5":
-            return SourceVersion.RELEASE_5;
-          case "1.6":
-          case "6":
-            return SourceVersion.RELEASE_6;
-          case "1.7":
-          case "7":
-            return SourceVersion.RELEASE_7;
-          case "1.8":
-          case "8":
-            return SourceVersion.RELEASE_8;
-          default:
-            throw new HumanReadableException("target %s not supported", option);
-        }
+        return SourceVersionUtils.getSourceVersionFromTarget(option);
       }
     }
 

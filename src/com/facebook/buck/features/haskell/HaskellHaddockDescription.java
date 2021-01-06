@@ -1,37 +1,38 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -69,7 +70,6 @@ public class HaskellHaddockDescription
     LOG.info("Creating Haddock " + name);
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     HaskellPlatform platform = getPlatform(baseTarget, args);
     ImmutableCollection<BuildRule> deps = graphBuilder.getAllRules(args.getDeps());
 
@@ -100,8 +100,8 @@ public class HaskellHaddockDescription
             baseTarget,
             context.getProjectFilesystem(),
             params,
-            ruleFinder,
-            platform.getHaddock().resolve(graphBuilder),
+            graphBuilder,
+            platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             args.getHaddockFlags(),
             haddockInputs.build()));
   }
@@ -111,7 +111,9 @@ public class HaskellHaddockDescription
       BuildTarget target, AbstractHaskellHaddockDescriptionArg arg) {
     HaskellPlatformsProvider haskellPlatformsProvider =
         toolchainProvider.getByName(
-            HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+            HaskellPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            HaskellPlatformsProvider.class);
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
@@ -129,13 +131,15 @@ public class HaskellHaddockDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractHaskellHaddockDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     HaskellDescriptionUtils.getParseTimeDeps(
-        ImmutableList.of(getPlatform(buildTarget, constructorArg)), targetGraphOnlyDepsBuilder);
+        buildTarget.getTargetConfiguration(),
+        ImmutableList.of(getPlatform(buildTarget, constructorArg)),
+        targetGraphOnlyDepsBuilder);
 
     constructorArg
         .getDepsQuery()
@@ -145,14 +149,21 @@ public class HaskellHaddockDescription
                     .forEach(targetGraphOnlyDepsBuilder::add));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractHaskellHaddockDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  @RuleArg
+  interface AbstractHaskellHaddockDescriptionArg extends BuildRuleArg, HasDepsQuery {
     Optional<Flavor> getPlatform();
 
     @Value.Default
     default ImmutableList<String> getHaddockFlags() {
       return ImmutableList.of();
+    }
+
+    @Override
+    default HaskellHaddockDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellHaddockDescriptionArg) this;
+      }
+      return HaskellHaddockDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

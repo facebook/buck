@@ -1,0 +1,3 @@
+load("//bool:defs.bzl", "malformed")
+
+malformed()

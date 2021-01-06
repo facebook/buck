@@ -1,31 +1,36 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.config;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Reader;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import org.ini4j.Config;
 import org.ini4j.Ini;
+import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile;
 
-class Inis {
+public class Inis {
 
   private Inis() {}
 
@@ -37,29 +42,44 @@ class Inis {
   // config; and if the include is an absolute path, it will also be handled correctly.
   public static ImmutableMap<String, ImmutableMap<String, String>> read(URL config)
       throws IOException {
-    Ini ini = makeIniParser(/*enable_includes=*/ true);
-    ini.load(config);
-    return toMap(ini);
+    try {
+      Ini ini = makeIniParser(/*enable_includes=*/ true);
+      ini.load(config);
+      return toMap(ini);
+    } catch (InvalidFileFormatException e) {
+      throw new HumanReadableException(e, e.getMessage());
+    } catch (FileNotFoundException e) {
+      try {
+        // Handle windows paths, without this conversion, they look like /C:/foo/bar
+        throw new HumanReadableException(
+            "Error while reading %s: %s", Paths.get(config.toURI()), e.getMessage());
+      } catch (URISyntaxException uriEx) {
+        throw e;
+      }
+    }
   }
 
   // This method should be used by tests only in order to construct an in-memory
   // buck config.  The includes are not enabled in this case (since include
   // location, particularly relative includes, is not well defined).
   @VisibleForTesting
-  static ImmutableMap<String, ImmutableMap<String, String>> read(Reader reader) throws IOException {
+  public static ImmutableMap<String, ImmutableMap<String, String>> read(Reader reader)
+      throws IOException {
     Ini ini = makeIniParser(/*enable_includes=*/ false);
     ini.load(reader);
     return toMap(ini);
   }
 
   // Creates and configures ini parser.
-  private static Ini makeIniParser(boolean enable_includes) {
+  @VisibleForTesting
+  public static Ini makeIniParser(boolean enable_includes) {
     Ini ini = new Ini();
-    Config config = ini.getConfig();
+    Config config = new Config();
     config.setEscape(false);
     config.setEscapeNewline(true);
     config.setMultiOption(false);
     config.setInclude(enable_includes);
+    ini.setConfig(config);
     return ini;
   }
 

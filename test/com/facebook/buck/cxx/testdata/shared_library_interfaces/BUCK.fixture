@@ -25,18 +25,17 @@ prebuilt_cxx_library(
     supports_shared_library_interface = True,
 )
 
-for library in ('cxx_library', 'prebuilt_cxx_library'):
+for library in ("cxx_library", "prebuilt_cxx_library"):
+    cxx_binary(
+        name = "shared_binary_" + library,
+        deps = [":" + library],
+        srcs = ["binary.cpp"],
+        link_style = "shared",
+    )
 
-  cxx_binary(
-    name = 'shared_binary_' + library,
-    deps = [':' + library],
-    srcs = [ 'binary.cpp' ],
-    link_style = 'shared',
-  )
-
-  cxx_binary(
-    name = 'static_binary_' + library,
-    deps = [':' + library],
-    srcs = [ 'binary.cpp' ],
-    link_style = 'static',
-  )
+    cxx_binary(
+        name = "static_binary_" + library,
+        deps = [":" + library],
+        srcs = ["binary.cpp"],
+        link_style = "static",
+    )

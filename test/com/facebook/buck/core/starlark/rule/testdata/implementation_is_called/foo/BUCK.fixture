@@ -1,0 +1,11 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(
+    name = "bar",
+    a = 1,
+)
+
+my_rule(
+    name = "baz",
+    a = 2,
+)

@@ -1,23 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +28,7 @@ import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -40,20 +43,34 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(
-      String fakeCompilationDirectory, ImmutableBiMap<Path, String> other) {
+      String fakeCompilationDirectory,
+      ImmutableBiMap<Path, String> other,
+      boolean useUnixPathSeparator) {
+    super(useUnixPathSeparator);
     this.fakeCompilationDirectory = fakeCompilationDirectory;
     this.other = other;
   }
 
+  public PrefixMapDebugPathSanitizer(
+      String fakeCompilationDirectory, ImmutableBiMap<Path, String> other) {
+    this(fakeCompilationDirectory, other, false);
+  }
+
   @Override
   public String getCompilationDirectory() {
-    return fakeCompilationDirectory;
+    return useUnixPathSeparator
+        ? PathFormatter.pathWithUnixSeparators(fakeCompilationDirectory)
+        : fakeCompilationDirectory;
   }
 
   @Override
   public ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize) {
-    return ImmutableMap.of("PWD", workingDir.toString());
+    return ImmutableMap.of(
+        "PWD",
+        useUnixPathSeparator
+            ? PathFormatter.pathWithUnixSeparators(workingDir.toString())
+            : workingDir.toString());
   }
 
   @Override
@@ -75,20 +92,25 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     // contained in) another, it must be processed after that other one. To ensure that we can
     // process them in the correct order, they are inserted into allPaths in order of length
     // (shortest first) so that prefixes will be handled correctly.
-    RichStream.<Map.Entry<Path, String>>empty()
-        // GCC has a bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71850) where it won't
-        // properly pass arguments down to subprograms using argsfiles, which can make it prone to
-        // argument list too long errors, so avoid adding `-fdebug-prefix-map` flags for each
-        // `prefixMap` entry.
-        .concat(
+    RichStream.from(
+            // GCC has a bug (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=71850) where it won't
+            // properly pass arguments down to subprograms using argsfiles, which can make it prone
+            // to argument list too long errors, so avoid adding `-fdebug-prefix-map`
+            // flags for each `prefixMap` entry.
             compiler instanceof GccCompiler
-                ? Stream.empty()
-                : prefixMap
-                    .entrySet()
-                    .stream()
-                    .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().toString())))
+                ? Stream.<Entry<Path, String>>empty()
+                : prefixMap.entrySet().stream()
+                    .map(
+                        e ->
+                            new AbstractMap.SimpleEntry<>(
+                                e.getKey(),
+                                useUnixPathSeparator
+                                    ? PathFormatter.pathWithUnixSeparators(e.getValue().toString())
+                                    : e.getValue().toString())))
         .concat(RichStream.from(getAllPaths(Optional.of(workingDir))))
-        .sorted(Comparator.comparingInt(entry -> entry.getKey().toString().length()))
+        .sorted(
+            Comparator.<Map.Entry<Path, String>>comparingInt(entry -> entry.getKey().getNameCount())
+                .thenComparing(entry -> entry.getKey()))
         .map(p -> getDebugPrefixMapFlag(p.getKey(), p.getValue()))
         .forEach(flags::add);
 
@@ -102,7 +124,8 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   private String getDebugPrefixMapFlag(Path realPath, String fakePath) {
-    String realPathStr = realPath.toString();
+    String realPathStr =
+        useUnixPathSeparator ? PathFormatter.pathWithUnixSeparators(realPath) : realPath.toString();
     // If we're replacing the real path with an empty fake path, then also remove the trailing `/`
     // to prevent forming an absolute path.
     if (fakePath.isEmpty()) {
@@ -119,6 +142,10 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     return Iterables.concat(
         other.entrySet(),
         ImmutableList.of(
-            new AbstractMap.SimpleEntry<>(workingDir.get(), fakeCompilationDirectory)));
+            new AbstractMap.SimpleEntry<>(
+                workingDir.get(),
+                useUnixPathSeparator
+                    ? PathFormatter.pathWithUnixSeparators(fakeCompilationDirectory)
+                    : fakeCompilationDirectory)));
   }
 }

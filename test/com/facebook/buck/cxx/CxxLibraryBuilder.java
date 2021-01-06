@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -25,18 +25,21 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
-import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,12 +54,14 @@ public class CxxLibraryBuilder
         BuildRule> {
 
   private static CxxLibraryDescription createCxxLibraryDescription(
-      CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
                 CxxPlatformsProvider.DEFAULT_NAME,
-                CxxPlatformsProvider.of(CxxPlatformUtils.build(cxxBuckConfig), cxxPlatforms))
+                CxxPlatformsProvider.of(
+                    new StaticUnresolvedCxxPlatform(CxxPlatformUtils.build(cxxBuckConfig)),
+                    cxxPlatforms))
             .build();
     CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
@@ -66,7 +71,8 @@ public class CxxLibraryBuilder
             cxxBuckConfig,
             new InferBuckConfig(FakeBuckConfig.builder().build()));
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
-        new CxxLibraryMetadataFactory(toolchainProvider);
+        new CxxLibraryMetadataFactory(
+            toolchainProvider, cxxBuckConfig.getDelegate().getFilesystem());
     return new CxxLibraryDescription(
         cxxLibraryImplicitFlavors,
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig),
@@ -75,8 +81,18 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder(
-      BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(createCxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target);
+      BuildTarget target,
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms,
+      ProjectFilesystem projectFilesystem) {
+    super(createCxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target, projectFilesystem);
+  }
+
+  public CxxLibraryBuilder(
+      BuildTarget target,
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
+    this(target, cxxBuckConfig, cxxPlatforms, new FakeProjectFilesystem());
   }
 
   public CxxLibraryBuilder(BuildTarget target, CxxBuckConfig cxxBuckConfig) {
@@ -84,10 +100,15 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder(BuildTarget target) {
+    this(target, new FakeProjectFilesystem());
+  }
+
+  public CxxLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
     this(
         target,
-        new CxxBuckConfig(FakeBuckConfig.builder().build()),
-        CxxTestUtils.createDefaultPlatforms());
+        new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(projectFilesystem).build()),
+        CxxTestUtils.createDefaultPlatforms(),
+        projectFilesystem);
   }
 
   public CxxLibraryBuilder setExportedHeaders(ImmutableSortedSet<SourcePath> headers) {
@@ -157,7 +178,7 @@ public class CxxLibraryBuilder
     return this;
   }
 
-  public CxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+  public CxxLibraryBuilder setPreferredLinkage(NativeLinkableGroup.Linkage linkage) {
     getArgForPopulating().setPreferredLinkage(Optional.of(linkage));
     return this;
   }
@@ -206,6 +227,18 @@ public class CxxLibraryBuilder
 
   public CxxLibraryBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
     getArgForPopulating().setHeaders(SourceSortedSet.ofNamedSources(headers));
+    return this;
+  }
+
+  public CxxLibraryBuilder setPlatformHeaders(
+      PatternMatchedCollection<SourceSortedSet> platformHeaders) {
+    getArgForPopulating().setPlatformHeaders(platformHeaders);
+    return this;
+  }
+
+  public CxxLibraryBuilder setExportedPlatformHeaders(
+      PatternMatchedCollection<SourceSortedSet> exportedPlatformHeaders) {
+    getArgForPopulating().setExportedPlatformHeaders(exportedPlatformHeaders);
     return this;
   }
 

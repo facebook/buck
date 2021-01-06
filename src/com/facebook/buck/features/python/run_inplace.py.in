@@ -1,6 +1,9 @@
-#!<PYTHON> -Es
+#!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
 
 import os
+import platform
+import signal
+import subprocess
 import sys
 
 main_module = <MAIN_MODULE>
@@ -10,7 +13,25 @@ native_libs_dir = <NATIVE_LIBS_DIR>
 native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
 native_libs_preload = <NATIVE_LIBS_PRELOAD>
 
+def try_resolve_possible_symlink(path):
+    p = subprocess.Popen(
+        ["powershell", "/c", "(Get-Item {}).Target".format(sys.argv[0])],
+        stdout=subprocess.PIPE,
+        shell=True,
+    )
+    stdout, _ = p.communicate()
+    if len(stdout) != 0:
+        return stdout
+    # if the file was not a symlink, powershell prints nothing
+    return path
+
+
 dirpath = os.path.dirname(os.path.realpath(__file__))
+if platform.system() == "Windows":
+    # Hah hah just kidding. __file__ will point to the symlink and not the
+    # actual pex we want to execute, if we're in a symlink. os.path.realpath
+    # does *not* dereference symlinks on windows until, like, 3.8 maybe.
+    dirpath = os.path.dirname(try_resolve_possible_symlink(sys.argv[0]))
 
 env_vals_to_restore = {}
 # Update the environment variable for the dynamic loader to the native
@@ -24,8 +45,13 @@ if native_libs_dir is not None:
 # to preload.
 if native_libs_preload is not None:
     old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
-    os.environ[native_libs_preload_env_var] = native_libs_preload
     env_vals_to_restore[native_libs_preload_env_var] = old_native_libs_preload
+
+    # On macos, preloaded libs are found via paths.
+    os.environ[native_libs_preload_env_var] = ":".join(
+        os.path.join(dirpath, native_libs_dir, l)
+        for l in native_libs_preload.split(":")
+    )
 
 STARTUP = """\
 # Wrap everything in a private function to prevent globals being captured by
@@ -48,15 +74,8 @@ def __run():
     assert sys.path[0] == ''
     sys.path[0] = {pythonpath!r}
 
-
-    import errno
-    import fcntl
-    import glob
     import os
-    import os.path
     import runpy
-    import shutil
-    import zipfile
 
     def setenv(var, val):
         if val is None:
@@ -80,18 +99,53 @@ __run()
     this_file=__file__,
 )
 
-args = [sys.executable, '-Es', '-c', STARTUP]
+args = [sys.executable, "<PYTHON_INTERPRETER_FLAGS>", "-c", STARTUP]
 
 # Default to 'd' warnings, but allow users to control this via PYTHONWARNINGS
 # The -E causes python to ignore all PYTHON* environment vars so we have to
 # pass this down using the command line.
-warnings = os.environ.get('PYTHONWARNINGS', 'd').split(',')
+warnings = os.environ.get("PYTHONWARNINGS", "d").split(",")
 for item in reversed(warnings):
-    args.insert(1, '-W{0}'.format(item.strip()))
+    args.insert(1, "-W{0}".format(item.strip()))
 
 # Allow users to disable byte code generation by setting the standard environment var.
 # Same as above, because of -E we have to pass this down using the command line.
-if 'PYTHONDONTWRITEBYTECODE' in os.environ:
-    args.insert(1, '-B')
+if "PYTHONDONTWRITEBYTECODE" in os.environ:
+    args.insert(1, "-B")
 
-os.execv(sys.executable, args + sys.argv[1:])
+# Python 3.7 allows benchmarking import time with this variable. Similar issues to
+# PYTHONDONTWRITEBYTECODE above. If using an earlier version of python... dont set this
+# Make sure we only run this on cpython where it's supported (python2 will fail
+# if given an unknown -X)
+if (
+    "PYTHONPROFILEIMPORTTIME" in os.environ
+    and platform.python_implementation() == "CPython"
+    and (sys.version_info[0], sys.version_info[1]) >= (3, 7)
+):
+    args[1:1] = ["-X", "importtime"]
+
+if platform.system() == "Windows":
+    # exec on Windows is not true exec - there is only 'spawn' ('CreateProcess').
+    # However, creating processes unnecessarily is painful, so we only do the spawn
+    # path if we have to, which is on Windows. That said, this complicates signal
+    # handling, so we need to set up some signal forwarding logic.
+
+    p = subprocess.Popen(args + sys.argv[1:])
+
+    def handler(signum, frame):
+        # If we're getting this, we need to forward signum to subprocesses
+        if signum == signal.SIGINT:
+            p.send_signal(signal.CTRL_C_EVENT)
+        elif signum == signal.SIGBREAK:
+            p.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            # shouldn't happen, we should be killed instead
+            p.terminate()
+
+    signal.signal(signal.SIGINT, handler)
+    signal.signal(signal.SIGBREAK, handler)
+
+    p.wait()
+    sys.exit(p.returncode)
+else:
+    os.execv(sys.executable, args + sys.argv[1:])

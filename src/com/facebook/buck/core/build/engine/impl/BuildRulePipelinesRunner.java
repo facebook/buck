@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.impl;
@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -170,7 +171,7 @@ public class BuildRulePipelinesRunner {
     }
 
     public T getState() {
-      return Preconditions.checkNotNull(state);
+      return Objects.requireNonNull(state);
     }
 
     @Override
@@ -193,7 +194,7 @@ public class BuildRulePipelinesRunner {
           Preconditions.checkState(rule.getFuture().isDone() || rule.getFuture().isCancelled());
         }
       } finally {
-        Preconditions.checkNotNull(state).close();
+        Objects.requireNonNull(state).close();
         state = null;
         rules.clear();
       }
@@ -266,8 +267,8 @@ public class BuildRulePipelinesRunner {
 
     @Override
     public void run() {
-      Preconditions.checkNotNull(pipeline);
-      Preconditions.checkNotNull(ruleStepRunnerFactory);
+      Objects.requireNonNull(pipeline);
+      Objects.requireNonNull(ruleStepRunnerFactory);
 
       runner = ruleStepRunnerFactory.apply(pipeline.getState());
       future.setFuture(runner.getFuture());

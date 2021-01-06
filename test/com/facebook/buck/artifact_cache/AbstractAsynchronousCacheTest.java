@@ -1,22 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.AbstractAsynchronousCache.CacheEventListener;
@@ -26,11 +27,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.ExplicitRunExecutorService;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -40,6 +42,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.IntStream;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class AbstractAsynchronousCacheTest {
@@ -49,9 +53,11 @@ public class AbstractAsynchronousCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     List<ImmutableList<RuleKey>> requestedRuleKeys = new ArrayList<>();
+    List<ImmutableSet<RuleKey>> checkedRuleKeys = new ArrayList<>();
 
     try (AbstractAsynchronousCache cache =
-        new RequestedKeyRecordingAsynchronousCache(service, filesystem, requestedRuleKeys, 3, 3)) {
+        new RequestedKeyRecordingAsynchronousCache(
+            service, filesystem, requestedRuleKeys, checkedRuleKeys, 3, 3, false)) {
 
       List<ListenableFuture<CacheResult>> results = new ArrayList<>();
       List<RuleKey> keys = new ArrayList<>();
@@ -68,6 +74,8 @@ public class AbstractAsynchronousCacheTest {
         assertTrue(future.isDone());
         assertTrue(future.get().getType().isSuccess());
       }
+
+      assertEquals(0, checkedRuleKeys.size());
 
       assertEquals(10, requestedRuleKeys.size());
 
@@ -104,9 +112,11 @@ public class AbstractAsynchronousCacheTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     List<ImmutableList<RuleKey>> requestedRuleKeys = new ArrayList<>();
+    List<ImmutableSet<RuleKey>> checkedRuleKeys = new ArrayList<>();
 
     try (AbstractAsynchronousCache cache =
-        new RequestedKeyRecordingAsynchronousCache(service, filesystem, requestedRuleKeys, 3, 3)) {
+        new RequestedKeyRecordingAsynchronousCache(
+            service, filesystem, requestedRuleKeys, checkedRuleKeys, 3, 3, false)) {
 
       // Make an async fetch request and allow it to run on the Executor
       ListenableFuture<CacheResult> fetchRequestOne =
@@ -145,6 +155,67 @@ public class AbstractAsynchronousCacheTest {
     }
   }
 
+  @Test
+  public void testMultiCheck() throws Exception {
+    ExplicitRunExecutorService service = new ExplicitRunExecutorService();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+
+    List<ImmutableList<RuleKey>> requestedRuleKeys = new ArrayList<>();
+    List<ImmutableSet<RuleKey>> checkedRuleKeys = new ArrayList<>();
+
+    try (AbstractAsynchronousCache cache =
+        new RequestedKeyRecordingAsynchronousCache(
+            service, filesystem, requestedRuleKeys, checkedRuleKeys, 0, 1, true)) {
+
+      List<ListenableFuture<CacheResult>> results = new ArrayList<>();
+      List<RuleKey> keys = new ArrayList<>();
+      for (int i = 0; i < 10; i++) {
+        RuleKey key = new RuleKey(HashCode.fromInt(i));
+        keys.add(key);
+        results.add(
+            cache.fetchAsync(null, key, LazyPath.ofInstance(filesystem.getPath("path" + i))));
+      }
+
+      service.run();
+
+      for (int i = 0; i < results.size(); i++) {
+        ListenableFuture<CacheResult> future = results.get(i);
+        assertTrue(future.isDone());
+        if (i < 6) {
+          assertTrue(future.get().getType().isSuccess());
+        } else {
+          assertFalse(future.get().getType().isSuccess());
+        }
+      }
+
+      assertEquals(1, checkedRuleKeys.size());
+      assertEquals(6, requestedRuleKeys.size());
+
+      // Validate we first check if all the keys are present in the cache.
+      MoreAsserts.assertIterablesEquals(
+          ImmutableList.of(
+              keys.get(0),
+              keys.get(1),
+              keys.get(2),
+              keys.get(3),
+              keys.get(4),
+              keys.get(5),
+              keys.get(6),
+              keys.get(7),
+              keys.get(8),
+              keys.get(9)),
+          checkedRuleKeys.get(0));
+
+      // Each of the present keys should be download individually.
+      MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(0)), requestedRuleKeys.get(0));
+      MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(1)), requestedRuleKeys.get(1));
+      MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(2)), requestedRuleKeys.get(2));
+      MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(3)), requestedRuleKeys.get(3));
+      MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(4)), requestedRuleKeys.get(4));
+      MoreAsserts.assertIterablesEquals(ImmutableList.of(keys.get(5)), requestedRuleKeys.get(5));
+    }
+  }
+
   private static class NoOpEventListener implements AbstractAsynchronousCache.CacheEventListener {
     @Override
     public AbstractAsynchronousCache.StoreEvents storeScheduled(
@@ -152,7 +223,7 @@ public class AbstractAsynchronousCacheTest {
       return () ->
           new AbstractAsynchronousCache.StoreEvents.StoreRequestEvents() {
             @Override
-            public void finished(StoreResult result) {}
+            public void finished(AbstractAsynchronousCache.StoreResult result) {}
 
             @Override
             public void failed(IOException e, String errorMessage) {}
@@ -166,7 +237,7 @@ public class AbstractAsynchronousCacheTest {
     public CacheEventListener.FetchRequestEvents fetchStarted(BuildTarget target, RuleKey ruleKey) {
       return new FetchRequestEvents() {
         @Override
-        public void finished(FetchResult result) {}
+        public void finished(AbstractAsynchronousCache.FetchResult result) {}
 
         @Override
         public void failed(IOException e, String errorMessage, CacheResult result) {}
@@ -181,7 +252,7 @@ public class AbstractAsynchronousCacheTest {
         public void skipped(int keyIndex) {}
 
         @Override
-        public void finished(int keyIndex, FetchResult thisResult) {}
+        public void finished(int keyIndex, AbstractAsynchronousCache.FetchResult thisResult) {}
 
         @Override
         public void failed(int keyIndex, IOException e, String msg, CacheResult result) {}
@@ -193,16 +264,24 @@ public class AbstractAsynchronousCacheTest {
   }
 
   private static class RequestedKeyRecordingAsynchronousCache extends AbstractAsynchronousCache {
+    private final ImmutableSet<RuleKey> matching =
+        IntStream.rangeClosed(0, 5)
+            .mapToObj(i -> new RuleKey(HashCode.fromInt(i)))
+            .collect(ImmutableSet.toImmutableSet());
     private final List<ImmutableList<RuleKey>> requestedRuleKeys;
+    private final List<ImmutableSet<RuleKey>> checkedRuleKeys;
     private int multiFetchLimit;
     private int concurrency;
+    private boolean isMultiCheckEnabled;
 
     public RequestedKeyRecordingAsynchronousCache(
         ExplicitRunExecutorService service,
         ProjectFilesystem filesystem,
         List<ImmutableList<RuleKey>> requestedRuleKeys,
+        List<ImmutableSet<RuleKey>> checkedRuleKeys,
         int multiFetchLimit,
-        int concurrency) {
+        int concurrency,
+        boolean isMultiCheckEnabled) {
       super(
           "fake",
           ArtifactCacheMode.dir,
@@ -213,27 +292,43 @@ public class AbstractAsynchronousCacheTest {
           Optional.empty(),
           filesystem);
       this.requestedRuleKeys = requestedRuleKeys;
+      this.checkedRuleKeys = checkedRuleKeys;
       this.multiFetchLimit = multiFetchLimit;
       this.concurrency = concurrency;
+      this.isMultiCheckEnabled = isMultiCheckEnabled;
     }
 
     @Override
-    protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) {
+    protected FetchResult fetchImpl(
+        @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
       requestedRuleKeys.add(ImmutableList.of(ruleKey));
       return hit();
     }
 
     @Override
     protected MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys) {
-      throw new UnsupportedOperationException("multiContains is not supported");
+      checkedRuleKeys.add(ruleKeys);
+      ImmutableMap.Builder<RuleKey, CacheResult> cacheResults = ImmutableMap.builder();
+      for (RuleKey ruleKey : ruleKeys) {
+        CacheResult cacheResult;
+        if (matching.contains(ruleKey)) {
+          cacheResult = CacheResult.hit(getName(), getMode());
+        } else {
+          cacheResult = CacheResult.miss();
+        }
+        cacheResults.put(ruleKey, cacheResult);
+      }
+      return ImmutableMultiContainsResult.builder().setCacheResults(cacheResults.build()).build();
     }
 
     private FetchResult hit() {
-      return FetchResult.builder().setCacheResult(CacheResult.hit(getName(), getMode())).build();
+      return ImmutableFetchResult.builder()
+          .setCacheResult(CacheResult.hit(getName(), getMode()))
+          .build();
     }
 
     private FetchResult skip() {
-      return FetchResult.builder().setCacheResult(CacheResult.skipped()).build();
+      return ImmutableFetchResult.builder().setCacheResult(CacheResult.skipped()).build();
     }
 
     @Override
@@ -259,7 +354,7 @@ public class AbstractAsynchronousCacheTest {
       while (result.size() < keys.size()) {
         result.add(skip());
       }
-      return MultiFetchResult.of(ImmutableList.copyOf(result));
+      return ImmutableMultiFetchResult.of(ImmutableList.copyOf(result));
     }
 
     @Override
@@ -268,6 +363,11 @@ public class AbstractAsynchronousCacheTest {
     @Override
     protected int getMultiFetchBatchSize(int pendingRequestsSize) {
       return Math.min(multiFetchLimit, 1 + pendingRequestsSize / concurrency);
+    }
+
+    @Override
+    protected boolean isMultiCheckEnabled() {
+      return isMultiCheckEnabled;
     }
   }
 }

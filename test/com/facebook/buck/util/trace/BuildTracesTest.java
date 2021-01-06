@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.trace;
@@ -22,8 +22,8 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
@@ -210,14 +210,17 @@ public class BuildTracesTest {
       ProjectFilesystem fs, String commandName, String buildId, int seconds) {
     InvocationInfo info =
         InvocationInfo.of(
-                new BuildId(buildId),
-                false,
-                false,
-                commandName,
-                ImmutableList.of(),
-                ImmutableList.of(),
-                fs.getBuckPaths().getLogDir())
-            .withTimestampMillis(TimeUnit.SECONDS.toMillis(seconds));
+            new BuildId(buildId),
+            false,
+            false,
+            commandName,
+            ImmutableList.of(),
+            ImmutableList.of(),
+            fs.getBuckPaths().getLogDir(),
+            false,
+            "repository",
+            "",
+            TimeUnit.SECONDS.toMillis(seconds));
     return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");
   }
 }

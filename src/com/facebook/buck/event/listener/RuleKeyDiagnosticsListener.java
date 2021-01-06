@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -21,15 +21,15 @@ import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
+import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +49,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.GuardedBy;
-import org.immutables.value.Value;
 
 public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyDiagnosticsListener.class);
@@ -58,11 +57,16 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final int DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH = 1000;
   private static final int DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH = 10 * 1024 * 1024; // 10 MB
 
+  private static final String TRACE_KIND_RULE_DIAG_GRAPH = "rule_diag_graph";
+  private static final String TRACE_KIND_RULE_DIAG_KEYS = "rule_diag_keys";
+
   private final ProjectFilesystem projectFilesystem;
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
 
-  private final BackgroundTaskManager bgTaskManager;
+  private final Optional<BuildReportFileUploader> buildReportFileUploader;
+
+  private final TaskManagerCommandScope managerScope;
 
   private final int minDiagKeysForAutoFlush;
   private final int minSizeForAutoFlush;
@@ -81,7 +85,8 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      BackgroundTaskManager bgTaskManager) {
+      TaskManagerCommandScope managerScope,
+      Optional<BuildReportFileUploader> buildReportFileUploader) {
     this.projectFilesystem = projectFilesystem;
     this.info = info;
     this.outputExecutor = outputExecutor;
@@ -89,7 +94,8 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     this.minSizeForAutoFlush = DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH;
     this.diagKeys = new ArrayList<>();
     this.diagKeysSize = 0;
-    this.bgTaskManager = bgTaskManager;
+    this.managerScope = managerScope;
+    this.buildReportFileUploader = buildReportFileUploader;
   }
 
   @Subscribe
@@ -229,14 +235,22 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   @Override
   public void close() { // todo same issue w/passed function
     submitFlushDiagKeys();
-    outputExecutor.execute(this::writeDiagGraph);
+    if (!rulesInfo.isEmpty()) {
+      outputExecutor.execute(this::writeDiagGraph);
+    }
+
+    Path logDir = info.getLogDirectoryPath();
+    RuleKeyDiagnosticsListenerCloseArgs args =
+        ImmutableRuleKeyDiagnosticsListenerCloseArgs.of(
+            outputExecutor,
+            buildReportFileUploader,
+            logDir.resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME),
+            logDir.resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME));
+
     BackgroundTask<RuleKeyDiagnosticsListenerCloseArgs> task =
-        ImmutableBackgroundTask.<RuleKeyDiagnosticsListenerCloseArgs>builder()
-            .setAction(new RuleKeyDiagnosticsListenerCloseAction())
-            .setActionArgs(RuleKeyDiagnosticsListenerCloseArgs.of(outputExecutor))
-            .setName("RuleKeyDiagnosticsListener_close")
-            .build();
-    bgTaskManager.schedule(task);
+        BackgroundTask.of(
+            "RuleKeyDiagnosticsListener_close", new RuleKeyDiagnosticsListenerCloseAction(), args);
+    managerScope.schedule(task);
   }
 
   /**
@@ -253,15 +267,38 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
+
+      args.getBuildReportFileUploader()
+          .ifPresent(
+              uploader -> {
+                if (args.getRuleDiagGraphFilePath().toFile().exists()) {
+                  uploader.uploadFile(args.getRuleDiagGraphFilePath(), TRACE_KIND_RULE_DIAG_GRAPH);
+                } else {
+                  LOG.debug(
+                      "Not uploading %s. %s doesn't exist.",
+                      TRACE_KIND_RULE_DIAG_GRAPH, args.getRuleDiagGraphFilePath().toString());
+                }
+                if (args.getRuleDiagKeyFilePath().toFile().exists()) {
+                  uploader.uploadFile(args.getRuleDiagKeyFilePath(), TRACE_KIND_RULE_DIAG_KEYS);
+                } else {
+                  LOG.debug(
+                      "Not uploading %s. %s doesn't exist.",
+                      TRACE_KIND_RULE_DIAG_KEYS, args.getRuleDiagKeyFilePath().toString());
+                }
+              });
     }
   }
 
   /** Arguments to {@link RuleKeyDiagnosticsListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRuleKeyDiagnosticsListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class RuleKeyDiagnosticsListenerCloseArgs {
     public abstract ExecutorService getOutputExecutor();
+
+    public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
+
+    public abstract Path getRuleDiagGraphFilePath();
+
+    public abstract Path getRuleDiagKeyFilePath();
   }
 
   private static class RuleInfo {

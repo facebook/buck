@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.tools.documentation.generator.skylark.rendering;
@@ -68,6 +68,16 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     return SkylarkList.createImmutable(kwargs.keySet());
   }
 
+  @SkylarkCallable(
+      name = "dummy",
+      doc = "Doc with {} inside.",
+      documented = false,
+      useAst = true,
+      useEnvironment = true)
+  public SkylarkList<String> dummyWithBracesInside() {
+    return SkylarkList.createImmutable(Collections.emptyList());
+  }
+
   @Before
   public void setUp() {
     // ignore windows and its new line philosophy
@@ -97,6 +107,16 @@ public class SoyTemplateSkylarkSignatureRendererTest {
     SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
     Method dummyField = getClass().getMethod("dummyWithoutArgs");
     String expectedContent = getExpectedContent("data/expected_dummy_function_without_args.soy");
+    String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
+    assertEquals(expectedContent, actualContent);
+  }
+
+  @Test
+  public void rendersAnExpectedFunctionSoyTemplateWithBracesInside() throws Exception {
+    SoyTemplateSkylarkSignatureRenderer renderer = new SoyTemplateSkylarkSignatureRenderer();
+    Method dummyField = getClass().getMethod("dummyWithBracesInside");
+    String expectedContent =
+        getExpectedContent("data/expected_dummy_function_with_braces_inside.soy");
     String actualContent = renderer.render(dummyField.getAnnotation(SkylarkCallable.class));
     assertEquals(expectedContent, actualContent);
   }

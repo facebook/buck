@@ -16,9 +16,6 @@ TYPES = [
 java_immutables_library(
     name = "types",
     srcs = TYPES,
-    exported_deps = [
-        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
-    ],
     visibility = [
         "//src/com/facebook/buck/rules/...",
     ],
@@ -28,6 +25,9 @@ java_immutables_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
     ],
 )
 
@@ -40,11 +40,6 @@ java_library(
         ],
         exclude = TYPES,
     ),
-    exported_deps = [
-        ":types",
-        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
-        "//src/com/facebook/buck/rules/keys:keys",
-    ],
     tests = [
         "//test/com/facebook/buck/rules/modern/impl:impl",
     ],
@@ -57,7 +52,6 @@ java_library(
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/rules/attr:attr",
         "//src/com/facebook/buck/core/rules/common:common",
-        "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/rules/modern:modern",
         "//src/com/facebook/buck/core/rules/pipeline:pipeline",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
@@ -68,13 +62,20 @@ java_library(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/objenesis:objenesis",
+    ],
+    exported_deps = [
+        ":types",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
+        "//src/com/facebook/buck/rules/keys:keys",
     ],
 )

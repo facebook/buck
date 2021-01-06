@@ -1,8 +1,8 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 TYPES_SRCS = [
-    "AbstractExactConstraint.java",
-    "AbstractVersion.java",
+    "ExactConstraint.java",
+    "Version.java",
     "Constraint.java",
 ]
 
@@ -16,24 +16,25 @@ TRANSLATOR_SRCS = [
     "TargetNodeTranslator.java",
     "TargetTranslatable.java",
     "TargetTranslator.java",
-    "TargetTranslatorOverridingDescription.java",
 ]
 
 java_library(
     name = "translator",
     srcs = TRANSLATOR_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/util/types:types",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         ":types",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/util/types:types",
     ],
 )
 
@@ -43,9 +44,6 @@ java_library_with_plugins(
         ["*.java"],
         exclude = TYPES_SRCS + TRANSLATOR_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-    ],
     tests = [
         "//test/com/facebook/buck/versions:versions",
     ],
@@ -53,26 +51,37 @@ java_library_with_plugins(
     deps = [
         ":translator",
         ":types",
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/core/graph/transformation/impl:impl",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/parser:rule_pattern",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/rules/query:query",
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/rules/query:utils",
-        "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
     ],
 )

@@ -1,0 +1,29 @@
+constraint_setting(
+    name = "cs",
+)
+
+constraint_value(
+    name = "cv",
+    constraint_setting = ":cs",
+)
+
+platform(
+    name = "p",
+    constraint_values = [
+        # It is essential for the test to have non-empty platform
+        ":cv",
+    ],
+)
+
+android_binary(
+    name = "b",
+    default_target_platform = ":p",
+    keystore = ":ks",
+    manifest = "AndroidManifest.xml",
+)
+
+keystore(
+    name = "ks",
+    properties = "test.keystore.properties",
+    store = "test.keystore",
+)

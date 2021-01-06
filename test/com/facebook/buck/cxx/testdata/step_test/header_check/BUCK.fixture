@@ -1,0 +1,11 @@
+cxx_binary(
+    name = "nested_untracked_header",
+    srcs = [
+        "nested_untracked_header.cpp",
+    ],
+    link_style = "static",
+    raw_headers = [
+        "parent_header.h",
+        "untracked_header_includer.h",
+    ],
+)

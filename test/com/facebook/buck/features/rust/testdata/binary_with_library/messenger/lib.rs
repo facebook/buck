@@ -4,10 +4,12 @@ pub struct Messenger {
 
 impl Messenger {
     pub fn new(message: &str) -> Messenger {
-        Messenger { message: message.to_string(), }
+        Messenger {
+            message: message.to_string(),
+        }
     }
 
-    #[cfg(feature="warning")]
+    #[cfg(feature = "warning")]
     fn unused() {}
 
     pub fn deliver(&self) {

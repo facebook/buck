@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -21,6 +21,9 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
@@ -30,11 +33,15 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.rules.modern.CustomFieldInputs;
+import com.facebook.buck.rules.modern.CustomFieldSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.google.common.annotations.VisibleForTesting;
@@ -47,17 +54,20 @@ import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class JarBuildStepsFactory
     implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
-  private static final Path METADATA_DIR = Paths.get("META-INF");
+  private static final Path[] METADATA_DIRS =
+      new Path[] {Paths.get("META-INF"), Paths.get("_STRIPPED_RESOURCES")};
 
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final BuildTarget libraryTarget;
 
-  @AddToRuleKey private final ConfiguredCompiler configuredCompiler;
+  @AddToRuleKey private final CompileToJarStepFactory configuredCompiler;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
   @AddToRuleKey private final ResourcesParameters resourcesParameters;
@@ -68,8 +78,11 @@ public class JarBuildStepsFactory
   @AddToRuleKey private final DependencyInfoHolder dependencyInfos;
   @AddToRuleKey private final ZipArchiveDependencySupplier abiClasspath;
 
-  private final boolean trackClassUsage;
+  @AddToRuleKey private final boolean trackClassUsage;
+
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   private final boolean trackJavacPhaseEvents;
+
   @AddToRuleKey private final boolean isRequiredForSourceOnlyAbi;
   @AddToRuleKey private final RemoveClassesPatternsMatcher classesToRemoveFromJar;
 
@@ -91,10 +104,16 @@ public class JarBuildStepsFactory
   }
 
   private static class DependencyInfoHolder implements AddsToRuleKey, HasCustomDepsLogic {
-    // Adding this to the rulekey is slow for large projects and the abiClasspath already reflects
-    // all
-    // the inputs.
-    // TODO(cjhopman): Improve rulekey calculation so we don't need such micro-optimizations.
+    // TODO(cjhopman): This is pretty much all due to these things caching all AddsToRuleKey things,
+    // but we don't want that for these things because nobody else uses them. We should improve the
+    // rulekey and similar stuff to better handle this.
+    @ExcludeFromRuleKey(
+        reason =
+            "Adding this to the rulekey is slow for large projects and the abiClasspath already "
+                + " reflects all the inputs. For the same reason, we need to do custom inputs"
+                + " derivation and custom serialization.",
+        serialization = InfosBehavior.class,
+        inputs = InfosBehavior.class)
     private final ImmutableList<JavaDependencyInfo> infos;
 
     public DependencyInfoHolder(ImmutableList<JavaDependencyInfo> infos) {
@@ -114,23 +133,61 @@ public class JarBuildStepsFactory
 
     public ZipArchiveDependencySupplier getAbiClasspath() {
       return new ZipArchiveDependencySupplier(
-          this.infos
-              .stream()
+          this.infos.stream()
               .map(i -> i.abiJar)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     }
 
     public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-      return infos
-          .stream()
+      return infos.stream()
           .map(info -> info.compileTimeJar)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    }
+
+    private static class InfosBehavior
+        implements CustomFieldSerialization<ImmutableList<JavaDependencyInfo>>,
+            CustomFieldInputs<ImmutableList<JavaDependencyInfo>> {
+
+      @Override
+      public <E extends Exception> void serialize(
+          ImmutableList<JavaDependencyInfo> value, ValueVisitor<E> serializer) throws E {
+        serializer.visitInteger(value.size());
+        for (JavaDependencyInfo info : value) {
+          serializer.visitSourcePath(info.compileTimeJar);
+          serializer.visitSourcePath(info.abiJar);
+          serializer.visitBoolean(info.isRequiredForSourceOnlyAbi);
+        }
+      }
+
+      @Override
+      public <E extends Exception> ImmutableList<JavaDependencyInfo> deserialize(
+          ValueCreator<E> deserializer) throws E {
+        int size = deserializer.createInteger();
+        ImmutableList.Builder<JavaDependencyInfo> infos =
+            ImmutableList.builderWithExpectedSize(size);
+        for (int i = 0; i < size; i++) {
+          SourcePath compileTimeJar = deserializer.createSourcePath();
+          SourcePath abiJar = deserializer.createSourcePath();
+          boolean isRequiredForSourceOnlyAbi = deserializer.createBoolean();
+          infos.add(new JavaDependencyInfo(compileTimeJar, abiJar, isRequiredForSourceOnlyAbi));
+        }
+        return infos.build();
+      }
+
+      @Override
+      public void getInputs(
+          ImmutableList<JavaDependencyInfo> value, Consumer<SourcePath> consumer) {
+        for (JavaDependencyInfo info : value) {
+          consumer.accept(info.abiJar);
+          consumer.accept(info.compileTimeJar);
+        }
+      }
     }
   }
 
   public JarBuildStepsFactory(
       BuildTarget libraryTarget,
-      ConfiguredCompiler configuredCompiler,
+      CompileToJarStepFactory configuredCompiler,
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
       ResourcesParameters resourcesParameters,
@@ -172,9 +229,21 @@ public class JarBuildStepsFactory
     return resources;
   }
 
+  public Optional<String> getResourcesRoot() {
+    return resourcesParameters.getResourcesRoot();
+  }
+
   @Nullable
   public SourcePath getSourcePathToOutput(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return getOutputJarPath(buildTarget, filesystem)
+        .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
+        .orElse(null);
+  }
+
+  @Nullable
+  public SourcePath getSourcePathToGeneratedAnnotationPath(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return getGeneratedAnnotationPath(buildTarget, filesystem)
         .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
         .orElse(null);
   }
@@ -189,38 +258,39 @@ public class JarBuildStepsFactory
   }
 
   /** Returns a predicate indicating whether a SourcePath is covered by the depfile. */
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(
-      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathRuleFinder ruleFinder) {
     // a hash set is intentionally used to achieve constant time look-up
     // TODO(cjhopman): This could probably be changed to be a 2-level check of archivepath->inner,
     // withinarchivepath->boolean.
-    return abiClasspath
-            .getArchiveMembers(pathResolver, ruleFinder)
-            .collect(ImmutableSet.toImmutableSet())
+    return abiClasspath.getArchiveMembers(ruleFinder).collect(ImmutableSet.toImmutableSet())
         ::contains;
   }
 
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate() {
     // Annotation processors might enumerate all files under a certain path and then generate
     // code based on that list (without actually reading the files), making the list of files
     // itself a used dependency that must be part of the dependency-based key. We don't
     // currently have the instrumentation to detect such enumeration perfectly, but annotation
     // processors are most commonly looking for files under META-INF, so as a stopgap we add
     // the listing of META-INF to the rule key.
-    return (SourcePath path) ->
-        (path instanceof ArchiveMemberSourcePath)
-            && pathResolver
-                .getRelativeArchiveMemberPath(path)
-                .getMemberPath()
-                .startsWith(METADATA_DIR);
+    return (SourcePath path) -> {
+      if (!(path instanceof ArchiveMemberSourcePath)) {
+        return false;
+      }
+      Path memberPath = ((ArchiveMemberSourcePath) path).getMemberPath();
+      for (Path metadataPath : METADATA_DIRS) {
+        if (memberPath.startsWith(metadataPath)) {
+          return true;
+        }
+      }
+      return false;
+    };
   }
 
   public boolean useRulePipelining() {
-    boolean usePipelining =
-        configuredCompiler instanceof JavacToJarStepFactory
-            && abiGenerationMode.isSourceAbi()
-            && abiGenerationMode.usesDependencies();
-    return usePipelining;
+    return configuredCompiler instanceof JavacToJarStepFactory
+        && abiGenerationMode.isSourceAbi()
+        && abiGenerationMode.usesDependencies();
   }
 
   public ImmutableList<Step> getBuildStepsForAbiJar(
@@ -238,8 +308,7 @@ public class JarBuildStepsFactory
 
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
-    CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
-    compileToJarStepFactory.createCompileToJarStep(
+    configuredCompiler.createCompileToJarStep(
         context,
         filesystem,
         buildTarget,
@@ -286,8 +355,7 @@ public class JarBuildStepsFactory
     CompilerParameters compilerParameters = getCompilerParameters(context, filesystem, buildTarget);
     ResourcesParameters resourcesParameters = getResourcesParameters();
 
-    CompileToJarStepFactory compileToJarStepFactory = (CompileToJarStepFactory) configuredCompiler;
-    compileToJarStepFactory.createCompileToJarStep(
+    configuredCompiler.createCompileToJarStep(
         context,
         filesystem,
         buildTarget,
@@ -420,10 +488,19 @@ public class JarBuildStepsFactory
     if (JavaAbis.isSourceAbiTarget(buildTarget) || JavaAbis.isSourceOnlyAbiTarget(buildTarget)) {
       return Optional.of(CompilerOutputPaths.getAbiJarPath(buildTarget, filesystem));
     } else if (JavaAbis.isLibraryTarget(buildTarget)) {
-      return Optional.of(AbstractCompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
+      return Optional.of(CompilerOutputPaths.getOutputJarPath(buildTarget, filesystem));
     } else {
       throw new IllegalArgumentException();
     }
+  }
+
+  private Optional<Path> getGeneratedAnnotationPath(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    if (!hasAnnotationProcessing()) {
+      return Optional.empty();
+    }
+
+    return CompilerOutputPaths.getAnnotationPath(filesystem, buildTarget);
   }
 
   private Path getDepFileRelativePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
@@ -432,7 +509,7 @@ public class JarBuildStepsFactory
   }
 
   private ImmutableMap<Path, SourcePath> getDepOutputPathToAbiSourcePath(
-      SourcePathResolver pathResolver, SourcePathRuleFinder ruleFinder) {
+      SourcePathResolverAdapter pathResolver, SourcePathRuleFinder ruleFinder) {
     ImmutableMap.Builder<Path, SourcePath> pathToSourcePathMapBuilder = ImmutableMap.builder();
     for (JavaDependencyInfo depInfo : dependencyInfos.infos) {
       SourcePath sourcePath = depInfo.compileTimeJar;
@@ -456,5 +533,9 @@ public class JarBuildStepsFactory
         compilerParameters,
         getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null));
+  }
+
+  public boolean hasAnnotationProcessing() {
+    return configuredCompiler.hasAnnotationProcessing();
   }
 }

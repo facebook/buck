@@ -1,0 +1,13 @@
+Buckconfig File
+  BcfgSectionImpl(SECTION)
+    BcfgSectionHeaderImpl(SECTION_HEADER)
+      PsiElement(BcfgTokenType.[)('[')
+      BcfgSectionNameImpl(SECTION_NAME)
+        PsiElement(BcfgTokenType.SECTION_NAME_FRAGMENT)('foo')
+      PsiElement(BcfgTokenType.])(']')
+    BcfgPropertyImpl(PROPERTY)
+      BcfgPropertyNameImpl(PROPERTY_NAME)
+        PsiElement(BcfgTokenType.PROPERTY_NAME_FRAGMENT)('bar')
+      PsiElement(BcfgTokenType.ASSIGN)('=')
+      BcfgPropertyValueImpl(PROPERTY_VALUE)
+        PsiElement(BcfgTokenType.PROPERTY_VALUE_FRAGMENT)('baz')

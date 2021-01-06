@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.config;
@@ -30,16 +30,29 @@ public interface BuckExecutableDetector {
 
   String getAdbExecutable();
 
+  String getBuildifierExecutable();
+
+  String getBuildozerExecutable();
+
   String getBuckExecutable();
+
+  String getNamedExecutable(String name);
 
   static BuckExecutableDetector newInstance() {
     return new Impl();
   }
 
+  String DEFAULT_BUCK_NAME = "buck";
+  String DEFAULT_BUILDIFIER_NAME = "buildifier";
+  String DEFAULT_BUILDOZER_NAME = "buildozer";
+  String DEFAULT_ADB_NAME = "adb";
+
   /** Default implementation. */
   class Impl implements BuckExecutableDetector {
-    private static final Path BUCK_EXECUTABLE = Paths.get("buck");
-    private static final Path ADB_EXECUTABLE = Paths.get("adb");
+    private static final Path BUCK_EXECUTABLE = Paths.get(DEFAULT_BUCK_NAME);
+    private static final Path BUILDIFIER_EXECUTABLE = Paths.get(DEFAULT_BUILDIFIER_NAME);
+    private static final Path BUILDOZER_EXECUTABLE = Paths.get(DEFAULT_BUILDOZER_NAME);
+    private static final Path ADB_EXECUTABLE = Paths.get(DEFAULT_ADB_NAME);
     private static final ExecutableFinder EXECUTABLE_FINDER = new ExecutableFinder();
 
     private Map<String, String> env;
@@ -65,6 +78,16 @@ public interface BuckExecutableDetector {
       return getExecutable(ADB_EXECUTABLE, ImmutableMap.copyOf(modifiedEnv));
     }
 
+    @Override
+    public String getBuildifierExecutable() {
+      return getExecutable(BUILDIFIER_EXECUTABLE, env);
+    }
+
+    @Override
+    public String getBuildozerExecutable() {
+      return getExecutable(BUILDOZER_EXECUTABLE, env);
+    }
+
     private void appendAndroidSdkPlatformToolsAtEndOfPath(Map<String, String> env) {
       String androidSdk = env.get("ANDROID_SDK");
       if (androidSdk == null) {
@@ -79,6 +102,11 @@ public interface BuckExecutableDetector {
       }
       path += androidAdkPlatformTools.toAbsolutePath().toString();
       env.put("PATH", path);
+    }
+
+    @Override
+    public String getNamedExecutable(String name) {
+      return getExecutable(Paths.get(name), env);
     }
 
     public String getExecutable(Path suggestedExecutable, Map<String, String> env) {

@@ -1,33 +1,42 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
-import com.google.devtools.build.lib.syntax.SkylarkNestedSet;
-import java.nio.file.Path;
 import java.util.Collection;
 
-public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
-    implements TypeCoercer<C> {
-  private final TypeCoercer<T> elementTypeCoercer;
+/**
+ * Base class for {@link com.google.common.collect.ImmutableCollection} subclasses coercers.
+ *
+ * @param <C> configured collection type
+ * @param <D> unconfigured collection type
+ * @param <T> configured collection element type
+ * @param <U> unconfigured collection element type
+ */
+public abstract class CollectionTypeCoercer<
+        D extends ImmutableCollection<U>, C extends ImmutableCollection<T>, U, T>
+    implements TypeCoercer<D, C> {
+  protected final TypeCoercer<U, T> elementTypeCoercer;
 
-  CollectionTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+  CollectionTypeCoercer(TypeCoercer<U, T> elementTypeCoercer) {
     this.elementTypeCoercer = elementTypeCoercer;
   }
 
@@ -37,7 +46,7 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, C object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, C object, Traversal traversal) {
     traversal.traverse(object);
     for (T element : object) {
       elementTypeCoercer.traverse(cellRoots, element, traversal);
@@ -45,36 +54,47 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   /** Helper method to add coerced elements to the builder. */
-  protected void fill(
-      CellPathResolver cellRoots,
+  protected void fillUnconfigured(
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
-      ImmutableCollection.Builder<T> builder,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      ImmutableCollection.Builder<U> builder,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
       Iterable<?> iterable = (Iterable<?>) object;
-      fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, iterable);
-    } else if (object instanceof SkylarkNestedSet) {
-      Iterable<?> iterable = ((SkylarkNestedSet) object).toCollection();
-      fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, iterable);
+      for (Object element : iterable) {
+        // if any element failed, the entire collection fails
+        U coercedElement =
+            elementTypeCoercer.coerceToUnconfigured(
+                cellNameResolver, filesystem, pathRelativeToProjectRoot, element);
+        builder.add(coercedElement);
+      }
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType().getType());
     }
   }
 
-  /** Populates collection builder with coerced elements from {@code iterable}. */
-  private void fill(
-      CellPathResolver cellRoots,
+  /** Helper method to add coerced elements to the builder. */
+  protected void fillConfigured(
+      CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       ImmutableCollection.Builder<T> builder,
-      Iterable<?> iterable)
+      D object)
       throws CoerceFailedException {
-    for (Object element : iterable) {
+    for (U element : object) {
       // if any element failed, the entire collection fails
       T coercedElement =
-          elementTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, element);
+          elementTypeCoercer.coerce(
+              cellNameResolver,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              element);
       builder.add(coercedElement);
     }
   }

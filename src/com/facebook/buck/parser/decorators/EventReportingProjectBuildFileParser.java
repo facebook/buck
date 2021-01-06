@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.decorators;
@@ -19,12 +19,12 @@ package com.facebook.buck.parser.decorators;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -35,9 +35,9 @@ import javax.annotation.concurrent.GuardedBy;
  * <p>This decouples status reporting functionality so that it can be used with different underlying
  * {@link ProjectBuildFileParser}s.
  */
-public class EventReportingProjectBuildFileParser implements ProjectBuildFileParser {
+public class EventReportingProjectBuildFileParser
+    extends ForwardingProjectBuildFileParserDecorator {
 
-  private final ProjectBuildFileParser delegate;
   private final BuckEventBus eventBus;
   private final Object eventLock;
 
@@ -47,7 +47,7 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
 
   private EventReportingProjectBuildFileParser(
       ProjectBuildFileParser delegate, BuckEventBus eventBus) {
-    this.delegate = delegate;
+    super(delegate);
     this.eventBus = eventBus;
     this.eventLock = new Object();
   }
@@ -63,15 +63,10 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile, AtomicLong processedBytes)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
-    return delegate.getBuildFileManifest(buildFile, processedBytes);
-  }
-
-  @Override
-  public void reportProfile() throws IOException {
-    delegate.reportProfile();
+    return delegate.getManifest(buildFile);
   }
 
   @Override
@@ -86,7 +81,7 @@ public class EventReportingProjectBuildFileParser implements ProjectBuildFilePar
       if (projectBuildFileParseEventStarted != null) {
         eventBus.post(
             new ProjectBuildFileParseEvents.Finished(
-                Preconditions.checkNotNull(projectBuildFileParseEventStarted)));
+                Objects.requireNonNull(projectBuildFileParseEventStarted)));
       }
     }
   }

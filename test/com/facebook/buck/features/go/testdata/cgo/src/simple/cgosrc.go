@@ -2,6 +2,7 @@ package simple
 
 /*
 #include "src/cxx/lib.h"
+#include "src/simple/hello.h"
 #include <stdlib.h>
 
 void wrapper(int i) {
@@ -16,6 +17,8 @@ import (
 
 func Test() {
 	C.simple_hello()
+
+	C.hello()
 
 	C.print_int(5)
 

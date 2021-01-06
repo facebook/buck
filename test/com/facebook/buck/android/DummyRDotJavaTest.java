@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -30,21 +30,19 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -62,21 +60,19 @@ public class DummyRDotJavaTest {
   public void testBuildSteps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    BuildRule resourceRule1 =
+    AndroidResource resourceRule1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
                 .build());
     setAndroidResourceBuildOutput(resourceRule1);
-    BuildRule resourceRule2 =
+    AndroidResource resourceRule2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
@@ -88,9 +84,8 @@ public class DummyRDotJavaTest {
         new DummyRDotJava(
             buildTarget,
             filesystem,
-            ruleFinder,
-            ImmutableSet.of(
-                (HasAndroidResourceDeps) resourceRule1, (HasAndroidResourceDeps) resourceRule2),
+            graphBuilder,
+            ImmutableSet.of(resourceRule1, resourceRule2),
             new JavacToJarStepFactory(
                 DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY),
             /* forceFinalResourceIds */ false,
@@ -118,10 +113,11 @@ public class DummyRDotJavaTest {
                 "%s/%s.jar",
                 rDotJavaOutputFolder,
                 dummyRDotJava.getBuildTarget().getShortNameAndFlavorPostfix()));
-    String genFolder = Paths.get("buck-out/gen/java/base/").toString();
+    String genFolder =
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent().toString();
 
     List<String> sortedSymbolsFiles =
-        Stream.of((AndroidResource) resourceRule1, (AndroidResource) resourceRule2)
+        Stream.of(resourceRule1, resourceRule2)
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList());
     ImmutableSortedSet<Path> javaSourceFiles =
@@ -140,10 +136,10 @@ public class DummyRDotJavaTest {
                 new JavacStep(
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                            .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
+                            .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
                             .build(),
                         dummyRDotJava.getBuildTarget(),
-                        pathResolver,
+                        graphBuilder.getSourcePathResolver(),
                         new FakeProjectFilesystem(),
                         new ClasspathChecker(),
                         CompilerParameters.builder()
@@ -173,7 +169,7 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testRDotJavaBinFolder() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(

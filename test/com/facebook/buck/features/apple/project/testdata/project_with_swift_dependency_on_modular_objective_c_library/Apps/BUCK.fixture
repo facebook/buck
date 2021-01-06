@@ -1,0 +1,22 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":AppBinary"],
+)
+
+apple_binary(
+    name = "AppBinary",
+    srcs = ["main.m"],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        "//Libraries:SwiftDep",
+    ],
+)

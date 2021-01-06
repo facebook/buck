@@ -110,7 +110,7 @@ var testCoverPaths []string
 
 func main() {
 	flag.Var(coverPkgs, "cover-pkgs", "List of packages & coverage variables to gather coverage info on, in the form of IMPORT-PATH1:var1=file1,var2=file2,var3=file3;IMPORT-PATH2:...")
-	flag.StringVar(&testCoverMode, "cover-mode", "set", "Cover mode (see `go tool cover`)")
+	flag.StringVar(&testCoverMode, "cover-mode", "", "Cover mode (see `go tool cover`)")
 	flag.Parse()
 
 	testFuncs, err := loadTestFuncsFromFiles(*pkgImportPath, flag.Args())
@@ -126,7 +126,7 @@ func main() {
 		testFuncs.Cover = append(testFuncs.Cover, cover)
 		testCoverPaths = append(testCoverPaths, importPath)
 	}
-	testCover = len(testCoverPaths) > 0
+	testCover = testCoverMode != ""
 
 	out := os.Stdout
 	if *outputFile != "" {

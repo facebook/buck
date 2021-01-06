@@ -1,5 +1,8 @@
 java_library(
     name = "intellij-plugin-sdk",
+    visibility = [
+        "PUBLIC",
+    ],
     exported_deps = [
         ":android",
         ":annotations",
@@ -14,9 +17,9 @@ java_library(
         ":platform-impl",
         ":serviceMessages",
         ":util",
-    ],
-    visibility = [
-        "PUBLIC",
+        # IntelliJ will provide these, too...
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )
 
@@ -62,7 +65,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "picocontainer",
-    binary_jar = "picocontainer.jar",
+    binary_jar = "picocontainer-1.2.jar",
 )
 
 prebuilt_jar(

@@ -1,0 +1,33 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "rule",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/description/impl:impl",
+        "//src/com/facebook/buck/core/rules/actions/lib:lib",
+        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/lib:lib",
+        "//src/com/facebook/buck/core/starlark/coercer:coercer",
+        "//src/com/facebook/buck/core/starlark/eventhandler:eventhandler",
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
+        "//src/com/facebook/buck/core/starlark/rule/names:names",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/skylark/packages:packages",
+        "//src/com/facebook/buck/skylark/parser/context:context",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/starlark/coercer:coercer",
+        "//src/com/facebook/buck/core/starlark/rule/args:args",
+        "//src/com/facebook/buck/core/starlark/rule/attr:attr",
+        "//third-party/java/bazel:bazel",
+    ],
+)

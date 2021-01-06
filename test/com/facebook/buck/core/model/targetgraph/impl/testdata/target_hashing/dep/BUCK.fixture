@@ -1,0 +1,7 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "DepLib1.java",
+        "DepLib2.java",
+    ],
+)

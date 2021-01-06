@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.config.BuckConfig;
@@ -20,6 +21,7 @@ import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -46,7 +48,9 @@ public class IjProjectBuckConfig {
       boolean excludeArtifacts,
       boolean includeTransitiveDependencies,
       boolean skipBuild,
-      boolean keepModuleFilesInModuleDirsEnabled) {
+      boolean keepModuleFilesInModuleDirsEnabled,
+      ImmutableSet<String> includeTestPatterns,
+      ImmutableSet<String> excludeTestPatterns) {
     Optional<String> excludedResourcePathsOption =
         buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "excluded_resource_paths");
 
@@ -73,33 +77,7 @@ public class IjProjectBuckConfig {
                 INTELLIJ_BUCK_CONFIG_SECTION, "keep_module_files_in_module_dirs", false)
             || keepModuleFilesInModuleDirsEnabled;
 
-    return IjProjectConfig.builder()
-        .setAutogenerateAndroidFacetSourcesEnabled(
-            !buckConfig.getBooleanValue(
-                PROJECT_BUCK_CONFIG_SECTION, "disable_r_java_idea_generator", false))
-        .setJavaBuckConfig(buckConfig.getView(JavaBuckConfig.class))
-        .setBuckConfig(buckConfig)
-        .setProjectJdkName(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_name"))
-        .setProjectJdkType(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
-        .setAndroidModuleSdkName(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_name"))
-        .setAndroidModuleSdkType(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
-        .setIntellijModuleSdkName(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "intellij_module_sdk_name"))
-        .setIntellijPluginLabels(
-            buckConfig.getListWithoutComments(
-                INTELLIJ_BUCK_CONFIG_SECTION, "intellij_plugin_labels"))
-        .setJavaModuleSdkName(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "java_module_sdk_name"))
-        .setJavaModuleSdkType(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "java_module_sdk_type"))
-        .setPythonModuleSdkName(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "python_module_sdk_name"))
-        .setPythonModuleSdkType(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "python_module_sdk_type"))
-        .setProjectLanguageLevel(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "language_level"))
+    return createBuilder(buckConfig)
         .setExcludedResourcePaths(excludedResourcePaths)
         .setLabelToGeneratedSourcesMap(labelToGeneratedSourcesMap)
         .setAndroidManifest(androidManifest)
@@ -118,6 +96,41 @@ public class IjProjectBuckConfig {
         .setIncludeTransitiveDependency(
             isIncludingTransitiveDependencyEnabled(includeTransitiveDependencies, buckConfig))
         .setModuleGroupName(getModuleGroupName(moduleGroupName, buckConfig))
+        .setIncludeTestPatterns(includeTestPatterns)
+        .setExcludeTestPatterns(excludeTestPatterns)
+        .build();
+  }
+
+  static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
+    return IjProjectConfig.builder()
+        .setAutogenerateAndroidFacetSourcesEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "auto_generate_android_facet_sources", true))
+        .setJavaBuckConfig(buckConfig.getView(JavaBuckConfig.class))
+        .setBuckConfig(buckConfig)
+        .setProjectJdkName(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_name"))
+        .setProjectJdkType(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
+        .setAndroidModuleSdkName(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_name"))
+        .setAndroidGenDir(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_generated_files_directory"))
+        .setAndroidModuleSdkType(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
+        .setIntellijModuleSdkName(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "intellij_module_sdk_name"))
+        .setIntellijPluginLabels(
+            buckConfig.getListWithoutComments(
+                INTELLIJ_BUCK_CONFIG_SECTION, "intellij_plugin_labels"))
+        .setJavaModuleSdkName(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "java_module_sdk_name"))
+        .setJavaModuleSdkType(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "java_module_sdk_type"))
+        .setPythonModuleSdkName(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "python_module_sdk_name"))
+        .setPythonModuleSdkType(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "python_module_sdk_type"))
+        .setProjectLanguageLevel(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "language_level"))
         .setIgnoredTargetLabels(
             buckConfig.getListWithoutComments(
                 INTELLIJ_BUCK_CONFIG_SECTION, "ignored_target_labels"))
@@ -132,9 +145,9 @@ public class IjProjectBuckConfig {
         .setGeneratingAndroidManifestEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_android_manifest", false))
-        .setGeneratingTargetModuleMapEnabled(
+        .setGeneratingTargetInfoMapEnabled(
             buckConfig.getBooleanValue(
-                INTELLIJ_BUCK_CONFIG_SECTION, "generate_target_module_map", false))
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_target_info_map", false))
         .setOutputUrl(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "project_compiler_output_url"))
         .setExtraCompilerOutputModulesPath(
@@ -142,7 +155,15 @@ public class IjProjectBuckConfig {
                 INTELLIJ_BUCK_CONFIG_SECTION, "extra_compiler_output_modules_path", false))
         .setMinAndroidSdkVersion(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "default_min_android_sdk_version"))
-        .build();
+        .setMultiCellModuleSupportEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false))
+        .setGeneratingDummyRDotJavaEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true))
+        .setKotlinJavaRuntimeLibraryTemplatePath(
+            buckConfig.getPath(
+                INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {

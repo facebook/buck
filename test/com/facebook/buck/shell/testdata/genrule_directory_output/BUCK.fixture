@@ -3,3 +3,14 @@ genrule(
     out = "directory",
     cmd = "mkdir $OUT && echo something> $OUT/file",
 )
+
+genrule(
+    name = "mkdir_outs",
+    outs = {
+        "output": [
+            "directory",
+        ],
+    },
+    bash = "mkdir -p $OUT/directory && echo something> $OUT/directory/file",
+    cmd_exe = "mkdir -p $OUT\\directory && echo something> $OUT\\directory\\file",
+)

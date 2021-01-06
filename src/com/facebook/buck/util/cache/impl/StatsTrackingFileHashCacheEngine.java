@@ -1,24 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache.impl;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.FileHashCacheEvent;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.util.cache.DelegatingFileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.google.common.collect.ImmutableList;
@@ -66,9 +65,10 @@ public class StatsTrackingFileHashCacheEngine extends DelegatingFileHashCacheEng
   }
 
   @Override
-  public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+  public HashCode getForArchiveMember(Path archiveRelativePath, Path memberPath)
+      throws IOException {
     long start = System.nanoTime();
-    HashCode sha1 = super.get(archiveMemberPath);
+    HashCode sha1 = super.getForArchiveMember(archiveRelativePath, memberPath);
     cacheRetrievalAggregatedNanoTime += System.nanoTime() - start;
     numberOfRetrievals++;
     return sha1;

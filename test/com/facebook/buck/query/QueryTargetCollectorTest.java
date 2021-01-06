@@ -1,30 +1,33 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.query;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.parser.BuildTargetPatternParser;
+import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -34,17 +37,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class QueryTargetCollectorTest {
-  private static Path ROOT = Paths.get("/fake/cell/root");
-  private static String baseName = "//app";
+  private static final Path ROOT = Paths.get("/fake/cell/root").toAbsolutePath();
+  private static final String baseName = "//app";
   private QueryEnvironment env =
       new GraphEnhancementQueryEnvironment(
           Optional.empty(),
           Optional.empty(),
           new DefaultTypeCoercerFactory(),
-          DefaultCellPathResolver.of(ROOT, ImmutableMap.of()),
-          BuildTargetPatternParser.forBaseName(baseName),
-          ImmutableSet.of());
-  private QueryTargetCollector collector;
+          TestCellPathResolver.create(ROOT).getCellNameResolver(),
+          new ParsingUnconfiguredBuildTargetViewFactory(),
+          BaseName.of(baseName),
+          ImmutableSet.of(),
+          UnconfiguredTargetConfiguration.INSTANCE);
+  private QueryTargetCollector<QueryBuildTarget> collector;
 
   @Before
   public void setUp() {
@@ -61,13 +66,13 @@ public class QueryTargetCollectorTest {
   public void targetSet() {
     ImmutableSet<QueryTarget> targets =
         ImmutableSet.of(target("foo"), target("bar"), target("baz"));
-    TargetSetExpression.of(targets).traverse(collector);
+    TargetSetExpression.<QueryBuildTarget>of(targets).traverse(collector);
     assertThat(collector.getTargets(), Matchers.equalTo(targets));
   }
 
   @Test
   public void emptySet() {
-    SetExpression.of(ImmutableList.of()).traverse(collector);
+    SetExpression.of(ImmutableList.<TargetLiteral<QueryBuildTarget>>of()).traverse(collector);
     assertThat(collector.getTargets(), Matchers.empty());
   }
 
@@ -78,16 +83,17 @@ public class QueryTargetCollectorTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void complexExpression() {
+    ImmutableList<Argument<QueryBuildTarget>> args =
+        ImmutableList.of(
+            (Argument<QueryBuildTarget>)
+                Argument.of(SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
+            (Argument<QueryBuildTarget>) Argument.of(2));
     BinaryOperatorExpression.of(
-            AbstractBinaryOperatorExpression.Operator.UNION,
+            BinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                FunctionExpression.of(
-                    new DepsFunction(),
-                    ImmutableList.of(
-                        QueryEnvironment.Argument.of(
-                            SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
-                        QueryEnvironment.Argument.of(2))),
+                new FunctionExpression<>(new DepsFunction(), args),
                 TargetSetExpression.of(ImmutableSet.of(target("bar"), target("baz")))))
         .traverse(collector);
     assertThat(
@@ -100,6 +106,6 @@ public class QueryTargetCollectorTest {
   }
 
   private static QueryTarget target(String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, baseName, shortName));
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 }

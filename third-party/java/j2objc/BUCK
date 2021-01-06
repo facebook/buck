@@ -7,4 +7,3 @@ prebuilt_jar(
     source_jar = "j2objc-annotations-1.3-sources.jar",
     visibility = ["PUBLIC"],
 )
-

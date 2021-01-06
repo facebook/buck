@@ -1,0 +1,16 @@
+java_library(
+    name = "path",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/path:path",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+    ],
+)

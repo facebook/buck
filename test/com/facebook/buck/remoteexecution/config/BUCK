@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "config",
+    srcs = glob([
+        "*.java",
+    ]),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/config:config",
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/core/config:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

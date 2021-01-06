@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -38,7 +38,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -55,6 +55,8 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> thinBinaries;
 
+  private final boolean isCacheable;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
 
@@ -65,11 +67,13 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathRuleFinder ruleFinder,
       Tool lipo,
       ImmutableSortedSet<SourcePath> thinBinaries,
+      boolean isCacheable,
       Path output) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);
+    this.isCacheable = isCacheable;
     this.output = output;
   }
 
@@ -151,5 +155,10 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         // These rules may generate supplemental object files that are linked into the binary, and
         // must be materialized in order for dsymutil to find them.
         .concat(getBuildDeps().stream());
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return isCacheable;
   }
 }

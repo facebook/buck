@@ -14,6 +14,10 @@ for i in "$@"; do
             loc="$2"
             shift
             ;;
+        --async)
+            async="$2"
+            shift
+            ;;
         *)
             shift
             ;;
@@ -49,9 +53,16 @@ do
   # Write to the output file.
   echo "the startup arguments were: $ARGS" > $output_path
   # Send the job result reply.
-  printf ",{\"id\":%s, \"type\":\"result\", \"exit_code\":0}" "$message_id"
+  if [ "$async" != "" ]; then
+      printf ",{\"id\":%s, \"type\":\"result\", \"exit_code\":0}" "$message_id" >> $TMP/output
+  else
+      printf ",{\"id\":%s, \"type\":\"result\", \"exit_code\":0}" "$message_id"
+  fi
 done
 
+if [ "$async" != "" ]; then
+    cat $TMP/output
+fi
 # Read in the end of the JSON array and reply with a corresponding closing bracket.
 read -d "]"
 echo ]

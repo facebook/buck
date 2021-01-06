@@ -1,0 +1,40 @@
+constraint_setting(
+    name = "color",
+)
+
+constraint_value(
+    name = "red-c",
+    constraint_setting = ":color",
+)
+
+config_setting(
+    name = "red",
+    constraint_values = [
+        ":red-c",
+    ],
+)
+
+java_library(
+    name = "a",
+    compatible_with = [
+        ":red",
+    ],
+    deps = select({
+        ":red": [],
+        "DEFAULT": [],
+    }),
+)
+
+java_library(
+    name = "b",
+    deps = [
+        ":a",
+    ],
+)
+
+java_library(
+    name = "c",
+    deps = [
+        ":b",
+    ],
+)

@@ -1,24 +1,24 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.skylark.parser.context;
 
+import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -26,6 +26,7 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
@@ -33,13 +34,15 @@ import javax.annotation.Nullable;
 /**
  * Tracks parse context.
  *
- * <p>This class provides API to record information retrieved while parsing a build file like parsed
- * rules.
+ * <p>This class provides API to record information retrieved while parsing a build or package file
+ * like parsed rules or a package definition.
  */
 public class ParseContext {
   // internal variable exposed to rules that is used to track parse events. This allows us to
   // remove parse state from rules and as such makes rules reusable across parse invocations
   private static final String PARSE_CONTEXT = "$parse_context";
+
+  private @Nullable PackageMetadata pkg;
 
   private final Map<String, ImmutableMap<String, Object>> rawRules;
   // stores every accessed configuration option while parsing the build file.
@@ -53,11 +56,31 @@ public class ParseContext {
     this.packageContext = packageContext;
   }
 
+  /** Records the parsed {@code rawPackage}. */
+  public void recordPackage(PackageMetadata pkg, FuncallExpression ast) throws EvalException {
+    Preconditions.checkState(rawRules.isEmpty(), "Package files cannot contain rules.");
+    if (this.pkg != null) {
+      throw new EvalException(
+          ast.getLocation(), String.format("Only one package is allow per package file."));
+    }
+    this.pkg = pkg;
+  }
+
   /** Records the parsed {@code rawRule}. */
   public void recordRule(ImmutableMap<String, Object> rawRule, FuncallExpression ast)
       throws EvalException {
-    String name =
-        Preconditions.checkNotNull((String) rawRule.get("name"), "Every target must have a name.");
+    Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
+    Object nameObject =
+        Objects.requireNonNull(rawRule.get("name"), "Every target must have a name.");
+    if (!(nameObject instanceof String)) {
+      throw new IllegalArgumentException(
+          "Target name must be string, it is "
+              + nameObject
+              + " ("
+              + nameObject.getClass().getName()
+              + ")");
+    }
+    String name = (String) nameObject;
     if (rawRules.containsKey(name)) {
       throw new EvalException(
           ast.getLocation(),
@@ -78,12 +101,20 @@ public class ParseContext {
         .putIfAbsent(key, Optional.ofNullable(value));
   }
 
+  /** @return The package in the parsed package file if defined. */
+  public PackageMetadata getPackage() {
+    if (pkg == null) {
+      return PackageMetadata.EMPTY_SINGLETON;
+    }
+    return pkg;
+  }
+
   /**
    * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as a
    *     map with attributes as keys and parameters as values.
    */
-  public ImmutableList<ImmutableMap<String, Object>> getRecordedRules() {
-    return ImmutableList.copyOf(rawRules.values());
+  public ImmutableMap<String, ImmutableMap<String, Object>> getRecordedRules() {
+    return ImmutableMap.copyOf(rawRules);
   }
 
   /** @return {@code true} if the rule with provided name exists, {@code false} otherwise. */
@@ -93,9 +124,7 @@ public class ParseContext {
 
   public ImmutableMap<String, ImmutableMap<String, Optional<String>>>
       getAccessedConfigurationOptions() {
-    return readConfigOptions
-        .entrySet()
-        .stream()
+    return readConfigOptions.entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(Entry::getKey, e -> ImmutableMap.copyOf(e.getValue())));
   }

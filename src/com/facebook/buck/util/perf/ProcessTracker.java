@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.perf;
@@ -27,13 +27,13 @@ import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.ProcessRegistry;
 import com.facebook.buck.util.ProcessResourceConsumption;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -140,13 +140,13 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @Override
-  protected void startUp() throws Exception {
+  protected void startUp() {
     LOG.debug("startUp");
     registerThisProcess();
   }
 
   @Override
-  protected void runOneIteration() throws Exception {
+  protected void runOneIteration() {
     GlobalStateManager.singleton()
         .getThreadToCommandRegister()
         .register(Thread.currentThread().getId(), invocationInfo.getCommandId());
@@ -154,7 +154,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
   }
 
   @Override
-  protected void shutDown() throws Exception {
+  protected void shutDown() {
     LOG.debug("shutDown");
     refreshProcessesInfo(/* isShuttingDown */ true);
   }
@@ -193,9 +193,9 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
         ProcessExecutorParams params,
         ImmutableMap<String, String> context) {
       this.pid = pid;
-      this.process = Preconditions.checkNotNull(process);
-      this.params = Preconditions.checkNotNull(params);
-      this.context = Preconditions.checkNotNull(context);
+      this.process = Objects.requireNonNull(process);
+      this.params = Objects.requireNonNull(params);
+      this.context = Objects.requireNonNull(context);
       updateResourceConsumption();
     }
 
@@ -236,7 +236,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
 
     ThisProcessInfo(long pid, String name) {
       this.pid = pid;
-      this.name = Preconditions.checkNotNull(name);
+      this.name = Objects.requireNonNull(name);
       updateResourceConsumption();
     }
 
@@ -276,7 +276,7 @@ public class ProcessTracker extends AbstractScheduledService implements AutoClos
         Optional<ImmutableMap<String, String>> context,
         Optional<ProcessResourceConsumption> resourceConsumption) {
       super(EventKey.unique());
-      this.executableName = Preconditions.checkNotNull(executableName);
+      this.executableName = Objects.requireNonNull(executableName);
       this.params = params;
       this.context = context;
       this.resourceConsumption = resourceConsumption;

@@ -1,12 +1,18 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# This generates the documentation for Buck and publishes it to GitHub.
-# Usage:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#   ./docs/publish.sh
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Caller must be sure they have the appropriate credentials configured
-# to push to the GitHub repo.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 set -e
 
@@ -32,6 +38,8 @@ EOF
   exit 1
 }
 
+GIT_USER="buck-bot"
+CNAME="buck.build"
 START_SOYWEB=0
 KEEP_FILES=0
 SOYWEB_PID=0
@@ -46,6 +54,12 @@ for arg do
 done
 
 STATIC_FILES_DIR=$(mktemp -d)
+
+buck run //docs:generate_buckconfig_aliases
+if ! git diff --quiet; then
+  echo "Git repository is not clean; refusing to publish"
+  exit 1
+fi
 
 # Always run this script from the root of the Buck project directory.
 cd $(git rev-parse --show-toplevel)
@@ -71,7 +85,7 @@ echo "Documentation working directory is ${STATIC_FILES_DIR}"
 # Create a clean checkout of the gh-pages branch with no data:
 if [ -z "$1" ]
 then
-  git clone git@github.com:facebook/buck.git $STATIC_FILES_DIR
+  git clone https://${GIT_USER}:${GITHUB_TOKEN}@github.com/facebook/buck.git $STATIC_FILES_DIR
 else
   cp -r "$1" $STATIC_FILES_DIR
 fi
@@ -89,6 +103,8 @@ cd -
 
 # Commit the new version of the docs:
 cd $STATIC_FILES_DIR
+echo "${CNAME}" > CNAME
+git config --global user.name "${GIT_USER}"
 git add .
 git commit -m "Updated HTML documentation."
 

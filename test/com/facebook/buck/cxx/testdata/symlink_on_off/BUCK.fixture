@@ -1,0 +1,20 @@
+cxx_library(
+    name = "bar",
+    srcs = [
+        "bar.c",
+    ],
+    deps = [
+        ":foo",
+    ],
+)
+
+cxx_library(
+    name = "foo",
+    srcs = [
+        "foo.c",
+    ],
+    exported_headers = {
+        "a/a.h": "a/a.h",
+        "a/b.h": "b/b.h",
+    },
+)

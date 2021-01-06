@@ -1,29 +1,29 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.android.apksig.ApkSigner;
 import com.android.sdklib.build.ApkCreationException;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
 import java.security.KeyStore;
@@ -32,8 +32,8 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Use Google apksigner to v1/v2/v3 sign the final APK */
@@ -61,7 +61,7 @@ class ApkSignerStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) {
     try {
-      List<ApkSigner.SignerConfig> signerConfigs = getSignerConfigs();
+      ImmutableList<ApkSigner.SignerConfig> signerConfigs = getSignerConfigs();
       File inputApkFile = filesystem.getPathForRelativePath(inputApkPath).toFile();
       File outputApkFile = filesystem.getPathForRelativePath(outputApkPath).toFile();
       signApkFile(inputApkFile, outputApkFile, signerConfigs);
@@ -74,7 +74,7 @@ class ApkSignerStep implements Step {
 
   /** Sign the APK using Google's {@link com.android.apksig.ApkSigner} */
   private void signApkFile(
-      File inputApk, File outputApk, List<ApkSigner.SignerConfig> signerConfigs)
+      File inputApk, File outputApk, ImmutableList<ApkSigner.SignerConfig> signerConfigs)
       throws ApkCreationException {
     ApkSigner.Builder apkSignerBuilder = new ApkSigner.Builder(signerConfigs);
     // For non-redex build, apkSignerBuilder can look up minimum SDK version from
@@ -97,7 +97,7 @@ class ApkSignerStep implements Step {
     }
   }
 
-  private List<ApkSigner.SignerConfig> getSignerConfigs() throws KeyStoreException {
+  private ImmutableList<ApkSigner.SignerConfig> getSignerConfigs() throws KeyStoreException {
     KeystoreProperties keystoreProperties = keystorePropertiesSupplier.get();
     Path keystorePath = keystoreProperties.getKeystore();
     char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
@@ -108,8 +108,7 @@ class ApkSignerStep implements Step {
     List<X509Certificate> certs = loadCertificates(keystore, keyAlias);
     ApkSigner.SignerConfig signerConfig =
         new ApkSigner.SignerConfig.Builder("CERT", key, certs).build();
-    List<ApkSigner.SignerConfig> configs = new ArrayList<>(Arrays.asList(signerConfig));
-    return configs;
+    return ImmutableList.of(signerConfig);
   }
 
   private KeyStore loadKeyStore(Path keystorePath, char[] keystorePassword)
@@ -130,7 +129,7 @@ class ApkSignerStep implements Step {
     try {
       key = (PrivateKey) keystore.getKey(keyAlias, keyPassword);
       // key can be null if alias/password is incorrect.
-      Preconditions.checkNotNull(key);
+      Objects.requireNonNull(key);
     } catch (Exception e) {
       throw new KeyStoreException(
           "Failed to load private key \"" + keyAlias + "\" from " + keystore);

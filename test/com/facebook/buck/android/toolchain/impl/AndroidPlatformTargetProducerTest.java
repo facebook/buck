@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.impl;
@@ -21,11 +21,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.android.toolchain.AdbToolchain;
 import com.facebook.buck.android.toolchain.AndroidBuildToolsLocation;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.file.MorePathsForTests;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -36,6 +39,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -43,6 +47,12 @@ import org.junit.rules.TemporaryFolder;
 public class AndroidPlatformTargetProducerTest {
   @Rule public TemporaryFolder tempDir = new TemporaryFolder();
   @Rule public TemporaryFolder projectRoot = new TemporaryFolder();
+  private ProjectFilesystem filesystem;
+
+  @Before
+  public void setUp() {
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot().toPath());
+  }
 
   @Test
   public void testCreateFromDefaultDirectoryStructure() {
@@ -51,16 +61,21 @@ public class AndroidPlatformTargetProducerTest {
     String platformDirectoryPath = "platforms/android-16";
     Set<Path> additionalJarPaths = ImmutableSet.of();
 
+    AndroidBuildToolsLocation buildToolsLocation =
+        AndroidBuildToolsLocation.of(androidSdkDir.resolve("platform-tools"));
+    AdbToolchain adbToolchain = AdbToolchain.of(androidSdkDir.resolve("platform-tools/adb"));
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.createFromDefaultDirectoryStructure(
+            filesystem,
             name,
-            AndroidBuildToolsLocation.of(androidSdkDir.resolve("platform-tools")),
+            buildToolsLocation,
             AndroidSdkLocation.of(androidSdkDir),
             platformDirectoryPath,
             additionalJarPaths,
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
-    assertEquals(name, androidPlatformTarget.getName());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
+    assertEquals(name, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
             MorePathsForTests.rootRelativePath("home/android/platforms/android-16/android.jar")),
@@ -81,11 +96,13 @@ public class AndroidPlatformTargetProducerTest {
         MorePathsForTests.rootRelativePath(
             "home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
     assertEquals(
-        androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
-        androidPlatformTarget.getAaptExecutable());
+        androidSdkDir.resolve("platform-tools/aapt" + binaryExtension).toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsLocation.getAaptPath()));
     assertEquals(
-        androidSdkDir.resolve("platform-tools/aidl"), androidPlatformTarget.getAidlExecutable());
+        androidSdkDir.resolve("platform-tools/aidl" + binaryExtension),
+        androidPlatformTarget.getAidlExecutable());
     assertEquals(
         androidSdkDir.resolve(
             Platform.detect() == Platform.WINDOWS ? "platform-tools/dx.bat" : "platform-tools/dx"),
@@ -111,13 +128,18 @@ public class AndroidPlatformTargetProducerTest {
     addOnsLibsDir3.mkdirs();
     Files.touch(new File(addOnsLibsDir3, "ignored.jar"));
 
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
+
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
+            filesystem,
             "Google Inc.:Google APIs:17",
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
 
     // Verify that addOnsLibsDir2 was picked up since addOnsLibsDir1 is empty.
     assertTrue(
@@ -146,17 +168,21 @@ public class AndroidPlatformTargetProducerTest {
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
     Files.touch(new File(addOnsLibsDir, "maps.jar"));
     Files.touch(new File(addOnsLibsDir, "usb.jar"));
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
 
     String platformId = "Google Inc.:Google APIs:23";
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
+            filesystem,
             platformId,
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
 
-    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-23/android.jar"),
@@ -175,13 +201,17 @@ public class AndroidPlatformTargetProducerTest {
   public void testThrowsExceptionWhenAddOnsDirectoryIsMissing() throws IOException {
     File androidSdkDir = tempDir.newFolder();
     String platformId = "Google Inc.:Google APIs:17";
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
     try {
       AndroidPlatformTargetProducer.getTargetForId(
+          filesystem,
           platformId,
           AndroidBuildToolsLocation.of(androidSdkDir.toPath().resolve("build-tools")),
           AndroidSdkLocation.of(androidSdkDir.toPath()),
           /* aaptOverride */ Optional.empty(),
-          /* aapt2Override */ Optional.empty());
+          /* aapt2Override */ Optional.empty(),
+          adbToolchain);
       fail("Should have thrown HumanReadableException");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -209,15 +239,19 @@ public class AndroidPlatformTargetProducerTest {
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
     Files.touch(new File(addOnsLibsDir, "maps.jar"));
     Files.touch(new File(addOnsLibsDir, "usb.jar"));
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
 
     // This one should include the Google jars
     AndroidPlatformTarget androidPlatformTarget1 =
         AndroidPlatformTargetProducer.getTargetForId(
+            filesystem,
             "Google Inc.:Google APIs:17",
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
     assertEquals(
         ImmutableList.of(
             pathToAndroidSdkDir.resolve("platforms/android-17/android.jar"),
@@ -229,11 +263,13 @@ public class AndroidPlatformTargetProducerTest {
     // This one should only include android.jar
     AndroidPlatformTarget androidPlatformTarget2 =
         AndroidPlatformTargetProducer.getTargetForId(
+            filesystem,
             "android-17",
             AndroidBuildToolsLocation.of(buildToolsDir.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
     assertEquals(
         ImmutableList.of(pathToAndroidSdkDir.resolve("platforms/android-17/android.jar")),
         androidPlatformTarget2.getBootclasspathEntries());
@@ -250,34 +286,41 @@ public class AndroidPlatformTargetProducerTest {
     File addOnsLibsDir = new File(androidSdkDir, "add-ons/addon-google_apis-google-17/libs");
     addOnsLibsDir.mkdirs();
     Files.touch(new File(addOnsLibsDir, "effects.jar"));
+    AdbToolchain adbToolchain =
+        AdbToolchain.of(new File(androidSdkDir, "platform-tools/adb").toPath());
 
     String platformId = "Google Inc.:Google APIs:17";
     AndroidPlatformTarget androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
+            filesystem,
             platformId,
             AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
 
-    assertEquals(platformId, androidPlatformTarget.getName());
+    assertEquals(platformId, androidPlatformTarget.getPlatformName());
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
     assertEquals(
-        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign"),
+        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign" + binaryExtension),
         androidPlatformTarget.getZipalignExecutable());
 
     File toolsDir = new File(androidSdkDir, "tools");
     toolsDir.mkdirs();
-    Files.touch(new File(toolsDir, "zipalign"));
+    Files.touch(new File(toolsDir, "zipalign" + binaryExtension));
     androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
+            filesystem,
             platformId,
             AndroidBuildToolsLocation.of(buildToolsDirFromOldUpgradePath.toPath()),
             AndroidSdkLocation.of(androidSdkDir.toPath()),
             /* aaptOverride */ Optional.empty(),
-            /* aapt2Override */ Optional.empty());
-    assertEquals(platformId, androidPlatformTarget.getName());
+            /* aapt2Override */ Optional.empty(),
+            adbToolchain);
+    assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
-        pathToAndroidSdkDir.resolve("tools/zipalign"),
+        pathToAndroidSdkDir.resolve("tools/zipalign" + binaryExtension),
         androidPlatformTarget.getZipalignExecutable());
   }
 

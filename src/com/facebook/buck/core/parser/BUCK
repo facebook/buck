@@ -1,0 +1,26 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "parser",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/parser:parser",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/files:files",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/watchman:capability",
+        "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/skylark/io/impl:impl",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
+    ],
+)

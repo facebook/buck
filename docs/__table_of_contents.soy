@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace table_of_contents}
 
 /**
@@ -157,7 +173,7 @@
       {param currentnavid: $navid /}
       {param folder: 'article' /}
       {param page: 'query_cheat_sheet' /}
-      {param text: 'Buck Query Cheat Sheet' /}
+      {param text: 'Buck Cheat Sheet' /}
     {/call}
   </ul>
   <h3>About</h3>
@@ -228,20 +244,20 @@
     {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
-      {param page: 'buckjavaargs' /}
-      {param text: '.buckjavaargs' /}
-    {/call}
-    {call navigation.link}
-      {param currentnavid: $navid /}
-      {param folder: 'concept' /}
-      {param page: 'buckconfig' /}
-      {param text: '.buckconfig' /}
+      {param page: 'buckd' /}
+      {param text: 'Buck Daemon (buckd)' /}
     {/call}
     {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'concept' /}
       {param page: 'visibility' /}
       {param text: 'Visibility' /}
+    {/call}
+    {call navigation.link}
+      {param currentnavid: $navid /}
+      {param folder: 'concept' /}
+      {param page: 'flavors' /}
+      {param text: 'Flavors' /}
     {/call}
     {call navigation.link}
       {param currentnavid: $navid /}
@@ -268,6 +284,9 @@
       {param text: 'Skylark' /}
     {/call}
   </ul>
+  {call .tocFilesDirs}
+    {param navid: $navid /}
+  {/call}
   {call .tocCommands}
     {param navid: $navid /}
   {/call}
@@ -421,6 +440,36 @@
 {/template}
 
 /**
+ * Table of contents for Buck files and directories section.
+ * @param navid The current page's navigation id.
+ */
+{template .tocFilesDirs}
+  <h3>Files and Directories</h3>
+  <ul>
+    {foreach $file_dir in [
+        'buckconfig',
+        'buckjavaargs',
+        ]}
+      {let $file_dir_text}
+        .{$file_dir}
+      {/let}
+      {call navigation.link}
+        {param currentnavid: $navid /}
+        {param folder: 'files-and-dirs' /}
+        {param page: $file_dir /}
+        {param text: $file_dir_text /}
+      {/call}
+    {/foreach}
+    {call navigation.link}
+      {param currentnavid: $navid /}
+      {param folder: 'files-and-dirs' /}
+      {param page: 'buck-out' /}
+      {param text: 'buck-out' /}
+    {/call}
+  </ul>
+{/template}
+
+/**
  * Table of contents for Buck commands section.
  * @param navid The current page's navigation id.
  */
@@ -441,13 +490,14 @@
         'fetch',
         'fix',
         'install',
+        'kill',
+        'killall',
         'project',
         'publish',
         'query',
         'run',
         'root',
         'server',
-        'suggest',
         'targets',
         'test',
         'uninstall',
@@ -462,12 +512,6 @@
         {param text: $commandtext /}
       {/call}
     {/foreach}
-    {call navigation.link}
-      {param currentnavid: $navid /}
-      {param folder: 'command' /}
-      {param page: 'buckd' /}
-      {param text: 'buckd' /}
-    {/call}
     {call navigation.link}
       {param currentnavid: $navid /}
       {param folder: 'command' /}

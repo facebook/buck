@@ -1,0 +1,19 @@
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
+    name = "common",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        "//src/com/facebook/buck/apple/xcode:xcode",
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/util/graph:graph",
+        "//src/com/facebook/buck/util/json:json",
+    ],
+    tests = [
+        "//test/com/facebook/buck/features/apple/common:common",
+    ],
+    visibility = ["PUBLIC"],
+)

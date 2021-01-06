@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache;
@@ -25,67 +25,67 @@ public class NoOpCacheStatsTracker implements CacheStatsTracker {
   }
 
   @Override
-  public Long getTotalHitCount() {
+  public long getTotalHitCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalMissCount() {
+  public long getTotalMissCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalMissMatchCount() {
+  public long getTotalMissMatchCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalEvictionCount() {
+  public long getTotalEvictionCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalInvalidationCount() {
+  public long getTotalInvalidationCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalLoadSuccessCount() {
+  public long getTotalLoadSuccessCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalLoadExceptionCount() {
+  public long getTotalLoadExceptionCount() {
     return 0L;
   }
 
   @Override
-  public Long getTotalRetrievalTime() {
+  public long getTotalRetrievalTime() {
     return 0L;
   }
 
   @Override
-  public Long getTotalLoadTime() {
+  public long getTotalLoadTime() {
     return 0L;
   }
 
   @Override
-  public Long getTotalMissTime() {
+  public long getTotalMissTime() {
     return 0L;
   }
 
   @Override
-  public Long getAverageRetrievalTime() {
+  public long getAverageRetrievalTime() {
     return 0L;
   }
 
   @Override
-  public Long getAverageMissTime() {
+  public long getAverageMissTime() {
     return 0L;
   }
 
   @Override
-  public Long getAverageLoadTime() {
+  public long getAverageLoadTime() {
     return 0L;
   }
 

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.dalvik;
@@ -64,7 +64,8 @@ abstract class SecondaryDexHelper<ZIP_OUTPUT_STREAM_HELPER extends ZipOutputStre
       currentSecondaryOut = newZipOutput(newSecondaryFile);
       newSecondaryOutOnNextEntry = false;
       // Make sure the first class in the new secondary dex can be safely loaded.
-      FileLike canaryFile = CanaryFactory.create(storeName, currentSecondaryIndex);
+      FileLike canaryFile =
+          CanaryFactory.create(storeName, String.format("%02d", currentSecondaryIndex));
       currentSecondaryOut.putEntry(canaryFile);
       // We've already tested for this. It really shouldn't happen.
       Preconditions.checkState(currentSecondaryOut.canPutEntry(entry));

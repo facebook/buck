@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/starlark/rule/attr/impl:impl",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/actions:testutil",
+        "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
+        "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
+        "//test/com/facebook/buck/core/starlark/compatible:testutil",
+        "//test/com/facebook/buck/step/impl:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

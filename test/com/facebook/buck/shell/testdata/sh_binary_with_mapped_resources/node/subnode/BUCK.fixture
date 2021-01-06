@@ -1,0 +1,7 @@
+export_file(
+    name = "stuff",
+    src = "fluff.txt",
+    visibility = [
+        "PUBLIC",
+    ],
+)

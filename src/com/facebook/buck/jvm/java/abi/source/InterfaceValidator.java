@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi.source;
@@ -22,13 +22,13 @@ import com.facebook.buck.jvm.java.abi.source.TreeBackedTypeResolutionSimulator.T
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory.SourceOnlyAbiRuleInfo;
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import com.facebook.buck.util.liteinfersupport.Preconditions;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -134,7 +134,7 @@ class InterfaceValidator {
               elements,
               types,
               (PackageElement)
-                  Preconditions.checkNotNull(trees.getElement(new TreePath(compilationUnit))));
+                  Objects.requireNonNull(trees.getElement(new TreePath(compilationUnit))));
       treeBackedResolver = new TreeBackedTypeResolutionSimulator(elements, trees, compilationUnit);
     }
 
@@ -182,8 +182,7 @@ class InterfaceValidator {
 
       DeclaredType declaredType = (DeclaredType) typeMirror;
       TypeElement typeElement = (TypeElement) declaredType.asElement();
-      CompletedType completedType =
-          Preconditions.checkNotNull(completer.complete(typeElement, true));
+      CompletedType completedType = Objects.requireNonNull(completer.complete(typeElement, true));
 
       switch (completedType.kind) {
         case COMPLETED_TYPE:
@@ -273,7 +272,7 @@ class InterfaceValidator {
           imports.importMembers(leafmostElement, leafmostElementPath);
         }
       } else if (!isStarImport) {
-        imports.importStatic((TypeElement) leafmostElement, Preconditions.checkNotNull(memberName));
+        imports.importStatic((TypeElement) leafmostElement, Objects.requireNonNull(memberName));
       } else {
         imports.importStaticMembers((TypeElement) leafmostElement);
       }

@@ -1,0 +1,14 @@
+java_library(
+    name = "should_pass",
+    deps = [
+        "//foo:baz",
+        "//foo:qux",
+    ],
+)
+
+java_library(
+    name = "should_fail",
+    deps = [
+        "//foo:waldo",
+    ],
+)

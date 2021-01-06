@@ -1,0 +1,25 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "parser",
+    deps = [
+        "//src/com/facebook/buck/core/files:files",
+        "//src/com/facebook/buck/core/graph/transformation/executor/impl:impl",
+        "//src/com/facebook/buck/core/parser:parser",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/io/watchman:capability",
+        "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/skylark/io/impl:impl",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/watchman:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/util:testutil",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
+    ],
+)

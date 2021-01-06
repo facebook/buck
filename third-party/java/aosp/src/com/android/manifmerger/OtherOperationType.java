@@ -26,5 +26,5 @@ public enum OtherOperationType {
     ignore,
 
     // used to direct lint
-    targetAPI
+    targetApi
 }

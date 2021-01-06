@@ -1,0 +1,19 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "cache",
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/cache:cache",
+        "//src/com/facebook/buck/parser/cache/json:json",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/util/config:config",
+        "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

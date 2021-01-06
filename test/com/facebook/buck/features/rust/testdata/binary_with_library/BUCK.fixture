@@ -39,3 +39,25 @@ rust_library(
     name = "hyphenated-name",
     srcs = ["hyphenated_name.rs"],
 )
+
+rust_binary(
+    name = "hello-renamed",
+    srcs = [
+        "main.rs",
+    ],
+    named_deps = {
+        "messenger": "//messenger3:messenger3",
+    },
+)
+
+rust_binary(
+    name = "hello-multi-renamed",
+    srcs = [
+        "main.rs",
+    ],
+    named_deps = {
+        "messenger": "//messenger3:messenger3",
+        "whatsapp": "//messenger3:messenger3",
+    },
+    rustc_flags = ["--cfg=whatsapp"],
+)

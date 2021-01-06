@@ -14,36 +14,40 @@
 
 """Unit tests for structs.bzl."""
 
-load("//:lib.bzl", "structs", "asserts", "unittest")
-
+load("//:lib.bzl", "asserts", "structs", "unittest")
 
 def _add_test(ctx):
-  """Unit tests for dicts.add."""
-  env = unittest.begin(ctx)
+    """Unit tests for dicts.add."""
+    env = unittest.begin(ctx)
 
-  # Test zero- and one-argument behavior.
-  asserts.equals(env, {}, structs.to_dict(struct()))
-  asserts.equals(env, {"a": 1}, structs.to_dict(struct(a=1)))
+    # Test zero- and one-argument behavior.
+    asserts.equals(env, {}, structs.to_dict(struct()))
+    asserts.equals(env, {"a": 1}, structs.to_dict(struct(a = 1)))
 
-  # Test simple two-argument behavior.
-  asserts.equals(env, {"a": 1, "b": 2}, structs.to_dict(struct(a=1, b=2)))
+    # Test simple two-argument behavior.
+    asserts.equals(env, {"a": 1, "b": 2}, structs.to_dict(struct(a = 1, b = 2)))
 
-  # Test simple more-than-two-argument behavior.
-  asserts.equals(env, {"a": 1, "b": 2, "c": 3, "d": 4},
-                 structs.to_dict(struct(a=1, b=2, c=3, d=4)))
+    # Test simple more-than-two-argument behavior.
+    asserts.equals(
+        env,
+        {"a": 1, "b": 2, "c": 3, "d": 4},
+        structs.to_dict(struct(a = 1, b = 2, c = 3, d = 4)),
+    )
 
-  # Test transformation is not applied transitively.
-  asserts.equals(env, {"a": 1, "b": struct(bb=1)},
-                 structs.to_dict(struct(a=1, b=struct(bb=1))))
+    # Test transformation is not applied transitively.
+    asserts.equals(
+        env,
+        {"a": 1, "b": struct(bb = 1)},
+        structs.to_dict(struct(a = 1, b = struct(bb = 1))),
+    )
 
-  unittest.end(env)
+    unittest.end(env)
 
 add_test = unittest.make(_add_test)
 
-
 def structs_test_suite():
-  """Creates the test targets and test suite for structs.bzl tests."""
-  unittest.suite(
-      "structs_tests",
-      add_test,
-  )
+    """Creates the test targets and test suite for structs.bzl tests."""
+    unittest.suite(
+        "structs_tests",
+        add_test,
+    )

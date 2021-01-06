@@ -1,0 +1,44 @@
+apple_library(
+    name = "AvailableLibrary",
+    exported_headers = [
+        "AvailableLibrary.h",
+    ],
+    modular = True,
+)
+
+apple_library(
+    name = "Library",
+    srcs = [
+        "Test.m",
+        "Test.swift",
+    ],
+    compiler_flags = ["-Werror=unguarded-availability"],
+    exported_deps = [":AvailableLibrary"],
+    swift_version = "5",
+    target_sdk_version = "12.0",
+)
+
+apple_binary(
+    name = "Binary",
+    srcs = [
+        "Test.swift",
+        "main.m",
+    ],
+    compiler_flags = ["-Werror=unguarded-availability"],
+    swift_version = "5",
+    target_sdk_version = "12.0",
+    deps = [":AvailableLibrary"],
+)
+
+apple_test(
+    name = "Test",
+    srcs = [
+        "Test.m",
+        "Test.swift",
+    ],
+    compiler_flags = ["-Werror=unguarded-availability"],
+    info_plist = "Info.plist",
+    swift_version = "5",
+    target_sdk_version = "12.0",
+    deps = [":AvailableLibrary"],
+)

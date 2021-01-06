@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.resources;
@@ -29,7 +29,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -52,7 +51,7 @@ public class ResourceTableTest {
   private Path apkPath;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
@@ -100,8 +99,7 @@ public class ResourceTableTest {
       String expected =
           Joiner.on("\n")
               .join(
-                  Files.readAllLines(resourcesOutput)
-                      .stream()
+                  Files.readAllLines(resourcesOutput).stream()
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
@@ -131,8 +129,7 @@ public class ResourceTableTest {
       String expected =
           Joiner.on("\n")
               .join(
-                  Files.readAllLines(resourcesOutput)
-                      .stream()
+                  Files.readAllLines(resourcesOutput).stream()
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
@@ -162,8 +159,7 @@ public class ResourceTableTest {
       String expected =
           Joiner.on("\n")
               .join(
-                  Files.readAllLines(resourcesOutput)
-                      .stream()
+                  Files.readAllLines(resourcesOutput).stream()
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
@@ -212,7 +208,7 @@ public class ResourceTableTest {
       }
       resourceTable = ResourceTable.slice(resourceTable, counts);
       Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.sliced"));
-      String expected = filesystem.readFileIfItExists(resourcesOutput).get();
+      String expected = filesystem.readFileIfItExists(resourcesOutput).get().replaceAll("\r\n", "\n");
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));

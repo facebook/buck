@@ -5,7 +5,8 @@
 [project]
   ignore = buck-out
   ide = intellij
-  disable_r_java_idea_generator = true
 [intellij]
+  auto_generate_android_facet_sources = false
   excluded_resource_paths = values-en
   keep_module_files_in_module_dirs = true
+  generate_target_info_map = true

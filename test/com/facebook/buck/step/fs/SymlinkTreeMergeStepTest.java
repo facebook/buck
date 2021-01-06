@@ -1,20 +1,23 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.step.fs;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -24,12 +27,11 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSetMultimap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.BiFunction;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -44,6 +46,8 @@ public class SymlinkTreeMergeStepTest {
 
   private ProjectFilesystem filesystem;
   private Path linkPath;
+  private final BiFunction<ProjectFilesystem, Path, Boolean> deleteExistingLinkPredicate =
+      (fs, existingTarget) -> false;
 
   @Before
   public void setUp() throws IOException {
@@ -86,19 +90,18 @@ public class SymlinkTreeMergeStepTest {
   }
 
   @Test
-  public void mergesFromDirectoriesProperly() throws IOException, InterruptedException {
-    ImmutableMultimap<Path, Path> dirs =
-        ImmutableSetMultimap.of(
-            Paths.get(""), filesystem.resolve(Paths.get("example_py")),
-            Paths.get(""), filesystem.resolve(Paths.get("example_2_py")),
-            Paths.get("subdir"), filesystem.resolve(Paths.get("example_3_py")));
+  public void mergesFromDirectoriesProperly() throws IOException {
+    SymlinkPaths dirs =
+        SymlinkPackPaths.of(
+            new SymlinkDirPaths(filesystem.resolve(Paths.get("example_py"))),
+            new SymlinkDirPaths(filesystem.resolve(Paths.get("example_2_py"))));
 
-    SymlinkTreeMergeStep step = new SymlinkTreeMergeStep("binary", filesystem, linkPath, dirs);
+    SymlinkTreeMergeStep step =
+        new SymlinkTreeMergeStep("binary", filesystem, linkPath, dirs, deleteExistingLinkPredicate);
     StepExecutionResult result = step.execute(TestExecutionContext.newInstance());
 
-    Assert.assertEquals(StepExecutionResults.SUCCESS, result);
+    assertEquals(StepExecutionResults.SUCCESS, result);
     Assert.assertTrue(filesystem.isDirectory(linkPath.resolve("common_dir")));
-    Assert.assertTrue(filesystem.isDirectory(linkPath.resolve("subdir").resolve("common_dir")));
 
     if (Platform.detect() != Platform.WINDOWS) {
       Assert.assertTrue(filesystem.isSymLink(linkPath.resolve(Paths.get("example_py.py"))));
@@ -112,14 +115,6 @@ public class SymlinkTreeMergeStepTest {
           filesystem.isSymLink(linkPath.resolve(Paths.get("example_2_py-1.0", "DESCRIPTION.rst"))));
       Assert.assertTrue(
           filesystem.isSymLink(linkPath.resolve(Paths.get("common_dir", "sibling.py"))));
-
-      Assert.assertTrue(
-          filesystem.isSymLink(linkPath.resolve(Paths.get("subdir", "example_3_py.py"))));
-      Assert.assertTrue(
-          filesystem.isSymLink(
-              linkPath.resolve(Paths.get("subdir", "example_3_py-1.0", "DESCRIPTION.rst"))));
-      Assert.assertTrue(
-          filesystem.isSymLink(linkPath.resolve(Paths.get("subdir", "common_dir", "sibling.py"))));
     }
 
     Assert.assertTrue(
@@ -148,24 +143,10 @@ public class SymlinkTreeMergeStepTest {
         Files.isSameFile(
             filesystem.resolve(Paths.get("example_2_py", "common_dir", "sibling.py")),
             filesystem.resolve(linkPath.resolve(Paths.get("common_dir", "sibling.py")))));
-
-    Assert.assertTrue(
-        Files.isSameFile(
-            filesystem.resolve(Paths.get("example_3_py", "example_3_py.py")),
-            filesystem.resolve(linkPath.resolve(Paths.get("subdir", "example_3_py.py")))));
-    Assert.assertTrue(
-        Files.isSameFile(
-            filesystem.resolve(Paths.get("example_3_py", "example_3_py-1.0", "DESCRIPTION.rst")),
-            filesystem.resolve(
-                linkPath.resolve(Paths.get("subdir", "example_3_py-1.0", "DESCRIPTION.rst")))));
-    Assert.assertTrue(
-        Files.isSameFile(
-            filesystem.resolve(Paths.get("example_3_py", "common_dir", "sibling.py")),
-            filesystem.resolve(linkPath.resolve(Paths.get("subdir", "common_dir", "sibling.py")))));
   }
 
   @Test
-  public void throwsIfDestinationAlreadyExists() throws IOException, InterruptedException {
+  public void throwsIfDestinationAlreadyExists() throws IOException {
     Path examplePyDest = linkPath.resolve("example_py.py");
     Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
 
@@ -180,13 +161,13 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSetMultimap.of(Paths.get(""), examplePySource.getParent()));
+            new SymlinkDirPaths(examplePySource.getParent()),
+            deleteExistingLinkPredicate);
     step.execute(TestExecutionContext.newInstance());
   }
 
   @Test
-  public void throwsWithBetterMessageIfDestinationAlreadyExistsAndIsASymlink()
-      throws IOException, InterruptedException {
+  public void throwsWithBetterMessageIfDestinationAlreadyExistsAndIsASymlink() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
     Path examplePyDest = linkPath.resolve("example_py.py");
     Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
@@ -205,11 +186,33 @@ public class SymlinkTreeMergeStepTest {
             "binary",
             filesystem,
             linkPath,
-            ImmutableSetMultimap.of(
-                Paths.get(""),
-                examplePySource.getParent(),
-                Paths.get(""),
-                otherPySource.getParent()));
+            SymlinkPackPaths.of(
+                new SymlinkDirPaths(examplePySource.getParent()),
+                new SymlinkDirPaths(otherPySource.getParent())),
+            deleteExistingLinkPredicate);
     step.execute(TestExecutionContext.newInstance());
+  }
+
+  @Test
+  public void linksIfFileAlreadyExistsAndIsASymlinkAndPredicateReturnsTrue() throws IOException {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
+    Path examplePyDest = linkPath.resolve("example_py.py");
+    Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
+    Path otherPySource = filesystem.resolve("example_2_py").resolve("example_py.py");
+    filesystem.writeContentsToPath("print(\"conflict!\")", otherPySource);
+
+    SymlinkTreeMergeStep step =
+        new SymlinkTreeMergeStep(
+            "binary",
+            filesystem,
+            linkPath,
+            SymlinkPackPaths.of(
+                new SymlinkDirPaths(examplePySource.getParent()),
+                new SymlinkDirPaths(otherPySource.getParent())),
+            (fs, existingTarget) -> true);
+    step.execute(TestExecutionContext.newInstance());
+
+    assertThat(
+        filesystem.readSymLink(examplePyDest), Matchers.oneOf(examplePySource, otherPySource));
   }
 }

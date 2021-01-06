@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.redex;
@@ -20,13 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +40,7 @@ import org.junit.Test;
 public class ReDexStepTest {
   @Test
   public void constructorArgsAreUsedToCreateShellCommand() {
-    Path workingDirectory = Paths.get("/where/the/code/is");
+    AbsPath workingDirectory = AbsPath.of(Paths.get("/where/the/code/is").toAbsolutePath());
     List<String> redexBinaryArgs = ImmutableList.of("/usr/bin/redex");
     Map<String, String> redexEnvironmentVariables = ImmutableMap.of("REDEX_DEBUG", "1");
     Path inputApkPath = Paths.get("buck-out/gen/app.apk.zipalign");
@@ -57,10 +55,9 @@ public class ReDexStepTest {
     ImmutableList<Arg> redexExtraArgs = ImmutableList.of(StringArg.of("foo"), StringArg.of("bar"));
     Path proguardMap = Paths.get("buck-out/gen/app/__proguard__/mapping.txt");
     Path proguardConfig = Paths.get("app.proguard.config");
-    Path seeds = Paths.get("buck-out/gen/app/__proguard__/seeds.txt");
-
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    Path seeds =
+        Paths.get(
+            "buck-out/gen/app/__proshouldEmitGFlagIfProguardConfigPresentshouldEmitGFlagIfProguardConfigPresentshouldEmitGFlagIfProguardConfigPresentguard__/seeds.txt");
 
     Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
 
@@ -78,7 +75,7 @@ public class ReDexStepTest {
             proguardMap,
             proguardConfig,
             seeds,
-            pathResolver);
+            new TestActionGraphBuilder().getSourcePathResolver());
 
     assertEquals("redex", redex.getShortName());
 

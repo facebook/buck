@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.attr;
@@ -20,7 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.function.Predicate;
@@ -42,7 +42,7 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * key if and only if they are actually being used for the rule. I.e. if they are present in the
    * dep-file listed by {@link #getInputsAfterBuildingLocally(BuildContext, CellPathResolver)}.
    */
-  Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver);
+  Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolverAdapter pathResolver);
 
   /**
    * Returns a predicate that can tell whether the existence of a given path may be of interest to
@@ -58,7 +58,7 @@ public interface SupportsDependencyFileRuleKey extends BuildRule {
    * compiler may decide to use it. For that reason rule key needs to reflect existence of all such
    * files and change when a such a file gets added or removed.
    */
-  Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver);
+  Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolverAdapter pathResolver);
 
   /**
    * Returns a list of source paths that were actually used for the rule. This list comes from the

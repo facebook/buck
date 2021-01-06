@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
@@ -22,7 +22,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.filesystem.ExactPathMatcher;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -31,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -51,14 +54,70 @@ public class DefaultProjectFilesystemViewTest {
   private DefaultProjectFilesystemView filesystemView;
 
   @Before
-  public void setUp() throws InterruptedException {
+  public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    filesystemView = new DefaultProjectFilesystemView(filesystem, Paths.get(""), ImmutableMap.of());
+    filesystemView =
+        new DefaultProjectFilesystemView(
+            filesystem, Paths.get(""), filesystem.getRootPath().getPath(), ImmutableMap.of());
+  }
+
+  @Test
+  public void resolvedPathsAreResolvedRelativeToViewRoot() {
+    assertEquals(tmp.getRoot().resolve(Paths.get("foo")), filesystemView.resolve(Paths.get("foo")));
+    assertEquals(tmp.getRoot().resolve(Paths.get("foo")), filesystemView.resolve("foo"));
+
+    filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());
+
+    assertEquals(
+        tmp.getRoot().resolve(Paths.get("foo", "bar")), filesystemView.resolve(Paths.get("bar")));
+    assertEquals(tmp.getRoot().resolve(Paths.get("foo", "bar")), filesystemView.resolve("bar"));
+  }
+
+  @Test
+  public void isSubdirOfShouldObeyViewRoot() {
+    assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo")));
+    assertFalse(filesystemView.isSubdirOf(tmp.getRoot().resolve("..")));
+
+    filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());
+    assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo").resolve("bar")));
+    assertTrue(filesystemView.isSubdirOf(tmp.getRoot().resolve("foo")));
+    assertFalse(filesystemView.isSubdirOf(tmp.getRoot()));
+  }
+
+  @Test
+  public void getDirectoryContentsObeysViewRoot() throws IOException {
+    tmp.newFile("file1");
+    tmp.newFolder("dir");
+    tmp.newFile("dir/file2");
+    tmp.newFolder("dir/subdir");
+    tmp.newFile("dir/subdir/file3");
+
+    DefaultProjectFilesystemView dirView =
+        filesystemView.withView(Paths.get("dir"), ImmutableSet.of());
+    assertThat(
+        dirView.getDirectoryContents(Paths.get("")),
+        containsInAnyOrder(Paths.get("file2"), Paths.get("subdir")));
+    assertThat(
+        dirView.getDirectoryContents(Paths.get("subdir")),
+        containsInAnyOrder(Paths.get("subdir/file3")));
+  }
+
+  @Test
+  public void isDirectoryDelegatesToFilesystem() throws IOException {
+    filesystem = new FakeProjectFilesystem();
+    filesystem.mkdirs(Paths.get("foo"));
+    filesystemView =
+        new DefaultProjectFilesystemView(
+            filesystem, Paths.get(""), filesystem.getRootPath().getPath(), ImmutableMap.of());
+
+    assertTrue(filesystemView.isDirectory(Paths.get("foo")));
+    assertFalse(filesystemView.isDirectory(Paths.get("bar")));
   }
 
   @Test
   public void relativizeReturnsPathsRelativeToViewRoot() {
-    assertEquals(filesystem.relativize(tmp.getRoot()), filesystemView.relativize(tmp.getRoot()));
+    assertEquals(
+        filesystem.relativize(tmp.getRoot()).getPath(), filesystemView.relativize(tmp.getRoot()));
     filesystemView = filesystemView.withView(Paths.get("foo"), ImmutableSet.of());
     assertEquals(
         Paths.get("bar"),
@@ -73,7 +132,7 @@ public class DefaultProjectFilesystemViewTest {
     assertFalse(filesystemView.isIgnored(Paths.get("foo")));
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("foo"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("foo"))));
 
     // matcher was declared in view relative to ".", so should only match "foo", but not any
     // "bar/foo" etc
@@ -87,7 +146,7 @@ public class DefaultProjectFilesystemViewTest {
 
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("a", "path"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("a", "path"))));
     filesystemView = filesystemView.withView(Paths.get("a"), ImmutableSet.of());
     assertTrue(filesystemView.isIgnored(Paths.get("path")));
     assertFalse(filesystemView.isIgnored(Paths.get("a", "path")));
@@ -100,7 +159,7 @@ public class DefaultProjectFilesystemViewTest {
     tmp.newFolder("dir/dir2");
     tmp.newFile("dir/dir2/file2.txt");
 
-    ImmutableList.Builder<String> fileNames = ImmutableList.builder();
+    ImmutableList.Builder<Path> fileNames = ImmutableList.builder();
 
     filesystemView.walkRelativeFileTree(
         Paths.get("dir"),
@@ -108,13 +167,15 @@ public class DefaultProjectFilesystemViewTest {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            fileNames.add(file.toString());
+            fileNames.add(file);
             return FileVisitResult.CONTINUE;
           }
         });
-    assertThat(fileNames.build(), containsInAnyOrder("dir/file.txt", "dir/dir2/file2.txt"));
+    assertThat(
+        fileNames.build(),
+        containsInAnyOrder(Paths.get("dir/file.txt"), Paths.get("dir/dir2/file2.txt")));
 
-    ImmutableList.Builder<String> fileNames2 = ImmutableList.builder();
+    ImmutableList.Builder<Path> fileNames2 = ImmutableList.builder();
 
     filesystemView = filesystemView.withView(Paths.get("dir"), ImmutableSet.of());
     filesystemView.walkRelativeFileTree(
@@ -123,12 +184,13 @@ public class DefaultProjectFilesystemViewTest {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            fileNames2.add(file.toString());
+            fileNames2.add(file);
             return FileVisitResult.CONTINUE;
           }
         });
 
-    assertThat(fileNames2.build(), containsInAnyOrder("file.txt", "dir2/file2.txt"));
+    assertThat(
+        fileNames2.build(), containsInAnyOrder(Paths.get("file.txt"), Paths.get("dir2/file2.txt")));
   }
 
   @Test
@@ -138,24 +200,24 @@ public class DefaultProjectFilesystemViewTest {
     tmp.newFolder("dir/dir2");
     tmp.newFile("dir/dir2/file2.txt");
 
-    ImmutableList.Builder<String> fileNames = ImmutableList.builder();
+    ImmutableList.Builder<Path> fileNames = ImmutableList.builder();
 
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("dir", "dir2"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("dir", "dir2"))));
     filesystemView.walkRelativeFileTree(
         Paths.get("dir"),
         EnumSet.noneOf(FileVisitOption.class),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            fileNames.add(file.toString());
+            fileNames.add(file);
             return FileVisitResult.CONTINUE;
           }
         });
-    assertThat(fileNames.build(), containsInAnyOrder("dir/file.txt"));
+    assertThat(fileNames.build(), containsInAnyOrder(Paths.get("dir/file.txt")));
 
-    ImmutableList.Builder<String> fileNames2 = ImmutableList.builder();
+    ImmutableList.Builder<Path> fileNames2 = ImmutableList.builder();
     filesystemView = filesystemView.withView(Paths.get("dir"), ImmutableSet.of());
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
@@ -163,41 +225,41 @@ public class DefaultProjectFilesystemViewTest {
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            fileNames2.add(file.toString());
+            fileNames2.add(file);
             return FileVisitResult.CONTINUE;
           }
         });
 
-    assertThat(fileNames2.build(), containsInAnyOrder("file.txt"));
+    assertThat(fileNames2.build(), containsInAnyOrder(Paths.get("file.txt")));
 
-    ImmutableList.Builder<String> fileNames3 = ImmutableList.builder();
+    ImmutableList.Builder<Path> fileNames3 = ImmutableList.builder();
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("dir"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("dir"))));
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
         EnumSet.noneOf(FileVisitOption.class),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            fileNames3.add(file.toString());
+            fileNames3.add(file);
             return FileVisitResult.CONTINUE;
           }
         });
 
-    assertThat(fileNames3.build(), containsInAnyOrder("file.txt"));
+    assertThat(fileNames3.build(), containsInAnyOrder(Paths.get("file.txt")));
 
-    ImmutableList.Builder<String> fileNames4 = ImmutableList.builder();
+    ImmutableList.Builder<Path> fileNames4 = ImmutableList.builder();
     filesystemView =
         filesystemView.withView(
-            Paths.get(""), ImmutableSet.of(new PathOrGlobMatcher(Paths.get("file.txt"))));
+            Paths.get(""), ImmutableSet.of(RecursiveFileMatcher.of(RelPath.get("file.txt"))));
     filesystemView.walkRelativeFileTree(
         Paths.get(""),
         EnumSet.noneOf(FileVisitOption.class),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-            fileNames4.add(file.toString());
+            fileNames4.add(file);
             return FileVisitResult.CONTINUE;
           }
         });
@@ -261,7 +323,7 @@ public class DefaultProjectFilesystemViewTest {
         containsInAnyOrder(Paths.get("dir1/file2"), Paths.get("dir1/dir2/file3")));
 
     filesystemView =
-        filesystemView.withView(Paths.get("dir1"), ImmutableSet.of(new PathOrGlobMatcher("file2")));
+        filesystemView.withView(Paths.get("dir1"), ImmutableSet.of(ExactPathMatcher.of("file2")));
     assertThat(
         filesystemView.getFilesUnderPath(Paths.get(""), EnumSet.noneOf(FileVisitOption.class)),
         containsInAnyOrder(Paths.get("dir2/file3")));
@@ -272,5 +334,63 @@ public class DefaultProjectFilesystemViewTest {
             Paths.get("dir1/file2")::equals,
             EnumSet.of(FileVisitOption.FOLLOW_LINKS)),
         containsInAnyOrder());
+  }
+
+  @Test
+  public void getDirectoryContentsWithEmptyRoot() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file1");
+    tmp.newFile("dir1/file2");
+
+    assertThat(
+        filesystemView.getDirectoryContents(Paths.get("dir1")),
+        containsInAnyOrder(Paths.get("dir1/file1"), Paths.get("dir1/file2")));
+  }
+
+  @Test
+  public void isFile() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file1");
+
+    assertTrue(filesystemView.isFile(Paths.get("dir1/file1")));
+    assertTrue(filesystemView.isFile(Paths.get("dir1/file1"), LinkOption.NOFOLLOW_LINKS));
+    assertFalse(filesystemView.isFile(Paths.get("dir1/file2")));
+  }
+
+  @Test
+  public void isDirectory() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFolder("dir1/dir2");
+
+    assertTrue(filesystemView.isDirectory(Paths.get("dir1/dir2")));
+    assertFalse(filesystemView.isDirectory(Paths.get("dir2")));
+    assertFalse(filesystemView.isDirectory(Paths.get("dir1/dir3")));
+  }
+
+  @Test
+  public void canReadAttributes() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file1");
+
+    BasicFileAttributes attributes =
+        filesystemView.readAttributes(Paths.get("dir1/file1"), BasicFileAttributes.class);
+    assertTrue(attributes.isRegularFile());
+    assertFalse(attributes.isDirectory());
+
+    attributes = filesystemView.readAttributes(Paths.get("dir1"), BasicFileAttributes.class);
+    assertFalse(attributes.isRegularFile());
+    assertTrue(attributes.isDirectory());
+  }
+
+  @Test
+  public void writeLinesToFileWritesFileAtCorrectPath() throws IOException {
+    filesystemView.writeLinesToPath(ImmutableList.of("1"), Paths.get("test1"));
+    assertEquals(ImmutableList.of("1"), filesystem.readLines(Paths.get("test1")));
+
+    filesystemView = filesystemView.withView(Paths.get("rel"), ImmutableSet.of());
+
+    filesystem.mkdirs(Paths.get("rel"));
+    filesystemView.writeLinesToPath(ImmutableList.of("2"), Paths.get("test2"));
+    assertEquals(ImmutableList.of("2"), filesystem.readLines(Paths.get("rel", "test2")));
   }
 }

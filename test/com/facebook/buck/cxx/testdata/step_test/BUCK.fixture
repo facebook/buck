@@ -49,6 +49,23 @@ cxx_binary(
 )
 
 genrule(
+    name = "genheaders_folder",
+    out = "genheaders",
+    cmd = "mkdir $OUT; echo \"#define TEST\" > $OUT/genheader.h",
+    cmd_exe = "mkdir $OUT & echo \"#define TEST\" > $OUT\\genheader.h",
+)
+
+cxx_binary(
+    name = "binary_using_location_include_path",
+    srcs = [
+        "foo.cpp",
+    ],
+    preprocessor_flags = [
+        "-I$(location :genheaders_folder)",
+    ],
+)
+
+genrule(
     name = "gensource",
     srcs = [
         "unused.dat",
@@ -155,6 +172,13 @@ cxx_binary(
     name = "untracked_header",
     srcs = [
         "untracked_header.cpp",
+    ],
+)
+
+cxx_binary(
+    name = "two_untracked_headers",
+    srcs = [
+        "two_untracked_headers.cpp",
     ],
 )
 

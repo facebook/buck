@@ -4,6 +4,40 @@ java_test(
         "MockTest.java",
         "MockTest2.java",
     ],
+    labels = [
+        "A",
+        "B",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "//:foo",
+    ],
+)
+
+java_test(
+    name = "wider_classpath_coverage_test",
+    srcs = [
+        "MockTest.java",
+        "MockTest2.java",
+    ],
+    labels = [
+        "A",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "//:top",
+    ],
+)
+
+java_test(
+    name = "test_setup_for_source_only_abi",
+    srcs = [
+        "MockTest.java",
+        "MockTest2.java",
+    ],
+    labels = [
+        "B",
+    ],
     deps = [
         "buck//third-party/java/junit:junit",
         "//:foo",

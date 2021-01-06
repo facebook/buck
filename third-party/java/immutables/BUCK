@@ -12,29 +12,30 @@ java_annotation_processor(
 
 java_library(
     name = "immutables",
+    visibility = [
+        "PUBLIC",
+    ],
     exported_deps = [
         ":builder",
         ":value",
-    ],
-    visibility = [
-        "PUBLIC",
+        "//src/com/facebook/buck/core/util/immutables/resources:resources",
     ],
 )
 
 prebuilt_jar(
     name = "value",
-    binary_jar = "value-2.5.7-SNAPSHOT.jar",
+    binary_jar = "value-2.7.3.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "value-2.5.7-SNAPSHOT-sources.jar",
+    source_jar = "value-2.7.3-sources.jar",
 )
 
 prebuilt_jar(
     name = "builder",
-    binary_jar = "builder-2.5.7-SNAPSHOT.jar",
+    binary_jar = "builder-2.7.3.jar",
     licenses = [
         "COPYING",
     ],
-    source_jar = "builder-2.5.7-SNAPSHOT-sources.jar",
+    source_jar = "builder-2.7.3-sources.jar",
 )

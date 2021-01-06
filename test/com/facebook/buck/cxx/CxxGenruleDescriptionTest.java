@@ -1,40 +1,49 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -52,29 +61,32 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.Genrule;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.OptionalMatchers;
-import com.facebook.buck.util.Optionals;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.config.RawConfig;
+import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.NaiveVersionSelector;
 import com.facebook.buck.versions.VersionPropagatorBuilder;
 import com.facebook.buck.versions.VersionedAliasBuilder;
-import com.facebook.buck.versions.VersionedTargetGraphBuilder;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CxxGenruleDescriptionTest {
 
-  private static final ForkJoinPool POOL = new ForkJoinPool(1);
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void toolPlatformParseTimeDeps() {
@@ -87,7 +99,8 @@ public class CxxGenruleDescriptionTest {
           ImmutableSet.copyOf(builder.findImplicitDeps()),
           Matchers.equalTo(
               ImmutableSet.copyOf(
-                  CxxPlatforms.getParseTimeDeps(CxxPlatformUtils.DEFAULT_PLATFORM))));
+                  CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.getParseTimeDeps(
+                      UnconfiguredTargetConfiguration.INSTANCE))));
     }
   }
 
@@ -108,7 +121,7 @@ public class CxxGenruleDescriptionTest {
       CxxGenruleBuilder builder =
           new CxxGenruleBuilder(
                   BuildTargetFactory.newInstance(
-                      "//:rule#" + CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()))
+                      "//:rule#" + CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR))
               .setOut("out")
               .setCmd(
                   StringWithMacrosUtils.format(
@@ -119,18 +132,22 @@ public class CxxGenruleDescriptionTest {
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(bBuilder.build(), aBuilder.build(), builder.build());
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
       bBuilder.build(graphBuilder);
       aBuilder.build(graphBuilder);
       Genrule genrule = (Genrule) builder.build(graphBuilder);
       assertThat(
           Joiner.on(' ')
-              .join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
+              .join(
+                  Arg.stringify(
+                      ImmutableList.of(genrule.getBuildable().getCmd().get()),
+                      graphBuilder.getSourcePathResolver())),
           Matchers.containsString("-a"));
       assertThat(
           Joiner.on(' ')
-              .join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
+              .join(
+                  Arg.stringify(
+                      ImmutableList.of(genrule.getBuildable().getCmd().get()),
+                      graphBuilder.getSourcePathResolver())),
           Matchers.not(Matchers.containsString("-b")));
     }
   }
@@ -138,12 +155,16 @@ public class CxxGenruleDescriptionTest {
   @Test
   public void cppflagsNoArgs() {
     CxxPlatform cxxPlatform =
-        CxxPlatformUtils.DEFAULT_PLATFORM.withCppflags("-cppflag").withCxxppflags("-cxxppflag");
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withCppflags(ImmutableList.of(StringArg.of("-cppflag")))
+            .withCxxppflags(ImmutableList.of(StringArg.of("-cxxppflag")));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
                 new FlavorDomain<>(
-                    "C/C++ Platform", ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform)))
+                    "C/C++ Platform",
+                    ImmutableMap.of(
+                        cxxPlatform.getFlavor(), new StaticUnresolvedCxxPlatform(cxxPlatform))))
             .setOut("out")
             .setCmd(
                 StringWithMacrosUtils.format(
@@ -152,11 +173,13 @@ public class CxxGenruleDescriptionTest {
                     CxxppFlagsMacro.of(Optional.empty(), ImmutableList.of())));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule genrule = (Genrule) builder.build(graphBuilder);
     assertThat(
-        Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
+        Joiner.on(' ')
+            .join(
+                Arg.stringify(
+                    ImmutableList.of(genrule.getBuildable().getCmd().get()),
+                    graphBuilder.getSourcePathResolver())),
         Matchers.containsString("-cppflag -cxxppflag"));
   }
 
@@ -164,25 +187,28 @@ public class CxxGenruleDescriptionTest {
   public void cflagsNoArgs() {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM
-            .withAsflags("-asflag")
-            .withCflags("-cflag")
-            .withCxxflags("-cxxflag");
+            .withAsflags(ImmutableList.of(StringArg.of("-asflag")))
+            .withCflags(ImmutableList.of(StringArg.of("-cflag")))
+            .withCxxflags(ImmutableList.of(StringArg.of("-cxxflag")));
     CxxGenruleBuilder builder =
         new CxxGenruleBuilder(
                 BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
                 new FlavorDomain<>(
-                    "C/C++ Platform", ImmutableMap.of(cxxPlatform.getFlavor(), cxxPlatform)))
+                    "C/C++ Platform",
+                    ImmutableMap.of(
+                        cxxPlatform.getFlavor(), new StaticUnresolvedCxxPlatform(cxxPlatform))))
             .setOut("out")
             .setCmd(StringWithMacrosUtils.format("%s %s", CcFlagsMacro.of(), CxxFlagsMacro.of()));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Genrule genrule = (Genrule) builder.build(graphBuilder);
     for (String expected : ImmutableList.of("-asflag", "-cflag", "-cxxflag")) {
       assertThat(
           Joiner.on(' ')
-              .join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
+              .join(
+                  Arg.stringify(
+                      ImmutableList.of(genrule.getBuildable().getCmd().get()),
+                      graphBuilder.getSourcePathResolver())),
           Matchers.containsString(expected));
     }
   }
@@ -202,12 +228,15 @@ public class CxxGenruleDescriptionTest {
             .setOut("foo");
     TargetGraph graph =
         TargetGraphFactory.newInstance(dep.build(), versionedDep.build(), genruleBuilder.build());
-    TargetGraphAndBuildTargets transformed =
-        VersionedTargetGraphBuilder.transform(
+    TargetGraphCreationResult transformed =
+        AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            POOL,
-            new DefaultTypeCoercerFactory());
+            TargetGraphCreationResult.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
+            executor.get(),
+            new DefaultTypeCoercerFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            20,
+            new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
@@ -237,12 +266,15 @@ public class CxxGenruleDescriptionTest {
     TargetGraph graph =
         TargetGraphFactory.newInstance(
             transitiveDep.build(), versionedDep.build(), dep.build(), genruleBuilder.build());
-    TargetGraphAndBuildTargets transformed =
-        VersionedTargetGraphBuilder.transform(
+    TargetGraphCreationResult transformed =
+        AsyncVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
-            TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            POOL,
-            new DefaultTypeCoercerFactory());
+            TargetGraphCreationResult.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
+            executor.get(),
+            new DefaultTypeCoercerFactory(),
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            20,
+            new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
             transformed.getTargetGraph().get(genruleBuilder.getTarget()),
@@ -267,20 +299,20 @@ public class CxxGenruleDescriptionTest {
             .setOut("out");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     CxxGenrule dep = (CxxGenrule) graphBuilder.requireRule(depBuilder.getTarget());
     CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
     Genrule genrule =
         (Genrule)
-            ruleFinder
+            graphBuilder
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertThat(
-        Arg.stringify(Optionals.toStream(genrule.getCmd()).toOnceIterable(), pathResolver),
+        Arg.stringify(
+            RichStream.from(genrule.getBuildable().getCmd()).toOnceIterable(),
+            graphBuilder.getSourcePathResolver()),
         Matchers.contains(
-            pathResolver
+            graphBuilder
+                .getSourcePathResolver()
                 .getAbsolutePath(dep.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .toString()));
   }
@@ -294,17 +326,45 @@ public class CxxGenruleDescriptionTest {
             .setCacheable(false);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
     Genrule genrule =
         (Genrule)
-            ruleFinder
+            graphBuilder
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertFalse(genrule.isCacheable());
   }
 
-  private static <U> U extractArg(TargetNode<?> node, Class<U> clazz) {
+  @Test
+  public void testCxxGenrulesAreExecutableWithConfig() {
+    CxxGenruleBuilder builder =
+        new CxxGenruleBuilder(
+                BuildTargetFactory.newInstance("//:rule"),
+                FakeBuckConfig.builder()
+                    .setSections(
+                        RawConfig.builder()
+                            .put(
+                                RemoteExecutionConfig.SECTION,
+                                RemoteExecutionConfig
+                                    .getUseRemoteExecutionForGenruleIfRequestedField("cxx_genrule"),
+                                "true")
+                            .build())
+                    .build())
+            .setOut("out")
+            .setCmd(StringWithMacrosUtils.format("touch $OUT"))
+            .setRemote(true);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
+    Genrule genrule =
+        (Genrule)
+            graphBuilder
+                .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
+                .orElseThrow(AssertionError::new);
+    assertTrue(genrule.getBuildable().shouldExecuteRemotely());
+  }
+
+  private static <U extends ConstructorArg> U extractArg(TargetNode<?> node, Class<U> clazz) {
     return TargetNodes.castArg(node, clazz)
         .orElseThrow(
             () ->

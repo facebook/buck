@@ -1,30 +1,35 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
-import com.facebook.buck.io.filesystem.PathOrGlobMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
@@ -65,7 +70,6 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
@@ -90,20 +94,21 @@ import java.util.jar.Manifest;
 import javax.annotation.Nullable;
 
 /** An injectable service for interacting with the filesystem relative to the project root. */
-public class DefaultProjectFilesystem implements ProjectFilesystem {
+public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
-  private static final Path EDEN_MAGIC_PATH_ELEMENT = Paths.get(".eden");
+  private final Path edenMagicPathElement;
 
-  private final Path projectRoot;
+  private final AbsPath projectRoot;
   private final BuckPaths buckPaths;
 
-  private final ImmutableSet<PathOrGlobMatcher> blackListedPaths;
-  private final ImmutableSet<PathOrGlobMatcher> blackListedDirectories;
+  private final ImmutableSet<PathMatcher> blackListedPaths;
+  private final ImmutableSet<PathMatcher> blackListedDirectories;
 
   /** Supplier that returns an absolute path that is guaranteed to exist. */
   private final Supplier<Path> tmpDir;
 
-  private final ProjectFilesystemDelegate delegate;
+  private ProjectFilesystemDelegate delegate;
+  private final ProjectFilesystemDelegatePair delegatePair;
   @Nullable private final WindowsFS winFSInstance;
 
   // Defaults to false, and so paths should be valid.
@@ -117,35 +122,54 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     return true;
   }
 
+  /** This function should be only used in tests, because it ignores hashes-in-path buckconfig. */
   @VisibleForTesting
   protected DefaultProjectFilesystem(
-      Path root,
-      ProjectFilesystemDelegate projectFilesystemDelegate,
-      @Nullable WindowsFS winFSInstance) {
+      CanonicalCellName cellName,
+      AbsPath root,
+      ProjectFilesystemDelegate delegate,
+      @Nullable WindowsFS winFSInstance,
+      boolean buckOutIncludeTargetConfigHash) {
     this(
-        root.getFileSystem(),
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(root),
-        projectFilesystemDelegate,
+        BuckPaths.createDefaultBuckPaths(cellName, root.getPath(), buckOutIncludeTargetConfigHash),
+        delegate,
+        new ProjectFilesystemDelegatePair(delegate, delegate),
         winFSInstance);
   }
 
   public DefaultProjectFilesystem(
-      FileSystem vfs,
-      Path root,
-      ImmutableSet<PathOrGlobMatcher> blackListedPaths,
+      AbsPath root,
+      ImmutableSet<PathMatcher> blackListedPaths,
       BuckPaths buckPaths,
       ProjectFilesystemDelegate delegate,
       @Nullable WindowsFS winFSInstance) {
+    this(
+        root,
+        blackListedPaths,
+        buckPaths,
+        delegate,
+        new ProjectFilesystemDelegatePair(delegate, delegate),
+        winFSInstance);
+  }
+
+  public DefaultProjectFilesystem(
+      AbsPath root,
+      ImmutableSet<PathMatcher> blackListedPaths,
+      BuckPaths buckPaths,
+      ProjectFilesystemDelegate delegate,
+      ProjectFilesystemDelegatePair delegatePair,
+      @Nullable WindowsFS winFSInstance) {
+
     if (shouldVerifyConstructorArguments()) {
-      Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
-      Preconditions.checkState(vfs.equals(root.getFileSystem()));
-      Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
+      Preconditions.checkArgument(
+          Files.isDirectory(root.getPath()), "%s must be a directory", root);
     }
 
     this.projectRoot = MorePaths.normalize(root);
     this.delegate = delegate;
+    this.delegatePair = delegatePair;
     this.ignoreValidityOfPaths = false;
     this.blackListedPaths =
         FluentIterable.from(blackListedPaths)
@@ -156,35 +180,39 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
                         MorePaths.filterForSubpaths(
                             ImmutableSet.of(
                                 getCacheDir(
-                                    root,
+                                    root.getPath(),
                                     Optional.of(buckPaths.getCacheDir().toString()),
                                     buckPaths)),
-                            root))
+                            root.getPath()))
                     .append(ImmutableSet.of(buckPaths.getTrashDir()))
-                    .transform(PathOrGlobMatcher::new))
+                    .transform(basePath -> RecursiveFileMatcher.of(RelPath.of(basePath))))
             .toSet();
     this.buckPaths = buckPaths;
 
     this.blackListedDirectories =
         FluentIterable.from(this.blackListedPaths)
-            .filter(matcher -> matcher.getType() == PathOrGlobMatcher.Type.PATH)
+            .filter(RecursiveFileMatcher.class)
             .transform(
                 matcher -> {
-                  Path path = matcher.getPath();
+                  RelPath path = matcher.getPath();
                   ImmutableSet<Path> filtered =
-                      MorePaths.filterForSubpaths(ImmutableSet.of(path), root);
+                      MorePaths.filterForSubpaths(ImmutableSet.of(path.getPath()), root.getPath());
                   if (filtered.isEmpty()) {
-                    return path;
+                    return path.getPath();
                   }
                   return Iterables.getOnlyElement(filtered);
                 })
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
             // we really don't end up ignoring it in reality (see extractIgnorePaths).
             .append(ImmutableSet.of(buckPaths.getBuckOut()))
-            .transform(PathOrGlobMatcher::new)
+            .transform((Path basePath) -> RecursiveFileMatcher.of(RelPath.of(basePath)))
+            .transform(matcher -> (PathMatcher) matcher)
             .append(
+                // RecursiveFileMatcher instances are handled separately above because they all
+                // must be relative to the project root, but all other matchers are not relative
+                // to the root and do not require any special treatment.
                 Iterables.filter(
-                    this.blackListedPaths, input -> input.getType() == PathOrGlobMatcher.Type.GLOB))
+                    this.blackListedPaths, matcher -> !(matcher instanceof RecursiveFileMatcher)))
             .toSet();
     this.tmpDir =
         MoreSuppliers.memoize(
@@ -200,8 +228,9 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
     this.winFSInstance = winFSInstance;
     if (Platform.detect() == Platform.WINDOWS) {
-      Preconditions.checkNotNull(this.winFSInstance);
+      Objects.requireNonNull(this.winFSInstance);
     }
+    this.edenMagicPathElement = this.getPath(".eden");
   }
 
   public static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
@@ -220,7 +249,43 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   @Override
-  public final Path getRootPath() {
+  public DefaultProjectFilesystem clone() throws CloneNotSupportedException {
+    return (DefaultProjectFilesystem) super.clone();
+  }
+
+  protected DefaultProjectFilesystem useBuckOutProjectDelegate() {
+    delegate = delegatePair.getBuckOutDelegate();
+    return this;
+  }
+
+  @Override
+  public DefaultProjectFilesystem createBuckOutProjectFilesystem() {
+    // This method is used to generate the proper delegate for a buck-out path at creation time of
+    // the FileHashCache. This avoids having to check the path on each lookup to determine if we're
+    // in a buck-out path.
+    try {
+      // If the delegate is already the proper one for a buck-out path, then we don't need to do
+      // anything here.
+      if (delegate == delegatePair.getBuckOutDelegate()) {
+        return this;
+      }
+      // Otherwise, we need to make sure the delegate is set properly. The DefaultProjectFilesystem
+      // may be used in other places, so we must clone the object so we don't set the delegate to
+      // the buck-out delegate when the filesystem may be used in non-buck-out cells.
+      return clone().useBuckOutProjectDelegate();
+    } catch (CloneNotSupportedException e) {
+      throw new UnsupportedOperationException(e);
+    }
+  }
+
+  @Override
+  public DefaultProjectFilesystemView asView() {
+    return new DefaultProjectFilesystemView(
+        this, getPath(""), projectRoot.getPath(), ImmutableMap.of());
+  }
+
+  @Override
+  public final AbsPath getRootPath() {
     return projectRoot;
   }
 
@@ -239,18 +304,23 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
   @Override
   public Path resolve(String path) {
-    return MorePaths.normalize(getRootPath().resolve(path).toAbsolutePath());
+    return MorePaths.normalize(getRootPath().resolve(path)).getPath();
   }
 
   /** Construct a relative path between the project root and a given path. */
   @Override
-  public Path relativize(Path path) {
+  public RelPath relativize(Path path) {
     return projectRoot.relativize(path);
   }
 
-  /** @return A {@link ImmutableSet} of {@link PathOrGlobMatcher} objects to have buck ignore. */
   @Override
-  public ImmutableSet<PathOrGlobMatcher> getIgnorePaths() {
+  public ImmutableSet<PathMatcher> getBlacklistedPaths() {
+    return blackListedPaths;
+  }
+
+  /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
+  @Override
+  public ImmutableSet<PathMatcher> getIgnorePaths() {
     return blackListedDirectories;
   }
 
@@ -261,7 +331,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
 
   @Override
   public Path getPathForRelativePath(String pathRelativeToProjectRoot) {
-    return projectRoot.resolve(pathRelativeToProjectRoot);
+    return projectRoot.resolve(pathRelativeToProjectRoot).getPath();
   }
 
   /**
@@ -274,11 +344,12 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   public Optional<Path> getPathRelativeToProjectRoot(Path path) {
     path = MorePaths.normalize(path);
     if (path.isAbsolute()) {
-      Path configuredBuckOut =
+      AbsPath pathAbs = AbsPath.of(path);
+      AbsPath configuredBuckOut =
           MorePaths.normalize(projectRoot.resolve(buckPaths.getConfiguredBuckOut()));
       // If the path is in the configured buck-out, it's also part of the filesystem.
-      if (path.startsWith(configuredBuckOut) || path.startsWith(projectRoot)) {
-        return Optional.of(MorePaths.relativize(projectRoot, path));
+      if (pathAbs.startsWith(configuredBuckOut) || pathAbs.startsWith(projectRoot)) {
+        return Optional.of(MorePaths.relativize(projectRoot.getPath(), path));
       } else {
         return Optional.empty();
       }
@@ -391,8 +462,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         skipIgnored);
   }
 
-  @Override
-  public void walkRelativeFileTree(
+  private void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor)
@@ -423,7 +493,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       throws IOException {
     Path rootPath = getPathForRelativePath(pathRelativeToProjectRoot);
     walkFileTreeWithPathMapping(
-        rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path));
+        rootPath, visitOptions, fileVisitor, ignoreFilter, path -> relativize(path).getPath());
   }
 
   void walkFileTreeWithPathMapping(
@@ -442,7 +512,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
             // properly handle cyclic symlinks in a general way.
             // Failure to perform this check will result in a java.nio.file.FileSystemLoopException
             // in Eden.
-            if (EDEN_MAGIC_PATH_ELEMENT.equals(dir.getFileName())) {
+            if (edenMagicPathElement.equals(dir.getFileName())) {
               return FileVisitResult.SKIP_SUBTREE;
             }
             return fileVisitor.preVisitDirectory(pathMapper.apply(dir), attrs);
@@ -479,8 +549,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     walkFileTree(root, options, fileVisitor, true);
   }
 
-  @Override
-  public void walkFileTree(
+  private void walkFileTree(
       Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException {
     walkFileTree(
@@ -549,12 +618,17 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   @Override
   public ImmutableCollection<Path> getDirectoryContents(Path pathToUse) throws IOException {
     Path path = getPathForRelativePath(pathToUse);
-    try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+    try (DirectoryStream<Path> stream = getDirectoryContentsStream(path)) {
       return FluentIterable.from(stream)
           .filter(input -> !isIgnored(relativize(input)))
-          .transform(absolutePath -> MorePaths.relativize(projectRoot, absolutePath))
+          .transform(absolutePath -> MorePaths.relativize(projectRoot.getPath(), absolutePath))
           .toSortedList(Comparator.naturalOrder());
     }
+  }
+
+  /** @return returns sorted absolute paths of everything under the given directory */
+  DirectoryStream<Path> getDirectoryContentsStream(Path absolutePath) throws IOException {
+    return Files.newDirectoryStream(absolutePath);
   }
 
   @VisibleForTesting
@@ -565,7 +639,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   /**
    * Returns the files inside {@code pathRelativeToProjectRoot} which match {@code globPattern},
    * ordered in descending last modified time order. This will not obey the results of {@link
-   * #isIgnored(Path)}.
+   * ProjectFilesystem#isIgnored(RelPath)}.
    */
   @Override
   public ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
@@ -769,7 +843,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
    */
   @Override
   public Optional<String> readFirstLine(String pathRelativeToProjectRoot) {
-    return readFirstLine(projectRoot.getFileSystem().getPath(pathRelativeToProjectRoot));
+    return readFirstLine(getPath(pathRelativeToProjectRoot));
   }
 
   /**
@@ -879,7 +953,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
           }
 
           @Override
-          public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+          public FileVisitResult visitFileFailed(Path file, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
 
@@ -1015,10 +1089,9 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   @Override
-  public boolean isIgnored(Path path) {
-    Preconditions.checkArgument(!path.isAbsolute());
-    for (PathOrGlobMatcher blackListedPath : blackListedPaths) {
-      if (blackListedPath.matches(path)) {
+  public boolean isIgnored(RelPath path) {
+    for (PathMatcher blackListedPath : blackListedPaths) {
+      if (blackListedPath.matches(path.getPath())) {
         return true;
       }
     }

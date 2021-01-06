@@ -1,39 +1,45 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,31 +61,31 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   private ProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidBinaryRDotJavaIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    filesystem = workspace.getProjectFileSystem();
   }
 
   @Test
-  public void testApkWithNoResourcesBuildsCorrectly() throws IOException {
+  public void testApkWithNoResourcesBuildsCorrectly() {
     workspace.runBuckBuild("//apps/sample:app_with_no_res").assertSuccess();
     workspace.runBuckBuild("//apps/sample:app_with_no_res_or_predex").assertSuccess();
   }
 
   @Test
   public void testApkWithNoResourcesBuildsCorrectlyWithAapt2() throws Exception {
-    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeAapt2WithOutputTextSymbolsIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_aapt2_with_no_res").assertSuccess();
   }
 
   @Test
   public void testSimpleAapt2App() throws Exception {
-    AssumeAndroidPlatform.assumeAapt2WithOutputTextSymbolsIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeAapt2WithOutputTextSymbolsIsAvailable();
 
     ImmutableMap<String, Path> outputs =
         workspace.buildMultipleAndReturnOutputs(
@@ -130,7 +136,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
     buildLog.assertTargetBuiltLocally(
-        "//apps/multidex:app#dex,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
+        "//apps/multidex:app#d8,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
     verifyTrimmedRDotJava(ImmutableSet.of("title"));
 
     // Turn off trimming and turn on exopackage, and rebuilt.
@@ -172,7 +178,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
     buildLog.assertTargetBuiltLocally(
-        "//apps/multidex:app#dex,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
+        "//apps/multidex:app#d8,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
     verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
   }
 
@@ -184,7 +190,11 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   private void verifyTrimmedRDotJava(ImmutableSet<String> expected) throws IOException {
     List<String> lines =
         filesystem.readLines(
-            Paths.get("buck-out/gen/apps/multidex/disassemble_app_r_dot_java/all_r_fields.smali"));
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    BuildTargetFactory.newInstance("//apps/multidex:disassemble_app_r_dot_java"),
+                    "%s")
+                .resolve("all_r_fields.smali"));
 
     ImmutableSet.Builder<String> found = ImmutableSet.builder();
     for (String line : lines) {
@@ -268,5 +278,157 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$id;"));
     assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$string;"));
     assertThat(secondaryClasses, hasItem("Lcom/secondary2/R$color;"));
+  }
+
+  @Test
+  public void testSkipCrunchPngs() throws IOException {
+    // By default, images are crunched. This test also makes sure that the image we're using is
+    // genuinely an unoptimized image so that the next test is actually testing something real.
+    long originalSize =
+        Files.size(workspace.getPath("res/com/sample/top/res/drawable/uncrunched.png"));
+    long crunchedSize =
+        buildAndGetOutputEntryLength("//apps/sample:app_with_aapt2", "res/drawable/uncrunched.png");
+    assertNotEquals(originalSize, crunchedSize);
+
+    // If we pass in the option to skip crunching, the image size should stay the same.
+    workspace.addBuckConfigLocalOption("android", "aapt_compile_skip_crunch_pngs_default", "true");
+    long uncrunchedSize =
+        buildAndGetOutputEntryLength("//apps/sample:app_with_aapt2", "res/drawable/uncrunched.png");
+    assertEquals(originalSize, uncrunchedSize);
+  }
+
+  private long buildAndGetOutputEntryLength(String target, String zipEntry) throws IOException {
+    return new ZipInspector(buildApk(target)).getSize(zipEntry);
+  }
+
+  @Test
+  public void testFailOnLegacyErrors() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("26");
+    // As of 2019-11-14, aapt2 has only two error cases that --legacy suppresses:
+    //    1) Multiple positional arguments in a resource string are not allowed.
+    //    2) Multiple periods are not allowed in resource filenames.
+    // The latter check was added in aapt2 in 28.0.2, the former was in at least 26.0.0
+    // (possibly earlier).
+
+    // Since we can't guarantee which version of aapt2 buck runs tests with, we'll test for
+    // catching the first case, since it's been there for longer.
+
+    // With --legacy (the default), the string resource 'positional_args' produces a warning
+    workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertSuccess();
+
+    // Without --legacy, 'positional_args' causes a aapt2 compile to fail.
+    workspace.addBuckConfigLocalOption("android", "aapt_fail_on_legacy_errors", "true");
+    workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertFailure();
+  }
+
+  private Path buildApk(String target) throws IOException {
+    ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(target);
+    return outputs.get(target);
+  }
+
+  @Test
+  public void testNoResourceRemoval() throws Exception {
+    // Resource removal was added in 28.0.2, and the --no-resource-removal flag was
+    // added in 29.0.0.
+    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("29");
+
+    // Without the flag (default), the missing_in_default resource is removed from the apk
+    Path apk = buildApk("//apps/sample:app_with_aapt2");
+    assertDoesNotHaveResource(apk, "string/missing_in_default");
+
+    // With the flag, the missing_in_default resource is present
+    workspace.addBuckConfigLocalOption("android", "aapt_no_resource_removal", "true");
+    apk = buildApk("//apps/sample:app_with_aapt2");
+    assertHasResource(apk, "string/missing_in_default");
+  }
+
+  private String dumpResources(Path apk) throws Exception {
+    AndroidSdkResolver sdkResolver = AndroidSdkResolver.get(workspace).get();
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            ImmutableList.of(
+                sdkResolver.getAapt2().getPath(), "dump", "resources", apk.toString()));
+
+    return result.getStdout().get();
+  }
+
+  private void assertHasResource(Path apk, String resourceName) throws Exception {
+    String output = dumpResources(apk);
+    assertTrue(
+        "Apk "
+            + apk
+            + " expected to have resource `"
+            + resourceName
+            + "`. But not found. Output: "
+            + output,
+        output.contains(resourceName));
+  }
+
+  private void assertDoesNotHaveResource(Path apk, String resourceName) throws Exception {
+    String output = dumpResources(apk);
+    assertFalse(
+        "Apk "
+            + apk
+            + " expected not to have resource `"
+            + resourceName
+            + "`. But found. Output: "
+            + output,
+        output.contains(resourceName));
+  }
+
+  /** Verifies that we don't stamp workspace specific absolute paths into .flata files. */
+  @Test
+  public void testFlataContainsRelativePaths() throws IOException {
+    // The path to the .flata file generated by aapt2 compile
+    String flataPath =
+        BuildTargetPaths.getGenPath(
+                filesystem,
+                BuildTargetFactory.newInstance("//res/com/sample/aapt2:aapt2#aapt2_compile"),
+                "%s")
+            .resolve("resources.flata")
+            .toString();
+
+    workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertSuccess();
+    Path firstFlataFile = workspace.getPath(flataPath);
+    byte[] firstFlataBytes = Files.readAllBytes(firstFlataFile);
+
+    // Create a second workspace in a different root directory
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_project", workspace.getPath("xx_altwork"));
+    workspace.setUp();
+    workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertSuccess();
+    Path secondFlataFile = workspace.getPath(flataPath);
+    byte[] secondFlataBytes = Files.readAllBytes(secondFlataFile);
+
+    assertArrayEquals(
+        "Expected binary files " + firstFlataFile + " and " + secondFlataFile + " to be identical",
+        firstFlataBytes,
+        secondFlataBytes);
+  }
+
+  // TODO(bduff): find a better place for this and other aapt2 tests
+  @Test
+  public void aapt2FilteringWithAapt1Fails() throws IOException {
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+
+    workspace.runBuckBuild("//apps/sample_wrong_aapt:sample_wrong_aapt").assertFailure();
+  }
+
+  @Test
+  public void aapt2FilteringStripsLocales() throws Exception {
+    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("29");
+
+    // Disable resource removal.
+    workspace.addBuckConfigLocalOption("android", "aapt_no_resource_removal", "true");
+
+    // First check that we include the pt locale in non-filtered builds.
+    Path apk = buildApk("//apps/sample:app_with_aapt2");
+    assertHasResource(apk, "(pt)");
+
+    // Now build the filtered version, and check that it doesn't contain the pt locale
+    apk = buildApk("//apps/sample:app_with_aapt2_locale_filtering");
+
+    assertDoesNotHaveResource(apk, "(pt)");
   }
 }

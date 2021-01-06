@@ -1,41 +1,45 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.types.Either;
@@ -53,9 +57,12 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
   private static final String CONFIG_SECTION = "worker";
   private static final String CONFIG_PERSISTENT_KEY = "persistent";
 
-  public static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+  public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(
-          new LocationMacroExpander(), new ClasspathMacroExpander(), new ExecutableMacroExpander());
+          LocationMacroExpander.INSTANCE,
+          new ClasspathMacroExpander(),
+          new ExecutableMacroExpander<>(ExecutableMacro.class),
+          new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
 
   private final BuckConfig buckConfig;
 
@@ -86,49 +93,38 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             buildTarget, args.getExe().get().getFullyQualifiedName());
       }
 
-      builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+      builder =
+          new CommandTool.Builder(
+              ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel()));
     } else {
       builder = new CommandTool.Builder();
     }
 
     builder.addInputs(
-        params
-            .getBuildDeps()
-            .stream()
+        params.getBuildDeps().stream()
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)
             .collect(ImmutableList.toImmutableList()));
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
 
     if (args.getArgs().isLeft()) {
-      builder.addArg(
-          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft(), graphBuilder)) {
-            @Override
-            public void appendToCommandLine(
-                Consumer<String> consumer, SourcePathResolver pathResolver) {
-              ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
-              super.appendToCommandLine(subBuilder::add, pathResolver);
-              for (String arg : subBuilder.build()) {
-                for (String splitArg : arg.split("\\s+")) {
-                  consumer.accept(splitArg);
-                }
-              }
-            }
-          });
+      builder.addArg(new SingleStringMacroArg(macrosConverter.convert(args.getArgs().getLeft())));
     } else {
       for (StringWithMacros arg : args.getArgs().getRight()) {
-        builder.addArg(macrosConverter.convert(arg, graphBuilder));
+        builder.addArg(macrosConverter.convert(arg));
       }
     }
     for (Map.Entry<String, StringWithMacros> e : args.getEnv().entrySet()) {
-      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), graphBuilder));
+      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue()));
     }
+
+    boolean async = args.getSoloAsync().orElse(false);
 
     Preconditions.checkArgument(
         !(args.getMaxWorkers().isPresent() && args.getMaxWorkersPerThreadPercent().isPresent()),
@@ -141,26 +137,55 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
           percent > 0, "max_workers_per_thread_percent must be greater than 0.");
       Preconditions.checkArgument(
           percent <= 100, "max_workers_per_thread_percent must not be greater than 100.");
-      maxWorkers = (int) Math.max(1, percent / 100.0 * buckConfig.getNumThreads());
+      maxWorkers =
+          (int)
+              Math.max(
+                  1, percent / 100.0 * buckConfig.getView(BuildBuckConfig.class).getNumThreads());
     } else {
       // negative or zero: unlimited number of worker processes
-      maxWorkers = args.getMaxWorkers().map(x -> x < 1 ? buckConfig.getNumThreads() : x).orElse(1);
+      maxWorkers =
+          args.getMaxWorkers()
+              .map(x -> x < 1 ? buckConfig.getView(BuildBuckConfig.class).getNumThreads() : x)
+              .orElse(1);
     }
 
     CommandTool tool = builder.build();
-    return new DefaultWorkerTool(
+    return new DefaultWorkerToolRule(
         buildTarget,
         context.getProjectFilesystem(),
-        new SourcePathRuleFinder(graphBuilder),
+        graphBuilder,
         tool,
         maxWorkers,
+        async,
         args.getPersistent()
             .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
+  /**
+   * ProxyArg representing a single string retrieved from a macro invocation. Unlike a normal Arg,
+   * this class splits its command-line arguments by space separators before appending them to a
+   * command line.
+   */
+  private static class SingleStringMacroArg extends ProxyArg {
+    public SingleStringMacroArg(Arg arg) {
+      super(arg);
+    }
+
+    @Override
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
+      ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
+      super.appendToCommandLine(subBuilder::add, pathResolver);
+      for (String arg : subBuilder.build()) {
+        for (String splitArg : arg.split("\\s+")) {
+          consumer.accept(splitArg);
+        }
+      }
+    }
+  }
+
+  @RuleArg
+  interface AbstractWorkerToolDescriptionArg extends BuildRuleArg {
     ImmutableMap<String, StringWithMacros> getEnv();
 
     @Value.Default
@@ -175,5 +200,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     Optional<Integer> getMaxWorkersPerThreadPercent();
 
     Optional<Boolean> getPersistent();
+
+    Optional<Boolean> getSoloAsync();
   }
 }

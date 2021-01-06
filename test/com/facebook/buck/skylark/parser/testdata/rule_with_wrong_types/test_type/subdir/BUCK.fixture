@@ -1,0 +1,3 @@
+load("//test_type/subdir:foo.bzl", "some_rule")
+
+some_rule(name = "target1")

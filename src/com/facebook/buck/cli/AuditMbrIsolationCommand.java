@@ -1,47 +1,48 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.modern.tools.IsolationChecker;
 import com.facebook.buck.rules.modern.tools.IsolationChecker.FailureReporter;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
-import java.io.IOException;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,6 +51,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.kohsuke.args4j.Argument;
 
@@ -66,8 +68,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
   }
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
     try {
       // Create a TargetGraph that is composed of the transitive closure of all of the dependent
       // BuildRules for the specified BuildTargetPaths.
@@ -77,16 +78,17 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         throw new CommandLineException("must specify at least one build target");
       }
 
-      TargetGraph targetGraph;
+      TargetGraphCreationResult targetGraph;
       try (CommandThreadManager pool =
           new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
         targetGraph =
             params
                 .getParser()
                 .buildTargetGraph(
-                    params.getCell(),
-                    getEnableParserProfiling(),
-                    pool.getListeningExecutorService(),
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .withExcludeUnsupportedTargets(false),
                     targets);
       } catch (BuildFileParseException e) {
         params
@@ -94,23 +96,25 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return ExitCode.PARSE_ERROR;
       }
-      if (params.getBuckConfig().getBuildVersions()) {
-        targetGraph =
-            toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
-                .getTargetGraph();
+      if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
+        targetGraph = toVersionedTargetGraph(params, targetGraph);
       }
 
       ActionGraphBuilder graphBuilder =
-          Preconditions.checkNotNull(
+          Objects.requireNonNull(
                   new ActionGraphProvider(
                           params.getBuckEventBus(),
                           ActionGraphFactory.create(
                               params.getBuckEventBus(),
-                              params.getCell().getCellProvider(),
-                              params.getPoolSupplier(),
+                              params.getCells().getRootCell().getCellProvider(),
+                              params.getExecutors(),
+                              params.getDepsAwareExecutorSupplier(),
                               params.getBuckConfig()),
                           new ActionGraphCache(
-                              params.getBuckConfig().getMaxActionGraphCacheEntries()),
+                              params
+                                  .getBuckConfig()
+                                  .getView(BuildBuckConfig.class)
+                                  .getMaxActionGraphCacheEntries()),
                           params.getRuleKeyConfiguration(),
                           params.getBuckConfig())
                       .getFreshActionGraph(targetGraph))
@@ -119,11 +123,10 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
 
       SerializationReportGenerator reportGenerator = new SerializationReportGenerator();
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       IsolationChecker isolationChecker =
           new IsolationChecker(
-              ruleFinder,
-              params.getCell().getCellPathResolver(),
+              graphBuilder,
+              params.getCells().getRootCell().getCellPathResolver(),
               reportGenerator.getFailureReporter());
       AbstractBreadthFirstTraversal.<BuildRule>traverse(
           targets.stream().map(graphBuilder::getRule).collect(Collectors.toList()),
@@ -135,7 +138,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
               depsBuilder.addAll(
                   graphBuilder.getAllRules(
                       ((HasRuntimeDeps) rule)
-                          .getRuntimeDeps(ruleFinder)
+                          .getRuntimeDeps(graphBuilder)
                           .collect(Collectors.toList())));
             }
             return depsBuilder.build();
@@ -153,10 +156,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
 
   private static List<Entry<String, Collection<String>>> asSortedEntries(
       Multimap<String, String> failure) {
-    return failure
-        .asMap()
-        .entrySet()
-        .stream()
+    return failure.asMap().entrySet().stream()
         .sorted(Comparator.comparing(e -> -e.getValue().size()))
         .collect(Collectors.toList());
   }
@@ -171,10 +171,59 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
     return "provides facilities to audit build targets' classpaths";
   }
 
+  private static class ByPackageFailureRecorder {
+    final String errorMessage;
+    int failureCount = 0;
+    Multimap<String, String> failedRulesByPackage = TreeMultimap.create();
+
+    ByPackageFailureRecorder(String errorMessage) {
+      this.errorMessage = errorMessage;
+    }
+
+    public void record(String packageName, String ruleName) {
+      failureCount++;
+      failedRulesByPackage.put(packageName, ruleName);
+    }
+
+    public Collection<String> getOrderedPackages() {
+      return failedRulesByPackage.asMap().entrySet().stream()
+          .sorted(Comparator.comparing(e -> -e.getValue().size()))
+          .map(e -> e.getKey())
+          .collect(ImmutableList.toImmutableList());
+    }
+
+    public Collection<String> getFailedRules(String packageName) {
+      return failedRulesByPackage.get(packageName).stream()
+          .sorted(Ordering.natural())
+          .collect(ImmutableList.toImmutableList());
+    }
+  }
+
+  private static class RuleTypeFailureRecorder {
+    int totalFailureCount = 0;
+    Map<String, ByPackageFailureRecorder> failuresByMessageAndPackage = new HashMap<>();
+
+    public void record(BuildTarget buildTarget, String error) {
+      totalFailureCount++;
+      ByPackageFailureRecorder failuresByMessage =
+          failuresByMessageAndPackage.computeIfAbsent(
+              error, ignored -> new ByPackageFailureRecorder(error));
+      failuresByMessage.record(
+          buildTarget.getCell().getName() + "//" + buildTarget.getBaseName(),
+          buildTarget.getFullyQualifiedName());
+    }
+
+    public Collection<ByPackageFailureRecorder> getOrderedErrors() {
+      return failuresByMessageAndPackage.values().stream()
+          .sorted(Comparator.comparing(r -> -r.failureCount))
+          .collect(ImmutableList.toImmutableList());
+    }
+  }
+
   private static class SerializationReportGenerator {
     // Maps a rule type to a set of failures for that rule type. The set of failures in turn is a
     // map of failure message to a set of targets that failed in that way.
-    Map<String, Multimap<String, String>> failuresByRuleType = new HashMap<>();
+    Map<String, RuleTypeFailureRecorder> failureRecordersByType = new HashMap<>();
     Map<String, Multimap<String, String>> absolutePathsRequired = new HashMap<>();
 
     Multimap<String, String> successByType = ArrayListMultimap.create();
@@ -192,17 +241,18 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
           public void reportSerializationFailure(
               BuildRule instance, String crumbs, String message) {
             String error = String.format("%s %s", crumbs, message);
-            Multimap<String, String> failedTargetsByMessage =
-                failuresByRuleType.computeIfAbsent(
-                    getRuleTypeString(instance), ignored -> ArrayListMultimap.create());
-            failedTargetsByMessage.put(error, instance.getFullyQualifiedName());
+            RuleTypeFailureRecorder failureRecorder =
+                failureRecordersByType.computeIfAbsent(
+                    getRuleTypeString(instance), ignored -> new RuleTypeFailureRecorder());
+
+            failureRecorder.record(instance.getBuildTarget(), error);
           }
 
           @Override
           public void reportAbsolutePath(BuildRule instance, String crumbs, Path path) {
             Multimap<String, String> inner =
                 absolutePathsRequired.computeIfAbsent(
-                    path.toString(), ignored -> ArrayListMultimap.create());
+                    path.toString(), ignored -> TreeMultimap.create());
             inner.put(crumbs, instance.getFullyQualifiedName());
           }
 
@@ -244,29 +294,37 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
       }
 
       builder.addSeparator();
-      if (failuresByRuleType.isEmpty()) {
-        builder.addLine("There's no failures for rules migrated to ModernBuildRule.");
+      if (failureRecordersByType.isEmpty()) {
+        builder.addLine("There's no serialization failures for rules migrated to ModernBuildRule.");
       } else {
-        for (Map.Entry<String, Multimap<String, String>> failure :
-            failuresByRuleType
-                .entrySet()
-                .stream()
-                .sorted(Comparator.comparing(entry -> -entry.getValue().size()))
-                .collect(Collectors.toList())) {
-          builder.addLine(
-              "%s failures for rules of type %s.", failure.getValue().size(), failure.getKey());
-          for (Entry<String, Collection<String>> instance : asSortedEntries(failure.getValue())) {
-            builder.addLine("  %s: %s", instance.getValue().size(), instance.getKey());
+        // Configures maximum packages and rules to show for each error.
+        final int maxPackages = 3;
+        final int maxRules = 2;
 
-            int count = 0;
-            int max = 3;
-            for (String target : instance.getValue()) {
-              if (count >= max) {
-                builder.addLine("    ...");
-                break;
+        for (Entry<String, RuleTypeFailureRecorder> failure :
+            failureRecordersByType.entrySet().stream()
+                .sorted(Comparator.comparing(entry -> -entry.getValue().totalFailureCount))
+                .collect(Collectors.toList())) {
+          String ruleType = failure.getKey();
+          RuleTypeFailureRecorder recorder = failure.getValue();
+
+          builder.addLine(
+              "%s serialization failures for rules of type %s.",
+              recorder.totalFailureCount, ruleType);
+
+          for (ByPackageFailureRecorder byPackageRecorder : recorder.getOrderedErrors()) {
+            builder.addLine(
+                " %d: %s", byPackageRecorder.failureCount, byPackageRecorder.errorMessage);
+            Collection<String> orderedPackages = byPackageRecorder.getOrderedPackages();
+            for (String packageName : Iterables.limit(orderedPackages, maxPackages)) {
+              Collection<String> failedRules = byPackageRecorder.getFailedRules(packageName);
+              builder.addLine("  % 5d: %s", failedRules.size(), packageName);
+              for (String rule : Iterables.limit(failedRules, maxRules)) {
+                builder.addLine("           %s", rule);
               }
-              builder.addLine("    %s", target);
-              count++;
+            }
+            if (orderedPackages.size() > maxPackages) {
+              builder.addLine("    ... %d more packages", orderedPackages.size() - maxPackages);
             }
           }
         }
@@ -278,9 +336,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         builder.addLine("Didn't find any references to absolute paths.");
       } else {
         for (Map.Entry<String, Multimap<String, String>> requiredPath :
-            absolutePathsRequired
-                .entrySet()
-                .stream()
+            absolutePathsRequired.entrySet().stream()
                 .sorted(Comparator.comparing(entry -> -entry.getValue().size()))
                 .collect(Collectors.toList())) {
           builder.addLine(

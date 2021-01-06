@@ -1,0 +1,13 @@
+java_library(
+    name = "factory",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+    ],
+)

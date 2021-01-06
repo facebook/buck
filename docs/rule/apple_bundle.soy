@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 {namespace buck.apple_bundle}
 
 /***/
@@ -46,12 +62,7 @@ non-expired profile that matches the bundle id and entitlements.
 
 {param args}
 
-{call buck.arg}
-  {param name: 'name' /}
-  {param desc}
-  The name of the rule.
-  {/param}
-{/call}
+{call buck.name_arg /}
 
 {call buck.arg}
   {param name : 'deps' /}
@@ -116,6 +127,14 @@ non-expired profile that matches the bundle id and entitlements.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'ibtool_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  List of flags to be passed to ibtool during interface builder file compilation.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}
@@ -150,6 +169,18 @@ apple_bundle(
   binary = ':DemoAppBinary',
   deps = [':DemoWatchApp#watch'],
   extension = 'app',
+  info_plist = 'Info.plist',
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# iOS app using safeAreaInsets delivering to iOS 9.x
+apple_bundle(
+  name = 'DemoIBApp',
+  binary = ':DemoIBAppBinary',
+  deps = [':DemoIBAppResources'],
+  extension = 'app',
+  ibtool_flags = ["--minimum-deployment-target", "9.0"],
   info_plist = 'Info.plist',
 )
 </pre>{/literal}

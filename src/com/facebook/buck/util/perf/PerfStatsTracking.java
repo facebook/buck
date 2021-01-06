@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.perf;
@@ -119,6 +119,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     }
   }
 
+  /** Performance event that tracks current memory usage of Buck */
   public static class MemoryPerfStatsEvent extends PerfStatsEvent {
     private final long freeMemoryBytes;
     private final long totalMemoryBytes;
@@ -126,6 +127,18 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
     private final long timeSpentInGcMs;
     private final Map<String, Long> currentMemoryBytesUsageByPool;
 
+    /**
+     * Construct a new memory performance tracking object
+     *
+     * @param freeMemoryBytes Memory in bytes available for JVM to use for new allocations
+     * @param totalMemoryBytes Memory in bytes that JVM allocated at the moment, both used and
+     *     unused
+     * @param maxMemoryBytes Maximum amount of memory in bytes that JVM can allocate (-Xmx
+     *     parameter)
+     * @param timeSpentInGcMs Total amount of milliseconds spent doing garbage collection till now
+     * @param currentMemoryBytesUsageByPool A map of JVM memory pool name to the amount of memory
+     *     used by that pool
+     */
     public MemoryPerfStatsEvent(
         long freeMemoryBytes,
         long totalMemoryBytes,
@@ -139,22 +152,27 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
       this.currentMemoryBytesUsageByPool = currentMemoryBytesUsageByPool;
     }
 
+    /** @return Memory in bytes available for JVM to use for new allocations */
     public long getFreeMemoryBytes() {
       return freeMemoryBytes;
     }
 
+    /** @return Memory in bytes that JVM allocated at the moment, both used and unused */
     public long getTotalMemoryBytes() {
       return totalMemoryBytes;
     }
 
+    /** @return Maximum amount of memory in bytes that JVM can allocate (-Xmx parameter) */
     public long getMaxMemoryBytes() {
       return maxMemoryBytes;
     }
 
+    /** @return Total amount of milliseconds spent doing garbage collection till now */
     public long getTimeSpentInGcMs() {
       return timeSpentInGcMs;
     }
 
+    /** @return A map of JVM memory pool name to the amount of memory used by that pool */
     public Map<String, Long> getCurrentMemoryBytesUsageByPool() {
       return currentMemoryBytesUsageByPool;
     }

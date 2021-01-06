@@ -1,30 +1,44 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.concurrent.Parallelizer;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Optional;
 import java.util.function.Function;
 
 /** Provides methods to interact with the ActionGraph. */
 public interface ActionGraphBuilder extends BuildRuleResolver {
-  /** @return an unmodifiable view of the rules in the index */
+  /**
+   * @return an unmodifiable view of the rules in the index. Throws an exception if construction
+   *     fails for any rule.
+   */
   Iterable<BuildRule> getBuildRules();
+
+  /**
+   * @return an unmodifiable view of the successfully constructed (i.e. didn't throw an exception
+   *     during construction) rules in the index. Does not throw an exception if construction failed
+   *     for any rule.
+   */
+  Iterable<BuildRule> getSuccessfullyConstructedBuildRules();
 
   /**
    * Retrieve the {@code BuildRule} for the given {@code BuildTarget}. If no rules are associated
@@ -47,7 +61,7 @@ public interface ActionGraphBuilder extends BuildRuleResolver {
 
   /**
    * Retrieve a piece of metadata for a target. This metadata is computed via {@link
-   * com.facebook.buck.core.description.MetadataProvidingDescription#createMetadata}.
+   * com.facebook.buck.core.description.metadata.MetadataProvidingDescription#createMetadata}.
    */
   <T> Optional<T> requireMetadata(BuildTarget target, Class<T> metadataClass);
 
@@ -72,4 +86,9 @@ public interface ActionGraphBuilder extends BuildRuleResolver {
   // Convenience methods offering alternate access patterns.
 
   ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets);
+
+  ImmutableSortedMap<BuildTarget, BuildRule> computeAllIfAbsent(
+      ImmutableMap<BuildTarget, Function<BuildTarget, BuildRule>> mappings);
+
+  ListenableFuture<BuildRule> requireRuleFuture(BuildTarget target);
 }

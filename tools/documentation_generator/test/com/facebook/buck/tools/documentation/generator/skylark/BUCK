@@ -3,7 +3,7 @@ java_test(
     srcs = ["SignatureCollectorTest.java"],
     deps = [
         "//src/com/facebook/buck/util/environment:platform",
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/junit:junit",
         "//tools/documentation_generator/src/com/facebook/buck/tools/documentation/generator/skylark:collector",
         "//tools/documentation_generator/test/com/facebook/buck/tools/documentation/generator/skylark/signatures:signatures",

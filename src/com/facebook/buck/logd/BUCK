@@ -1,0 +1,26 @@
+java_library(
+    name = "logd",
+    srcs = glob(["**/*.java"]),
+    tests = [
+        "//test/com/facebook/buck/logd:logd",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":log4j2-config",
+        "//src-gen:logd-protobuf",
+        "//src-gen:protobuf",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/grpc:grpc-netty-shaded",
+        "//third-party/java/log4j2:log4j2-api",
+        "//third-party/java/log4j2:log4j2-core",
+        "//third-party/java/remote-apis:remote-apis",
+    ],
+)
+
+java_library(
+    name = "log4j2-config",
+    resources = glob(["resources/**/*.xml"]),
+    resources_root = "resources/",
+)

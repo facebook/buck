@@ -1,20 +1,18 @@
 #!/bin/bash
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# This generates the static content for Buck's documentation.
-# Usage:
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-#     ./docs/soy2html.sh <output-dir>
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
-# Caller must be sure that soyweb-prod.sh is already running.
-#
-# After running this script, you may want to run the following to
-# share a preview of the docs internally:
-#
-#    scp -r <output-dir>/* <hostname>:$/home/${USER}/public_html/buck
-#
-# Or if you do this frequently, you might want to use rsync instead of scp:
-#
-#    rsync -az --delete <output-dir>/* <hostname>:/home/${USER}/public_html/buck
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 set -e
 

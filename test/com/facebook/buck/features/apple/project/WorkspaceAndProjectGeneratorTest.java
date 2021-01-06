@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
@@ -19,7 +19,6 @@ package com.facebook.buck.features.apple.project;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -31,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
+import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryBuilder;
@@ -40,7 +40,11 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.XCScheme.AdditionalActions;
+import com.facebook.buck.apple.xcode.XCScheme.BuildActionEntry;
+import com.facebook.buck.apple.xcode.XCScheme.BuildActionEntry.BuildFor;
+import com.facebook.buck.apple.xcode.XCScheme.LaunchAction.WatchInterface;
 import com.facebook.buck.apple.xcode.XCScheme.SchemePrePostAction;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -51,16 +55,20 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderB
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.features.apple.common.SchemeActionType;
+import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -76,13 +84,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -114,11 +122,11 @@ public class WorkspaceAndProjectGeneratorTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws InterruptedException, IOException {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
-    rootCell = (new TestCellBuilder()).build();
+    rootCell = (new TestCellBuilder()).build().getRootCell();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
@@ -146,31 +154,27 @@ public class WorkspaceAndProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin.
 
-    BuildTarget bazTestTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "xctest");
-    BuildTarget fooBinTestTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "bin-xctest");
-    BuildTarget fooTestTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib-xctest");
+    BuildTarget bazTestTarget = BuildTargetFactory.newInstance("//baz", "xctest");
+    BuildTarget fooBinTestTarget = BuildTargetFactory.newInstance("//foo", "bin-xctest");
+    BuildTarget fooTestTarget = BuildTargetFactory.newInstance("//foo", "lib-xctest");
 
-    BuildTarget barLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar", "lib");
+    BuildTarget barLibTarget = BuildTargetFactory.newInstance("//bar", "libbar");
     TargetNode<?> barLibNode = AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget fooLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<?> fooLibNode =
         AppleLibraryBuilder.createBuilder(fooLibTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .setTests(ImmutableSortedSet.of(fooTestTarget))
             .build();
 
-    BuildTarget fooBinBinaryTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "binbinary");
+    BuildTarget fooBinBinaryTarget = BuildTargetFactory.newInstance("//foo", "binbinary");
     TargetNode<?> fooBinBinaryNode =
         AppleBinaryBuilder.createBuilder(fooBinBinaryTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
             .build();
 
-    BuildTarget fooBinTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "bin");
+    BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo", "bin");
     TargetNode<?> fooBinNode =
         AppleBundleBuilder.createBuilder(fooBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -179,7 +183,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
             .build();
 
-    BuildTarget bazLibTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "lib");
+    BuildTarget bazLibTarget = BuildTargetFactory.newInstance("//baz", "lib");
     TargetNode<?> bazLibNode =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
@@ -204,14 +208,13 @@ public class WorkspaceAndProjectGeneratorTest {
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    BuildTarget quxBinTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "bin");
+    BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux", "bin");
     TargetNode<?> quxBinNode =
         AppleBinaryBuilder.createBuilder(quxBinTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .build();
 
-    BuildTarget workspaceTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace");
+    BuildTarget workspaceTarget = BuildTargetFactory.newInstance("//foo", "workspace");
     workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(workspaceTarget)
             .setWorkspaceName(Optional.of("workspace"))
@@ -262,7 +265,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -289,7 +293,7 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         fooProjectGenerator.getGeneratedProject(), "//foo:lib-xctest");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        barProjectGenerator.getGeneratedProject(), "//bar:lib");
+        barProjectGenerator.getGeneratedProject(), "//bar:libbar");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         bazProjectGenerator.getGeneratedProject(), "//baz:lib");
   }
@@ -320,7 +324,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -343,7 +348,7 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(), "//foo:lib-xctest");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        projectGenerator.getGeneratedProject(), "//bar:lib");
+        projectGenerator.getGeneratedProject(), "//bar:libbar");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         projectGenerator.getGeneratedProject(), "//baz:lib");
   }
@@ -370,7 +375,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -393,7 +399,7 @@ public class WorkspaceAndProjectGeneratorTest {
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
         fooProjectGenerator.getGeneratedProject(), "//foo:lib");
     ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget(
-        barProjectGenerator.getGeneratedProject(), "//bar:lib");
+        barProjectGenerator.getGeneratedProject(), "//bar:libbar");
   }
 
   @Test
@@ -406,7 +412,10 @@ public class WorkspaceAndProjectGeneratorTest {
             targetGraph,
             workspaceNode.getConstructorArg(),
             workspaceNode.getBuildTarget(),
-            ProjectGeneratorOptions.builder().setShouldIncludeTests(true).build(),
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldGenerateProjectSchemes(true)
+                .build(),
             false /* combinedProject */,
             FocusedModuleTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -419,40 +428,106 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
 
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
 
-    Optional<XCScheme> scheme =
-        Iterables.getOnlyElement(generator.getSchemeGenerators().values()).getOutputScheme();
+    // one scheme for the workspace and then one for each project
+    assertEquals(generator.getSchemeGenerators().size(), 3);
 
-    assertThat(scheme.isPresent(), is(true));
+    // validate main scheme values
+    Optional<XCScheme> mainScheme =
+        generator.getSchemeGenerators().get("workspace").getOutputScheme();
 
-    assertThat(
-        "Test for project FooBin should have been generated",
-        scheme.get().getBuildAction().get().getBuildActionEntries(),
+    assertThat(mainScheme.isPresent(), is(true));
+
+    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.get().getBuildAction().get();
+    List<BuildActionEntry> mainSchemeBuildActionEntries =
+        mainSchemeBuildAction.getBuildActionEntries();
+    assertThat(mainSchemeBuildActionEntries, hasSize(4));
+    assertThat( // foo:bin
+        mainSchemeBuildActionEntries,
         hasItem(
-            withNameAndBuildingFor(
-                "bin-xctest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY))));
+            withNameAndBuildingFor("bin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+    assertThat( // foo:bin-xctest
+        mainSchemeBuildActionEntries,
+        hasItem(withNameAndBuildingFor("bin-xctest", equalTo(BuildFor.TEST_ONLY))));
+    assertThat( // foo:lib
+        mainSchemeBuildActionEntries,
+        hasItem(
+            withNameAndBuildingFor("lib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+    assertThat( // bar:libbar
+        mainSchemeBuildActionEntries,
+        hasItem(
+            withNameAndBuildingFor("libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
 
-    assertThat(
-        "Test for project FooLib should not be generated at all",
-        scheme.get().getBuildAction().get().getBuildActionEntries(),
-        not(
-            hasItem(
-                withNameAndBuildingFor(
-                    "lib-xctest", equalTo(XCScheme.BuildActionEntry.BuildFor.TEST_ONLY)))));
+    XCScheme.TestAction mainSchemeTestAction = mainScheme.get().getTestAction().get();
+    assertThat(mainSchemeTestAction.getTestables(), hasSize(1));
+    assertThat( // foo:bin-xctest
+        mainSchemeTestAction.getTestables(), hasItem(withName("bin-xctest")));
+
+    // validate project specific (foo) scheme values
+    SchemeGenerator fooSchemeGenerator = generator.getSchemeGenerators().get("foo");
+
+    assertThat(fooSchemeGenerator.getOutputDirectory(), is(Paths.get("foo/foo.xcodeproj")));
+
+    Optional<XCScheme> fooScheme = fooSchemeGenerator.getOutputScheme();
+
+    assertThat(fooScheme.isPresent(), is(true));
+
+    XCScheme.BuildAction fooSchemeBuildAction = fooScheme.get().getBuildAction().get();
+    List<BuildActionEntry> fooSchemeBuildActionEntries =
+        fooSchemeBuildAction.getBuildActionEntries();
+    assertThat(fooSchemeBuildActionEntries, hasSize(3));
+    assertThat( // foo:bin
+        fooSchemeBuildActionEntries,
+        hasItem(
+            withNameAndBuildingFor("bin", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+    assertThat( // foo:bin-xctest
+        fooSchemeBuildActionEntries,
+        hasItem(withNameAndBuildingFor("bin-xctest", equalTo(BuildFor.TEST_ONLY))));
+    assertThat( // foo:lib
+        fooSchemeBuildActionEntries,
+        hasItem(
+            withNameAndBuildingFor("lib", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+
+    XCScheme.TestAction fooSchemeTestAction = fooScheme.get().getTestAction().get();
+    assertThat(fooSchemeTestAction.getTestables(), hasSize(1));
+    assertThat( // foo:bin-xctest
+        fooSchemeTestAction.getTestables(), hasItem(withName("bin-xctest")));
+
+    // validate project specific (bar) scheme values
+    SchemeGenerator barSchemeGenerator = generator.getSchemeGenerators().get("bar");
+
+    assertThat(barSchemeGenerator.getOutputDirectory(), is(Paths.get("bar/bar.xcodeproj")));
+
+    Optional<XCScheme> barScheme = barSchemeGenerator.getOutputScheme();
+
+    assertThat(barScheme.isPresent(), is(true));
+
+    XCScheme.BuildAction barSchemeBuildAction = barScheme.get().getBuildAction().get();
+    List<BuildActionEntry> barSchemeBuildActionEntries =
+        barSchemeBuildAction.getBuildActionEntries();
+    assertThat(barSchemeBuildActionEntries, hasSize(1));
+    assertThat( // bar:libbar
+        barSchemeBuildActionEntries,
+        hasItem(
+            withNameAndBuildingFor("libbar", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT))));
+
+    XCScheme.TestAction barSchemeTestAction = barScheme.get().getTestAction().get();
+    assertThat(barSchemeTestAction.getTestables(), hasSize(0));
   }
 
   @Test
   public void requiredBuildTargets() throws IOException, InterruptedException {
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "gen");
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "gen");
     TargetNode<GenruleDescriptionArg> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg> library =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
@@ -462,7 +537,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+                BuildTargetFactory.newInstance("//foo", "workspace"))
             .setSrcTarget(Optional.of(libraryTarget))
             .build();
 
@@ -488,7 +563,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -498,11 +574,11 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void requiredBuildTargetsForCombinedProject() throws IOException, InterruptedException {
-    BuildTarget genruleTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "gen");
+    BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "gen");
     TargetNode<GenruleDescriptionArg> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
 
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "lib");
+    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
     TargetNode<AppleLibraryDescriptionArg> library =
         AppleLibraryBuilder.createBuilder(libraryTarget)
             .setSrcs(
@@ -512,7 +588,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+                BuildTargetFactory.newInstance("//foo", "workspace"))
             .setSrcTarget(Optional.of(libraryTarget))
             .build();
 
@@ -538,7 +614,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -564,34 +641,27 @@ public class WorkspaceAndProjectGeneratorTest {
     //
     // Calling generate on FooBin should pull in everything except BazLibTest and QuxBin.
 
-    BuildTarget bazTestTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "BazTest");
-    BuildTarget fooBinTestTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooBinTest");
-    BuildTarget fooTestTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLibTest");
+    BuildTarget bazTestTarget = BuildTargetFactory.newInstance("//baz", "BazTest");
+    BuildTarget fooBinTestTarget = BuildTargetFactory.newInstance("//foo", "FooBinTest");
+    BuildTarget fooTestTarget = BuildTargetFactory.newInstance("//foo", "FooLibTest");
 
-    BuildTarget barLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar", "BarLib");
+    BuildTarget barLibTarget = BuildTargetFactory.newInstance("//bar", "BarLib");
     TargetNode<?> barLibNode = AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget fooLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<?> fooLibNode =
         AppleLibraryBuilder.createBuilder(fooLibTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .setTests(ImmutableSortedSet.of(fooTestTarget))
             .build();
 
-    BuildTarget fooBinBinaryTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooBinBinary");
+    BuildTarget fooBinBinaryTarget = BuildTargetFactory.newInstance("//foo", "FooBinBinary");
     TargetNode<?> fooBinBinaryNode =
         AppleBinaryBuilder.createBuilder(fooBinBinaryTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
             .build();
 
-    BuildTarget fooBinTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooBin");
+    BuildTarget fooBinTarget = BuildTargetFactory.newInstance("//foo", "FooBin");
     TargetNode<?> fooBinNode =
         AppleBundleBuilder.createBuilder(fooBinTarget)
             .setExtension(Either.ofLeft(AppleBundleExtension.APP))
@@ -600,8 +670,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .setTests(ImmutableSortedSet.of(fooBinTestTarget))
             .build();
 
-    BuildTarget bazLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "BazLib");
+    BuildTarget bazLibTarget = BuildTargetFactory.newInstance("//baz", "BazLib");
     TargetNode<?> bazLibNode =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(fooLibTarget))
@@ -626,15 +695,13 @@ public class WorkspaceAndProjectGeneratorTest {
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
-    BuildTarget quxBinTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "QuxBin");
+    BuildTarget quxBinTarget = BuildTargetFactory.newInstance("//qux", "QuxBin");
     TargetNode<?> quxBinNode =
         AppleBinaryBuilder.createBuilder(quxBinTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
             .build();
 
-    BuildTarget workspaceTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace");
+    BuildTarget workspaceTarget = BuildTargetFactory.newInstance("//foo", "workspace");
     workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(workspaceTarget)
             .setWorkspaceName(Optional.of("workspace"))
@@ -642,7 +709,7 @@ public class WorkspaceAndProjectGeneratorTest {
             .build();
 
     BuildTarget workspaceWithExtraSchemeTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//qux", "workspace");
+        BuildTargetFactory.newInstance("//qux", "workspace");
     workspaceWithExtraSchemeNode =
         XcodeWorkspaceConfigBuilder.createBuilder(workspaceWithExtraSchemeTarget)
             .setWorkspaceName(Optional.of("workspace"))
@@ -692,7 +759,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -765,18 +833,15 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void targetsForWorkspaceWithExtraTargets() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
-    BuildTarget barLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//bar", "BarLib");
+    BuildTarget barLibTarget = BuildTargetFactory.newInstance("//bar", "BarLib");
     TargetNode<AppleLibraryDescriptionArg> barLib =
         AppleLibraryBuilder.createBuilder(barLibTarget).build();
 
-    BuildTarget bazLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//baz", "BazLib");
+    BuildTarget bazLibTarget = BuildTargetFactory.newInstance("//baz", "BazLib");
     TargetNode<AppleLibraryDescriptionArg> bazLib =
         AppleLibraryBuilder.createBuilder(bazLibTarget)
             .setDeps(ImmutableSortedSet.of(barLibTarget))
@@ -784,7 +849,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+                BuildTargetFactory.newInstance("//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .setExtraTargets(ImmutableSortedSet.of(bazLibTarget))
@@ -815,7 +880,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -854,15 +920,121 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
+  public void targetsForWorkspaceWithImplicitExtensionTargets()
+      throws IOException, InterruptedException {
+    BuildTarget barShareExtensionBinaryTarget =
+        BuildTargetFactory.newInstance("//foo", "BarShareExtensionBinary");
+    TargetNode<?> barShareExtensionBinary =
+        AppleBinaryBuilder.createBuilder(barShareExtensionBinaryTarget).build();
+
+    BuildTarget barShareExtensionTarget =
+        BuildTargetFactory.newInstance("//foo", "BarShareExtension", DefaultCxxPlatforms.FLAVOR);
+    TargetNode<AppleBundleDescriptionArg> barShareExtension =
+        AppleBundleBuilder.createBuilder(barShareExtensionTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APPEX))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(barShareExtensionBinaryTarget)
+            .setXcodeProductType(Optional.of(ProductTypes.APP_EXTENSION.getIdentifier()))
+            .build();
+
+    BuildTarget barAppBinaryTarget = BuildTargetFactory.newInstance("//foo", "BarAppBinary");
+    TargetNode<?> barAppBinary = AppleBinaryBuilder.createBuilder(barAppBinaryTarget).build();
+
+    BuildTarget barAppTarget = BuildTargetFactory.newInstance("//foo", "BarApp");
+    TargetNode<AppleBundleDescriptionArg> barApp =
+        AppleBundleBuilder.createBuilder(barAppTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(barAppBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(barShareExtensionTarget))
+            .build();
+
+    XcodeWorkspaceConfigDescriptionArg arg =
+        XcodeWorkspaceConfigDescriptionArg.builder()
+            .setName("workspace")
+            .setSrcTarget(barAppTarget)
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            barShareExtensionBinary, barShareExtension, barAppBinary, barApp);
+
+    WorkspaceAndProjectGenerator generator =
+        new WorkspaceAndProjectGenerator(
+            xcodeDescriptions,
+            rootCell,
+            targetGraph,
+            arg,
+            barAppTarget,
+            ProjectGeneratorOptions.builder()
+                .setShouldIncludeTests(true)
+                .setShouldIncludeDependenciesTests(true)
+                .build(),
+            false /* combinedProject */,
+            FocusedModuleTargetMatcher.noFocus(),
+            true /* parallelizeBuild */,
+            DEFAULT_PLATFORM,
+            ImmutableSet.of(),
+            "BUCK",
+            getActionGraphBuilderForNodeFunction(targetGraph),
+            getFakeBuckEventBus(),
+            TestRuleKeyConfigurationFactory.create(),
+            halideBuckConfig,
+            cxxBuckConfig,
+            appleConfig,
+            swiftBuckConfig,
+            Optional.empty());
+    Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
+    generator.generateWorkspaceAndDependentProjects(
+        projectGenerators, MoreExecutors.newDirectExecutorService());
+
+    assertThat(
+        generator.getSchemeGenerators().get("BarApp").getOutputScheme().isPresent(), is(true));
+    assertThat(
+        generator
+            .getSchemeGenerators()
+            .get("BarApp+BarShareExtension")
+            .getOutputScheme()
+            .isPresent(),
+        is(true));
+
+    // Validate app scheme
+    XCScheme appScheme = generator.getSchemeGenerators().get("BarApp").getOutputScheme().get();
+    assertThat(appScheme.getWasCreatedForExtension(), is(false));
+    XCScheme.BuildAction appSchemeBuildAction = appScheme.getBuildAction().get();
+    assertThat(appSchemeBuildAction.getBuildActionEntries(), hasSize(2));
+    assertThat(
+        appSchemeBuildAction.getBuildActionEntries().get(0),
+        withNameAndBuildingFor(
+            "BarShareExtension", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+    assertThat(
+        appSchemeBuildAction.getBuildActionEntries().get(1),
+        withNameAndBuildingFor("BarApp", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+
+    // Validate extension scheme
+    XCScheme extensionScheme =
+        generator.getSchemeGenerators().get("BarApp+BarShareExtension").getOutputScheme().get();
+    assertThat(extensionScheme.getWasCreatedForExtension(), is(true));
+    XCScheme.BuildAction extensionSchemeBuildAction = extensionScheme.getBuildAction().get();
+    assertThat(extensionSchemeBuildAction.getBuildActionEntries(), hasSize(2));
+    assertThat(
+        extensionSchemeBuildAction.getBuildActionEntries().get(0),
+        withNameAndBuildingFor("BarApp", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+    assertThat(
+        extensionSchemeBuildAction.getBuildActionEntries().get(1),
+        withNameAndBuildingFor(
+            "BarShareExtension", equalTo(XCScheme.BuildActionEntry.BuildFor.DEFAULT)));
+  }
+
+  @Test
   public void enablingParallelizeBuild() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+                BuildTargetFactory.newInstance("//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .build();
@@ -892,7 +1064,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -910,18 +1083,19 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void customRunnableSettings() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
     TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+                BuildTargetFactory.newInstance("//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .setExplicitRunnablePath(Optional.of("/some.app"))
             .setLaunchStyle(Optional.of(XCScheme.LaunchAction.LaunchStyle.WAIT))
+            .setWatchInterface(Optional.of(WatchInterface.COMPLICATION))
+            .setNotificationPayloadFile(Optional.of("SomeFile.apns"))
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(fooLib, workspaceNode);
@@ -949,7 +1123,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -959,12 +1134,14 @@ public class WorkspaceAndProjectGeneratorTest {
     assertThat(launchAction.getRunnablePath().get(), Matchers.equalTo("/some.app"));
     assertThat(
         launchAction.getLaunchStyle(), Matchers.equalTo(XCScheme.LaunchAction.LaunchStyle.WAIT));
+    assertThat(
+        launchAction.getWatchInterface().get(), Matchers.equalTo(WatchInterface.COMPLICATION));
+    assertThat(launchAction.getNotificationPayloadFile().get(), Matchers.equalTo("SomeFile.apns"));
   }
 
   @Test
   public void customPrePostActions() throws IOException, InterruptedException {
-    BuildTarget fooLibTarget =
-        BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "FooLib");
+    BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();
 
@@ -979,7 +1156,7 @@ public class WorkspaceAndProjectGeneratorTest {
                     AdditionalActions.POST_SCHEME_ACTIONS, ImmutableList.of("echo takeoff")));
     TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceNode =
         XcodeWorkspaceConfigBuilder.createBuilder(
-                BuildTargetFactory.newInstance(rootCell.getRoot(), "//foo", "workspace"))
+                BuildTargetFactory.newInstance("//foo", "workspace"))
             .setWorkspaceName(Optional.of("workspace"))
             .setSrcTarget(Optional.of(fooLibTarget))
             .setAdditionalSchemeActions(Optional.of(schemeActions))
@@ -1010,7 +1187,8 @@ public class WorkspaceAndProjectGeneratorTest {
             halideBuckConfig,
             cxxBuckConfig,
             appleConfig,
-            swiftBuckConfig);
+            swiftBuckConfig,
+            Optional.empty());
     Map<Path, ProjectGenerator> projectGenerators = new HashMap<>();
     generator.generateWorkspaceAndDependentProjects(
         projectGenerators, MoreExecutors.newDirectExecutorService());
@@ -1053,12 +1231,28 @@ public class WorkspaceAndProjectGeneratorTest {
         });
   }
 
+  private Matcher<XCScheme.TestableReference> testableReferenceWithName(String name) {
+    return new FeatureMatcher<XCScheme.TestableReference, String>(
+        equalTo(name), "TestableReference named", "name") {
+      @Override
+      protected String featureValueOf(XCScheme.TestableReference testableReference) {
+        return testableReference.getBuildableReference().blueprintName;
+      }
+    };
+  }
+
+  private Matcher<XCScheme.TestableReference> withName(String name) {
+    return testableReferenceWithName(name);
+  }
+
   private Function<TargetNode<?>, ActionGraphBuilder> getActionGraphBuilderForNodeFunction(
       TargetGraph targetGraph) {
     return input ->
         new ActionGraphProviderBuilder()
             .build()
-            .getFreshActionGraph(targetGraph.getSubgraph(ImmutableSet.of(input)))
+            .getFreshActionGraph(
+                TestTargetGraphCreationResultFactory.create(
+                    targetGraph.getSubgraph(ImmutableSet.of(input))))
             .getActionGraphBuilder();
   }
 }

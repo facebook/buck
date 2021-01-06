@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -29,8 +29,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -142,7 +143,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
               outputFileFetchResultFuture,
               (CacheResult outputFileFetchResult) -> {
                 outputFileFetchResult =
-                    outputFileFetchResult.withTwoLevelContentHashKey(contentHashKey);
+                    outputFileFetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
 
                 if (!outputFileFetchResult.getType().isSuccess()) {
                   LOG.verbose("Missed second-level lookup.");
@@ -167,16 +168,18 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 // Note: in the case of a hit, we return fetchResult, rather than
                 // outputFileFetchResult,
                 // so that the client gets the correct metadata.
-                CacheResult finalResult = fetchResult.withTwoLevelContentHashKey(contentHashKey);
+                CacheResult finalResult =
+                    fetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
 
                 // The two level content hash was not part of the original metadata that was stored
                 // to the cache, don't include it in the result.
                 finalResult =
                     finalResult.withMetadata(
-                        ImmutableMap.copyOf(
-                            RichStream.from(finalResult.getMetadata().entrySet())
-                                .filter(e -> !Objects.equals(e.getKey(), METADATA_KEY))
-                                .toOnceIterable()));
+                        Optional.of(
+                            ImmutableMap.copyOf(
+                                RichStream.from(finalResult.getMetadata().entrySet())
+                                    .filter(e -> !Objects.equals(e.getKey(), METADATA_KEY))
+                                    .toOnceIterable())));
                 return Futures.immediateFuture(finalResult);
               },
               MoreExecutors.directExecutor());
@@ -190,7 +193,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   }
 
   @Override
-  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+  public ListenableFuture<Unit> store(ArtifactInfo info, BorrowablePath output) {
 
     return Futures.transformAsync(
         attemptTwoLevelStore(info, output),
@@ -257,12 +260,20 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
     // we end up with constant re-uploading and rebuilding flow. The following issue is
     // only in case when output hash changes between builds.
     Pair<ArtifactInfo, BorrowablePath> artifact =
-        new Pair<>(ArtifactInfo.builder().addRuleKeys(new RuleKey(hashCode)).build(), output);
+        new Pair<>(
+            ArtifactInfo.builder()
+                .addRuleKeys(new RuleKey(hashCode))
+                .setBuildTarget(info.getBuildTarget())
+                .setBuildTimeMs(info.getBuildTimeMs())
+                .build(),
+            output);
     Pair<ArtifactInfo, BorrowablePath> metadata =
         new Pair<>(
             ArtifactInfo.builder()
                 .setRuleKeys(info.getRuleKeys())
                 .setMetadata(metadataWithCacheKey)
+                .setBuildTarget(info.getBuildTarget())
+                .setBuildTimeMs(info.getBuildTimeMs())
                 .build(),
             BorrowablePath.notBorrowablePath(emptyFilePath));
 

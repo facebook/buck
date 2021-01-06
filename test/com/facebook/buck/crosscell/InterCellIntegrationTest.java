@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.crosscell;
@@ -28,24 +28,28 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -53,8 +57,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -87,6 +91,10 @@ public class InterCellIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Rule
+  public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
+      CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
   @Test
   public void ensureThatNormalBuildsWorkAsExpected() throws IOException {
@@ -199,7 +207,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void xCellCxxLibraryBuildsShouldBeHermetic() throws InterruptedException, IOException {
+  public void xCellCxxLibraryBuildsShouldBeHermetic() throws IOException {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
@@ -270,7 +278,7 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    String systemBootclasspath = System.getProperty("sun.boot.class.path");
+    String systemBootclasspath = Bootclasspath.getJdk8StubJarPath();
     ProcessResult result =
         primary.runBuckBuild(
             "//:java-binary",
@@ -369,17 +377,16 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
-    Parser parser = TestParserFactory.create(primary.asCell().getBuckConfig());
+    Parser parser = TestParserFactory.create(executor.get(), primary.asCell());
 
     Cell primaryCell = primary.asCell();
-    BuildTarget namedTarget =
-        BuildTargetFactory.newInstance(primaryCell.getFilesystem().getRootPath(), targetName);
+    BuildTarget namedTarget = BuildTargetFactory.newInstance(targetName);
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(
-        primaryCell,
-        false,
-        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+        ParsingContext.builder(
+                primaryCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+            .build(),
         ImmutableSet.of(namedTarget));
   }
 
@@ -429,12 +436,13 @@ public class InterCellIntegrationTest {
     TestDataHelper.overrideBuckconfig(
         secondary, ImmutableMap.of("cxx", ImmutableMap.of("cc", "/does/not/exist")));
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "Overridden cxx:cc path not found: /does/not/exist\n\n"
-            + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'");
-    // This should throw
-    primary.runBuckBuild("//:cxxbinary");
+    ProcessResult processResult = primary.runBuckBuild("//:cxxbinary");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "Overridden cxx:cc path not found: /does/not/exist\n\n"
+                + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
   }
 
   @Test
@@ -562,9 +570,6 @@ public class InterCellIntegrationTest {
 
   @Test
   public void childCellWithCellMappingNotInRootCellShouldThrowError() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("repositories.third must exist in the root cell's cell mappings.");
-
     ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
@@ -572,7 +577,11 @@ public class InterCellIntegrationTest {
     registerCell(second, "third", third);
 
     // should fail since "third" is not specified in root
-    root.runBuckBuild("//:dummy");
+    ProcessResult processResult = root.runBuckBuild("//:dummy");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString("repositories.third must exist in the root cell's cell mappings."));
   }
 
   @Test
@@ -591,10 +600,6 @@ public class InterCellIntegrationTest {
 
   @Test
   public void childCellWithCellMappingThatDiffersFromRootCellShouldThrowError() throws IOException {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "repositories.third must point to the same directory as the root cell's cell "
-            + "mapping:");
     ProjectWorkspace root = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace second = createWorkspace("inter-cell/validation/root");
     ProjectWorkspace third = createWorkspace("inter-cell/validation/root");
@@ -603,12 +608,18 @@ public class InterCellIntegrationTest {
     registerCell(root, "third", second);
 
     // should fail since we mapped "third" to wrong cell
-    root.runBuckBuild("//:dummy");
+    ProcessResult processResult = root.runBuckBuild("//:dummy");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "repositories.third must point to the same directory as the root cell's cell "
+                + "mapping:"));
   }
 
   @Test
-  public void testCrossCellAndroidLibrary() throws InterruptedException, IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+  public void testCrossCellAndroidLibrary() throws IOException {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -621,8 +632,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellAndroidLibraryMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -634,15 +645,14 @@ public class InterCellIntegrationTest {
         secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
             new DefaultProcessExecutor(new TestConsole()),
             tmpDir,
             platform.getObjdump(),
-            pathResolver);
+            graphBuilder.getSourcePathResolver());
     SymbolsAndDtNeeded info;
     Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_libs");
 
@@ -666,8 +676,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -679,15 +689,14 @@ public class InterCellIntegrationTest {
         secondary, ImmutableMap.of("ndk", ImmutableMap.of("cpu_abis", "x86")));
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
             new DefaultProcessExecutor(new TestConsole()),
             tmpDir,
             platform.getObjdump(),
-            pathResolver);
+            graphBuilder.getSourcePathResolver());
     SymbolsAndDtNeeded info;
     Path apkPath = primary.buildAndReturnOutput("//apps/sample:app_with_merged_cross_cell_deps");
 
@@ -760,7 +769,7 @@ public class InterCellIntegrationTest {
   }
 
   @Test
-  public void testCrossCellCleanCommand() throws IOException, InterruptedException {
+  public void testCrossCellCleanCommand() throws IOException {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
@@ -876,6 +885,28 @@ public class InterCellIntegrationTest {
     secondary.runBuckBuild("primary//:hello").assertSuccess();
   }
 
+  @Test
+  public void crossCellBinarySharedLinkCanRun() throws IOException {
+    assumeThat(Platform.detect(), is(not(WINDOWS)));
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare("inter-cell/cxx_binary_shared/primary", "inter-cell/cxx_binary_shared/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    primary.runBuckCommand("run", "secondary//:main").assertSuccess();
+  }
+
+  @Test
+  public void crossCellShBinaryWithResources() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != WINDOWS);
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare(
+            "inter-cell/sh_binary_with_resources/primary",
+            "inter-cell/sh_binary_with_resources/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    primary.runBuckCommand("run", "secondary//:main").assertSuccess();
+  }
+
   private static String sortLines(String input) {
     return RichStream.from(Splitter.on('\n').trimResults().omitEmptyStrings().split(input))
         .sorted()
@@ -912,6 +943,11 @@ public class InterCellIntegrationTest {
         ImmutableMap.of(
             "repositories",
             ImmutableMap.of(
-                cellName, cellToRegisterAsCellName.getPath(".").normalize().toString())));
+                cellName,
+                cellToModifyConfigOf
+                    .getDestPath()
+                    .relativize(cellToRegisterAsCellName.getPath("."))
+                    .normalize()
+                    .toString())));
   }
 }

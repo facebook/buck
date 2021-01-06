@@ -5,11 +5,12 @@ java_test(
     srcs = glob(["*Test.java"]),
     deps = [
         "//src/com/facebook/buck/core/select/impl:impl",
+        "//src/com/facebook/buck/parser/syntax:syntax",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/select:testutil",
-        "//third-party/java/bazel:skylark-lang",
+        "//third-party/java/bazel:bazel",
         "//third-party/java/junit:junit",
     ],
 )

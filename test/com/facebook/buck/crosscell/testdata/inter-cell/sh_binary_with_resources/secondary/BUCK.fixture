@@ -1,0 +1,12 @@
+sh_binary(
+    name = "main",
+    main = "main",
+    resources = [
+        "binaries/linux_node_executable",
+        "binaries/os_x_node_executable",
+        "file with spaces in its name",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

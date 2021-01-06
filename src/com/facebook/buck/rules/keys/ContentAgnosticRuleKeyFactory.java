@@ -1,29 +1,29 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.hashing.FileHashLoader;
@@ -39,7 +39,6 @@ import java.util.Optional;
 public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 
   private final RuleKeyFieldLoader ruleKeyFieldLoader;
-  private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
 
@@ -57,27 +56,26 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         }
 
         @Override
-        public HashCode get(ArchiveMemberPath archiveMemberPath) {
+        public HashCode getForArchiveMember(Path relativeArchivePath, Path memberPath) {
           throw new AssertionError();
         }
       };
 
-  private final SingleBuildRuleKeyCache<RuleKey> ruleKeyCache = new SingleBuildRuleKeyCache<>();
+  private final SingleBuildActionRuleKeyCache<RuleKey> ruleKeyCache =
+      new SingleBuildActionRuleKeyCache<>();
 
   public ContentAgnosticRuleKeyFactory(
       RuleKeyFieldLoader ruleKeyFieldLoader,
-      SourcePathResolver pathResolver,
       SourcePathRuleFinder ruleFinder,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     this.ruleKeyFieldLoader = ruleKeyFieldLoader;
-    this.pathResolver = pathResolver;
     this.ruleFinder = ruleFinder;
     this.ruleKeyLogger = ruleKeyLogger;
   }
 
-  private RuleKey calculateBuildRuleKey(BuildRule buildRule) {
+  private RuleKey calculateBuildRuleKey(BuildEngineAction action) {
     Builder<HashCode> builder = new Builder<>(RuleKeyBuilder.createDefaultHasher(ruleKeyLogger));
-    ruleKeyFieldLoader.setFields(builder, buildRule, RuleKeyType.CONTENT_AGNOSTIC);
+    ruleKeyFieldLoader.setFields(builder, action, RuleKeyType.CONTENT_AGNOSTIC);
     return builder.build(RuleKey::new);
   }
 
@@ -89,8 +87,8 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   }
 
   @Override
-  public RuleKey build(BuildRule buildRule) {
-    return ruleKeyCache.get(buildRule, this::calculateBuildRuleKey);
+  public RuleKey build(BuildEngineAction action) {
+    return ruleKeyCache.get(action, this::calculateBuildRuleKey);
   }
 
   private RuleKey buildAppendableKey(AddsToRuleKey appendable) {
@@ -100,7 +98,12 @@ public class ContentAgnosticRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   public class Builder<RULE_KEY> extends RuleKeyBuilder<RULE_KEY> {
 
     public Builder(RuleKeyHasher<RULE_KEY> hasher) {
-      super(ruleFinder, pathResolver, fileHashLoader, hasher);
+      super(ruleFinder, fileHashLoader, hasher);
+    }
+
+    @Override
+    protected AbstractRuleKeyBuilder<RULE_KEY> setAction(Action action) {
+      return setActionRuleKey(ContentAgnosticRuleKeyFactory.this.build(action));
     }
 
     @Override

@@ -1,41 +1,36 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.in;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,11 +38,9 @@ import java.nio.file.Paths;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 public class ParserIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testParserFilesAreSandboxed() throws Exception {
@@ -57,7 +50,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:base_genrule");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "", "-v", "2");
     buildResult.assertSuccess();
@@ -73,17 +66,17 @@ public class ParserIntegrationTest {
    */
   @Test
   public void testParseRuleWithBadDependency() throws IOException {
-    // Ensure an exception with a specific message is thrown.
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "This error happened while trying to get dependency '//:bad-dep' of target '//:base'");
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "parse_rule_with_bad_dependency", temporaryFolder);
     workspace.setUp();
 
-    workspace.runBuckCommand("build", "//:base");
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:base");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "This error happened while trying to get dependency '//:bad-dep' of target '//:base'"));
   }
 
   /**
@@ -109,35 +102,32 @@ public class ParserIntegrationTest {
             this, "circular_dependency_detection", temporaryFolder);
     workspace.setUp();
 
-    try {
-      workspace.runBuckCommand("build", "//:A");
-    } catch (HumanReadableException e) {
-      assertThat(
-          e.getHumanReadableErrorMessage(),
-          is(
-              in(
-                  ImmutableSet.of(
-                      linesToText(
-                          "Buck can't handle circular dependencies.",
-                          "The following circular dependency has been found:",
-                          "//:C -> //:E -> //:F -> //:C",
-                          "",
-                          "Please break the circular dependency and try again."),
-                      linesToText(
-                          "Buck can't handle circular dependencies.",
-                          "The following circular dependency has been found:",
-                          "//:E -> //:F -> //:C -> //:E",
-                          "",
-                          "Please break the circular dependency and try again."),
-                      linesToText(
-                          "Buck can't handle circular dependencies.",
-                          "The following circular dependency has been found:",
-                          "//:F -> //:C -> //:E -> //:F",
-                          "",
-                          "Please break the circular dependency and try again.")))));
-      return;
-    }
-    fail("An exception should have been thrown because of a circular dependency.");
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:A");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        anyOf(
+            containsString(
+                linesToText(
+                    "Buck can't handle circular dependencies.",
+                    "The following circular dependency has been found:",
+                    "//:C -> //:E -> //:F -> //:C",
+                    "",
+                    "Please break the circular dependency and try again.")),
+            containsString(
+                linesToText(
+                    "Buck can't handle circular dependencies.",
+                    "The following circular dependency has been found:",
+                    "//:E -> //:F -> //:C -> //:E",
+                    "",
+                    "Please break the circular dependency and try again.")),
+            containsString(
+                linesToText(
+                    "Buck can't handle circular dependencies.",
+                    "The following circular dependency has been found:",
+                    "//:F -> //:C -> //:E -> //:F",
+                    "",
+                    "Please break the circular dependency and try again."))));
   }
 
   /**
@@ -219,10 +209,10 @@ public class ParserIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
-    result.assertExitCode("missing name should error", ExitCode.PARSE_ERROR);
-    assertThat(result.getStderr(), containsString("genrule"));
-    assertThat(result.getStderr(), containsString("gr"));
-    assertThat(result.getStderr(), containsString("out"));
+    result.assertExitCode("missing name should error", ExitCode.BUILD_ERROR);
+    assertThat(
+        result.getStderr(),
+        containsString("One and only one of 'out' or 'outs' must be present in genrule"));
   }
 
   @Test
@@ -244,12 +234,10 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "package_boundaries", temporaryFolder);
     workspace.setUp();
-    try {
-      workspace.runBuckCommand("build", "//java:foo");
-      fail("Expected exception");
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("can only be referenced from"));
-    }
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//java:foo");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("can only be referenced from"));
 
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "false");
     workspace.runBuckCommand("build", "//java:foo").assertSuccess();
@@ -257,12 +245,52 @@ public class ParserIntegrationTest {
     workspace.addBuckConfigLocalOption("project", "check_package_boundary", "true");
     workspace.addBuckConfigLocalOption("project", "package_boundary_exceptions", "java");
     workspace.runBuckCommand("build", "//java:foo").assertSuccess();
-    try {
-      workspace.runBuckCommand("build", "//java2:foo").assertSuccess();
-      fail("Expected exception");
-    } catch (HumanReadableException e) {
-      assertThat(e.getMessage(), containsString("can only be referenced from"));
-    }
+
+    processResult = workspace.runBuckCommand("build", "//java2:foo");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("can only be referenced from"));
+  }
+
+  @Test
+  public void packageVisibilityIsEnforced() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "package_visibility", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:should_pass").assertSuccess();
+    workspace.runBuckCommand("build", "//:should_pass_2").assertSuccess();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+
+    workspace.runBuckCommand("build", "//bar:should_pass").assertSuccess();
+
+    processResult = workspace.runBuckCommand("build", "//bar:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+  }
+
+  @Test
+  public void parentPackageVisibilityIsEnforced() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "package_inheritance", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//:should_pass").assertSuccess();
+    workspace.runBuckCommand("build", "//:should_pass_2").assertSuccess();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+
+    workspace.runBuckCommand("build", "//bar:should_pass").assertSuccess();
+
+    processResult = workspace.runBuckCommand("build", "//bar:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
   }
 
   static class BigFileTree {
@@ -408,9 +436,16 @@ public class ParserIntegrationTest {
             "//python/implicit_in_extension_bzl:main",
             "-c",
             "parser.disable_implicit_native_rules=true"),
-        "NameError: global name 'java_library' is not defined",
+        "NameError: name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 5");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//python/native_in_build_file:main",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "AttributeError: 'native' object has no attribute 'java_library'",
+        "BUCK\", line 1");
     workspace
         .runBuckBuild(
             "//python/native_in_extension_bzl:main",
@@ -464,6 +499,14 @@ public class ParserIntegrationTest {
         "name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 4");
+    assertParseFailedWithSubstrings(
+        workspace.runBuckBuild(
+            "//skylark/native_in_build_file:main",
+            "-c",
+            "parser.polyglot_parsing_enabled=true",
+            "-c",
+            "parser.disable_implicit_native_rules=true"),
+        "BUCK:2:1: type 'native (a language module)' has no method java_library");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
@@ -586,5 +629,25 @@ public class ParserIntegrationTest {
     assertParseFailedWithSubstrings(
         workspace.runBuckCommand("build", "//:glob"),
         "Recursive globs are prohibited at top-level directory");
+  }
+
+  @Test
+  public void skylarkParseErrorIfTopLevelRecursiveGlob() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "top_level_recursive_glob", temporaryFolder);
+    workspace.setUp();
+    assertParseFailedWithSubstrings(
+        workspace.runBuckCommand(
+            "build", "//:glob", "-c", "parser.default_build_file_syntax=skylark"),
+        "Recursive globs are prohibited at top-level directory");
+  }
+
+  @Test
+  public void parseAllFromRootCellShouldIgnoreSubcells() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "subcell_ignored", temporaryFolder);
+    workspace.setUp();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 }
