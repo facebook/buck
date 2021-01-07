@@ -59,6 +59,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey ArchiveContents archiveContents;
   @AddToRuleKey ImmutableList<SourcePath> extraScriptTemplates;
   @AddToRuleKey Linker.LinkableDepType linkStyle;
+  @AddToRuleKey ImmutableSet<SourcePath> pkgDirs;
 
   @AddToRuleKey(stringify = true)
   Path scriptTemplate;
@@ -88,6 +89,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       HaskellSources srcs,
       ImmutableMap<BuildTarget, HaskellPackageInfo> ideProjects,
       Collection<String> compilerFlags,
+      ImmutableSet<SourcePath> pkgDirs,
       ImmutableMap<BuildRule, HaskellPackage> haskellPackages,
       ImmutableMap<BuildRule, HaskellPackage> prebuiltHaskellPackages,
       ImmutableList<SourcePath> extraScriptTemplates,
@@ -102,6 +104,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     super(buildTarget, projectFilesystem, params);
     this.srcs = srcs;
     this.compilerFlags = compilerFlags;
+    this.pkgDirs = pkgDirs;
     this.haskellPackages = haskellPackages;
     this.prebuiltHaskellPackages = prebuiltHaskellPackages;
     this.archiveContents = archiveContents;
@@ -154,6 +157,12 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .collect(
                 ImmutableMap.toImmutableMap(
                     t -> t, t -> HaskellLibraryDescription.getPackageInfo(platform, t)));
+
+    ImmutableSet<SourcePath> pkgDirs =
+        Stream.concat(prebuiltHaskellPackages.values().stream(), haskellPackages.values().stream())
+            .map(pkg -> pkg.getPackageDb())
+            .collect(ImmutableSet.toImmutableSet());
+
     return new HaskellIdeRule(
         buildTarget,
         projectFilesystem,
@@ -161,6 +170,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         srcs,
         ideProjects,
         compilerFlags,
+        pkgDirs,
         haskellPackages,
         prebuiltHaskellPackages,
         extraScriptTemplates,
@@ -201,23 +211,6 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
 
-    ImmutableSet.Builder<Path> pkgDirs = ImmutableSet.builder();
-
-    for (HaskellPackage pkg : prebuiltHaskellPackages.values()) {
-      try {
-        Path packageDir = resolver.getCellUnsafeRelPath(pkg.getPackageDb()).getPath().toRealPath();
-        pkgDirs.add(packageDir);
-
-      } catch (IOException ex) {
-        throw new RuntimeException(ex);
-      }
-    }
-
-    for (HaskellPackage pkg : haskellPackages.values()) {
-      RelPath pkgDbSrc = resolver.getCellUnsafeRelPath(pkg.getPackageDb());
-      pkgDirs.add(pkgDbSrc.getPath());
-    }
-
     ImmutableSet.Builder<Path> srcDirs = ImmutableSet.builder();
     ImmutableSet.Builder<RelPath> srcPaths = ImmutableSet.builder();
     for (Map.Entry<HaskellSourceModule, SourcePath> e : srcs.getModuleMap().entrySet()) {
@@ -231,7 +224,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     String importDirs =
         srcDirs.build().stream().map(s -> makeRelativeToParent(dir, s)).collect(joining(" "));
     String packageDbs =
-        pkgDirs.build().stream().map(p -> makeRelativeToParent(dir, p)).collect(joining(" "));
+        pkgDirs.stream().map(p -> makeRelativeToParent(resolver, dir, p)).collect(joining(" "));
     String ignorePackages =
         ideProjects.values().stream()
             .map(p -> String.format("%s-%s", p.getName(), p.getVersion()))
@@ -300,6 +293,12 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private String makeRelativeToParent(RelPath parent, RelPath path) {
     return "${DIR}/" + parent.relativize(path).toString();
+  }
+
+  private String makeRelativeToParent(
+      SourcePathResolverAdapter resolver, RelPath parent, SourcePath spath) {
+    Path path = resolver.getCellUnsafeRelPath(spath).getPath();
+    return makeRelativeToParent(parent, RelPath.of(path));
   }
 
   @Override
