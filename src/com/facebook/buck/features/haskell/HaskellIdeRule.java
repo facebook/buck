@@ -61,6 +61,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey Linker.LinkableDepType linkStyle;
   @AddToRuleKey ImmutableSet<SourcePath> pkgDirs;
   @AddToRuleKey ImmutableSet<HaskellPackageInfo> exposedPackages;
+  @AddToRuleKey ImmutableSet<HaskellPackageInfo> ideProjects;
 
   @AddToRuleKey(stringify = true)
   Path scriptTemplate;
@@ -77,15 +78,12 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey(stringify = true)
   Path ghciCpp;
 
-  // Don't add to rulekey - expensive to compute and should be unnecessary
-  ImmutableMap<BuildTarget, HaskellPackageInfo> ideProjects;
-
   private HaskellIdeRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       HaskellSources srcs,
-      ImmutableMap<BuildTarget, HaskellPackageInfo> ideProjects,
+      ImmutableSet<HaskellPackageInfo> ideProjects,
       Collection<String> compilerFlags,
       ImmutableSet<SourcePath> pkgDirs,
       ImmutableSet<HaskellPackageInfo> exposedPackages,
@@ -146,11 +144,10 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     BuildRuleParams paramsWithExtraDeps =
         params.withDeclaredDeps(declaredDeps).copyAppendingExtraDeps(extraDeps.build());
 
-    ImmutableMap<BuildTarget, HaskellPackageInfo> ideProjects =
+    ImmutableSet<HaskellPackageInfo> ideProjects =
         ideTargets.stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    t -> t, t -> HaskellLibraryDescription.getPackageInfo(platform, t)));
+            .map(t -> HaskellLibraryDescription.getPackageInfo(platform, t))
+            .collect(ImmutableSet.toImmutableSet());
 
     ImmutableSet<SourcePath> pkgDirs =
         Stream.concat(prebuiltHaskellPackages.values().stream(), haskellPackages.values().stream())
@@ -227,7 +224,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     String packageDbs =
         pkgDirs.stream().map(p -> makeRelativeToParent(resolver, dir, p)).collect(joining(" "));
     String ignorePackages =
-        ideProjects.values().stream()
+        ideProjects.stream()
             .map(p -> String.format("%s-%s", p.getName(), p.getVersion()))
             .collect(joining(" "));
     String exposePackages =
