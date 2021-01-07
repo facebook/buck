@@ -10,6 +10,7 @@ rust_library(
     srcs = ["helloworld_derive_no_extern.rs"],
     deps = [":hellodep"],
     proc_macro = True,
+    edition = "2018",
 )
 
 rust_library(

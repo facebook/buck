@@ -68,7 +68,7 @@ public class RustLinkerIntegrationTest {
         workspace
             .runBuckCommand("run", "--config", "rust.linker_args=-lbad-linker-args", "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("library not found for -lbad-linker-args"));
+        Matchers.containsString("-lbad-linker-args"));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class RustLinkerIntegrationTest {
                 "rust.linker_args=-lbad-linker-args",
                 "//:xyzzy")
             .getStderr(),
-        Matchers.containsString("library not found for -lbad-linker-args"));
+        Matchers.containsString("-lbad-linker-args"));
   }
 
   @Test
@@ -139,7 +139,7 @@ public class RustLinkerIntegrationTest {
             .runBuckCommand("run", "--config", "cxx.ldflags=-lbad-linker-args", "//:xyzzy")
             .assertFailure()
             .getStderr(),
-        Matchers.containsString("library not found for -lbad-linker-args"));
+        Matchers.containsString("-lbad-linker-args"));
   }
 
   @Test

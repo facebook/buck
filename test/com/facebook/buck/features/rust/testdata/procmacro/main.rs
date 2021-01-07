@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate helloworld_derive;
+#[macro_use]
 extern crate helloworld_derive_no_extern;
 
 trait HelloWorld {
