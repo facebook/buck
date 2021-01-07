@@ -60,6 +60,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey ImmutableList<SourcePath> extraScriptTemplates;
   @AddToRuleKey Linker.LinkableDepType linkStyle;
   @AddToRuleKey ImmutableSet<SourcePath> pkgDirs;
+  @AddToRuleKey ImmutableSet<HaskellPackageInfo> exposedPackages;
 
   @AddToRuleKey(stringify = true)
   Path scriptTemplate;
@@ -77,10 +78,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   Path ghciCpp;
 
   // Don't add to rulekey - expensive to compute and should be unnecessary
-  ImmutableMap<BuildRule, HaskellPackage> haskellPackages;
-  ImmutableMap<BuildRule, HaskellPackage> prebuiltHaskellPackages;
   ImmutableMap<BuildTarget, HaskellPackageInfo> ideProjects;
-  Set<BuildRule> ruleDeps;
 
   private HaskellIdeRule(
       BuildTarget buildTarget,
@@ -90,8 +88,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableMap<BuildTarget, HaskellPackageInfo> ideProjects,
       Collection<String> compilerFlags,
       ImmutableSet<SourcePath> pkgDirs,
-      ImmutableMap<BuildRule, HaskellPackage> haskellPackages,
-      ImmutableMap<BuildRule, HaskellPackage> prebuiltHaskellPackages,
+      ImmutableSet<HaskellPackageInfo> exposedPackages,
       ImmutableList<SourcePath> extraScriptTemplates,
       Linker.LinkableDepType linkStyle,
       ArchiveContents archiveContents,
@@ -99,14 +96,12 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path ghciBinutils,
       Path ghciCxx,
       Path ghciCc,
-      Path ghciCpp,
-      Set<BuildRule> ruleDeps) {
+      Path ghciCpp) {
     super(buildTarget, projectFilesystem, params);
     this.srcs = srcs;
     this.compilerFlags = compilerFlags;
     this.pkgDirs = pkgDirs;
-    this.haskellPackages = haskellPackages;
-    this.prebuiltHaskellPackages = prebuiltHaskellPackages;
+    this.exposedPackages = exposedPackages;
     this.archiveContents = archiveContents;
     this.ghciBinutils = ghciBinutils;
     this.scriptTemplate = scriptTemplate;
@@ -114,7 +109,6 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.ghciCxx = ghciCxx;
     this.ghciCc = ghciCc;
     this.ghciCpp = ghciCpp;
-    this.ruleDeps = ruleDeps;
     this.ideProjects = ideProjects;
     this.extraScriptTemplates = extraScriptTemplates;
   }
@@ -163,6 +157,15 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .map(pkg -> pkg.getPackageDb())
             .collect(ImmutableSet.toImmutableSet());
 
+    Set<BuildRule> ruleDeps = params.getBuildDeps();
+
+    ImmutableSet<HaskellPackageInfo> exposedPackages =
+        Stream.concat(
+                haskellPackages.entrySet().stream(), prebuiltHaskellPackages.entrySet().stream())
+            .filter(e -> ruleDeps.contains(e.getKey()))
+            .map(e -> e.getValue().getInfo())
+            .collect(ImmutableSet.toImmutableSet());
+
     return new HaskellIdeRule(
         buildTarget,
         projectFilesystem,
@@ -171,8 +174,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         ideProjects,
         compilerFlags,
         pkgDirs,
-        haskellPackages,
-        prebuiltHaskellPackages,
+        exposedPackages,
         extraScriptTemplates,
         linkStyle,
         platform.getArchiveContents(),
@@ -180,8 +182,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         platform.getGhciBinutils().get(),
         platform.getGhciCxx().get(),
         platform.getGhciCc().get(),
-        platform.getGhciCpp().get(),
-        params.getBuildDeps());
+        platform.getGhciCpp().get());
   }
 
   private RelPath getOutputDir() {
@@ -230,10 +231,7 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             .map(p -> String.format("%s-%s", p.getName(), p.getVersion()))
             .collect(joining(" "));
     String exposePackages =
-        Stream.concat(
-                haskellPackages.entrySet().stream(), prebuiltHaskellPackages.entrySet().stream())
-            .filter(e -> ruleDeps.contains(e.getKey()))
-            .map(e -> e.getValue().getInfo())
+        exposedPackages.stream()
             .map(p -> String.format("%s-%s", p.getName(), p.getVersion()))
             .collect(joining(" "));
     Collection<String> compilerFlagsFinal = compilerFlagsBuilder.build();
