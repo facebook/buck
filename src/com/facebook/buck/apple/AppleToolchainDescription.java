@@ -202,9 +202,9 @@ public class AppleToolchainDescription
         developerRoot.map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath());
 
     ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder = ImmutableBiMap.builder();
-    sanitizerPathsBuilder.put(sdkRootPath.getPath(), "APPLE_SDKROOT");
-    sanitizerPathsBuilder.put(platformRootPath.getPath(), "APPLE_PLATFORM_DIR");
-    developerRootPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "APPLE_DEVELOPER_DIR"));
+    sanitizerPathsBuilder.put(sdkRootPath.getPath(), "/APPLE_SDKROOT");
+    sanitizerPathsBuilder.put(platformRootPath.getPath(), "/APPLE_PLATFORM_DIR");
+    developerRootPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "/APPLE_DEVELOPER_DIR"));
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(".", sanitizerPathsBuilder.build());
     cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);

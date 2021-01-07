@@ -323,10 +323,10 @@ public class AppleCxxPlatforms {
             : new CxxBuckConfig(buckConfig);
 
     ImmutableBiMap.Builder<Path, String> sanitizerPaths = ImmutableBiMap.builder();
-    sanitizerPaths.put(sdkPaths.getSdkPath(), "APPLE_SDKROOT");
-    sanitizerPaths.put(sdkPaths.getPlatformPath(), "APPLE_PLATFORM_DIR");
+    sanitizerPaths.put(sdkPaths.getSdkPath(), "/APPLE_SDKROOT");
+    sanitizerPaths.put(sdkPaths.getPlatformPath(), "/APPLE_PLATFORM_DIR");
     if (sdkPaths.getDeveloperPath().isPresent()) {
-      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), "APPLE_DEVELOPER_DIR");
+      sanitizerPaths.put(sdkPaths.getDeveloperPath().get(), "/APPLE_DEVELOPER_DIR");
     }
 
     // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote

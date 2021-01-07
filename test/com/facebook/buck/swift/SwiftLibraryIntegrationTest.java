@@ -340,9 +340,9 @@ public class SwiftLibraryIntegrationTest {
         compilerCommand,
         Matchers.containsInRelativeOrder(
             "-debug-prefix-map", projectFilesystem.getRootPath().toString() + "=.",
-            "-debug-prefix-map", sdkPaths.getSdkPath() + "=APPLE_SDKROOT",
-            "-debug-prefix-map", sdkPaths.getPlatformPath() + "=APPLE_PLATFORM_DIR",
-            "-debug-prefix-map", sdkPaths.getDeveloperPath().get() + "=APPLE_DEVELOPER_DIR"));
+            "-debug-prefix-map", sdkPaths.getSdkPath() + "=/APPLE_SDKROOT",
+            "-debug-prefix-map", sdkPaths.getPlatformPath() + "=/APPLE_PLATFORM_DIR",
+            "-debug-prefix-map", sdkPaths.getDeveloperPath().get() + "=/APPLE_DEVELOPER_DIR"));
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {

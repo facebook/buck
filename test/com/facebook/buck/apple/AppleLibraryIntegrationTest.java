@@ -63,6 +63,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -1459,6 +1461,76 @@ public class AppleLibraryIntegrationTest {
 
     assertThat(nonSpecificTargetBuildVersion.get(), not(containsString("minos 10.14")));
     assertThat(specificSDKTargetBuildVersion.get(), containsString("minos 10.14"));
+  }
+
+  @Test
+  public void testAppleLibraryDebugPrefixMap() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_debug_info", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    workspace.addBuckConfigLocalOption("swift", "use_debug_prefix_map", "true");
+    BuildTarget target = workspace.newBuildTarget("//:Bar#macosx-x86_64,static");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget objcObjectFileTarget =
+        BuildTargetFactory.newInstance("//:Bar#compile-Hello.m.o7d1569b2,macosx-x86_64");
+    Path objcObjectFilePath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), objcObjectFileTarget, "%s/Hello.m.o"));
+    assertTrue(Files.exists(objcObjectFilePath));
+
+    Optional<String> maybeStdOut =
+        workspace.runCommand("dwarfdump", objcObjectFilePath.toString()).getStdout();
+    assertTrue(maybeStdOut.isPresent());
+    String objcDwarf = maybeStdOut.get();
+    assertThat(objcDwarf, containsString("DW_AT_LLVM_sysroot\t(\"/APPLE_SDKROOT\")"));
+    assertThat(objcDwarf, containsString("DW_AT_comp_dir\t(\".\")"));
+    assertThat(objcDwarf, containsString("DW_AT_decl_file\t(\"/APPLE_SDKROOT/usr/include"));
+    assertThat(
+        objcDwarf,
+        containsString(
+            "DW_AT_LLVM_include_path\t(\"/APPLE_SDKROOT/System/Library/Frameworks/Foundation.framework\")"));
+
+    // ensure there are no absolute paths
+    Pattern pattern = Pattern.compile("\\(\"(/[^\"]+)\"\\)");
+    Matcher m = pattern.matcher(objcDwarf);
+    while (m.find()) {
+      assertTrue(m.group(1).startsWith("/APPLE_"));
+    }
+
+    BuildTarget swiftObjectFileTarget =
+        BuildTargetFactory.newInstance("//:Foo#apple-swift-compile,macosx-x86_64");
+    Path swiftObjectFilePath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), swiftObjectFileTarget, "%s/Foo.o"));
+    assertTrue(Files.exists(swiftObjectFilePath));
+
+    maybeStdOut = workspace.runCommand("dwarfdump", swiftObjectFilePath.toString()).getStdout();
+    assertTrue(maybeStdOut.isPresent());
+    String swiftDwarf = maybeStdOut.get();
+    assertThat(swiftDwarf, containsString("DW_AT_comp_dir\t(\".\")"));
+    assertThat(
+        swiftDwarf,
+        containsString(
+            "DW_AT_LLVM_include_path\t(\"/APPLE_SDKROOT/usr/lib/swift/Swift.swiftmodule/x86_64-apple-macos.swiftinterface\")"));
+
+    m = pattern.matcher(swiftDwarf);
+    while (m.find()) {
+      // Compiler bug does not prefix map the sysroot, fixed in next Swift release
+      if (m.group(1).endsWith("MacOSX.sdk")) {
+        continue;
+      }
+      assertTrue(m.group(1).startsWith("/APPLE_"));
+    }
   }
 
   public static Optional<String> getOtoolLoaderCommandByName(
