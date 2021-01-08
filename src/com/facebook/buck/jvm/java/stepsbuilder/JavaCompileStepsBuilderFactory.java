@@ -19,11 +19,11 @@ package com.facebook.buck.jvm.java.stepsbuilder;
 /** Factory that creates {@link JavaCompileStepsBuilder} instances */
 public interface JavaCompileStepsBuilderFactory {
 
-  /** Creates an appropriate {@link JavaLibraryJarStepsBuilder} instance */
-  JavaLibraryJarStepsBuilder getLibraryJarBuilder();
+  /** Creates an appropriate {@link LibraryJarStepsBuilder} instance */
+  LibraryJarStepsBuilder getLibraryJarBuilder();
 
-  /** Creates an appropriate {@link JavaLibraryJarPipelineStepsBuilder} instance */
-  JavaLibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder();
+  /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance */
+  LibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder();
 
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance */
   AbiJarStepsBuilder getAbiJarBuilder();

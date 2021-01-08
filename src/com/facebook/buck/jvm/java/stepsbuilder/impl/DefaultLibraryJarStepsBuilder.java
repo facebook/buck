@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -26,18 +26,28 @@ import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
+import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-/** Builder that creates library jar steps. */
-public interface JavaLibraryJarStepsBuilder extends JavaLibraryCompileStepsBuilder {
+/** Default implementation of {@link LibraryJarStepsBuilder} */
+class DefaultLibraryJarStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
+    extends DefaultLibraryStepsBuilderBase<T> implements LibraryJarStepsBuilder {
 
-  void addBuildStepsForLibraryJar(
+  DefaultLibraryJarStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
+    super(configuredCompiler);
+  }
+
+  @Override
+  public void addBuildStepsForLibraryJar(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
@@ -60,5 +70,44 @@ public interface JavaLibraryJarStepsBuilder extends JavaLibraryCompileStepsBuild
       AbsPath buildCellRootPath,
       Optional<RelPath> pathToClasses,
       ResolvedJavac resolvedJavac,
-      CompileToJarStepFactory.ExtraParams extraParams);
+      CompileToJarStepFactory.ExtraParams extraParams) {
+
+    CompilerParameters compilerParameters =
+        JavaLibraryRules.getCompilerParameters(
+            compileTimeClasspathPaths,
+            javaSrcs,
+            fullJarInfos,
+            abiJarInfos,
+            buildTargetValue.getFullyQualifiedName(),
+            trackClassUsage,
+            trackJavacPhaseEvents,
+            abiGenerationMode,
+            abiCompatibilityMode,
+            isRequiredForSourceOnlyAbi,
+            compilerOutputPathsValue.getByType(buildTargetValue.getType()));
+
+    Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
+    configuredCompiler.createCompileToJarStep(
+        filesystemParams,
+        buildTargetValue,
+        compilerOutputPathsValue,
+        compilerParameters,
+        postprocessClassesCommands,
+        null,
+        libraryJarParameters,
+        stepsBuilder,
+        buildableContext,
+        withDownwardApi,
+        cellToPathMappings,
+        resourcesMap,
+        buildCellRootPath,
+        resolvedJavac,
+        extraParamsType.cast(extraParams));
+
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        FilesystemParamsUtils.getIgnoredPaths(filesystemParams),
+        stepsBuilder,
+        pathToClasses,
+        pathToClassHashes);
+  }
 }

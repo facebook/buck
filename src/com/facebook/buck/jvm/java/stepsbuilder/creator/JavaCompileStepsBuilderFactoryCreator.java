@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.creator;
 
+import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
@@ -34,8 +35,12 @@ public class JavaCompileStepsBuilderFactoryCreator {
         new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
 
     if (configuredCompiler.supportsCompilationDaemon()) {
-      return new JavaCDStepsBuilderFactory(defaultJavaCompileStepsBuilderFactory, isJavaCDEnabled);
+      BaseJavacToJarStepFactory baseJavacToJarStepFactory =
+          (BaseJavacToJarStepFactory) configuredCompiler;
+      return new JavaCDStepsBuilderFactory(
+          baseJavacToJarStepFactory, defaultJavaCompileStepsBuilderFactory, isJavaCDEnabled);
     }
+
     return defaultJavaCompileStepsBuilderFactory;
   }
 }

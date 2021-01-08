@@ -14,22 +14,33 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder;
+package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
+import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JavacPipelineState;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
-/** Builder that creates library jar pipeline steps. */
-public interface JavaLibraryJarPipelineStepsBuilder extends JavaLibraryCompileStepsBuilder {
+/** Default implementation of {@link LibraryJarPipelineStepsBuilder} */
+class DefaultLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
+    extends DefaultLibraryStepsBuilderBase<T> implements LibraryJarPipelineStepsBuilder {
 
-  void addPipelinedBuildStepsForLibraryJar(
+  DefaultLibraryJarPipelineStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
+    super(configuredCompiler);
+  }
+
+  @Override
+  public void addPipelinedBuildStepsForLibraryJar(
       BuildTargetValue libraryTarget,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
@@ -38,5 +49,22 @@ public interface JavaLibraryJarPipelineStepsBuilder extends JavaLibraryCompileSt
       RelPath pathToClassHashes,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      Optional<RelPath> pathToClasses);
+      Optional<RelPath> pathToClasses) {
+    ((BaseJavacToJarStepFactory) configuredCompiler)
+        .createPipelinedCompileToJarStep(
+            filesystemParams,
+            cellToPathMappings,
+            libraryTarget,
+            state,
+            compilerOutputPathsValue,
+            stepsBuilder,
+            buildableContext,
+            resourcesMap);
+
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        FilesystemParamsUtils.getIgnoredPaths(filesystemParams),
+        stepsBuilder,
+        pathToClasses,
+        pathToClassHashes);
+  }
 }

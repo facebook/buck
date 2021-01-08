@@ -20,17 +20,17 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
-/** Default implementation of {@link JavaLibraryCompileStepsBuilder}. */
-abstract class DefaultJavaLibraryCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
-    extends DefaultJavaStepsBuilderBase<T> implements JavaLibraryCompileStepsBuilder {
+/** Default implementation of {@link LibraryStepsBuilderBase}. */
+abstract class DefaultLibraryStepsBuilderBase<T extends CompileToJarStepFactory.ExtraParams>
+    extends DefaultJavaStepsBuilderBase<T> implements LibraryStepsBuilderBase {
 
-  DefaultJavaLibraryCompileStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
+  DefaultLibraryStepsBuilderBase(CompileToJarStepFactory<T> configuredCompiler) {
     super(configuredCompiler);
   }
 

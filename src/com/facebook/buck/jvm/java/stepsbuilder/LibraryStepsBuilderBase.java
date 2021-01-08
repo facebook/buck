@@ -22,7 +22,7 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.google.common.collect.ImmutableMap;
 
 /** Interface that expose base method for java library steps builder. */
-public interface JavaLibraryCompileStepsBuilder extends JavaCompileStepsBuilder {
+public interface LibraryStepsBuilderBase extends JavaCompileStepsBuilder {
 
   void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,

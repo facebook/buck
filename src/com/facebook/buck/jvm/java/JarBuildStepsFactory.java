@@ -50,9 +50,9 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -485,7 +485,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
       RelPath pathToClassHashes,
-      JavaLibraryJarStepsBuilder stepsBuilder) {
+      LibraryJarStepsBuilder stepsBuilder) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
@@ -570,7 +570,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
       RelPath pathToClassHashes,
-      JavaLibraryJarPipelineStepsBuilder stepsBuilder) {
+      LibraryJarPipelineStepsBuilder stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(

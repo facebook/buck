@@ -21,8 +21,8 @@ import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 
 /**
  * Factory that creates {@link JavaCompileStepsBuilder } builders instances that returns steps that
@@ -37,16 +37,16 @@ public class DefaultJavaCompileStepsBuilderFactory<T extends CompileToJarStepFac
     this.configuredCompiler = configuredCompiler;
   }
 
-  /** Creates an appropriate {@link JavaLibraryJarStepsBuilder} instance */
+  /** Creates an appropriate {@link LibraryJarStepsBuilder} instance */
   @Override
-  public JavaLibraryJarStepsBuilder getLibraryJarBuilder() {
-    return new DefaultJavaLibraryJarStepsBuilder<>(configuredCompiler);
+  public LibraryJarStepsBuilder getLibraryJarBuilder() {
+    return new DefaultLibraryJarStepsBuilder<>(configuredCompiler);
   }
 
-  /** Creates an appropriate {@link JavaLibraryJarPipelineStepsBuilder} instance */
+  /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance */
   @Override
-  public JavaLibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
-    return new DefaultJavaLibraryJarPipelineStepsBuilder<>(configuredCompiler);
+  public LibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
+    return new DefaultLibraryJarPipelineStepsBuilder<>(configuredCompiler);
   }
 
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance */

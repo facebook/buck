@@ -16,12 +16,14 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
+import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 
 /**
@@ -29,27 +31,34 @@ import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuild
  */
 public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory {
 
+  private final boolean hasAnnotationProcessing;
+  private final BuildJavaCommand.SpoolMode spoolMode;
+  private final boolean withDownwardApi;
   // TODO msemko: remove delegate when all builders are ready.
   private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
-  // TODO msemko: would be used later.
-  @SuppressWarnings("unused")
   private final boolean isJavaCDEnabled;
 
   public JavaCDStepsBuilderFactory(
-      DefaultJavaCompileStepsBuilderFactory<?> delegate, boolean isJavaCDEnabled) {
+      BaseJavacToJarStepFactory configuredCompiler,
+      DefaultJavaCompileStepsBuilderFactory<?> delegate,
+      boolean isJavaCDEnabled) {
+    this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
+    this.spoolMode = configuredCompiler.getSpoolMode();
+    this.withDownwardApi = configuredCompiler.isWithDownwardApi();
     this.delegate = delegate;
     this.isJavaCDEnabled = isJavaCDEnabled;
   }
 
-  /** Creates an appropriate {@link JavaLibraryJarStepsBuilder} instance. */
+  /** Creates an appropriate {@link LibraryJarStepsBuilder} instance. */
   @Override
-  public JavaLibraryJarStepsBuilder getLibraryJarBuilder() {
-    return delegate.getLibraryJarBuilder();
+  public LibraryJarStepsBuilder getLibraryJarBuilder() {
+    return new JavaCDLibraryJarStepsBuilder(
+        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled);
   }
 
-  /** Creates an appropriate {@link JavaLibraryJarPipelineStepsBuilder} instance. */
+  /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance. */
   @Override
-  public JavaLibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
+  public LibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
     return delegate.getPipelineLibraryJarBuilder();
   }
 

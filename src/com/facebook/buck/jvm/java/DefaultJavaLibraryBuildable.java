@@ -36,10 +36,10 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -135,7 +135,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
-    JavaLibraryJarStepsBuilder stepsBuilder =
+    LibraryJarStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled)
             .getLibraryJarBuilder();
@@ -162,7 +162,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
-    JavaLibraryJarPipelineStepsBuilder stepsBuilder =
+    LibraryJarPipelineStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled)
             .getPipelineLibraryJarBuilder();
@@ -185,7 +185,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
-      JavaLibraryCompileStepsBuilder stepsBuilder) {
+      LibraryStepsBuilderBase stepsBuilder) {
 
     if (unusedDependenciesFinderFactory.isPresent()) {
       UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
@@ -261,7 +261,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesParams unusedDependenciesParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       String buildTargetFullyQualifiedName,
-      JavaLibraryCompileStepsBuilder stepsBuilder) {
+      LibraryStepsBuilderBase stepsBuilder) {
     stepsBuilder.addUnusedDependencyStep(
         unusedDependenciesParams, cellToPathMappings, buildTargetFullyQualifiedName);
   }
