@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -100,8 +101,8 @@ public abstract class ResolvedJavacOptions {
       JavacPluginParams javaAnnotationProcessorParams,
       JavacPluginParams standardJavacPluginParams,
       List<String> extraArguments,
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-      ImmutableList<JavacPluginJsr199Fields> javaPlugins,
+      List<JavacPluginJsr199Fields> annotationProcessors,
+      List<JavacPluginJsr199Fields> javaPlugins,
       boolean javaAnnotationProcessorParamsPresent) {
     return ImmutableResolvedJavacOptions.ofImpl(
         bootclasspath,

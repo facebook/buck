@@ -17,12 +17,14 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.processing.Processor;
@@ -52,14 +54,13 @@ class AnnotationProcessorFactory implements AutoCloseable {
 
   public List<Processor> createProcessors(ImmutableList<JavacPluginJsr199Fields> fields) {
     return fields.stream()
-        .map(this::createProcessorsWithCommonClasspath)
-        .flatMap(Function.identity())
+        .flatMap(this::createProcessorsWithCommonClasspath)
         .collect(Collectors.toList());
   }
 
   private Stream<Processor> createProcessorsWithCommonClasspath(JavacPluginJsr199Fields fields) {
     ClassLoader classLoader = getClassLoaderForProcessorGroup(fields);
-    return fields.getProcessorNames().stream().map(name -> createProcessor(classLoader, name));
+    return fields.getProcessorNamesList().stream().map(name -> createProcessor(classLoader, name));
   }
 
   private Processor createProcessor(ClassLoader classLoader, String name) {
@@ -87,6 +88,17 @@ class AnnotationProcessorFactory implements AutoCloseable {
       cache = localClassLoaderCache;
     }
     return cache.getClassLoaderForClassPath(
-        compilerClassLoader, ImmutableList.copyOf(processorGroup.getClasspath()));
+        compilerClassLoader,
+        processorGroup.getClasspathList().stream()
+            .map(this::toURL)
+            .collect(ImmutableList.toImmutableList()));
+  }
+
+  private URL toURL(JavacPluginJsr199Fields.URL url) {
+    try {
+      return new URL(url.getValue());
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

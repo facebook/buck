@@ -16,8 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 // Counter part of AnnotationProcessorFactory
 public class PluginFactory implements AutoCloseable {
@@ -56,7 +59,16 @@ public class PluginFactory implements AutoCloseable {
     return cache.getClassLoaderForClassPath(
         compilerClassLoader,
         pluginGroups.stream()
-            .flatMap(pluginGroup -> pluginGroup.getClasspath().stream())
+            .flatMap(pluginGroup -> pluginGroup.getClasspathList().stream())
+            .map(this::toURL)
             .collect(ImmutableList.toImmutableList()));
+  }
+
+  private URL toURL(JavacPluginJsr199Fields.URL url) {
+    try {
+      return new URL(url.getValue());
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

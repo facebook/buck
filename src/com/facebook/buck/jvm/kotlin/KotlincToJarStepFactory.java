@@ -35,6 +35,7 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
@@ -44,7 +45,6 @@ import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavac;
@@ -67,6 +67,7 @@ import com.google.common.collect.Ordering;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.FileSystem;
@@ -251,8 +252,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
             ImmutableList.copyOf(
                 javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
                     .map(p -> p.getJavacPluginJsr199Fields(rootPath))
-                    .map(JavacPluginJsr199Fields::getClasspath)
+                    .map(JavacPluginJsr199Fields::getClasspathList)
                     .flatMap(List::stream)
+                    .map(KotlincToJarStepFactory::toURL)
                     .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
                     .collect(Collectors.toList()));
 
@@ -427,6 +429,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     } catch (URISyntaxException e) {
       // In case of error, fall back to the original implementation.
       return url.getFile();
+    }
+  }
+
+  private static URL toURL(JavacPluginJsr199Fields.URL url) {
+    try {
+      return new URL(url.getValue());
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
     }
   }
 

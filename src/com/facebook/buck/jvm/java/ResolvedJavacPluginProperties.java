@@ -25,6 +25,7 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -145,18 +146,26 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
 
   /** Get the javac plugin fields. */
   public JavacPluginJsr199Fields getJavacPluginJsr199Fields(AbsPath root) {
-    return JavacPluginJsr199Fields.of(
-        getCanReuseClassLoader(),
-        getProcessorNames(),
-        ImmutableList.copyOf(toURLArray(getClasspath(), root)));
+    JavacPluginJsr199Fields.Builder builder = JavacPluginJsr199Fields.newBuilder();
+    builder.setCanReuseClassLoader(getCanReuseClassLoader());
+    for (String processorName : getProcessorNames()) {
+      builder.addProcessorNames(processorName);
+    }
+
+    for (URL classpath : toURLs(getClasspath(), root)) {
+      builder.addClasspath(
+          JavacPluginJsr199Fields.URL.newBuilder().setValue(classpath.toString()).build());
+    }
+    return builder.build();
   }
 
-  private static URL[] toURLArray(ImmutableList<RelPath> list, AbsPath root) {
-    return list.stream()
-        .map(root::resolve)
-        .map(AbsPath::normalize)
-        .map(ResolvedJavacPluginProperties::toUrl)
-        .toArray(URL[]::new);
+  private static Iterable<URL> toURLs(ImmutableList<RelPath> list, AbsPath root) {
+    return () ->
+        list.stream()
+            .map(root::resolve)
+            .map(AbsPath::normalize)
+            .map(ResolvedJavacPluginProperties::toUrl)
+            .iterator();
   }
 
   public static String getJoinedClasspath(

@@ -27,6 +27,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.SourceVersionUtils;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.google.common.collect.ImmutableList;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
