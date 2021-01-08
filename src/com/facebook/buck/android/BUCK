@@ -84,7 +84,6 @@ RULES_SRCS = [
     "AndroidResource.java",
     "AndroidResourceDescription.java",
     "AndroidResourceHelper.java",
-    "AndroidResourceIndex.java",
     "AndroidTransitiveDependencyGraph.java",
     "ApkGenrule.java",
     "ApkGenruleDescription.java",

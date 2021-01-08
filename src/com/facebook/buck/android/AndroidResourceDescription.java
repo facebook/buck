@@ -83,9 +83,6 @@ public class AndroidResourceDescription
   public static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("resources-symlink-tree");
 
-  public static final Flavor ANDROID_RESOURCE_INDEX_FLAVOR =
-      InternalFlavor.of("android-resource-index");
-
   @VisibleForTesting
   public static final Flavor ASSETS_SYMLINK_TREE_FLAVOR = InternalFlavor.of("assets-symlink-tree");
 
@@ -185,15 +182,6 @@ public class AndroidResourceDescription
                     .getSecond()
                     .map(graphBuilder::filterBuildRuleInputs)
                     .orElse(ImmutableSet.of())));
-
-    if (flavors.contains(ANDROID_RESOURCE_INDEX_FLAVOR)) {
-      Optional<SourcePath> resDir = resInputs.getSecond();
-      Preconditions.checkArgument(
-          resDir.isPresent(),
-          "Tried to require rule %s, but no resource dir is preset.",
-          buildTarget);
-      return new AndroidResourceIndex(buildTarget, projectFilesystem, params, resDir.get());
-    }
 
     return new AndroidResource(
         buildTarget,
@@ -352,8 +340,7 @@ public class AndroidResourceDescription
       Flavor flavor = flavors.iterator().next();
       return flavor.equals(RESOURCES_SYMLINK_TREE_FLAVOR)
           || flavor.equals(ASSETS_SYMLINK_TREE_FLAVOR)
-          || flavor.equals(AAPT2_COMPILE_FLAVOR)
-          || flavor.equals(ANDROID_RESOURCE_INDEX_FLAVOR);
+          || flavor.equals(AAPT2_COMPILE_FLAVOR);
     }
 
     return false;
