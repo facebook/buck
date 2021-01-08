@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.JavaAbiInfo;
@@ -26,6 +27,7 @@ import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.JavaExtraParams;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
@@ -67,6 +69,13 @@ public class JavaCDWorkerToolStepsBuilder {
         break;
 
       case ABIJARCOMMAND:
+        AbiJarCommand abiJarCommand = buildJavaCommand.getAbiJarCommand();
+        AbiJarStepsBuilder abiJarBuilder = factory.getAbiJarBuilder();
+        handleAbiJarCommand(abiJarBuilder, abiJarCommand, withDownwardApi);
+
+        javaCompileStepsBuilder = abiJarBuilder;
+        break;
+
       case COMMAND_NOT_SET:
       default:
         throw new IllegalStateException(commandCase + " is not supported!");
@@ -124,6 +133,39 @@ public class JavaCDWorkerToolStepsBuilder {
         buildTargetValue,
         pathToClassHashes,
         libraryJarBuilder);
+  }
+
+  private void handleAbiJarCommand(
+      AbiJarStepsBuilder abiJarBuilder, AbiJarCommand abiJarCommand, boolean withDownwardApi) {
+    BaseJarCommand command = abiJarCommand.getBaseJarCommand();
+
+    abiJarBuilder.addBuildStepsForAbiJar(
+        command.getAbiCompatibilityMode(),
+        command.getAbiGenerationMode(),
+        command.getIsRequiredForSourceOnlyAbi(),
+        command.getTrackClassUsage(),
+        command.getTrackJavacPhaseEvents(),
+        withDownwardApi,
+        command.getFilesystemParams(),
+        path -> {},
+        BuildTargetValueSerializer.deserialize(command.getBuildTargetValue()),
+        CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
+        toSortedSetOfRelPath(command.getCompileTimeClasspathPathsList()),
+        toSortedSetOfRelPath(command.getJavaSrcsList()),
+        toJavaAbiInfo(command.getFullJarInfosList()),
+        toJavaAbiInfo(command.getAbiJarInfosList()),
+        toResourceMap(command.getResourcesMapList()),
+        toCellToPathMapping(command.getCellToPathMappingsMap()),
+        abiJarCommand.hasAbiJarParameters()
+            ? JarParametersSerializer.deserialize(abiJarCommand.getAbiJarParameters())
+            : null,
+        command.hasLibraryJarParameters()
+            ? JarParametersSerializer.deserialize(command.getLibraryJarParameters())
+            : null,
+        AbsPathSerializer.deserialize(command.getBuildCellRootPath()),
+        ResolvedJavacSerializer.deserialize(command.getResolvedJavac()),
+        JavaExtraParams.of(
+            ResolvedJavacOptionsSerializer.deserialize(command.getResolvedJavacOptions())));
   }
 
   private DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(

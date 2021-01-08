@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
@@ -89,6 +90,9 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
         break;
 
       case ABI_JAR:
+        commandBuilder.setAbiJarCommand((AbiJarCommand) buildCommand());
+        break;
+
       case ABI_JAR_PIPELINE:
       case LIBRARY_JAR_PIPELINE:
       default:

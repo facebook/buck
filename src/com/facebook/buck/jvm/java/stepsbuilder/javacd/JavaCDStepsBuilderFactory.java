@@ -65,7 +65,8 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance. */
   @Override
   public AbiJarStepsBuilder getAbiJarBuilder() {
-    return delegate.getAbiJarBuilder();
+    return new JavaCDAbiJarStepsBuilder(
+        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled);
   }
 
   /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance. */
