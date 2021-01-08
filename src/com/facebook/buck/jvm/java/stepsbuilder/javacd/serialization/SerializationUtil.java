@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
-
 /** JavaCD serialization utilities. */
 class SerializationUtil {
 

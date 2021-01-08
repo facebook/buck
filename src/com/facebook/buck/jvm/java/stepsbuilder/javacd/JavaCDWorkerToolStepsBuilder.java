@@ -17,12 +17,15 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.JavaAbiInfo;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
@@ -41,6 +44,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSeria
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -51,27 +55,47 @@ import java.util.Optional;
 /** JavaCD Worker Tool steps builder */
 public class JavaCDWorkerToolStepsBuilder {
 
-  /** Builds {@link IsolatedStep}s from the given passed protobuf message */
-  public ImmutableList<IsolatedStep> build(BuildJavaCommand buildJavaCommand) {
+  private final ImmutableList<IsolatedStep> steps;
+  private final AbsPath ruleCellRoot;
+
+  public JavaCDWorkerToolStepsBuilder(BuildJavaCommand buildJavaCommand) {
+    Pair<AbsPath, ImmutableList<IsolatedStep>> pair = buildSteps(buildJavaCommand);
+    this.ruleCellRoot = pair.getFirst();
+    this.steps = pair.getSecond();
+  }
+
+  /** Returns {@link IsolatedStep}s from the passed protobuf message */
+  public ImmutableList<IsolatedStep> getSteps() {
+    return steps;
+  }
+
+  /** Returns rule cell root. */
+  public AbsPath getRuleCellRoot() {
+    return ruleCellRoot;
+  }
+
+  private Pair<AbsPath, ImmutableList<IsolatedStep>> buildSteps(BuildJavaCommand buildJavaCommand) {
     boolean withDownwardApi = buildJavaCommand.getWithDownwardApi();
     DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> factory =
         creteDefaultStepsFactory(buildJavaCommand, withDownwardApi);
 
     BuildJavaCommand.CommandCase commandCase = buildJavaCommand.getCommandCase();
+    AbsPath ruleCellRoot;
 
     JavaCompileStepsBuilder javaCompileStepsBuilder;
     switch (commandCase) {
       case LIBRARYJARCOMMAND:
         LibraryJarCommand libraryJarCommand = buildJavaCommand.getLibraryJarCommand();
         LibraryJarStepsBuilder libraryJarBuilder = factory.getLibraryJarBuilder();
-        handleLibraryJarCommand(libraryJarBuilder, libraryJarCommand, withDownwardApi);
+        ruleCellRoot =
+            handleLibraryJarCommand(libraryJarBuilder, libraryJarCommand, withDownwardApi);
         javaCompileStepsBuilder = libraryJarBuilder;
         break;
 
       case ABIJARCOMMAND:
         AbiJarCommand abiJarCommand = buildJavaCommand.getAbiJarCommand();
         AbiJarStepsBuilder abiJarBuilder = factory.getAbiJarBuilder();
-        handleAbiJarCommand(abiJarBuilder, abiJarCommand, withDownwardApi);
+        ruleCellRoot = handleAbiJarCommand(abiJarBuilder, abiJarCommand, withDownwardApi);
 
         javaCompileStepsBuilder = abiJarBuilder;
         break;
@@ -81,10 +105,10 @@ public class JavaCDWorkerToolStepsBuilder {
         throw new IllegalStateException(commandCase + " is not supported!");
     }
 
-    return javaCompileStepsBuilder.buildIsolatedSteps();
+    return new Pair<>(ruleCellRoot, javaCompileStepsBuilder.buildIsolatedSteps());
   }
 
-  private void handleLibraryJarCommand(
+  private AbsPath handleLibraryJarCommand(
       LibraryJarStepsBuilder libraryJarBuilder,
       LibraryJarCommand libraryJarCommand,
       boolean withDownwardApi) {
@@ -97,6 +121,8 @@ public class JavaCDWorkerToolStepsBuilder {
     RelPath pathToClassHashes =
         RelPathSerializer.deserialize(libraryJarCommand.getPathToClassHashes());
 
+    FilesystemParams filesystemParams = command.getFilesystemParams();
+
     libraryJarBuilder.addBuildStepsForLibraryJar(
         command.getAbiCompatibilityMode(),
         command.getAbiGenerationMode(),
@@ -105,7 +131,7 @@ public class JavaCDWorkerToolStepsBuilder {
         command.getTrackClassUsage(),
         command.getTrackJavacPhaseEvents(),
         withDownwardApi,
-        command.getFilesystemParams(),
+        filesystemParams,
         path -> {},
         buildTargetValue,
         CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
@@ -133,11 +159,15 @@ public class JavaCDWorkerToolStepsBuilder {
         buildTargetValue,
         pathToClassHashes,
         libraryJarBuilder);
+
+    return getRootPath(filesystemParams);
   }
 
-  private void handleAbiJarCommand(
+  private AbsPath handleAbiJarCommand(
       AbiJarStepsBuilder abiJarBuilder, AbiJarCommand abiJarCommand, boolean withDownwardApi) {
     BaseJarCommand command = abiJarCommand.getBaseJarCommand();
+
+    FilesystemParams filesystemParams = command.getFilesystemParams();
 
     abiJarBuilder.addBuildStepsForAbiJar(
         command.getAbiCompatibilityMode(),
@@ -146,7 +176,7 @@ public class JavaCDWorkerToolStepsBuilder {
         command.getTrackClassUsage(),
         command.getTrackJavacPhaseEvents(),
         withDownwardApi,
-        command.getFilesystemParams(),
+        filesystemParams,
         path -> {},
         BuildTargetValueSerializer.deserialize(command.getBuildTargetValue()),
         CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
@@ -166,6 +196,12 @@ public class JavaCDWorkerToolStepsBuilder {
         ResolvedJavacSerializer.deserialize(command.getResolvedJavac()),
         JavaExtraParams.of(
             ResolvedJavacOptionsSerializer.deserialize(command.getResolvedJavacOptions())));
+
+    return getRootPath(filesystemParams);
+  }
+
+  private AbsPath getRootPath(FilesystemParams filesystemParams) {
+    return AbsPath.get(filesystemParams.getRootPath().getPath());
   }
 
   private DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
@@ -186,10 +222,9 @@ public class JavaCDWorkerToolStepsBuilder {
       LibraryStepsBuilderBase javaCompileStepsBuilder) {
 
     if (command.hasUnusedDependenciesParams()) {
+      UnusedDependenciesParams unusedDependenciesParams = command.getUnusedDependenciesParams();
       javaCompileStepsBuilder.addUnusedDependencyStep(
-          command.getUnusedDependenciesParams(),
-          cellToPathMappings,
-          buildTargetValue.getFullyQualifiedName());
+          unusedDependenciesParams, cellToPathMappings, buildTargetValue.getFullyQualifiedName());
     }
 
     javaCompileStepsBuilder.addMakeMissingOutputsStep(

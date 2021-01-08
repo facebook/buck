@@ -106,7 +106,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
     // TODO msemko: wrap protobuf command into WT step and deserialize isolated steps in the JavaCD
     // process.
-    return new JavaCDWorkerToolStepsBuilder().build(buildJavaCommand);
+    return new JavaCDWorkerToolStepsBuilder(buildJavaCommand).getSteps();
   }
 
   protected abstract T buildCommand();
