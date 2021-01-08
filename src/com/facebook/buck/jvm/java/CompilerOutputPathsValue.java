@@ -29,13 +29,13 @@ import com.facebook.buck.jvm.core.JavaAbis;
 @BuckStyleValue
 public abstract class CompilerOutputPathsValue {
 
-  abstract String getLibraryTargetFullyQualifiedName();
+  public abstract String getLibraryTargetFullyQualifiedName();
 
-  abstract CompilerOutputPaths getLibraryCompilerOutputPath();
+  public abstract CompilerOutputPaths getLibraryCompilerOutputPath();
 
-  abstract CompilerOutputPaths getSourceAbiCompilerOutputPath();
+  public abstract CompilerOutputPaths getSourceAbiCompilerOutputPath();
 
-  abstract CompilerOutputPaths getSourceOnlyAbiCompilerOutputPath();
+  public abstract CompilerOutputPaths getSourceOnlyAbiCompilerOutputPath();
 
   /** Returns {@link CompilerOutputPaths} by given {@code type} */
   public CompilerOutputPaths getByType(Type type) {

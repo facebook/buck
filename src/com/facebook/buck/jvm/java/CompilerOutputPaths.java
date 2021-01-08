@@ -92,4 +92,8 @@ public abstract class CompilerOutputPaths {
   public static RelPath getDepFilePath(RelPath outputJarDirPath) {
     return outputJarDirPath.resolveRel("used-classes.json");
   }
+
+  public static ImmutableCompilerOutputPaths.Builder builder() {
+    return ImmutableCompilerOutputPaths.builder();
+  }
 }
