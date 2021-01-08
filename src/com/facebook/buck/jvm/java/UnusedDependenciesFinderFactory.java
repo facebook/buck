@@ -29,11 +29,12 @@ import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.javacd.model.RelPath;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.BuildTargetAndPaths;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -174,9 +175,9 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   /**
    * Converts {@link DependencyAndExportedDeps} list with {@link SourcePath} to resolved list of
-   * {@link UnusedDependenciesFinder.DependencyAndExportedDepsPath}
+   * {@link DependencyAndExportedDepsPath}
    */
-  ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> convert(
+  ImmutableList<DependencyAndExportedDepsPath> convert(
       ImmutableList<DependencyAndExportedDeps> list,
       SourcePathResolverAdapter resolver,
       AbsPath projectRootPath) {
@@ -185,15 +186,26 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         .collect(ImmutableList.toImmutableList());
   }
 
-  private UnusedDependenciesFinder.DependencyAndExportedDepsPath convert(
+  private DependencyAndExportedDepsPath convert(
       DependencyAndExportedDeps dependencyAndExportedDeps,
       SourcePathResolverAdapter resolver,
       AbsPath projectRootPath) {
-    return UnusedDependenciesFinder.DependencyAndExportedDepsPath.of(
+    return create(
         convert(dependencyAndExportedDeps.dependency, resolver, projectRootPath),
         dependencyAndExportedDeps.exportedDeps.stream()
             .map(d -> convert(d, resolver, projectRootPath))
             .collect(ImmutableList.toImmutableList()));
+  }
+
+  private DependencyAndExportedDepsPath create(
+      BuildTargetAndPaths dep, ImmutableList<DependencyAndExportedDepsPath> exportedDeps) {
+    UnusedDependenciesParams.DependencyAndExportedDepsPath.Builder depsBuilder =
+        UnusedDependenciesParams.DependencyAndExportedDepsPath.newBuilder();
+    depsBuilder.setDependency(dep);
+    for (DependencyAndExportedDepsPath exportedDepsPath : exportedDeps) {
+      depsBuilder.addExportedDeps(exportedDepsPath);
+    }
+    return depsBuilder.build();
   }
 
   private BuildTargetAndPaths convert(

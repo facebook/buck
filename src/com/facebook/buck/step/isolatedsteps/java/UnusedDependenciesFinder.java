@@ -27,6 +27,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileReader;
 import com.facebook.buck.step.StepExecutionResult;
@@ -199,7 +200,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       return false;
     }
 
-    for (DependencyAndExportedDepsPath exportedDependency : dependency.getExportedDeps()) {
+    for (DependencyAndExportedDepsPath exportedDependency : dependency.getExportedDepsList()) {
       if (isUsedDependencyIncludingExportedDeps(
           root, exportedDependency, usedJars, firstOrderDepTargets)) {
         return false;
@@ -219,7 +220,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       return true;
     }
 
-    for (DependencyAndExportedDepsPath exportedDependency : exportedDep.getExportedDeps()) {
+    for (DependencyAndExportedDepsPath exportedDependency : exportedDep.getExportedDepsList()) {
       if (isUsedDependencyIncludingExportedDeps(
           root, exportedDependency, usedJars, firstOrderDepTargets)) {
         return true;
@@ -369,21 +370,6 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     @Override
     public boolean encounteredMessage() {
       return encounteredMessage;
-    }
-  }
-
-  /** Recursive hierarchy of a single build target and its exported deps. */
-  @BuckStyleValue
-  public abstract static class DependencyAndExportedDepsPath {
-
-    public abstract UnusedDependenciesParams.BuildTargetAndPaths getDependency();
-
-    public abstract ImmutableList<DependencyAndExportedDepsPath> getExportedDeps();
-
-    public static DependencyAndExportedDepsPath of(
-        UnusedDependenciesParams.BuildTargetAndPaths dependency,
-        ImmutableList<DependencyAndExportedDepsPath> exportedDeps) {
-      return ImmutableDependencyAndExportedDepsPath.ofImpl(dependency, exportedDeps);
     }
   }
 }

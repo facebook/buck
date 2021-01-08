@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
@@ -29,12 +30,9 @@ import java.util.Optional;
 @BuckStyleValue
 public abstract class UnusedDependenciesParams {
 
-  public abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> getDeps();
+  public abstract ImmutableList<DependencyAndExportedDepsPath> getDeps();
 
-  public abstract ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath>
-      getProvidedDeps();
-
-  public abstract String getFullyQualifiedName();
+  public abstract ImmutableList<DependencyAndExportedDepsPath> getProvidedDeps();
 
   public abstract RelPath getDepFile();
 
@@ -50,9 +48,8 @@ public abstract class UnusedDependenciesParams {
 
   /** Creates {@link UnusedDependenciesParams} */
   public static UnusedDependenciesParams of(
-      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> deps,
-      ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDepsPath> providedDeps,
-      String fullyQualifiedName,
+      ImmutableList<DependencyAndExportedDepsPath> deps,
+      ImmutableList<DependencyAndExportedDepsPath> providedDeps,
       RelPath depFile,
       UnusedDependenciesAction unusedDependenciesAction,
       ImmutableList<String> exportedDeps,
@@ -62,7 +59,6 @@ public abstract class UnusedDependenciesParams {
     return ImmutableUnusedDependenciesParams.ofImpl(
         deps,
         providedDeps,
-        fullyQualifiedName,
         depFile,
         unusedDependenciesAction,
         exportedDeps,
@@ -74,9 +70,10 @@ public abstract class UnusedDependenciesParams {
   /** Creates {@link UnusedDependenciesFinder} */
   public static UnusedDependenciesFinder createFinder(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      String buildTargetFullyQualifiedName) {
     return UnusedDependenciesFinder.of(
-        unusedDependenciesParams.getFullyQualifiedName(),
+        buildTargetFullyQualifiedName,
         unusedDependenciesParams.getDeps(),
         unusedDependenciesParams.getProvidedDeps(),
         unusedDependenciesParams.getExportedDeps(),

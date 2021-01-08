@@ -201,11 +201,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       RelPath depFile =
           CompilerOutputPaths.getDepFilePath(
               CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
+      String buildTargetFullyQualifiedName = buildTarget.getFullyQualifiedName();
       UnusedDependenciesParams unusedDependenciesParams =
           UnusedDependenciesParams.of(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
-              buildTarget.getFullyQualifiedName(),
               depFile,
               unusedDependenciesAction,
               factory.exportedDeps,
@@ -213,7 +213,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
               factory.onlyPrintCommands,
               factory.doUltralightChecking);
 
-      addUnusedDependencyStep(unusedDependenciesParams, cellToPathMappings, stepsBuilder);
+      addUnusedDependencyStep(
+          unusedDependenciesParams,
+          cellToPathMappings,
+          buildTargetFullyQualifiedName,
+          stepsBuilder);
     }
 
     RelPath rootOutput = outputPathResolver.resolvePath(rootOutputPath);
@@ -225,8 +229,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      String buildTargetFullyQualifiedName,
       JavaLibraryCompileStepsBuilder stepsBuilder) {
-    stepsBuilder.addUnusedDependencyStep(unusedDependenciesParams, cellToPathMappings);
+    stepsBuilder.addUnusedDependencyStep(
+        unusedDependenciesParams, cellToPathMappings, buildTargetFullyQualifiedName);
   }
 
   public boolean useDependencyFileRuleKeys() {

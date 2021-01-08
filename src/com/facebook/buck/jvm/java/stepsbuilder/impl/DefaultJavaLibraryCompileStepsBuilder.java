@@ -35,9 +35,11 @@ abstract class DefaultJavaLibraryCompileStepsBuilder<T extends CompileToJarStepF
   @Override
   public void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      String buildTargetFullyQualifiedName) {
     stepsBuilder.add(
-        UnusedDependenciesParams.createFinder(unusedDependenciesParams, cellToPathMappings));
+        UnusedDependenciesParams.createFinder(
+            unusedDependenciesParams, cellToPathMappings, buildTargetFullyQualifiedName));
   }
 
   @Override

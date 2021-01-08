@@ -25,7 +25,8 @@ public interface JavaLibraryCompileStepsBuilder extends JavaCompileStepsBuilder 
 
   void addUnusedDependencyStep(
       UnusedDependenciesParams unusedDependenciesParams,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings);
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      String buildTargetFullyQualifiedName);
 
   void addMakeMissingOutputsStep(
       RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath);
