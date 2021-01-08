@@ -26,6 +26,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileReader;
 import com.facebook.buck.step.StepExecutionResult;
@@ -42,7 +43,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 
 /**
  * The step that reports dependencies not used during Java compilation.
@@ -178,12 +178,12 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
     ImmutableSet<String> firstOrderDeps =
         Stream.concat(
-                targets.stream().map(x -> x.getDependency().getBuildTarget()),
+                targets.stream().map(x -> x.getDependency().getBuildTargetName()),
                 getExportedDeps().stream())
             .collect(ImmutableSet.toImmutableSet());
     for (DependencyAndExportedDepsPath target : targets) {
       if (isUnusedDependencyIncludingExportedDeps(root, target, usedJars, firstOrderDeps)) {
-        unusedDependencies.add(target.getDependency().getBuildTarget());
+        unusedDependencies.add(target.getDependency().getBuildTargetName());
       }
     }
 
@@ -214,7 +214,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       DependencyAndExportedDepsPath exportedDep,
       ImmutableSet<AbsPath> usedJars,
       ImmutableSet<String> firstOrderDepTargets) {
-    if (!firstOrderDepTargets.contains(exportedDep.getDependency().getBuildTarget())
+    if (!firstOrderDepTargets.contains(exportedDep.getDependency().getBuildTargetName())
         && isUsedDependency(root, exportedDep.getDependency(), usedJars)) {
       return true;
     }
@@ -230,13 +230,18 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   }
 
   private boolean isUsedDependency(
-      AbsPath root, BuildTargetAndPaths dependency, ImmutableSet<AbsPath> usedJars) {
-    if (dependency.getFullJarPath() != null
+      AbsPath root,
+      UnusedDependenciesParams.BuildTargetAndPaths dependency,
+      ImmutableSet<AbsPath> usedJars) {
+    if (dependency.hasFullJarPath()
         && usedJars.contains(toAbsPath(root, dependency.getFullJarPath()))) {
       return true;
     }
-    return dependency.getAbiPath() != null
-        && usedJars.contains(toAbsPath(root, dependency.getAbiPath()));
+    return dependency.hasAbiPath() && usedJars.contains(toAbsPath(root, dependency.getAbiPath()));
+  }
+
+  private AbsPath toAbsPath(AbsPath root, com.facebook.buck.javacd.model.RelPath relPath) {
+    return toAbsPath(root, RelPath.get(relPath.getPath()));
   }
 
   private AbsPath toAbsPath(AbsPath root, RelPath relPath) {
@@ -289,10 +294,10 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
           "Target: %s, deps are:%n%s%nProvided deps are:%n%s%n",
           buildTarget,
           getDeps().stream()
-              .map(dep -> dep.getDependency().getBuildTarget())
+              .map(dep -> dep.getDependency().getBuildTargetName())
               .collect(Collectors.joining(LINE_SEPARATOR)),
           getProvidedDeps().stream()
-              .map(dep -> dep.getDependency().getBuildTarget())
+              .map(dep -> dep.getDependency().getBuildTargetName())
               .collect(Collectors.joining(LINE_SEPARATOR)));
     }
   }
@@ -371,31 +376,14 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
   @BuckStyleValue
   public abstract static class DependencyAndExportedDepsPath {
 
-    public abstract BuildTargetAndPaths getDependency();
+    public abstract UnusedDependenciesParams.BuildTargetAndPaths getDependency();
 
     public abstract ImmutableList<DependencyAndExportedDepsPath> getExportedDeps();
 
     public static DependencyAndExportedDepsPath of(
-        BuildTargetAndPaths dependency, ImmutableList<DependencyAndExportedDepsPath> exportedDeps) {
+        UnusedDependenciesParams.BuildTargetAndPaths dependency,
+        ImmutableList<DependencyAndExportedDepsPath> exportedDeps) {
       return ImmutableDependencyAndExportedDepsPath.ofImpl(dependency, exportedDeps);
-    }
-  }
-
-  /** Holder for a build target string and the source paths of its output. */
-  @BuckStyleValue
-  public abstract static class BuildTargetAndPaths {
-
-    public abstract String getBuildTarget();
-
-    @Nullable
-    public abstract RelPath getFullJarPath();
-
-    @Nullable
-    public abstract RelPath getAbiPath();
-
-    public static BuildTargetAndPaths of(
-        String buildTarget, @Nullable RelPath fullJarPath, @Nullable RelPath abiPath) {
-      return ImmutableBuildTargetAndPaths.ofImpl(buildTarget, fullJarPath, abiPath);
     }
   }
 }

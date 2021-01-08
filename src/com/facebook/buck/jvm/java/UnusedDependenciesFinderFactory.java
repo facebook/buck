@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -29,6 +28,8 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.javacd.model.RelPath;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.BuildTargetAndPaths;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -195,14 +196,25 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
             .collect(ImmutableList.toImmutableList()));
   }
 
-  private UnusedDependenciesFinder.BuildTargetAndPaths convert(
+  private BuildTargetAndPaths convert(
       BuildTargetAndSourcePaths buildTargetAndSourcePaths,
       SourcePathResolverAdapter resolver,
       AbsPath projectRootPath) {
-    return UnusedDependenciesFinder.BuildTargetAndPaths.of(
-        buildTargetAndSourcePaths.buildTarget,
-        toRelativePath(buildTargetAndSourcePaths.fullJarSourcePath, resolver, projectRootPath),
-        toRelativePath(buildTargetAndSourcePaths.abiSourcePath, resolver, projectRootPath));
+
+    BuildTargetAndPaths.Builder builder =
+        BuildTargetAndPaths.newBuilder().setBuildTargetName(buildTargetAndSourcePaths.buildTarget);
+    RelPath abiPath =
+        toRelativePath(buildTargetAndSourcePaths.abiSourcePath, resolver, projectRootPath);
+    if (abiPath != null) {
+      builder.setAbiPath(abiPath);
+    }
+    RelPath fullJarPath =
+        toRelativePath(buildTargetAndSourcePaths.fullJarSourcePath, resolver, projectRootPath);
+    if (fullJarPath != null) {
+      builder.setFullJarPath(fullJarPath);
+    }
+
+    return builder.build();
   }
 
   private RelPath toRelativePath(
@@ -210,6 +222,8 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     if (sourcePath == null) {
       return null;
     }
-    return rootPath.relativize(resolver.getAbsolutePath(sourcePath));
+    AbsPath absolutePath = resolver.getAbsolutePath(sourcePath);
+    String relPath = rootPath.relativize(absolutePath).toString();
+    return RelPath.newBuilder().setPath(relPath).build();
   }
 }
