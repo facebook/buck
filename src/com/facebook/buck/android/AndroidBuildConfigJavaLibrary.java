@@ -56,7 +56,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       JavacOptions javacOptions,
       AndroidBuildConfig androidBuildConfig,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     super(
         buildTarget,
         projectFilesystem,
@@ -95,7 +96,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         false,
         false,
         false,
-        isJavaCDEnabled);
+        isJavaCDEnabled,
+        javaPrefix);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }

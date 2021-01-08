@@ -177,7 +177,8 @@ public class DefaultJavaLibrary
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     super(
         buildTarget,
         projectFilesystem,
@@ -189,7 +190,8 @@ public class DefaultJavaLibrary
             unusedDependenciesAction,
             unusedDependenciesFinderFactory,
             sourceAbi,
-            isJavaCDEnabled));
+            isJavaCDEnabled,
+            javaPrefix));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(

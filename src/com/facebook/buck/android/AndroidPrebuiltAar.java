@@ -64,7 +64,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -110,7 +111,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         false,
         false,
         false,
-        isJavaCDEnabled);
+        isJavaCDEnabled,
+        javaPrefix);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

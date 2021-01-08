@@ -42,6 +42,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -105,7 +106,11 @@ public class AndroidBuildConfigDescription
             .getJavacOptions(),
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
-        javaBuckConfig.isJavaCDEnabled());
+        javaBuckConfig.isJavaCDEnabled(),
+        javaBuckConfig
+            .getDefaultJavaOptions()
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration())
+            .getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 
   /**
@@ -128,7 +133,8 @@ public class AndroidBuildConfigDescription
       JavacOptions javacOptions,
       ActionGraphBuilder graphBuilder,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -184,7 +190,8 @@ public class AndroidBuildConfigDescription
         javacOptions,
         androidBuildConfig,
         withDownwardApi,
-        isJavaCDEnabled);
+        isJavaCDEnabled,
+        javaPrefix);
   }
 
   @Override

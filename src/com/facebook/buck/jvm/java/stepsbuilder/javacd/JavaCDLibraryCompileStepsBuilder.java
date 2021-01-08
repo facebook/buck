@@ -24,6 +24,7 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
@@ -40,8 +41,9 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
       boolean withDownwardApi,
       Type type,
       MessageOrBuilder commandBuilder,
-      boolean isJavaCDEnabled) {
-    super(hasAnnotationProcessing, spoolMode, withDownwardApi, type, isJavaCDEnabled);
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
+    super(hasAnnotationProcessing, spoolMode, withDownwardApi, type, isJavaCDEnabled, javaPrefix);
     this.commandBuilder = commandBuilder;
   }
 

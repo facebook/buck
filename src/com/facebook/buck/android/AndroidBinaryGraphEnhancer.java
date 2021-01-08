@@ -466,7 +466,12 @@ public class AndroidBinaryGraphEnhancer {
               javacOptions,
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
-              javaBuckConfig.isJavaCDEnabled());
+              javaBuckConfig.isJavaCDEnabled(),
+              javaBuckConfig
+                  .getDefaultJavaOptions()
+                  .getJavaRuntimeLauncher(
+                      graphBuilder, originalBuildTarget.getTargetConfiguration())
+                  .getCommandPrefix(graphBuilder.getSourcePathResolver()));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -718,7 +723,8 @@ public class AndroidBinaryGraphEnhancer {
       JavacOptions javacOptions,
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -767,7 +773,8 @@ public class AndroidBinaryGraphEnhancer {
               javacOptions,
               graphBuilder,
               withDownwardApi,
-              isJavaCDEnabled);
+              isJavaCDEnabled,
+              javaPrefix);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(

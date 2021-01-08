@@ -807,7 +807,8 @@ public class AndroidBinaryGraphEnhancerTest {
             ANDROID_JAVAC_OPTIONS,
             graphBuilder,
             false,
-            false);
+            false,
+            ImmutableList.of("java"));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =

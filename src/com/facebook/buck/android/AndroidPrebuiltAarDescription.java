@@ -252,7 +252,11 @@ public class AndroidPrebuiltAarDescription
         args.getMavenCoords(),
         args.isUseSystemLibraryLoader(),
         withDownwardApi,
-        javaBuckConfig.isJavaCDEnabled());
+        javaBuckConfig.isJavaCDEnabled(),
+        javaBuckConfig
+            .getDefaultJavaOptions()
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration())
+            .getCommandPrefix(graphBuilder.getSourcePathResolver()));
   }
 
   @Override

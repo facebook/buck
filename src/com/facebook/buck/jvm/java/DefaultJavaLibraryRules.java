@@ -76,7 +76,8 @@ public abstract class DefaultJavaLibraryRules {
         boolean isDesugarEnabled,
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
-        boolean isJavaCDEnabled);
+        boolean isJavaCDEnabled,
+        ImmutableList<String> javaPrefix);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -414,6 +415,7 @@ public abstract class DefaultJavaLibraryRules {
 
     CoreArg args = getArgs();
 
+    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
     return getConstructor()
         .newInstance(
             buildTarget,
@@ -437,7 +439,11 @@ public abstract class DefaultJavaLibraryRules {
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-            getJavaBuckConfig().isJavaCDEnabled());
+            javaBuckConfig.isJavaCDEnabled(),
+            javaBuckConfig
+                .getDefaultJavaOptions()
+                .getJavaRuntimeLauncher(actionGraphBuilder, buildTarget.getTargetConfiguration())
+                .getCommandPrefix(actionGraphBuilder.getSourcePathResolver()));
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -457,6 +463,7 @@ public abstract class DefaultJavaLibraryRules {
             configuredCompilerFactory);
 
     CoreArg args = getArgs();
+    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
     DefaultJavaLibrary libraryRule =
         getConstructor()
             .newInstance(
@@ -481,7 +488,12 @@ public abstract class DefaultJavaLibraryRules {
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-                getJavaBuckConfig().isJavaCDEnabled());
+                javaBuckConfig.isJavaCDEnabled(),
+                javaBuckConfig
+                    .getDefaultJavaOptions()
+                    .getJavaRuntimeLauncher(
+                        actionGraphBuilder, buildTarget.getTargetConfiguration())
+                    .getCommandPrefix(actionGraphBuilder.getSourcePathResolver()));
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -522,15 +534,21 @@ public abstract class DefaultJavaLibraryRules {
 
     JarBuildStepsFactory<?> jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
 
-    BuildTarget sourceAbiTarget = JavaAbis.getSourceOnlyAbiJar(getLibraryTarget());
-    return getActionGraphBuilder()
-        .addToIndex(
-            new CalculateSourceAbi(
-                sourceAbiTarget,
-                getProjectFilesystem(),
-                jarBuildStepsFactory,
-                getActionGraphBuilder(),
-                getJavaBuckConfig().isJavaCDEnabled()));
+    BuildTarget libraryTarget = getLibraryTarget();
+    BuildTarget sourceAbiTarget = JavaAbis.getSourceOnlyAbiJar(libraryTarget);
+    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    ActionGraphBuilder graphBuilder = getActionGraphBuilder();
+    return graphBuilder.addToIndex(
+        new CalculateSourceAbi(
+            sourceAbiTarget,
+            getProjectFilesystem(),
+            jarBuildStepsFactory,
+            graphBuilder,
+            javaBuckConfig.isJavaCDEnabled(),
+            javaBuckConfig
+                .getDefaultJavaOptions()
+                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())
+                .getCommandPrefix(getSourcePathResolver())));
   }
 
   @Nullable
@@ -541,15 +559,21 @@ public abstract class DefaultJavaLibraryRules {
 
     JarBuildStepsFactory<?> jarBuildStepsFactory = getJarBuildStepsFactory();
 
-    BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(getLibraryTarget());
-    return getActionGraphBuilder()
-        .addToIndex(
-            new CalculateSourceAbi(
-                sourceAbiTarget,
-                getProjectFilesystem(),
-                jarBuildStepsFactory,
-                getActionGraphBuilder(),
-                getJavaBuckConfig().isJavaCDEnabled()));
+    BuildTarget libraryTarget = getLibraryTarget();
+    BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(libraryTarget);
+    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    ActionGraphBuilder graphBuilder = getActionGraphBuilder();
+    return graphBuilder.addToIndex(
+        new CalculateSourceAbi(
+            sourceAbiTarget,
+            getProjectFilesystem(),
+            jarBuildStepsFactory,
+            graphBuilder,
+            javaBuckConfig.isJavaCDEnabled(),
+            javaBuckConfig
+                .getDefaultJavaOptions()
+                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())
+                .getCommandPrefix(getSourcePathResolver())));
   }
 
   @Nullable

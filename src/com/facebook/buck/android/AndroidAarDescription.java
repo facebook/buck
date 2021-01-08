@@ -230,7 +230,11 @@ public class AndroidAarDescription
                   .getJavacOptions(),
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
-              javaBuckConfig.isJavaCDEnabled());
+              javaBuckConfig.isJavaCDEnabled(),
+              javaBuckConfig
+                  .getDefaultJavaOptions()
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration())
+                  .getCommandPrefix(graphBuilder.getSourcePathResolver()));
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

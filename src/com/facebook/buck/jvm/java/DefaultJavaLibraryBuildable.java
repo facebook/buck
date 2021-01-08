@@ -77,6 +77,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   @AddToRuleKey private final boolean isJavaCDEnabled;
+  @AddToRuleKey private final ImmutableList<String> javaPrefix;
 
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
@@ -85,7 +86,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -97,6 +99,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                     new NonHashableSourcePathContainer(
                         Objects.requireNonNull(rule.getSourcePathToOutput())));
     this.isJavaCDEnabled = isJavaCDEnabled;
+    this.javaPrefix = javaPrefix;
 
     CompilerOutputPaths outputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -137,7 +140,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     LibraryJarStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
-                jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled)
+                jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled, javaPrefix)
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -164,7 +167,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     LibraryJarPipelineStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
-                jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled)
+                jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled, javaPrefix)
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(

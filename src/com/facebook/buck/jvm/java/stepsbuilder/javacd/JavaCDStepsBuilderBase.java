@@ -64,22 +64,26 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
   private final BuildJavaCommand.Builder commandBuilder = BuildJavaCommand.newBuilder();
   protected final Type type;
-
   // TODO msemko: would be used later.
   @SuppressWarnings("unused")
   private final boolean isJavaCDEnabled;
+  // TODO msemko: would be used later.
+  @SuppressWarnings("unused")
+  private final ImmutableList<String> javaPrefix;
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
       Type type,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     this.type = type;
+    this.isJavaCDEnabled = isJavaCDEnabled;
+    this.javaPrefix = javaPrefix;
     commandBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
     commandBuilder.setWithDownwardApi(withDownwardApi);
     commandBuilder.setSpoolMode(spoolMode);
-    this.isJavaCDEnabled = isJavaCDEnabled;
   }
 
   @Override

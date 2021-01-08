@@ -60,7 +60,8 @@ public class AndroidBuildConfigJavaLibraryTest {
             DEFAULT_JAVAC_OPTIONS,
             graphBuilder,
             false,
-            false);
+            false,
+            ImmutableList.of("java"));
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -94,7 +95,8 @@ public class AndroidBuildConfigJavaLibraryTest {
             DEFAULT_JAVAC_OPTIONS,
             graphBuilder,
             false,
-            false);
+            false,
+            ImmutableList.of("java"));
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

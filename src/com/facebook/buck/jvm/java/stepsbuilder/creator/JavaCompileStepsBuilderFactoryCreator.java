@@ -21,6 +21,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaCDStepsBuilderFactory;
+import com.google.common.collect.ImmutableList;
 
 /** Creator that creates an appropriate {@link JavaCompileStepsBuilderFactory}. */
 public class JavaCompileStepsBuilderFactoryCreator {
@@ -30,7 +31,9 @@ public class JavaCompileStepsBuilderFactoryCreator {
   /** Returns specific implementation of {@link JavaCompileStepsBuilderFactory}. */
   public static <T extends CompileToJarStepFactory.ExtraParams>
       JavaCompileStepsBuilderFactory createFactory(
-          CompileToJarStepFactory<T> configuredCompiler, boolean isJavaCDEnabled) {
+          CompileToJarStepFactory<T> configuredCompiler,
+          boolean isJavaCDEnabled,
+          ImmutableList<String> javaPrefix) {
     DefaultJavaCompileStepsBuilderFactory<T> defaultJavaCompileStepsBuilderFactory =
         new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
 
@@ -38,7 +41,10 @@ public class JavaCompileStepsBuilderFactoryCreator {
       BaseJavacToJarStepFactory baseJavacToJarStepFactory =
           (BaseJavacToJarStepFactory) configuredCompiler;
       return new JavaCDStepsBuilderFactory(
-          baseJavacToJarStepFactory, defaultJavaCompileStepsBuilderFactory, isJavaCDEnabled);
+          baseJavacToJarStepFactory,
+          defaultJavaCompileStepsBuilderFactory,
+          isJavaCDEnabled,
+          javaPrefix);
     }
 
     return defaultJavaCompileStepsBuilderFactory;

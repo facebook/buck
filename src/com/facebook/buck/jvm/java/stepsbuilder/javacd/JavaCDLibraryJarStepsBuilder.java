@@ -46,14 +46,16 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
       boolean hasAnnotationProcessing,
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     super(
         hasAnnotationProcessing,
         spoolMode,
         withDownwardApi,
         Type.LIBRARY_JAR,
         LibraryJarCommand.newBuilder(),
-        isJavaCDEnabled);
+        isJavaCDEnabled,
+        javaPrefix);
   }
 
   @Override

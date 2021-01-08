@@ -25,6 +25,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Factory that creates {@link JavaCompileStepsBuilder } builders instances applicable to JavaCD.
@@ -37,23 +38,26 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   // TODO msemko: remove delegate when all builders are ready.
   private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
   private final boolean isJavaCDEnabled;
+  private final ImmutableList<String> javaPrefix;
 
   public JavaCDStepsBuilderFactory(
       BaseJavacToJarStepFactory configuredCompiler,
       DefaultJavaCompileStepsBuilderFactory<?> delegate,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
     this.spoolMode = configuredCompiler.getSpoolMode();
     this.withDownwardApi = configuredCompiler.isWithDownwardApi();
     this.delegate = delegate;
     this.isJavaCDEnabled = isJavaCDEnabled;
+    this.javaPrefix = javaPrefix;
   }
 
   /** Creates an appropriate {@link LibraryJarStepsBuilder} instance. */
   @Override
   public LibraryJarStepsBuilder getLibraryJarBuilder() {
     return new JavaCDLibraryJarStepsBuilder(
-        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled);
+        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled, javaPrefix);
   }
 
   /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance. */
@@ -66,7 +70,7 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   @Override
   public AbiJarStepsBuilder getAbiJarBuilder() {
     return new JavaCDAbiJarStepsBuilder(
-        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled);
+        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled, javaPrefix);
   }
 
   /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance. */

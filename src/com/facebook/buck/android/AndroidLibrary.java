@@ -43,6 +43,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
@@ -107,7 +108,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      boolean isJavaCDEnabled) {
+      boolean isJavaCDEnabled,
+      ImmutableList<String> javaPrefix) {
     super(
         buildTarget,
         projectFilesystem,
@@ -130,7 +132,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled,
         neverMarkAsUnusedDependency,
-        isJavaCDEnabled);
+        isJavaCDEnabled,
+        javaPrefix);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
@@ -219,7 +222,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               isDesugarEnabled,
               isInterfaceMethodsDesugarEnabled,
               neverMarkAsUnusedDependency,
-              isJavaCDEnabled) ->
+              isJavaCDEnabled,
+              javaPrefix) ->
               new AndroidLibrary(
                   target,
                   filesystem,
@@ -244,7 +248,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
                   neverMarkAsUnusedDependency,
-                  isJavaCDEnabled));
+                  isJavaCDEnabled,
+                  javaPrefix));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 
