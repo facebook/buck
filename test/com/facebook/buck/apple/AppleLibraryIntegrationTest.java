@@ -23,6 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -66,7 +67,6 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -114,7 +114,7 @@ public class AppleLibraryIntegrationTest {
       JsonNode inputPathNode = fileDiagnosticsInfo.get("input_path");
       assertTrue(inputPathNode.isTextual());
       Path inputPath = Paths.get(inputPathNode.textValue());
-      Assert.assertFalse(inputPath.isAbsolute());
+      assertFalse(inputPath.isAbsolute());
 
       JsonNode diagnosticName = fileDiagnosticsInfo.get("diagnostic_name");
       assertTrue(diagnosticName.isTextual());
@@ -1278,6 +1278,88 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildAppleLibraryWhereModularObjcUsesSwiftSameLib() throws Exception {
     testModularScenario("apple_library_modular_objc_uses_swift_same_lib", "Mixed");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcAndSwiftUseEachOtherWithoutObjcHeader()
+      throws Exception {
+    ProjectWorkspace workspace =
+        testModularScenarioWithFlavorAndLocalConfigs(
+            "apple_library_modular_objc_swift_bidirectional",
+            "Mixed",
+            Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR),
+            ImmutableMap.of(
+                "apple", ImmutableMap.of("modular_swift_exports_objc_header", "false")));
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget genereatedHeaderTarget =
+        BuildTargetFactory.newInstance(
+            "//:Mixed#apple-swift-objc-generated-header,iphonesimulator-x86_64");
+    Path generatedHeaderPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), genereatedHeaderTarget, "%s"));
+    assertFalse(Files.exists(generatedHeaderPath));
+
+    BuildTarget privateHeaderTarget =
+        BuildTargetFactory.newInstance(
+            "//:Mixed#apple-swift-private-objc-generated-header,iphonesimulator-x86_64");
+    Path privateHeaderPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), privateHeaderTarget, "%s"));
+    assertTrue(Files.exists(privateHeaderPath));
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcUsesSwiftDiffLibWithoutObjcHeader()
+      throws Exception {
+    ProjectWorkspace workspace =
+        testModularScenarioWithFlavorAndLocalConfigs(
+            "apple_library_modular_objc_uses_swift_diff_lib",
+            "Bar",
+            Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR),
+            ImmutableMap.of(
+                "apple", ImmutableMap.of("modular_swift_exports_objc_header", "false")));
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget genereatedHeaderTarget =
+        BuildTargetFactory.newInstance(
+            "//:Foo#apple-swift-objc-generated-header,iphonesimulator-x86_64");
+    Path generatedHeaderPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), genereatedHeaderTarget, "%s"));
+    assertFalse(Files.exists(generatedHeaderPath));
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereModularObjcUsesSwiftSameLibWithoutObjcHeader()
+      throws Exception {
+    ProjectWorkspace workspace =
+        testModularScenarioWithFlavorAndLocalConfigs(
+            "apple_library_modular_objc_uses_swift_same_lib",
+            "Mixed",
+            Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR),
+            ImmutableMap.of(
+                "apple", ImmutableMap.of("modular_swift_exports_objc_header", "false")));
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget genereatedHeaderTarget =
+        BuildTargetFactory.newInstance(
+            "//:Mixed#apple-swift-objc-generated-header,iphonesimulator-x86_64");
+    Path generatedHeaderPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), genereatedHeaderTarget, "%s"));
+    assertFalse(Files.exists(generatedHeaderPath));
+
+    BuildTarget privateHeaderTarget =
+        BuildTargetFactory.newInstance(
+            "//:Mixed#apple-swift-private-objc-generated-header,iphonesimulator-x86_64");
+    Path privateHeaderPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), privateHeaderTarget, "%s"));
+    assertTrue(Files.exists(privateHeaderPath));
   }
 
   @Test

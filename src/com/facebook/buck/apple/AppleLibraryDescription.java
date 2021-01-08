@@ -337,6 +337,10 @@ public class AppleLibraryDescription
                 createUnderlyingModuleSymlinkTreeBuildRule(
                     buildTarget, projectFilesystem, graphBuilder, args));
           } else if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
+            Preconditions.checkState(
+                !args.isModular() || appleConfig.getModularSwiftExportsObjcHeader(),
+                "Modular Swift libraries should not export generated ObjC headers.");
+
             CxxPlatform cxxPlatform =
                 cxxPlatforms
                     .getValue(buildTarget)
@@ -952,7 +956,9 @@ public class AppleLibraryDescription
           {
             AppleLibrarySwiftMetadata metadata =
                 AppleLibrarySwiftMetadata.from(
-                    args.getSrcs(), graphBuilder.getSourcePathResolver());
+                    args.getSrcs(),
+                    graphBuilder.getSourcePathResolver(),
+                    !args.isModular() || appleConfig.getModularSwiftExportsObjcHeader());
             return Optional.of(metadata).map(metadataClass::cast);
           }
         case APPLE_SWIFT_UNDERLYING_MODULE_INPUT:
@@ -1033,14 +1039,19 @@ public class AppleLibraryDescription
   private static CxxPreprocessorInput createSwiftPreprocessorInput(
       ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
     CxxHeaders swiftCompileHeaders = createSwiftModuleHeaders(graphBuilder, baseTarget);
-    CxxHeaders headers =
-        createSwiftObjcHeaders(graphBuilder, baseTarget, Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER);
-
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
     builder.addIncludes(swiftCompileHeaders);
-    builder.addIncludes(headers);
-    CxxPreprocessorInput input = builder.build();
-    return input;
+
+    // modular Swift libraries should not separately export their ObjC headers, this will
+    // already be part of the libraries modulemap.
+    if (targetExportsGeneratedObjcHeaderSeparately(baseTarget, graphBuilder)) {
+      CxxHeaders headers =
+          createSwiftObjcHeaders(
+              graphBuilder, baseTarget, Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER);
+      builder.addIncludes(headers);
+    }
+
+    return builder.build();
   }
 
   private static CxxHeaders createSwiftModuleHeaders(
@@ -1191,11 +1202,23 @@ public class AppleLibraryDescription
   }
 
   private static boolean targetContainsSwift(BuildTarget target, ActionGraphBuilder graphBuilder) {
+    return getAppleLibrarySwiftMetadata(target, graphBuilder)
+        .map(m -> !m.getSwiftSources().isEmpty())
+        .orElse(false);
+  }
+
+  private static boolean targetExportsGeneratedObjcHeaderSeparately(
+      BuildTarget target, ActionGraphBuilder graphBuilder) {
+    return getAppleLibrarySwiftMetadata(target, graphBuilder)
+        .map(AppleLibrarySwiftMetadata::getExportsGeneratedObjcHeaderSeparately)
+        .orElse(false);
+  }
+
+  private static Optional<AppleLibrarySwiftMetadata> getAppleLibrarySwiftMetadata(
+      BuildTarget target, ActionGraphBuilder graphBuilder) {
     BuildTarget metadataTarget =
         target.withAppendedFlavors(MetadataType.APPLE_SWIFT_METADATA.getFlavor());
-    Optional<AppleLibrarySwiftMetadata> metadata =
-        graphBuilder.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class);
-    return metadata.map(m -> !m.getSwiftSources().isEmpty()).orElse(false);
+    return graphBuilder.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class);
   }
 
   public static Optional<CxxPreprocessorInput> underlyingModuleCxxPreprocessorInput(

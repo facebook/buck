@@ -27,13 +27,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class AppleLibrarySwiftMetadata {
-  private ImmutableSet<SourceWithFlags> swiftSources;
-  private ImmutableSet<SourceWithFlags> nonSwiftSources;
+  private final ImmutableSet<SourceWithFlags> swiftSources;
+  private final ImmutableSet<SourceWithFlags> nonSwiftSources;
+  private final boolean exportsGeneratedObjcHeaderSeparately;
 
   public AppleLibrarySwiftMetadata(
-      ImmutableSet<SourceWithFlags> swiftSources, ImmutableSet<SourceWithFlags> nonSwiftSources) {
+      ImmutableSet<SourceWithFlags> swiftSources,
+      ImmutableSet<SourceWithFlags> nonSwiftSources,
+      boolean exportsGeneratedObjcHeaderSeparately) {
     this.swiftSources = swiftSources;
     this.nonSwiftSources = nonSwiftSources;
+    this.exportsGeneratedObjcHeaderSeparately = exportsGeneratedObjcHeaderSeparately;
   }
 
   public ImmutableSet<SourceWithFlags> getSwiftSources() {
@@ -44,8 +48,14 @@ public class AppleLibrarySwiftMetadata {
     return nonSwiftSources;
   }
 
+  public boolean getExportsGeneratedObjcHeaderSeparately() {
+    return exportsGeneratedObjcHeaderSeparately;
+  }
+
   public static AppleLibrarySwiftMetadata from(
-      ImmutableSortedSet<SourceWithFlags> allSources, SourcePathResolverAdapter pathResolver) {
+      ImmutableSortedSet<SourceWithFlags> allSources,
+      SourcePathResolverAdapter pathResolver,
+      boolean exportsGeneratedObjcHeaderSeparately) {
     Map<Boolean, List<SourceWithFlags>> swiftAndNonSwiftSources =
         allSources.stream()
             .collect(
@@ -60,6 +70,7 @@ public class AppleLibrarySwiftMetadata {
         swiftAndNonSwiftSources.getOrDefault(false, Collections.emptyList()).stream()
             .collect(ImmutableSet.toImmutableSet());
 
-    return new AppleLibrarySwiftMetadata(swiftSources, nonSwiftSources);
+    return new AppleLibrarySwiftMetadata(
+        swiftSources, nonSwiftSources, exportsGeneratedObjcHeaderSeparately);
   }
 }
