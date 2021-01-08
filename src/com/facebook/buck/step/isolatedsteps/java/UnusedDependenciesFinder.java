@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -81,9 +82,9 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public static ImmutableUnusedDependenciesFinder of(
       String fullyQualifiedBuildTargetName,
-      ImmutableList<DependencyAndExportedDepsPath> deps,
-      ImmutableList<DependencyAndExportedDepsPath> providedDeps,
-      ImmutableList<String> exportedDeps,
+      List<DependencyAndExportedDepsPath> deps,
+      List<DependencyAndExportedDepsPath> providedDeps,
+      List<String> exportedDeps,
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,

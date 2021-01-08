@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.stepsbuilder;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.google.common.collect.ImmutableMap;
 
 /** Interface that expose base method for java library steps builder. */

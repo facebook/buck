@@ -33,12 +33,13 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -203,15 +204,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
               CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
       String buildTargetFullyQualifiedName = buildTarget.getFullyQualifiedName();
       UnusedDependenciesParams unusedDependenciesParams =
-          UnusedDependenciesParams.of(
+          createUnusedDependenciesParams(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
               depFile,
-              unusedDependenciesAction,
-              factory.exportedDeps,
-              factory.buildozerPath,
-              factory.onlyPrintCommands,
-              factory.doUltralightChecking);
+              factory);
 
       addUnusedDependencyStep(
           unusedDependenciesParams,
@@ -224,6 +221,41 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     RelPath pathToClassHashes = outputPathResolver.resolvePath(pathToClassHashesOutputPath);
     RelPath annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath);
     stepsBuilder.addMakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath);
+  }
+
+  public UnusedDependenciesParams createUnusedDependenciesParams(
+      ImmutableList<DependencyAndExportedDepsPath> deps,
+      ImmutableList<DependencyAndExportedDepsPath> providedDeps,
+      RelPath depFile,
+      UnusedDependenciesFinderFactory factory) {
+    UnusedDependenciesParams.Builder builder = UnusedDependenciesParams.newBuilder();
+
+    for (DependencyAndExportedDepsPath dep : deps) {
+      builder.addDeps(dep);
+    }
+
+    for (DependencyAndExportedDepsPath providedDep : providedDeps) {
+      builder.addProvidedDeps(providedDep);
+    }
+
+    builder.setDepFile(toModelRelPath(depFile));
+    builder.setUnusedDependenciesAction(unusedDependenciesAction);
+
+    for (String exportedDep : factory.exportedDeps) {
+      builder.addExportedDeps(exportedDep);
+    }
+
+    Optional<String> buildozerPath = factory.buildozerPath;
+    buildozerPath.ifPresent(builder::setBuildozerPath);
+    builder.setOnlyPrintCommands(factory.onlyPrintCommands);
+    builder.setDoUltralightChecking(factory.doUltralightChecking);
+
+    return builder.build();
+  }
+
+  public com.facebook.buck.javacd.model.RelPath toModelRelPath(RelPath relPath) {
+    String path = relPath.toString();
+    return com.facebook.buck.javacd.model.RelPath.newBuilder().setPath(path).build();
   }
 
   private void addUnusedDependencyStep(
