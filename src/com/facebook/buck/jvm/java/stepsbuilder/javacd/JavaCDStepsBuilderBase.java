@@ -64,11 +64,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
   private final BuildJavaCommand.Builder commandBuilder = BuildJavaCommand.newBuilder();
   protected final Type type;
-  // TODO msemko: would be used later.
-  @SuppressWarnings("unused")
   private final boolean isJavaCDEnabled;
-  // TODO msemko: would be used later.
-  @SuppressWarnings("unused")
   private final ImmutableList<String> javaPrefix;
 
   protected JavaCDStepsBuilderBase(
@@ -104,8 +100,9 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     }
 
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
-    // TODO msemko: wrap protobuf command into WT step and deserialize isolated steps in the JavaCD
-    // process.
+    if (isJavaCDEnabled) {
+      return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, javaPrefix));
+    }
     return new JavaCDWorkerToolStepsBuilder(buildJavaCommand).getSteps();
   }
 

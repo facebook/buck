@@ -114,6 +114,7 @@ RAW_RESOURCES = {
     "dx": "//third-party/java/dx:etc_dx",
     "external_actions": "//src/com/facebook/buck/external/main:external_actions_bin",
     "jacoco_agent_jar": "//third-party/java/jacoco:agent",
+    "javacd": "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main",
     "legacy_fix_script": "//programs/fixes/source_only_abi:fix",
     # The name of this resource is important, since it needs to have this filename in the PEX.
     "libjcocoa.dylib": "//third-party/java/ObjCBridge:libjcocoa.dylib",

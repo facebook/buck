@@ -9,6 +9,8 @@ java_library(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/common:common",
+        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+        "//src/com/facebook/buck/event/isolated:isolated",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:steps",
@@ -19,6 +21,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/serialization:serialization",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/java:java",
+        "//src/com/facebook/buck/workertool:workertool",
         "//third-party/java/guava:guava",
     ],
 )

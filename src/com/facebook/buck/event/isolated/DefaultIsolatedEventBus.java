@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
 import com.facebook.buck.event.BuckEvent;
@@ -52,6 +53,9 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   private static final Logger LOG = Logger.get(DefaultIsolatedEventBus.class);
   private static final String THREAD_NAME = "DefaultIsolatedEventBus";
   public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
+
+  private static final DownwardProtocol DOWNWARD_PROTOCOL =
+      DownwardProtocolType.BINARY.getDownwardProtocol();
 
   private final BuildId buildId;
   private final OutputStream outputStream;
@@ -287,7 +291,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private void writeToNamedPipe(EventTypeMessage eventType, AbstractMessage payload) {
     try {
-      DownwardProtocolType.BINARY.getDownwardProtocol().write(eventType, payload, outputStream);
+      DOWNWARD_PROTOCOL.write(eventType, payload, outputStream);
     } catch (IOException e) {
       LOG.error(e, "Failed to write buck event %s of type", payload, eventType.getEventType());
     }

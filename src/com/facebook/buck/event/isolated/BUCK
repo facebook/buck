@@ -3,6 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = [
         "//src/com/facebook/buck/external/...",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/...",
         "//test/com/facebook/buck/...",
     ],
     deps = [
