@@ -77,6 +77,8 @@ message EventTypeMessage {
         CHROME_TRACE_EVENT = 3;
         STEP_EVENT = 4;
         EXTERNAL_EVENT = 5;
+        RESULT_EVENT = 6;
+        PIPELINE_FINISHED_EVENT = 7;
         END_EVENT = 100;
     }
 }
@@ -140,11 +142,23 @@ message ChromeTraceEvent {
 }
 
 // Empty event to indicate end of downward APi protocol
-message EndEvent {}
+message EndEvent {
+}
 
 // An ExternalEvent is an event that is intended to be propagated to consumers outside of Buck (currently via the Websocket).
 // Tools are able to create this event so that arbitrary data can be propagated to any custom listener of the Websocket.
 // Buck itself does not process these events in any way, and is unaware of its data.
 message ExternalEvent {
     map<string, string> data = 1;
+}
+
+// Event used to notify buck that execution task has been completed.
+message ResultEvent {
+    string action_id = 1;
+    int32 exit_code = 2;
+    string message = 3;
+}
+
+// Event used to notify buck that pipelining task has been finished.
+message PipelineFinishedEvent {
 }
