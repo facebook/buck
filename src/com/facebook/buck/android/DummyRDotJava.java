@@ -46,7 +46,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.FilesystemParams;
+import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -293,7 +293,7 @@ public class DummyRDotJava extends AbstractBuildRule
     // Compile the .java files.
     ImmutableList.Builder<IsolatedStep> isolatedSteps = ImmutableList.builder();
     compileStepFactory.createCompileStep(
-        FilesystemParams.of(filesystem),
+        FilesystemParamsUtils.of(filesystem),
         CellPathResolverUtils.getCellToPathMappings(rootPath, context.getCellPathResolver()),
         buildTargetValue,
         CompilerOutputPathsValue.of(buckPaths, buildTarget),

@@ -19,11 +19,12 @@ package com.facebook.buck.jvm.java.stepsbuilder.impl;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
-import com.facebook.buck.jvm.java.FilesystemParams;
+import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
@@ -64,6 +65,9 @@ class DefaultJavaLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactor
             resourcesMap);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
-        filesystemParams.getIgnoredPaths(), stepsBuilder, pathToClasses, pathToClassHashes);
+        FilesystemParamsUtils.getIgnoredPaths(filesystemParams),
+        stepsBuilder,
+        pathToClasses,
+        pathToClassHashes);
   }
 }

@@ -29,13 +29,13 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavac;
@@ -98,7 +98,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
     ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
     RelPath outputDirectory = parameters.getOutputPaths().getClassesDir();
 
-    AbsPath rootPath = filesystemParams.getRootPath();
+    AbsPath rootPath = getRootPath(filesystemParams);
     BuildContext context = extraParams.getBuildContext();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 

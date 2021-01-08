@@ -23,12 +23,12 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
-import com.facebook.buck.jvm.java.FilesystemParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
@@ -69,7 +69,7 @@ class GroovyToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareEx
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
       BuildContextAwareExtraParams extraParams) {
-    AbsPath rootPath = filesystemParams.getRootPath();
+    AbsPath rootPath = getRootPath(filesystemParams);
 
     ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();

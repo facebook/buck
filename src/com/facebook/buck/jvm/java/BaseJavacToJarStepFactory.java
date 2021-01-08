@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -94,7 +95,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
             resolvedJavac,
             resolvedJavacOptions,
             invokingRule,
-            filesystemParams.getConfiguredBuckOut(),
+            getConfiguredBuckOut(filesystemParams),
             compilerOutputPathsValue,
             new ClasspathChecker(),
             parameters,
@@ -138,7 +139,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
       // This adds the javac command, along with any supporting commands.
       createPipelinedCompileStep(
-          filesystemParams.getConfiguredBuckOut(),
+          getConfiguredBuckOut(filesystemParams),
           compilerOutputPathsValue,
           cellToPathMappings,
           pipeline,
@@ -206,7 +207,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
               resolvedJavac,
               extraParams.getResolvedJavacOptions(),
               invokingRule,
-              filesystemParams.getConfiguredBuckOut(),
+              getConfiguredBuckOut(filesystemParams),
               compilerOutputPathsValue,
               new ClasspathChecker(),
               compilerParameters,
@@ -268,5 +269,9 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
   public BuildJavaCommand.SpoolMode getSpoolMode() {
     return spoolMode;
+  }
+
+  private RelPath getConfiguredBuckOut(FilesystemParams filesystemParams) {
+    return RelPath.get(filesystemParams.getConfiguredBuckOut().getPath());
   }
 }

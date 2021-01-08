@@ -202,7 +202,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       RelPath depFile =
           CompilerOutputPaths.getDepFilePath(
               CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
-      String buildTargetFullyQualifiedName = buildTarget.getFullyQualifiedName();
       UnusedDependenciesParams unusedDependenciesParams =
           createUnusedDependenciesParams(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
@@ -213,7 +212,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       addUnusedDependencyStep(
           unusedDependenciesParams,
           cellToPathMappings,
-          buildTargetFullyQualifiedName,
+          buildTarget.getFullyQualifiedName(),
           stepsBuilder);
     }
 

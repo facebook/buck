@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -184,7 +185,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
                 .getEntriesToJar()
                 .contains(compilerParameters.getOutputPaths().getClassesDir()));
 
-    AbsPath rootPath = filesystemParams.getRootPath();
+    AbsPath rootPath = getRootPath(filesystemParams);
 
     createCompileStep(
         filesystemParams,
@@ -328,4 +329,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
    * Eventually we would need to get rid of BuildContext for other JVM languages.
    */
   public interface ExtraParams {}
+
+  protected AbsPath getRootPath(FilesystemParams filesystemParams) {
+    return AbsPath.get(filesystemParams.getRootPath().getPath());
+  }
 }

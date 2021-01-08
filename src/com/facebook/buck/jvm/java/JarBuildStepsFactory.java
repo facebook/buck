@@ -412,7 +412,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         trackClassUsage,
         trackJavacPhaseEvents,
         withDownwardApi,
-        FilesystemParams.of(filesystem),
+        FilesystemParamsUtils.of(filesystem),
         buildableContext,
         buildTargetValue,
         CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
@@ -471,7 +471,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     stepsBuilder.addPipelinedBuildStepsForAbiJar(
         buildTargetValue,
         CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
-        FilesystemParams.of(filesystem),
+        FilesystemParamsUtils.of(filesystem),
         buildableContext,
         state,
         resourcesMap,
@@ -539,7 +539,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         trackClassUsage,
         trackJavacPhaseEvents,
         withDownwardApi,
-        FilesystemParams.of(filesystem),
+        FilesystemParamsUtils.of(filesystem),
         buildableContext,
         buildTargetValue,
         CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
@@ -593,7 +593,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForLibraryJar(
         libraryTargetValue,
-        FilesystemParams.of(filesystem),
+        FilesystemParamsUtils.of(filesystem),
         buildableContext,
         state,
         CompilerOutputPathsValue.of(baseBuckPaths, libraryTarget),
