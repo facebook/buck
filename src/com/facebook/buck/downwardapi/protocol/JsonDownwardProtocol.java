@@ -24,6 +24,8 @@ import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
+import com.facebook.buck.downward.model.PipelineFinishedEvent;
+import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Message;
@@ -109,6 +111,12 @@ enum JsonDownwardProtocol implements DownwardProtocol {
 
       case EXTERNAL_EVENT:
         return ExternalEvent.newBuilder();
+
+      case RESULT_EVENT:
+        return ResultEvent.newBuilder();
+
+      case PIPELINE_FINISHED_EVENT:
+        return PipelineFinishedEvent.newBuilder();
 
       case UNKNOWN:
       case UNRECOGNIZED:

@@ -5,7 +5,9 @@ package com.facebook.buck.downward.model;
 
 /**
  * <pre>
- *The purpose of this event is for give ability to an invoking tool propagates these events into a custom listener.
+ * An ExternalEvent is an event that is intended to be propagated to consumers outside of Buck (currently via the Websocket).
+ * Tools are able to create this event so that arbitrary data can be propagated to any custom listener of the Websocket.
+ * Buck itself does not process these events in any way, and is unaware of its data.
  * </pre>
  *
  * Protobuf type {@code downward.api.v1.ExternalEvent}
@@ -348,7 +350,9 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   *The purpose of this event is for give ability to an invoking tool propagates these events into a custom listener.
+   * An ExternalEvent is an event that is intended to be propagated to consumers outside of Buck (currently via the Websocket).
+   * Tools are able to create this event so that arbitrary data can be propagated to any custom listener of the Websocket.
+   * Buck itself does not process these events in any way, and is unaware of its data.
    * </pre>
    *
    * Protobuf type {@code downward.api.v1.ExternalEvent}

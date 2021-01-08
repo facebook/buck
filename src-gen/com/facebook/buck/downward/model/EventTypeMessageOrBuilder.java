@@ -16,4 +16,13 @@ public interface EventTypeMessageOrBuilder extends
    * <code>.downward.api.v1.EventTypeMessage.EventType event_type = 1;</code>
    */
   com.facebook.buck.downward.model.EventTypeMessage.EventType getEventType();
+
+  /**
+   * <pre>
+   * would be used if `event_type` is set to `CUSTOM_EVENT`
+   * </pre>
+   *
+   * <code>int32 custom_event_type_code = 2;</code>
+   */
+  int getCustomEventTypeCode();
 }

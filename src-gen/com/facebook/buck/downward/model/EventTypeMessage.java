@@ -50,6 +50,11 @@ private static final long serialVersionUID = 0L;
             eventType_ = rawValue;
             break;
           }
+          case 16: {
+
+            customEventTypeCode_ = input.readInt32();
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -112,6 +117,14 @@ private static final long serialVersionUID = 0L;
      */
     EXTERNAL_EVENT(5),
     /**
+     * <code>RESULT_EVENT = 6;</code>
+     */
+    RESULT_EVENT(6),
+    /**
+     * <code>PIPELINE_FINISHED_EVENT = 7;</code>
+     */
+    PIPELINE_FINISHED_EVENT(7),
+    /**
      * <code>END_EVENT = 100;</code>
      */
     END_EVENT(100),
@@ -143,6 +156,14 @@ private static final long serialVersionUID = 0L;
      */
     public static final int EXTERNAL_EVENT_VALUE = 5;
     /**
+     * <code>RESULT_EVENT = 6;</code>
+     */
+    public static final int RESULT_EVENT_VALUE = 6;
+    /**
+     * <code>PIPELINE_FINISHED_EVENT = 7;</code>
+     */
+    public static final int PIPELINE_FINISHED_EVENT_VALUE = 7;
+    /**
      * <code>END_EVENT = 100;</code>
      */
     public static final int END_EVENT_VALUE = 100;
@@ -172,6 +193,8 @@ private static final long serialVersionUID = 0L;
         case 3: return CHROME_TRACE_EVENT;
         case 4: return STEP_EVENT;
         case 5: return EXTERNAL_EVENT;
+        case 6: return RESULT_EVENT;
+        case 7: return PIPELINE_FINISHED_EVENT;
         case 100: return END_EVENT;
         default: return null;
       }
@@ -242,6 +265,19 @@ private static final long serialVersionUID = 0L;
     return result == null ? com.facebook.buck.downward.model.EventTypeMessage.EventType.UNRECOGNIZED : result;
   }
 
+  public static final int CUSTOM_EVENT_TYPE_CODE_FIELD_NUMBER = 2;
+  private int customEventTypeCode_;
+  /**
+   * <pre>
+   * would be used if `event_type` is set to `CUSTOM_EVENT`
+   * </pre>
+   *
+   * <code>int32 custom_event_type_code = 2;</code>
+   */
+  public int getCustomEventTypeCode() {
+    return customEventTypeCode_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -259,6 +295,9 @@ private static final long serialVersionUID = 0L;
     if (eventType_ != com.facebook.buck.downward.model.EventTypeMessage.EventType.UNKNOWN.getNumber()) {
       output.writeEnum(1, eventType_);
     }
+    if (customEventTypeCode_ != 0) {
+      output.writeInt32(2, customEventTypeCode_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -271,6 +310,10 @@ private static final long serialVersionUID = 0L;
     if (eventType_ != com.facebook.buck.downward.model.EventTypeMessage.EventType.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(1, eventType_);
+    }
+    if (customEventTypeCode_ != 0) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeInt32Size(2, customEventTypeCode_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -288,6 +331,8 @@ private static final long serialVersionUID = 0L;
     com.facebook.buck.downward.model.EventTypeMessage other = (com.facebook.buck.downward.model.EventTypeMessage) obj;
 
     if (eventType_ != other.eventType_) return false;
+    if (getCustomEventTypeCode()
+        != other.getCustomEventTypeCode()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -301,6 +346,8 @@ private static final long serialVersionUID = 0L;
     hash = (19 * hash) + getDescriptor().hashCode();
     hash = (37 * hash) + EVENT_TYPE_FIELD_NUMBER;
     hash = (53 * hash) + eventType_;
+    hash = (37 * hash) + CUSTOM_EVENT_TYPE_CODE_FIELD_NUMBER;
+    hash = (53 * hash) + getCustomEventTypeCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -436,6 +483,8 @@ private static final long serialVersionUID = 0L;
       super.clear();
       eventType_ = 0;
 
+      customEventTypeCode_ = 0;
+
       return this;
     }
 
@@ -463,6 +512,7 @@ private static final long serialVersionUID = 0L;
     public com.facebook.buck.downward.model.EventTypeMessage buildPartial() {
       com.facebook.buck.downward.model.EventTypeMessage result = new com.facebook.buck.downward.model.EventTypeMessage(this);
       result.eventType_ = eventType_;
+      result.customEventTypeCode_ = customEventTypeCode_;
       onBuilt();
       return result;
     }
@@ -513,6 +563,9 @@ private static final long serialVersionUID = 0L;
       if (other == com.facebook.buck.downward.model.EventTypeMessage.getDefaultInstance()) return this;
       if (other.eventType_ != 0) {
         setEventTypeValue(other.getEventTypeValue());
+      }
+      if (other.getCustomEventTypeCode() != 0) {
+        setCustomEventTypeCode(other.getCustomEventTypeCode());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -584,6 +637,44 @@ private static final long serialVersionUID = 0L;
     public Builder clearEventType() {
       
       eventType_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private int customEventTypeCode_ ;
+    /**
+     * <pre>
+     * would be used if `event_type` is set to `CUSTOM_EVENT`
+     * </pre>
+     *
+     * <code>int32 custom_event_type_code = 2;</code>
+     */
+    public int getCustomEventTypeCode() {
+      return customEventTypeCode_;
+    }
+    /**
+     * <pre>
+     * would be used if `event_type` is set to `CUSTOM_EVENT`
+     * </pre>
+     *
+     * <code>int32 custom_event_type_code = 2;</code>
+     */
+    public Builder setCustomEventTypeCode(int value) {
+      
+      customEventTypeCode_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * would be used if `event_type` is set to `CUSTOM_EVENT`
+     * </pre>
+     *
+     * <code>int32 custom_event_type_code = 2;</code>
+     */
+    public Builder clearCustomEventTypeCode() {
+      
+      customEventTypeCode_ = 0;
       onChanged();
       return this;
     }

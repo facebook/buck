@@ -49,6 +49,11 @@ public interface EventHandler<T extends AbstractMessage> {
       case EXTERNAL_EVENT:
         return (EventHandler<T>) ExternalEventHandler.INSTANCE;
 
+      case RESULT_EVENT:
+      case PIPELINE_FINISHED_EVENT:
+        throw new IllegalStateException(
+            "Client code is required to pass a custom event handler for this type : " + eventType);
+
       case END_EVENT:
       case UNKNOWN:
       case UNRECOGNIZED:

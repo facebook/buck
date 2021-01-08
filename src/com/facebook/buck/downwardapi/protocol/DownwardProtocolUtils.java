@@ -24,6 +24,8 @@ import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
+import com.facebook.buck.downward.model.PipelineFinishedEvent;
+import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.AbstractMessage;
@@ -72,6 +74,12 @@ class DownwardProtocolUtils {
 
       case EXTERNAL_EVENT:
         return ExternalEvent.class;
+
+      case RESULT_EVENT:
+        return ResultEvent.class;
+
+      case PIPELINE_FINISHED_EVENT:
+        return PipelineFinishedEvent.class;
 
       case UNKNOWN:
       case UNRECOGNIZED:

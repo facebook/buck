@@ -22,6 +22,8 @@ import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downward.model.LogEvent;
+import com.facebook.buck.downward.model.PipelineFinishedEvent;
+import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -92,6 +94,12 @@ enum BinaryDownwardProtocol implements DownwardProtocol {
 
       case EXTERNAL_EVENT:
         return ExternalEvent.parseDelimitedFrom(inputStream);
+
+      case RESULT_EVENT:
+        return ResultEvent.parseDelimitedFrom(inputStream);
+
+      case PIPELINE_FINISHED_EVENT:
+        return PipelineFinishedEvent.parseDelimitedFrom(inputStream);
 
       case UNKNOWN:
       case UNRECOGNIZED:
