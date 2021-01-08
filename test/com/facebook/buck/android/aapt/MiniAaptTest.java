@@ -106,14 +106,12 @@ public class MiniAaptTest {
             ImmutableSet.of(),
             false,
             true,
-            true,
-            MiniAapt.ResourceCollectionType.R_DOT_TXT);
+            true);
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertEquals(
         createTestingFakes(definitions),
@@ -238,8 +236,7 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertEquals(
         createTestingFakesWithParents(definitions),
@@ -279,8 +276,7 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertTrue(definitions.isEmpty());
   }
@@ -307,8 +303,7 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertEquals(
         createTestingFakes(definitions),
@@ -339,8 +334,7 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processDrawables(filesystem, Paths.get("android_drawable.xml"));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertEquals(
         createTestingFakes(definitions),
@@ -375,8 +369,7 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processDrawables(filesystem, Paths.get("custom_drawable.xml"));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertEquals(
         createTestingFakesWithCustomDrawables(definitions),
@@ -399,12 +392,10 @@ public class MiniAaptTest {
             ImmutableSet.of(),
             /* isGrayscaleImageProcessingEnabled */ true,
             /* isVerifyingStylesXmlEnabled */ false,
-            /* isVerifyingXmlAttrsEnabled */ false,
-            MiniAapt.ResourceCollectionType.R_DOT_TXT);
+            /* isVerifyingXmlAttrsEnabled */ false);
     aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertThat(
         createTestingFakesWithCustomDrawables(definitions),
@@ -581,8 +572,7 @@ public class MiniAaptTest {
             ImmutableSet.of(depRTxt),
             false,
             true,
-            true,
-            MiniAapt.ResourceCollectionType.R_DOT_TXT);
+            true);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
 
@@ -628,8 +618,7 @@ public class MiniAaptTest {
             ImmutableSet.of(depRTxt),
             false,
             true,
-            true,
-            MiniAapt.ResourceCollectionType.R_DOT_TXT);
+            true);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processStyleFile(filesystem, Paths.get("styles.xml"), references);
 
@@ -708,8 +697,7 @@ public class MiniAaptTest {
             FakeEntry.create(IdType.INT, RType.DRAWABLE, "icon"),
             FakeEntry.create(IdType.INT, RType.DRAWABLE, "nine_patch"),
             FakeEntry.create(IdType.INT, RType.TRANSITION, "some_transition")),
-        createTestingFakes(
-            ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources()));
+        createTestingFakes(aapt.getResourceCollector().getResources()));
   }
 
   @Test

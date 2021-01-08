@@ -19,10 +19,8 @@ package com.facebook.buck.android.aapt;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.util.xml.DocumentLocation;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +34,7 @@ import javax.annotation.Nullable;
  * to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx} represents
  * the resource type, and {@code yyyy} represents the id within that resource type.
  */
-public class RDotTxtResourceCollector implements ResourceCollector {
+public class RDotTxtResourceCollector {
 
   private int currentTypeId;
   private final Map<RType, ResourceIdEnumerator> enumerators;
@@ -48,22 +46,15 @@ public class RDotTxtResourceCollector implements ResourceCollector {
     this.currentTypeId = 1;
   }
 
-  @Override
-  public void addIntResourceIfNotPresent(
-      RType rType, String name, Path path, DocumentLocation documentLocation) {
+  public void addIntResourceIfNotPresent(RType rType, String name) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
-      addResource(rType, IdType.INT, name, getNextIdValue(rType), null, path, documentLocation);
+      addResource(rType, IdType.INT, name, getNextIdValue(rType), null);
     }
   }
 
-  @Override
   public void addCustomDrawableResourceIfNotPresent(
-      RType rType,
-      String name,
-      Path path,
-      DocumentLocation documentLocation,
-      CustomDrawableType drawableType) {
+      RType rType, String name, CustomDrawableType drawableType) {
     RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
     if (!resources.contains(entry)) {
       String idValue = getNextCustomIdValue(rType, drawableType);
@@ -71,28 +62,12 @@ public class RDotTxtResourceCollector implements ResourceCollector {
     }
   }
 
-  @Override
-  public void addIntArrayResourceIfNotPresent(
-      RType rType, String name, int numValues, Path path, DocumentLocation documentLocation) {
-    addResource(
-        rType,
-        IdType.INT_ARRAY,
-        name,
-        getNextArrayIdValue(rType, numValues),
-        null,
-        path,
-        documentLocation);
+  public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
+    addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues), null);
   }
 
-  @Override
   public void addResource(
-      RType rType,
-      IdType idType,
-      String name,
-      String idValue,
-      @Nullable String parent,
-      Path path,
-      DocumentLocation documentLocation) {
+      RType rType, IdType idType, String name, String idValue, @Nullable String parent) {
     resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
   }
 

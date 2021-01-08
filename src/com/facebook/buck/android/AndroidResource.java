@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.MiniAapt;
-import com.facebook.buck.android.aapt.MiniAapt.ResourceCollectionType;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -358,8 +357,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             pathsToSymbolsOfDeps,
             isGrayscaleImageProcessingEnabled,
             isVerifyingStylesXmlEnabled,
-            isVerifyingXmlAttrsEnabled,
-            ResourceCollectionType.R_DOT_TXT));
+            isVerifyingXmlAttrsEnabled));
     return steps.build();
   }
 
