@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import org.stringtemplate.v4.ST;
 
 /**
@@ -40,18 +41,29 @@ public class StringTemplateStep implements Step {
   private final ProjectFilesystem filesystem;
   private final Path outputPath;
   private final ImmutableMap<String, ?> values;
+  private final Consumer<String> verifier;
 
   public StringTemplateStep(
       Path templatePath,
       ProjectFilesystem filesystem,
       Path outputPath,
       ImmutableMap<String, ?> values) {
+    this(templatePath, filesystem, outputPath, values, noop -> {});
+  }
+
+  public StringTemplateStep(
+      Path templatePath,
+      ProjectFilesystem filesystem,
+      Path outputPath,
+      ImmutableMap<String, ?> values,
+      Consumer<String> verifier) {
     Preconditions.checkArgument(
         !outputPath.isAbsolute(), "Output must be specified as a relative path: %s", outputPath);
     this.templatePath = templatePath;
     this.filesystem = filesystem;
     this.outputPath = outputPath;
     this.values = values;
+    this.verifier = verifier;
   }
 
   @Override
@@ -66,11 +78,10 @@ public class StringTemplateStep implements Step {
       st = st.add(ent.getKey(), ent.getValue());
     }
 
-    return WriteFileStep.of(
-            filesystem.getRootPath(),
-            Objects.requireNonNull(st.render()),
-            outputPath, /* executable */
-            false)
+    String content = Objects.requireNonNull(st.render());
+    verifier.accept(content);
+
+    return WriteFileStep.of(filesystem.getRootPath(), content, outputPath, /* executable */ false)
         .createDelegate(context)
         .executeIsolatedStep(context);
   }

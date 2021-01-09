@@ -16,7 +16,9 @@
 
 package com.facebook.buck.shell;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -60,5 +62,89 @@ public class ShBinaryDescriptionTest {
         BuildableSupport.deriveInputs(shBinary.getExecutableCommand(OutputLabel.defaultLabel()))
             .collect(ImmutableList.toImmutableList()),
         Matchers.hasItem(resource));
+  }
+
+  @Test
+  public void verifyCellErrorMatcher() {
+    assertTrue(
+        ShBinary.cellErrorMatcher
+            .matcher(
+                "cd \"$BUCK_TMP_ROOT\"\n"
+                    + "  # Create symlink to the cells in the folder containing this script.\n"
+                    + "  CELLS_NAMES=(\n"
+                    + "  header \"__default__\"\n"
+                    + "  header \"buck\"\n"
+                    + "  header \"other_cell\"\n"
+                    + "  )\n"
+                    + "  CELLS_PATHS=("
+                    + "...")
+            .find());
+
+    assertTrue(
+        ShBinary.cellErrorMatcher
+            .matcher(
+                "cd \"$BUCK_TMP_ROOT\"\n"
+                    + "  # Create symlink to the cells in the folder containing this script.\n"
+                    + "  CELLS_NAMES=(\n"
+                    + "  header \"__default__\"\n"
+                    + "  header \"buck\"\n"
+                    + "  header \"other_cell\"\n"
+                    + "  )\n"
+                    + "  CELLS_PATHS=("
+                    + "...")
+            .find());
+
+    assertTrue(
+        ShBinary.cellErrorMatcher
+            .matcher(
+                "cd \"$BUCK_TMP_ROOT\"\n"
+                    + "  # Create symlink to the cells in the folder containing this script.\n"
+                    + "  CELLS_NAMES=(\n"
+                    + "  \"__default__\"\n"
+                    + "  header \"buck\"\n"
+                    + "  \"other_cell\"\n"
+                    + "  )\n"
+                    + "  CELLS_PATHS=("
+                    + "...")
+            .find());
+
+    assertFalse(
+        ShBinary.cellErrorMatcher
+            .matcher(
+                "cd \"$BUCK_TMP_ROOT\"\n"
+                    + "  CELLS_NOT_NAMES=(\n"
+                    + "  \"__default__\"\n"
+                    + "  header \"buck\"\n"
+                    + "  \"other_cell\"\n"
+                    + "  )\n"
+                    + "  CELLS_PATHS=("
+                    + "...")
+            .find());
+
+    assertFalse(
+        ShBinary.cellErrorMatcher
+            .matcher(
+                "cd \"$BUCK_TMP_ROOT\"\n"
+                    + "  CELLS_NAMES=(\n"
+                    + "  \"__default__\"\n"
+                    + "  \"other_cell\"\n"
+                    + "  )\n"
+                    + "  CELLS_PATHS=("
+                    + "...")
+            .find());
+
+    assertFalse(
+        ShBinary.cellErrorMatcher
+            .matcher(
+                "cd \"$BUCK_TMP_ROOT\"\n"
+                    + "  CELLS_NAMES=(\n"
+                    + "  \"__default__\"\n"
+                    + "  \"other_cell\"\n"
+                    + "  )\n"
+                    + "  CELLS_NOT_NAMES=("
+                    + "  header \"buck\"\n"
+                    + "  )\n"
+                    + "...")
+            .find());
   }
 }

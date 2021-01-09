@@ -42,6 +42,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -55,6 +56,7 @@ import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.Escaper;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -65,6 +67,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 // TODO(cjhopman): Don't allow people to just write complex, hard to follow behavior without
@@ -76,6 +80,7 @@ import java.util.stream.Stream;
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
 
+  private static final Logger LOG = Logger.get(ShBinary.class);
 
   private static final Path TEMPLATE =
       Paths.get(
@@ -98,6 +103,25 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final RelPath output;
 
   private final RelPath runtimeResourcesDir;
+
+  /**
+   * Pattern to match incorrectly generated `CELL_NAME` section in sh binary. The pattern we are
+   * trying to match is where we have the following code:
+   *
+   * <pre>{@code
+   * ...
+   * CELL_NAMES=(
+   *   ...
+   *   header "<valid cell names>"
+   *   ...
+   * )
+   * ...
+   * }</pre>
+   */
+  @VisibleForTesting
+  static final Pattern cellErrorMatcher =
+      Pattern.compile(
+          "CELLS_NAMES\\=\\((((\\s)*?\"(\\w|[-_])*?\")*?(\\s)*?header ((\\s)*?\"(\\w|[-_])*?\")*?)*?\\s*\\)");
 
   protected ShBinary(
       BuildTarget buildTarget,
@@ -220,7 +244,19 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 context.getBuildCellRootPath()))
         .add(
             new StringTemplateStep(
-                TEMPLATE, getProjectFilesystem(), output.getPath(), valuesBuilder.build()))
+                TEMPLATE,
+                getProjectFilesystem(),
+                output.getPath(),
+                valuesBuilder.build(),
+                expanded -> {
+                  Matcher matcher = cellErrorMatcher.matcher(expanded);
+                  if (matcher.find()) {
+                    String matched = matcher.group();
+                    LOG.error(
+                        "ShBinary template CELL_NAMES expanded to: `%s`, but given `%s`",
+                        matched, cellsNamesBuilder.build());
+                  }
+                }))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
         .build();
   }
