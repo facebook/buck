@@ -279,13 +279,6 @@ import org.pf4j.PluginManager;
  * <p>One instance of {@link MainRunner} exists per command run.
  */
 public final class MainRunner {
-  /**
-   * Force JNA to be initialized early to avoid deadlock race condition.
-   *
-   * <p>See: https://github.com/java-native-access/jna/issues/652
-   */
-  public static final int JNA_POINTER_SIZE = Pointer.SIZE;
-
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
       Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));
 
