@@ -15,7 +15,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.2.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-2.0.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-1.0.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.9.7.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.9.7.jar!/" />
@@ -37,7 +37,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/errorprone/error_prone_annotations-2.0.19-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/sqlite/sqlite-jdbc-3.20.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-1.2.4-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-2.0.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nailgun/nailgun-server-1.0.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-annotations-2.9.7-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.9.7-sources.jar!/" />
