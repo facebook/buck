@@ -153,8 +153,8 @@
     <include name="kotlin/kotlin-reflect.jar" />
     <include name="android/sdklib-25.3.0.jar" />
     <include name="nailgun/nailgun-server-1.0.0.jar" />
-    <include name="jna/jna-4.5.1.jar" />
-    <include name="jna/jna-platform-4.5.1.jar" />
+    <include name="jna/jna-5.6.0.jar" />
+    <include name="jna/jna-platform-5.6.0.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
     <include name="bazel/bazel_deploy.jar" />
     <include name="remote-apis/remote-apis.jar" />
