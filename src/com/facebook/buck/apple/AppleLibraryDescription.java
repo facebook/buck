@@ -976,50 +976,42 @@ public class AppleLibraryDescription
               return Optional.empty();
             }
 
-            if (appleConfig.shouldUseVFSOverlays()) {
-              BuildTarget underlyingVfsTarget =
-                  baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_VFS_OVERLAY.getFlavor());
+            BuildTarget underlyingVfsTarget =
+                baseTarget.withAppendedFlavors(Type.SWIFT_UNDERLYING_VFS_OVERLAY.getFlavor());
 
-              AppleVFSOverlayBuildRule vfsOverlayRule =
-                  (AppleVFSOverlayBuildRule) graphBuilder.requireRule(underlyingVfsTarget);
+            AppleVFSOverlayBuildRule vfsOverlayRule =
+                (AppleVFSOverlayBuildRule) graphBuilder.requireRule(underlyingVfsTarget);
 
-              // The VFS overlay masks the exported modulemap with the underlying one.
-              // This requires us to import the exported modulemap path to overlay correctly.
-              // We cannot require the rule here as that would be a circular dependency, so we
-              // generate the path and add as a string arg instead.
-              BuildTarget exportedHeadersWithModulemapTarget =
-                  baseTarget.withAppendedFlavors(
-                      CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
-                      HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
-              RelPath exportedHeadersWithModulemapPath =
-                  BuildTargetPaths.getGenPath(
-                      graphBuilder
-                          .getSourcePathResolver()
-                          .getFilesystem(vfsOverlayRule.getSourcePathToOutput())
-                          .getBuckPaths(),
-                      exportedHeadersWithModulemapTarget,
-                      "%s");
+            // The VFS overlay masks the exported modulemap with the underlying one.
+            // This requires us to import the exported modulemap path to overlay correctly.
+            // We cannot require the rule here as that would be a circular dependency, so we
+            // generate the path and add as a string arg instead.
+            BuildTarget exportedHeadersWithModulemapTarget =
+                baseTarget.withAppendedFlavors(
+                    CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                    HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
+            RelPath exportedHeadersWithModulemapPath =
+                BuildTargetPaths.getGenPath(
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getFilesystem(vfsOverlayRule.getSourcePathToOutput())
+                        .getBuckPaths(),
+                    exportedHeadersWithModulemapTarget,
+                    "%s");
 
-              ImmutableMultimap.Builder<CxxSource.Type, Arg> argBuilder =
-                  ImmutableMultimap.builder();
+            ImmutableMultimap.Builder<CxxSource.Type, Arg> argBuilder = ImmutableMultimap.builder();
 
-              argBuilder.putAll(
-                  CxxSource.Type.SWIFT,
-                  StringArg.of("-ivfsoverlay"),
-                  SourcePathArg.of(vfsOverlayRule.getSourcePathToOutput()),
-                  StringArg.of("-I"),
-                  StringArg.of(exportedHeadersWithModulemapPath.toString()));
+            argBuilder.putAll(
+                CxxSource.Type.SWIFT,
+                StringArg.of("-ivfsoverlay"),
+                SourcePathArg.of(vfsOverlayRule.getSourcePathToOutput()),
+                StringArg.of("-I"),
+                StringArg.of(exportedHeadersWithModulemapPath.toString()));
 
-              CxxPreprocessorInput.Builder inputBuilder = CxxPreprocessorInput.builder();
-              inputBuilder.setPreprocessorFlags(argBuilder.build());
+            CxxPreprocessorInput.Builder inputBuilder = CxxPreprocessorInput.builder();
+            inputBuilder.setPreprocessorFlags(argBuilder.build());
 
-              return Optional.of(inputBuilder.build()).map(metadataClass::cast);
-            } else {
-              CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-              builder.addIncludes(
-                  CxxSymlinkTreeHeaders.from(modulemap, CxxPreprocessables.IncludeType.LOCAL));
-              return Optional.of(builder.build()).map(metadataClass::cast);
-            }
+            return Optional.of(inputBuilder.build()).map(metadataClass::cast);
           }
       }
     }
