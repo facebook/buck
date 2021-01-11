@@ -327,7 +327,7 @@ abstract class GoDescriptors {
       List<String> compilerFlags,
       List<String> assemblerFlags,
       List<String> linkerFlags,
-      List<String> externalLinkerFlags,
+      Iterable<String> externalLinkerFlags,
       GoPlatform platform) {
 
     ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();

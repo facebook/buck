@@ -33,9 +33,13 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import org.immutables.value.Value;
 
 public class GoBinaryDescription
     implements DescriptionWithTargetGraph<GoBinaryDescriptionArg>,
@@ -96,7 +100,13 @@ public class GoBinaryDescription
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
         args.getLinkerFlags(),
-        args.getExternalLinkerFlags(),
+        Iterables.concat(
+            ImmutableList.<ImmutableList<String>>builder()
+                .add(args.getExternalLinkerFlags())
+                .addAll(
+                    args.getPlatformExternalLinkerFlags()
+                        .getMatchingValues(platform.getFlavor().toString()))
+                .build()),
         platform);
   }
 
@@ -125,5 +135,10 @@ public class GoBinaryDescription
 
   @RuleArg
   interface AbstractGoBinaryDescriptionArg
-      extends BuildRuleArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {}
+      extends BuildRuleArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<String>> getPlatformExternalLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
+  }
 }
