@@ -81,6 +81,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final Optional<SourcePath> resourceStableIds;
   @AddToRuleKey private final Optional<String> preferredDensity;
   @AddToRuleKey private final Optional<Integer> minSdk;
+  @AddToRuleKey private final boolean shouldKeepRawValues;
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -111,6 +112,7 @@ public class Aapt2Link extends AbstractBuildRule {
       Optional<SourcePath> resourceStableIds,
       Optional<String> preferredDensity,
       Optional<Integer> minSdk,
+      boolean shouldKeepRawValues,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
@@ -134,6 +136,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.resourceStableIds = resourceStableIds;
     this.preferredDensity = preferredDensity;
     this.minSdk = minSdk;
+    this.shouldKeepRawValues = shouldKeepRawValues;
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -364,6 +367,10 @@ public class Aapt2Link extends AbstractBuildRule {
 
       if (packageIdOffset != 0) {
         builder.add("--package-id", String.format("0x%x", BASE_PACKAGE_ID + packageIdOffset));
+      }
+
+      if (shouldKeepRawValues) {
+        builder.add("--keep-raw-values");
       }
 
       if (resourceStableIds.isPresent()) {

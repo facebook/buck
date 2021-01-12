@@ -277,6 +277,7 @@ public class AndroidInstrumentationApkDescription
             new NoopAndroidNativeTargetConfigurationMatcher(),
             androidBuckConfig.getFailOnLegacyAaptErrors(),
             /* useAapt2LocaleFiltering= */ false,
+            /* shouldAapt2KeepRawValues= */ false,
             /* extraFilteredResources= */ ImmutableSet.of(),
             /* resourceStableIds= */ Optional.empty(),
             androidBuckConfig.getRDotJavaWeightFactor(),

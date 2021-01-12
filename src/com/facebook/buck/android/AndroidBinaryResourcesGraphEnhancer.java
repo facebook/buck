@@ -101,6 +101,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean useProtoFormat;
   private final boolean failOnLegacyAapt2Errors;
   private final boolean useAapt2LocaleFiltering;
+  private final boolean shouldAapt2KeepRawValues;
   private final ImmutableSet<String> extraFilteredResources;
   private final Optional<SourcePath> resourceStableIds;
   private final boolean withDownwardApi;
@@ -139,6 +140,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean useProtoFormat,
       boolean failOnLegacyAapt2Errors,
       boolean useAapt2LocaleFiltering,
+      boolean shouldAapt2KeepRawValues,
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
       boolean withDownwardApi,
@@ -175,6 +177,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
     this.noResourceRemoval = noResourceRemoval;
     this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
+    this.shouldAapt2KeepRawValues = shouldAapt2KeepRawValues;
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
     this.withDownwardApi = withDownwardApi;
@@ -617,6 +620,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         resourceStableIds,
         Optional.empty(),
         Optional.empty(),
+        shouldAapt2KeepRawValues,
         withDownwardApi);
   }
 

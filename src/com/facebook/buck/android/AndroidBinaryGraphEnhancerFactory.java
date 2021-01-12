@@ -228,6 +228,7 @@ public class AndroidBinaryGraphEnhancerFactory {
             configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()),
         androidBuckConfig.getFailOnLegacyAaptErrors(),
         args.isAapt2LocaleFiltering(),
+        args.isAapt2KeepRawValues(),
         args.getExtraFilteredResources(),
         args.getResourceStableIds(),
         androidBuckConfig.getRDotJavaWeightFactor(),

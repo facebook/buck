@@ -1100,6 +1100,7 @@ public class AndroidBinaryGraphEnhancerTest {
         new NoopAndroidNativeTargetConfigurationMatcher(),
         /* failOnLegacyAapt2Errors */ false,
         /* useAapt2LocaleFiltering */ false,
+        /* shouldAapt2KeepRawValues */ false,
         /* extraFilteredResources */ ImmutableSet.of(),
         /* resourceStableIds */ Optional.empty(),
         /* rDotJavaWeightFactor */ 8,

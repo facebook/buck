@@ -292,6 +292,7 @@ public class RobolectricTestDescription
                 Optional.empty(),
                 args.getPreferredDensityForBinaryResources(),
                 args.getManifestEntries().getMinSdkVersion(),
+                false,
                 downwardApiConfig.isEnabledForAndroid());
 
         graphBuilder.addToIndex(aapt2Link);

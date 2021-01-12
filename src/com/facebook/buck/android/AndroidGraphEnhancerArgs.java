@@ -137,6 +137,11 @@ public interface AndroidGraphEnhancerArgs
     return false;
   }
 
+  @Value.Default
+  default boolean isAapt2KeepRawValues() {
+    return false;
+  }
+
   Optional<Integer> getSecondaryDexWeightLimit();
 
   @Value.Default
