@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
@@ -41,6 +42,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -118,6 +120,17 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    ImmutableSet.Builder<OutputLabel> builder = ImmutableSet.builder();
+    builder.add(OutputLabel.defaultLabel());
+    if (linkRule instanceof HasMultipleOutputs) {
+      ImmutableSet<OutputLabel> outputLabels = ((HasMultipleOutputs) linkRule).getOutputLabels();
+      builder.addAll(outputLabels.iterator());
+    }
+    return builder.build();
   }
 
   @Override

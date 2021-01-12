@@ -1,8 +1,23 @@
+cxx_library(
+    name = "implib",
+    srcs = [
+        "MathLibrary.cpp",
+    ],
+    compiler_flags = ["-DMATHLIBRARY_EXPORTS"],
+    exported_headers = [
+        "MathLibrary.h",
+    ],
+    header_namespace = "",
+    link_style = "shared",
+    preferred_linkage = "shared",
+    visibility = ["PUBLIC"],
+)
+
 prebuilt_cxx_library(
     name = "implib_prebuilt",
     exported_headers = ["MathLibrary.h"],
     header_namespace = "",
-    import_lib = "implib_prebuilt.lib",
-    shared_lib = "implib_prebuilt.dll",
+    import_lib = ":implib#windows-x86_64,shared[implib]",
+    shared_lib = ":implib#windows-x86_64,shared",
     visibility = ["PUBLIC"],
 )

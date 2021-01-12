@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -201,6 +202,15 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
           }
         });
     return stepBuilder.build();
+  }
+
+  @Override
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return ImmutableSet.of(
+        OutputLabel.defaultLabel(),
+        OutputLabel.of(TEST_BINARY_OUTPUT),
+        OutputLabel.of(TEST_BUNDLE),
+        OutputLabel.of(APPLE_CONFIGS_PATH));
   }
 
   @Override

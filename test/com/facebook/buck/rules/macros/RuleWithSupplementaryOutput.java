@@ -19,6 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
@@ -53,6 +55,11 @@ public final class RuleWithSupplementaryOutput extends AbstractBuildRule
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
+  }
+
+  @Override
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return ImmutableSet.of(OutputLabel.defaultLabel());
   }
 
   @Nullable

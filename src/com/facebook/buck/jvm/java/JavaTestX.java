@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -187,6 +188,16 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public SortedSet<BuildRule> getExportedProvidedDeps() {
     return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    return ImmutableSet.of(
+        OutputLabel.defaultLabel(),
+        OutputLabel.of("testbin"),
+        OutputLabel.of("classnames"),
+        OutputLabel.of("classpath-file"),
+        OutputLabel.of("jvm-args"));
   }
 
   @Nullable

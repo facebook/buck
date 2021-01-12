@@ -543,10 +543,10 @@ public class PrebuiltCxxLibraryDescription
             && getImportLibrary(cxxPlatform, graphBuilder).isPresent()) {
           // TODO(fishb): We should allow `shared_lib` to be absent (ex. link against import lib
           //  of pre-deployed DLL)
-          SourcePath sharedLibraryPath = requireSharedLibrary(cxxPlatform, false, graphBuilder);
-          soname =
-              Optional.ofNullable(
-                  ((PathSourcePath) sharedLibraryPath).getRelativePath().getFileName().toString());
+          SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, false, graphBuilder);
+          Path sharedLibraryPath =
+              graphBuilder.getSourcePathResolver().getIdeallyRelativePath(sharedLibrary);
+          soname = Optional.of(sharedLibraryPath.getFileName().toString());
         }
         return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname);
       }

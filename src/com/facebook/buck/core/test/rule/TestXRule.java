@@ -18,6 +18,7 @@ package com.facebook.buck.core.test.rule;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -25,6 +26,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
@@ -113,5 +115,10 @@ public interface TestXRule extends TestRule, ExternalTestRunnerRule, HasSuppleme
       return getSourcePathToOutput();
     }
     return null;
+  }
+
+  @Override
+  default ImmutableSet<OutputLabel> getOutputLabels() {
+    return ImmutableSet.of(OutputLabel.defaultLabel(), OutputLabel.of(TEST_BINARY_OUTPUT));
   }
 }

@@ -35,6 +35,13 @@ cxx_library(
     visibility = ["PUBLIC"],
 )
 
+export_file(
+    name = "implib_header",
+    src = "MathLibrary.h",
+    out = "MathLibrary.h",
+    visibility = ["PUBLIC"],
+)
+
 genrule(
     name = "implib_copy",
     out = "implib_copy.lib",

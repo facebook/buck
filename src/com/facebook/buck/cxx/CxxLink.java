@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.BuildRule;
@@ -396,6 +397,14 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   public Stream<BuildRule> getAppleDebugSymbolDeps() {
     return getBuildDeps().stream()
         .filter(x -> x instanceof Archive || x instanceof CxxPreprocessAndCompile);
+  }
+
+  @Override
+  public ImmutableSet<OutputLabel> getOutputLabels() {
+    ImmutableSet.Builder<OutputLabel> builder = ImmutableSet.builder();
+    builder.add(OutputLabel.defaultLabel());
+    builder.addAll(extraOutputs.keySet().stream().map(s -> OutputLabel.of(s)).iterator());
+    return builder.build();
   }
 
   @Override
