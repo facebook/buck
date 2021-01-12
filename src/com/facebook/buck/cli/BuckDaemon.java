@@ -41,6 +41,15 @@ import javax.annotation.Nullable;
 
 /** The buckd process, which is the long running nailgun server. */
 public final class BuckDaemon {
+  /**
+   * Force JNA to be initialized early to avoid deadlock race condition.
+   *
+   * <p>
+   *
+   * <p>See: https://github.com/java-native-access/jna/issues/652
+   */
+  public static final int JNA_POINTER_SIZE = Native.POINTER_SIZE;
+
   private static final int AFTER_COMMAND_AUTO_GC_DELAY_MS = 5000;
   private static final int SUBSEQUENT_GC_DELAY_MS = 10000;
 

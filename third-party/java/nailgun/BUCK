@@ -1,10 +1,10 @@
 prebuilt_jar(
     name = "nailgun",
-    binary_jar = "nailgun-server-1.0.0.jar",
+    binary_jar = "nailgun-server-1.0.1.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "nailgun-server-1.0.0-sources.jar",
+    source_jar = "nailgun-server-1.0.1-sources.jar",
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/cli/exceptions/handlers:handlers",
