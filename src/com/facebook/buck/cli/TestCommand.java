@@ -16,6 +16,10 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidBinary;
+import com.facebook.buck.android.AndroidInstrumentationApk;
+import com.facebook.buck.android.AndroidInstrumentationTest;
+import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
@@ -55,6 +59,9 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
+import com.facebook.buck.jvm.java.JavaLibraryWithTests;
+import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -311,7 +318,8 @@ public class TestCommand extends BuildCommand {
       BuildEngine buildEngine,
       Build build,
       BuildContext buildContext,
-      Iterable<TestRule> testRules)
+      Iterable<TestRule> testRules,
+      ImmutableSet<JavaLibrary> rulesUnderTestForCoverage)
       throws InterruptedException, IOException {
 
     if (!withDashArguments.isEmpty()) {
@@ -329,6 +337,7 @@ public class TestCommand extends BuildCommand {
               params,
               ruleResolver,
               testRules,
+              rulesUnderTestForCoverage,
               StepExecutionContext.from(build.getExecutionContext(), filesystem.getRootPath()),
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
@@ -620,17 +629,18 @@ public class TestCommand extends BuildCommand {
       }
 
       ImmutableSet<BuildRule> rulesToMaterializeForAnalysis = ImmutableSet.of();
+      ImmutableSet<JavaLibrary> rulesUnderTestForCoverage = ImmutableSet.of();
       if (isCodeCoverageEnabled) {
         // Ensure that the libraries that we want to inspect after the build are built/fetched.
         // This requires that the rules under test are materialized as well as any generated srcs
         // that they use
         BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
-        ImmutableSet<JavaLibrary> rulesUnderTest = TestRunning.getRulesUnderTest(testRules);
+        rulesUnderTestForCoverage = getRulesUnderTest(testRules);
         rulesToMaterializeForAnalysis =
-            RichStream.from(rulesUnderTest)
+            RichStream.from(rulesUnderTestForCoverage)
                 .flatMap(
                     lib -> RichStream.from(ruleResolver.filterBuildRuleInputs(lib.getJavaSrcs())))
-                .concat(RichStream.from(rulesUnderTest))
+                .concat(RichStream.from(rulesUnderTestForCoverage))
                 .collect(ImmutableSet.toImmutableSet());
       }
 
@@ -768,7 +778,8 @@ public class TestCommand extends BuildCommand {
               cachingBuildEngine,
               build,
               buildContext,
-              testRules);
+              testRules,
+              rulesUnderTestForCoverage);
         }
       }
     }
@@ -917,5 +928,59 @@ public class TestCommand extends BuildCommand {
   @Override
   public void handleException(CmdLineException e) throws CmdLineException {
     handleException(e, "If using an external runner, remember to use '--'.");
+  }
+
+  /** Generates the set of Java library rules under test. */
+  static ImmutableSet<JavaLibrary> getRulesUnderTest(Iterable<TestRule> tests) {
+    ImmutableSet.Builder<JavaLibrary> rulesUnderTest = ImmutableSet.builder();
+
+    // Gathering all rules whose source will be under test.
+    for (TestRule test : tests) {
+      if (test instanceof JavaTest) {
+        // Look at the transitive dependencies for `tests` attribute that refers to this test.
+        JavaTest javaTest = (JavaTest) test;
+
+        ImmutableSet<JavaLibrary> transitiveDeps =
+            JavaLibraryClasspathProvider.getAllReachableJavaLibraries(
+                ImmutableSet.of(javaTest.getCompiledTestsLibrary()));
+        for (JavaLibrary dep : transitiveDeps) {
+          if (dep instanceof JavaLibraryWithTests) {
+            ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
+            if (depTests.contains(test.getBuildTarget())) {
+              rulesUnderTest.add(dep);
+            }
+          }
+        }
+      }
+      if (test instanceof AndroidInstrumentationTest) {
+        // Look at the transitive dependencies for `tests` attribute that refers to this test.
+        AndroidInstrumentationTest androidInstrumentationTest = (AndroidInstrumentationTest) test;
+
+        HasInstallableApk apk = androidInstrumentationTest.getApk();
+        if (apk instanceof AndroidBinary) {
+          AndroidBinary androidBinary = (AndroidBinary) apk;
+          Iterable<JavaLibrary> transitiveDeps = androidBinary.getTransitiveClasspathDeps();
+
+          if (androidBinary instanceof AndroidInstrumentationApk) {
+            transitiveDeps =
+                Iterables.concat(
+                    transitiveDeps,
+                    ((AndroidInstrumentationApk) androidBinary)
+                        .getApkUnderTest()
+                        .getTransitiveClasspathDeps());
+          }
+          for (JavaLibrary dep : transitiveDeps) {
+            if (dep instanceof JavaLibraryWithTests) {
+              ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
+              if (depTests.contains(test.getBuildTarget())) {
+                rulesUnderTest.add(dep);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return rulesUnderTest.build();
   }
 }

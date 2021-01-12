@@ -16,10 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidBinary;
-import com.facebook.buck.android.AndroidInstrumentationApk;
-import com.facebook.buck.android.AndroidInstrumentationTest;
-import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -54,10 +50,7 @@ import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.GenerateCodeCoverageReportStep;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
-import com.facebook.buck.jvm.java.JavaLibraryWithTests;
 import com.facebook.buck.jvm.java.JavaOptions;
-import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -134,6 +127,7 @@ public class TestRunning {
       CommandRunnerParams params,
       BuildRuleResolver ruleResolver,
       Iterable<TestRule> tests,
+      ImmutableSet<JavaLibrary> rulesUnderTestForCoverage,
       StepExecutionContext executionContext,
       TestRunningOptions options,
       ListeningExecutorService service,
@@ -142,31 +136,27 @@ public class TestRunning {
       SourcePathRuleFinder ruleFinder)
       throws IOException, InterruptedException {
 
-    ImmutableSet<JavaLibrary> rulesUnderTestForCoverage;
     // If needed, we first run instrumentation on the class files.
-    if (options.isCodeCoverageEnabled()) {
-      rulesUnderTestForCoverage = getRulesUnderTest(tests);
-      if (!rulesUnderTestForCoverage.isEmpty()) {
-        try {
-          // We'll use the filesystem of the first rule under test. This will fail if there are any
-          // tests from a different repo, but it'll help us bootstrap ourselves to being able to
-          // support multiple repos
-          // TODO(t8220837): Support tests in multiple repos
-          JavaLibrary library = rulesUnderTestForCoverage.iterator().next();
-          for (Step step :
-              MakeCleanDirectoryStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      buildContext.getBuildCellRootPath(),
-                      library.getProjectFilesystem(),
-                      JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())))) {
-            StepRunner.runStep(executionContext, step, Optional.empty());
-          }
-        } catch (StepFailedException e) {
-          params
-              .getBuckEventBus()
-              .post(ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));
-          return 1;
+    if (options.isCodeCoverageEnabled() && !rulesUnderTestForCoverage.isEmpty()) {
+      try {
+        // We'll use the filesystem of the first rule under test. This will fail if there are any
+        // tests from a different repo, but it'll help us bootstrap ourselves to being able to
+        // support multiple repos
+        // TODO(t8220837): Support tests in multiple repos
+        JavaLibrary library = rulesUnderTestForCoverage.iterator().next();
+        for (Step step :
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    library.getProjectFilesystem(),
+                    JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())))) {
+          StepRunner.runStep(executionContext, step, Optional.empty());
         }
+      } catch (StepFailedException e) {
+        params
+            .getBuckEventBus()
+            .post(ConsoleEvent.severe(Throwables.getRootCause(e).getLocalizedMessage()));
+        return 1;
       }
     } else {
       rulesUnderTestForCoverage = ImmutableSet.of();
@@ -580,60 +570,6 @@ public class TestRunning {
         return result.getLeft();
       }
     };
-  }
-
-  /** Generates the set of Java library rules under test. */
-  static ImmutableSet<JavaLibrary> getRulesUnderTest(Iterable<TestRule> tests) {
-    ImmutableSet.Builder<JavaLibrary> rulesUnderTest = ImmutableSet.builder();
-
-    // Gathering all rules whose source will be under test.
-    for (TestRule test : tests) {
-      if (test instanceof JavaTest) {
-        // Look at the transitive dependencies for `tests` attribute that refers to this test.
-        JavaTest javaTest = (JavaTest) test;
-
-        ImmutableSet<JavaLibrary> transitiveDeps =
-            JavaLibraryClasspathProvider.getAllReachableJavaLibraries(
-                ImmutableSet.of(javaTest.getCompiledTestsLibrary()));
-        for (JavaLibrary dep : transitiveDeps) {
-          if (dep instanceof JavaLibraryWithTests) {
-            ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
-            if (depTests.contains(test.getBuildTarget())) {
-              rulesUnderTest.add(dep);
-            }
-          }
-        }
-      }
-      if (test instanceof AndroidInstrumentationTest) {
-        // Look at the transitive dependencies for `tests` attribute that refers to this test.
-        AndroidInstrumentationTest androidInstrumentationTest = (AndroidInstrumentationTest) test;
-
-        HasInstallableApk apk = androidInstrumentationTest.getApk();
-        if (apk instanceof AndroidBinary) {
-          AndroidBinary androidBinary = (AndroidBinary) apk;
-          Iterable<JavaLibrary> transitiveDeps = androidBinary.getTransitiveClasspathDeps();
-
-          if (androidBinary instanceof AndroidInstrumentationApk) {
-            transitiveDeps =
-                Iterables.concat(
-                    transitiveDeps,
-                    ((AndroidInstrumentationApk) androidBinary)
-                        .getApkUnderTest()
-                        .getTransitiveClasspathDeps());
-          }
-          for (JavaLibrary dep : transitiveDeps) {
-            if (dep instanceof JavaLibraryWithTests) {
-              ImmutableSortedSet<BuildTarget> depTests = ((JavaLibraryWithTests) dep).getTests();
-              if (depTests.contains(test.getBuildTarget())) {
-                rulesUnderTest.add(dep);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    return rulesUnderTest.build();
   }
 
   /**
