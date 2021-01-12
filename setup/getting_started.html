@@ -1,0 +1,315 @@
+<!doctype html><html xmlns="http://www.w3.org/1999/xhtml"><head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns#"><script>var loc = new String(window.location); if (loc.indexOf('facebook.github.io/buck') != -1) {window.location.replace(loc.replace('facebook.github.io/buck', 'buck.build'));}</script><!-- Facebook Pixel Code --><script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','//connect.facebook.net/en_US/fbevents.js'); fbq('init', '1637165926500152'); fbq('track', 'PageView');</script><noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1" /></noscript><!-- End Facebook Pixel Code --><title>Buck: Getting Started</title><link type="image/png" rel="shortcut icon" href="/static/favicon.png" /><meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" /><meta http-equiv="content-type" content="text/html;charset=utf-8"><link type="text/css" rel="stylesheet" href="/static/buck.css"><link type="text/css" rel="stylesheet" href="/static/search.css"><link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" /><meta property="og:locale" content="en_US"><meta property="og:title" content="Getting Started"><meta property="og:site_name" content="Buck: a build tool"><meta property="og:image" content="http://buck.build/static/og.png"><meta property="og:type" content="article"><meta property="og:description" content="How to setup your project to use Buck."><meta property="fb:admins" content="584556688222168"><script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-44373548-18', 'auto');
+    ga('send', 'pageview');
+  </script></head><body><div id="fb-root"></div><script>(function(d, s, id) {var js, fjs = d.getElementsByTagName(s)[0]; if (d.getElementById(id)) return; js = d.createElement(s); js.id = id; js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=584556688222168"; fjs.parentNode.insertBefore(js, fjs);}(document, 'script', 'facebook-jssdk'));</script><header class='topbar'><nav class='width'><a href='http://buck.build/'><h1>Buck</h1></a><ul class='menu'><li class="algolia-search-wrapper"><input id="algolia-doc-search" type="search" placeholder="Search docs..." /></li><li><a href='/setup/getting_started.html'>Docs</a><li><a href='https://github.com/facebook/buck/issues'>Issues</a><li><a href='https://github.com/facebook/buck'>GitHub</a></ul></nav></header><section class='content'><div class='width'><article id="content"><h1>Getting Started</h1><p><strong>Note:</strong> If you are a member of an organization that is using Buck, please consult with your colleagues to see if your organization has <em>site-specific documentation</em> for Buck. Buck is flexible and configurable, and many organizations have created their own Buck documentation, which is specific to their use cases&mdash;in addition to the documentation here.</p><h2>Quick Starts for various target platforms</h2><div class="overview"><div class="toggler"><table><tr><td><span><strong>Platform:</strong></span></td><td><a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a><a href="javascript:void(0);" class="button-ios" onclick="display('platform', 'ios')">iOS</a><a href="javascript:void(0);" class="button-java" onclick="display('platform', 'java')">Java</a><a href="javascript:void(0);" class="button-other" onclick="display('platform', 'other')">Other</a></td></tr><tr><td><span><strong>Development OS:</strong></span></td><td><a href="javascript:void(0);" class="button-mac" onclick="display('os', 'mac')">macOS</a><a href="javascript:void(0);" class="button-linux" onclick="display('os', 'linux')">Linux</a><a href="javascript:void(0);" class="button-windows" onclick="display('os', 'windows')">Windows</a></td></tr></table></div><span><block class="linux windows ios" /></span><p>Development for iOS is supported only on macOS.</p><span><block class="mac ios" /></span><p>This is a quick-start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck and build your first application from scratch using Buck.</p><p><blockquote>While not a prerequisite for installing Buck itself, in order to build iOS applications, you will also need to install <a href="https://itunes.apple.com/us/app/xcode/id497799835">Xcode</a>.</blockquote></p><span><block class="linux windows android java other" /></span><p>This is a quick-start guide for getting up and running with Buck. This article is light on details, instead focusing on the commands that you need to run to install Buck and build your first application from scratch using Buck.</p><span><block class="linux windows android java other" /></span><p>The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative operating system (macOS, Linux, Windows). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>Emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, and few things are quicker than copy-and-paste!</p><p>Currently, there is no way to download a precompiled binary for Buck.</p><span><block class="windows android java other" /></span><h3>Windows 10 Build and Configuration Requirements</h3><p>[Buck support for Windows 10 is currently in <strong>Beta</strong>]</p><p>In order to use Buck on Windows 10, you need to ensure that your installation of Windows meets the following requirements.</p><h4>Windows version</h4><p>You must be running <strong>Windows 10 build version 1703 or higher</strong>. Run the <code>winver</code> program to view which build version you have. If you are running an earlier version of Windows, work with your IT group to upgrade&mdash;or to install a recent build yourself, use the following Microsoft link:</p><blockquote><a href="https://go.microsoft.com/fwlink/p/?LinkId=821363">Download Windows 10 Disc Image (ISO File)</a></blockquote><h4>Developer mode</h4><p>You must enable developer mode on Windows. For instructions, go to</p><blockquote><a href="https://docs.microsoft.com/en-us/windows/uwp/get-started/enable-your-device-for-development">Enable your device for development</a></blockquote><p>at Microsoft's Windows Developer Center.</p><h4>Long pathnames</h4><p>You must enable long pathnames. There are many articles on the web that provide instructions. The following Stack Exchange article consolidates the relevant information:</p><blockquote><a href="https://superuser.com/questions/1119883/windows-10-enable-ntfs-long-paths-policy-option-missing">Windows 10: Enable NTFS long paths</a></blockquote><h4>Enable symlinks</h4><p>If you are doing development work on the Buck source, you must enable the use of symlinks on Windows. In the <strong>Group Policy Editor</strong>, go to:</p><p><pre>
+Local Computer Policy 
+  Computer Configuration 
+    Windows Settings 
+      Security Settings      
+        Local Policies   
+          User Rights Assignment
+</pre></p><p>You should have a policy called <strong>Create symbolic links</strong>. Enable it for any users who will be running Buck on the local computer. You could enable the accounts of those users specifically or if all those users belong to a Windows security group, you could enable that security group. Restart your computer for this change to take effect.</p><span><block class="windows android" /></span><p><h3>Android SDK and Android NDK</h3><blockquote>While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a> and the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>, which can be installed via <a href="https://chocolatey.org/packages/android-sdk">Chocolatey</a> or manually downloaded and installed.</blockquote></p><span><block class="mac android" /></span><blockquote>While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a> and the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>, which can be installed via <a href="http://brewformulas.org/Android-sdk">Homebrew</a> or manually downloaded and installed.</blockquote><span><block class="linux android" /></span><blockquote>While not a prerequisite for installing Buck itself, to build Android applications, you will also need at least the <a href="https://developer.android.com/studio/index.html">Android SDK</a> and the <a href="https://developer.android.com/ndk/index.html">Android NDK</a>, which can be installed via <code>apt-get</code> (or your distro's package manager)</a> or manually downloaded and installed.</blockquote><span><block class="mac ios android java other" /></span><p>The commands in this guide are designed to be copy-pasteable, idempotent, and usable on its representative operating system (macOS, Linux, Windows). Sometimes this results in some unusual constructions (such as using <code>echo</code> instead of <code>vi</code> or <code>Emacs</code> to create a file). Bear in mind that this is a <em>quick</em> start guide, and few things are quicker than copy-and-paste!</p><span><block class="linux android java other" /></span><h4>Buck requires Java 8</h4><p>Buck currently requires Java&nbsp;8; we are working toward support for future versions.  If you have multiple installations of Java on your development computer, you might get warnings from Buck that you are using an unsupported version of Java. To resolve this issue, set the <code>JAVA_HOME</code> environment variable to the directory for <strong>version&nbsp;8</strong> of the Java Development Kit (JDK). Note that the directory that <code>JAVA_HOME</code> points to should contain a <code>bin</code> subdirectory which in turn contains binaries for the Java compiler (<code>javac</code>) and Java runtime (<code>java</code>).</p><span><block class="windows android java other" /></span><h4>Buck requires Java 8</h4><p>Buck currently requires Java&nbsp;8; we are working toward support for future versions.  If you have multiple installations of Java on your development computer, you might get warnings from Buck that you are using an unsupported version of Java. To resolve this issue, set the <code>JAVA_HOME</code> environment variable to the directory for <strong>version&nbsp;8</strong> of the Java Development Kit (JDK). Note that the directory that <code>JAVA_HOME</code> points to should contain a <code>bin</code> subdirectory which in turn contains binaries for the Java compiler (<code>javac.exe</code>) and Java runtime (<code>java.exe</code>).</p><span><block class="windows android java other" /></span><h2>Install from Chocolatey</h2><p>Buck regularly deploys Windows binaries to <a href="https://chocolatey.org">Chocolatey</a>. Once <a href="https://chocolatey.org/install">Chocolatey is installed</a>, you can install Buck by running:</p><pre>
+choco install buck
+</pre><p>This automatically adds buck to Chocolatey's path, and lets you run commands just by typing <code>buck</code> on the command line.</p><span><block class="mac ios android java other" /></span><h2>Install with Homebrew</h2><p>Buck is available as a bottle on <a href="http://brew.sh/">Homebrew</a>.</p><h3>Prerequisites</h3><ul><li><a href="https://developer.apple.com/xcode/features/">Command Line Tools</a></li><li><p><a href="https://java.com/en/download/">Java Runtime Environment version 8</a> (support for future versions is in the works)</p><p>If you have multiple installations of Java on your development computer, you might get warnings from Buck that you are using an unsupported version of Java. To resolve this issue, set the <code>JAVA_HOME</code> environment variable to the directory for <strong>version 8</strong> of the Java Development Kit (JDK). Note that the directory that <code>JAVA_HOME</code> points to should contain a <code>bin</code> subdirectory which in turn contains binaries for the Java compiler (<code>javac</code>) and Java runtime (<code>java</code>).</p></li></ul><pre>
+# Install command line tools. NOTE: If you have Xcode installed, these may
+# already be installed.
+xcode-select --install
+# Download and Install Java SE 8 from:
++# https://www.oracle.com/technetwork/java/javase/downloads/index.html.
++# This installs the JDK 8, a superset of the JRE.
++# Alternatively, install AdoptOpenJDK 8 with Homebrew Cask:
++brew tap homebrew/cask-cask
++brew tap homebrew/cask-versions
++brew cask install homebrew/cask-versions/adoptopenjdk8
+</pre><span><block class="mac ios" /></span><blockquote><p>If you do not have Xcode installed and you get the following error</p><p><pre>
+error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist
+</pre></p><p>then run</p><p><pre>
+xcode-select --reset 
+</pre></p><p>to reset the command-line tools path to where the command line tools are installed.</blockquote></p><span><block class="mac ios android java other" /></span><h3>Brew install</h3><p>You have two choices when using Homebrew.  You can choose to get the latest binary <a href="https://github.com/facebook/buck/releases/latest">release</a>:</p><pre>
+brew tap facebook/fb
+brew install buck
+</pre>
+<p>Or, you can get the latest code and build it locally:</p><pre>
+brew update
+brew tap facebook/fb
+brew install --HEAD buck
+</pre>
+<h2>Build from Source</h2><h3>Prerequisites</h3><p>To manually build Buck, download and install the following prerequisites:</p><ul><li><a href="https://developer.apple.com/xcode/features/">Command Line Tools</a></li><li><p><a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java Development Kit version 8</a> (support for future versions is in the works)</p></li><li><a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a></li><li><a href="https://www.python.org/downloads/">Python 2.7</a></li><li><a href="http://git-scm.com/download">Git</a></li><li><a href="https://facebook.github.io/watchman/docs/install">Watchman</a></li></ul><blockquote>We strongly recommended that you install Watchman.  With watchman, Buck uses a daemon (<a href="/command/buckd.html">buckd</a>) which prevents Buck from needing to parse all of your <a href="/concept/build_file.html">build files</a> every time you build&mdash;and it caches some other components of your build as well.</blockquote><p>You can use <a href="http://homebrew.sh">Homebrew</a> to install many of the prerequisites on a Mac.</p><pre>
+# Install Command Line tools first. NOTE: If you have Xcode installed, these may
+# already be installed.
+xcode-select --install
+# Then the JDK (superset of the JRE)
+brew update
+brew tap caskroom/cask
+brew tap caskroom/versions
+brew cask install java8
+# Then...
+brew install ant python git watchman
+</pre><span><block class="mac ios" /></span><blockquote><p>If you do not have Xcode installed and you get the following error</p><p><pre>
+error: active developer path ("/Applications/Xcode.app/Contents/Developer") does not exist
+</pre></p><p>then run</p><p><pre>
+xcode-select --reset 
+</pre></p><p>to reset the command-line tools path to where the command line tools are installed.</blockquote></p><span><block class="mac ios java android other" /></span><h3>Build</h3><p>Once you have the above tools installed, you can build Buck as follows:</p><pre>
+git clone https://github.com/facebook/buck.git
+cd buck
+ant
+./bin/buck build --show-output buck
+buck-out/gen/programs/buck.pex --help
+</pre><p>If everything worked correctly, you should see something like:</p><pre>
+buck build tool
+usage:
+  buck [options]
+  buck command --help
+  buck command [command-options]
+available commands:
+  audit       lists the inputs for the specified target
+  build       builds the specified target
+  cache       makes calls to the artifact cache
+  clean       deletes any generated files
+  fetch       downloads remote resources to your local machine
+  install     builds and installs an application
+  kill        kill buckd for the current project
+  killall     kill all buckd processes
+  project     generates project configuration files for an IDE
+  query       provides facilities to query information about the configured target nodes graph
+  root        prints the absolute path to the root of the current buck project
+  run         runs a target as a command
+  server      query and control the http server
+  targets     prints the list of buildable targets
+  test        builds and runs the tests for the specified target
+  uninstall   uninstalls an APK
+  uquery      provides facilities to query information about the unconfigured target nodes graph
+options:
+ --help         : Shows this screen and exits.
+ --version (-V) : Show version number.
+</pre><p>Because you will likely be running <code>./bin/buck</code> often, you should add it to your path so that you can simply run <code>buck</code> from the command line.</p><span><block class="linux windows android java other" /></span><h2>Build from Source</h2><h3>Prerequisites</h3><p>To manually build Buck, download and install the following prerequisites:</p><ul><li><a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle Java Development Kit version 8</a> (support for future versions is in the works)</li><li><a href="http://ant.apache.org/">Apache Ant 1.9 (or newer)</a></li><li><a href="https://www.python.org/downloads/">Python 2.7</a></li><li><a href="http://git-scm.com/download">Git</a></li><li><a href="https://facebook.github.io/watchman/docs/install.html">Watchman</a></li></ul><blockquote>With watchman, Buck will use <a href="/command/buckd.html">a daemon</a> which will prevent Buck from parsing all of your <a href="/concept/build_file.html">build files</a> every time and cache some other things as well. It is strongly recommended that you install Watchman.</blockquote><span><block class="windows android java other" /></span><p>You can use <a href="https://chocolatey.org/">Chocolatey</a> to install many of the prerequisites on Windows.</p><pre>
+choco install jdk8 ant python2 git
+# install watchman as stated in the watchman prerequisite link above
+</pre><span><block class="linux android java other" /></span><p>You can use your distro's package manager (e.g., <code>apt</code>) to install many of the prerequisites on Linux. For example on Ubuntu 16.04, you can run the following:</p><pre>
+sudo apt-get update
+sudo apt-get install default-jdk ant python2 git
+# install watchman as stated in the watchman prerequisite link above
+</pre><p><blockquote>For some distros, the default packages may be older than what you would like. In those cases, either build those packages from source, or find third party repositories beyond the default that is used by <code>apt-get</code> via <code>sudo add-apt-repository</code> (or however you add new repositories on your distro).</blockquote></p><span><block class="mac linux windows android" /></span><h3 id="locate-android-sdk">Set Location of Android SDK and NDK</h3><p>You will need to tell Buck where to find the Android SDK and NDK.</p><p>To find the location of the <strong>Android SDK</strong>, Buck looks at the following values <em>in the following order</em>:<ul><li><code>ANDROID_SDK</code> environment variable</li><li><code>ANDROID_HOME</code> environment variable</li><li><code>ANDROID_SDK_ROOT</code> environment variable</li><li>The value of the <a href="/files-and-dirs/buckconfig.html#android.sdk_path"><code>[android].sdk_path</code></a> property in <code>.buckconfig</code>.</li></ul></p><p>To find the location of a specific <strong>NDK</strong>, Buck looks at the following values <em>in the following order</em>:<ul><li><code>ANDROID_NDK</code> environment variable.</li><li><code>NDK_HOME</code> environment variable.</li><li>The value of the <a href="/files-and-dirs/buckconfig.html#ndk.ndk_path"><code>[ndk].ndk_path</code></a> property in <code>.buckconfig</code>.</li></ul></p><p>If you have <strong>multiple NDKs</strong> installed into a single enclosing directory, you can specify this directory to Buck using either of the following values:<ul><li><code>ANDROID_NDK_REPOSITORY</code> environment variable.</li><li>The <a href="/files-and-dirs/buckconfig.html#ndk.ndk_repository_path"><code>[ndk].ndk_repository_path</code></a> property in <code>.buckconfig</code>.</li></ul>If you specify <em>both</em> the environment variable and the <code>.buckconfig</code> setting, the environment variable takes precedence.</p><p>If you specify an NDK repository, Buck selects the NDK based on the version that you specify in the <a href="/files-and-dirs/buckconfig.html#ndk.ndk_version"><code>[ndk].ndk_version</code></a> property of <code>.buckconfig</code>.</p><span><block class="windows linux android other" /></span><h3>Build</h3><p>Once you have the above tools installed, you can build Buck as follows:</p><span><block class="windows android java other" /></span><pre>
+git clone https://github.com/facebook/buck.git
+cd buck
+ant
+.\bin\buck build --show-output buck
+buck-out\gen\programs\buck.pex --help
+</pre><span><block class="linux android java other" /></span><pre>
+git clone https://github.com/facebook/buck.git
+cd buck
+ant
+./bin/buck build --show-output buck
+buck-out/gen/programs/buck.pex --help
+</pre><span><block class="windows linux android java other" /></span><p>If everything worked correctly, you should see something like:</p><pre>
+buck build tool
+usage:
+  buck [options]
+  buck command --help
+  buck command [command-options]
+available commands:
+  audit       lists the inputs for the specified target
+  build       builds the specified target
+  cache       makes calls to the artifact cache
+  clean       deletes any generated files
+  fetch       downloads remote resources to your local machine
+  install     builds and installs an application
+  kill        kill buckd for the current project
+  killall     kill all buckd processes
+  project     generates project configuration files for an IDE
+  query       provides facilities to query information about the target nodes graph
+  root        prints the absolute path to the root of the current buck project
+  run         runs a target as a command
+  server      query and control the http server
+  targets     prints the list of buildable targets
+  test        builds and runs the tests for the specified target
+  uninstall   uninstalls an APK
+options:
+ --help         : Shows this screen and exits.
+ --version (-V) : Show version number.
+</pre><span><block class="windows android java other" /></span><p>Because you will likely be running <code>.\bin\buck</code> often, you should add it to your path so that you can simply run <code>buck</code> from the command line.</p><span><block class="linux android java other" /></span><p>Because you will likely be running <code>./bin/buck</code> often, you should add it to your path so that you can simply run <code>buck</code> from the command line.</p><span><block class="mac ios" /></span><h2>Trying Buck</h2><p>Now that Buck is installed, it is time to use Buck in a sample project.</p><h3>Clone <a href="https://github.com/fbsamples/bucksamples/">Buck samples repo</a></h3>
+<pre>
+git clone https://github.com/fbsamples/bucksamples.git
+cd bucksamples/cross-platform-scale-2015-demo/
+</pre>
+<h3>Key iOS files</h3><p>This sample app has all the files necessary to use Buck to build an iOS project. From the root directory, you will find:</p><ul><li><p><code>ios/main.m</code>: The main iOS file supported by other views, controllers and associated resources.</p></li><li><p><code>ios/BUCK</code>: The <a href="/concept/build_file.html">build file</a> is what makes Buck work. It defines all the <a href="/concept/build_rule.html">build rule</a>s for your source code. A <a href="/concept/build_rule.html">build rule</a> may also include dependencies (via <code>deps</code>), which may be from other <a href="/concept/build_file.html">build file</a>s.</p></li><li><p><code>.buckconfig</code>: A <a href="/files-and-dirs/buckconfig.html"><code>.buckconfig</code></a> file allows for various flag and alias settings for any project (even beyond iOS) within the root directory.</p></li></ul><h3>Build the iOS sample</h3><p>In order to build the app, you use the <a href="/command/build.html"><code>buck build</code></a> command, specifying your app as the target. The target may be defined in the <a href="/files-and-dirs/buckconfig.html#alias"><code>[alias]</code></a> section in the <code>.buckconfig</code> file or it would be the name of your iOS project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//ios:BuckDemoApp</code>).</p>
+<pre>
+# From the root `cross-platform-scale-2015-demo/` directory
+# demo_app_ios is an alias in .buckconfig for //ios::BuckDemoApp. Either works.
+buck build demo_app_ios
+</pre>
+<p>You should see output similar to:</p>
+<pre>
+buck build demo_app_ios
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.7s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+</pre>
+<p><blockquote>The first time you build, you will most likely see a longer time and cache misses. Subsequent builds should be much faster, with minimal cache misses.</blockquote></p><p>Buck outputs its results in the <code>buck-out/</code> directory.</p><h3>Run the Built iOS App</h3><p>Now that you know your app has built successfully, you can install and run the app with <a href="/command/install.html"><code>buck install</code></a>. This command both compiles and installs the application on the iOS simulator. Using the <code>--run</code> flag will launch the simulator as well.</p>
+<pre>
+buck install --run demo_app_ios
+Successfully launched demo_app_ios. To debug, run: lldb -p 50240
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.3s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+[-] INSTALLING...FINISHED 38.7s
+</pre>
+<h3>Success!</h3><p>If all goes well, you should see something similar to:</p><div><img src="../static/ios-hello-buck.png" alt="iOS Hello Buck" /></div><span><block class="mac linux windows android" /></span><h2>Trying Buck</h2><p>Now that Buck is installed, it is time to use Buck in a sample project.</p><h3>Clone <a href="https://github.com/fbsamples/bucksamples/">Buck samples repo</a></h3>
+<pre>
+git clone https://github.com/fbsamples/bucksamples.git
+cd bucksamples/cross-platform-scale-2015-demo/
+</pre>
+<h3>Key Android Files</h3><p>This sample app has all the files necessary to use Buck to build an Android project. From the root directory, you will find:</p><ul><li><p><code>android/java/com/facebook/buck/demo/Hello.java</code>: The main Java file supported by other associated resources.</p></li><li><p><code>android/BUCK</code>: The <a href="/concept/build_file.html">build file</a> is what makes Buck work. It defines all the <a href="/concept/build_rule.html">build rule</a>s for your source code. A <a href="/concept/build_rule.html">build rule</a> can also include dependencies (generally via <code>deps</code>), which may be from other <a href="/concept/build_file.html">build file</a>s, as in the case of this app.</p></li><li><p><code>.buckconfig</code>: A <a href="/files-and-dirs/buckconfig.html"><code>.buckconfig</code></a> file allows for various flag and alias settings for any project (even beyond Android) within the root directory.</p></li></ul><h3>Configure the environment</h3><p>Before building an app you need to configure environment variables to let Buck know the locations of Android SDK and Android NDK.</p><p>First of all, check for existing variables:</p>
+<pre>
+$ env | grep ANDROID_
+ANDROID_HOME=&lt;path-to-sdk&gt;
+ANDROID_NDK_REPOSITORY=&lt;path-to-ndk&gt;
+ANDROID_SDK=&lt;path-to-sdk&gt;
+ANDROID_SDK_ROOT=&lt;path-to-sdk&gt;
+</pre>
+<p>Set the missing variables to the locations of Android SDK and Android NDK or set the paths in your <a href="/files-and-dirs/buckconfig.html"><code>.buckconfig</code></a> file.</p><p>Before building make sure you installed correct build tools and a target in Android SDK and correct version of Android NDK. You can find the required versions of these tools in <a href="/files-and-dirs/buckconfig.html"><code>.buckconfig</code></a>:</p><ul><li>See <a href="/files-and-dirs/buckconfig.html#android.build_tools_version"><code>[android].build_tools_version</code></a> to get the version of build tools in Android SDK.</li><li><a href="/files-and-dirs/buckconfig.html#android.compile_sdk_version"><code>[android].compile_sdk_version</code></a> points to the Android SDK to build against.</li><li><a href="/files-and-dirs/buckconfig.html#ndk.ndk_version"><code>[ndk].ndk_version</code></a> points to the version of Android NDK.</li></ul>Optionally:<ul><li><a href="/files-and-dirs/buckconfig.html#android.sdk_path"><code>[android].sdk_path</code></a> is an absolute path to the Android SDK.</li><li><a href="/files-and-dirs/buckconfig.html#ndk.ndk_path"><code>[ndk].ndk_path</code></a> is an absolute path to the Android NDK.</li><li><a href="/files-and-dirs/buckconfig.html#ndk.ndk_repository_path"><code>[ndk].ndk_repository_path</code></a> is an absolute path to a directory that contains multiple Android NDKs in subdirectories. Buck selects which NDK to use based on the value of the <a href="/files-and-dirs/buckconfig.html#ndk.ndk_version"><code>[ndk].ndk_version</code></a> property in <code>.buckconfig</code>.</li></ul><h3>Build the Android sample</h3><p>In order to build the app, you use the <a href="/command/build.html"><code>buck build</code></a>command, specifying your app as the target. The target may be defined in the <a href="/files-and-dirs/buckconfig.html#alias"><code>[alias]</code></a> section in the <a href="/files-and-dirs/buckconfig.html"><code>.buckconfig</code></a> file or it would be the name of your Android project prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//android:demo-app</code>).</p>
+<pre>
+# From the root `cross-platform-scale-2015-demo/` directory
+# demo_app_android is an alias in .buckconfig for //android:demo-app. Either works.
+buck build demo_app_android
+</pre>
+<p>You should see output similar to:</p>
+<pre>
+export ANDROID_NDK=$HOME/android-sdk
+buck build demo_app_android
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.7s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+</pre>
+<p><blockquote>The first time you build, you will most likely see a longer time and cache misses. Subsequent builds should be much faster, with minimal cache misses.</blockquote></p><p>Buck outputs its results in the <code>buck-out/</code> directory.</p><h3>Run the built Android App</h3><p>Now that you know your app has built successfully, you can install and run the app with <a href="/command/install.html"><code>buck install</code></a>. This command both compiles and installs the application on the Android emulator. Using the <code>--run</code> flag will launch the emulator as well.</p>
+<pre>
+buck install --run demo_app_android
+Installing apk on emulator-5554 (android-emulator).
+[-] PROCESSING BUCK FILES...FINISHED 0.1s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.8s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+[+] INSTALLING...0.9s
+Successfully ran install apk //android:demo-app on 1 device(s)
+Starting activity com.facebook.buck.demo/.App...
+Successfully ran start activity on 1 device(s)
+</pre>
+<p><blockquote>If you get an error either that you do not have certain Android add-ons (e.g., Google APIs) or that there is no emulator to run, you should launch the Android SDK Manager (e.g., <code>android sdk</code>) and install the appropriate packages and/or run your emulator (usually found under <code>Tools | Manage AVDs</code>).</blockquote></p><h3>Success!</h3><p>If all goes well, you should see something similar to:</p><div><img src="../static/android-hello-buck.png" alt="iOS Hello Buck" /></div><span><block class="mac linux windows java" /></span><h2>Trying Buck</h2><p>Now that Buck is installed, it is time to use Buck in a sample project. In particular, we are going to build a simple Java "Hello Buck" library and application.</p><h3>Clone <a href="https://github.com/fbsamples/bucksamples/">Buck samples repo</a></h3>
+<pre>
+git clone https://github.com/fbsamples/bucksamples.git
+cd bucksamples/hello-buck-java/
+</pre>
+<h3>Key Java Files</h3><p>We are going to be building a Java application that prints out "Hello Buck". The code to build the application consists of both a library and app component. To build this Java application, the code you cloned has all the files necessary. From the <code>hello-buck-java</code> directory, you will find:</p><ul><li><p><code>com/facebook/buck/demo/HelloBuckJava.java</code>: The main Java application file.</p></li><li><p><code>com/facebook/buck/demo/HelloStringJava.java</code>: A simple Java library with one function that the main app calls.</p></li><li><p><code>com/facebook/buck/demo/BUCK</code>: This <a href="/concept/build_file.html">build file</a> is what makes Buck work and is the trigger for building the application. It defines all the <a href="/concept/build_rule.html">build rule</a>s for your source code. The key rules you will see in this file is <a href="/rule/java_binary.html"><code>java_binary</code></a> and <a href="/rule/java_library.html"><code>java_library</code></a>. A <a href="/concept/build_rule.html">build rule</a> may also include dependencies (generally via <code>deps</code>), which may be from other <a href="/concept/build_file.html">build file</a>s.</p></li><li><p><code>.buckconfig</code>: A <a href="/files-and-dirs/buckconfig.html"><code>.buckconfig</code></a> file allows for various flag and alias settings for any project (even beyond this Java application, if they existed) within the <code>hello-buck-java</code> directory.</p></li></ul><h3>Build the Java application</h3><p>In order to build the library, you use the <a href="/command/build.html"><code>buck build</code></a> command, specifying your app as the target. The target may be defined in the <a href="/files-and-dirs/buckconfig.html#alias"><code>[alias]</code></a> section in the <code>.buckconfig</code> file or it would be the name of your Java application prepended by <code>//[the directory where your project is located]:</code> (e.g., <code>//com/facebook/buck/demo:hello-buck-java</code>).</p>
+<pre>
+# From the root `hello-buck-java/` directory
+# hello_buck_java is an alias in .buckconfig for //com/facebook/buck/demo:hello-buck-java. Either works.
+buck build hello_buck_java
+</pre>
+<p>You should see output similar to:</p>
+<pre>
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.8s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+</pre>
+<p><blockquote>The first time you build, you will most likely see a longer time and cache misses. Subsequent builds should be much faster, with minimal cache misses.</blockquote></p><p>Buck outputs its results in the <code>buck-out/</code> directory.</p><h3>Run the Built Java Application</h3><p>Now that you know your app has built successfully, you can install and run the app with <a href="/command/run.html"><code>buck run</code></a>. This command both compiles and runs the application.</p>
+<pre>
+buck run hello_buck_java
+[-] PROCESSING BUCK FILES...FINISHED 0.0s [100%]
+[-] DOWNLOADING... (0.00 B/S AVG, TOTAL: 0.00 B, 0 Artifacts)
+[-] BUILDING...FINISHED 0.4s [100%] (1/1 JOBS, 0 UPDATED, 0 [0.0%] CACHE MISS)
+Hello Buck
+</pre>
+<h3>Success!</h3><p>If all goes well, you should see something similar to:</p><p><code>Hello Buck</code></p></div>
+<script>
+// Convert <div>...<span><block /></span>...</div>
+// Into <div>...<block />...</div>
+var blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  var span = blocks[i].parentNode;
+  var container = span.parentNode;
+  container.insertBefore(block, span);
+  container.removeChild(span);
+}
+// Convert <div>...<block />content<block />...</div>
+// Into <div>...<block>content</block><block />...</div>
+blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
+    block.appendChild(block.nextSibling);
+  }
+}
+function display(type, value) {
+  var container = document.getElementsByTagName('block')[0].parentNode;
+  container.className = 'display-' + type + '-' + value + ' ' +
+    container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
+}
+
+// If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
+// us as close as possible to the correct platform and dev os using the hashtag and block walk up.
+var foundHash = false;
+if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
+  var hashLinks = document.querySelectorAll('a.hash-link');
+  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
+    if (hashLinks[i].hash === window.location.hash) {
+      var parent = hashLinks[i].parentElement;
+      while (parent) {
+        if (parent.tagName === 'BLOCK') {
+          var devOS = null;
+          var targetPlatform = null;
+          // Could be more than one target os and dev platform, but just choose some sort of order
+          // of priority here.
+
+          // Dev OS
+          if (parent.className.indexOf('mac') > -1) {
+            devOS = 'mac';
+          } else if (parent.className.indexOf('linux') > -1) {
+            devOS = 'linux';
+          } else if (parent.className.indexOf('windows') > -1) {
+            devOS = 'windows';
+          } else {
+            break; // assume we don't have anything.
+          }
+
+          // Target Platform
+          if (parent.className.indexOf('ios') > -1) {
+            targetPlatform = 'ios';
+          } else if (parent.className.indexOf('android') > -1) {
+            targetPlatform = 'android';
+          } else if (parent.className.indexOf('java') > -1) {
+            targetPlatform = 'java';
+          } else {
+            break; // assume we don't have anything.
+          }
+          // We would have broken out if both targetPlatform and devOS hadn't been filled.
+          display('os', devOS);
+          display('platform', targetPlatform);
+          foundHash = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+    }
+  }
+}
+// Do the default if there is no matching hash
+if (!foundHash) {
+  var isMac = navigator.platform.toLowerCase().indexOf('mac') !== -1;
+  var isLinux = navigator.platform.toLowerCase().indexOf('linux') !== -1;
+  display('os', isMac ? 'mac' : (isLinux ? 'linux' : 'windows'));
+  display('platform', 'android');
+}
+</script>
+</article><nav><h3>The Basics</h3><ul><li class="navActiveItem"><a href="/setup/getting_started.html">Getting Started</a></li><li class=""><a href="/about/overview.html">Key Concepts</a></li><li class=""><a href="/learning/tutorial.html">Tutorial</a></li><li class=""><a href="/setup/intellij_plugin_install.html">Installing the IntelliJ Plugin</a></li><li class=""><a href="/article/exopackage.html">Exopackage</a></li><li class=""><a href="/article/query_cheat_sheet.html">Buck Cheat Sheet</a></li></ul><h3>About</h3><ul><li class=""><a href="/concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a></li><li class=""><a href="/about/showcase.html">Showcase</a></li><li class=""><a href="/concept/troubleshooting.html">Troubleshooting</a></li><li class=""><a href="/about/performance_tuning.html">Performance Tuning</a></li><li class=""><a href="/concept/faq.html">FAQ</a></li><li class=""><a href="/presentations/index.html">Learn More (Buck Presentations)</a></li></ul><h3>Concepts</h3><ul><li class=""><a href="/concept/build_rule.html">Build Rule</a></li><li class=""><a href="/concept/build_file.html">Build File</a></li><li class=""><a href="/concept/build_target.html">Build Target</a></li><li class=""><a href="/concept/build_target_pattern.html">Build Target Pattern</a></li><li class=""><a href="/concept/buckd.html">Buck Daemon (buckd)</a></li><li class=""><a href="/concept/visibility.html">Visibility</a></li><li class=""><a href="/concept/flavors.html">Flavors</a></li><li class=""><a href="/concept/http_cache_api.html">HTTP Cache API</a></li><li class=""><a href="/concept/rule_keys.html">Rule Keys</a></li><li class=""><a href="/concept/java_abis.html">Java ABIs</a></li><li class=""><a href="/concept/skylark.html">Skylark</a></li></ul><h3>Files and Directories</h3><ul><li class=""><a href="/files-and-dirs/buckconfig.html">.buckconfig</a></li><li class=""><a href="/files-and-dirs/buckjavaargs.html">.buckjavaargs</a></li><li class=""><a href="/files-and-dirs/buck-out.html">buck-out</a></li></ul><h3>Commands</h3><ul><li class=""><a href="/command/common_parameters.html">Common Parameters</a></li><li class=""><a href="/command/audit.html">buck audit</a></li><li class=""><a href="/command/build.html">buck build</a></li><li class=""><a href="/command/clean.html">buck clean</a></li><li class=""><a href="/command/doctor.html">buck doctor</a></li><li class=""><a href="/command/fetch.html">buck fetch</a></li><li class=""><a href="/command/fix.html">buck fix</a></li><li class=""><a href="/command/install.html">buck install</a></li><li class=""><a href="/command/kill.html">buck kill</a></li><li class=""><a href="/command/killall.html">buck killall</a></li><li class=""><a href="/command/project.html">buck project</a></li><li class=""><a href="/command/publish.html">buck publish</a></li><li class=""><a href="/command/query.html">buck query</a></li><li class=""><a href="/command/run.html">buck run</a></li><li class=""><a href="/command/root.html">buck root</a></li><li class=""><a href="/command/server.html">buck server</a></li><li class=""><a href="/command/targets.html">buck targets</a></li><li class=""><a href="/command/test.html">buck test</a></li><li class=""><a href="/command/uninstall.html">buck uninstall</a></li><li class=""><a href="/command/exit_codes.html">Exit Codes</a></li></ul><h3>Build Rules</h3><ul><li><strong>Core</strong></li><li class=""><a href="/rule/command_alias.html">command_alias()</a></li><li class=""><a href="/rule/export_file.html">export_file()</a></li><li class=""><a href="/rule/filegroup.html">filegroup()</a></li><li class=""><a href="/rule/genrule.html">genrule()</a></li><li class=""><a href="/rule/http_archive.html">http_archive()</a></li><li class=""><a href="/rule/http_file.html">http_file()</a></li><li class=""><a href="/rule/remote_file.html">remote_file()</a></li><li class=""><a href="/rule/test_suite.html">test_suite()</a></li><li class=""><a href="/rule/worker_tool.html">worker_tool()</a></li><li class=""><a href="/rule/zip_file.html">zip_file()</a></li><li><strong>Android</strong></li><li class=""><a href="/rule/android_aar.html">android_aar()</a></li><li class=""><a href="/rule/android_binary.html">android_binary()</a></li><li class=""><a href="/rule/android_build_config.html">android_build_config()</a></li><li class=""><a href="/rule/android_instrumentation_apk.html">android_instrumentation_apk()</a></li><li class=""><a href="/rule/android_instrumentation_test.html">android_instrumentation_test()</a></li><li class=""><a href="/rule/android_library.html">android_library()</a></li><li class=""><a href="/rule/android_manifest.html">android_manifest()</a></li><li class=""><a href="/rule/android_prebuilt_aar.html">android_prebuilt_aar()</a></li><li class=""><a href="/rule/android_resource.html">android_resource()</a></li><li class=""><a href="/rule/apk_genrule.html">apk_genrule()</a></li><li class=""><a href="/rule/gen_aidl.html">gen_aidl()</a></li><li class=""><a href="/rule/keystore.html">keystore()</a></li><li class=""><a href="/rule/ndk_library.html">ndk_library()</a></li><li class=""><a href="/rule/prebuilt_jar.html">prebuilt_jar()</a></li><li class=""><a href="/rule/prebuilt_native_library.html">prebuilt_native_library()</a></li><li class=""><a href="/rule/robolectric_test.html">robolectric_test()</a></li><li><strong>CXX</strong></li><li class=""><a href="/rule/cxx_binary.html">cxx_binary()</a></li><li class=""><a href="/rule/cxx_library.html">cxx_library()</a></li><li class=""><a href="/rule/cxx_genrule.html">cxx_genrule()</a></li><li class=""><a href="/rule/cxx_precompiled_header.html">cxx_precompiled_header()</a></li><li class=""><a href="/rule/cxx_test.html">cxx_test()</a></li><li class=""><a href="/rule/prebuilt_cxx_library.html">prebuilt_cxx_library()</a></li><li class=""><a href="/rule/prebuilt_cxx_library_group.html">prebuilt_cxx_library_group()</a></li><li><strong>D</strong></li><li class=""><a href="/rule/d_binary.html">d_binary()</a></li><li class=""><a href="/rule/d_library.html">d_library()</a></li><li class=""><a href="/rule/d_test.html">d_test()</a></li><li><strong>Go</strong></li><li class=""><a href="/rule/go_binary.html">go_binary()</a></li><li class=""><a href="/rule/go_library.html">go_library()</a></li><li class=""><a href="/rule/go_test.html">go_test()</a></li><li class=""><a href="/rule/cgo_library.html">cgo_library()</a></li><li><strong>Groovy</strong></li><li class=""><a href="/rule/groovy_library.html">groovy_library()</a></li><li><strong>Halide</strong></li><li class=""><a href="/rule/halide_library.html">halide_library()</a></li><li><strong>Haskell</strong></li><li class=""><a href="/rule/haskell_binary.html">haskell_binary()</a></li><li class=""><a href="/rule/haskell_library.html">haskell_library()</a></li><li class=""><a href="/rule/prebuilt_haskell_library.html">prebuilt_haskell_library()</a></li><li><strong>iOS</strong></li><li class=""><a href="/rule/apple_asset_catalog.html">apple_asset_catalog()</a></li><li class=""><a href="/rule/apple_binary.html">apple_binary()</a></li><li class=""><a href="/rule/apple_bundle.html">apple_bundle()</a></li><li class=""><a href="/rule/apple_library.html">apple_library()</a></li><li class=""><a href="/rule/apple_package.html">apple_package()</a></li><li class=""><a href="/rule/apple_resource.html">apple_resource()</a></li><li class=""><a href="/rule/apple_test.html">apple_test()</a></li><li class=""><a href="/rule/core_data_model.html">core_data_model()</a></li><li class=""><a href="/rule/prebuilt_apple_framework.html">prebuilt_apple_framework()</a></li><li><strong>Java</strong></li><li class=""><a href="/rule/java_binary.html">java_binary()</a></li><li class=""><a href="/rule/java_library.html">java_library()</a></li><li class=""><a href="/rule/java_test.html">java_test()</a></li><li class=""><a href="/rule/prebuilt_jar.html">prebuilt_jar()</a></li><li class=""><a href="/rule/prebuilt_native_library.html">prebuilt_native_library()</a></li><li><strong>Kotlin</strong></li><li class=""><a href="/rule/kotlin_library.html">kotlin_library()</a></li><li class=""><a href="/rule/kotlin_test.html">kotlin_test()</a></li><li><strong>Lua</strong></li><li class=""><a href="/rule/cxx_lua_extension.html">cxx_lua_extension()</a></li><li class=""><a href="/rule/lua_binary.html">lua_binary()</a></li><li class=""><a href="/rule/lua_library.html">lua_library()</a></li><li><strong>OCaml</strong></li><li class=""><a href="/rule/ocaml_binary.html">ocaml_binary()</a></li><li class=""><a href="/rule/ocaml_library.html">ocaml_library()</a></li><li><strong>Python</strong></li><li class=""><a href="/rule/prebuilt_python_library.html">prebuilt_python_library()</a></li><li class=""><a href="/rule/python_binary.html">python_binary()</a></li><li class=""><a href="/rule/python_library.html">python_library()</a></li><li class=""><a href="/rule/python_test.html">python_test()</a></li><li><strong>Rust</strong></li><li class=""><a href="/rule/rust_binary.html">rust_binary()</a></li><li class=""><a href="/rule/rust_library.html">rust_library()</a></li><li class=""><a href="/rule/rust_test.html">rust_test()</a></li><li class=""><a href="/rule/prebuilt_rust_library.html">prebuilt_rust_library()</a></li><li><strong>Shell</strong></li><li class=""><a href="/rule/sh_binary.html">sh_binary()</a></li><li class=""><a href="/rule/sh_test.html">sh_test()</a></li><li><strong>.NET</strong></li><li class=""><a href="/rule/csharp_library.html">csharp_library()</a></li><li class=""><a href="/rule/prebuilt_dotnet_library.html">prebuilt_dotnet_library()</a></li></ul><h3>Functions</h3><ul><li><strong>Python DSL</strong></li><li class=""><a href="/function/add_build_file_dep.html">add_build_file_dep()</a></li><li class=""><a href="/function/allow_unsafe_import.html">allow_unsafe_import()</a></li><li class=""><a href="/function/flatten_dicts.html">flatten_dicts()</a></li><li class=""><a href="/function/glob.html">glob()</a></li><li class=""><a href="/function/get_base_path.html">get_base_path()</a></li><li class=""><a href="/function/get_cell_name.html">get_cell_name()</a></li><li class=""><a href="/function/host_info.html">host_info()</a></li><li class=""><a href="/function/include_defs.html">include_defs()</a></li><li class=""><a href="/function/load.html">load()</a></li><li class=""><a href="/function/read_config.html">read_config()</a></li><li class=""><a href="/function/subdir_glob.html">subdir_glob()</a></li><li class=""><a href="/function/string_parameter_macros.html">String Parameter Macros</a></li></ul><ul><li><strong>Skylark</strong></li><li class=""><a href="/skylark/generated/glob.html">glob()</a></li><li class=""><a href="/skylark/generated/host_info.html">host_info()</a></li><li class=""><a href="/skylark/generated/package_name.html">package_name()</a></li><li class=""><a href="/skylark/generated/provider.html">provider()</a></li><li class=""><a href="/skylark/generated/read_config.html">read_config()</a></li><li class=""><a href="/skylark/generated/repository_name.html">repository_name()</a></li><li class=""><a href="/skylark/generated/rule_exists.html">rule_exists()</a></li></ul><h3>Extending Buck</h3><ul><li class=""><a href="/extending/macros.html">Custom Macros</a></li><li class=""><a href="/extending/rules.html">Custom Rules</a></li><li class=""><a href="/extending/e2e_tests.html">Building E2E Tests for Buck</a></li></ul></nav></div></section><footer><div class='width'>&copy; Copyright Facebook, 2013 - 2020</div></footer><!-- Algolia Search Code --><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+docsearch({
+  apiKey: 'c25b7174e8f6161ce5fdd44bb0b95081',
+  indexName: 'buckbuild',
+  inputSelector: '#algolia-doc-search',
+  debug: false // Set debug to true if you want to inspect the dropdown
+});
+</script><!-- End Algolia Search Code --></body></html>

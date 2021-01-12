@@ -1,0 +1,594 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/* mobile first */
+
+* {
+  padding: 0;
+  margin: 0;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizelegibility;
+  background-color: #fafafa;
+  overflow-y: scroll;
+}
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, 'lucida grande', tahoma, verdana, arial, sans-serif;
+  color: #4e5665;
+  margin: 0;
+  line-height: 1.5em;
+}
+
+h1, h2, h3, h4 {
+  color: #374665;
+  font-weight: normal;
+  margin: 1.5em 0 0.5em;
+}
+
+h1:first-child, h2:first-child, h3:first-child, h4:first-child {
+  margin-top: 0;
+}
+
+h1 {
+  font-size: 1.6em;
+}
+
+.subtitle {
+  font-size: 80%;
+  padding-top: 10px;
+}
+
+.warning-banner {
+  color: red
+}
+
+h2 {
+  font-size: 1.4em;
+}
+
+h3 {
+  font-size: 1.3em;
+}
+
+h4 {
+  font-size: 1.2em;
+}
+
+p, pre, ul, ol {
+    margin:  0 0 1em 0;
+}
+
+/*  
+ *
+ *  Override pre.prettyprint from
+ *
+ *    google-code-prettify/prettify.css
+ *  
+ *  in order to make the non-code aspects 
+ *  of our code blocks all share the same 
+ *  styling.
+ *
+ */
+pre, pre.prettyprint {
+    border: 1px solid #ededed;
+    padding: 0.5em 1em;
+    overflow-x: auto;
+    background: #fff;
+    border-radius: 2px;
+    line-height: 1.5em;
+}
+
+code {
+    background: #fff;
+    letter-spacing: 0.02em;
+    border: 1px solid #ededed;
+    border-radius: 3px;
+    padding-top: 0.0em;
+    padding-bottom: 0.01em;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
+}
+
+/*
+ *  
+ *  Use this class for code-formatted text that is not inline and also
+ *  not in a code block, for example, code-formatted text in a table
+ *  cell, where drawing a box around the code--as in the standard `code`
+ *  style above--looks redundant and somewhat strange: boxes inside
+ *  boxes.
+ *  
+ */
+code.not-inline {
+    background: #fff;
+    letter-spacing: 0.02em;
+    border: none;
+    border-radius: 3px;
+    padding: 0.1em;
+}
+
+pre, code {
+    font-size: 14px;
+}
+
+table {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+th {
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    background: #eee;
+}
+
+th code {
+    background: inherit;
+}
+
+td {
+    border: 1px solid #ccc;
+    padding: 0 0.5em;
+}
+
+/*
+ * Use a class to scope styling specifically for the exit-codes.
+ *
+ * The styling from the incumbent styling (above) is not being
+ * expressed in the tables on the exit-codes page. I suspect that 
+ * I am getting collisions from styling for <table> elsewhere.
+ *
+ * Note that the styling specified above also does not show up 
+ * correctly in the Exopackage and HTTP Cache API topics.
+ * 
+ * I will take a task to debug this global CSS issue as a separate
+ * issue.
+*/
+
+table.exit-codes {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+td.exit-codes {
+    border: 1px solid #ccc;
+    padding: 0 0.5em;
+}
+
+ul, ol {
+ list-style-position: outside;
+ margin-left: 1em;
+ padding-left: 1em;
+}
+
+a {
+  text-decoration: none;
+  color: #3A5CA9;
+}
+
+a:hover {
+  font-weight: bold;
+}
+
+.width {
+  margin: 0 auto !important;
+  padding: 0 20px !important;
+}
+
+.warning {
+  color: #A00;
+}
+
+header:after, section.content:after, footer:after {
+  clear: both;
+  content: ".";
+  display: block;
+  font-size: 0;
+  height: 0;
+  line-height: 0;
+  visibility: hidden;
+}
+
+header.topbar {
+  background: #000;
+  padding: 10px 0;
+  border-bottom: solid 4px #fff;
+}
+
+header.topbar h1 {
+  background-image: url(logo.png);
+  background-size: 150px 75px;
+  background-position: -15px 50%;
+  background-repeat: no-repeat;
+  float: left;
+  line-height: 60px;
+  margin: 0 10px 0 0;
+  overflow: hidden;
+  text-indent: 100%;
+  white-space: nowrap;
+  width: 240px;
+}
+
+header.topbar nav ul {
+  float: right;
+  text-align: right;
+  margin: 0 0 0 10px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+header.topbar nav ul li {
+  display: inline;
+  text-transform: uppercase;
+}
+
+header.topbar nav ul li a {
+  color: #fff;
+  font-size: 12px;
+  margin: 0 0 0 10px;
+  text-decoration: none;
+  font-weight: bold;
+  line-height: 60px;
+}
+
+header.topbar nav ul li a:active {
+  color: #3A5CA9;
+}
+
+header.hero {
+  background-color: #4566a4;
+  padding: 20px 0;
+  border-bottom: solid 4px #fff;
+  text-align: center;
+}
+
+header.hero hgroup h1 {
+  font-size: 1.4em;
+  font-weight: normal;
+  color: #fff;
+  margin: 0;
+  line-height: 2em;
+}
+
+button, a.button {
+  background: #102747;
+  color: #fff;
+  font-weight: bold;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  display: inline-block;
+  margin-top: 1em;
+  border: 0;
+  cursor: pointer;
+}
+
+header.hero aside {
+  display: none;
+}
+
+header.hero aside > * {
+  max-width: 100%;
+}
+
+section.content {
+  padding: 30px 0 60px 0;
+}
+
+section.content article img,
+section.content landing-page img {
+  max-width: 100%;
+}
+
+section.content article h1,
+section.content landing-page h1 {
+  font-weight: bold;
+}
+
+section.content article h2,
+section.content landing-page h2 {
+  color: #888888;
+  font-weight: bold;
+}
+
+section.content article ul li,
+section.content article ol li,
+section.content landing-page ul li,
+section.content landing-page ol li
+ {
+  margin: 1em 0;
+}
+
+section.content article ul.tight-list li,
+section.content article ol.tight-list li,
+section.content landing-page ul.tight-list li,
+section.content landing-page ol.tight-list li {
+  margin: 0;
+}
+
+section.content article blockquote,
+section.content landing-page blockquote {
+  padding: 0px 20px;
+  margin: 0 0 20px;
+  border-left: 5px solid #eee;
+}
+
+section.content article blockquote p,
+section.content landing-page blockquote p {
+  font-style: italic;
+}
+
+section.content article blockquote small:before,
+section.content landing-page blockquote small:before {
+  content: '\2014 \00A0';
+}
+
+section.content nav {
+    font-size: 12px;
+    line-height: 18px;
+    margin-bottom: 20px;
+}
+
+section.content nav h3 {
+    margin: 0.5em 0;
+    padding-top: 0.5em;
+    border-top: 1px solid #ccc;
+}
+
+section.content nav h3:first-child {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+section.content nav ul {
+   list-style: none;
+   margin: 0;
+   padding-left: 1em;
+}
+
+section.content nav ul li a {
+  margin-left: 1em;
+}
+
+section.content nav ul li.navActiveItem {
+  background-color: black;
+  border-top-right-radius: 10em;
+  border-bottom-right-radius: 10em;
+  font-weight: bold;
+}
+section.content nav ul li.navActiveItem a {
+  color: white;
+}
+
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 0;
+  background-color: #000;
+  color: #fff;
+  border-top: 4px solid #fff;
+}
+
+.success {
+  color: black;
+  background-color: green;
+}
+
+.arglist, .top-level-list {
+  -webkit-padding-start: 20px;
+}
+
+.arg {
+  list-style-type: square;
+  margin-bottom: 0.5em;
+}
+.arg code.argName {
+  font-weight: bolder;
+}
+.arg span.argDefault {
+  font-size: smaller;
+}
+
+.build_target_ex {
+  font-size: 36px;
+  font-family: monospace;
+}
+
+.faq {
+  margin-bottom: 1em;
+}
+
+.faq_q {
+  font-weight: bold;
+}
+
+.inline-link {
+  font-size: small;
+  vertical-align: top;
+  display: none;
+}
+
+:hover > .inline-link {
+  display: inline;
+}
+
+/* For use in a <td> */
+.measurement {
+  text-align: right;
+}
+
+.companyShowcase h2,
+.companyShowcase div {
+  text-align: center;
+}
+.itemShowcase {
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+.itemShowcase .showcaseItem {
+  text-align: center;
+  display: inline-block;
+  width: 175px;
+  margin: 0;
+  padding: 10px;
+  vertical-align: top;
+}
+.itemShowcase .showcaseItem img {
+  width: 100px;
+  border-radius: 20px;
+}
+
+/* tabletish */
+
+@media (min-width: 480px) {
+
+  header.topbar nav ul li a {
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    margin-left: 20px;
+  }
+
+}
+
+/* desktopish */
+
+@media (min-width: 1000px) {
+
+  header.topbar nav ul li a {
+    font-size: 15px;
+    margin-left: 30px;
+  }
+
+  .width {
+    width: 960px;
+    /* make columns add to <880 for 60 gutter */
+  }
+
+
+  header.hero hgroup {
+    float: left;
+    width: 438px;
+    text-align: left;
+  }
+
+  header.hero hgroup h1 {
+    font-size: 2em;
+  }
+
+  header.hero aside {
+    display: block;
+    float: right;
+    width: 442px;
+  }
+
+  header.hero aside img {
+    border: 1px solid #fff;
+  }
+
+  section.content article {
+    float: right;
+    width: 660px;
+  }
+
+  section.content landing-page {
+    float: left;
+    width: 660px;
+  }
+
+  section.content nav {
+    float: left;
+    width: 220px;
+  }
+
+}
+
+/* Toggler like on getting started */
+
+.toggler a {
+  display: inline-block;
+  padding: 10px 5px;
+  margin: 2px;
+  border: 1px solid #05A5D1;
+  border-radius: 3px;
+  text-decoration: none !important;
+}
+
+.toggler table {
+  border-collapse: collapse;
+}
+
+.toggler table, .toggler td, .toggler th {
+  border: 0;
+}
+
+.display-os-mac .toggler .button-mac,
+.display-os-linux .toggler .button-linux,
+.display-os-windows .toggler .button-windows,
+.display-platform-ios .toggler .button-ios,
+.display-platform-android .toggler .button-android,
+.display-platform-other .toggler .button-other,
+.display-platform-java .toggler .button-java,
+.disp-os-mac .toggler .button-mac,
+.disp-os-linux .toggler .button-linux,
+.disp-os-windows .toggler .button-windows,
+.disp-platform-ios .toggler .button-ios,
+.disp-platform-android .toggler .button-android,
+.disp-platform-macos .toggler .button-macos,
+.disp-platform-linuxos .toggler .button-linuxos,
+.disp-language-java .toggler .button-java,
+.disp-language-kotlin .toggler .button-kotlin,
+.disp-language-rust .toggler .button-rust {
+  background-color: #05A5D1;
+  color: white;
+}
+
+block {
+  display: none;
+}
+
+.disp-platform-android.disp-os-mac.disp-language-java .android.mac.java,
+.disp-platform-android.disp-os-linux.disp-language-java .android.linux.java,
+.disp-platform-android.disp-os-mac.disp-language-kotlin .android.mac.kotlin,
+.disp-platform-android.disp-os-linux.disp-language-kotlin .android.linux.kotlin,
+.disp-platform-macos.disp-os-mac.disp-language-rust .macos.mac.rust,
+.disp-platform-linuxos.disp-os-linux.disp-language-rust .linuxos.linux.rust,
+.display-platform-ios.display-os-mac .ios.mac,
+.display-platform-ios.display-os-linux .ios.linux,
+.display-platform-ios.display-os-windows .ios.windows,
+.display-platform-android.display-os-mac .android.mac,
+.display-platform-android.display-os-linux .android.linux,
+.display-platform-android.display-os-windows .android.windows,
+.display-platform-other.display-os-mac .other.mac,
+.display-platform-other.display-os-linux .other.linux,
+.display-platform-other.display-os-windows .other.windows,
+.display-platform-java.display-os-mac .java.mac,
+.display-platform-java.display-os-linux .java.linux,
+.display-platform-java.display-os-windows .java.windows {
+  display: block;
+}
+
