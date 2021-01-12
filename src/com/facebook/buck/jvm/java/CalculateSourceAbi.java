@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
@@ -71,13 +72,17 @@ public class CalculateSourceAbi
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         new SourceAbiBuildable(
-            buildTarget, projectFilesystem, jarBuildStepsFactory, isJavaCDEnabled, javaPrefix));
+            buildTarget,
+            projectFilesystem,
+            jarBuildStepsFactory,
+            isJavaCDEnabled,
+            javaRuntimeLauncher));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -99,18 +104,19 @@ public class CalculateSourceAbi
     @AddToRuleKey private final PublicOutputPath rootOutputPath;
     @AddToRuleKey private final PublicOutputPath annotationsOutputPath;
     @AddToRuleKey private final boolean isJavaCDEnabled;
-    @AddToRuleKey private final ImmutableList<String> javaPrefix;
+
+    @AddToRuleKey private final Tool javaRuntimeLauncher;
 
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
         boolean isJavaCDEnabled,
-        ImmutableList<String> javaPrefix) {
+        Tool javaRuntimeLauncher) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
       this.isJavaCDEnabled = isJavaCDEnabled;
-      this.javaPrefix = javaPrefix;
+      this.javaRuntimeLauncher = javaRuntimeLauncher;
 
       CompilerOutputPaths outputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -126,7 +132,9 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       AbiJarStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
-                  jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled, javaPrefix)
+                  jarBuildStepsFactory.getConfiguredCompiler(),
+                  isJavaCDEnabled,
+                  javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()))
               .getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
@@ -146,7 +154,9 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       AbiJarPipelineStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
-                  jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled, javaPrefix)
+                  jarBuildStepsFactory.getConfiguredCompiler(),
+                  isJavaCDEnabled,
+                  javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()))
               .getPipelineAbiJarBuilder();
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,

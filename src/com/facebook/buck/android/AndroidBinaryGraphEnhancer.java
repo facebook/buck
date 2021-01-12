@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
@@ -470,8 +471,7 @@ public class AndroidBinaryGraphEnhancer {
               javaBuckConfig
                   .getDefaultJavaOptions()
                   .getJavaRuntimeLauncher(
-                      graphBuilder, originalBuildTarget.getTargetConfiguration())
-                  .getCommandPrefix(graphBuilder.getSourcePathResolver()));
+                      graphBuilder, originalBuildTarget.getTargetConfiguration()));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -724,7 +724,7 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      Tool javaRuntimeLauncher) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -774,7 +774,7 @@ public class AndroidBinaryGraphEnhancer {
               graphBuilder,
               withDownwardApi,
               isJavaCDEnabled,
-              javaPrefix);
+              javaRuntimeLauncher);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(

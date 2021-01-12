@@ -233,8 +233,7 @@ public class AndroidAarDescription
               javaBuckConfig.isJavaCDEnabled(),
               javaBuckConfig
                   .getDefaultJavaOptions()
-                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration())
-                  .getCommandPrefix(graphBuilder.getSourcePathResolver()));
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

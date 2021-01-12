@@ -34,12 +34,13 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
 
   private final BuildJavaCommand buildJavaCommand;
-  private final ImmutableList<String> javaPrefix;
+  private final ImmutableList<String> javaRuntimeLauncherCommand;
 
-  public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, ImmutableList<String> javaPrefix) {
+  public JavaCDWorkerToolStep(
+      BuildJavaCommand buildJavaCommand, ImmutableList<String> javaRuntimeLauncherCommand) {
     super("javacd_wt");
     this.buildJavaCommand = buildJavaCommand;
-    this.javaPrefix = javaPrefix;
+    this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
   }
 
   @Override
@@ -53,7 +54,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
                 .withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
 
     WorkerToolExecutor workerToolExecutor =
-        new JavaCDWorkerToolExecutor(processExecutor, buildJavaCommand, javaPrefix);
+        new JavaCDWorkerToolExecutor(processExecutor, buildJavaCommand, javaRuntimeLauncherCommand);
     workerToolExecutor.executeCommand();
 
     return StepExecutionResults.SUCCESS;
@@ -63,15 +64,15 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private static class JavaCDWorkerToolExecutor extends WorkerToolExecutor {
 
     private final BuildJavaCommand buildJavaCommand;
-    private final ImmutableList<String> javaPrefix;
+    private final ImmutableList<String> javaRuntimeLauncherCommand;
 
     public JavaCDWorkerToolExecutor(
         DownwardApiProcessExecutor downwardApiProcessExecutor,
         BuildJavaCommand buildJavaCommand,
-        ImmutableList<String> javaPrefix) {
+        ImmutableList<String> javaRuntimeLauncherCommand) {
       super(downwardApiProcessExecutor);
       this.buildJavaCommand = buildJavaCommand;
-      this.javaPrefix = javaPrefix;
+      this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
     }
 
     @Override
@@ -82,8 +83,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     @Override
     protected ImmutableList<String> getStartWorkerToolCommand() {
       int runArgumentsCount = 2;
-      return ImmutableList.<String>builderWithExpectedSize(javaPrefix.size() + runArgumentsCount)
-          .addAll(javaPrefix)
+      return ImmutableList.<String>builderWithExpectedSize(
+              javaRuntimeLauncherCommand.size() + runArgumentsCount)
+          .addAll(javaRuntimeLauncherCommand)
           .add("-jar")
           .add(getJavaCDJarPath())
           .build();

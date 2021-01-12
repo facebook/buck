@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +62,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            ImmutableList.of("java"));
+            new FakeTool());
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -96,7 +97,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            ImmutableList.of("java"));
+            new FakeTool());
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

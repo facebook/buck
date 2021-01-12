@@ -255,8 +255,7 @@ public class AndroidPrebuiltAarDescription
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig
             .getDefaultJavaOptions()
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration())
-            .getCommandPrefix(graphBuilder.getSourcePathResolver()));
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
   }
 
   @Override

@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BaseBuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
@@ -77,7 +78,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   @AddToRuleKey private final boolean isJavaCDEnabled;
-  @AddToRuleKey private final ImmutableList<String> javaPrefix;
+
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
@@ -87,7 +89,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      Tool javaRuntimeLauncher) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -99,7 +101,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                     new NonHashableSourcePathContainer(
                         Objects.requireNonNull(rule.getSourcePathToOutput())));
     this.isJavaCDEnabled = isJavaCDEnabled;
-    this.javaPrefix = javaPrefix;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
 
     CompilerOutputPaths outputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -140,7 +142,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     LibraryJarStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
-                jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled, javaPrefix)
+                jarBuildStepsFactory.getConfiguredCompiler(),
+                isJavaCDEnabled,
+                javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()))
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -167,7 +171,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     LibraryJarPipelineStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
-                jarBuildStepsFactory.getConfiguredCompiler(), isJavaCDEnabled, javaPrefix)
+                jarBuildStepsFactory.getConfiguredCompiler(),
+                isJavaCDEnabled,
+                javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()))
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(

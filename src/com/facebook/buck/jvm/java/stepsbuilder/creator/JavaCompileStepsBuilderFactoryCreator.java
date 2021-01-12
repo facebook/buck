@@ -33,7 +33,7 @@ public class JavaCompileStepsBuilderFactoryCreator {
       JavaCompileStepsBuilderFactory createFactory(
           CompileToJarStepFactory<T> configuredCompiler,
           boolean isJavaCDEnabled,
-          ImmutableList<String> javaPrefix) {
+          ImmutableList<String> javaRuntimeLauncherCommand) {
     DefaultJavaCompileStepsBuilderFactory<T> defaultJavaCompileStepsBuilderFactory =
         new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
 
@@ -44,7 +44,7 @@ public class JavaCompileStepsBuilderFactoryCreator {
           baseJavacToJarStepFactory,
           defaultJavaCompileStepsBuilderFactory,
           isJavaCDEnabled,
-          javaPrefix);
+          javaRuntimeLauncherCommand);
     }
 
     return defaultJavaCompileStepsBuilderFactory;

@@ -48,14 +48,14 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      ImmutableList<String> javaRuntimeLauncherCommand) {
     super(
         hasAnnotationProcessing,
         spoolMode,
         withDownwardApi,
         Type.ABI_JAR,
         isJavaCDEnabled,
-        javaPrefix);
+        javaRuntimeLauncherCommand);
   }
 
   @Override

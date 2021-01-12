@@ -65,7 +65,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
   private final BuildJavaCommand.Builder commandBuilder = BuildJavaCommand.newBuilder();
   protected final Type type;
   private final boolean isJavaCDEnabled;
-  private final ImmutableList<String> javaPrefix;
+  private final ImmutableList<String> javaRuntimeLauncherCommand;
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
@@ -73,10 +73,10 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
       boolean withDownwardApi,
       Type type,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      ImmutableList<String> javaRuntimeLauncherCommand) {
     this.type = type;
     this.isJavaCDEnabled = isJavaCDEnabled;
-    this.javaPrefix = javaPrefix;
+    this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
     commandBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
     commandBuilder.setWithDownwardApi(withDownwardApi);
     commandBuilder.setSpoolMode(spoolMode);
@@ -101,7 +101,8 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
     if (isJavaCDEnabled) {
-      return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, javaPrefix));
+      return ImmutableList.of(
+          new JavaCDWorkerToolStep(buildJavaCommand, javaRuntimeLauncherCommand));
     }
     return new JavaCDWorkerToolStepsBuilder(buildJavaCommand).getSteps();
   }

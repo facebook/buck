@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -77,7 +78,7 @@ public abstract class DefaultJavaLibraryRules {
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
         boolean isJavaCDEnabled,
-        ImmutableList<String> javaPrefix);
+        Tool javaRuntimeLauncher);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -442,8 +443,7 @@ public abstract class DefaultJavaLibraryRules {
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig
                 .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(actionGraphBuilder, buildTarget.getTargetConfiguration())
-                .getCommandPrefix(actionGraphBuilder.getSourcePathResolver()));
+                .getJavaRuntimeLauncher(actionGraphBuilder, buildTarget.getTargetConfiguration()));
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -492,8 +492,7 @@ public abstract class DefaultJavaLibraryRules {
                 javaBuckConfig
                     .getDefaultJavaOptions()
                     .getJavaRuntimeLauncher(
-                        actionGraphBuilder, buildTarget.getTargetConfiguration())
-                    .getCommandPrefix(actionGraphBuilder.getSourcePathResolver()));
+                        actionGraphBuilder, buildTarget.getTargetConfiguration()));
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -547,8 +546,7 @@ public abstract class DefaultJavaLibraryRules {
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig
                 .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())
-                .getCommandPrefix(getSourcePathResolver())));
+                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())));
   }
 
   @Nullable
@@ -572,8 +570,7 @@ public abstract class DefaultJavaLibraryRules {
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig
                 .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())
-                .getCommandPrefix(getSourcePathResolver())));
+                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())));
   }
 
   @Nullable

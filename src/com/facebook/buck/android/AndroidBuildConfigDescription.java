@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -42,7 +43,6 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -109,8 +109,7 @@ public class AndroidBuildConfigDescription
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig
             .getDefaultJavaOptions()
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration())
-            .getCommandPrefix(graphBuilder.getSourcePathResolver()));
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
   }
 
   /**
@@ -134,7 +133,7 @@ public class AndroidBuildConfigDescription
       ActionGraphBuilder graphBuilder,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      Tool javaRuntimeLauncher) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -191,7 +190,7 @@ public class AndroidBuildConfigDescription
         androidBuildConfig,
         withDownwardApi,
         isJavaCDEnabled,
-        javaPrefix);
+        javaRuntimeLauncher);
   }
 
   @Override

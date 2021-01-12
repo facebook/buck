@@ -42,8 +42,14 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
       Type type,
       MessageOrBuilder commandBuilder,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
-    super(hasAnnotationProcessing, spoolMode, withDownwardApi, type, isJavaCDEnabled, javaPrefix);
+      ImmutableList<String> javaRuntimeLauncherCommand) {
+    super(
+        hasAnnotationProcessing,
+        spoolMode,
+        withDownwardApi,
+        type,
+        isJavaCDEnabled,
+        javaRuntimeLauncherCommand);
     this.commandBuilder = commandBuilder;
   }
 

@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
@@ -65,7 +66,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       boolean useSystemLibraryLoader,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      Tool javaRuntimeLauncher) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -112,7 +113,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         false,
         false,
         isJavaCDEnabled,
-        javaPrefix);
+        javaRuntimeLauncher);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

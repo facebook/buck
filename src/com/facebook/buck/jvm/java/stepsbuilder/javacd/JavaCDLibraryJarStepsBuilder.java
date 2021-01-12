@@ -47,7 +47,7 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      ImmutableList<String> javaRuntimeLauncherCommand) {
     super(
         hasAnnotationProcessing,
         spoolMode,
@@ -55,7 +55,7 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
         Type.LIBRARY_JAR,
         LibraryJarCommand.newBuilder(),
         isJavaCDEnabled,
-        javaPrefix);
+        javaRuntimeLauncherCommand);
   }
 
   @Override

@@ -38,26 +38,30 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   // TODO msemko: remove delegate when all builders are ready.
   private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
   private final boolean isJavaCDEnabled;
-  private final ImmutableList<String> javaPrefix;
+  private final ImmutableList<String> javaRuntimeLauncherCommand;
 
   public JavaCDStepsBuilderFactory(
       BaseJavacToJarStepFactory configuredCompiler,
       DefaultJavaCompileStepsBuilderFactory<?> delegate,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      ImmutableList<String> javaRuntimeLauncherCommand) {
     this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
     this.spoolMode = configuredCompiler.getSpoolMode();
     this.withDownwardApi = configuredCompiler.isWithDownwardApi();
     this.delegate = delegate;
     this.isJavaCDEnabled = isJavaCDEnabled;
-    this.javaPrefix = javaPrefix;
+    this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
   }
 
   /** Creates an appropriate {@link LibraryJarStepsBuilder} instance. */
   @Override
   public LibraryJarStepsBuilder getLibraryJarBuilder() {
     return new JavaCDLibraryJarStepsBuilder(
-        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled, javaPrefix);
+        hasAnnotationProcessing,
+        spoolMode,
+        withDownwardApi,
+        isJavaCDEnabled,
+        javaRuntimeLauncherCommand);
   }
 
   /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance. */
@@ -70,7 +74,11 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   @Override
   public AbiJarStepsBuilder getAbiJarBuilder() {
     return new JavaCDAbiJarStepsBuilder(
-        hasAnnotationProcessing, spoolMode, withDownwardApi, isJavaCDEnabled, javaPrefix);
+        hasAnnotationProcessing,
+        spoolMode,
+        withDownwardApi,
+        isJavaCDEnabled,
+        javaRuntimeLauncherCommand);
   }
 
   /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance. */

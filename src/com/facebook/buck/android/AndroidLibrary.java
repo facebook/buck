@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
@@ -43,7 +44,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
@@ -109,7 +109,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaPrefix) {
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -133,7 +133,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isInterfaceMethodsDesugarEnabled,
         neverMarkAsUnusedDependency,
         isJavaCDEnabled,
-        javaPrefix);
+        javaRuntimeLauncher);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
@@ -223,7 +223,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               isInterfaceMethodsDesugarEnabled,
               neverMarkAsUnusedDependency,
               isJavaCDEnabled,
-              javaPrefix) ->
+              javaRuntimeLauncher) ->
               new AndroidLibrary(
                   target,
                   filesystem,
@@ -249,7 +249,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   isInterfaceMethodsDesugarEnabled,
                   neverMarkAsUnusedDependency,
                   isJavaCDEnabled,
-                  javaPrefix));
+                  javaRuntimeLauncher));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 
