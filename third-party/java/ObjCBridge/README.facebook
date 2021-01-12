@@ -1,6 +1,16 @@
 Project: Java Objective-C Bridge
-Version: Git revision c22107743c2751f1fbaef3f509d59683f16adb60
-Release Date: 2014-08-06
+Version: Git revision c38d607820e18bdc607067457ba6680a6277f7cd
+Release Date: Sun Nov 3 19:35:06 2019 +0100
 Website: https://github.com/shannah/Java-Objective-C-Bridge/
 License: Apache 2.0
 Description: JNA library to allow Java programs to invoke Objective-C APIs
+Instructions:
+    brew install maven
+    brew install gpg
+    gpg --gen-key
+    git clone https://github.com/shannah/Java-Objective-C-Bridge.git
+    cd Java-Objective-C-Bridge
+    Edit pom.xml (or apply patch.diff)
+        Change <maven.compiler.target> to version 8
+        Change <maven.compiler.source> to version 8
+    mvn clean install -Drelease=true

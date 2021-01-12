@@ -1,6 +1,8 @@
 README for NuProcess
 
-URL: https://github.com/brettwooldridge/NuProcess
-Revision: 562e0b39cd893ca389ba2d0b3689dde305b7632d
-Built With: mvn package
+Repository: https://github.com/brettwooldridge/NuProcess
+URL: https://search.maven.org/artifact/com.zaxxer/nuprocess/2.0.1/bundle
+Version: 2.01
+Build Instructions:
+  mvn package
 License: Apache 2.0 license
