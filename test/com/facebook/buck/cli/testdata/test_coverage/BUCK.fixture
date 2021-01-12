@@ -32,3 +32,13 @@ java_library(
         "PUBLIC",
     ],
 )
+
+java_library(
+    name = "library_with_no_tests",
+    srcs = glob(["*.java"]),
+    resources = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

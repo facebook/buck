@@ -131,6 +131,11 @@ public abstract class TestBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("test", "use_relative_paths_in_classpath_file", false);
   }
 
+  public boolean includeExplicitTargetsInTestCoverage() {
+    return getDelegate()
+        .getBooleanValue("test", "include_explicit_targets_in_test_coverage", false);
+  }
+
   public String getClientId() {
     return getDelegate().getValue("client", "id").orElse("buck");
   }

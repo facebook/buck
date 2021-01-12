@@ -635,7 +635,21 @@ public class TestCommand extends BuildCommand {
         // This requires that the rules under test are materialized as well as any generated srcs
         // that they use
         BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
-        rulesUnderTestForCoverage = getRulesUnderTest(testRules);
+        ImmutableSet<JavaLibrary> explicitJavaLibraryRules =
+            params
+                    .getBuckConfig()
+                    .getView(TestBuckConfig.class)
+                    .includeExplicitTargetsInTestCoverage()
+                ? ruleResolver.getAllRules(explicitBuildTargets).stream()
+                    .filter(JavaLibrary.class::isInstance)
+                    .map(JavaLibrary.class::cast)
+                    .collect(ImmutableSet.toImmutableSet())
+                : ImmutableSet.of();
+        rulesUnderTestForCoverage =
+            ImmutableSet.<JavaLibrary>builder()
+                .addAll(getRulesUnderTest(testRules))
+                .addAll(explicitJavaLibraryRules)
+                .build();
         rulesToMaterializeForAnalysis =
             RichStream.from(rulesUnderTestForCoverage)
                 .flatMap(

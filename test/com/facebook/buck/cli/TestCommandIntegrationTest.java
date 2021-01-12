@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -237,5 +238,41 @@ public class TestCommandIntegrationTest {
     workspace.getBuildLog().assertNoLogEntry("//test:simple_test");
     // Has label B
     workspace.getBuildLog().assertNoLogEntry("//test:test_setup_for_source_only_abi");
+  }
+
+  @Test
+  public void testCodeCoverageNotAddedForLibraryWithNoTests() throws Exception {
+    workspace.enableDirCache();
+    try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
+      ProcessResult result =
+          workspace.runBuckCommand(
+              "test",
+              "--code-coverage",
+              "--code-coverage-format",
+              "XML",
+              "//:library_with_no_tests");
+      result.assertSuccess();
+    }
+
+    assertFalse(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.xml")));
+  }
+
+  @Test
+  public void testCodeCoverageAddedForLibraryWithNoTests() throws Exception {
+    workspace.enableDirCache();
+    try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
+      ProcessResult result =
+          workspace.runBuckCommand(
+              "test",
+              "-c",
+              "test.include_explicit_targets_in_test_coverage=true",
+              "--code-coverage",
+              "--code-coverage-format",
+              "XML",
+              "//:library_with_no_tests");
+      result.assertSuccess();
+    }
+
+    assertTrue(Files.exists(workspace.getPath(CODE_COVERAGE_SUBPATH).resolve("coverage.xml")));
   }
 }
