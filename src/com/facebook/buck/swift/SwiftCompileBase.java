@@ -490,13 +490,4 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   public SourcePath getOutputPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
   }
-
-  /**
-   * @return {@link SourcePath} to the .swiftmodule output from the compilation process. A
-   *     swiftmodule file contains the public interface for a module, and is basically a binary file
-   *     format equivalent to header files for a C framework or library.
-   */
-  public SourcePath getSwiftModuleOutputPath() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath);
-  }
 }

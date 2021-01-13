@@ -54,7 +54,6 @@ import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
-import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
@@ -1030,9 +1029,7 @@ public class AppleLibraryDescription
 
   private static CxxPreprocessorInput createSwiftPreprocessorInput(
       ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
-    CxxHeaders swiftCompileHeaders = createSwiftModuleHeaders(graphBuilder, baseTarget);
     CxxPreprocessorInput.Builder builder = CxxPreprocessorInput.builder();
-    builder.addIncludes(swiftCompileHeaders);
 
     // modular Swift libraries should not separately export their ObjC headers, this will
     // already be part of the libraries modulemap.
@@ -1044,15 +1041,6 @@ public class AppleLibraryDescription
     }
 
     return builder.build();
-  }
-
-  private static CxxHeaders createSwiftModuleHeaders(
-      ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
-    BuildTarget swiftCompileTarget = baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
-    SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
-
-    return CxxHeadersDir.of(
-        CxxPreprocessables.IncludeType.LOCAL, compile.getSwiftModuleOutputPath());
   }
 
   private static CxxHeaders createSwiftObjcHeaders(
