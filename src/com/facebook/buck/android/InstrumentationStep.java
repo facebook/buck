@@ -72,7 +72,6 @@ public class InstrumentationStep extends IsolatedShellStep {
   protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
-
     jvmArgs.formatCommandLineArgsToList(filesystem, args, classpathArgfile);
 
     if (jvmArgs.isDebugEnabled()) {
@@ -90,6 +89,10 @@ public class InstrumentationStep extends IsolatedShellStep {
   @Override
   public Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
+  }
+
+  public Path getClasspathArgFilePath() {
+    return filesystem.resolve(classpathArgfile.get());
   }
 
   /** Ensures the classpath argfile for Java 9+ invocations has been created. */

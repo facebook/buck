@@ -16,8 +16,10 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.google.common.collect.ImmutableList;
@@ -25,11 +27,15 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
@@ -113,7 +119,7 @@ abstract class AndroidInstrumentationTestJVMArgs {
       // use from using the approach we use for Java 8-.
       args.add("@" + filesystem.resolve(classpathArgfile.get()));
     } else {
-      args.add("-classpath", getClasspathContents());
+      args.add("-classpath", getClasspathContents(filesystem));
     }
 
     args.add(FileClassPathRunner.class.getName());
@@ -198,7 +204,7 @@ abstract class AndroidInstrumentationTestJVMArgs {
     builder.append("-classpath");
     builder.append(System.lineSeparator());
     builder.append('"');
-    builder.append(escapePathForArgfile(getClasspathContents()));
+    builder.append(escapePathForArgfile(getClasspathContents(filesystem)));
     builder.append('"');
     builder.append(System.lineSeparator());
 
@@ -209,15 +215,16 @@ abstract class AndroidInstrumentationTestJVMArgs {
     return path.replace("\\", "\\\\");
   }
 
-  private String getClasspathContents() {
-    return getTestRunnerClasspath()
-        + File.pathSeparator
-        + this.getDdmlibJarPath()
-        + File.pathSeparator
-        + this.getKxmlJarPath()
-        + File.pathSeparator
-        + this.getGuavaJarPath()
-        + File.pathSeparator
-        + this.getAndroidToolsCommonJarPath();
+  private String getClasspathContents(ProjectFilesystem filesystem) {
+    AbsPath rootPath = filesystem.getRootPath();
+    return Stream.of(
+            getTestRunnerClasspath(),
+            Paths.get(getDdmlibJarPath()),
+            Paths.get(getKxmlJarPath()),
+            Paths.get(getGuavaJarPath()),
+            Paths.get(getAndroidToolsCommonJarPath()))
+        .map(p -> ProjectFilesystemUtils.relativize(rootPath, p))
+        .map(Objects::toString)
+        .collect(Collectors.joining(File.pathSeparator));
   }
 }
