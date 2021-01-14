@@ -115,10 +115,10 @@ public class TracingTaskListener implements BuckJavacTaskListener {
   static class TraceCleaner {
     private final JavacPhaseTracer tracing;
     private int enterCount = 0;
-    private List<String> enteredFiles = new ArrayList<>();
+    private final List<String> enteredFiles = new ArrayList<>();
     private int analyzeCount = 0;
-    private List<String> analyzedFiles = new ArrayList<>();
-    private List<String> analyzedTypes = new ArrayList<>();
+    private final List<String> analyzedFiles = new ArrayList<>();
+    private final List<String> analyzedTypes = new ArrayList<>();
 
     public TraceCleaner(JavacPhaseTracer tracing) {
       this.tracing = tracing;

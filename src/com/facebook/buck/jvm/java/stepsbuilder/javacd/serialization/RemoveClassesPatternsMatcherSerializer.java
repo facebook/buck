@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 /** {@link RemoveClassesPatternsMatcher} to protobuf serializer */
 class RemoveClassesPatternsMatcherSerializer {
 
-  private RemoveClassesPatternsMatcherSerializer() {};
+  private RemoveClassesPatternsMatcherSerializer() {}
 
   /**
    * Serializes {@link RemoveClassesPatternsMatcher} into javacd model's {@link

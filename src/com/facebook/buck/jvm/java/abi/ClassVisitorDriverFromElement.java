@@ -139,7 +139,7 @@ class ClassVisitorDriverFromElement {
           descriptorFactory.getInternalName(superclass),
           e.getInterfaces().stream()
               .map(descriptorFactory::getInternalName)
-              .toArray(size -> new String[size]));
+              .toArray(String[]::new));
       classVisitorStarted = true;
 
       // Handle nests in Java 11+. See JEP 181 (https://openjdk.java.net/jeps/181) for details.
@@ -277,7 +277,7 @@ class ClassVisitorDriverFromElement {
       String[] exceptions =
           e.getThrownTypes().stream()
               .map(descriptorFactory::getInternalName)
-              .toArray(count -> new String[count]);
+              .toArray(String[]::new);
 
       MethodVisitor methodVisitor =
           visitor.visitMethod(
@@ -436,12 +436,8 @@ class ClassVisitorDriverFromElement {
     private void visitAnnotationValues(
         Map<? extends ExecutableElement, ? extends AnnotationValue> elementValues,
         AnnotationVisitor visitor) {
-      elementValues
-          .entrySet()
-          .forEach(
-              entry ->
-                  visitAnnotationValue(
-                      entry.getKey().getSimpleName().toString(), entry.getValue(), visitor));
+      elementValues.forEach(
+          (key, value) -> visitAnnotationValue(key.getSimpleName().toString(), value, visitor));
     }
 
     private void visitAnnotationValue(

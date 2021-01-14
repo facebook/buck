@@ -222,12 +222,11 @@ public class JUnitStep extends ShellStep {
                 /* stdin */ Optional.empty(),
                 /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
                 /* timeOutHandler */ Optional.of(
-                    input -> {
-                      context
-                          .getStdErr()
-                          .print(
-                              "Printing the stack took longer than 30 seconds. No longer trying.");
-                    }));
+                    input ->
+                        context
+                            .getStdErr()
+                            .print(
+                                "Printing the stack took longer than 30 seconds. No longer trying.")));
           } catch (Exception e) {
             LOG.error(e);
           }

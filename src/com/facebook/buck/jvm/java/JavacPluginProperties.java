@@ -75,7 +75,7 @@ abstract class JavacPluginProperties implements AddsToRuleKey {
   @Value.Default
   public JavacPluginPathParams getPathParams() {
     return JavacPluginPathParams.empty();
-  };
+  }
 
   public boolean isEmpty() {
     return getProcessorNames().isEmpty() && getClasspathEntries().isEmpty();

@@ -505,13 +505,13 @@ public class JavaFileParser {
           @Nullable private String packageName;
 
           /** Maps simple name to fully-qualified name. */
-          private Map<String, String> simpleImportedTypes = new HashMap<>();
+          private final Map<String, String> simpleImportedTypes = new HashMap<>();
 
           /**
            * Maps wildcard import prefixes, such as {@code "java.util"} to the types in the
            * respective package if a wildcard import such as {@code import java.util.*} is used.
            */
-          private Map<String, ImmutableSet<String>> wildcardImports = new HashMap<>();
+          private final Map<String, ImmutableSet<String>> wildcardImports = new HashMap<>();
 
           @Override
           public boolean visit(PackageDeclaration node) {

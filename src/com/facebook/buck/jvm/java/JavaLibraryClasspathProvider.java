@@ -46,9 +46,7 @@ public class JavaLibraryClasspathProvider {
       outputClasspathBuilder.addAll(rule.getOutputClasspaths());
     }
 
-    if (outputJar.isPresent()) {
-      outputClasspathBuilder.add(outputJar.get());
-    }
+    outputJar.ifPresent(outputClasspathBuilder::add);
 
     return outputClasspathBuilder.build();
   }

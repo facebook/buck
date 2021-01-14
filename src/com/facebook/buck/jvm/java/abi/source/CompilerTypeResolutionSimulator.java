@@ -92,7 +92,7 @@ class CompilerTypeResolutionSimulator {
         TypeElement type = (TypeElement) trees.getElement(getCurrentPath());
         return new Object() {
           private ResolvedTypeKind kind = ResolvedTypeKind.RESOLVED_TYPE;
-          private Set<String> missingDependencies = new HashSet<>();
+          private final Set<String> missingDependencies = new HashSet<>();
 
           {
             CompletionSimulator.CompletedType completedType = completer.complete(type, false);

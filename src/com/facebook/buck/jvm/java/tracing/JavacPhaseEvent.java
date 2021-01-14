@@ -129,7 +129,7 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
 
   @Override
   protected String getValueString() {
-    return buildTargetFulyQualifiedName.toString();
+    return buildTargetFulyQualifiedName;
   }
 
   @Override
@@ -145,7 +145,7 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
   @Override
   public ImmutableMap<String, Object> getEventInfo() {
     return getArgs().entrySet().stream()
-        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> (Object) e.getValue()));
+        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue()));
   }
 
   public static Started started(

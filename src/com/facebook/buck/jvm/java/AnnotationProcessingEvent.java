@@ -74,7 +74,7 @@ public abstract class AnnotationProcessingEvent extends SimplePerfEvent
 
   @Override
   protected String getValueString() {
-    return buildTargetFullyQualifiedName.toString();
+    return buildTargetFullyQualifiedName;
   }
 
   @Override

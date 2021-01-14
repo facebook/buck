@@ -40,6 +40,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementScanner8;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.InnerClassNode;
 
 /**
  * Aids in constructing a table of {@link InnerClassNode}s when generating bytecode for a {@link
@@ -236,12 +237,11 @@ public class InnerClassesTable {
         .filter(reported::add)
         .sorted(Comparator.comparing(e -> e.getQualifiedName().toString()))
         .forEach(
-            element -> {
-              visitor.visitInnerClass(
-                  descriptorFactory.getInternalName(element),
-                  descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
-                  element.getSimpleName().toString(),
-                  accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER);
-            });
+            element ->
+                visitor.visitInnerClass(
+                    descriptorFactory.getInternalName(element),
+                    descriptorFactory.getInternalName((TypeElement) element.getEnclosingElement()),
+                    element.getSimpleName().toString(),
+                    accessFlagsUtils.getAccessFlags(element) & ~Opcodes.ACC_SUPER));
   }
 }

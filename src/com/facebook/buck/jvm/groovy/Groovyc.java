@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 
 public class Groovyc implements Tool {
 
-  public static String BIN_GROOVYC = "bin/groovyc";
+  public static final String BIN_GROOVYC = "bin/groovyc";
 
   @AddToRuleKey private final Supplier<? extends SourcePath> path;
   @AddToRuleKey private final boolean external;

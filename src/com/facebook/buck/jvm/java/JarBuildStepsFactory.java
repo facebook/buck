@@ -720,10 +720,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
         Optional<BuildTarget> abiJar = hasJavaAbi.getAbiJar();
         abiJar.ifPresent(
-            buildTarget -> {
-              pathToSourcePathMapBuilder.put(
-                  path.getPath(), DefaultBuildTargetSourcePath.of(buildTarget));
-            });
+            buildTarget ->
+                pathToSourcePathMapBuilder.put(
+                    path.getPath(), DefaultBuildTargetSourcePath.of(buildTarget)));
       }
     }
     return pathToSourcePathMapBuilder.build();

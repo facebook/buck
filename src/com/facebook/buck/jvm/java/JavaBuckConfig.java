@@ -126,15 +126,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     builder.setTrackClassUsage(trackClassUsage(targetConfiguration));
     Optional<Boolean> trackJavacPhaseEvents =
         delegate.getBoolean(SECTION, "track_javac_phase_events");
-    if (trackJavacPhaseEvents.isPresent()) {
-      builder.setTrackJavacPhaseEvents(trackJavacPhaseEvents.get());
-    }
+    trackJavacPhaseEvents.ifPresent(builder::setTrackJavacPhaseEvents);
 
     Optional<BuildJavaCommand.SpoolMode> spoolMode =
         delegate.getEnum(SECTION, "jar_spool_mode", BuildJavaCommand.SpoolMode.class);
-    if (spoolMode.isPresent()) {
-      builder.setSpoolMode(spoolMode.get());
-    }
+    spoolMode.ifPresent(builder::setSpoolMode);
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);
     ImmutableMap.Builder<String, ImmutableList<PathSourcePath>> bootclasspaths =

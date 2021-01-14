@@ -195,9 +195,8 @@ class PostEnterCanonicalizer {
               && treePath.getLeaf().getKind() == Tree.Kind.IDENTIFIER) {
             DeclaredType inferredType = (DeclaredType) getImportedType(treePath);
             if (inferredType != null) {
-              TypeElement inferredElement =
+              canonicalElement =
                   (TypeElement) elements.getCanonicalElement(inferredType.asElement());
-              canonicalElement = inferredElement;
             }
           }
 

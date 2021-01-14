@@ -84,9 +84,7 @@ class DescriptorFactory {
 
                 return Type.getMethodType(
                     getType(e.getReturnType()),
-                    parameterTypeStream
-                        .map(DescriptorFactory.this::getType)
-                        .toArray(size -> new Type[size]));
+                    parameterTypeStream.map(DescriptorFactory.this::getType).toArray(Type[]::new));
               }
 
               @Override
@@ -113,9 +111,7 @@ class DescriptorFactory {
 
                 return Type.getMethodType(
                     getType(e.getReturnType()),
-                    parameterTypeStream
-                        .map(DescriptorFactory.this::getType)
-                        .toArray(size -> new Type[size]));
+                    parameterTypeStream.map(DescriptorFactory.this::getType).toArray(Type[]::new));
               }
 
               @Override

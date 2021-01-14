@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public final class ResourceValidator {
-  public static ImmutableSortedSet<SourcePath> validateResources(
+  public static void validateResources(
       SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,
       ImmutableSortedSet<SourcePath> resourcePaths) {
@@ -36,7 +36,6 @@ public final class ResourceValidator {
             "Error: a directory is not a valid input to the `resources` argument: %s", path);
       }
     }
-    return resourcePaths;
   }
 
   private ResourceValidator() {}

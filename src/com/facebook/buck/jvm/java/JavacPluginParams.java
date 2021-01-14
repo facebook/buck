@@ -87,7 +87,7 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
   public static class Builder extends ImmutableJavacPluginParams.Builder {
 
     private Set<String> legacyAnnotationProcessorNames = new LinkedHashSet<>();
-    private List<BuildRule> legacyAnnotationProcessorDeps = new ArrayList<>();
+    private final List<BuildRule> legacyAnnotationProcessorDeps = new ArrayList<>();
 
     private List<ResolvedJavacPluginProperties> resolveLegacyProcessors(
         SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {

@@ -89,7 +89,7 @@ public class JavaInMemoryFileObject extends JarFileObject {
     if (!isWritten) {
       throw new FileNotFoundException(uri.toString());
     }
-    return new String(bos.toByteArray());
+    return bos.toString();
   }
 
   @Override

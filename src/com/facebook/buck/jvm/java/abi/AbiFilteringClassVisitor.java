@@ -44,8 +44,8 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   private int classAccess;
   private int classVersion;
   private boolean hasVisibleConstructor = false;
-  private Set<String> includedInnerClasses = new HashSet<>();
-  private List<String> nestMembers = new ArrayList<>();
+  private final Set<String> includedInnerClasses = new HashSet<>();
+  private final List<String> nestMembers = new ArrayList<>();
 
   public AbiFilteringClassVisitor(ClassVisitor cv, List<String> methodsWithRetainedBody) {
     this(cv, methodsWithRetainedBody, null);

@@ -24,7 +24,7 @@ import java.util.zip.ZipEntry;
 
 public class LoggingJarBuilderObserver implements JarBuilder.Observer {
   private final JavacEventSink eventSink;
-  private Level duplicatesLogLevel;
+  private final Level duplicatesLogLevel;
 
   public LoggingJarBuilderObserver(JavacEventSink eventSink) {
     this(eventSink, Level.INFO);

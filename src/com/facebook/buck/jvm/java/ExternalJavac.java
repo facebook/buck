@@ -32,12 +32,11 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** javac implemented in a separate binary. */
@@ -86,7 +85,7 @@ public class ExternalJavac implements Javac {
     }
 
     @Override
-    public ResolvedJavac.Invocation newBuildInvocation(
+    public Invocation newBuildInvocation(
         JavacExecutionContext context,
         BuildTargetValue invokingRule,
         CompilerOutputPathsValue compilerOutputPathsValue,
@@ -106,7 +105,7 @@ public class ExternalJavac implements Javac {
       Preconditions.checkArgument(abiJarParameters == null);
       Preconditions.checkArgument(libraryJarParameters == null);
 
-      return new ResolvedJavac.Invocation() {
+      return new Invocation() {
         @Override
         public int buildSourceOnlyAbiJar() {
           throw new UnsupportedOperationException(
@@ -150,16 +149,12 @@ public class ExternalJavac implements Javac {
           command.addAll(commandPrefix);
 
           try {
-            FluentIterable<String> escapedPaths =
-                FluentIterable.from(expandedSources)
-                    .transform(Object::toString)
-                    .transform(ResolvedJavac.ARGFILES_ESCAPER::apply);
-            FluentIterable<String> escapedArgs =
-                FluentIterable.from(options).transform(ResolvedJavac.ARGFILES_ESCAPER::apply);
+            Stream<String> sources = expandedSources.stream().map(Object::toString);
+            Stream<String> args = options.stream();
 
             ProjectFilesystemUtils.writeLinesToPath(
                 context.getRuleCellRoot(),
-                Iterables.concat(escapedArgs, escapedPaths),
+                () -> Stream.concat(args, sources).map(ResolvedJavac.ARGFILES_ESCAPER).iterator(),
                 pathToSrcsList.getPath());
             command.add("@" + pathToSrcsList);
           } catch (IOException e) {

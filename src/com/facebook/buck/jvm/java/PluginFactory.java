@@ -48,10 +48,8 @@ public class PluginFactory implements AutoCloseable {
     // would break running inside of Buck. So we default to creating a new ClassLoader
     // if any plugins meets those requirements.
     if (pluginGroups.stream()
-        .map(group -> Boolean.valueOf(group.getCanReuseClassLoader()))
-        .reduce(
-            Boolean.TRUE,
-            (bool1, bool2) -> Boolean.logicalAnd(Boolean.valueOf(bool1), Boolean.valueOf(bool2)))) {
+        .map(group -> group.getCanReuseClassLoader())
+        .reduce(Boolean.TRUE, (bool1, bool2) -> Boolean.logicalAnd(bool1, bool2))) {
       cache = globalClassLoaderCache;
     } else {
       cache = localClassLoaderCache;

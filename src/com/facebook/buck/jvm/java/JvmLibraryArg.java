@@ -147,7 +147,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
   default List<BuildRule> getPluginsOf(
       BuildRuleResolver resolver, final JavacPluginProperties.Type type) {
     return getPlugins().stream()
-        .map(pluginTarget -> resolver.getRule(pluginTarget))
+        .map(resolver::getRule)
         .filter(
             pluginRule -> ((JavacPlugin) pluginRule).getUnresolvedProperties().getType() == type)
         .collect(Collectors.toList());

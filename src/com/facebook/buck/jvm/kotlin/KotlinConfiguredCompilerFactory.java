@@ -92,7 +92,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinArgs.getKotlinCompilerPlugins(),
         getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
-        kotlinArgs.getTarget().map(target -> getKotlincCompatibleTarget(target)),
+        kotlinArgs.getTarget().map(this::getKotlincCompatibleTarget),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         javacOptions,
         downwardApiConfig.isEnabledForKotlin());

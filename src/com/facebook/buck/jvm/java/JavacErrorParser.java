@@ -32,7 +32,7 @@ public class JavacErrorParser {
   private final ProjectFilesystem filesystem;
   private final JavaPackageFinder javaPackageFinder;
 
-  private static ImmutableList<Pattern> onePartPatterns =
+  private static final ImmutableList<Pattern> onePartPatterns =
       ImmutableList.of(
           Pattern.compile("error: cannot access (?<symbol>\\S+)"),
           Pattern.compile(
@@ -44,7 +44,7 @@ public class JavacErrorParser {
                   + System.lineSeparator()
                   + "import static (?<symbol>\\S+)\\.[^.]+;"));
 
-  private static ImmutableList<Pattern> twoPartPatterns =
+  private static final ImmutableList<Pattern> twoPartPatterns =
       ImmutableList.of(
           Pattern.compile(
               "\\s*symbol:\\s+class (?<class>\\S+)"
@@ -60,7 +60,7 @@ public class JavacErrorParser {
   // might go looking for an imported symbol in the current package (wrong) in addition to the
   // package it was imported from (right). That's ultimately fine, because the symbol can't exist in
   // both places (without causing another compiler error).
-  private static ImmutableList<Pattern> localPackagePatterns =
+  private static final ImmutableList<Pattern> localPackagePatterns =
       ImmutableList.of(
           Pattern.compile(
               MoreStrings.linesToText(

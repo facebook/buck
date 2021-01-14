@@ -24,7 +24,7 @@ import javax.tools.Diagnostic;
 /** Utilities method for {@link AbiGenerationMode} */
 public class AbiGenerationModeUtils {
 
-  private static Map<AbiGenerationMode, Diagnostic.Kind> DIAGNOSTICS_MAP =
+  private static final Map<AbiGenerationMode, Diagnostic.Kind> DIAGNOSTICS_MAP =
       ImmutableMap.of(
           AbiGenerationMode.MIGRATING_TO_SOURCE_ONLY, Diagnostic.Kind.WARNING,
           AbiGenerationMode.SOURCE_ONLY, Diagnostic.Kind.ERROR);

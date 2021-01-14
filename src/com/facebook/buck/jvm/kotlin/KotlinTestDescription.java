@@ -86,7 +86,7 @@ public class KotlinTestDescription
             .build(
                 new CacheLoader<TargetConfiguration, JavacOptions>() {
                   @Override
-                  public JavacOptions load(TargetConfiguration key) throws Exception {
+                  public JavacOptions load(TargetConfiguration key) {
                     return toolchainProvider
                         .getByName(
                             JavacOptionsProvider.DEFAULT_NAME, key, JavacOptionsProvider.class)

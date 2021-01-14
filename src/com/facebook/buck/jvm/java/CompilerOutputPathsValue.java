@@ -83,12 +83,10 @@ public abstract class CompilerOutputPathsValue {
         CompilerOutputPaths.of(JavaAbis.getSourceAbiJar(libraryTarget), baseBuckPaths);
     CompilerOutputPaths sourceOnlyAbiCompilerOutputPaths =
         CompilerOutputPaths.of(JavaAbis.getSourceOnlyAbiJar(libraryTarget), baseBuckPaths);
-    CompilerOutputPathsValue compilerOutputPathsValue =
-        of(
-            libraryTarget.getFullyQualifiedName(),
-            libraryCompilerOutputPaths,
-            sourceAbiCompilerOutputPaths,
-            sourceOnlyAbiCompilerOutputPaths);
-    return compilerOutputPathsValue;
+    return of(
+        libraryTarget.getFullyQualifiedName(),
+        libraryCompilerOutputPaths,
+        sourceAbiCompilerOutputPaths,
+        sourceOnlyAbiCompilerOutputPaths);
   }
 }
