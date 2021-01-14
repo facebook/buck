@@ -111,8 +111,7 @@ public class AndroidLibraryGraphEnhancer {
         break;
       case TRANSITIVE:
         androidResourceDeps =
-            UnsortedAndroidResourceDeps.createFrom(originalDeps, Optional.empty())
-                .getResourceDeps();
+            UnsortedAndroidResourceDeps.createFrom(originalDeps).getResourceDeps();
         break;
       default:
         throw new IllegalStateException(

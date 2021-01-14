@@ -22,7 +22,6 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.Set;
 
 public class UnsortedAndroidResourceDeps {
@@ -37,10 +36,6 @@ public class UnsortedAndroidResourceDeps {
           JavaLibrary.class,
           JavaTest.class,
           RobolectricTest.class);
-
-  public interface Callback {
-    void onRuleVisited(BuildRule rule, Set<BuildRule> depsToVisit);
-  }
 
   private final ImmutableSet<HasAndroidResourceDeps> resourceDeps;
 
@@ -58,8 +53,7 @@ public class UnsortedAndroidResourceDeps {
    * UberRDotJava, DummyRDotJava, AaptPackageResources where we only need the deps to correctly
    * order the execution of those buildables.
    */
-  public static UnsortedAndroidResourceDeps createFrom(
-      Collection<BuildRule> rules, Optional<Callback> callback) {
+  public static UnsortedAndroidResourceDeps createFrom(Collection<BuildRule> rules) {
 
     ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
 
@@ -90,9 +84,6 @@ public class UnsortedAndroidResourceDeps {
                   TRAVERSABLE_TYPES.contains(rule.getClass())
                       ? rule.getBuildDeps()
                       : ImmutableSet.of();
-            }
-            if (callback.isPresent()) {
-              callback.get().onRuleVisited(rule, depsToVisit);
             }
             return depsToVisit;
           }
