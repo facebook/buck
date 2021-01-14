@@ -1,6 +1,5 @@
 {
   "targets": [
     "buck//test/com/facebook/buck/cxx/endtoend:e2e"
-  ],
-  "version": "efec4149dcdc4fddd45b78ed5087d9b3161d490a"
+  ]
 }
