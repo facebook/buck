@@ -82,7 +82,6 @@ public class RobolectricTestDescription
     implements DescriptionWithTargetGraph<RobolectricTestDescriptionArg>,
         ImplicitDepsInferringDescription<RobolectricTestDescriptionArg> {
 
-
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
@@ -202,7 +201,6 @@ public class RobolectricTestDescription
             JavaTestDescription.MACRO_EXPANDERS);
     ImmutableList<Arg> vmArgs =
         ImmutableList.copyOf(Lists.transform(args.getVmArgs(), macrosConverter::convert));
-
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
@@ -510,6 +508,5 @@ public class RobolectricTestDescription
       }
       return RobolectricTestDescriptionArg.builder().from(this).setSrcs(srcs).build();
     }
-
   }
 }
