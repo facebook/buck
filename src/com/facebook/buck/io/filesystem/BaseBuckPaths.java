@@ -17,13 +17,11 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Common Buck paths */
-@BuckStyleValue
 public abstract class BaseBuckPaths {
 
   /** The relative path to the directory where Buck will generate its files. */
@@ -129,10 +127,5 @@ public abstract class BaseBuckPaths {
 
   public RelPath getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
     return getConfiguredBuckOut().resolve(getBuckOut().relativize(unconfiguredDirInBuckOut));
-  }
-
-  public static BaseBuckPaths of(
-      RelPath buckOut, RelPath configuredBuckOut, boolean shouldIncludeTargetConfigHash) {
-    return ImmutableBaseBuckPaths.ofImpl(buckOut, configuredBuckOut, shouldIncludeTargetConfigHash);
   }
 }
