@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.javacd.model.BuildTargetValue.Type;
 import com.facebook.buck.jvm.core.JavaAbis;
 
@@ -70,7 +70,7 @@ public abstract class CompilerOutputPathsValue {
   }
 
   /** Creates {@link CompilerOutputPathsValue} */
-  public static CompilerOutputPathsValue of(BaseBuckPaths baseBuckPaths, BuildTarget buildTarget) {
+  public static CompilerOutputPathsValue of(BuckPaths buckPaths, BuildTarget buildTarget) {
 
     BuildTarget libraryTarget =
         JavaAbis.isLibraryTarget(buildTarget)
@@ -78,11 +78,11 @@ public abstract class CompilerOutputPathsValue {
             : JavaAbis.getLibraryTarget(buildTarget);
 
     CompilerOutputPaths libraryCompilerOutputPaths =
-        CompilerOutputPaths.of(libraryTarget, baseBuckPaths);
+        CompilerOutputPaths.of(libraryTarget, buckPaths);
     CompilerOutputPaths sourceAbiCompilerOutputPaths =
-        CompilerOutputPaths.of(JavaAbis.getSourceAbiJar(libraryTarget), baseBuckPaths);
+        CompilerOutputPaths.of(JavaAbis.getSourceAbiJar(libraryTarget), buckPaths);
     CompilerOutputPaths sourceOnlyAbiCompilerOutputPaths =
-        CompilerOutputPaths.of(JavaAbis.getSourceOnlyAbiJar(libraryTarget), baseBuckPaths);
+        CompilerOutputPaths.of(JavaAbis.getSourceOnlyAbiJar(libraryTarget), buckPaths);
     return of(
         libraryTarget.getFullyQualifiedName(),
         libraryCompilerOutputPaths,

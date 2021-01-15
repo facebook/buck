@@ -30,7 +30,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
@@ -174,7 +174,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                         "Kotlin compilation to jar factory has to have build target extra params"));
 
     AbsPath rootPath = getRootPath(filesystemParams);
-    BaseBuckPaths buckPaths = buildTargetValueExtraParams.getBaseBuckPaths();
+    BuckPaths buckPaths = buildTargetValueExtraParams.getBuckPaths();
     ImmutableSet<PathMatcher> ignoredPaths =
         FilesystemParamsUtils.getIgnoredPaths(filesystemParams);
 
@@ -536,13 +536,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         + extraParams.getShortName();
   }
 
-  public static RelPath getKaptAnnotationGenPath(BaseBuckPaths buckPaths, BuildTarget buildTarget) {
+  public static RelPath getKaptAnnotationGenPath(BuckPaths buckPaths, BuildTarget buildTarget) {
     return getKaptAnnotationGenPath(
         buckPaths, BuildTargetValue.withExtraParams(buildTarget, buckPaths));
   }
 
   private static RelPath getKaptAnnotationGenPath(
-      BaseBuckPaths buckPaths, BuildTargetValue buildTargetValue) {
+      BuckPaths buckPaths, BuildTargetValue buildTargetValue) {
     BuildTargetValueExtraParams extraParams = getBuildTargetValueExtraParams(buildTargetValue);
     String format = extraParams.isFlavored() ? "%s" : "%s__";
     return getGenPath(buckPaths, buildTargetValue, format).resolveRel("__generated__");
@@ -550,14 +550,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
   /** Returns annotation path for the given {@code target} and {@code format} */
   public static RelPath getAnnotationPath(
-      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
+      BuckPaths buckPaths, BuildTargetValue target, String format) {
     checkArgument(!format.startsWith("/"), "format string should not start with a slash");
     return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getAnnotationDir());
   }
 
   /** Returns `gen` directory path for the given {@code target} and {@code format} */
-  public static RelPath getGenPath(
-      BaseBuckPaths buckPaths, BuildTargetValue target, String format) {
+  public static RelPath getGenPath(BuckPaths buckPaths, BuildTargetValue target, String format) {
     checkArgument(!format.startsWith("/"), "format string should not start with a slash");
 
     return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getGenDir());

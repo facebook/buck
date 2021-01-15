@@ -38,7 +38,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
@@ -296,7 +296,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   @Nullable
-  public SourcePath getSourcePathToOutput(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
+  public SourcePath getSourcePathToOutput(BuildTarget buildTarget, BuckPaths buckPaths) {
     return getOutputJarPath(buildTarget, buckPaths)
         .map(path -> ExplicitBuildTargetSourcePath.of(buildTarget, path))
         .orElse(null);
@@ -372,7 +372,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
     ImmutableSortedSet<RelPath> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     AbsPath rootPath = filesystem.getRootPath();
-    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
+    BuckPaths buckPaths = filesystem.getBuckPaths();
 
     ImmutableList<BaseJavaAbiInfo> fullJarInfos =
         dependencyInfos.infos.stream()
@@ -385,9 +385,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .map(this::toBaseJavaAbiInfo)
             .collect(ImmutableList.toImmutableList());
 
-    BuildTargetValue buildTargetValue =
-        BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
-    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, baseBuckPaths);
+    BuildTargetValue buildTargetValue = BuildTargetValue.withExtraParams(buildTarget, buckPaths);
+    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, buckPaths);
     RelPath classesDir = compilerOutputPaths.getClassesDir();
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -415,7 +414,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         FilesystemParamsUtils.of(filesystem),
         buildableContext,
         buildTargetValue,
-        CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
+        CompilerOutputPathsValue.of(buckPaths, buildTarget),
         compileTimeClasspathPaths,
         javaSrcs,
         fullJarInfos,
@@ -465,12 +464,11 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             filesystem.getRootPath(), context.getCellPathResolver());
 
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
-    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
-    BuildTargetValue buildTargetValue =
-        BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    BuildTargetValue buildTargetValue = BuildTargetValue.withExtraParams(buildTarget, buckPaths);
     stepsBuilder.addPipelinedBuildStepsForAbiJar(
         buildTargetValue,
-        CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
+        CompilerOutputPathsValue.of(buckPaths, buildTarget),
         FilesystemParamsUtils.of(filesystem),
         buildableContext,
         state,
@@ -493,7 +491,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
     ImmutableSortedSet<RelPath> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
     AbsPath rootPath = filesystem.getRootPath();
-    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
+    BuckPaths buckPaths = filesystem.getBuckPaths();
 
     ImmutableList<BaseJavaAbiInfo> fullJarInfos =
         dependencyInfos.infos.stream()
@@ -506,9 +504,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .map(this::toBaseJavaAbiInfo)
             .collect(ImmutableList.toImmutableList());
 
-    BuildTargetValue buildTargetValue =
-        BuildTargetValue.withExtraParams(buildTarget, baseBuckPaths);
-    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, baseBuckPaths);
+    BuildTargetValue buildTargetValue = BuildTargetValue.withExtraParams(buildTarget, buckPaths);
+    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, buckPaths);
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -528,7 +525,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     AbsPath buildCellRootPath = AbsPath.of(context.getBuildCellRootPath());
 
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
-    Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, baseBuckPaths);
+    Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, buckPaths);
     T extraParams = createExtraParams(context, rootPath);
 
     stepsBuilder.addBuildStepsForLibraryJar(
@@ -542,7 +539,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         FilesystemParamsUtils.of(filesystem),
         buildableContext,
         buildTargetValue,
-        CompilerOutputPathsValue.of(baseBuckPaths, buildTarget),
+        CompilerOutputPathsValue.of(buckPaths, buildTarget),
         pathToClassHashes,
         compileTimeClasspathPaths,
         javaSrcs,
@@ -558,8 +555,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   private Optional<RelPath> getPathToClasses(
-      BuildContext context, BuildTarget buildTarget, BaseBuckPaths baseBuckPaths) {
-    return Optional.ofNullable(getSourcePathToOutput(buildTarget, baseBuckPaths))
+      BuildContext context, BuildTarget buildTarget, BuckPaths buckPaths) {
+    return Optional.ofNullable(getSourcePathToOutput(buildTarget, buckPaths))
         .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath));
   }
 
@@ -587,16 +584,16 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Optional<RelPath> pathToClasses =
         getPathToClasses(context, libraryTarget, filesystem.getBuckPaths());
 
-    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
+    BuckPaths buckPaths = filesystem.getBuckPaths();
     BuildTargetValue libraryTargetValue =
-        BuildTargetValue.withExtraParams(libraryTarget, baseBuckPaths);
+        BuildTargetValue.withExtraParams(libraryTarget, buckPaths);
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     stepsBuilder.addPipelinedBuildStepsForLibraryJar(
         libraryTargetValue,
         FilesystemParamsUtils.of(filesystem),
         buildableContext,
         state,
-        CompilerOutputPathsValue.of(baseBuckPaths, libraryTarget),
+        CompilerOutputPathsValue.of(buckPaths, libraryTarget),
         pathToClassHashes,
         resourcesMap,
         cellToPathMappings,
@@ -672,7 +669,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       CellPathResolver cellPathResolver,
       BuildTarget buildTarget) {
     Preconditions.checkState(useDependencyFileRuleKeys());
-    BaseBuckPaths buckPath = filesystem.getBuckPaths();
+    BuckPaths buckPath = filesystem.getBuckPaths();
     return DefaultClassUsageFileReader.loadFromFile(
         filesystem.getRootPath(),
         cellPathResolver,
@@ -682,7 +679,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 
-  private Optional<RelPath> getOutputJarPath(BuildTarget buildTarget, BaseBuckPaths buckPaths) {
+  private Optional<RelPath> getOutputJarPath(BuildTarget buildTarget, BuckPaths buckPaths) {
     if (!producesJar()) {
       return Optional.empty();
     }
@@ -737,7 +734,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     ImmutableSortedSet<RelPath> compileTimeClasspathPaths =
         getCompileTimeClasspathPaths(filesystem, sourcePathResolver);
     ImmutableSortedSet<RelPath> javaSrcs = getJavaSrcs(filesystem, sourcePathResolver);
-    BaseBuckPaths baseBuckPaths = filesystem.getBuckPaths();
+    BuckPaths buckPaths = filesystem.getBuckPaths();
 
     ImmutableList<BaseJavaAbiInfo> fullJarInfos =
         dependencyInfos.infos.stream()
@@ -751,7 +748,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             .collect(ImmutableList.toImmutableList());
 
     BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
-    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, baseBuckPaths);
+    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, buckPaths);
     JarParameters abiJarParameters =
         getAbiJarParameters(buildTarget, context, filesystem, compilerOutputPaths.getClassesDir())
             .orElse(null);

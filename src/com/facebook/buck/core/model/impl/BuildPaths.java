@@ -19,7 +19,7 @@ package com.facebook.buck.core.model.impl;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
@@ -64,7 +64,7 @@ public class BuildPaths {
    * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of {@code
    *     target}.
    */
-  public static RelPath getGenDir(BaseBuckPaths buckPaths, BuildTarget target) {
+  public static RelPath getGenDir(BuckPaths buckPaths, BuildTarget target) {
     return BuildTargetPaths.getGenPath(buckPaths, target, getFormat(target));
   }
 
@@ -72,8 +72,7 @@ public class BuildPaths {
    * Return a relative path to a file taking into account the {@code target}'s package path and
    * formatting with the short name.
    *
-   * <p>This is a portion of the path returned by, e.g., {@link #getGenDir(BaseBuckPaths,
-   * BuildTarget)}
+   * <p>This is a portion of the path returned by, e.g., {@link #getGenDir(BuckPaths, BuildTarget)}
    *
    * @param target The {@link BuildTarget} to scope this path to.
    * @return A {@link java.nio.file.Path} scoped to the base path to {@code target}.

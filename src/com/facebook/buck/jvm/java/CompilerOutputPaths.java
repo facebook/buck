@@ -20,7 +20,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
 import java.nio.file.FileSystem;
 import java.util.Optional;
@@ -44,7 +44,7 @@ public abstract class CompilerOutputPaths {
   public abstract Optional<RelPath> getOutputJarPath();
 
   /** Creates {@link CompilerOutputPaths} */
-  public static CompilerOutputPaths of(BuildTarget target, BaseBuckPaths buckPath) {
+  public static CompilerOutputPaths of(BuildTarget target, BuckPaths buckPath) {
     boolean shouldIncludeTargetConfigHash = buckPath.shouldIncludeTargetConfigHash();
     FileSystem fileSystem = buckPath.getFileSystem();
     RelPath genDir = buckPath.getGenDir();

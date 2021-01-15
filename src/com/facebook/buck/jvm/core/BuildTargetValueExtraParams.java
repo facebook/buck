@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 
 /** Extra params from {@link BuildTarget} needed for Kotlin. */
 @BuckStyleValue
@@ -36,19 +36,18 @@ public abstract class BuildTargetValueExtraParams {
 
   public abstract String getShortName();
 
-  public abstract BaseBuckPaths getBaseBuckPaths();
+  public abstract BuckPaths getBuckPaths();
 
   /** Creates {@link BuildTargetValueExtraParams} */
-  public static BuildTargetValueExtraParams of(
-      BuildTarget buildTarget, BaseBuckPaths baseBuckPaths) {
+  public static BuildTargetValueExtraParams of(BuildTarget buildTarget, BuckPaths buckPaths) {
     return BuildTargetValueExtraParams.of(
         buildTarget.getCellRelativeBasePath().getPath(),
         buildTarget.isFlavored(),
         BuildTargetPaths.getBasePathForBaseName(
-            baseBuckPaths.shouldIncludeTargetConfigHash(), buildTarget),
+            buckPaths.shouldIncludeTargetConfigHash(), buildTarget),
         buildTarget.getShortNameAndFlavorPostfix(),
         buildTarget.getShortName(),
-        baseBuckPaths);
+        buckPaths);
   }
 
   /** Creates {@link BuildTargetValueExtraParams} */
@@ -58,13 +57,13 @@ public abstract class BuildTargetValueExtraParams {
       ForwardRelativePath basePathForBaseName,
       String shortNameAndFlavorPostfix,
       String shortName,
-      BaseBuckPaths baseBuckPaths) {
+      BuckPaths buckPaths) {
     return ImmutableBuildTargetValueExtraParams.ofImpl(
         cellRelativeBasePath,
         flavored,
         basePathForBaseName,
         shortNameAndFlavorPostfix,
         shortName,
-        baseBuckPaths);
+        buckPaths);
   }
 }

@@ -32,7 +32,7 @@ import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.BaseBuckPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
@@ -206,7 +206,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
           CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
 
-      BaseBuckPaths buckPaths = filesystem.getBuckPaths();
+      BuckPaths buckPaths = filesystem.getBuckPaths();
 
       RelPath depFile =
           CompilerOutputPaths.getDepFilePath(
