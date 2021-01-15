@@ -19,7 +19,6 @@ import collections
 import contextlib
 import functools
 import hashlib
-import imp
 import inspect
 import json
 import optparse
@@ -74,6 +73,11 @@ from .util import (
     is_in_dir,
     is_special,
 )
+
+if not PY3:
+    # This module is not used in python3.
+    # Importing it in python3 generates a warning.
+    import imp
 
 
 # When build files are executed, the functions in this file tagged with
@@ -1879,7 +1883,11 @@ class BuildFileProcessor(object):
 
             # Build a new module for the given file, using the default globals
             # created above.
-            module = imp.new_module(path)
+            if PY3:
+                module = types.ModuleType(path)
+            else:
+                # this method handles str/unicode in py2
+                module = imp.new_module(path)
             module.__file__ = path
             module.__dict__.update(default_globals)
 

@@ -7,7 +7,6 @@ import posixpath
 import re
 import sys
 import time
-from collections import Sequence
 from contextlib import contextmanager
 from errno import EINVAL, ENOENT
 from operator import attrgetter
@@ -17,6 +16,11 @@ try:
 except ImportError:
     from urllib.parse import quote as urlquote, quote_from_bytes as urlquote_from_bytes
 
+if sys.version_info[:2] >= ( 3, 3):
+    from collections.abc import Sequence
+else:
+    # This stops working in python 3.9, and deprecated since python 3.3
+    from collections import Sequence
 
 try:
     intern = intern
