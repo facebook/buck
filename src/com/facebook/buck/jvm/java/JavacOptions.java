@@ -219,7 +219,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
   private static void appendOptionsTo(
       AbsPath ruleCellRoot,
       OptionsConsumer optionsConsumer,
-      String bootclasspathString,
+      @Nullable String bootclasspathString,
       JavacLanguageLevelOptions languageLevelOptions,
       boolean isDebug,
       boolean isVerbose,
@@ -310,6 +310,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
     optionsConsumer.addExtras(extraArguments);
   }
 
+  @Nullable
   private static String getBootclasspathString(
       Optional<String> bootclasspathOptional, Optional<List<RelPath>> bootclasspathList) {
     if (bootclasspathOptional.isPresent()) {
