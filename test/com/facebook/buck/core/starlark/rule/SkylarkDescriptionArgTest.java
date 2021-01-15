@@ -42,7 +42,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.starlark.rule.attr.impl.IntAttribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -119,8 +118,7 @@ public class SkylarkDescriptionArgTest {
   }
 
   @Test
-  public void defaultValuesUsedWhenMarshalling()
-      throws LabelSyntaxException, EvalException, CoerceFailedException {
+  public void defaultValuesUsedWhenMarshalling() throws LabelSyntaxException, EvalException {
     DefaultConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellNameResolver cellNameResolver =

@@ -252,8 +252,7 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   private ExternalJavac.ResolvedExternalJavac createTestStep() {
     ExternalJavac externalJavac =
-        new ExternalJavac(
-            () -> new FakeTool(), filesystem.resolve(Paths.get("fakeJavac")).toString());
+        new ExternalJavac(FakeTool::new, filesystem.resolve(Paths.get("fakeJavac")).toString());
     return externalJavac.resolve(
         new TestActionGraphBuilder().getSourcePathResolver(), filesystem.getRootPath());
   }

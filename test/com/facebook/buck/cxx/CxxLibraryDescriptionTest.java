@@ -1406,7 +1406,7 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         RichStream.from(rule.getBuildDeps())
             .map(BuildRule::getBuildTarget)
-            .map(t -> t.withFlavors())
+            .map(BuildTarget::withFlavors)
             .toImmutableSet(),
         hasItem(exportedDepBuilder.getTarget()));
   }

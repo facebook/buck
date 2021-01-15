@@ -155,7 +155,7 @@ public class WindowsCmdExeEscaperTest {
   static void testCommandLineToArgvW(String commandLine, String[] argv) {
     WindowsCmdExeEscaper.CommandLineToArgvWParser argvParser =
         new WindowsCmdExeEscaper.CommandLineToArgvWParser();
-    ArrayList<String> argvBuilder = new ArrayList<String>();
+    ArrayList<String> argvBuilder = new ArrayList<>();
     BiConsumer<String, Optional<WindowsCmdExeEscaper.AnnotatedString>> argConsumer =
         (separator, optionalArg) -> optionalArg.map(arg -> argvBuilder.add(arg.toString()));
     argvParser.parse(new WindowsCmdExeEscaper.AnnotatedString(commandLine), argConsumer);

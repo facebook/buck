@@ -65,11 +65,7 @@ public class ExactPathMatcherTest {
   public void verifyPathWithAnAsteriskChar() {
     String path = ".idea/blah/blah/bl*ah/foo/bar";
     InvalidPathException expectedException =
-        assertThrows(
-            InvalidPathException.class,
-            () -> {
-              ExactPathMatcher.of(path);
-            });
+        assertThrows(InvalidPathException.class, () -> ExactPathMatcher.of(path));
 
     assertThat(expectedException.getCause(), equalTo(null));
     assertThat(expectedException.getMessage(), equalTo("Illegal char <*> at index 18: " + path));

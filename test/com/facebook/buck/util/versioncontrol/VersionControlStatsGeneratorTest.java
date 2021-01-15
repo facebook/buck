@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Optional;
@@ -41,7 +40,7 @@ public class VersionControlStatsGeneratorTest {
               () -> {
                 try {
                   return new FileInputStream(
-                      new File("/tmp/this_is_not_really_a_valid_diff_but_whatever.diff"));
+                      "/tmp/this_is_not_really_a_valid_diff_but_whatever.diff");
                 } catch (IOException e) {
                   throw new VersionControlCommandFailedException(e);
                 }

@@ -45,7 +45,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class SwiftTestIOSIntegrationTest {
-  private static String XCTOOL_DEFAULT_DEST_FOR_TESTS = "name=iPhone 8";
+  private static final String XCTOOL_DEFAULT_DEST_FOR_TESTS = "name=iPhone 8";
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

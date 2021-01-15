@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -409,7 +410,8 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     apkInspector.assertTypeExists("Lcom/facebook/sample3/private_shared/Sample;");
   }
 
-  /* Disable @Test */
+  @Ignore
+  @Test
   public void testMultidexProguardModular() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -422,7 +424,8 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
   }
 
-  /* Disable @Test */
+  @Ignore
+  @Test
   public void testMultidexProguardModularWithObfuscation() throws IOException {
     String target = "//apps/multidex:app_modular_proguard_obfuscate";
     workspace.runBuckCommand("build", target).assertSuccess();

@@ -60,7 +60,7 @@ public class ExternalActionsUtilsTest {
   }
 
   @Test
-  public void failureToWriteJsonGivesCorrectErrorMessage() throws Exception {
+  public void failureToWriteJsonGivesCorrectErrorMessage() {
     expectedThrownException.expect(IllegalStateException.class);
     expectedThrownException.expectMessage("Failed to write JSON for ");
 

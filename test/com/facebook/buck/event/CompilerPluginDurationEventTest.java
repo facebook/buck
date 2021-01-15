@@ -28,7 +28,8 @@ import org.junit.Test;
 
 public class CompilerPluginDurationEventTest {
 
-  private String target = BuildTargetFactory.newInstance("//fake:rule").getFullyQualifiedName();
+  private final String target =
+      BuildTargetFactory.newInstance("//fake:rule").getFullyQualifiedName();
 
   @Test
   public void testEquals() {

@@ -103,8 +103,7 @@ public class ConstructorArgMarshallerImmutableTest {
   private <T extends BuildRuleArg> T invokePopulate2(
       Class<T> constructorClass,
       Map<String, ?> attributes,
-      ImmutableSet.Builder<BuildTarget> declaredDeps)
-      throws CoerceFailedException {
+      ImmutableSet.Builder<BuildTarget> declaredDeps) {
     HashMap<ParamName, Object> attributesWithName = new HashMap<>();
     for (Map.Entry<String, ?> entry : attributes.entrySet()) {
       attributesWithName.put(ParamName.bySnakeCase(entry.getKey()), entry.getValue());
@@ -485,7 +484,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesResolvesConfigurableAttributes() throws Exception {
+  public void populateWithConfiguringAttributesResolvesConfigurableAttributes() {
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(
@@ -552,7 +551,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesCopiesValuesToImmutable() throws Exception {
+  public void populateWithConfiguringAttributesCopiesValuesToImmutable() {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
@@ -581,7 +580,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesCollectsDeclaredDeps() throws Exception {
+  public void populateWithConfiguringAttributesCollectsDeclaredDeps() {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
@@ -612,7 +611,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesSkipsMissingValues() throws Exception {
+  public void populateWithConfiguringAttributesSkipsMissingValues() {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
@@ -638,7 +637,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithConfiguringAttributesSplitsConfiguration() throws Exception {
+  public void populateWithConfiguringAttributesSplitsConfiguration() {
     BuildTarget multiPlatformTarget =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:multi_platform");
     BuildTarget basePlatformTarget =
@@ -699,7 +698,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   @Test
-  public void populateWithExecSwitch() throws Exception {
+  public void populateWithExecSwitch() {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =

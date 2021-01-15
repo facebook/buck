@@ -97,14 +97,14 @@ public class ObjectFileScrubbersTest {
   public void testHexConversion() {
     ImmutableMap<Byte, String> expectedOutput =
         ImmutableMap.of(
-            new Byte((byte) 0x00), "00",
-            new Byte((byte) 0x7F), "7F",
-            new Byte((byte) 0x80), "80",
-            new Byte((byte) 0xAB), "AB",
-            new Byte((byte) 0xFF), "FF");
+            (byte) 0x00, "00",
+            (byte) 0x7F, "7F",
+            (byte) 0x80, "80",
+            (byte) 0xAB, "AB",
+            (byte) 0xFF, "FF");
 
     for (Map.Entry<Byte, String> entry : expectedOutput.entrySet()) {
-      byte inputByte = entry.getKey().byteValue();
+      byte inputByte = entry.getKey();
       String expectedHexString = entry.getValue();
       String actualHexString = ObjectFileScrubbers.bytesToHex(new byte[] {inputByte}, false);
       assertThat(actualHexString, equalTo(expectedHexString));

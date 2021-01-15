@@ -454,7 +454,7 @@ public class AdbHelperTest {
   }
 
   @Test
-  public void testGetDevicesShouldReconnectIfFirstConnectionFails() throws Exception {
+  public void testGetDevicesShouldReconnectIfFirstConnectionFails() {
     AndroidDebugBridgeFacade adb =
         createFlakyAdb(
             /*connectOnAttempt=*/ 2,
@@ -466,7 +466,7 @@ public class AdbHelperTest {
   }
 
   @Test
-  public void testGetDevicesShouldRetryIfNoDevicesFound() throws Exception {
+  public void testGetDevicesShouldRetryIfNoDevicesFound() {
     AndroidDebugBridgeFacade adb =
         createFlakyAdb(
             /*connectOnAttempt=*/ 1,
@@ -578,14 +578,14 @@ public class AdbHelperTest {
   private AdbHelper createAdbHelper(List<IDevice> deviceList) {
     AdbHelper.setDevicesSupplierForTests(
         Optional.of(
-            () -> {
-              return deviceList.stream()
-                  .map(
-                      id ->
-                          (AndroidDevice)
-                              new RealAndroidDevice(testContext.getBuckEventBus(), id, testConsole))
-                  .collect(ImmutableList.toImmutableList());
-            }));
+            () ->
+                deviceList.stream()
+                    .map(
+                        id ->
+                            (AndroidDevice)
+                                new RealAndroidDevice(
+                                    testContext.getBuckEventBus(), id, testConsole))
+                    .collect(ImmutableList.toImmutableList())));
 
     return new AdbHelper(
         createAdbOptions(),

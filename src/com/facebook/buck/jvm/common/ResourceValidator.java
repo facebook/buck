@@ -24,6 +24,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 
 public final class ResourceValidator {
+
+  /** Validates `resources` argument for java targets. */
   public static void validateResources(
       SourcePathResolverAdapter resolver,
       ProjectFilesystem filesystem,

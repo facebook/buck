@@ -66,7 +66,7 @@ import org.junit.rules.ExpectedException;
 
 public class AppleTestIntegrationTest {
 
-  private static String XCTOOL_DEFAULT_DEST_FOR_TESTS = "name=iPhone 8";
+  private static final String XCTOOL_DEFAULT_DEST_FOR_TESTS = "name=iPhone 8";
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

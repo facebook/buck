@@ -36,7 +36,7 @@ public class Sha1Command implements Command {
       aliases = {"-m"})
   private String mountPoint;
 
-  @Argument private List<String> paths = new ArrayList<>();
+  @Argument private final List<String> paths = new ArrayList<>();
 
   @Override
   public int run(EdenClientPool pool) throws EdenError, IOException, TException {

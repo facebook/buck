@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -71,7 +72,7 @@ public class TargetNodeSpecTest {
 
   /**
    * Verify that {@link TargetNodeSpec#getBuildTargetPattern(Cell)} returns the same {@link
-   * BuildTargetPattern} as {@link BuildTargetPatternParser#parse(String)}.
+   * BuildTargetPattern} as {@link BuildTargetPatternParser#parse(String, CellNameResolver)}.
    */
   @Test
   @Parameters(method = "getTargetPatterns")

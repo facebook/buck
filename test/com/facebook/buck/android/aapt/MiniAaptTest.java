@@ -175,8 +175,7 @@ public class MiniAaptTest {
             ImmutableSet.of());
     aapt.processValuesFile(filesystem, Paths.get("values.xml"));
 
-    Set<RDotTxtEntry> definitions =
-        ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
+    Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
     assertEquals(
         createTestingFakes(definitions),

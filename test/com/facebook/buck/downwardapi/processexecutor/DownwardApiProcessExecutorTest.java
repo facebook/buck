@@ -564,8 +564,7 @@ public class DownwardApiProcessExecutorTest {
         diffInSeconds <= diffThreshold);
   }
 
-  private void writeIntoNamedPipeProcess(String namedPipeName)
-      throws IOException, InterruptedException {
+  private void writeIntoNamedPipeProcess(String namedPipeName) throws IOException {
     NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
     try (NamedPipeWriter namedPipe = namedPipeFactory.connectAsWriter(Paths.get(namedPipeName));
         OutputStream outputStream = namedPipe.getOutputStream()) {

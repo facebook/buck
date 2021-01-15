@@ -40,7 +40,7 @@ public class DefaultBuckEventBusTest {
   private static final int TIMEOUT_MILLIS = 500;
   private static final Instant AT_TIME = Instant.parse("2020-04-24T12:13:14.123456789Z");
 
-  private DefaultBuckEventBus buckEventBus =
+  private final DefaultBuckEventBus buckEventBus =
       new DefaultBuckEventBus(
           new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, TIMEOUT_MILLIS);
 

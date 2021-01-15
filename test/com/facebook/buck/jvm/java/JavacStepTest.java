@@ -88,7 +88,7 @@ public class JavacStepTest {
   private SourcePathResolverAdapter sourcePathResolver;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     buckPaths = fakeFilesystem.getBuckPaths();
     target = BuildTargetFactory.newInstance("//foo:bar");

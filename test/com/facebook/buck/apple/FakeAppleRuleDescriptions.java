@@ -63,7 +63,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /** Utility class holding pre-made fake Apple rule descriptions for use in tests. */
@@ -107,44 +106,43 @@ public class FakeAppleRuleDescriptions {
           .setToolchains(ImmutableList.of())
           .build();
 
-  public static final ProjectFilesystem FAKE_PROJECT_FILESYSTEM =
-      ((Supplier<ProjectFilesystem>)
-              () -> {
-                ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-                Stream.of(
-                        "Platforms/iPhoneOS.platform/Developer/usr/bin/libtool",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/ar",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/ld",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/nm",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/strip",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool",
-                        "Tools/otest",
-                        "usr/bin/actool",
-                        "usr/bin/ibtool",
-                        "usr/bin/momc",
-                        "usr/bin/copySceneKitAssets",
-                        "usr/bin/lldb",
-                        "usr/bin/xctest")
-                    .forEach(
-                        path -> {
-                          Path actualPath = filesystem.getPath(path);
-                          try {
-                            Files.createDirectories(actualPath.getParent());
-                            Files.createFile(actualPath);
-                          } catch (IOException e) {
-                            throw new RuntimeException(e);
-                          }
-                        });
-                return filesystem;
-              })
-          .get();
+  public static final ProjectFilesystem FAKE_PROJECT_FILESYSTEM;
+
+  static {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Stream.of(
+            "Platforms/iPhoneOS.platform/Developer/usr/bin/libtool",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/ar",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/ld",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/nm",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/strip",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool",
+            "Tools/otest",
+            "usr/bin/actool",
+            "usr/bin/ibtool",
+            "usr/bin/momc",
+            "usr/bin/copySceneKitAssets",
+            "usr/bin/lldb",
+            "usr/bin/xctest")
+        .forEach(
+            path -> {
+              Path actualPath = filesystem.getPath(path);
+              try {
+                Files.createDirectories(actualPath.getParent());
+                Files.createFile(actualPath);
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
+    FAKE_PROJECT_FILESYSTEM = filesystem;
+  }
 
   public static final AppleSdkPaths DEFAULT_MACOSX_SDK_PATHS =
       AppleSdkPaths.builder()

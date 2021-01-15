@@ -102,7 +102,7 @@ public class AbstractBottomUpTraversalTest {
     //   Y
     //  /
     // Z
-    DirectedAcyclicGraph.Builder<Node> graphBuilder = DirectedAcyclicGraph.<Node>serialBuilder();
+    DirectedAcyclicGraph.Builder<Node> graphBuilder = DirectedAcyclicGraph.serialBuilder();
     Set<Node> nodes = ImmutableSet.of(Node.A, Node.V, Node.W, Node.X, Node.Y, Node.Z);
     for (Node node : nodes) {
       graphBuilder.addNode(node);

@@ -598,7 +598,7 @@ public class WatchmanWatcherTest {
     watcher.postEvents(bus, WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     boolean zeroFilesChangedSeen = false;
-    System.err.println(String.format("Events: %d", events.size()));
+    System.err.printf("Events: %d%n", events.size());
     for (BuckEvent event : events) {
       zeroFilesChangedSeen |= event.getEventName().equals("WatchmanZeroFileChanges");
     }
@@ -645,9 +645,9 @@ public class WatchmanWatcherTest {
     watcher.postEvents(bus, WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     boolean zeroFilesChangedSeen = false;
-    System.err.println(String.format("Events: %d", events.size()));
+    System.err.printf("Events: %d%n", events.size());
     for (BuckEvent event : events) {
-      System.err.println(String.format("Event: %s", event));
+      System.err.printf("Event: %s%n", event);
       zeroFilesChangedSeen |= event.getEventName().equals("WatchmanZeroFileChanges");
     }
     assertFalse(zeroFilesChangedSeen);

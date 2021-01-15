@@ -556,7 +556,7 @@ public class DefaultGraphTransformationEngineTest {
             executor);
     assertEquals(ImmutableLongNode.of(19), engine.computeUnchecked(ImmutableLongNode.of(1)));
     assertEquals(
-        ImmutableLongMultNode.of(1 * 2 * 3 * 3 * 4 * 5 * 4 * 4 * 5 * 4 * 9),
+        ImmutableLongMultNode.of(2 * 3 * 3 * 4 * 5 * 4 * 4 * 5 * 4 * 9),
         engine.computeUnchecked(ImmutableLongMultNode.of(1)));
 
     assertComputationIndexBecomesEmpty(engine.impl.computationIndex);

@@ -192,7 +192,7 @@ public class ThriftArtifactCacheTest {
   }
 
   private static class InMemoryThriftResponse implements HttpResponse {
-    private byte[] response;
+    private final byte[] response;
 
     public InMemoryThriftResponse(TBase<?, ?> thrift, byte[]... payloads) {
       byte[] serializedThrift = null;

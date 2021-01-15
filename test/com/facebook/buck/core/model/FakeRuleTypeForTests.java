@@ -17,8 +17,8 @@
 package com.facebook.buck.core.model;
 
 /**
- * Helper that is particularly important for Kotlin code because apparently {@link
- * AbstractRuleType.Kind} is not visible to it, even if it is referenced as <code>RuleType.Kind
+ * Helper that is particularly important for Kotlin code because apparently {@link RuleType.Kind} is
+ * not visible to it, even if it is referenced as <code>RuleType.Kind
  * </code>, because <code>Kind</code> is declared inside a class that is package-private and Kotlin
  * visibility rules work differently.
  */

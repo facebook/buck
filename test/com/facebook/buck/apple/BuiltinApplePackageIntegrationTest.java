@@ -155,7 +155,7 @@ public class BuiltinApplePackageIntegrationTest {
   }
 
   @Test
-  public void packageHasProperStructureForWatch20() throws IOException, InterruptedException {
+  public void packageHasProperStructureForWatch20() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
@@ -164,7 +164,7 @@ public class BuiltinApplePackageIntegrationTest {
   }
 
   @Test
-  public void packageHasProperStructureForWatch21() throws IOException, InterruptedException {
+  public void packageHasProperStructureForWatch21() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
@@ -237,7 +237,7 @@ public class BuiltinApplePackageIntegrationTest {
       ImmutableList.Builder<String> fullCommandBuilder = ImmutableList.builder();
       ImmutableList<String> fullCommand =
           fullCommandBuilder.addAll(command).addAll(platformInfo.getSecond()).build();
-      System.err.println(String.format("%s", fullCommand.toString()));
+      System.err.printf("%s%n", fullCommand.toString());
       ProcessExecutor.Result result = workspace.runCommand(fullCommand);
       assertEquals(0, result.getExitCode());
 

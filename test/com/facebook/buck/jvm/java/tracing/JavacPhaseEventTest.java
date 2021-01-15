@@ -28,7 +28,7 @@ import org.junit.Test;
 
 public class JavacPhaseEventTest {
 
-  String target = BuildTargetFactory.newInstance("//fake:rule").getFullyQualifiedName();
+  final String target = BuildTargetFactory.newInstance("//fake:rule").getFullyQualifiedName();
 
   @Test
   public void testEquals() {

@@ -58,7 +58,7 @@ public class AccumulateClassNamesStepTest {
   private AbsPath ruleCellRoot;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     ruleCellRoot = AbsPath.of(tmp.getRoot().toPath().toAbsolutePath());
   }
 

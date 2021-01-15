@@ -233,7 +233,7 @@ public class TargetCompatibilityCheckerTest {
             incompatibleBuckConfig));
   }
 
-  private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) throws Exception {
+  private ConstructorArg createTargetNodeArg(Map<String, Object> rawNode) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();

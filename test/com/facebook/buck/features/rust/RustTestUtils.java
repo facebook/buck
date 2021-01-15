@@ -42,11 +42,11 @@ public class RustTestUtils {
                 Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build()), true));
   }
 
-  public static Flavor PLUGIN_FLAVOR = InternalFlavor.of("rustc-plugin");
+  public static final Flavor PLUGIN_FLAVOR = InternalFlavor.of("rustc-plugin");
 
-  public static CxxPlatform CXX_PLUGIN_PLATFORM =
+  public static final CxxPlatform CXX_PLUGIN_PLATFORM =
       CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(PLUGIN_FLAVOR);
-  public static RustPlatform RUST_PLUGIN_PLATFORM =
+  public static final RustPlatform RUST_PLUGIN_PLATFORM =
       makeRustPlatform().setCxxPlatform(CXX_PLUGIN_PLATFORM).build();
 
   public static final RustPlatform DEFAULT_PLATFORM =

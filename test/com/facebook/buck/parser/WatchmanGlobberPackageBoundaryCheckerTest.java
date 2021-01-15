@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import static com.android.common.SdkConstants.UTF_8;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
@@ -36,6 +35,7 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -212,6 +212,6 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
   }
 
   private void touch(AbsPath path) throws IOException {
-    Files.write(path.getPath(), "".getBytes(UTF_8));
+    Files.write(path.getPath(), "".getBytes(StandardCharsets.UTF_8));
   }
 }

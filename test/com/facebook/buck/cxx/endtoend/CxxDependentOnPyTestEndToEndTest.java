@@ -64,7 +64,7 @@ public class CxxDependentOnPyTestEndToEndTest {
       throws Exception {
     boolean foundFile = false;
     long startTime = System.currentTimeMillis();
-    long timeoutMillis = timeout * 1000;
+    long timeoutMillis = timeout * 1000L;
     while (!foundFile && System.currentTimeMillis() < startTime + timeoutMillis) {
       try {
         workspace.getFileContents(filename);

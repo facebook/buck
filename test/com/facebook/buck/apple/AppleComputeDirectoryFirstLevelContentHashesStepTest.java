@@ -42,7 +42,7 @@ public class AppleComputeDirectoryFirstLevelContentHashesStepTest {
   private StepExecutionContext context;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS);
     filesystemRootPath =
         TestDataHelper.getTestDataDirectory(this)

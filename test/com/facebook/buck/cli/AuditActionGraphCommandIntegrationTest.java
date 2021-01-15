@@ -267,12 +267,7 @@ public class AuditActionGraphCommandIntegrationTest {
         BuildTargetPaths.getGenPath(
                 filesystem.getBuckPaths(), BuildTargetFactory.newInstance(targetName), "%s")
             .resolve(relPathToOutputDir);
-    return new StringBuilder("Pair(")
-        .append(targetName)
-        .append(", ")
-        .append(output)
-        .append(")")
-        .toString();
+    return "Pair(" + targetName + ", " + output + ")";
   }
 
   /**
@@ -311,6 +306,6 @@ public class AuditActionGraphCommandIntegrationTest {
   }
 
   private static String asList(String stringToWrap) {
-    return new StringBuilder("[").append(stringToWrap).append("]").toString();
+    return "[" + stringToWrap + "]";
   }
 }

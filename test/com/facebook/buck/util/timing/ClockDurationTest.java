@@ -40,7 +40,7 @@ public class ClockDurationTest {
     ClockDuration duration1 = new ClockDuration(10, 2, 3);
     ClockDuration duration2 = new ClockDuration(1, 20, 3);
     ClockDuration duration3 = new ClockDuration(1, 2, 30);
-    Assert.assertNotEquals(duration, 42);
+    Assert.assertNotEquals(duration.getWallMillisDuration(), 42);
     Assert.assertEquals(duration, duration);
     Assert.assertEquals(duration, duration0);
     Assert.assertNotEquals(duration, duration1);

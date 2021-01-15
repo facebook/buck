@@ -249,7 +249,7 @@ public class CxxRawHeadersIntegrationTest {
         containsString("In //lib6:lib6 expected regular file: lib6/headers"));
   }
 
-  private ProcessResult runCommand(String... args) throws IOException {
+  private ProcessResult runCommand(String... args) {
     if (useBuckd) {
       return workspace.runBuckCommand(args);
     } else {

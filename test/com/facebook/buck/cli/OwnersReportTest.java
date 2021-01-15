@@ -134,7 +134,7 @@ public class OwnersReportTest {
 
   static OwnersReport<TargetNode<?>> generateOwnersReportConfigured(
       Cell rootCell, TargetNode<?> targetNode, String filePath) {
-    return OwnersReport.generateOwnersReport((n) -> n.getInputs(), rootCell, targetNode, filePath);
+    return OwnersReport.generateOwnersReport(TargetNode::getInputs, rootCell, targetNode, filePath);
   }
 
   private ProjectFilesystem filesystem;

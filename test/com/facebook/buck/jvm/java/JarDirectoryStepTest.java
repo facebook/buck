@@ -283,7 +283,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotMergeManifestsIfRequested() throws IOException, InterruptedException {
+  public void shouldNotMergeManifestsIfRequested() throws IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
@@ -293,7 +293,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldMergeManifestsIfAsked() throws InterruptedException, IOException {
+  public void shouldMergeManifestsIfAsked() throws IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
@@ -308,7 +308,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldSortManifestAttributesAndEntries() throws IOException, InterruptedException {
+  public void shouldSortManifestAttributesAndEntries() throws IOException {
     Manifest fromJar =
         createManifestWithExampleSection(ImmutableMap.of("foo", "bar", "baz", "waz"));
     Manifest fromUser =

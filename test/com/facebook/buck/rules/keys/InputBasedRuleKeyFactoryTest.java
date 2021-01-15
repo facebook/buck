@@ -306,7 +306,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
-          RuleKeyAppendableWithInput input =
+          final RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(PathSourcePath.of(filesystem, output));
         };
 
@@ -342,7 +342,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
-          RuleKeyAppendableWithInput input =
+          final RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
         };
 
@@ -394,7 +394,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
-          RuleKeyAppendableWithInput input =
+          final RuleKeyAppendableWithInput input =
               new RuleKeyAppendableWithInput(dep.getSourcePathToOutput());
         };
 
@@ -445,7 +445,7 @@ public class InputBasedRuleKeyFactoryTest {
     BuildRule rule =
         new NoopBuildRuleWithDeclaredAndExtraDeps(target, filesystem, params) {
           @AddToRuleKey
-          NestedRuleKeyAppendableWithInput input =
+          final NestedRuleKeyAppendableWithInput input =
               new NestedRuleKeyAppendableWithInput(PathSourcePath.of(filesystem, inputFile));
         };
 
@@ -623,7 +623,7 @@ public class InputBasedRuleKeyFactoryTest {
     return new TestInputBasedRuleKeyFactory(hashCache, ruleFinder)
         .build(
             new FakeBuildRule("//fake:target") {
-              @AddToRuleKey List<Object> ruleObjects = Arrays.asList(objects);
+              @AddToRuleKey final List<Object> ruleObjects = Arrays.asList(objects);
             });
   }
 }

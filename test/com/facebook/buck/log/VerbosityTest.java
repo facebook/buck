@@ -42,7 +42,7 @@ public class VerbosityTest {
   }
 
   @Test
-  public void noOutputOnNormalBuildWithVerboseZero() throws IOException {
+  public void noOutputOnNormalBuildWithVerboseZero() {
     ProcessResult result = workspace.runBuckCommand("build", "--verbose", "0", "//:foo");
     result.assertSuccess();
     Assert.assertEquals("", result.getStderr());

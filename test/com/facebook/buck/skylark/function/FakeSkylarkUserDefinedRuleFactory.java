@@ -96,8 +96,8 @@ public class FakeSkylarkUserDefinedRuleFactory {
     StarlarkCallable implementation =
         new StarlarkCallable() {
           @Override
-          public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs)
-              throws EvalException, InterruptedException {
+          public Object call(
+              StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs) {
             Preconditions.checkArgument(args.size() == 1);
             Preconditions.checkArgument(args.get(0) instanceof SkylarkRuleContext);
             return callable.apply((SkylarkRuleContext) args.get(0));

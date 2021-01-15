@@ -152,7 +152,7 @@ public class CxxDependencyFileIntegrationTest {
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
-  private ProcessResult runCommand(String... args) throws IOException {
+  private ProcessResult runCommand(String... args) {
     if (buckd) {
       return workspace.runBuckCommand(args);
     } else {

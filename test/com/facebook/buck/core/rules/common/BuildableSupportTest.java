@@ -60,18 +60,20 @@ public class BuildableSupportTest {
 
     AddsToRuleKey rule =
         new AddsToRuleKey() {
-          @AddToRuleKey int value = 0;
-          @AddToRuleKey BuildRule bareRule = rule1;
-          @AddToRuleKey SourcePath sourcePath = rule2.getSourcePathToOutput();
+          @AddToRuleKey final int value = 0;
+          @AddToRuleKey final BuildRule bareRule = rule1;
+          @AddToRuleKey final SourcePath sourcePath = rule2.getSourcePathToOutput();
 
           @AddToRuleKey
-          Object ruleKeyAppendable =
+          final Object ruleKeyAppendable =
               new AddsToRuleKey() {
-                @AddToRuleKey Object key = rule3;
+                @AddToRuleKey final Object key = rule3;
               };
 
-          @AddToRuleKey ImmutableList<BuildRule> list = ImmutableList.of(rule4);
-          @AddToRuleKey Optional<SourcePath> optional = Optional.of(rule5.getSourcePathToOutput());
+          @AddToRuleKey final ImmutableList<BuildRule> list = ImmutableList.of(rule4);
+
+          @AddToRuleKey
+          final Optional<SourcePath> optional = Optional.of(rule5.getSourcePathToOutput());
         };
 
     MoreAsserts.assertSetEquals(
@@ -86,16 +88,16 @@ public class BuildableSupportTest {
     PathSourcePath path3 = FakeSourcePath.of("path3");
     AddsToRuleKey rule =
         new AddsToRuleKey() {
-          @AddToRuleKey int value = 0;
-          @AddToRuleKey SourcePath sourcePath = path1;
+          @AddToRuleKey final int value = 0;
+          @AddToRuleKey final SourcePath sourcePath = path1;
 
           @AddToRuleKey
-          Object ruleKeyAppendable =
+          final Object ruleKeyAppendable =
               new AddsToRuleKey() {
-                @AddToRuleKey SourcePath key = path2;
+                @AddToRuleKey final SourcePath key = path2;
               };
 
-          @AddToRuleKey Optional<SourcePath> optional = Optional.of(path3);
+          @AddToRuleKey final Optional<SourcePath> optional = Optional.of(path3);
         };
 
     MoreAsserts.assertSetEquals(

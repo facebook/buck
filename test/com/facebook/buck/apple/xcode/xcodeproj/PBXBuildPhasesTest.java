@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.apple.project_generator;
+package com.facebook.buck.apple.xcode.xcodeproj;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -26,12 +26,6 @@ import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
-import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;

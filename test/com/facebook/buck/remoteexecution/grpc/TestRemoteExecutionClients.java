@@ -39,9 +39,9 @@ import java.util.concurrent.TimeUnit;
 
 public class TestRemoteExecutionClients implements RemoteExecutionClients {
   private final BuckEventBus eventBus;
-  private Server server;
+  private final Server server;
 
-  private RemoteExecutionClients clients;
+  private final RemoteExecutionClients clients;
 
   public TestRemoteExecutionClients(List<BindableService> services) throws IOException {
     eventBus = new DefaultBuckEventBus(new DefaultClock(), new BuildId("dontcare"));

@@ -65,6 +65,7 @@ import java.util.regex.Pattern;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -209,6 +210,8 @@ public class AppleBinaryIntegrationTest {
         containsString("ARM64"));
   }
 
+  @Ignore
+  @Test
   public void testAppleBinaryRespectsFlavorOverrides() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -2086,6 +2089,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(specificSDKTargetBuildVersion.get(), containsString("minos 10.14"));
   }
 
+  @Test
   public void testAppleBinaryWithTargetTripleBuildsSomething() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

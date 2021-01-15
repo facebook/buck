@@ -28,7 +28,7 @@ import java.nio.file.Paths;
 
 public class FakeWorkerProcess extends WorkerProcess {
 
-  private ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap;
+  private final ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap;
   private boolean isAlive;
 
   public FakeWorkerProcess(ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap)

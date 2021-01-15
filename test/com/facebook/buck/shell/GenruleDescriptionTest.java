@@ -84,7 +84,7 @@ import org.junit.Test;
 public class GenruleDescriptionTest {
 
   @Test
-  public void testImplicitDepsAreAddedCorrectly() throws Exception {
+  public void testImplicitDepsAreAddedCorrectly() {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
     BuckConfig buckConfig = FakeBuckConfig.empty();

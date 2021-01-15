@@ -50,7 +50,7 @@ public class AppleComputeFileOrDirectoryHashStepTest {
     context = TestExecutionContext.newInstance();
   }
 
-  private static String FOO_FILE_HASH = "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83";
+  private static final String FOO_FILE_HASH = "4e1243bd22c66e76c2ba9eddc1f91394e57f9f83";
 
   @Test
   public void
@@ -144,7 +144,7 @@ public class AppleComputeFileOrDirectoryHashStepTest {
     assertEquals(emptyDataHash(), hashBuilder.toString());
   }
 
-  private static String REFERENCE_DIRECTORY_WITH_FILE_HASH =
+  private static final String REFERENCE_DIRECTORY_WITH_FILE_HASH =
       "b11a6313ece4816dbd2e59ffd801e434f7794029";
 
   @Test

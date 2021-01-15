@@ -725,13 +725,11 @@ public class SkylarkProjectBuildFileParserTest {
     ProjectBuildFileParserOptions options =
         getDefaultParserOptions().setUserDefinedRulesState(UserDefinedRulesState.ENABLED).build();
     knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions();
-    System.err.println(
-        String.format(
-            "Got %s descriptions\n%s providers\n%s from PM\n",
-            knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions(),
-            knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getPerFeatureProviders(),
-            BuckPluginManagerFactory.createPluginManager()
-                .getExtensions(DescriptionProvider.class)));
+    System.err.printf(
+        "Got %s descriptions\n%s providers\n%s from PM\n%n",
+        knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions(),
+        knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getPerFeatureProviders(),
+        BuckPluginManagerFactory.createPluginManager().getExtensions(DescriptionProvider.class));
     parser = createParserWithOptions(parser.eventHandler, options);
     SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
     RawTargetNode rule = getSingleRule(buildFile);

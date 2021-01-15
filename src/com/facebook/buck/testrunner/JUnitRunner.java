@@ -31,7 +31,6 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
-import java.util.logging.Logger; // NOPMD
 import java.util.logging.StreamHandler;
 import junit.framework.TestCase;
 import org.junit.Ignore;
@@ -157,9 +156,7 @@ public final class JUnitRunner extends BaseRunner {
    * if you are using a filter then a class-without-tests will cause a NoTestsRemainException to be
    * thrown, which is propagated back as an error.
    */
-  /* @Nullable */
-  private List<TestResult> combineResults(
-      List<TestResult> results, List<TestResult> filteredResults) {
+  List<TestResult> combineResults(List<TestResult> results, List<TestResult> filteredResults) {
     List<TestResult> combined = new ArrayList<>(filteredResults);
     if (!isSingleResultCausedByNoTestsRemainException(results)) {
       combined.addAll(results);
@@ -284,7 +281,7 @@ public final class JUnitRunner extends BaseRunner {
 
       // Listen to any java.util.logging messages reported by the test and write them to
       // julLogBytes / julErrLogBytes.
-      Logger rootLogger = LogManager.getLogManager().getLogger("");
+      java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
 
       if (rootLogger != null) {
         rootLogger.setLevel(Level.FINE);
@@ -313,7 +310,7 @@ public final class JUnitRunner extends BaseRunner {
       System.setErr(originalErr);
 
       // Flush any debug logs and remove the handlers.
-      Logger rootLogger = LogManager.getLogManager().getLogger("");
+      java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
 
       flushAndRemoveLogHandler(rootLogger, julLogHandler);
       julLogHandler = null;
@@ -446,7 +443,10 @@ public final class JUnitRunner extends BaseRunner {
     }
 
     private Handler addStreamHandler(
-        Logger rootLogger, OutputStream stream, Formatter formatter, Level level) {
+        java.util.logging.Logger rootLogger,
+        OutputStream stream,
+        Formatter formatter,
+        Level level) {
       Handler result;
       if (rootLogger != null) {
         result = new StreamHandler(stream, formatter);
@@ -458,7 +458,7 @@ public final class JUnitRunner extends BaseRunner {
       return result;
     }
 
-    private void flushAndRemoveLogHandler(Logger rootLogger, Handler handler) {
+    private void flushAndRemoveLogHandler(java.util.logging.Logger rootLogger, Handler handler) {
       if (handler != null) {
         handler.flush();
       }

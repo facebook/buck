@@ -48,7 +48,7 @@ public class ObjectMappersTest {
     List<Boolean> typed = ImmutableList.of(true, false);
 
     return Lists.cartesianProduct(
-            paths.stream().map(p -> Paths.get(p)).collect(Collectors.toList()), typed)
+            paths.stream().map(Paths::get).collect(Collectors.toList()), typed)
         .stream()
         .map(List::toArray)
         .toArray();

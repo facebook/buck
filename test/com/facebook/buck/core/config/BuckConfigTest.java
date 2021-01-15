@@ -167,7 +167,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testPrepareConfigForREFilteringSection() throws IOException {
+  public void testPrepareConfigForREFilteringSection() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
@@ -183,7 +183,7 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testPrepareConfigForREFilteringFields() throws IOException {
+  public void testPrepareConfigForREFilteringFields() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(

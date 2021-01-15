@@ -79,7 +79,7 @@ public class CommandAliasIntegrationTest {
             .collect(ImmutableSet.toImmutableSet());
     ImmutableList<String> files =
         Files.walk(genDir.toPath())
-            .filter(p -> Files.isDirectory(p))
+            .filter(Files::isDirectory)
             .map(p -> p.getFileName().toString())
             .filter(platforms::contains)
             .collect(ImmutableList.toImmutableList());

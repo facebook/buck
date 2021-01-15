@@ -58,7 +58,7 @@ public class ExternallyBuiltApplePackageTest {
   private ProjectFilesystem projectFilesystem;
   private ActionGraphBuilder graphBuilder;
   private ExternallyBuiltApplePackage.ApplePackageConfigAndPlatformInfo config;
-  private Platform platform = Platform.detect();
+  private final Platform platform = Platform.detect();
 
   @Before
   public void setUp() {

@@ -245,8 +245,7 @@ public class MachoDynamicLinkingTest {
       ImmutableSet<MachoBindInfoSymbol> boundSymbols =
           MachoBindInfoReader.parseStrongAndLazyBoundSymbols(mappedFile);
 
-      Set<MachoBindInfoSymbol> expectedSymbols = new HashSet<>();
-      expectedSymbols.addAll(symbols);
+      Set<MachoBindInfoSymbol> expectedSymbols = new HashSet<>(symbols);
 
       // If `expectedSymbols` is a subset, then after computing the intersection, we expect all
       // elements to be still present.

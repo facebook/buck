@@ -68,7 +68,7 @@ final class AndroidSdkResolver {
   }
 
   /** Gets a resolver for the given filesystem, if the sdk is available. */
-  public static Optional<AndroidSdkResolver> get(ProjectFilesystem filesystem) throws IOException {
+  public static Optional<AndroidSdkResolver> get(ProjectFilesystem filesystem) {
     try {
       return Optional.of(new AndroidSdkResolver(filesystem));
     } catch (HumanReadableException e) {

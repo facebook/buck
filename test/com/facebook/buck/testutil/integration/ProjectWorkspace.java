@@ -714,7 +714,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
         new ParsingUnconfiguredBuildTargetViewFactory());
   }
 
-  public BuildTarget newBuildTarget(String fullyQualifiedName) throws IOException {
+  public BuildTarget newBuildTarget(String fullyQualifiedName) {
     return BuildTargetFactory.newInstance(fullyQualifiedName);
   }
 

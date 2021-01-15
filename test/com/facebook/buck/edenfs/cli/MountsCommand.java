@@ -22,6 +22,7 @@ import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 public class MountsCommand implements Command {
@@ -31,7 +32,7 @@ public class MountsCommand implements Command {
     List<MountInfo> mountInfos = client.listMounts();
     System.out.printf("Number of mounts: %d\n", mountInfos.size());
     for (MountInfo info : mountInfos) {
-      System.out.println(info.mountPoint);
+      System.out.println(Arrays.toString(info.mountPoint));
     }
 
     return 0;

@@ -1673,15 +1673,14 @@ public class ProjectGeneratorTest {
     return HeaderMap.deserialize(headerMapBytes);
   }
 
-  private void assertThatHeaderMapWithoutSymLinksIsEmpty(Path root)
-      throws IOException, InterruptedException {
+  private void assertThatHeaderMapWithoutSymLinksIsEmpty(Path root) throws IOException {
     HeaderMap headerMap = getHeaderMapInDir(root);
     assertNotNull(headerMap);
     assertEquals(headerMap.getNumEntries(), 0);
   }
 
   private void assertThatHeaderMapWithoutSymLinksContains(
-      Path root, ImmutableMap<String, String> content) throws IOException, InterruptedException {
+      Path root, ImmutableMap<String, String> content) throws IOException {
     HeaderMap headerMap = getHeaderMapInDir(root);
     assertNotNull(headerMap);
     assertThat(headerMap.getNumEntries(), equalTo(content.size()));

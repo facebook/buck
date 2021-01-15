@@ -63,13 +63,13 @@ import org.junit.Test;
 
 @SuppressWarnings("unused")
 public class DefaultClassInfoTest {
-  private InputRuleResolver inputRuleResolver = createStrictMock(InputRuleResolver.class);
+  private final InputRuleResolver inputRuleResolver = createStrictMock(InputRuleResolver.class);
 
-  private Consumer<BuildRule> buildRuleConsumer = createStrictMock(Consumer.class);
+  private final Consumer<BuildRule> buildRuleConsumer = createStrictMock(Consumer.class);
 
-  private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
+  private final Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
-  private ProjectFilesystem filesystem =
+  private final ProjectFilesystem filesystem =
       new FakeProjectFilesystem(
           CanonicalCellName.rootCell(), Paths.get("project/root").toAbsolutePath());
 

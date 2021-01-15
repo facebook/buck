@@ -140,9 +140,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     assertTrue(target.getMatcher().get() instanceof CxxLinkGroupMappingTargetPatternMatcher);
 
     assertEquals(
-        ((CxxLinkGroupMappingTargetPatternMatcher) target.getMatcher().get())
-            .getPattern()
-            .toString(),
+        ((CxxLinkGroupMappingTargetPatternMatcher) target.getMatcher().get()).getPattern(),
         buildTargetPattern);
   }
 

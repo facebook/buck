@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.util.string;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.string.AsciiBoxStringBuilder;
 import com.google.common.base.Joiner;
 import org.junit.Test;
 

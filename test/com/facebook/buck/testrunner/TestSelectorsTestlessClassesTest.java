@@ -27,6 +27,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +35,7 @@ import org.junit.Test;
 /**
  * Test to demonstrate how, with or without the use of --filter, a class that contains no @Test
  * methods will never result in an internal NoTestsRemainException being returned to the user as an
- * error. See {@link JUnitRunner#combineResults} for why this is weird.
+ * error. See {@link JUnitRunner#combineResults(List, List)} for why this is weird.
  */
 public class TestSelectorsTestlessClassesTest {
 

@@ -38,37 +38,37 @@ public class RuleKeyDiagnosticsTest {
 
     AddsToRuleKey app0 =
         new AddsToRuleKey() {
-          @AddToRuleKey String k0 = "v0";
+          @AddToRuleKey final String k0 = "v0";
         };
     AddsToRuleKey app1 =
         new AddsToRuleKey() {
-          @AddToRuleKey String k1 = "v1";
+          @AddToRuleKey final String k1 = "v1";
         };
     AddsToRuleKey app2 =
         new AddsToRuleKey() {
-          @AddToRuleKey String k2 = "v2";
-          @AddToRuleKey Object k20 = app0;
+          @AddToRuleKey final String k2 = "v2";
+          @AddToRuleKey final Object k20 = app0;
         };
     AddsToRuleKey app3 =
         new AddsToRuleKey() {
-          @AddToRuleKey String k3 = "v3";
-          @AddToRuleKey Object k30 = app0;
+          @AddToRuleKey final String k3 = "v3";
+          @AddToRuleKey final Object k30 = app0;
         };
     AddsToRuleKey app4 =
         new AddsToRuleKey() {
-          @AddToRuleKey Object k42 = app2;
-          @AddToRuleKey Object k43 = app3;
+          @AddToRuleKey final Object k42 = app2;
+          @AddToRuleKey final Object k43 = app3;
         };
 
     BuildRule dep1 = new FakeBuildRule("//fake:dep1");
     BuildRule dep2 =
         new FakeBuildRule("//fake:dep2") {
-          @AddToRuleKey AddsToRuleKey a4 = app4;
+          @AddToRuleKey final AddsToRuleKey a4 = app4;
         };
     BuildRule rule1 =
         new FakeBuildRule("//fake:rule1", dep1, dep2) {
-          @AddToRuleKey AddsToRuleKey a1 = app1;
-          @AddToRuleKey AddsToRuleKey a4 = app4;
+          @AddToRuleKey final AddsToRuleKey a1 = app1;
+          @AddToRuleKey final AddsToRuleKey a4 = app4;
         };
 
     RuleKeyFactoryWithDiagnostics<RuleKey> factory =

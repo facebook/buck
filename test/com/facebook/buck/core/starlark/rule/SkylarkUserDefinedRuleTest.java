@@ -100,13 +100,12 @@ public class SkylarkUserDefinedRuleTest {
     }
 
     @Override
-    public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs)
-        throws EvalException, InterruptedException {
+    public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs) {
       throw new UnsupportedOperationException();
     }
   }
 
-  private StarlarkThread newEnvironment(Mutability mutability) throws LabelSyntaxException {
+  private StarlarkThread newEnvironment(Mutability mutability) {
     PrintingEventHandler eventHandler = new PrintingEventHandler(EventKind.ALL_EVENTS);
     ParseContext parseContext =
         new ParseContext(

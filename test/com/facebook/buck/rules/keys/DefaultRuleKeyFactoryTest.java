@@ -86,7 +86,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @SuppressWarnings("unused")
     class UndecoratedFields extends EmptyFakeBuildRule {
-      private String field = "cake-walk";
+      private final String field = "cake-walk";
 
       public UndecoratedFields() {
         super(target);
@@ -109,7 +109,7 @@ public class DefaultRuleKeyFactoryTest {
     @SuppressWarnings("unused")
     class DecoratedFields extends EmptyFakeBuildRule {
 
-      @AddToRuleKey private String field = "cake-walk";
+      @AddToRuleKey private final String field = "cake-walk";
 
       public DecoratedFields() {
         super(target);
@@ -139,7 +139,7 @@ public class DefaultRuleKeyFactoryTest {
     @SuppressWarnings("unused")
     class StringifiedField extends EmptyFakeBuildRule {
       @AddToRuleKey(stringify = true)
-      private Stringifiable field = new Stringifiable();
+      private final Stringifiable field = new Stringifiable();
 
       public StringifiedField() {
         super(target);
@@ -270,9 +270,9 @@ public class DefaultRuleKeyFactoryTest {
 
     @SuppressWarnings("unused")
     class UnsortedFields extends EmptyFakeBuildRule {
-      @AddToRuleKey private String gamma = "stinking bishop";
-      @AddToRuleKey private int beta = 1;
-      @AddToRuleKey private String alpha = "stilton";
+      @AddToRuleKey private final String gamma = "stinking bishop";
+      @AddToRuleKey private final int beta = 1;
+      @AddToRuleKey private final String alpha = "stilton";
 
       public UnsortedFields() {
         super(target);
@@ -311,7 +311,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @SuppressWarnings("unused")
     class Parent extends EmptyFakeBuildRule {
-      @AddToRuleKey private BuildTarget target;
+      @AddToRuleKey private final BuildTarget target;
 
       public Parent(BuildTarget target) {
         super(target);
@@ -321,7 +321,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @SuppressWarnings("unused")
     class Child extends Parent {
-      @AddToRuleKey private String exoticCheese = "bavarian smoked";
+      @AddToRuleKey private final String exoticCheese = "bavarian smoked";
 
       public Child(BuildTarget target) {
         super(target);
@@ -346,7 +346,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @SuppressWarnings("unused")
     class Parent extends EmptyFakeBuildRule {
-      @AddToRuleKey private String key = "parent";
+      @AddToRuleKey private final String key = "parent";
 
       public Parent() {
         super(target);
@@ -355,7 +355,7 @@ public class DefaultRuleKeyFactoryTest {
 
     @SuppressWarnings("unused")
     class Child extends Parent {
-      @AddToRuleKey private String key = "child";
+      @AddToRuleKey private final String key = "child";
 
       public Child() {}
     }
@@ -615,8 +615,8 @@ public class DefaultRuleKeyFactoryTest {
 
   @SuppressWarnings("unused")
   private static class Adder implements AddsToRuleKey {
-    @AddToRuleKey private String cheese = "brie";
-    @AddToRuleKey private String wine = "cabernet";
+    @AddToRuleKey private final String cheese = "brie";
+    @AddToRuleKey private final String wine = "cabernet";
 
     @Override
     public String toString() {
@@ -626,7 +626,7 @@ public class DefaultRuleKeyFactoryTest {
 
   @SuppressWarnings("unused")
   private static class Appender implements RuleKeyAppendable {
-    @AddToRuleKey private String wine = "cabernet";
+    @AddToRuleKey private final String wine = "cabernet";
 
     @Override
     public void appendToRuleKey(RuleKeyAppendableSink sink) {

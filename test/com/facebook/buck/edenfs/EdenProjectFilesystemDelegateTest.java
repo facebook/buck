@@ -316,8 +316,7 @@ public class EdenProjectFilesystemDelegateTest {
     replay(mount);
 
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage(
-        String.format("Watchman is not set. Please turn off eden.use_watchman_content_sha1"));
+    thrown.expectMessage("Watchman is not set. Please turn off eden.use_watchman_content_sha1");
 
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);

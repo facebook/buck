@@ -28,11 +28,13 @@ public final class DeepMatcher<T> implements IArgumentMatcher {
     this.expected = expected;
   }
 
+  @Override
   public void appendTo(StringBuffer buffer) {
     buffer.append("DeepMatcher");
-    buffer.append(String.valueOf(expected));
+    buffer.append(expected);
   }
 
+  @Override
   public boolean matches(Object argument) {
     if (expected instanceof List && argument instanceof List) {
       // List.equals uses Object.equals on its elements, which uses identity for arrays.

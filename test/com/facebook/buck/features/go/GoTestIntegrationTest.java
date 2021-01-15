@@ -327,7 +327,7 @@ public class GoTestIntegrationTest {
   }
 
   @Test
-  public void testGoTestWithSystemEnv() throws IOException {
+  public void testGoTestWithSystemEnv() {
     workspace
         .runBuckCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
         .assertTestFailure();
