@@ -69,6 +69,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,10 +92,15 @@ public class TargetSpecResolver implements AutoCloseable {
   private final LoadingCache<CanonicalCellName, GraphTransformationEngine>
       graphEngineForRecursiveSpecPerCell;
 
+  public static final Duration DEFAULT_WATCHMAN_TIMEOUT = Duration.ofSeconds(30);
+
   @FunctionalInterface
   private interface EngineFactory {
     GraphTransformationEngine makeEngine(
-        Path cellPath, String buildFileName, ProjectFilesystemView fileSystemView);
+        Path cellPath,
+        String buildFileName,
+        ProjectFilesystemView fileSystemView,
+        Duration timeout);
   }
 
   private TargetSpecResolver(
@@ -114,11 +120,16 @@ public class TargetSpecResolver implements AutoCloseable {
                 CacheLoader.from(
                     name -> {
                       Cell cell = cellProvider.getCellByCanonicalCellName(name);
-                      String buildFileName =
-                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+                      ParserConfig config = cell.getBuckConfigView(ParserConfig.class);
+                      String buildFileName = config.getBuildFileName();
                       ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
+                      Duration timeout =
+                          config
+                              .getWatchmanQueryTimeoutMs()
+                              .map(Duration::ofMillis)
+                              .orElse(DEFAULT_WATCHMAN_TIMEOUT);
                       return engineFactory.makeEngine(
-                          cell.getRoot().getPath(), buildFileName, fileSystemView);
+                          cell.getRoot().getPath(), buildFileName, fileSystemView, timeout);
                     })));
   }
 
@@ -154,7 +165,10 @@ public class TargetSpecResolver implements AutoCloseable {
     return new TargetSpecResolver(
         eventBus,
         cellProvider,
-        (Path cellPath, String buildFileName, ProjectFilesystemView fileSystemView) -> {
+        (Path cellPath,
+            String buildFileName,
+            ProjectFilesystemView fileSystemView,
+            Duration watchmanTimeout) -> {
           DirectoryListCache dirListCache = dirListCachePerRoot.getUnchecked(cellPath);
           Verify.verifyNotNull(
               dirListCache,
@@ -197,12 +211,15 @@ public class TargetSpecResolver implements AutoCloseable {
     return new TargetSpecResolver(
         eventBus,
         cellProvider,
-        (Path cellPath, String buildFileName, ProjectFilesystemView fileSystemView) ->
+        (Path cellPath,
+            String buildFileName,
+            ProjectFilesystemView fileSystemView,
+            Duration timeout) ->
             new DefaultGraphTransformationEngine(
                 ImmutableList.of(
                     new GraphComputationStage<>(
                         new WatchmanBuildPackageComputation(
-                            buildFileName, fileSystemView, watchman))),
+                            buildFileName, fileSystemView, watchman, timeout))),
                 1,
                 executor));
   }

@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -62,6 +63,7 @@ import org.junit.runner.RunWith;
 public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageComputationTest {
 
   private static final Logger LOG = Logger.get(WatchmanBuildPackageComputationTest.class);
+  public static final Duration WATCHMAN_TIME_OUT = Duration.ofSeconds(30);
 
   @Rule public TemporaryPaths watchmanStateDirectory = new TemporaryPaths();
 
@@ -140,7 +142,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
             "Path [%s] is not watched. The list of watched project: [%s]",
             filesystem.getRootPath(), ImmutableList.of()));
 
-    new WatchmanBuildPackageComputation("BUCK", filesystem.asView(), WatchmanFactory.NULL_WATCHMAN);
+    new WatchmanBuildPackageComputation(
+        "BUCK", filesystem.asView(), WatchmanFactory.NULL_WATCHMAN, WATCHMAN_TIME_OUT);
   }
 
   @Test
@@ -206,7 +209,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
       String buildFileName, ProjectFilesystemView filesystemView, Watchman watchman) {
     return ImmutableList.of(
         new GraphComputationStage<>(
-            new WatchmanBuildPackageComputation(buildFileName, filesystemView, watchman)));
+            new WatchmanBuildPackageComputation(
+                buildFileName, filesystemView, watchman, WATCHMAN_TIME_OUT)));
   }
 
   private Watchman createWatchmanClientFactory(ImmutableSet<AbsPath> watchedProjects)

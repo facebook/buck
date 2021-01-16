@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -64,25 +65,30 @@ public class WatchmanBuildPackageComputation
   private final ProjectFilesystemView filesystemView;
   private final ProjectWatch watch;
   private final Watchman watchman;
+  private final Duration timeOut;
 
   private static final Logger LOG = Logger.get(WatchmanBuildPackageComputation.class);
 
   private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
-  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(30);
 
   /**
    * @param buildFileName Name of the build file to search for, for example 'BUCK'
    * @param filesystemView Cell to search in. Discovered paths are relative to {@link
    *     ProjectFilesystemView#getRootPath()}.
+   * @param timeOut the timeout in nanoseconds to wait for {@code watchman}
    * @throws FileSystemNotWatchedException {@code watchman} does not include a watch for {@link
    *     ProjectFilesystemView#getRootPath()}.
    */
   public WatchmanBuildPackageComputation(
-      String buildFileName, ProjectFilesystemView filesystemView, Watchman watchman)
+      String buildFileName,
+      ProjectFilesystemView filesystemView,
+      Watchman watchman,
+      Duration timeOut)
       throws FileSystemNotWatchedException {
     this.buildFileName = buildFileName;
     this.filesystemView = filesystemView;
     this.watchman = watchman;
+    this.timeOut = timeOut;
 
     ProjectWatch watch = watchman.getProjectWatches().get(AbsPath.of(filesystemView.getRootPath()));
     if (watch == null) {
@@ -157,7 +163,7 @@ public class WatchmanBuildPackageComputation
               EnumSet.of(
                   WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
                   WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
-              TIMEOUT_NANOS,
+              timeOut.toNanos(),
               WARN_TIMEOUT_NANOS);
       LOG.info("Globber with basepath %s, pattern: %s result: %s", basePath, pattern, paths);
     }
