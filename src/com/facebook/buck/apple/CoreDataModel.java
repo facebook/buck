@@ -25,8 +25,11 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -42,8 +45,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.SortedSet;
 
-public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+/** Compile data models */
+public class CoreDataModel extends AbstractBuildRule {
 
   public static final Flavor FLAVOR = InternalFlavor.of("core-data-model");
 
@@ -59,18 +64,19 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final Path sdkRoot;
   private final Path outputDir;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   @AddToRuleKey private final boolean withDownwardApi;
 
   CoreDataModel(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
       AppleCxxPlatform appleCxxPlatform,
       String moduleName,
       ImmutableSet<SourcePath> dataModelPaths,
       boolean withDownwardApi) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
     this.moduleName = moduleName;
     this.dataModelPaths = dataModelPaths;
     this.withDownwardApi = withDownwardApi;
@@ -83,6 +89,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.sdkRoot = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.momc = appleCxxPlatform.getMomc();
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
   }
 
   @Override
@@ -137,5 +144,15 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputDir);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return depsSupplier.get();
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 }

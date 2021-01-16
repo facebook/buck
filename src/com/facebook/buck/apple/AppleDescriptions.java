@@ -558,7 +558,7 @@ public class AppleDescriptions {
       TargetGraph targetGraph,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
       String moduleName,
       AppleCxxPlatform appleCxxPlatform,
       Predicate<BuildTarget> filter,
@@ -584,7 +584,7 @@ public class AppleDescriptions {
           new CoreDataModel(
               coreDataModelBuildTarget,
               projectFilesystem,
-              params.withoutDeclaredDeps().withoutExtraDeps(),
+              graphBuilder,
               appleCxxPlatform,
               moduleName,
               coreDataModelArgs.stream()
@@ -858,7 +858,7 @@ public class AppleDescriptions {
             targetGraph,
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
-            params,
+            graphBuilder,
             AppleBundle.getBinaryName(buildTarget, productName),
             appleCxxPlatform,
             filter,
