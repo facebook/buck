@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.toolchain.ComparableToolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -47,10 +48,15 @@ public abstract class AndroidNdk implements ComparableToolchain {
 
   @Value.Lazy
   public Path getNdkBuildExecutable() {
+    String executableName = "ndk-build";
+    if (Platform.detect() == Platform.WINDOWS) {
+      executableName = "ndk-build.cmd";
+    }
     Optional<Path> ndkBuild =
-        getExecutableFinder().getOptionalExecutable(Paths.get("ndk-build"), getNdkRootPath());
+        getExecutableFinder().getOptionalExecutable(Paths.get(executableName), getNdkRootPath());
     if (!ndkBuild.isPresent()) {
-      throw new HumanReadableException("Unable to find ndk-build in " + getNdkRootPath());
+      throw new HumanReadableException(
+          "Unable to find " + executableName + " in " + getNdkRootPath());
     }
     return ndkBuild.get();
   }
