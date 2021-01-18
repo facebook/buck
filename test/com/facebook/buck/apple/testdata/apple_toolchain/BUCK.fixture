@@ -18,6 +18,11 @@ apple_binary(
     preprocessor_flags = ["-fobjc-arc"],
 )
 
+core_data_model(
+    name = "AppleTestObjects",
+    path = "srcs/TestObjects.xcdatamodeld",
+)
+
 apple_library(
     name = "TestLib",
     srcs = [
@@ -30,6 +35,9 @@ apple_library(
     ],
     headers = [
         "srcs/header.h",
+    ],
+    deps = [
+        ":AppleTestObjects",
     ],
 )
 
