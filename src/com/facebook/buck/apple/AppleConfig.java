@@ -106,9 +106,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   // TODO(T78663283): This is a temporary flag, remove after successful deployment
   private static final String PARALLELIZE_CODE_SIGN_ON_COPY = "parallelize_code_sign_on_copy";
 
-  private static final String MODULAR_SWIFT_EXPORTS_OBJC_HEADER =
-      "modular_swift_exports_objc_header";
-
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -632,10 +629,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getParallelCodeSignOnCopyEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, PARALLELIZE_CODE_SIGN_ON_COPY, false);
-  }
-
-  public boolean getModularSwiftExportsObjcHeader() {
-    return delegate.getBooleanValue(APPLE_SECTION, MODULAR_SWIFT_EXPORTS_OBJC_HEADER, true);
   }
 
   @BuckStyleValue

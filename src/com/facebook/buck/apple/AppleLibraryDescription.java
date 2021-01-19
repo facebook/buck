@@ -337,7 +337,7 @@ public class AppleLibraryDescription
                     buildTarget, projectFilesystem, graphBuilder, args));
           } else if (type.getValue().equals(Type.SWIFT_EXPORTED_OBJC_GENERATED_HEADER)) {
             Preconditions.checkState(
-                !args.isModular() || appleConfig.getModularSwiftExportsObjcHeader(),
+                !args.isModular(),
                 "Modular Swift libraries should not export generated ObjC headers.");
 
             CxxPlatform cxxPlatform =
@@ -955,9 +955,7 @@ public class AppleLibraryDescription
           {
             AppleLibrarySwiftMetadata metadata =
                 AppleLibrarySwiftMetadata.from(
-                    args.getSrcs(),
-                    graphBuilder.getSourcePathResolver(),
-                    !args.isModular() || appleConfig.getModularSwiftExportsObjcHeader());
+                    args.getSrcs(), graphBuilder.getSourcePathResolver(), !args.isModular());
             return Optional.of(metadata).map(metadataClass::cast);
           }
         case APPLE_SWIFT_UNDERLYING_MODULE_INPUT:
