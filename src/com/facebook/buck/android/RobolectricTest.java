@@ -37,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -76,6 +77,7 @@ public class RobolectricTest extends JavaTest {
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
+      ImmutableSortedSet<SourcePath> resources,
       Optional<SourcePath> unbundledResourcesRoot,
       Optional<SourcePath> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest,
@@ -120,6 +122,7 @@ public class RobolectricTest extends JavaTest {
         forkMode,
         stdOutLogLevel,
         stdErrLogLevel,
+        resources,
         unbundledResourcesRoot,
         useRelativePathsInClasspathFile,
         withDownwardApi);

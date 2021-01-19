@@ -186,6 +186,7 @@ public class KotlinTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
+        args.getResources(),
         args.getUnbundledResourcesRoot(),
         javaBuckConfig
             .getDelegate()

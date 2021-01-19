@@ -175,6 +175,7 @@ public class GroovyTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
+        args.getResources(),
         args.getUnbundledResourcesRoot(),
         javaBuckConfig
             .getDelegate()

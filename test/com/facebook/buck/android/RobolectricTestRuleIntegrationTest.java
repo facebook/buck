@@ -129,6 +129,12 @@ public class RobolectricTestRuleIntegrationTest {
             .collect(ImmutableList.toImmutableList());
     assertFalse(androidJarEntries.isEmpty());
 
+    ImmutableList<String> robolectricResourcesPaths =
+        requiredPaths.stream()
+            .filter(path -> path.contains("some_file.txt"))
+            .collect(ImmutableList.toImmutableList());
+    assertEquals(1, robolectricResourcesPaths.size());
+
     // The classpath arg file should use relative paths except for the bootclasspath, which uses an
     // absolute path.
     ImmutableList<String> classpathArgfile =

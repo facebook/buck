@@ -150,6 +150,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final ForkMode forkMode;
 
+  private final ImmutableSet<SourcePath> resources;
   private final Optional<SourcePath> unbundledResourcesRoot;
   private final boolean useRelativePathsInClasspathFile;
   private final boolean withDownwardApi;
@@ -175,6 +176,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
+      ImmutableSet<SourcePath> resources,
       Optional<SourcePath> unbundledResourcesRoot,
       boolean useRelativePathsInClasspathFile,
       boolean withDownwardApi) {
@@ -196,6 +198,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.forkMode = forkMode;
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
+    this.resources = ImmutableSet.copyOf(resources);
     this.unbundledResourcesRoot = unbundledResourcesRoot;
     this.withDownwardApi = withDownwardApi;
     this.useRelativePathsInClasspathFile = useRelativePathsInClasspathFile;
@@ -670,10 +673,15 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  @SuppressWarnings("unused")
   protected ImmutableSet<Path> getExtraRequiredPaths(
       SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return nativeLibsRequiredPaths;
+    return ImmutableSet.<Path>builder()
+        .addAll(
+            resources.stream()
+                .map(sourcePath -> sourcePathResolverAdapter.getAbsolutePath(sourcePath).getPath())
+                .collect(ImmutableSet.toImmutableSet()))
+        .addAll(nativeLibsRequiredPaths)
+        .build();
   }
 
   public interface AdditionalClasspathEntriesProvider {
