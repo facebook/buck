@@ -56,6 +56,7 @@ java_library(
         "//src/com/facebook/buck/core/rules/pipeline:pipeline",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/core/toolchain/tool:tool",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",

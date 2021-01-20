@@ -319,8 +319,8 @@ public class AndroidBinaryGraphEnhancer {
             buildBuckConfig.areExternalActionsEnabled(),
             javaBuckConfig
                 .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(graphBuilder, originalBuildTarget.getTargetConfiguration())
-                .getCommandPrefix(graphBuilder.getSourcePathResolver()));
+                .getJavaRuntimeLauncher(
+                    graphBuilder, originalBuildTarget.getTargetConfiguration()));
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;

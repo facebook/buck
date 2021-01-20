@@ -35,7 +35,6 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -55,6 +54,7 @@ import java.nio.file.Paths;
  * These are copies from aapt's outputs. The exo resources zip gets zipaligned.
  */
 public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
+
   private static final String EXO_RESOURCES_APK_FILE_NAME = "exo-resources.apk";
   private static final String PRIMARY_RESOURCES_APK_FILE_NAME = "primary-resources.apk";
   private static final String R_TXT_FILE_NAME = "R.txt";
@@ -70,7 +70,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
       Tool zipalignTool,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      ImmutableList<String> javaCommandPrefix) {
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -85,7 +85,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
             Paths.get(R_TXT_FILE_NAME),
             withDownwardApi,
             shouldExecuteInSeparateProcess,
-            javaCommandPrefix));
+            javaRuntimeLauncher));
   }
 
   SourcePath getPathToRDotTxt() {
@@ -126,8 +126,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
         Path rDotTxtOutputPath,
         boolean withDownwardApi,
         boolean shouldExecuteInSeparateProcess,
-        ImmutableList<String> javaCommandPrefix) {
-      super(shouldExecuteInSeparateProcess, javaCommandPrefix);
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.buildTarget = buildTarget;
       this.exoResourcesOutputPath = new OutputPath(exoResourcesOutputPath);
       this.primaryResourcesOutputPath = new OutputPath(primaryResourcesOutputPath);

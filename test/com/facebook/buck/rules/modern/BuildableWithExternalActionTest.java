@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -34,9 +35,10 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.buildables.BuildableCommandExecutionStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.Objects;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -95,7 +97,7 @@ public class BuildableWithExternalActionTest {
     private final String arg;
 
     private FakeBuildable(boolean shouldUseExternalActions, String arg) {
-      super(shouldUseExternalActions, ImmutableList.of("java"));
+      super(shouldUseExternalActions, new FakeTool());
       this.arg = arg;
     }
 
@@ -120,27 +122,18 @@ public class BuildableWithExternalActionTest {
     }
   }
 
-  private static class FakeStep extends IsolatedStep {
+  private static class FakeStep extends AbstractIsolatedExecutionStep {
 
     private final String arg;
 
     private FakeStep(String arg) {
+      super("fake_step");
       this.arg = arg;
     }
 
     @Override
     public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
       return StepExecutionResults.SUCCESS;
-    }
-
-    @Override
-    public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-      return "fake_step_description";
-    }
-
-    @Override
-    public String getShortName() {
-      return "fake_step";
     }
 
     @Override
@@ -151,13 +144,13 @@ public class BuildableWithExternalActionTest {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
-      FakeStep that = (FakeStep) o;
-      return arg == that.arg;
+      FakeStep fakeStep = (FakeStep) o;
+      return Objects.equal(arg, fakeStep.arg);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(arg);
+      return Objects.hashCode(arg);
     }
   }
 }

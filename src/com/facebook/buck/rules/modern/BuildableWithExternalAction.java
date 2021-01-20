@@ -17,6 +17,8 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.external.utils.BuildStepsRetriever;
@@ -33,13 +35,13 @@ import com.google.common.collect.ImmutableList;
  */
 public abstract class BuildableWithExternalAction implements Buildable {
 
-  private final boolean shouldExecuteInSeparateProcess;
-  private final ImmutableList<String> javaCommandPrefix;
+  @AddToRuleKey private final boolean shouldExecuteInSeparateProcess;
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   public BuildableWithExternalAction(
-      boolean shouldExecuteInSeparateProcess, ImmutableList<String> javaCommandPrefix) {
+      boolean shouldExecuteInSeparateProcess, Tool javaRuntimeLauncher) {
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
-    this.javaCommandPrefix = javaCommandPrefix;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 
   @Override
@@ -56,7 +58,7 @@ public abstract class BuildableWithExternalAction implements Buildable {
           new BuildableCommandExecutionStep(
               getBuildableCommand(filesystem, outputPathResolver, buildContext),
               filesystem,
-              javaCommandPrefix));
+              javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver())));
     }
     String externalActionClassName = buildableCommand.getExternalActionClass();
     try {

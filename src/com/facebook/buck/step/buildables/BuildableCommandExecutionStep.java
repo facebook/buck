@@ -55,13 +55,13 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   private final String mainToInvoke;
   private final BuildableCommand buildableCommand;
   private final ProjectFilesystem projectFilesystem;
-  private final ImmutableList<String> javaCommandPrefix;
+  private final ImmutableList<String> javaRuntimeLauncherCommand;
 
   public BuildableCommandExecutionStep(
       BuildableCommand buildableCommand,
       ProjectFilesystem projectFilesystem,
-      ImmutableList<String> javaCommandPrefix) {
-    this(EXTERNAL_ACTIONS_MAIN, buildableCommand, projectFilesystem, javaCommandPrefix);
+      ImmutableList<String> javaRuntimeLauncherCommand) {
+    this(EXTERNAL_ACTIONS_MAIN, buildableCommand, projectFilesystem, javaRuntimeLauncherCommand);
   }
 
   /**
@@ -77,7 +77,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
     this.mainToInvoke = mainToInvoke;
     this.buildableCommand = buildableCommand;
     this.projectFilesystem = projectFilesystem;
-    this.javaCommandPrefix =
+    this.javaRuntimeLauncherCommand =
         ImmutableList.<String>builder().addAll(javaCommandPrefix).add("-cp").build();
   }
 
@@ -131,8 +131,8 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   }
 
   private ImmutableList<String> getCommand(Path buildableCommandPath) {
-    return ImmutableList.<String>builderWithExpectedSize(javaCommandPrefix.size() + 3)
-        .addAll(javaCommandPrefix)
+    return ImmutableList.<String>builderWithExpectedSize(javaRuntimeLauncherCommand.size() + 3)
+        .addAll(javaRuntimeLauncherCommand)
         .add(getJarPath().toString())
         .add(mainToInvoke)
         .add(buildableCommandPath.toString())
