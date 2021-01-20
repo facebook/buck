@@ -1,0 +1,6 @@
+[cache]
+  mode = dir
+[cxx]
+  cflags = -g
+[apple]
+  iphonesimulator_target_sdk_version = 10.0

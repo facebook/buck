@@ -65,7 +65,6 @@ import java.util.regex.Pattern;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -210,7 +209,6 @@ public class AppleBinaryIntegrationTest {
         containsString("ARM64"));
   }
 
-  @Ignore
   @Test
   public void testAppleBinaryRespectsFlavorOverrides() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
@@ -244,23 +242,6 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         workspace.runCommand("otool", "-hv", simOutputPath.toString()).getStdout().get(),
         containsString("X86_64"));
-
-    BuildTarget fatTarget =
-        target.withFlavors(
-            InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("iphonesimulator-i386"));
-    workspace.runBuckCommand("build", fatTarget.getFullyQualifiedName()).assertSuccess();
-
-    Path fatOutputPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                workspace.getProjectFileSystem().getBuckPaths(), target, "%s"));
-    assertThat(Files.exists(fatOutputPath), is(true));
-    assertThat(
-        workspace.runCommand("file", fatOutputPath.toString()).getStdout().get(),
-        containsString("executable"));
-    ProcessExecutor.Result lipoVerifyResult =
-        workspace.runCommand("lipo", fatOutputPath.toString(), "-verify_arch", "i386", "x86_64");
-    assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 
   @Test
