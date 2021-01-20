@@ -2021,8 +2021,7 @@ public final class MainRunner {
             watchman,
             buildEventBus,
             unconfiguredBuildTargetFactory,
-            hostConfiguration,
-            BuildBuckConfig.of(buckConfig).shouldBuckOutIncludeTargetConfigHash()),
+            hostConfiguration),
         buckGlobalState.getTypeCoercerFactory(),
         new InstrumentedVersionedTargetGraphCache(
             buckGlobalState.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

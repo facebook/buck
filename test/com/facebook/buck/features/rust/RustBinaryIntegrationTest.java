@@ -20,8 +20,11 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -1077,7 +1080,12 @@ public class RustBinaryIntegrationTest {
     String binary =
         "buck-out/cells/cell/gen/"
             + BuildTargetPaths.getBasePath(
-                    workspace.getProjectFileSystem().getBuckPaths().shouldIncludeTargetConfigHash(),
+                    workspace
+                        .getProjectFileSystem()
+                        .getBuckPaths()
+                        .shouldIncludeTargetConfigHash(
+                            CellRelativePath.of(
+                                CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
                     BuildTargetFactory.newInstance("//:thinguser#binary"),
                     "%s")
                 .resolve("thinguser");

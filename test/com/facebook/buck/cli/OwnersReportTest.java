@@ -309,7 +309,7 @@ public class OwnersReportTest {
             parser,
             perBuildState,
             Optional.empty(),
-            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
+            new TemporaryUnconfiguredTargetToTargetUniquenessChecker(),
             new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
             MoreExecutors.newDirectExecutorService());
     OwnersReport report =
@@ -350,7 +350,7 @@ public class OwnersReportTest {
             parser,
             perBuildState,
             Optional.empty(),
-            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
+            new TemporaryUnconfiguredTargetToTargetUniquenessChecker(),
             new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
             MoreExecutors.newDirectExecutorService());
 

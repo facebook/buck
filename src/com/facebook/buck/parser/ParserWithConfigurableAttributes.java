@@ -87,9 +87,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
-      BuckEventBus eventBus,
-      boolean buckOutIncludeTargetConfigHash) {
-    super(daemonicParserState, perBuildStateFactory, eventBus, buckOutIncludeTargetConfigHash);
+      BuckEventBus eventBus) {
+    super(daemonicParserState, perBuildStateFactory, eventBus);
     this.targetSpecResolver = targetSpecResolver;
   }
 

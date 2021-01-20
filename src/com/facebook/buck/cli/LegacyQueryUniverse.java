@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -104,9 +103,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
         params.getParser(),
         parserState,
         params.getTargetConfiguration(),
-        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
-            BuildBuckConfig.of(params.getCells().getRootCell().getBuckConfig())
-                .shouldBuckOutIncludeTargetConfigHash()),
+        new TemporaryUnconfiguredTargetToTargetUniquenessChecker(),
         params.getBuckEventBus(),
         service);
   }
@@ -304,7 +301,7 @@ public class LegacyQueryUniverse implements TargetUniverse {
                 return Futures.immediateFuture(Unit.UNIT);
               }
               graph.addNode(buildTarget);
-              checker.addTarget(buildTarget, dependencyStack);
+              checker.addTarget(targetNode, dependencyStack);
 
               // `TargetNode.getParseDeps()` is expensive (as it's layers of `Sets.union()`), so we
               // avoid it when possible and parallelize it here via the executor.

@@ -105,7 +105,8 @@ public class DefaultSourcePathResolver extends AbstractSourcePathResolver {
                     BuildTargetPaths.getBasePathForBaseName(
                             rule.getProjectFilesystem()
                                 .getBuckPaths()
-                                .shouldIncludeTargetConfigHash(),
+                                .shouldIncludeTargetConfigHash(
+                                    rule.getBuildTarget().getCellRelativeBasePath()),
                             rule.getBuildTarget())
                         .toPath(path.getFileSystem()));
         if (path.startsWith(basePath)) {

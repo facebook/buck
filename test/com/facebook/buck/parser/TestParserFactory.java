@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -90,7 +89,6 @@ public class TestParserFactory {
         new DaemonicParserState(parserConfig.getNumParsingThreads()),
         perBuildStateFactory,
         TestTargetSpecResolverFactory.create(executor, cell.getCellProvider(), eventBus),
-        eventBus,
-        BuildBuckConfig.of(cell.getBuckConfig()).shouldBuckOutIncludeTargetConfigHash());
+        eventBus);
   }
 }

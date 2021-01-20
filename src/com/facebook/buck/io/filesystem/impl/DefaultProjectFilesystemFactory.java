@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RecursivePathSetting;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -185,7 +186,15 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
       boolean buckOutIncludeTargetConfigHash) {
     BuckPaths buckPaths =
-        BuckPaths.createDefaultBuckPaths(cellName, rootPath, buckOutIncludeTargetConfigHash);
+        BuckPaths.createDefaultBuckPaths(
+            cellName,
+            rootPath,
+            buckOutIncludeTargetConfigHash,
+            // NOTE(agallagher): To avoid cases where builds originating in cells which have fully
+            // enabled hashed buck-out, we currently only support overrides for the root cell.
+            cellName.equals(CanonicalCellName.rootCell())
+                ? BuckPaths.getBuckOutIncludeTargetConfigHashOverrides(config)
+                : RecursivePathSetting.<Boolean>builder().build());
     Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
 
     if (embeddedCellBuckOutInfo.isPresent()) {

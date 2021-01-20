@@ -1,0 +1,4 @@
+genrule(
+    name = "gen",
+    out = "gen",
+)

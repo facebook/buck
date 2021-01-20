@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.util.config.RecursivePathSetting;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.Clock;
@@ -274,7 +275,10 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         root,
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(
-            CanonicalCellName.rootCell(), root.getPath(), buckOutIncludeTargetConfigHash),
+            CanonicalCellName.rootCell(),
+            root.getPath(),
+            buckOutIncludeTargetConfigHash,
+            RecursivePathSetting.<Boolean>builder().build()),
         new DefaultProjectFilesystemDelegate(root.getPath(), Optional.empty()));
   }
 

@@ -44,7 +44,8 @@ public abstract class BuildTargetValueExtraParams {
         buildTarget.getCellRelativeBasePath().getPath(),
         buildTarget.isFlavored(),
         BuildTargetPaths.getBasePathForBaseName(
-            buckPaths.shouldIncludeTargetConfigHash(), buildTarget),
+            buckPaths.shouldIncludeTargetConfigHash(buildTarget.getCellRelativeBasePath()),
+            buildTarget),
         buildTarget.getShortNameAndFlavorPostfix(),
         buildTarget.getShortName(),
         buckPaths);

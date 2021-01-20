@@ -172,7 +172,11 @@ public class OutputAttributeTest {
     assertFalse(artifact.isSource());
     assertEquals(
         BuildTargetPaths.getBasePath(
-                filesystem.getBuckPaths().shouldIncludeTargetConfigHash(), target, "%s__")
+                filesystem
+                    .getBuckPaths()
+                    .shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
+                target,
+                "%s__")
             .toPath(filesystem.getFileSystem())
             .resolve("subdir")
             .resolve("main.cpp")

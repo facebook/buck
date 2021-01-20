@@ -78,6 +78,10 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return segments.length;
   }
 
+  public String getSegment(int index) {
+    return segments[index];
+  }
+
   /** Compatible with {@link Path#iterator()}. */
   public Iterable<ForwardRelativePath> asIterable() {
     if (segments.length == 0) {

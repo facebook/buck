@@ -58,7 +58,7 @@ public class BuildTargetPaths {
         target,
         format,
         buckPaths.getFileSystem(),
-        buckPaths.shouldIncludeTargetConfigHash(),
+        buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         buckPaths.getScratchDir());
   }
 
@@ -80,7 +80,7 @@ public class BuildTargetPaths {
         target,
         format,
         buckPaths.getFileSystem(),
-        buckPaths.shouldIncludeTargetConfigHash(),
+        buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         buckPaths.getAnnotationDir());
   }
 
@@ -103,7 +103,7 @@ public class BuildTargetPaths {
         target,
         format,
         buckPaths.getFileSystem(),
-        buckPaths.shouldIncludeTargetConfigHash(),
+        buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         buckPaths.getGenDir());
   }
 
@@ -124,7 +124,9 @@ public class BuildTargetPaths {
     return buckPaths
         .getGenDir()
         .resolve(
-            getBasePathForBaseName(buckPaths.shouldIncludeTargetConfigHash(), target)
+            getBasePathForBaseName(
+                    buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
+                    target)
                 .toRelPath(fileSystem));
   }
 

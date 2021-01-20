@@ -79,7 +79,9 @@ public class BuildPaths {
    */
   public static ForwardRelativePath getBaseDir(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getBasePath(
-        filesystem.getBuckPaths().shouldIncludeTargetConfigHash(), target, getFormat(target));
+        filesystem.getBuckPaths().shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
+        target,
+        getFormat(target));
   }
 
   /**

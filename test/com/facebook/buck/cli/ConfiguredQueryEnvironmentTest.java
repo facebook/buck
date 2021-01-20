@@ -151,7 +151,7 @@ public class ConfiguredQueryEnvironmentTest {
             parser,
             parserState,
             Optional.empty(),
-            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true),
+            new TemporaryUnconfiguredTargetToTargetUniquenessChecker(),
             eventBus,
             MoreExecutors.newDirectExecutorService());
     TargetPatternEvaluator targetPatternEvaluator =

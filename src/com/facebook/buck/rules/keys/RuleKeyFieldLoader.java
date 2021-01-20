@@ -49,7 +49,10 @@ public class RuleKeyFieldLoader {
     BuckPaths buckPaths = buildRule.getProjectFilesystem().getBuckPaths();
     RelPath buckOutPath = buckPaths.getConfiguredBuckOut();
     builder.setReflectively(".out", buckOutPath.toString());
-    builder.setReflectively(".hashed_buck_out_paths", buckPaths.shouldIncludeTargetConfigHash());
+    builder.setReflectively(
+        ".hashed_buck_out_paths",
+        buckPaths.shouldIncludeTargetConfigHash(
+            buildRule.getBuildTarget().getCellRelativeBasePath()));
 
     AlterRuleKeys.amendKey(builder, buildRule);
   }

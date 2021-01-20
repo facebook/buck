@@ -179,7 +179,8 @@ public class OutputListAttributeTest {
       assertFalse(artifact.isBound());
       assertFalse(artifact.isSource());
     }
-    boolean includeTargetConfigHash = filesystem.getBuckPaths().shouldIncludeTargetConfigHash();
+    boolean includeTargetConfigHash =
+        filesystem.getBuckPaths().shouldIncludeTargetConfigHash(target.getCellRelativeBasePath());
     assertEquals(
         ImmutableList.of(
             BuildTargetPaths.getBasePath(includeTargetConfigHash, target, "%s__")

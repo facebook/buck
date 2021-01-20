@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.config.RecursivePathSetting;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -93,7 +94,11 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     this(
         root,
         ImmutableSet.of(),
-        BuckPaths.createDefaultBuckPaths(cellName, root.getPath(), buckOutIncludeTargetConfigHash),
+        BuckPaths.createDefaultBuckPaths(
+            cellName,
+            root.getPath(),
+            buckOutIncludeTargetConfigHash,
+            RecursivePathSetting.<Boolean>builder().build()),
         delegate,
         new ProjectFilesystemDelegatePair(delegate, delegate));
   }

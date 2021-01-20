@@ -27,12 +27,15 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.PredicateMatcher;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -76,7 +79,10 @@ public class JsRulesIntegrationTest {
     workspace.setUp();
     projectFilesystem = workspace.getProjectFileSystem();
     genPath = projectFilesystem.getBuckPaths().getGenDir();
-    if (projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash()) {
+    if (projectFilesystem
+        .getBuckPaths()
+        .shouldIncludeTargetConfigHash(
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")))) {
       genPath =
           genPath.resolveRel(
               TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));

@@ -18,9 +18,13 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.RecursivePathSetting;
+import com.google.common.base.Preconditions;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -30,7 +34,9 @@ import org.immutables.value.Value;
 public abstract class BuckPaths {
 
   /**
-   * Default value for {@link #shouldIncludeTargetConfigHash()} when it is not specified by user.
+   * Default value for {@link
+   * #shouldIncludeTargetConfigHash(com.facebook.buck.core.model.CellRelativePath)} when it is not
+   * specified by user.
    */
   public static final boolean DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH = false;
 
@@ -48,7 +54,20 @@ public abstract class BuckPaths {
   public abstract RelPath getConfiguredBuckOut();
 
   /** Whether to include the target configuration hash on buck-out. */
-  public abstract boolean shouldIncludeTargetConfigHash();
+  abstract boolean getIncludeTargetConfigHash();
+
+  /** When target configuration hash is enabled, overrides to disable it on certain base paths. */
+  @Value.Default
+  RecursivePathSetting<Boolean> getTargetConfigHashBasePathOverrides() {
+    return RecursivePathSetting.<Boolean>builder().build();
+  }
+
+  /** @return whether to use target config hash for the given base path. */
+  public final boolean shouldIncludeTargetConfigHash(CellRelativePath path) {
+    Preconditions.checkArgument(path.getCellName().equals(getCellName()));
+    return getIncludeTargetConfigHash()
+        && getTargetConfigHashBasePathOverrides().get(path.getPath()).orElse(true);
+  }
 
   /** The version the buck output directory was created for */
   @Value.Derived
@@ -142,10 +161,18 @@ public abstract class BuckPaths {
   }
 
   public static BuckPaths createDefaultBuckPaths(
-      CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
+      CanonicalCellName cellName,
+      Path rootPath,
+      boolean buckOutIncludeTargetConfigHash,
+      RecursivePathSetting<Boolean> targetConfigHashBasePathOverrides) {
     RelPath buckOut =
         RelPath.of(rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
-    return of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
+    return of(
+        cellName,
+        buckOut,
+        buckOut,
+        buckOutIncludeTargetConfigHash,
+        targetConfigHashBasePathOverrides);
   }
 
   /** Is hashed buck-out enabled? Must be queried using root cell buckconfig. */
@@ -156,13 +183,36 @@ public abstract class BuckPaths {
         DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
   }
 
+  /**
+   * Hashed buck-out overrides used to opt-out/in base paths when hashed buck-out is enabled. As
+   * opposed to hashed buck-out enablement, cell-specific configs are used to build this config.
+   */
+  public static RecursivePathSetting<Boolean> getBuckOutIncludeTargetConfigHashOverrides(
+      Config config) {
+    RecursivePathSetting.Builder<Boolean> builder = RecursivePathSetting.builder();
+    config.getListWithoutComments("project", "buck_out_target_config_hash_excludes").stream()
+        // TODO(agallagher): Improve error message when this fails.
+        .map(ForwardRelativePath::of)
+        .forEach(p -> builder.set(p, false));
+    config.getListWithoutComments("project", "buck_out_target_config_hash_includes").stream()
+        // TODO(agallagher): Improve error message when this fails.
+        .map(ForwardRelativePath::of)
+        .forEach(p -> builder.set(p, true));
+    return builder.build();
+  }
+
   public static BuckPaths of(
       CanonicalCellName cellName,
       RelPath buckOut,
       RelPath configuredBuckOut,
-      boolean shouldIncludeTargetConfigHash) {
+      boolean shouldIncludeTargetConfigHash,
+      RecursivePathSetting<Boolean> targetConfigHashBasePathOverrides) {
     return ImmutableBuckPaths.ofImpl(
-        cellName, buckOut, configuredBuckOut, shouldIncludeTargetConfigHash);
+        cellName,
+        buckOut,
+        configuredBuckOut,
+        shouldIncludeTargetConfigHash,
+        targetConfigHashBasePathOverrides);
   }
 
   /** Replace {@link #getConfiguredBuckOut()} field. */
@@ -170,7 +220,12 @@ public abstract class BuckPaths {
     if (getConfiguredBuckOut().equals(configuredBuckOut)) {
       return this;
     }
-    return of(getCellName(), getBuckOut(), configuredBuckOut, shouldIncludeTargetConfigHash());
+    return of(
+        getCellName(),
+        getBuckOut(),
+        configuredBuckOut,
+        getIncludeTargetConfigHash(),
+        getTargetConfigHashBasePathOverrides());
   }
 
   /** Replace {@link #getBuckOut()} field. */
@@ -178,7 +233,12 @@ public abstract class BuckPaths {
     if (getBuckOut().equals(buckOut)) {
       return this;
     }
-    return of(getCellName(), buckOut, getConfiguredBuckOut(), shouldIncludeTargetConfigHash());
+    return of(
+        getCellName(),
+        buckOut,
+        getConfiguredBuckOut(),
+        getIncludeTargetConfigHash(),
+        getTargetConfigHashBasePathOverrides());
   }
 
   @Value.Derived

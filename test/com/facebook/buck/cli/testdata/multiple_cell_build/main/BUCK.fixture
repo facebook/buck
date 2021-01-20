@@ -7,6 +7,9 @@ cxx_library(
 
 java_library(
     name = "TestJava",
+    srcs = [
+        "Empty.java",
+    ],
     deps = [
         "java//:java",
     ],

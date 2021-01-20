@@ -65,17 +65,14 @@ abstract class AbstractParser implements Parser {
   protected final PerBuildStateFactory perBuildStateFactory;
   protected final DaemonicParserState permState;
   protected final BuckEventBus eventBus;
-  private final boolean buckOutIncludeTargetConfigHash;
 
   AbstractParser(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
-      BuckEventBus eventBus,
-      boolean buckOutIncludeTargetConfigHash) {
+      BuckEventBus eventBus) {
     this.perBuildStateFactory = perBuildStateFactory;
     this.permState = daemonicParserState;
     this.eventBus = eventBus;
-    this.buckOutIncludeTargetConfigHash = buckOutIncludeTargetConfigHash;
   }
 
   @Override
@@ -219,8 +216,7 @@ abstract class AbstractParser implements Parser {
       DirectedAcyclicGraph.Builder<TargetNode<?>> graph = DirectedAcyclicGraph.serialBuilder();
       Map<BuildTarget, TargetNode<?>> index = new HashMap<>();
       TemporaryUnconfiguredTargetToTargetUniquenessChecker checker =
-          TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
-              buckOutIncludeTargetConfigHash);
+          new TemporaryUnconfiguredTargetToTargetUniquenessChecker();
 
       for (Map.Entry<BuildTarget, Pair<TargetNode<?>, DependencyStack>> targetAndNode :
           targetNodeTraversal.traverse(toExplore).entrySet()) {
@@ -230,7 +226,7 @@ abstract class AbstractParser implements Parser {
 
         graph.addNode(targetNode);
         MoreMaps.putCheckEquals(index, target, targetNode);
-        checker.addTarget(target, dependencyStack);
+        checker.addTarget(targetNode, dependencyStack);
         if (target.isFlavored()) {
           BuildTarget unflavoredTarget = target.withoutFlavors();
           MoreMaps.putCheckEquals(

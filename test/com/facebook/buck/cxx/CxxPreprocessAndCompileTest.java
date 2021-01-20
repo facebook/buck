@@ -27,11 +27,14 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -711,7 +714,11 @@ public class CxxPreprocessAndCompileTest {
                 "-o",
                 "buck-out/gen/"
                     + BuildTargetPaths.getBasePath(
-                        projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash(),
+                        projectFilesystem
+                            .getBuckPaths()
+                            .shouldIncludeTargetConfigHash(
+                                CellRelativePath.of(
+                                    CanonicalCellName.rootCell(), ForwardRelativePath.of("foo"))),
                         BuildTargetFactory.newInstance("//foo:bar"),
                         "%s__")
                     + "/baz/test.o")

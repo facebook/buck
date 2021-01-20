@@ -38,8 +38,7 @@ public class ParserFactory {
       Watchman watchman,
       BuckEventBus eventBus,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      TargetConfiguration hostConfiguration,
-      boolean buckOutIncludeTargetConfigHash) {
+      TargetConfiguration hostConfiguration) {
     return new ParserWithConfigurableAttributes(
         daemonicParserState,
         new PerBuildStateFactory(
@@ -52,7 +51,6 @@ public class ParserFactory {
             unconfiguredBuildTargetFactory,
             hostConfiguration),
         targetSpecResolver,
-        eventBus,
-        buckOutIncludeTargetConfigHash);
+        eventBus);
   }
 }

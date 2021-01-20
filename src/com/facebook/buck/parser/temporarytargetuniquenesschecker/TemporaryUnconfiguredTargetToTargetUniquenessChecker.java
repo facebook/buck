@@ -17,27 +17,47 @@
 package com.facebook.buck.parser.temporarytargetuniquenesschecker;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Check there's only one {@link BuildTarget} for {@link
  * com.facebook.buck.core.model.UnconfiguredBuildTarget}. We do that this until we use target
  * configuration in the output path.
  */
-public interface TemporaryUnconfiguredTargetToTargetUniquenessChecker {
+public class TemporaryUnconfiguredTargetToTargetUniquenessChecker {
+
+  private final ConcurrentHashMap<UnconfiguredBuildTarget, BuildTarget>
+      targetToUnconfiguredBuildTarget = new ConcurrentHashMap<>();
+
   /**
    * Register a target, check if there's already registered target with the same unconfigured
    * target, same flavors but different configuration.
    */
-  void addTarget(BuildTarget buildTarget, DependencyStack dependencyStack);
+  public void addTarget(TargetNode<?> node, DependencyStack dependencyStack) {
+    // If a node uses hashed buck-out paths, no need to check for uniqueness of the unconfigured
+    // target.
+    if (node.getFilesystem()
+        .getBuckPaths()
+        .shouldIncludeTargetConfigHash(node.getBuildTarget().getCellRelativeBasePath())) {
+      return;
+    }
 
-  /**
-   * Create a uniqueness checker, deny or no-op depending on hashed buck-out disabled or enabled.
-   */
-  static TemporaryUnconfiguredTargetToTargetUniquenessChecker create(
-      boolean buckOutIncludeTargetConfigHash) {
-    return buckOutIncludeTargetConfigHash
-        ? TemporaryUnconfiguredTargetToTargetUniquenessCheckerAllow.instance
-        : new TemporaryUnconfiguredTargetToTargetUniquenessCheckerDeny();
+    BuildTarget buildTarget = node.getBuildTarget();
+    BuildTarget prev =
+        targetToUnconfiguredBuildTarget.putIfAbsent(
+            buildTarget.getUnconfiguredBuildTarget(), buildTarget);
+    if (prev != null && !prev.equals(buildTarget)) {
+      throw new HumanReadableException(
+          dependencyStack,
+          "Target %s has more than one configurations (%s and %s) with the same set of flavors %s",
+          buildTarget.getUnconfiguredBuildTarget(),
+          buildTarget.getTargetConfiguration(),
+          prev.getTargetConfiguration(),
+          buildTarget.getUnconfiguredBuildTarget().getFlavors().getSet());
+    }
   }
 }

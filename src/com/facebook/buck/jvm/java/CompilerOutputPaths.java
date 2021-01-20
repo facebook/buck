@@ -45,7 +45,8 @@ public abstract class CompilerOutputPaths {
 
   /** Creates {@link CompilerOutputPaths} */
   public static CompilerOutputPaths of(BuildTarget target, BuckPaths buckPath) {
-    boolean shouldIncludeTargetConfigHash = buckPath.shouldIncludeTargetConfigHash();
+    boolean shouldIncludeTargetConfigHash =
+        buckPath.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath());
     FileSystem fileSystem = buckPath.getFileSystem();
     RelPath genDir = buckPath.getGenDir();
     RelPath scratchDir = buckPath.getScratchDir();

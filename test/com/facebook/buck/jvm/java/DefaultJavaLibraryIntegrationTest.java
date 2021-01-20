@@ -846,7 +846,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
                           workspace
                               .getProjectFileSystem()
                               .getBuckPaths()
-                              .shouldIncludeTargetConfigHash(),
+                              .shouldIncludeTargetConfigHash(utilTarget.getCellRelativeBasePath()),
                           utilTarget,
                           "%s/" + utilTarget.getShortName() + "-abi.jar")
                       .toString());
@@ -859,7 +859,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
                           workspace
                               .getProjectFileSystem()
                               .getBuckPaths()
-                              .shouldIncludeTargetConfigHash(),
+                              .shouldIncludeTargetConfigHash(utilTarget.getCellRelativeBasePath()),
                           utilTarget,
                           "lib__%s__output/" + utilTarget.getShortName() + ".jar")
                       .toString());

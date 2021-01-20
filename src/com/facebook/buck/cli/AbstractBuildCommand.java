@@ -575,6 +575,12 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     for (BuildTargetWithOutputs buildTargetWithOutputs :
         graphsAndBuildTargets.getBuildTargetWithOutputs()) {
       BuildRule rule = graphBuilder.requireRule(buildTargetWithOutputs.getBuildTarget());
+      // If this rule is opting out of target config hashing, then skip linking it.
+      if (!rule.getProjectFilesystem()
+          .getBuckPaths()
+          .shouldIncludeTargetConfigHash(rule.getBuildTarget().getCellRelativeBasePath())) {
+        continue;
+      }
       linkRuleToHashedBuckOut(
           rule,
           pathResolver,
