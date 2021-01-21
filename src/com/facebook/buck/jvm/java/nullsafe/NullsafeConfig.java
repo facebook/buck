@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -32,6 +33,7 @@ public abstract class NullsafeConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "nullsafe";
   public static final String PLUGIN_FIELD = "plugin";
   public static final String SIGNATURES_FIELD = "signatures";
+  public static final String EXTRA_ARGS_FIELD = "extra_args";
 
   public static NullsafeConfig of(BuckConfig delegate) {
     return ImmutableNullsafeConfig.ofImpl(delegate);
@@ -60,5 +62,10 @@ public abstract class NullsafeConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public Optional<SourcePath> getSignatures(TargetConfiguration targetConfiguration) {
     return getDelegate().getSourcePath(SECTION, SIGNATURES_FIELD, targetConfiguration);
+  }
+
+  @Value.Lazy
+  public ImmutableList<String> getExtraArgs() {
+    return getDelegate().getListWithoutComments(SECTION, EXTRA_ARGS_FIELD);
   }
 }

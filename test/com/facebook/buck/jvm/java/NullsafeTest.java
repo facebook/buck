@@ -51,6 +51,7 @@ public class NullsafeTest {
   private final String NULLSAFE_PLUGIN_NAME = "Nullsafe";
   private final String NULLSAFE_TARGET_NAME = "nullsafe_plugin";
   private final String NULLSAFE_TARGET = "//:" + NULLSAFE_TARGET_NAME;
+  private final String NULLSAFE_EXTRA_ARG = "-Anullsafe.extraArg=true";
 
   private BuildTarget nullsafeTarget;
 
@@ -76,7 +77,10 @@ public class NullsafeTest {
                     NullsafeConfig.SECTION,
                     ImmutableMap.of(
                         // Important to set the plugin target in the config
-                        NullsafeConfig.PLUGIN_FIELD, NULLSAFE_TARGET)))
+                        NullsafeConfig.PLUGIN_FIELD,
+                        NULLSAFE_TARGET,
+                        NullsafeConfig.EXTRA_ARGS_FIELD,
+                        NULLSAFE_EXTRA_ARG)))
             .build();
     nullsafeTarget = BuildTargetFactory.newInstance(NULLSAFE_TARGET);
     nullsafeConfig = NullsafeConfig.of(buckConfig);
@@ -134,6 +138,10 @@ public class NullsafeTest {
     // Augmented options should contain setup for nullsafe plugin
     assertTrue(
         augmentedOpts.getExtraArguments().stream().anyMatch(s -> s.contains("-XDcompilePolicy")));
+    // Augmented options should contain extra arguments from config
+    assertTrue(
+        augmentedOpts.getExtraArguments().stream().anyMatch(s -> s.contains(NULLSAFE_EXTRA_ARG)));
+
     ResolvedJavacPluginProperties nullsafeProps =
         augmentedOpts.getStandardJavacPluginParams().getPluginProperties().get(0);
     assertTrue(

@@ -142,7 +142,8 @@ public class Nullsafe extends ModernBuildRule<Nullsafe.Impl> {
     JavacOptions.Builder javacOptionsBuilder =
         JavacOptions.builder(javacOptions)
             .setStandardJavacPluginParams(augmentedPluginParams)
-            .addExtraArguments("-XDcompilePolicy=byfile");
+            .addExtraArguments("-XDcompilePolicy=byfile")
+            .addAllExtraArguments(nullsafeConfig.getExtraArgs());
 
     if (shouldReportJson(buildTarget)) {
       javacOptionsBuilder.addExtraArguments("-Anullsafe.reportToJava=false");
