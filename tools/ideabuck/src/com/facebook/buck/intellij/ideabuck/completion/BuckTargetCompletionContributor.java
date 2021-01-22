@@ -80,6 +80,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       doCellNames(project, prefix, result);
       doPathsForFullyQualifiedBuckTarget(project.getBaseDir(), project, prefix, result);
       doTargetsForBuckTarget(project.getBaseDir(), project, prefix, result);
+      doAliasesForBuckTarget(project, prefix, result);
       return;
     }
 
@@ -363,6 +364,20 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         BuckPsiUtils.findTargetsInPsiTree(targetPsiFile, pattern.getRuleName().orElse(""));
     for (String name : targetsInPsiTree.keySet()) {
       addResultForTarget(result, name);
+    }
+  }
+
+  private void doAliasesForBuckTarget(
+      Project project, String prefixToAutocomplete, CompletionResultSet resultSet) {
+    if (prefixToAutocomplete.contains("//")
+        || prefixToAutocomplete.contains(":")
+        || prefixToAutocomplete.contains("...")) {
+      return;
+    }
+    for (String alias : BuckAliasesCache.getInstance(project).getAliasToTarget().keySet()) {
+      if (alias.startsWith(prefixToAutocomplete)) {
+        addResultForTarget(resultSet, alias);
+      }
     }
   }
 }
