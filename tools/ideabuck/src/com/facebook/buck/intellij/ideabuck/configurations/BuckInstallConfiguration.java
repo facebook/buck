@@ -34,6 +34,11 @@ public class BuckInstallConfiguration
     super(project, factory, name);
   }
 
+  @Override
+  protected String getNamePrefix() {
+    return "Buck install ";
+  }
+
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {

@@ -33,6 +33,11 @@ public class BuckRunConfiguration extends AbstractConfiguration<BuckRunConfigura
     super(project, factory, name);
   }
 
+  @Override
+  protected String getNamePrefix() {
+    return "Buck run ";
+  }
+
   @NotNull
   @Override
   public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {

@@ -26,7 +26,9 @@ import com.intellij.notification.Notifications;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializer;
+import javax.annotation.Nullable;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 
@@ -64,6 +66,16 @@ public abstract class AbstractConfiguration<T extends AbstractConfiguration.Data
     }
     return false;
   }
+
+  @Nullable
+  @Override
+  public String suggestedName() {
+    return StringUtil.isEmptyOrSpaces(data.targets)
+        ? "[Please enter a Buck target]"
+        : getNamePrefix() + data.targets;
+  }
+
+  protected abstract String getNamePrefix();
 
   protected abstract T createData();
 

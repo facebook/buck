@@ -49,7 +49,7 @@ public abstract class AbstractConfigurationEditor<T extends AbstractConfiguratio
 
     root = new JPanel(new GridBagLayout());
     final JBLabel targetLabel = new JBLabel();
-    targetLabel.setText("Targets");
+    targetLabel.setText("Targets (required)");
     mTargets =
         new LanguageTextField(
             BuckLanguage.INSTANCE, project, "", new ConfigurationEditorDocumentCreator());
