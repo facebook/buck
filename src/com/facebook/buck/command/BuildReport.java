@@ -91,19 +91,23 @@ public class BuildReport {
       BuildRule rule = entry.getKey();
       Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
-      if (result.isPresent()) {
-        success = result.get().getSuccessOptional();
-      }
 
       String successIndicator;
       String successType;
       @Nullable ImmutableMap<OutputLabel, ImmutableSet<Path>> outputPathsByLabels;
-      if (success.isPresent()) {
-        successIndicator = ansi.asHighlightedSuccessText("OK  ");
-        successType = success.get().name();
-        outputPathsByLabels = getMultipleOutputPaths(rule);
+      if (result.isPresent()) {
+        success = result.get().getSuccessOptional();
+        if (success.isPresent()) {
+          successIndicator = ansi.asHighlightedSuccessText("OK  ");
+          successType = success.get().name();
+          outputPathsByLabels = getMultipleOutputPaths(rule);
+        } else {
+          successIndicator = ansi.asHighlightedFailureText("FAIL");
+          successType = null;
+          outputPathsByLabels = null;
+        }
       } else {
-        successIndicator = ansi.asHighlightedFailureText("FAIL");
+        successIndicator = ansi.asHighlightedFailureText("UNKNOWN");
         successType = null;
         outputPathsByLabels = null;
       }

@@ -148,7 +148,7 @@ public class BuildReportTest {
             Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule2"),
             Pattern.quote(
                 "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE"),
-            Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule4"),
+            Pattern.quote("\u001B[31mUNKNOWN\u001B[0m //fake:rule4"),
             Pattern.quote(
                 "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5 "
                     + "BUILT_LOCALLY "
@@ -204,7 +204,7 @@ public class BuildReportTest {
                     MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
             "FAIL //fake:rule2",
             "OK   //fake:rule3 FETCHED_FROM_CACHE",
-            "FAIL //fake:rule4",
+            "UNKNOWN //fake:rule4",
             "OK   //fake:rule5 BUILT_LOCALLY default_output",
             "OK   //fake:rule5\\[named_1\\] BUILT_LOCALLY named_output_1",
             "OK   //fake:rule6 BUILT_LOCALLY default_output1",
