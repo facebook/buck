@@ -41,7 +41,7 @@ public final class MoreStrings {
   private MoreStrings() {}
 
   /**
-   * Joins the les passed in with the platform line separator.
+   * Joins the lines passed in with the platform line separator.
    *
    * @param lines the lines that need to be joined.
    * @return String, containing the joined lines using the platform line separator as delimiter.
