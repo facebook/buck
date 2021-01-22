@@ -108,7 +108,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
     Preconditions.checkState(!actionId.isEmpty(), "Action id can't be empty");
 
     String ansiEnabled = context.get(ANSI_ESCAPE_SEQUENCES_ENABLED);
-    Preconditions.checkNotNull(actionId, ANSI_ESCAPE_SEQUENCES_ENABLED + " key is not provided");
+    Preconditions.checkNotNull(ansiEnabled, ANSI_ESCAPE_SEQUENCES_ENABLED + " key is not provided");
     boolean ansiEscapeSequencesEnabled = Boolean.parseBoolean(ansiEnabled);
 
     String verbosityString = context.get(VERBOSITY);
