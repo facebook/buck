@@ -56,15 +56,12 @@ abstract class KotlinBuckTestAction(val testClass: KtClass, private val debug: B
   /** Update the run/debug gutter icon */
   override fun update(e: AnActionEvent) {
     val verb =
-        when (debug) {
-          true -> {
-            e.presentation.icon = BuckIcons.DEBUG_BUCK_TEST
+        if (debug) {
+            e.presentation.icon = BuckIcons.BUCK_DEBUG
             "Debug"
-          }
-          false -> {
-            e.presentation.icon = BuckIcons.BUILD_RUN_TEST
+        } else {
+            e.presentation.icon = BuckIcons.BUCK_RUN
             "Run"
-          }
         }
     e.presentation.text = "$verb '${getDisplayTestName()}' with Buck"
     e.presentation.isEnabledAndVisible = true

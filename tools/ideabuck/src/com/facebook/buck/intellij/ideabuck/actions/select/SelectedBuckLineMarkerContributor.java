@@ -107,7 +107,7 @@ public class SelectedBuckLineMarkerContributor extends RunLineMarkerContributor 
       actions.add(new FixedBuckRunAction(BuckCommand.RUN.name(), target, true));
     }
     return new Info(
-        BuckIcons.BUILD_RUN_TEST, actions.toArray(new AnAction[0]), it -> "Build/Test this target");
+        BuckIcons.BUCK_RUN, actions.toArray(new AnAction[0]), it -> "Build/Test this target");
   }
 
   private static boolean isTestTargetType(String targetType) {

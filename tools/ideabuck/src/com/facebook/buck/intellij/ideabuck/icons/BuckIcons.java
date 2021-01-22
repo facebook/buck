@@ -41,8 +41,6 @@ public final class BuckIcons {
   public static final Icon ACTION_UNINSTALL = load("/icons/actions/Uninstall.png");
   public static final Icon CONFIGURATION_TEST = load("/icons/runConfigurations/test.png");
   public static final Icon BUCK_INSTALL = load("/icons/runConfigurations/install.png");
-
-  // Gutter icons for running unit tests
-  public static final Icon BUILD_RUN_TEST = load("/icons/actions/BuckRun.png");
-  public static final Icon DEBUG_BUCK_TEST = load("/icons/actions/BuckDebug.png");
+  public static final Icon BUCK_RUN = load("/icons/actions/BuckRun.png");
+  public static final Icon BUCK_DEBUG = load("/icons/actions/BuckDebug.png");
 }
