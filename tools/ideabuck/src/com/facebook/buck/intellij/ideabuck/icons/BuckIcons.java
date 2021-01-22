@@ -39,8 +39,10 @@ public final class BuckIcons {
   public static final Icon ACTION_RUN = load("/icons/actions/Run.png");
   public static final Icon ACTION_TEST = load("/icons/actions/Test.png");
   public static final Icon ACTION_UNINSTALL = load("/icons/actions/Uninstall.png");
-  public static final Icon CONFIGURATION_TEST = load("/icons/runConfigurations/test.png");
-  public static final Icon BUCK_INSTALL = load("/icons/runConfigurations/install.png");
-  public static final Icon BUCK_RUN = load("/icons/actions/BuckRun.png");
-  public static final Icon BUCK_DEBUG = load("/icons/actions/BuckDebug.png");
+
+  public static final Icon BUCK_RUN = load("/icons/runConfigurations/BuckRun.png");
+  public static final Icon BUCK_DEBUG = load("/icons/runConfigurations/BuckDebug.png");
+  public static final Icon BUCK_BUILD = load("/icons/runConfigurations/BuckBuild.png");
+  public static final Icon BUCK_TEST = load("/icons/runConfigurations/BuckTest.png");
+  public static final Icon BUCK_INSTALL = load("/icons/runConfigurations/BuckInstall.png");
 }

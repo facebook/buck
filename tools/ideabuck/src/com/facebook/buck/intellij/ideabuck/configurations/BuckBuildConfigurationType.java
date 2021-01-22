@@ -64,7 +64,7 @@ public class BuckBuildConfigurationType implements ConfigurationType {
 
   @Override
   public Icon getIcon() {
-    return BuckIcons.DEFAULT_BUCK_ICON;
+    return BuckIcons.BUCK_BUILD;
   }
 
   @NotNull
