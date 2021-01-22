@@ -17,11 +17,9 @@
 package com.facebook.buck.workertool;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
-import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -44,9 +42,7 @@ public abstract class WorkerToolExecutor {
 
   private static final Logger LOG = Logger.get(WorkerToolExecutor.class);
 
-  private static final NamedPipeFactory NAMED_PIPE_FACTORY =
-      NamedPipeFactory.getFactory(
-          DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE);
+  private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
 
   private final DownwardApiProcessExecutor downwardApiProcessExecutor;
 
