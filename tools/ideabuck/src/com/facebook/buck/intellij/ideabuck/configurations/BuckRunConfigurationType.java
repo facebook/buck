@@ -17,11 +17,11 @@
 package com.facebook.buck.intellij.ideabuck.configurations;
 
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
-import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.openapi.project.Project;
+import javax.annotation.Nonnull;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 
@@ -32,11 +32,17 @@ public class BuckRunConfigurationType implements ConfigurationType {
 
   private static final String ID = "Buck run";
 
-  private final ConfigurationFactoryEx myFactory;
+  private final ConfigurationFactory myFactory;
 
   public BuckRunConfigurationType() {
     myFactory =
-        new ConfigurationFactoryEx(this) {
+        new ConfigurationFactory(this) {
+          @Nonnull
+          @Override
+          public String getId() {
+            return ID;
+          }
+
           @Override
           @NotNull
           public BuckRunConfiguration createTemplateConfiguration(@NotNull Project project) {

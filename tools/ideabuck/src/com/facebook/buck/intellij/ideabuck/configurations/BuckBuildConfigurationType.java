@@ -17,13 +17,13 @@
 package com.facebook.buck.intellij.ideabuck.configurations;
 
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
-import com.intellij.execution.configuration.ConfigurationFactoryEx;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.ConfigurationTypeUtil;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
-import javax.swing.*;
+import javax.annotation.Nonnull;
+import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 
 public class BuckBuildConfigurationType implements ConfigurationType {
@@ -33,11 +33,17 @@ public class BuckBuildConfigurationType implements ConfigurationType {
 
   private static final String ID = "Buck build";
 
-  private final ConfigurationFactoryEx myFactory;
+  private final ConfigurationFactory myFactory;
 
   public BuckBuildConfigurationType() {
     myFactory =
-        new ConfigurationFactoryEx(this) {
+        new ConfigurationFactory(this) {
+          @Nonnull
+          @Override
+          public String getId() {
+            return ID;
+          }
+
           @Override
           @NotNull
           public RunConfiguration createTemplateConfiguration(@NotNull Project project) {
