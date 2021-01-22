@@ -18,16 +18,9 @@ package com.facebook.buck.intellij.ideabuck.build;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
-import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.components.BuckDebugPanel;
-import com.intellij.execution.filters.HyperlinkInfo;
 import com.intellij.execution.ui.ConsoleViewContentType;
-import com.intellij.ide.DataManager;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionPlaces;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.ModalityState;
 import com.intellij.openapi.components.ServiceManager;
@@ -37,8 +30,6 @@ import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.wm.WindowManager;
-import javax.swing.JComponent;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -64,11 +55,6 @@ public class BuckBuildManager {
 
   public synchronized void setProgress(double fraction) {
     return;
-  }
-
-  /** Get saved target for this project from settings. */
-  public static String getCurrentSavedTarget(Project project) {
-    return BuckProjectSettingsProvider.getInstance(project).getLastAlias().orElse(null);
   }
 
   public BuckCommandHandler getCurrentRunningBuckCommandHandler() {
@@ -99,36 +85,6 @@ public class BuckBuildManager {
     }
     VirtualFile base = project.getBaseDir();
     return base.findChild(BuckBuildUtil.BUCK_CONFIG_FILE) != null;
-  }
-
-  /**
-   * Print "no selected target" error message to console window. Also provide a hyperlink which can
-   * directly jump to "Choose Target" GUI window.
-   */
-  public void showNoTargetMessage(Project project) {
-    BuckModule buckModule = project.getComponent(BuckModule.class);
-    buckModule.getBuckEventsConsumer().consumeConsoleEvent("Please choose a build target!");
-
-    BuckDebugPanel buckDebugPanel = BuckUIManager.getInstance(project).getBuckDebugPanel();
-
-    buckDebugPanel.outputConsoleMessage("Please ", ConsoleViewContentType.ERROR_OUTPUT);
-    buckDebugPanel.outputConsoleHyperlink(
-        "choose a build target!\n",
-        new HyperlinkInfo() {
-          @Override
-          public void navigate(Project project) {
-            JComponent frame = WindowManager.getInstance().getIdeFrame(project).getComponent();
-            AnAction action = ActionManager.getInstance().getAction("buck.ChooseTarget");
-            action.actionPerformed(
-                new AnActionEvent(
-                    null,
-                    DataManager.getInstance().getDataContext(frame),
-                    ActionPlaces.UNKNOWN,
-                    action.getTemplatePresentation(),
-                    ActionManager.getInstance(),
-                    0));
-          }
-        });
   }
 
   private void saveAndRun(final BuckCommandHandler handler, Runnable runnable) {

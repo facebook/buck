@@ -41,8 +41,6 @@ public interface BuckToolWindow {
 
   boolean isRunToolWindowVisible();
 
-  void updateMainToolWindowTitleByTarget();
-
   void updateMainToolWindowTitle(@Nullable String title);
 
   ActionGroup getLeftToolbarActions();

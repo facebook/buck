@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.components;
 
-import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.execution.ui.layout.PlaceInGrid;
 import com.intellij.ide.ui.UISettings;
@@ -71,7 +70,7 @@ public class BuckToolWindowImpl implements BuckToolWindow {
         contentManager.getFactory().createContent(runnerLayoutUi.getComponent(), "", true);
     contentManager.addContent(content);
 
-    updateMainToolWindowTitleByTarget();
+    updateMainToolWindowTitle("Main");
   }
 
   @Override
@@ -136,12 +135,6 @@ public class BuckToolWindowImpl implements BuckToolWindow {
   }
 
   @Override
-  public void updateMainToolWindowTitleByTarget() {
-    String target = BuckBuildManager.getInstance(project).getCurrentSavedTarget(project);
-    updateMainToolWindowTitle("Target: " + target);
-  }
-
-  @Override
   public void updateMainToolWindowTitle(@Nullable String title) {
     ToolWindow toolWindow =
         ToolWindowManager.getInstance(project).getToolWindow(MAIN_TOOL_WINDOW_ID);
@@ -154,13 +147,7 @@ public class BuckToolWindowImpl implements BuckToolWindow {
 
     DefaultActionGroup group = new DefaultActionGroup();
 
-    group.add(actionManager.getAction("buck.ChooseTarget"));
-    group.addSeparator();
-    group.add(actionManager.getAction("buck.Build"));
     group.add(actionManager.getAction("buck.Stop"));
-    group.add(actionManager.getAction("buck.Test"));
-    group.add(actionManager.getAction("buck.Install"));
-    group.add(actionManager.getAction("buck.Uninstall"));
     group.add(actionManager.getAction("buck.Kill"));
     group.add(actionManager.getAction("buck.ScrollToEnd"));
     group.add(actionManager.getAction("buck.Clear"));

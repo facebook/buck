@@ -239,14 +239,6 @@ public class BuckProjectSettingsProvider
     return "BuckProjectSettingsProvider";
   }
 
-  public Optional<String> getLastAlias() {
-    return Optional.ofNullable(state.lastAlias);
-  }
-
-  public void setLastAlias(@Nullable String buildTarget) {
-    state.lastAlias = buildTarget;
-  }
-
   public String getConvertedTargetType(String targetType) {
     // If a target type is not in our mapping, assume that it was a non-macro target type
     return state.macroTargetTypeToTargetType.getOrDefault(targetType, targetType);
@@ -258,9 +250,6 @@ public class BuckProjectSettingsProvider
 
   /** All settings are stored in this inner class. */
   public static class State {
-
-    /** Remember the last used buck alias. */
-    @Nullable public String lastAlias = null;
 
     /**
      * Optional buck executable to prefer to {@link BuckExecutableDetector#getBuckExecutable()}.
@@ -332,7 +321,6 @@ public class BuckProjectSettingsProvider
           && multiInstallMode == state.multiInstallMode
           && uninstallBeforeInstalling == state.uninstallBeforeInstalling
           && customizedInstallSetting == state.customizedInstallSetting
-          && Objects.equal(lastAlias, state.lastAlias)
           && Objects.equal(buckExecutable, state.buckExecutable)
           && Objects.equal(adbExecutable, state.adbExecutable)
           && Objects.equal(customizedInstallSettingCommand, state.customizedInstallSettingCommand)
@@ -344,7 +332,6 @@ public class BuckProjectSettingsProvider
     @Override
     public int hashCode() {
       return Objects.hashCode(
-          lastAlias,
           buckExecutable,
           adbExecutable,
           showDebug,

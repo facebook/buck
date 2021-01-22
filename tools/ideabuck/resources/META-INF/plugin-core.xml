@@ -163,25 +163,7 @@
 
     <group id="buck.BuildGroup">
       <separator></separator>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.ChooseTargetAction"
-        id="buck.ChooseTarget">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift J"/>
-      </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckBuildAction" id="buck.Build">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift S"/>
-      </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckStopAction" id="buck.Stop" />
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckTestAction" id="buck.Test">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift Y"/>
-      </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckInstallAction"
-        id="buck.Install">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift X"/>
-      </action>
-      <action class="com.facebook.buck.intellij.ideabuck.actions.BuckUninstallAction"
-        id="buck.Uninstall">
-        <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift M"/>
-      </action>
       <action class="com.facebook.buck.intellij.ideabuck.actions.BuckKillAction" id="buck.Kill">
         <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift L"/>
       </action>
