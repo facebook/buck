@@ -43,6 +43,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -171,7 +172,11 @@ public class FetchCommand extends BuildCommand {
                       .createDefaultJavaPackageFinder(),
                   params.getClock(),
                   getExecutionContext(),
-                  isKeepGoing())) {
+                  isKeepGoing(),
+                  params
+                      .getBuckConfig()
+                      .getView(BuildReportConfig.class)
+                      .getMaxNumberOfEntries())) {
         exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,

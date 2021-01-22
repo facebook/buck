@@ -36,6 +36,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.ExitCode;
@@ -102,7 +103,8 @@ public class BuildExecutor {
             args.getBuckConfig().getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
             args.getClock(),
             executionContext,
-            keepGoing);
+            keepGoing,
+            args.getBuckConfig().getView(BuildReportConfig.class).getMaxNumberOfEntries());
   }
 
   /**

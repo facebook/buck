@@ -13,5 +13,6 @@
       "type" : "BUILT_LOCALLY"
     }
   },
-  "failures" : { }
+  "failures" : { },
+  "truncated" : false
 }

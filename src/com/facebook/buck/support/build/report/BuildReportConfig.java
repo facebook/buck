@@ -34,6 +34,7 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
   private static final String ENABLED_FIELD = "enable_build_report";
   private static final String ENDPOINT_URL_FIELD = "endpoint_url";
   private static final String ENDPOINT_TIMEOUT_MS_FIELD = "endpoint_timeout_ms";
+  private static final String MAX_NUMBER_OF_ENTRIES = "max_number_of_entries";
 
   private static final long DEFAULT_ENDPOINT_TIMEOUT_MS = 30 * 1000;
 
@@ -49,6 +50,13 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getEnabled() {
     return getDelegate().getBooleanValue(BUILD_REPORT_SECTION, ENABLED_FIELD, ENABLED_DEFAULT);
+  }
+
+  @Value.Lazy
+  public int getMaxNumberOfEntries() {
+    return getDelegate()
+        .getInteger(BUILD_REPORT_SECTION, MAX_NUMBER_OF_ENTRIES)
+        .orElse(Integer.MAX_VALUE);
   }
 
   @Value.Lazy

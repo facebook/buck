@@ -80,6 +80,7 @@ public class Build implements Closeable {
   private final JavaPackageFinder javaPackageFinder;
   private final Clock clock;
   private final BuildEngineBuildContext buildContext;
+  private final int maxBuildReportEntries;
   private boolean symlinksCreated = false;
 
   public Build(
@@ -90,7 +91,8 @@ public class Build implements Closeable {
       JavaPackageFinder javaPackageFinder,
       Clock clock,
       ExecutionContext executionContext,
-      boolean isKeepGoing) {
+      boolean isKeepGoing,
+      int maxBuildReportEntries) {
     this.graphBuilder = graphBuilder;
     this.cells = cells;
     this.executionContext = executionContext;
@@ -99,6 +101,7 @@ public class Build implements Closeable {
     this.javaPackageFinder = javaPackageFinder;
     this.clock = clock;
     this.buildContext = createBuildContext(isKeepGoing);
+    this.maxBuildReportEntries = maxBuildReportEntries;
   }
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
@@ -344,7 +347,11 @@ public class Build implements Closeable {
     int exitCode;
 
     BuildReport buildReport =
-        new BuildReport(buildExecutionResult, graphBuilder.getSourcePathResolver(), cells);
+        new BuildReport(
+            buildExecutionResult,
+            graphBuilder.getSourcePathResolver(),
+            cells,
+            maxBuildReportEntries);
 
     if (buildContext.isKeepGoing()) {
       String buildReportText = buildReport.generateForConsole(console);
@@ -438,7 +445,10 @@ public class Build implements Closeable {
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     BuildReport buildReport =
         new BuildReport(
-            e.createBuildExecutionResult(), graphBuilder.getSourcePathResolver(), cells);
+            e.createBuildExecutionResult(),
+            graphBuilder.getSourcePathResolver(),
+            cells,
+            maxBuildReportEntries);
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));

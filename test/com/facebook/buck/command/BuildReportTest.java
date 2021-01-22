@@ -126,8 +126,14 @@ public class BuildReportTest {
     ruleToResult.put(
         rule6, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
+    BuildRule rule7 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule7"));
+    BuildResult rule7Failure = BuildResult.failure(rule7, runtimeException);
+    ruleToResult.put(rule7, Optional.of(rule7Failure));
+    graphBuilder.addToIndex(rule7);
+
     buildExecutionResult =
-        ImmutableBuildExecutionResult.ofImpl(ruleToResult, ImmutableSet.of(rule2Failure));
+        ImmutableBuildExecutionResult.ofImpl(
+            ruleToResult, ImmutableSet.of(rule2Failure, rule7Failure));
   }
 
   @Test
@@ -171,12 +177,15 @@ public class BuildReportTest {
                 "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("named_output_22")),
+            Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule7"),
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "\tat .*",
+            "\\.Rule //fake:rule7 FAILED because java.lang.RuntimeException: some",
             "\tat .*");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells)
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
             .generateForConsole(
                 new Console(
                     Verbosity.STANDARD_INFORMATION,
@@ -203,12 +212,13 @@ public class BuildReportTest {
             "OK   //fake:rule6\\[named_1\\] BUILT_LOCALLY named_output_1",
             "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_2",
             "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_22",
+            "FAIL //fake:rule7",
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
             "\tat .*");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells)
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
     assertThat(observedReport, Matchers.matchesPattern(expectedReport));
   }
@@ -258,6 +268,77 @@ public class BuildReportTest {
             "        \"named_1\" : [ \"named_output_1\" ],",
             "        \"named_2\" : [ \"named_output_2\", \"named_output_22\" ]",
             "      }",
+            "    },",
+            "    \"//fake:rule7\" : {",
+            "      \"success\" : \"FAIL\"",
+            "    }",
+            "  },",
+            "  \"failures\" : {",
+            "    \"//fake:rule2\" : \""
+                + Throwables.getStackTraceAsString(runtimeException)
+                    .replace("\r\n", "\n")
+                    .replace("\t", "\\t")
+                    .replace("\n", "\\n")
+                + "\",",
+            "    \"//fake:rule7\" : \""
+                + Throwables.getStackTraceAsString(runtimeException)
+                    .replace("\r\n", "\n")
+                    .replace("\t", "\\t")
+                    .replace("\n", "\\n")
+                + "\"",
+            "  },",
+            "  \"truncated\" : false",
+            "}");
+    String observedReport =
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
+            .generateJsonBuildReport();
+    assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
+  }
+
+  @Test
+  public void generateBuildReportTruncatedForConsole() {
+    String expectedReport =
+        linesToText(
+            "(?s)"
+                + Pattern.quote(
+                    "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
+                        + "BUILT_LOCALLY "
+                        + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
+            "\tTruncated 6 rule\\(s\\)\\.\\.\\.",
+            "",
+            " \\*\\* Summary of failures encountered during the build \\*\\*",
+            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "\tat .*",
+            "\tTruncated 1 failure\\(s\\)\\.\\.\\..*");
+    String observedReport =
+        new BuildReport(buildExecutionResult, resolver, cells, 1)
+            .generateForConsole(
+                new Console(
+                    Verbosity.STANDARD_INFORMATION,
+                    new CapturingPrintStream(),
+                    new CapturingPrintStream(),
+                    Ansi.forceTty()));
+    assertThat(observedReport, Matchers.matchesPattern(expectedReport));
+  }
+
+  @Test
+  public void generateTruncatedJsonBuildReport() throws IOException {
+    String rule1TxtPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"))
+            .toString();
+    String expectedReport =
+        String.join(
+            System.lineSeparator(),
+            "{",
+            "  \"success\" : false,",
+            "  \"results\" : {",
+            "    \"//fake:rule1\" : {",
+            "      \"success\" : \"SUCCESS\",",
+            "      \"type\" : \"BUILT_LOCALLY\",",
+            "      \"outputs\" : {",
+            "        \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "      }",
             "    }",
             "  },",
             "  \"failures\" : {",
@@ -267,10 +348,11 @@ public class BuildReportTest {
                     .replace("\t", "\\t")
                     .replace("\n", "\\n")
                 + "\"",
-            "  }",
+            "  },",
+            "  \"truncated\" : true",
             "}");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells).generateJsonBuildReport();
+        new BuildReport(buildExecutionResult, resolver, cells, 1).generateJsonBuildReport();
     assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
   }
 }

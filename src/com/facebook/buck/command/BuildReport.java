@@ -57,19 +57,23 @@ public class BuildReport {
   private final Build.BuildExecutionResult buildExecutionResult;
   private final SourcePathResolverAdapter pathResolver;
   private final Cells cells;
+  private final int maxNumberOfEntries;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
    * @param pathResolver source path resolver which can be used for the result.
    * @param cells
+   * @param maxNumberOfEntries
    */
   public BuildReport(
       Build.BuildExecutionResult buildExecutionResult,
       SourcePathResolverAdapter pathResolver,
-      Cells cells) {
+      Cells cells,
+      int maxNumberOfEntries) {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
     this.cells = cells;
+    this.maxNumberOfEntries = maxNumberOfEntries;
   }
 
   public String generateForConsole(Console console) {
@@ -77,7 +81,13 @@ public class BuildReport {
     Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
 
     StringBuilder report = new StringBuilder();
+    int numEntries = 0;
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
+      if (numEntries == maxNumberOfEntries) {
+        report.append(
+            String.format("\tTruncated %s rule(s)...%n", ruleToResult.size() - maxNumberOfEntries));
+        break;
+      }
       BuildRule rule = entry.getKey();
       Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
@@ -119,12 +129,22 @@ public class BuildReport {
           }
         }
       }
+      numEntries++;
     }
 
+    numEntries = 0;
     if (!buildExecutionResult.getFailures().isEmpty()
         && console.getVerbosity().shouldPrintStandardInformation()) {
       report.append(linesToText("", " ** Summary of failures encountered during the build **", ""));
       for (BuildResult failureResult : buildExecutionResult.getFailures()) {
+        if (numEntries == maxNumberOfEntries) {
+          report.append(System.lineSeparator());
+          report.append(
+              String.format(
+                  "\tTruncated %s failure(s)...%n",
+                  buildExecutionResult.getFailures().size() - maxNumberOfEntries));
+          break;
+        }
         Throwable failure = Objects.requireNonNull(failureResult.getFailure());
         new ErrorLogger(
                 new ErrorLogger.LogImpl() {
@@ -151,6 +171,8 @@ public class BuildReport {
                 },
                 new HumanReadableExceptionAugmentor(ImmutableMap.of()))
             .logException(failure);
+
+        numEntries++;
       }
     }
 
@@ -175,7 +197,10 @@ public class BuildReport {
     Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
     LinkedHashMap<String, Object> results = new LinkedHashMap<>();
     LinkedHashMap<String, Object> failures = new LinkedHashMap<>();
+    int numEntriesWritten = 0;
+
     boolean isOverallSuccess = true;
+    boolean truncated = false;
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
       Optional<BuildRuleSuccessType> success = Optional.empty();
@@ -183,22 +208,33 @@ public class BuildReport {
       if (result.isPresent()) {
         success = result.get().getSuccessOptional();
       }
-      Map<String, Object> value = new LinkedHashMap<>();
 
       boolean isSuccess = success.isPresent();
-      value.put("success", result.map(r -> r.getStatus().toString()).orElse("UNKNOWN"));
       if (!isSuccess) {
         isOverallSuccess = false;
       }
 
+      if (numEntriesWritten == maxNumberOfEntries) {
+        truncated = true;
+        break;
+      }
+
+      Map<String, Object> value = new LinkedHashMap<>();
+      value.put("success", result.map(r -> r.getStatus().toString()).orElse("UNKNOWN"));
       if (isSuccess) {
         value.put("type", success.get().name());
         value.put("outputs", getMultipleOutputPaths(rule));
       }
       results.put(rule.getFullyQualifiedName(), value);
+      numEntriesWritten++;
     }
 
+    numEntriesWritten = 0;
     for (BuildResult failureResult : buildExecutionResult.getFailures()) {
+      if (numEntriesWritten == maxNumberOfEntries) {
+        truncated = true;
+        break;
+      }
       Throwable failure = Objects.requireNonNull(failureResult.getFailure());
       StringBuilder messageBuilder = new StringBuilder();
       new ErrorLogger(
@@ -219,12 +255,14 @@ public class BuildReport {
               new HumanReadableExceptionAugmentor(ImmutableMap.of()))
           .logException(failure);
       failures.put(failureResult.getRule().getFullyQualifiedName(), messageBuilder.toString());
+      numEntriesWritten++;
     }
 
     Map<String, Object> report = new LinkedHashMap<>();
     report.put("success", isOverallSuccess);
     report.put("results", results);
     report.put("failures", failures);
+    report.put("truncated", truncated);
     return ObjectMappers.WRITER
         .withFeatures(SerializationFeature.INDENT_OUTPUT)
         .writeValueAsString(report);

@@ -75,6 +75,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.support.build.report.BuildReportConfig;
 import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
@@ -728,7 +729,11 @@ public class TestCommand extends BuildCommand {
                         .createDefaultJavaPackageFinder(),
                     params.getClock(),
                     getExecutionContext(),
-                    isKeepGoing())) {
+                    isKeepGoing(),
+                    params
+                        .getBuckConfig()
+                        .getView(BuildReportConfig.class)
+                        .getMaxNumberOfEntries())) {
 
           // Build all of the test rules and runtime deps.
           Iterable<BuildTarget> targets =
