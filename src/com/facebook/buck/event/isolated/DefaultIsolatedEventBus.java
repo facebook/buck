@@ -185,7 +185,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void timestamp(SimplePerfEvent event, long threadId) {
-    timestamp((BuckEvent) event, Thread.currentThread().getId());
+    timestamp((BuckEvent) event, threadId);
   }
 
   @Override
