@@ -181,9 +181,10 @@ public class BuildReportTest {
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
-            "\tat .*",
-            "\\.Rule //fake:rule7 FAILED because java.lang.RuntimeException: some",
-            "\tat .*");
+            "\tat .*\\.",
+            "Rule //fake:rule7 FAILED because java.lang.RuntimeException: some",
+            "\tat .*\\.",
+            "");
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
             .generateForConsole(
@@ -216,7 +217,8 @@ public class BuildReportTest {
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
-            "\tat .*");
+            "\tat .*\\.",
+            "");
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
@@ -309,7 +311,8 @@ public class BuildReportTest {
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
             "\tat .*",
-            "\tTruncated 1 failure\\(s\\)\\.\\.\\..*");
+            "\tTruncated 1 failure\\(s\\)\\.\\.\\.",
+            "");
     String observedReport =
         new BuildReport(buildExecutionResult, resolver, cells, 1)
             .generateForConsole(

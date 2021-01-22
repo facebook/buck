@@ -156,7 +156,7 @@ public class BuildReport {
                   public void logUserVisible(String message) {
                     report.append(
                         String.format(
-                            "Rule %s FAILED because %s.",
+                            "Rule %s FAILED because %s.%n",
                             failureResult.getRule().getFullyQualifiedName(), message));
                   }
 
