@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi.processexecutor.handlers;
+package com.facebook.buck.downwardapi.processexecutor.handlers.impl;
 
 import static com.facebook.buck.event.StepEvent.finished;
 import static com.facebook.buck.event.StepEvent.started;
 
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.event.StepEvent.Started;
 import com.facebook.buck.step.StepExecutionResults;
 import java.time.Instant;
@@ -35,7 +36,7 @@ enum StepEventHandler implements EventHandler<StepEvent> {
   @Override
   public void handleEvent(DownwardApiExecutionContext context, StepEvent event) {
     Map<Integer, Started> stepStartedEvents = context.getStepStartedEvents();
-    Instant timestamp = EventHandler.getTimestamp(context, event.getDuration());
+    Instant timestamp = EventHandlerUtils.getTimestamp(context, event.getDuration());
     int eventId = event.getEventId();
 
     switch (event.getStepStatus()) {

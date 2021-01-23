@@ -7,6 +7,8 @@ standard_java_test(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/namedpipes:namedpipes",
         "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+        "//src/com/facebook/buck/downwardapi/processexecutor/context:context",
+        "//src/com/facebook/buck/downwardapi/processexecutor/handlers:handlers",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event/chrome_trace:chrome_trace",

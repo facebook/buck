@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi.processexecutor.handlers;
+package com.facebook.buck.downwardapi.processexecutor.handlers.impl;
 
 import com.facebook.buck.downward.model.ExternalEvent;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 

@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi.processexecutor.handlers;
+package com.facebook.buck.downwardapi.processexecutor.handlers.impl;
 
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.PerfEventTitle;
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,7 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
 
   @Override
   public void handleEvent(DownwardApiExecutionContext context, ChromeTraceEvent event) {
-    Instant timestamp = EventHandler.getTimestamp(context, event.getDuration());
+    Instant timestamp = EventHandlerUtils.getTimestamp(context, event.getDuration());
     Map<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents =
         context.getChromeTraceStartedEvents();
 

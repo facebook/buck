@@ -19,10 +19,11 @@ package com.facebook.buck.downwardapi.processexecutor;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.downward.model.EndEvent;
-import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.EventTypeMessage.EventType;
 import com.facebook.buck.downwardapi.namedpipes.SupportsDownwardProtocol;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
+import com.facebook.buck.downwardapi.processexecutor.handlers.impl.EventHandlerUtils;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.protocol.InvalidDownwardProtocolException;
@@ -134,9 +135,9 @@ class NamedPipeEventHandler {
   private void processEvents(String namedPipeName, InputStream inputStream) {
     while (true) {
       try {
-        EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
+        EventType eventType = downwardProtocol.readEventType(inputStream);
         AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
-        if (eventType.equals(EventTypeMessage.EventType.END_EVENT)) {
+        if (eventType.equals(EventType.END_EVENT)) {
           DownwardApiProcessExecutor.LOG.info(
               "Received end event for named pipe %s", namedPipeName);
           break;
@@ -154,12 +155,12 @@ class NamedPipeEventHandler {
     }
   }
 
-  private void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
+  private void processEvent(EventType eventType, AbstractMessage event) {
     DownwardApiProcessExecutor.LOG.debug(
         "Processing event of type %s in the thread: %s",
         eventType, Thread.currentThread().getName());
 
-    EventHandler<AbstractMessage> eventHandler = EventHandler.getEventHandler(eventType);
+    EventHandler<AbstractMessage> eventHandler = EventHandlerUtils.getEventHandler(eventType);
     try {
       eventHandler.handleEvent(context, event);
     } catch (Exception e) {

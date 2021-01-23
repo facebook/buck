@@ -1,15 +1,12 @@
 java_library(
     name = "handlers",
     srcs = glob(["*.java"]),
-    visibility = ["//src/com/facebook/buck/downwardapi/processexecutor:processexecutor"],
-    deps = [
-        "//src/com/facebook/buck/core/util/log:log",
-        "//src/com/facebook/buck/downwardapi/processexecutor/context:context",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
-        "//src/com/facebook/buck/step:step",
+    visibility = [
+        "//src/com/facebook/buck/downwardapi/processexecutor/...",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/workertool:workertool",
+        "//test/com/facebook/buck/downwardapi/processexecutor/...",
     ],
-    exported_deps = [
-        "//src-gen:downward-model",
-    ],
+    deps = ["//src/com/facebook/buck/downwardapi/processexecutor/context:context"],
+    exported_deps = ["//third-party/java/protobuf:protobuf"],
 )

@@ -6,11 +6,13 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src-gen:downward-model",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/namedpipes:namedpipes",
         "//src/com/facebook/buck/downwardapi/processexecutor/context:context",
         "//src/com/facebook/buck/downwardapi/processexecutor/handlers:handlers",
+        "//src/com/facebook/buck/downwardapi/processexecutor/handlers/impl:impl",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/downwardapi/utils:utils",
         "//src/com/facebook/buck/event:interfaces",

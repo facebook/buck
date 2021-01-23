@@ -37,7 +37,7 @@ public abstract class DownwardApiExecutionContext {
   /** Returns {@code Instant} when execution started. */
   public abstract Instant getStartExecutionInstant();
 
-  abstract IsolatedEventBus getBuckEventBus();
+  abstract IsolatedEventBus getIsolatedEventBus();
 
   abstract long getInvokingThreadId();
 
@@ -50,29 +50,29 @@ public abstract class DownwardApiExecutionContext {
   }
 
   public final void postEvent(ExternalEvent event) {
-    getBuckEventBus().post(event, getInvokingThreadId());
+    getIsolatedEventBus().post(event, getInvokingThreadId());
   }
 
   public final void postEvent(ConsoleEvent event) {
-    getBuckEventBus().post(event, getInvokingThreadId());
+    getIsolatedEventBus().post(event, getInvokingThreadId());
   }
 
   public final void postEvent(StepEvent event) {
-    getBuckEventBus().post(event, getInvokingThreadId());
+    getIsolatedEventBus().post(event, getInvokingThreadId());
   }
 
   public final void postEvent(StepEvent event, Instant atTime) {
-    getBuckEventBus().post(event, atTime, getInvokingThreadId());
+    getIsolatedEventBus().post(event, atTime, getInvokingThreadId());
   }
 
   /** Posts events into buck event bus. */
   public final void postEvent(SimplePerfEvent event) {
-    getBuckEventBus().post(event, getInvokingThreadId());
+    getIsolatedEventBus().post(event, getInvokingThreadId());
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
   public final void postEvent(SimplePerfEvent event, Instant atTime) {
-    getBuckEventBus().post(event, atTime, getInvokingThreadId());
+    getIsolatedEventBus().post(event, atTime, getInvokingThreadId());
   }
 
   public static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus) {

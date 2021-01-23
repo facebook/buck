@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi.processexecutor.handlers;
+package com.facebook.buck.downwardapi.processexecutor.handlers.impl;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 
 /** Downward API event handler for {@code LogEvent} */
 enum LogEventHandler implements EventHandler<LogEvent> {

@@ -1,0 +1,18 @@
+java_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/processexecutor/context:context",
+        "//src/com/facebook/buck/downwardapi/processexecutor/handlers:handlers",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
+        "//src/com/facebook/buck/step:step",
+    ],
+    exported_deps = [
+        "//src-gen:downward-model",
+    ],
+)
