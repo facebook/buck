@@ -121,10 +121,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     this.namedPipeFactory = namedPipeFactory;
   }
 
-  public String getActionId() {
-    return actionId;
-  }
-
   @Override
   public ProcessExecutor.LaunchedProcess launchProcess(
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
