@@ -94,6 +94,7 @@ public class BuildableCommandExecutionStepTest {
                     Verbosity.STANDARD_INFORMATION, System.out, System.err, new Ansi(true))))
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
         .setRuleCellRoot(rootPath)
+        .setActionId("test_action_id")
         .build();
   }
 }

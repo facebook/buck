@@ -105,7 +105,8 @@ public class ExternalActionsExecutable {
               console,
               Platform.detect(),
               new DefaultProcessExecutor(console),
-              parsedEnvVars.getRuleCellRoot());
+              parsedEnvVars.getRuleCellRoot(),
+              parsedEnvVars.getActionId());
       IsolatedStepsRunner.execute(stepsToExecute, executionContext);
     }
   }

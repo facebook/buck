@@ -109,6 +109,7 @@ public class TestActionExecutionRunner {
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .setRuleCellRoot(rootPath)
+                .setActionId(action.getBuildTarget().getFullyQualifiedName())
                 .build());
 
     return ImmutableExecutionDetails.ofImpl(action, executionResult);

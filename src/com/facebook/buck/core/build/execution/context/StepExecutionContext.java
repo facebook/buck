@@ -41,9 +41,12 @@ import org.immutables.value.Value;
     "immutables:from") // Suppress warning for event bus being different type in superclass
 public abstract class StepExecutionContext extends IsolatedExecutionContext {
 
-  /** Creates {@link StepExecutionContext} from {@link ExecutionContext} and {@code ruleCellRoot} */
-  public static StepExecutionContext from(ExecutionContext executionContext, AbsPath ruleCellRoot) {
-
+  /**
+   * Creates {@link StepExecutionContext} from {@link ExecutionContext}, {@code ruleCellRoot} and
+   * {@code actionId}
+   */
+  public static StepExecutionContext from(
+      ExecutionContext executionContext, AbsPath ruleCellRoot, String actionId) {
     return StepExecutionContext.builder()
         .setConsole(executionContext.getConsole())
         .setBuckEventBus(executionContext.getBuckEventBus())
@@ -61,6 +64,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setTruncateFailingCommandEnabled(executionContext.isTruncateFailingCommandEnabled())
         .setWorkerProcessPools(executionContext.getWorkerProcessPools())
         .setRuleCellRoot(ruleCellRoot)
+        .setActionId(actionId)
         .build();
   }
 

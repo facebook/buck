@@ -72,6 +72,7 @@ public class IsolatedStepsRunnerTest {
   private static final Verbosity VERBOSITY_FOR_TEST = Verbosity.STANDARD_INFORMATION;
   private static final Ansi ANSI_FOR_TEST = new Ansi(true);
   private static final BuildId BUILD_UUID_FOR_TEST = new BuildId("my_build");
+  private static final String ACTION_ID = "my_action_id";
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem projectFilesystem;
@@ -235,7 +236,8 @@ public class IsolatedStepsRunnerTest {
         console,
         Platform.detect(),
         defaultProcessExecutor,
-        AbsPath.get(root.toString()));
+        AbsPath.get(root.toString()),
+        ACTION_ID);
   }
 
   private StepEvent getAndAssertStepEvent(

@@ -153,7 +153,8 @@ public class JavaCDWorkerToolMain {
               console,
               Platform.detect(),
               new DefaultProcessExecutor(console),
-              ruleCellRoot);
+              ruleCellRoot,
+              workerToolParsedEnvs.getActionId());
       IsolatedStepsRunner.execute(isolatedSteps, executionContext);
     }
   }

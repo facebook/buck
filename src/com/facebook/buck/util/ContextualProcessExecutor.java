@@ -103,10 +103,6 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
   @Override
   public ProcessExecutor withDownwardAPI(
       DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus) {
-    String actionId = context.get(ACTION_ID);
-    Preconditions.checkNotNull(actionId, ACTION_ID + " key is not provided");
-    Preconditions.checkState(!actionId.isEmpty(), "Action id can't be empty");
-
     String ansiEnabled = context.get(ANSI_ESCAPE_SEQUENCES_ENABLED);
     Preconditions.checkNotNull(ansiEnabled, ANSI_ESCAPE_SEQUENCES_ENABLED + " key is not provided");
     boolean ansiEscapeSequencesEnabled = Boolean.parseBoolean(ansiEnabled);
@@ -116,6 +112,14 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
     Verbosity verbosity = Verbosity.valueOf(verbosityString);
 
     return factory.create(
-        this, ConsoleParams.of(ansiEscapeSequencesEnabled, verbosity), buckEventBus, actionId);
+        this, ConsoleParams.of(ansiEscapeSequencesEnabled, verbosity), buckEventBus, getActionId());
+  }
+
+  /** Returns an id of executing action */
+  public String getActionId() {
+    String actionId = context.get(ACTION_ID);
+    Preconditions.checkNotNull(actionId, ACTION_ID + " key is not provided");
+    Preconditions.checkState(!actionId.isEmpty(), "Action id can't be empty");
+    return actionId;
   }
 }

@@ -214,6 +214,7 @@ public class ActionExecutionStepTest {
         .setBuildCellRootPath(baseCell)
         .setProcessExecutor(new FakeProcessExecutor())
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
-        .setRuleCellRoot(rootPath);
+        .setRuleCellRoot(rootPath)
+        .setActionId("test_action_id");
   }
 }

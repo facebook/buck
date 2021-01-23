@@ -129,6 +129,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 class CachingBuildRuleBuilder {
+
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
   private final BuildType buildMode;
@@ -1320,13 +1321,17 @@ class CachingBuildRuleBuilder {
     LOG.debug("Running post-build steps for %s", rule);
 
     for (Step step : postBuildSteps) {
+      ContextualProcessExecutor contextualProcessExecutor =
+          new ContextualProcessExecutor(
+              this.executionContext.getProcessExecutor(), processExecutorContext);
       ExecutionContext executionContext =
-          this.executionContext.withProcessExecutor(
-              new ContextualProcessExecutor(
-                  this.executionContext.getProcessExecutor(), processExecutorContext));
+          this.executionContext.withProcessExecutor(contextualProcessExecutor);
 
       StepRunner.runStep(
-          StepExecutionContext.from(executionContext, rule.getProjectFilesystem().getRootPath()),
+          StepExecutionContext.from(
+              executionContext,
+              rule.getProjectFilesystem().getRootPath(),
+              contextualProcessExecutor.getActionId()),
           step,
           Optional.of(rule.getBuildTarget()));
 
@@ -1438,6 +1443,7 @@ class CachingBuildRuleBuilder {
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
   public class BuildRuleSteps<T extends RulePipelineState> {
+
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     private final StepExecutionContext ruleExecutionContext;
@@ -1447,12 +1453,14 @@ class CachingBuildRuleBuilder {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
       this.pipelineState = pipelineState;
+      ContextualProcessExecutor contextualProcessExecutor =
+          new ContextualProcessExecutor(
+              executionContext.getProcessExecutor(), processExecutorContext);
       this.ruleExecutionContext =
           StepExecutionContext.from(
-              executionContext.withProcessExecutor(
-                  new ContextualProcessExecutor(
-                      executionContext.getProcessExecutor(), processExecutorContext)),
-              rule.getProjectFilesystem().getRootPath());
+              executionContext.withProcessExecutor(contextualProcessExecutor),
+              rule.getProjectFilesystem().getRootPath(),
+              contextualProcessExecutor.getActionId());
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {
@@ -1523,6 +1531,7 @@ class CachingBuildRuleBuilder {
   }
 
   public interface BuildRuleBuilderDelegate {
+
     void markRuleAsUsed(BuildRule rule, BuckEventBus eventBus);
 
     void setFirstFailure(BuildRuleFailedException throwable);

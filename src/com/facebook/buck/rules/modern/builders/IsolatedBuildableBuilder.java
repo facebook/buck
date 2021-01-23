@@ -54,6 +54,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -99,6 +100,7 @@ import org.pf4j.PluginWrapper;
  * (see getProvider() below for the expected layout of this directory).
  */
 public abstract class IsolatedBuildableBuilder {
+
   private static final Logger LOG = Logger.get(IsolatedBuildableBuilder.class);
   private final BuildContext buildContext;
   private final StepExecutionContext.Builder executionContextBuilder;
@@ -321,12 +323,14 @@ public abstract class IsolatedBuildableBuilder {
 
     try (Scope ignored = LeafEvents.scope(eventBus, "steps");
         CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus)) {
+      BuildTarget buildTarget = reconstructed.target;
       ProjectFilesystem filesystem =
-          filesystemFunction.apply(reconstructed.target.getCell().getLegacyName());
+          filesystemFunction.apply(buildTarget.getCell().getLegacyName());
+      Buildable buildable = reconstructed.buildable;
       ModernBuildRule.injectFieldsIfNecessary(
           filesystem,
-          reconstructed.target,
-          reconstructed.buildable,
+          buildTarget,
+          buildable,
           new AbstractBuildRuleResolver() {
             @Override
             public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
@@ -342,15 +346,14 @@ public abstract class IsolatedBuildableBuilder {
               deserializationComplete.minusMillis(start.toEpochMilli()).toEpochMilli()));
 
       StepExecutionContext executionContext =
-          executionContextBuilder.setRuleCellRoot(filesystem.getRootPath()).build();
+          executionContextBuilder
+              .setRuleCellRoot(filesystem.getRootPath())
+              .setActionId(buildTarget.getFullyQualifiedName())
+              .build();
       for (Step step :
           ModernBuildRule.stepsForBuildable(
-              buildContext,
-              reconstructed.buildable,
-              filesystem,
-              reconstructed.target,
-              ImmutableList.of())) {
-        StepRunner.runStep(executionContext, step, Optional.of(reconstructed.target));
+              buildContext, buildable, filesystem, buildTarget, ImmutableList.of())) {
+        StepRunner.runStep(executionContext, step, Optional.of(buildTarget));
       }
 
       long duration =

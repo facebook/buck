@@ -47,13 +47,15 @@ public abstract class IsolatedExecutionContext implements Closeable {
       Console console,
       Platform platform,
       ProcessExecutor processExecutor,
-      AbsPath ruleCellRoot) {
+      AbsPath ruleCellRoot,
+      String actionId) {
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(eventBus)
         .setConsole(console)
         .setPlatform(platform)
         .setProcessExecutor(processExecutor)
         .setRuleCellRoot(ruleCellRoot)
+        .setActionId(actionId)
         .build();
   }
 
@@ -82,6 +84,12 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * return cell2's path.
    */
   public abstract AbsPath getRuleCellRoot();
+
+  /**
+   * Returns an id of executing action. Typically represents that fully qualified name of the build
+   * target.
+   */
+  public abstract String getActionId();
 
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {
@@ -156,6 +164,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
         .setRuleCellRoot(getRuleCellRoot())
         .setClassLoaderCache(getClassLoaderCache().addRef())
+        .setActionId(getActionId())
         .build();
   }
 }

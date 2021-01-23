@@ -56,7 +56,8 @@ public class TestExecutionContext {
         .setCellPathResolver(cellPathResolver)
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setBuildCellRootPath(rootPath.getPath())
-        .setRuleCellRoot(rootPath);
+        .setRuleCellRoot(rootPath)
+        .setActionId("test_action_id");
   }
 
   public static StepExecutionContext newInstance() {

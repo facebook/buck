@@ -54,6 +54,7 @@ import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -339,7 +340,10 @@ public class TestCommand extends BuildCommand {
               ruleResolver,
               testRules,
               rulesUnderTestForCoverage,
-              StepExecutionContext.from(build.getExecutionContext(), filesystem.getRootPath()),
+              StepExecutionContext.from(
+                  build.getExecutionContext(),
+                  filesystem.getRootPath(),
+                  "test-running-" + buildContext.getEventBus().getBuildId().toString()),
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
@@ -362,14 +366,13 @@ public class TestCommand extends BuildCommand {
         StreamSupport.stream(testRules.spliterator(), /* parallel */ true)
             .filter(rule -> !(rule instanceof ExternalTestRunnerRule))
             .findAny();
+    BuckEventBus buckEventBus = params.getBuckEventBus();
     if (nonExternalTestRunnerRule.isPresent()) {
-      params
-          .getBuckEventBus()
-          .post(
-              ConsoleEvent.severe(
-                  String.format(
-                      "Test %s does not support external test running",
-                      nonExternalTestRunnerRule.get().getBuildTarget())));
+      buckEventBus.post(
+          ConsoleEvent.severe(
+              String.format(
+                  "Test %s does not support external test running",
+                  nonExternalTestRunnerRule.get().getBuildTarget())));
       return ExitCode.BUILD_ERROR;
     }
 
@@ -398,19 +401,18 @@ public class TestCommand extends BuildCommand {
               .map(ExternalTestRunnerRule.class::cast)
               .map(
                   rule -> {
+                    BuildTarget buildTarget = rule.getBuildTarget();
                     try {
-                      params
-                          .getBuckEventBus()
-                          .post(ExternalTestSpecCalculationEvent.started(rule.getBuildTarget()));
+                      buckEventBus.post(ExternalTestSpecCalculationEvent.started(buildTarget));
                       return rule.getExternalTestRunnerSpec(
                           StepExecutionContext.from(
-                              build.getExecutionContext(), filesystem.getRootPath()),
+                              build.getExecutionContext(),
+                              filesystem.getRootPath(),
+                              buildTarget.getFullyQualifiedName()),
                           options,
                           buildContext);
                     } finally {
-                      params
-                          .getBuckEventBus()
-                          .post(ExternalTestSpecCalculationEvent.finished(rule.getBuildTarget()));
+                      buckEventBus.post(ExternalTestSpecCalculationEvent.finished(buildTarget));
                     }
                   })
               .collect(ImmutableList.toImmutableList());
@@ -493,18 +495,16 @@ public class TestCommand extends BuildCommand {
           processExecutor.launchProcess(processExecutorParams, processListener);
       ExitCode exitCode = ExitCode.FATAL_GENERIC;
       try {
-        params
-            .getBuckEventBus()
-            .post(
-                ExternalTestRunEvent.started(
-                    options.isRunAllTests(),
-                    options.getTestSelectorList(),
-                    options.shouldExplainTestSelectorList(),
-                    testTargets));
+        buckEventBus.post(
+            ExternalTestRunEvent.started(
+                options.isRunAllTests(),
+                options.getTestSelectorList(),
+                options.shouldExplainTestSelectorList(),
+                testTargets));
         exitCode = ExitCode.map(processExecutor.waitForProcess(process));
         return exitCode;
       } finally {
-        params.getBuckEventBus().post(ExternalTestRunEvent.finished(testTargets, exitCode));
+        buckEventBus.post(ExternalTestRunEvent.finished(testTargets, exitCode));
         processExecutor.destroyProcess(process, /* force */ false);
         processExecutor.waitForProcess(process);
       }
