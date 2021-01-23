@@ -46,7 +46,7 @@ public abstract class WorkerToolParsedEnvs {
   public static WorkerToolParsedEnvs parse(ImmutableMap<String, String> envs) {
     return ImmutableWorkerToolParsedEnvs.ofImpl(
         Verbosity.valueOf(getNonNullValue(envs, DownwardApiConstants.ENV_VERBOSITY)),
-        Boolean.valueOf(getNonNullValue(envs, DownwardApiConstants.ENV_ANSI_ENABLED)),
+        Boolean.parseBoolean(getNonNullValue(envs, DownwardApiConstants.ENV_ANSI_ENABLED)),
         new BuildId(getNonNullValue(envs, DownwardApiConstants.ENV_BUILD_UUID)),
         getNonNullValue(envs, DownwardApiConstants.ENV_ACTION_ID),
         Paths.get(getNonNullValue(envs, DownwardApiConstants.ENV_EVENT_PIPE)),

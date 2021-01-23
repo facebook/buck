@@ -57,7 +57,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD required by API
 import java.io.Writer;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -83,7 +82,7 @@ import javax.tools.StandardJavaFileManager;
 class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   private static final Logger LOG = Logger.get(Jsr199JavacInvocation.class);
-  private static final ListeningExecutorService threadPool =
+  private static final ListeningExecutorService THREAD_POOL =
       MoreExecutors.listeningDecorator(
           Executors.newCachedThreadPool(new NamedThreadFactory("javac")));
 
@@ -186,7 +185,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   private CompilerWorker getWorker() {
     if (worker == null) {
-      worker = new CompilerWorker(threadPool);
+      worker = new CompilerWorker(THREAD_POOL);
     }
 
     return worker;
@@ -558,7 +557,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
           List<String> classNamesForAnnotationProcessing = ImmutableList.of();
           Writer compilerOutputWriter =
-              new PrintWriter(context.getStdErr()); // NOPMD required by API
+              new java.io.PrintWriter(context.getStdErr()); // NOPMD required by API
           PluginClassLoaderFactory loaderFactory =
               PluginLoader.newFactory(context.getClassLoaderCache());
 
