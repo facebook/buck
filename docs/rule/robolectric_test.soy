@@ -74,14 +74,6 @@ with Robolectric test runner. It extends from <code>java_test()</code> rule.
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'use_binary_resources' /}
-  {param default : 'False' /}
-  {param desc}
-  Tells Robolectric to use binary resources mode, which reads resources from a resource APK rather than the filesystem. This requires Robolectric 4+.
-  {/param}
-{/call}
-
 {/param} // close args
 
 {/call} // close buck.rule

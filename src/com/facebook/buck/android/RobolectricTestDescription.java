@@ -70,7 +70,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Objects;
@@ -216,143 +215,123 @@ public class RobolectricTestDescription
             buildTarget.getTargetConfiguration(),
             AndroidPlatformTarget.class);
 
-    Optional<UnitTestOptions> unitTestOptions = Optional.empty();
-    Optional<MergeAssets> optionalBinaryResources = Optional.empty();
+    Optional<SourcePath> maybeRoboManifest = args.getRobolectricManifest();
+    Preconditions.checkArgument(
+        maybeRoboManifest.isPresent(),
+        "You must specify a manifest when running a robolectric test.");
+    SourcePath robolectricManifest = maybeRoboManifest.get();
 
-    if (!args.isUseBinaryResources()) {
-      ImmutableSortedSet<BuildRule> newDeclaredDeps =
-          ImmutableSortedSet.<BuildRule>naturalOrder()
-              .addAll(params.getDeclaredDeps().get())
-              .add(actualDummyRDotJava)
-              .build();
-      params = params.withDeclaredDeps(newDeclaredDeps);
-      testLibraryArgs =
-          testLibraryArgs.withDeps(
-              Iterables.concat(
-                  args.getDeps(), Collections.singletonList(actualDummyRDotJava.getBuildTarget())));
-    } else {
-      Optional<SourcePath> maybeRoboManifest = args.getRobolectricManifest();
-      Preconditions.checkArgument(
-          maybeRoboManifest.isPresent(),
-          "You must specify a manifest to use binary resources mode.");
-      SourcePath robolectricManifest = maybeRoboManifest.get();
+    FilteredResourcesProvider resourcesProvider =
+        new IdentityResourcesProvider(
+            actualDummyRDotJava.getAndroidResourceDeps().stream()
+                .map(HasAndroidResourceDeps::getRes)
+                .collect(ImmutableList.toImmutableList()));
 
-      FilteredResourcesProvider resourcesProvider =
-          new IdentityResourcesProvider(
-              actualDummyRDotJava.getAndroidResourceDeps().stream()
-                  .map(HasAndroidResourceDeps::getRes)
-                  .collect(ImmutableList.toImmutableList()));
+    ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
 
-      ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
+    ImmutableList<Aapt2Compile> compileables =
+        AndroidBinaryResourcesGraphEnhancer.createAapt2CompileablesForResourceProvider(
+            projectFilesystem,
+            graphBuilder,
+            aapt2ToolProvider,
+            resourcesProvider,
+            buildTarget,
+            true,
+            false,
+            downwardApiConfig.isEnabledForAndroid());
 
-      ImmutableList<Aapt2Compile> compileables =
-          AndroidBinaryResourcesGraphEnhancer.createAapt2CompileablesForResourceProvider(
-              projectFilesystem,
-              graphBuilder,
-              aapt2ToolProvider,
-              resourcesProvider,
-              buildTarget,
-              true,
-              false,
-              downwardApiConfig.isEnabledForAndroid());
+    BuildTarget aapt2LinkBuildTarget =
+        buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_link"));
+    Aapt2Link aapt2Link =
+        new Aapt2Link(
+            aapt2LinkBuildTarget,
+            projectFilesystem,
+            graphBuilder,
+            compileables,
+            robolectricManifest,
+            args.getManifestEntries(),
+            0,
+            ImmutableList.of(),
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            aapt2ToolProvider.resolve(graphBuilder, aapt2LinkBuildTarget.getTargetConfiguration()),
+            ImmutableList.of(),
+            androidPlatformTarget.getAndroidJar(),
+            !args.getLocalesForBinaryResources().isEmpty(),
+            args.getLocalesForBinaryResources(),
+            ImmutableSet.of(),
+            Optional.empty(),
+            args.getPreferredDensityForBinaryResources(),
+            args.getManifestEntries().getMinSdkVersion(),
+            false,
+            downwardApiConfig.isEnabledForAndroid());
 
-      BuildTarget aapt2LinkBuildTarget =
-          buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_link"));
-      Aapt2Link aapt2Link =
-          new Aapt2Link(
-              aapt2LinkBuildTarget,
-              projectFilesystem,
-              graphBuilder,
-              compileables,
-              robolectricManifest,
-              args.getManifestEntries(),
-              0,
-              ImmutableList.of(),
-              false,
-              false,
-              false,
-              false,
-              false,
-              false,
-              aapt2ToolProvider.resolve(
-                  graphBuilder, aapt2LinkBuildTarget.getTargetConfiguration()),
-              ImmutableList.of(),
-              androidPlatformTarget.getAndroidJar(),
-              !args.getLocalesForBinaryResources().isEmpty(),
-              args.getLocalesForBinaryResources(),
-              ImmutableSet.of(),
-              Optional.empty(),
-              args.getPreferredDensityForBinaryResources(),
-              args.getManifestEntries().getMinSdkVersion(),
-              false,
-              downwardApiConfig.isEnabledForAndroid());
+    graphBuilder.addToIndex(aapt2Link);
+    AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
 
-      graphBuilder.addToIndex(aapt2Link);
-      AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+    MergeAssets binaryResources =
+        new MergeAssets(
+            buildTarget.withAppendedFlavors(
+                AndroidBinaryResourcesGraphEnhancer.MERGE_ASSETS_FLAVOR),
+            projectFilesystem,
+            graphBuilder,
+            Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
+            actualDummyRDotJava.getAndroidResourceDeps().stream()
+                .map(HasAndroidResourceDeps::getAssets)
+                .filter(Objects::nonNull)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+    graphBuilder.addToIndex(binaryResources);
 
-      MergeAssets mergeAssets =
-          new MergeAssets(
-              buildTarget.withAppendedFlavors(
-                  AndroidBinaryResourcesGraphEnhancer.MERGE_ASSETS_FLAVOR),
-              projectFilesystem,
-              graphBuilder,
-              Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
-              actualDummyRDotJava.getAndroidResourceDeps().stream()
-                  .map(HasAndroidResourceDeps::getAssets)
-                  .filter(Objects::nonNull)
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
-      graphBuilder.addToIndex(mergeAssets);
-      optionalBinaryResources = Optional.of(mergeAssets);
+    UnitTestOptions unitTestOptions =
+        new UnitTestOptions(
+            buildTarget.withAppendedFlavors(InternalFlavor.of("unit_test_options")),
+            projectFilesystem,
+            graphBuilder,
+            ImmutableMap.of(
+                "android_resource_apk",
+                graphBuilder
+                    .getSourcePathResolver()
+                    .getCellUnsafeRelPath(binaryResources.getSourcePathToOutput())
+                    .toString(),
+                "android_merged_manifest",
+                graphBuilder
+                    .getSourcePathResolver()
+                    .getCellUnsafeRelPath(robolectricManifest)
+                    .toString()));
 
-      unitTestOptions =
-          Optional.of(
-              new UnitTestOptions(
-                  buildTarget.withAppendedFlavors(InternalFlavor.of("unit_test_options")),
-                  projectFilesystem,
-                  graphBuilder,
-                  ImmutableMap.of(
-                      "android_resource_apk",
-                      graphBuilder
-                          .getSourcePathResolver()
-                          .getCellUnsafeRelPath(mergeAssets.getSourcePathToOutput())
-                          .toString(),
-                      "android_merged_manifest",
-                      graphBuilder
-                          .getSourcePathResolver()
-                          .getCellUnsafeRelPath(robolectricManifest)
-                          .toString())));
+    graphBuilder.addToIndex(unitTestOptions);
 
-      graphBuilder.addToIndex(unitTestOptions.get());
+    GenerateRDotJava generateRDotJava =
+        new GenerateRDotJava(
+            buildTarget.withAppendedFlavors(InternalFlavor.of("generate_rdot_java")),
+            projectFilesystem,
+            graphBuilder,
+            EnumSet.noneOf(RDotTxtEntry.RType.class),
+            Optional.empty(),
+            ImmutableList.of(aaptOutputInfo.getPathToRDotTxt()),
+            args.getResourceUnionPackage(),
+            actualDummyRDotJava.getAndroidResourceDeps().stream()
+                .map(HasAndroidResourceDeps::getBuildTarget)
+                .map(graphBuilder::requireRule)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
+            ImmutableList.of(resourcesProvider));
 
-      GenerateRDotJava generateRDotJava =
-          new GenerateRDotJava(
-              buildTarget.withAppendedFlavors(InternalFlavor.of("generate_rdot_java")),
-              projectFilesystem,
-              graphBuilder,
-              EnumSet.noneOf(RDotTxtEntry.RType.class),
-              Optional.empty(),
-              ImmutableList.of(aaptOutputInfo.getPathToRDotTxt()),
-              args.getResourceUnionPackage(),
-              actualDummyRDotJava.getAndroidResourceDeps().stream()
-                  .map(HasAndroidResourceDeps::getBuildTarget)
-                  .map(graphBuilder::requireRule)
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
-              ImmutableList.of(resourcesProvider));
+    graphBuilder.addToIndex(generateRDotJava);
 
-      graphBuilder.addToIndex(generateRDotJava);
+    params =
+        params.copyAppendingExtraDeps(ImmutableSortedSet.of(generateRDotJava, unitTestOptions));
 
-      params =
-          params.copyAppendingExtraDeps(
-              ImmutableSortedSet.of(generateRDotJava, unitTestOptions.get()));
+    ImmutableSortedSet<SourcePath> updatedSrcs =
+        ImmutableSortedSet.<SourcePath>naturalOrder()
+            .addAll(testLibraryArgs.getSrcs())
+            .add(generateRDotJava.getSourcePathToRZip())
+            .build();
 
-      ImmutableSortedSet<SourcePath> updatedSrcs =
-          ImmutableSortedSet.<SourcePath>naturalOrder()
-              .addAll(testLibraryArgs.getSrcs())
-              .add(generateRDotJava.getSourcePathToRZip())
-              .build();
-
-      testLibraryArgs = testLibraryArgs.withSrcs(updatedSrcs);
-    }
+    testLibraryArgs = testLibraryArgs.withSrcs(updatedSrcs);
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
@@ -409,8 +388,7 @@ public class RobolectricTestDescription
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         cxxLibraryEnhancement.requiredPaths,
-        args.isUseBinaryResources() ? Optional.empty() : dummyRDotJava,
-        optionalBinaryResources,
+        binaryResources,
         unitTestOptions,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
@@ -429,9 +407,6 @@ public class RobolectricTestDescription
         args.getUnbundledResourcesRoot(),
         args.getRobolectricRuntimeDependency(),
         args.getRobolectricManifest(),
-        javaBuckConfig
-            .getDelegate()
-            .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
         javaRuntimeConfig
             .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),

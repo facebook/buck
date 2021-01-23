@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -32,13 +31,10 @@ import com.facebook.buck.jvm.java.ForkMode;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.step.Step;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -67,9 +63,8 @@ public class RobolectricTest extends JavaTest {
       List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Set<Path> nativeLibsRequiredPaths,
-      Optional<DummyRDotJava> optionalDummyRDotJava,
-      Optional<MergeAssets> optionalBinaryResources,
-      Optional<UnitTestOptions> unitTestOptions,
+      MergeAssets binaryResources,
+      UnitTestOptions unitTestOptions,
       Optional<Long> testRuleTimeoutMs,
       Optional<Long> testCaseTimeoutMs,
       ImmutableMap<String, Arg> env,
@@ -81,7 +76,6 @@ public class RobolectricTest extends JavaTest {
       Optional<SourcePath> unbundledResourcesRoot,
       Optional<SourcePath> robolectricRuntimeDependency,
       Optional<SourcePath> robolectricManifest,
-      boolean passDirectoriesInFile,
       Tool javaRuntimeLauncher,
       boolean includeBootClasspathInRequiredPaths,
       boolean useRelativePathsInClasspathFile,
@@ -94,16 +88,8 @@ public class RobolectricTest extends JavaTest {
         Optional.of(
             resolver -> {
               ImmutableList.Builder<Path> builder = ImmutableList.builder();
-              optionalDummyRDotJava.ifPresent(
-                  dummyRDotJava ->
-                      builder.add(
-                          resolver
-                              .getAbsolutePath(dummyRDotJava.getSourcePathToOutput())
-                              .getPath()));
-              unitTestOptions.ifPresent(
-                  options ->
-                      builder.add(
-                          resolver.getAbsolutePath(options.getSourcePathToOutput()).getPath()));
+              builder.add(
+                  resolver.getAbsolutePath(unitTestOptions.getSourcePathToOutput()).getPath());
 
               return builder.build();
             }),
@@ -129,13 +115,10 @@ public class RobolectricTest extends JavaTest {
     this.androidPlatformTarget = androidPlatformTarget;
     this.robolectricTestHelper =
         new RobolectricTestHelper(
-            getBuildTarget(),
-            optionalDummyRDotJava,
-            optionalBinaryResources,
+            binaryResources,
             robolectricRuntimeDependency,
             robolectricManifest,
-            getProjectFilesystem(),
-            passDirectoriesInFile);
+            getProjectFilesystem());
     this.includeBootClasspathInRequiredPaths = includeBootClasspathInRequiredPaths;
   }
 
@@ -152,12 +135,6 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  protected void addPreTestSteps(
-      BuildContext buildContext, ImmutableList.Builder<Step> stepsBuilder) {
-    robolectricTestHelper.addPreTestSteps(buildContext, stepsBuilder);
-  }
-
-  @Override
   protected void onAmendVmArgs(
       ImmutableList.Builder<String> vmArgsBuilder,
       SourcePathResolverAdapter pathResolver,
@@ -167,22 +144,11 @@ public class RobolectricTest extends JavaTest {
   }
 
   @Override
-  public void onPreTest(BuildContext buildContext) throws IOException {
-    super.onPreTest(buildContext);
-    robolectricTestHelper.onPreTest(buildContext);
-  }
-
-  @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
         // Inherit any runtime deps from `JavaTest`.
         super.getRuntimeDeps(buildRuleResolver),
-        robolectricTestHelper.getExtraRuntimeDeps(buildRuleResolver, getBuildDeps()));
-  }
-
-  @VisibleForTesting
-  RobolectricTestHelper getRobolectricTestHelper() {
-    return robolectricTestHelper;
+        robolectricTestHelper.getExtraRuntimeDeps(getBuildDeps()));
   }
 
   @Override

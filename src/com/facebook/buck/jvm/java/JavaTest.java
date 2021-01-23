@@ -298,10 +298,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return compiledTestsLibrary;
   }
 
-  @SuppressWarnings("unused")
-  protected void addPreTestSteps(
-      BuildContext buildContext, ImmutableList.Builder<Step> stepsBuilder) {}
-
   /**
    * Runs the tests specified by the "srcs" of this class. If this rule transitively depends on
    * other {@code java_test()} rules, then they will be run separately.
@@ -329,7 +325,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput)));
-    addPreTestSteps(buildContext, steps);
     if (forkMode() == ForkMode.PER_TEST) {
       ImmutableList.Builder<JUnitStep> junitsBuilder = ImmutableList.builder();
       for (String testClass : testClassNames) {

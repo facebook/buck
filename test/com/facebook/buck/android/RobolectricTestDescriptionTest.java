@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -60,6 +61,7 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
         RobolectricTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
             .addDep(exportingNode.getBuildTarget())
+            .setRobolectricManifest(FakeSourcePath.of("manifest.xml"))
             .build();
 
     TargetGraph targetGraph =
@@ -99,6 +101,7 @@ public class RobolectricTestDescriptionTest extends AbiCompilationModeTest {
         RobolectricTestBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:rule"), javaBuckConfig)
             .addProvidedDep(exportingNode.getBuildTarget())
+            .setRobolectricManifest(FakeSourcePath.of("manifest.xml"))
             .build();
 
     TargetGraph targetGraph =

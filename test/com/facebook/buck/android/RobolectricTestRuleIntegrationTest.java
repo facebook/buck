@@ -58,16 +58,6 @@ public class RobolectricTestRuleIntegrationTest {
   }
 
   @Test
-  public void testRobolectricTestBuildsWithDummyR() throws IOException {
-
-    workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
-    workspace.setUp();
-    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
-  }
-
-  @Test
   public void testRobolectricTestAddsRequiredPath() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
@@ -76,7 +66,7 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.addBuckConfigLocalOption("test", "use_relative_paths_in_classpath_file", "true");
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
     workspace.addBuckConfigLocalOption("test", "java_for_tests_version", "11");
-    workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
 
     Path specOutput =
         workspace.getPath(
@@ -92,18 +82,6 @@ public class RobolectricTestRuleIntegrationTest {
         ImmutableSortedSet.<String>naturalOrder()
             .addAll((Iterable<String>) spec.get("required_paths"))
             .build();
-
-    ImmutableList<String> robolectricResourceDirectoriesPath =
-        requiredPaths.stream()
-            .filter(path -> path.contains("robolectric-resource-directories"))
-            .collect(ImmutableList.toImmutableList());
-    assertEquals(1, robolectricResourceDirectoriesPath.size());
-
-    ImmutableList<String> robolectricAssetDirectoriesPath =
-        requiredPaths.stream()
-            .filter(path -> path.contains("robolectric-asset-directories"))
-            .collect(ImmutableList.toImmutableList());
-    assertEquals(1, robolectricAssetDirectoriesPath.size());
 
     ImmutableList<String> robolectricBinaryResourcesApkPath =
         requiredPaths.stream()
@@ -157,56 +135,6 @@ public class RobolectricTestRuleIntegrationTest {
   }
 
   @Test
-  public void testRobolectricTestWithLegacyResourcesAddsRequiredPaths() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
-    workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
-    workspace.setUp();
-    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
-    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
-
-    Path specOutput =
-        workspace.getPath(
-            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
-    ImmutableList<ImmutableMap<String, Object>> specs =
-        ObjectMappers.readValue(
-            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
-    assertThat(specs, iterableWithSize(1));
-    ImmutableMap<String, Object> spec = specs.get(0);
-    assertThat(spec, hasKey("required_paths"));
-    //noinspection unchecked
-    ImmutableSortedSet<String> requiredPaths =
-        ImmutableSortedSet.<String>naturalOrder()
-            .addAll((Iterable<String>) spec.get("required_paths"))
-            .build();
-
-    ImmutableList<String> hilarityAssetsSymlinkPath =
-        requiredPaths.stream()
-            .filter(path -> path.contains("assets-symlink-tree/assets/hilarity.txt"))
-            .collect(ImmutableList.toImmutableList());
-    assertEquals(1, hilarityAssetsSymlinkPath.size());
-
-    ImmutableList<String> hilarityAssetsOriginalPath =
-        requiredPaths.stream()
-            .filter(path -> path.contains("res/com/sample/base/buck-assets/hilarity.txt"))
-            .collect(ImmutableList.toImmutableList());
-    assertEquals(1, hilarityAssetsOriginalPath.size());
-
-    ImmutableList<String> topLayoutResourceSymlinkPath =
-        requiredPaths.stream()
-            .filter(path -> path.contains("resources-symlink-tree/res/layout/top_layout.xml"))
-            .collect(ImmutableList.toImmutableList());
-    assertEquals(1, topLayoutResourceSymlinkPath.size());
-
-    ImmutableList<String> topLayoutResourceOriginalPath =
-        requiredPaths.stream()
-            .filter(path -> path.contains("res/com/sample/top/res/layout/top_layout.xml"))
-            .collect(ImmutableList.toImmutableList());
-    assertEquals(1, topLayoutResourceOriginalPath.size());
-  }
-
-  @Test
   public void testNoBootClasspathInRequiredPath() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
@@ -214,7 +142,7 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
     workspace.addBuckConfigLocalOption("test", "include_boot_classpath_in_required_paths", "false");
-    workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
 
     Path specOutput =
         workspace.getPath(
@@ -276,6 +204,6 @@ public class RobolectricTestRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    workspace.runBuckTest("//java/com/sample/lib:test_binary_resources").assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 }

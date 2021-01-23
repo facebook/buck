@@ -20,9 +20,11 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -97,6 +99,8 @@ public class RobolectricTestBuilder
             JavaOptionsProvider.of(
                 DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
         .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
         .build();
   }
 
@@ -126,6 +130,11 @@ public class RobolectricTestBuilder
 
   public RobolectricTestBuilder addProvidedDep(BuildTarget rule) {
     getArgForPopulating().addProvidedDeps(rule);
+    return this;
+  }
+
+  public RobolectricTestBuilder setRobolectricManifest(SourcePath manifest) {
+    getArgForPopulating().setRobolectricManifest(manifest);
     return this;
   }
 }
