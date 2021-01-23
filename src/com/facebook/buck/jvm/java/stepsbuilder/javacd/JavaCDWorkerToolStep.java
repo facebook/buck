@@ -22,6 +22,7 @@ import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -47,15 +48,18 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
 
-    DownwardApiProcessExecutor processExecutor =
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    DownwardApiProcessExecutor downwardApiProcessExecutor =
         (DownwardApiProcessExecutor)
-            context
-                .getProcessExecutor()
-                .withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+            processExecutor.withDownwardAPI(
+                DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
 
     WorkerToolExecutor workerToolExecutor =
-        new JavaCDWorkerToolExecutor(processExecutor, buildJavaCommand, javaRuntimeLauncherCommand);
-    workerToolExecutor.executeCommand();
+        new JavaCDWorkerToolExecutor(
+            downwardApiProcessExecutor, buildJavaCommand, javaRuntimeLauncherCommand);
+
+    String actionId = context.getActionId();
+    workerToolExecutor.executeCommand(actionId);
 
     return StepExecutionResults.SUCCESS;
   }

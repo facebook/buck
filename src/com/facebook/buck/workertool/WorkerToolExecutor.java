@@ -51,7 +51,7 @@ public abstract class WorkerToolExecutor {
   }
 
   /** Send an execution command to a worker tool instance and wait till the command executed. */
-  public final void executeCommand() throws IOException, InterruptedException {
+  public final void executeCommand(String actionId) throws IOException, InterruptedException {
 
     try (NamedPipeWriter namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
         OutputStream outputStream = namedPipeWriter.getOutputStream()) {
@@ -65,8 +65,7 @@ public abstract class WorkerToolExecutor {
 
       CommandTypeMessage executeCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
-      ExecuteCommand executeCommand =
-          ExecuteCommand.newBuilder().setActionId(downwardApiProcessExecutor.getActionId()).build();
+      ExecuteCommand executeCommand = ExecuteCommand.newBuilder().setActionId(actionId).build();
 
       executeCommandTypeMessage.writeDelimitedTo(outputStream);
       executeCommand.writeDelimitedTo(outputStream);
