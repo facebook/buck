@@ -51,6 +51,9 @@ import java.io.OutputStream;
  */
 public class ExternalActionsExecutable {
 
+  private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
+  private static final DownwardProtocolType DOWNWARD_PROTOCOL_TYPE = DownwardProtocolType.BINARY;
+
   /** Main entrypoint of actions that can be built in a separate process from buck. */
   public static void main(String[] args) {
     // Note that creating if expected environment variables are not present, this will throw a
@@ -58,9 +61,9 @@ public class ExternalActionsExecutable {
     ParsedEnvVars parsedEnvVars = ParsedEnvVars.parse(EnvVariablesProvider.getSystemEnv());
     Console console = createConsole(parsedEnvVars);
     try (NamedPipeWriter namedPipe =
-            NamedPipeFactory.getFactory().connectAsWriter(parsedEnvVars.getEventPipe());
+            NAMED_PIPE_FACTORY.connectAsWriter(parsedEnvVars.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
-      DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
+      DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(outputStream);
       Logger.get("").addHandler(new ExternalLogHandler(outputStream));
       executeSteps(args, parsedEnvVars, console, outputStream);
     } catch (Exception e) {
