@@ -104,8 +104,8 @@ public class DownwardApiProcessExecutorTest {
 
   private static final Logger LOG = Logger.get(DownwardApiProcessExecutorTest.class);
 
-  private static final Logger DOWNWARD_API_LOGGER = DownwardApiProcessExecutor.LOG;
-  private static Level DOWNWARD_API_LOGGER_INITIAL_LEVEL;
+  private static final Logger EVENT_HANDLER_LOGGER = NamedPipeEventHandler.LOG;
+  private static Level EVENT_HANDLER_LOGGER_INITIAL_LEVEL;
 
   private static final String TEST_LOGGER_NAME = "crazy.tool.name";
   private static final ConsoleParams CONSOLE_PARAMS =
@@ -116,15 +116,15 @@ public class DownwardApiProcessExecutorTest {
   @BeforeClass
   public static void beforeClass() {
     // store the initial log level in the variable
-    DOWNWARD_API_LOGGER_INITIAL_LEVEL = DOWNWARD_API_LOGGER.getLevel();
+    EVENT_HANDLER_LOGGER_INITIAL_LEVEL = EVENT_HANDLER_LOGGER.getLevel();
     // add ability to check all level of logs from class under the test.
-    DOWNWARD_API_LOGGER.setLevel(Level.ALL);
+    EVENT_HANDLER_LOGGER.setLevel(Level.ALL);
   }
 
   @AfterClass
   public static void afterClass() {
     // set the initial log level back
-    DOWNWARD_API_LOGGER.setLevel(DOWNWARD_API_LOGGER_INITIAL_LEVEL);
+    EVENT_HANDLER_LOGGER.setLevel(EVENT_HANDLER_LOGGER_INITIAL_LEVEL);
   }
 
   @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
@@ -133,8 +133,7 @@ public class DownwardApiProcessExecutorTest {
 
   @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);
 
-  @Rule
-  public TestLogSink executorLogSink = new TestLogSink(DownwardApiProcessExecutor.class.getName());
+  @Rule public TestLogSink executorLogSink = new TestLogSink(NamedPipeEventHandler.class.getName());
 
   private NamedPipeReader namedPipeReader;
   private Instant instant;

@@ -62,7 +62,7 @@ import java.util.function.Consumer;
  */
 public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
-  @VisibleForTesting static final Logger LOG = Logger.get(DownwardApiProcessExecutor.class);
+  private static final Logger LOG = Logger.get(DownwardApiProcessExecutor.class);
 
   public static final DownwardApiProcessExecutorFactory FACTORY = Factory.INSTANCE;
 

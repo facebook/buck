@@ -16,6 +16,7 @@
 
 package com.facebook.buck.downwardapi.processexecutor;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.util.DelegateLaunchedProcess;
 import com.facebook.buck.util.ProcessExecutor;
@@ -27,6 +28,8 @@ import java.util.concurrent.TimeoutException;
 
 /** Process launched inside the {@link DownwardApiProcessExecutor} */
 class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
+
+  private static final Logger LOG = Logger.get(DownwardApiLaunchedProcess.class);
 
   private final NamedPipe namedPipe;
   private final NamedPipeEventHandler namedPipeEventHandler;
@@ -55,14 +58,12 @@ class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
     } catch (CancellationException e) {
       // this is fine. it's just canceled
     } catch (InterruptedException e) {
-      DownwardApiProcessExecutor.LOG.info(
-          e, "Got interrupted while cancelling downward events processing");
+      LOG.info(e, "Got interrupted while cancelling downward events processing");
       Thread.currentThread().interrupt();
     } catch (ExecutionException e) {
-      DownwardApiProcessExecutor.LOG.warn(
-          e.getCause(), "Exception while cancelling named pipe events processing.");
+      LOG.warn(e.getCause(), "Exception while cancelling named pipe events processing.");
     } catch (TimeoutException e) {
-      DownwardApiProcessExecutor.LOG.error(
+      LOG.error(
           "Cannot shutdown downward api reader handler for named pipe: '%s'", namedPipe.getName());
       readerThreadTerminated = false;
     }
@@ -72,7 +73,7 @@ class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
     try {
       namedPipe.close();
     } catch (IOException e) {
-      DownwardApiProcessExecutor.LOG.error(e, "Cannot close named pipe: %s", namedPipe.getName());
+      LOG.error(e, "Cannot close named pipe: %s", namedPipe.getName());
     }
   }
 

@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
 import com.facebook.buck.downwardapi.namedpipes.SupportsDownwardProtocol;
@@ -30,6 +31,7 @@ import com.facebook.buck.downwardapi.protocol.InvalidDownwardProtocolException;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -86,6 +88,8 @@ import javax.annotation.Nullable;
  */
 class NamedPipeEventHandler {
 
+  @VisibleForTesting static final Logger LOG = Logger.get(NamedPipeEventHandler.class);
+
   private final NamedPipeReader namedPipe;
   private final DownwardApiExecutionContext context;
   private final SettableFuture<Void> done = SettableFuture.create();
@@ -105,28 +109,26 @@ class NamedPipeEventHandler {
   private void run() {
     String namedPipeName = namedPipe.getName();
     try (InputStream inputStream = namedPipe.getInputStream()) {
-      DownwardApiProcessExecutor.LOG.info(
-          "Trying to establish downward protocol for pipe %s", namedPipeName);
+      LOG.info("Trying to establish downward protocol for pipe %s", namedPipeName);
       if (downwardProtocol == null) {
         downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
-        DownwardApiProcessExecutor.LOG.info(
+        LOG.info(
             "Starting to read events from named pipe %s with protocol %s",
             namedPipeName, downwardProtocol.getProtocolName());
       }
 
       processEvents(namedPipeName, inputStream);
-      DownwardApiProcessExecutor.LOG.info(
+      LOG.info(
           "Finishing reader thread for pipe: %s; interrupted = %s",
           namedPipeName, Thread.currentThread().isInterrupted());
     } catch (PipeNotConnectedException e) {
-      DownwardApiProcessExecutor.LOG.info("Named pipe %s is closed", namedPipeName);
+      LOG.info("Named pipe %s is closed", namedPipeName);
     } catch (IOException e) {
-      DownwardApiProcessExecutor.LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
+      LOG.error(e, "Cannot read from named pipe: %s", namedPipeName);
     } catch (InvalidDownwardProtocolException e) {
-      DownwardApiProcessExecutor.LOG.error(e, "Received invalid downward protocol");
+      LOG.error(e, "Received invalid downward protocol");
     } catch (Exception e) {
-      DownwardApiProcessExecutor.LOG.warn(
-          e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
+      LOG.warn(e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
     } finally {
       done.set(null);
     }
@@ -138,25 +140,23 @@ class NamedPipeEventHandler {
         EventType eventType = downwardProtocol.readEventType(inputStream);
         AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
         if (eventType.equals(EventType.END_EVENT)) {
-          DownwardApiProcessExecutor.LOG.info(
-              "Received end event for named pipe %s", namedPipeName);
+          LOG.info("Received end event for named pipe %s", namedPipeName);
           break;
         }
         DownwardApiProcessExecutor.HANDLER_THREAD_POOL.execute(
             () -> processEvent(eventType, event));
       } catch (PipeNotConnectedException e) {
-        DownwardApiProcessExecutor.LOG.info("Named pipe %s is closed", namedPipeName);
+        LOG.info("Named pipe %s is closed", namedPipeName);
         break;
       } catch (IOException e) {
-        DownwardApiProcessExecutor.LOG.error(
-            e, "Exception during processing events from named pipe: %s", namedPipeName);
+        LOG.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
         break;
       }
     }
   }
 
   private void processEvent(EventType eventType, AbstractMessage event) {
-    DownwardApiProcessExecutor.LOG.debug(
+    LOG.debug(
         "Processing event of type %s in the thread: %s",
         eventType, Thread.currentThread().getName());
 
@@ -164,7 +164,7 @@ class NamedPipeEventHandler {
     try {
       eventHandler.handleEvent(context, event);
     } catch (Exception e) {
-      DownwardApiProcessExecutor.LOG.error(e, "Cannot handle event: %s", event);
+      LOG.error(e, "Cannot handle event: %s", event);
     }
   }
 
@@ -185,8 +185,7 @@ class NamedPipeEventHandler {
     try {
       namedPipeServer.prepareToClose(done);
     } catch (IOException e) {
-      DownwardApiProcessExecutor.LOG.error(
-          e, "Failed to prepare to close named pipe. Canceling handler");
+      LOG.error(e, "Failed to prepare to close named pipe. Canceling handler");
       running.map(future -> future.cancel(true));
     }
   }
