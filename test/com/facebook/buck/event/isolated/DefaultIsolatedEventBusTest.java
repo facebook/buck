@@ -85,7 +85,8 @@ public class DefaultIsolatedEventBusTest {
             FakeClock.of(NOW_MILLIS + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             executorService,
             TIMEOUT_MILLIS,
-            NOW_MILLIS);
+            NOW_MILLIS,
+            DownwardProtocolType.BINARY.getDownwardProtocol());
   }
 
   @After

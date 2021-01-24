@@ -18,6 +18,7 @@ package com.facebook.buck.external.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
@@ -53,6 +54,8 @@ public class ExternalActionsExecutable {
 
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
   private static final DownwardProtocolType DOWNWARD_PROTOCOL_TYPE = DownwardProtocolType.BINARY;
+  private static final DownwardProtocol DOWNWARD_PROTOCOL =
+      DOWNWARD_PROTOCOL_TYPE.getDownwardProtocol();
 
   /** Main entrypoint of actions that can be built in a separate process from buck. */
   public static void main(String[] args) {
@@ -101,7 +104,10 @@ public class ExternalActionsExecutable {
     long startExecutionEpochMillis = System.currentTimeMillis();
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(
-            parsedEnvVars.getBuildUuid(), outputStream, startExecutionEpochMillis)) {
+            parsedEnvVars.getBuildUuid(),
+            outputStream,
+            startExecutionEpochMillis,
+            DOWNWARD_PROTOCOL)) {
       IsolatedExecutionContext executionContext =
           IsolatedExecutionContext.of(
               eventBus,

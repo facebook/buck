@@ -227,7 +227,8 @@ public class IsolatedStepsRunnerTest {
                 startExecutionMillis + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             MoreExecutors.newDirectExecutorService(),
             DefaultIsolatedEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS,
-            startExecutionMillis);
+            startExecutionMillis,
+            DownwardProtocolType.BINARY.getDownwardProtocol());
     Console console = new Console(VERBOSITY_FOR_TEST, System.out, System.err, ANSI_FOR_TEST);
     ProcessExecutor defaultProcessExecutor = new DefaultProcessExecutor(console);
 

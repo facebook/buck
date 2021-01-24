@@ -18,7 +18,9 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
@@ -50,6 +52,9 @@ public class JavaCDWorkerToolMain {
   private static final Logger LOG = Logger.get(JavaCDWorkerToolMain.class);
 
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
+  private static final DownwardProtocolType DOWNWARD_PROTOCOL_TYPE = DownwardProtocolType.BINARY;
+  private static final DownwardProtocol DOWNWARD_PROTOCOL =
+      DOWNWARD_PROTOCOL_TYPE.getDownwardProtocol();
 
   /** Main entrypoint of JavaCD worker tool. */
   public static void main(String[] args) {
@@ -61,7 +66,7 @@ public class JavaCDWorkerToolMain {
             NAMED_PIPE_FACTORY.connectAsWriter(workerToolParsedEnvs.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
       // establish downward protocol type as binary
-      DownwardProtocolType.BINARY.writeDelimitedTo(outputStream);
+      DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(outputStream);
       Logger.get("").addHandler(new ExternalLogHandler(outputStream));
 
       executeSteps(workerToolParsedEnvs, console, outputStream);
@@ -114,9 +119,14 @@ public class JavaCDWorkerToolMain {
             AbsPath ruleCellRoot = javaCDWorkerToolStepsBuilder.getRuleCellRoot();
             ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
 
+            String actionId = executeCommand.getActionId();
             executeJavaCompilationCommand(
-                ruleCellRoot, isolatedSteps, workerToolParsedEnvs, console, outputStream);
-
+                isolatedSteps,
+                ruleCellRoot,
+                workerToolParsedEnvs.getBuildUuid(),
+                actionId,
+                console,
+                outputStream);
             break;
 
           case SHUTDOWN_COMMAND:
@@ -137,16 +147,17 @@ public class JavaCDWorkerToolMain {
   }
 
   private static void executeJavaCompilationCommand(
-      AbsPath ruleCellRoot,
       ImmutableList<IsolatedStep> isolatedSteps,
-      WorkerToolParsedEnvs workerToolParsedEnvs,
+      AbsPath ruleCellRoot,
+      BuildId buildUuid,
+      String actionId,
       Console console,
       OutputStream outputStream)
       throws IOException {
     long startExecutionMillis = System.currentTimeMillis();
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(
-            workerToolParsedEnvs.getBuildUuid(), outputStream, startExecutionMillis)) {
+            buildUuid, outputStream, startExecutionMillis, DOWNWARD_PROTOCOL)) {
       IsolatedExecutionContext executionContext =
           IsolatedExecutionContext.of(
               eventBus,
@@ -154,7 +165,7 @@ public class JavaCDWorkerToolMain {
               Platform.detect(),
               new DefaultProcessExecutor(console),
               ruleCellRoot,
-              workerToolParsedEnvs.getActionId());
+              actionId);
       IsolatedStepsRunner.execute(isolatedSteps, executionContext);
     }
   }

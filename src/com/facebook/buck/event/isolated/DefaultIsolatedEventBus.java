@@ -19,9 +19,11 @@ package com.facebook.buck.event.isolated;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
+import com.facebook.buck.downward.model.ChromeTraceEvent.ChromeTraceEventStatus;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.EventTypeMessage.EventType;
+import com.facebook.buck.downward.model.StepEvent.StepStatus;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
-import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -52,10 +54,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private static final Logger LOG = Logger.get(DefaultIsolatedEventBus.class);
   private static final String THREAD_NAME = "DefaultIsolatedEventBus";
-  public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15000;
-
-  private static final DownwardProtocol DOWNWARD_PROTOCOL =
-      DownwardProtocolType.BINARY.getDownwardProtocol();
+  public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15_000;
 
   private final BuildId buildId;
   private final OutputStream outputStream;
@@ -63,16 +62,21 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   private final ListeningExecutorService executorService;
   private final int shutdownTimeoutMillis;
   private final long startExecutionEpochMillis;
+  private final DownwardProtocol downwardProtocol;
 
   public DefaultIsolatedEventBus(
-      BuildId buildId, OutputStream outputStream, long startExecutionEpochMillis) {
+      BuildId buildId,
+      OutputStream outputStream,
+      long startExecutionEpochMillis,
+      DownwardProtocol downwardProtocol) {
     this(
         buildId,
         outputStream,
         new DefaultClock(true),
         MoreExecutors.listeningDecorator(MostExecutors.newSingleThreadExecutor(THREAD_NAME)),
         DEFAULT_SHUTDOWN_TIMEOUT_MS,
-        startExecutionEpochMillis);
+        startExecutionEpochMillis,
+        downwardProtocol);
   }
 
   public DefaultIsolatedEventBus(
@@ -81,13 +85,15 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
       Clock clock,
       ListeningExecutorService executorService,
       int shutdownTimeoutMillis,
-      long startExecutionEpochMillis) {
+      long startExecutionEpochMillis,
+      DownwardProtocol downwardProtocol) {
     this.buildId = buildId;
     this.outputStream = outputStream;
     this.clock = clock;
     this.executorService = executorService;
     this.shutdownTimeoutMillis = shutdownTimeoutMillis;
     this.startExecutionEpochMillis = startExecutionEpochMillis;
+    this.downwardProtocol = downwardProtocol;
   }
 
   @Override
@@ -185,7 +191,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void timestamp(SimplePerfEvent event, long threadId) {
-    timestamp((BuckEvent) event, threadId);
+    timestamp((BuckEvent) event, Thread.currentThread().getId());
   }
 
   @Override
@@ -209,9 +215,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private void writeExternalEvent(ExternalEvent event) {
     EventTypeMessage eventTypeMessage =
-        EventTypeMessage.newBuilder()
-            .setEventType(EventTypeMessage.EventType.EXTERNAL_EVENT)
-            .build();
+        EventTypeMessage.newBuilder().setEventType(EventType.EXTERNAL_EVENT).build();
     com.facebook.buck.downward.model.ExternalEvent externalEvent =
         com.facebook.buck.downward.model.ExternalEvent.newBuilder()
             .putAllData(event.getData())
@@ -221,9 +225,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private void writeConsoleEvent(ConsoleEvent event) {
     EventTypeMessage eventTypeMessage =
-        EventTypeMessage.newBuilder()
-            .setEventType(EventTypeMessage.EventType.CONSOLE_EVENT)
-            .build();
+        EventTypeMessage.newBuilder().setEventType(EventType.CONSOLE_EVENT).build();
     com.facebook.buck.downward.model.ConsoleEvent consoleEvent =
         com.facebook.buck.downward.model.ConsoleEvent.newBuilder()
             .setLogLevel(DownwardApiUtils.convertLogLevel(event.getLevel()))
@@ -234,7 +236,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private void writeStepEvent(StepEvent event) {
     EventTypeMessage eventTypeMessage =
-        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.STEP_EVENT).build();
+        EventTypeMessage.newBuilder().setEventType(EventType.STEP_EVENT).build();
     com.facebook.buck.downward.model.StepEvent stepEvent =
         com.facebook.buck.downward.model.StepEvent.newBuilder()
             .setEventId(event.getUuid().hashCode())
@@ -248,15 +250,14 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private void writeChromeTraceEvent(SimplePerfEvent event) {
     EventTypeMessage eventTypeMessage =
-        EventTypeMessage.newBuilder()
-            .setEventType(EventTypeMessage.EventType.CHROME_TRACE_EVENT)
-            .build();
+        EventTypeMessage.newBuilder().setEventType(EventType.CHROME_TRACE_EVENT).build();
+    ChromeTraceEventStatus eventStatus = convertEventType(event.getEventType());
     ChromeTraceEvent chromeTraceEvent =
         ChromeTraceEvent.newBuilder()
             .setEventId(event.getEventKey().hashCode())
             .setCategory(event.getCategory())
             .setTitle(event.getTitle().getValue())
-            .setStatus(convertEventType(event))
+            .setStatus(eventStatus)
             .putAllData(Maps.transformValues(event.getEventInfo(), Object::toString))
             .setDuration(getDuration(event))
             .build();
@@ -267,31 +268,35 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     return DurationUtils.millisToDuration(event.getTimestampMillis() - startExecutionEpochMillis);
   }
 
-  private ChromeTraceEvent.ChromeTraceEventStatus convertEventType(SimplePerfEvent event) {
-    switch (event.getEventType()) {
+  private ChromeTraceEventStatus convertEventType(SimplePerfEvent.Type eventType) {
+    switch (eventType) {
       case STARTED:
-        return ChromeTraceEvent.ChromeTraceEventStatus.BEGIN;
+        return ChromeTraceEventStatus.BEGIN;
+
       case FINISHED:
-        return ChromeTraceEvent.ChromeTraceEventStatus.END;
+        return ChromeTraceEventStatus.END;
+
       case UPDATED:
       default:
-        return ChromeTraceEvent.ChromeTraceEventStatus.UNKNOWN;
+        return ChromeTraceEventStatus.UNKNOWN;
     }
   }
 
-  private com.facebook.buck.downward.model.StepEvent.StepStatus getStepStatus(StepEvent event) {
+  private StepStatus getStepStatus(StepEvent event) {
     if (event instanceof StepEvent.Started) {
-      return com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED;
+      return StepStatus.STARTED;
     }
+
     if (event instanceof StepEvent.Finished) {
-      return com.facebook.buck.downward.model.StepEvent.StepStatus.FINISHED;
+      return StepStatus.FINISHED;
     }
-    return com.facebook.buck.downward.model.StepEvent.StepStatus.UNKNOWN;
+
+    return StepStatus.UNKNOWN;
   }
 
   private void writeToNamedPipe(EventTypeMessage eventType, AbstractMessage payload) {
     try {
-      DOWNWARD_PROTOCOL.write(eventType, payload, outputStream);
+      downwardProtocol.write(eventType, payload, outputStream);
     } catch (IOException e) {
       LOG.error(e, "Failed to write buck event %s of type", payload, eventType.getEventType());
     }
