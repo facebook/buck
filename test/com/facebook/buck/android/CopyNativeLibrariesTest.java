@@ -24,7 +24,6 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -157,10 +156,7 @@ public class CopyNativeLibrariesTest {
     ImmutableList<Step> steps = stepsBuilder.build();
 
     assertEquals(steps.size(), expectedCommandDescriptions.size());
-    StepExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setCellPathResolver(TestCellPathResolver.get(filesystem))
-            .build();
+    StepExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
     for (int i = 0; i < steps.size(); ++i) {
       String description = steps.get(i).getDescription(executionContext);

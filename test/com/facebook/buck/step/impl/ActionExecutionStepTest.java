@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -210,7 +209,6 @@ public class ActionExecutionStepTest {
         .setBuckEventBus(testEventBus)
         .setPlatform(Platform.UNKNOWN)
         .setEnvironment(ImmutableMap.of())
-        .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
         .setBuildCellRootPath(baseCell)
         .setProcessExecutor(new FakeProcessExecutor())
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())

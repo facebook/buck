@@ -19,7 +19,6 @@ package com.facebook.buck.step.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
@@ -104,7 +103,6 @@ public class TestActionExecutionRunner {
                 .setBuckEventBus(testEventBus)
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
-                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setBuildCellRootPath(rootPath.getPath())
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)

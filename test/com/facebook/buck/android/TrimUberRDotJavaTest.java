@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -134,10 +133,7 @@ public class TrimUberRDotJavaTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver());
     BuildableContext buildableContext = new FakeBuildableContext();
-    StepExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setCellPathResolver(TestCellPathResolver.get(filesystem))
-            .build();
+    StepExecutionContext executionContext = TestExecutionContext.newBuilder().build();
     ImmutableList<Step> steps = trimUberRDotJava.getBuildSteps(buildContext, buildableContext);
     for (Step step : steps) {
       step.execute(executionContext);

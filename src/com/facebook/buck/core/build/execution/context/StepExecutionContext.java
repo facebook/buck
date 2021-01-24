@@ -17,7 +17,6 @@
 package com.facebook.buck.core.build.execution.context;
 
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -52,7 +51,6 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setProcessExecutor(executionContext.getProcessExecutor())
         .setAndroidDevicesHelper(executionContext.getAndroidDevicesHelper())
         .setPersistentWorkerPools(executionContext.getPersistentWorkerPools())
-        .setCellPathResolver(executionContext.getCellPathResolver())
         .setBuildCellRootPath(executionContext.getBuildCellRootPath())
         .setProjectFilesystemFactory(executionContext.getProjectFilesystemFactory())
         .setClassLoaderCache(executionContext.getClassLoaderCache())
@@ -74,8 +72,6 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
    * running without daemon, there will be no persisted pools.
    */
   public abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
-
-  public abstract CellPathResolver getCellPathResolver();
 
   /**
    * The absolute path to the cell where this build was invoked.

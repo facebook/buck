@@ -207,7 +207,6 @@ public abstract class IsolatedBuildableBuilder {
             .setBuckEventBus(eventBus)
             .setPlatform(platform)
             .setEnvironment(clientEnvironment)
-            .setCellPathResolver(cellPathResolver)
             .setBuildCellRootPath(canonicalProjectRoot.getPath())
             .setProcessExecutor(processExecutor)
             .setProjectFilesystemFactory(projectFilesystemFactory);

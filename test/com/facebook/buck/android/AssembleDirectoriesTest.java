@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -53,7 +52,6 @@ public class AssembleDirectoriesTest {
     AbsPath rootPath = filesystem.getRootPath();
     context =
         TestExecutionContext.newBuilder()
-            .setCellPathResolver(TestCellPathResolver.get(filesystem))
             .setRuleCellRoot(rootPath)
             .setBuildCellRootPath(rootPath.getPath())
             .build();

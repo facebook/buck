@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -86,7 +85,6 @@ public class BuildableCommandExecutionStepTest {
         .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setPlatform(Platform.UNKNOWN)
         .setEnvironment(EnvironmentSanitizer.getSanitizedEnvForTests(ImmutableMap.of()))
-        .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
         .setBuildCellRootPath(Paths.get("cell"))
         .setProcessExecutor(
             new DefaultProcessExecutor(
