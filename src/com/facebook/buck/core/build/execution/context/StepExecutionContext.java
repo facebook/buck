@@ -24,11 +24,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.io.Closer;
-import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -120,27 +117,6 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
   @Value.Default
   public IsolatedEventBus getIsolatedEventBus() {
     return getBuckEventBus().isolated();
-  }
-
-  @Override
-  public StepExecutionContext createSubContext(
-      PrintStream newStdout, PrintStream newStderr, Optional<Verbosity> verbosityOverride) {
-    Console console =
-        new Console(
-            verbosityOverride.orElse(this.getConsole().getVerbosity()),
-            newStdout,
-            newStderr,
-            this.getConsole().getAnsi());
-
-    // This should replace (or otherwise retain) all of the closeable parts of the context.
-    return StepExecutionContext.builder()
-        .from(this)
-        .setConsole(console)
-        .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
-        .setClassLoaderCache(getClassLoaderCache().addRef())
-        .setAndroidDevicesHelper(Optional.empty())
-        .setWorkerProcessPools(new ConcurrentHashMap<>())
-        .build();
   }
 
   @Override
