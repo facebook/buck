@@ -18,6 +18,7 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.utils.EventBusUtils;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
@@ -115,10 +116,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
 
   @Override
   public void post(BuckEvent event, Instant atTime, long threadId) {
-    long millis = atTime.toEpochMilli();
-    long nano = clock.nanoTime();
-    long threadUserNanoTime = clock.threadUserNanoTime(threadId);
-    event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
+    EventBusUtils.configureEvent(event, atTime, threadId, clock, buildId);
     dispatch(event);
   }
 

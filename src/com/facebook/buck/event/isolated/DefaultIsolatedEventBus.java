@@ -31,6 +31,7 @@ import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
+import com.facebook.buck.event.utils.EventBusUtils;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
@@ -136,10 +137,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void post(StepEvent event, Instant atTime, long threadId) {
-    long millis = atTime.toEpochMilli();
-    long nano = clock.nanoTime();
-    long threadUserNanoTime = clock.threadUserNanoTime(threadId);
-    event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
+    EventBusUtils.configureEvent(event, atTime, threadId, clock, buildId);
     writeStepEvent(event);
   }
 
@@ -161,10 +159,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void post(SimplePerfEvent event, Instant atTime, long threadId) {
-    long millis = atTime.toEpochMilli();
-    long nano = clock.nanoTime();
-    long threadUserNanoTime = clock.threadUserNanoTime(threadId);
-    event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
+    EventBusUtils.configureEvent(event, atTime, threadId, clock, buildId);
     writeChromeTraceEvent(event);
   }
 
@@ -265,7 +260,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   }
 
   private Duration getDuration(BuckEvent event) {
-    return DurationUtils.millisToDuration(event.getTimestampMillis() - startExecutionEpochMillis);
+    return EventBusUtils.millisToDuration(event.getTimestampMillis() - startExecutionEpochMillis);
   }
 
   private ChromeTraceEventStatus convertEventType(SimplePerfEvent.Type eventType) {

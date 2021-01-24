@@ -64,6 +64,7 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -136,9 +137,9 @@ public class DownwardApiProcessExecutorTest {
   @Rule public TestLogSink executorLogSink = new TestLogSink(NamedPipeEventHandler.class.getName());
 
   private NamedPipeReader namedPipeReader;
-  private Instant instant;
   private BuckEventBus buckEventBus;
   private ProcessExecutorParams params;
+  private Clock clock;
 
   private static class TestListener {
 
@@ -176,10 +177,9 @@ public class DownwardApiProcessExecutorTest {
         NamedPipeFactory.getFactory(
                 DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE)
             .createAsReader();
-    instant = Instant.now();
-    buckEventBus =
-        BuckEventBusForTests.newInstance(
-            new SettableFakeClock(instant.toEpochMilli(), instant.getNano()));
+    Instant instant = Instant.now();
+    clock = new SettableFakeClock(instant.toEpochMilli(), instant.getNano());
+    buckEventBus = BuckEventBusForTests.newInstance(clock);
     params = getProcessExecutorParams(namedPipeReader.getName(), buckEventBus);
   }
 
@@ -201,7 +201,7 @@ public class DownwardApiProcessExecutorTest {
   @Test
   public void downwardApi() throws IOException, InterruptedException {
     TestListener listener = new TestListener();
-    long epochSecond = instant.getEpochSecond();
+    long epochMilli = clock.currentTimeMillis();
     buckEventBus.register(listener);
 
     ProcessExecutorParams params =
@@ -243,7 +243,7 @@ public class DownwardApiProcessExecutorTest {
 
     // step start event
     verifyStepEvent(
-        epochSecond,
+        epochMilli,
         events.get(0),
         StepEventExternalInterface.STEP_STARTED,
         "crazy_stuff",
@@ -255,7 +255,7 @@ public class DownwardApiProcessExecutorTest {
 
     // chrome trace start event
     verifyChromeTraceEvent(
-        epochSecond,
+        epochMilli,
         events.get(2),
         "category_1",
         SimplePerfEvent.Type.STARTED,
@@ -264,7 +264,7 @@ public class DownwardApiProcessExecutorTest {
 
     // step finished event
     verifyStepEvent(
-        epochSecond,
+        epochMilli,
         events.get(3),
         StepEventExternalInterface.STEP_FINISHED,
         "crazy_stuff",
@@ -274,7 +274,7 @@ public class DownwardApiProcessExecutorTest {
 
     // chrome trace finished event
     verifyChromeTraceEvent(
-        epochSecond,
+        epochMilli,
         events.get(4),
         "category_1",
         SimplePerfEvent.Type.FINISHED,
@@ -509,7 +509,7 @@ public class DownwardApiProcessExecutorTest {
   }
 
   private void verifyStepEvent(
-      long epochSecond,
+      long epochMilli,
       BuckEvent buckEvent,
       String eventName,
       String category,
@@ -520,12 +520,11 @@ public class DownwardApiProcessExecutorTest {
     assertEquals(eventName, event.getEventName());
     assertEquals(category, event.getCategory());
     assertEquals(description, event.getDescription());
-    long nanoTime = event.getNanoTime();
-    verifyDuration(epochSecond, expectedRelativeDuration, nanoTime);
+    verifyDuration(epochMilli, expectedRelativeDuration, event.getTimestampMillis());
   }
 
   private void verifyChromeTraceEvent(
-      long epochSecond,
+      long epochMilli,
       BuckEvent chromeTraceEvent,
       String category,
       SimplePerfEvent.Type type,
@@ -537,7 +536,7 @@ public class DownwardApiProcessExecutorTest {
     assertEquals(category, simplePerfEvent.getCategory());
     assertEquals(type, simplePerfEvent.getEventType());
     assertEquals(attributes, simplePerfEvent.getEventInfo());
-    verifyDuration(epochSecond, expectedRelativeTime, simplePerfEvent.getNanoTime());
+    verifyDuration(epochMilli, expectedRelativeTime, simplePerfEvent.getTimestampMillis());
   }
 
   private void verifyExternalEvent(BuckEvent buckEvent) {
@@ -553,11 +552,11 @@ public class DownwardApiProcessExecutorTest {
         externalEvent.getData());
   }
 
-  private void verifyDuration(long epochSecond, int expectedRelativeDuration, long nanoTime) {
-    long eventTimeInSeconds = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
-    long relativeTimeInSeconds = eventTimeInSeconds - epochSecond;
-    int diffInSeconds = (int) (relativeTimeInSeconds - expectedRelativeDuration);
-    int diffThreshold = 2;
+  private void verifyDuration(long epochMilli, int expectedRelativeDuration, long eventMillis) {
+    long relativeTimeInMillis = epochMilli - eventMillis;
+    int diffInSeconds =
+        (int) (TimeUnit.MILLISECONDS.toSeconds(relativeTimeInMillis) - expectedRelativeDuration);
+    int diffThreshold = 1;
     assertTrue(
         "Diff in seconds: " + diffInSeconds + " should be less than threshold: " + diffThreshold,
         diffInSeconds <= diffThreshold);
@@ -622,7 +621,7 @@ public class DownwardApiProcessExecutorTest {
             .setStepStatus(started)
             .setStepType("crazy_stuff")
             .setDescription(description)
-            .setDuration(Duration.newBuilder().setSeconds(durationSeconds).setNanos(10).build())
+            .setDuration(Duration.newBuilder().setSeconds(-durationSeconds).setNanos(-10).build())
             .build();
 
     return write(downwardProtocol, STEP_EVENT, stepEvent);
@@ -667,7 +666,7 @@ public class DownwardApiProcessExecutorTest {
       DownwardProtocol downwardProtocol,
       ChromeTraceEventStatus status,
       String category,
-      int relativeSeconds,
+      int durationInSeconds,
       ImmutableMap<String, String> attributes)
       throws IOException {
     ChromeTraceEvent chromeTraceEvent =
@@ -676,7 +675,7 @@ public class DownwardApiProcessExecutorTest {
             .setTitle("my_trace_event")
             .setCategory(category)
             .setStatus(status)
-            .setDuration(Duration.newBuilder().setSeconds(relativeSeconds).setNanos(10).build())
+            .setDuration(Duration.newBuilder().setSeconds(-durationInSeconds).setNanos(-10).build())
             .putAllData(attributes)
             .build();
 

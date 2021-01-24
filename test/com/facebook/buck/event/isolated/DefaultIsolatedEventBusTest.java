@@ -62,7 +62,7 @@ public class DefaultIsolatedEventBusTest {
   private static final int TIMEOUT_MILLIS = 500;
   private static final long NOW_MILLIS =
       Instant.parse("2020-12-15T12:13:14.123456789Z").toEpochMilli();
-  private static final int CLOCK_SHIFT_IN_SECONDS = 42;
+  private static final int CLOCK_SHIFT_IN_SECONDS = 4242;
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public final ExpectedException exception = ExpectedException.none();

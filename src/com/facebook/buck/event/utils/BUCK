@@ -1,0 +1,16 @@
+java_library(
+    name = "utils",
+    srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/event/utils:utils"],
+    visibility = [
+        "//src/com/facebook/buck/event/...",
+        "//test/com/facebook/buck/event/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/guava:guava",
+        "//third-party/java/protobuf:protobuf",
+    ],
+)
