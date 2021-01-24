@@ -190,7 +190,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
-  public void close() throws IOException {
+  public void close() {
     executorService.shutdown();
     try {
       executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS);
@@ -234,13 +234,17 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
         EventTypeMessage.newBuilder().setEventType(EventType.STEP_EVENT).build();
     com.facebook.buck.downward.model.StepEvent stepEvent =
         com.facebook.buck.downward.model.StepEvent.newBuilder()
-            .setEventId(event.getUuid().hashCode())
+            .setEventId(getEventId(event))
             .setStepStatus(getStepStatus(event))
             .setStepType(event.getShortStepName())
             .setDescription(event.getDescription())
             .setDuration(getDuration(event))
             .build();
     writeToNamedPipe(eventTypeMessage, stepEvent);
+  }
+
+  private int getEventId(BuckEvent event) {
+    return (int) event.getEventKey().getValue();
   }
 
   private void writeChromeTraceEvent(SimplePerfEvent event) {

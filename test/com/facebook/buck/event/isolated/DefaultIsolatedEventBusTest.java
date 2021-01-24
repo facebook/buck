@@ -45,7 +45,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.junit.After;
@@ -116,7 +115,7 @@ public class DefaultIsolatedEventBusTest {
 
   @Test
   public void stepEventCanBeWrittenToOutputStream() throws Exception {
-    StepEvent stepEvent = StepEvent.started("short_name", "my_description", UUID.randomUUID());
+    StepEvent stepEvent = StepEvent.started("short_name", "my_description");
     int secondsElapsedTillEventOccurred = 123;
     com.facebook.buck.downward.model.StepEvent expectedStepEvent =
         com.facebook.buck.downward.model.StepEvent.newBuilder()
@@ -186,7 +185,7 @@ public class DefaultIsolatedEventBusTest {
   }
 
   @Test
-  public void closeShutsDownExecutor() throws Exception {
+  public void closeShutsDownExecutor() {
     assertFalse(executorService.isShutdown());
     testEventBus.close();
     assertTrue(executorService.isShutdown());

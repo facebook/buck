@@ -23,7 +23,6 @@ import com.facebook.buck.event.StepEvent;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.UUID;
 
 /** Utility class for running {@link Step}s */
 public final class StepRunner {
@@ -50,8 +49,7 @@ public final class StepRunner {
 
     String stepShortName = step.getShortName();
     String stepDescription = step.getDescription(context);
-    UUID stepUuid = UUID.randomUUID();
-    StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
+    StepEvent.Started started = StepEvent.started(stepShortName, stepDescription);
     String buildTargetName = buildTarget.map(BuildTarget::getFullyQualifiedName).orElse("N/A");
     logStepEvent(context, started, buildTargetName);
     context.getBuckEventBus().post(started);

@@ -40,7 +40,6 @@ import com.google.common.hash.HashCode;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.junit.Test;
@@ -202,7 +201,7 @@ public class BuildThreadStateRendererTest {
       long threadId, long timeMs, String name) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
-            StepEvent.started(name, name + " description", UUID.randomUUID()),
+            StepEvent.started(name, name + " description"),
             timeMs,
             TimeUnit.MILLISECONDS,
             threadId));

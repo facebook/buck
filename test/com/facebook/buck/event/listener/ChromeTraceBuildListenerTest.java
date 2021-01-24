@@ -94,7 +94,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
@@ -460,7 +459,6 @@ public class ChromeTraceBuildListenerTest {
     RuleKey ruleKey = new RuleKey("abc123");
     String stepShortName = "fakeStep";
     String stepDescription = "I'm a Fake Step!";
-    UUID stepUuid = UUID.randomUUID();
 
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(buildTarget);
     Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
@@ -502,7 +500,7 @@ public class ChromeTraceBuildListenerTest {
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
-    eventBus.post(StepEvent.started(stepShortName, stepDescription, stepUuid));
+    eventBus.post(StepEvent.started(stepShortName, stepDescription));
 
     JavacPhaseEvent.Started runProcessorsStartedEvent =
         JavacPhaseEvent.started(
@@ -539,8 +537,7 @@ public class ChromeTraceBuildListenerTest {
 
     eventBus.post(JavacPhaseEvent.finished(runProcessorsStartedEvent, ImmutableMap.of()));
 
-    eventBus.post(
-        StepEvent.finished(StepEvent.started(stepShortName, stepDescription, stepUuid), 0));
+    eventBus.post(StepEvent.finished(StepEvent.started(stepShortName, stepDescription), 0));
     eventBus.post(
         BuildRuleEvent.finished(
             started,

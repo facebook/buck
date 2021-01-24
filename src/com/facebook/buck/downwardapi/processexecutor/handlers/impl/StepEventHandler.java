@@ -27,7 +27,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 /** Downward API event handler for {@code StepEvent} */
 enum StepEventHandler implements EventHandler<StepEvent> {
@@ -41,8 +40,7 @@ enum StepEventHandler implements EventHandler<StepEvent> {
 
     switch (event.getStepStatus()) {
       case STARTED:
-        Started startedEvent =
-            started(event.getStepType(), event.getDescription(), UUID.randomUUID());
+        Started startedEvent = started(event.getStepType(), event.getDescription());
         stepStartedEvents.put(eventId, startedEvent);
         context.postEvent(startedEvent, timestamp);
         break;

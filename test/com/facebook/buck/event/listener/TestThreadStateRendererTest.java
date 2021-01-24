@@ -226,7 +226,7 @@ public class TestThreadStateRendererTest {
       long threadId, long timeMs, String name) {
     return Optional.of(
         TestEventConfigurator.configureTestEventAtTime(
-            StepEvent.started(name, name + " description", UUID.randomUUID()),
+            StepEvent.started(name, name + " description"),
             timeMs,
             TimeUnit.MILLISECONDS,
             threadId));

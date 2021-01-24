@@ -57,7 +57,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.LogRecord;
 import org.junit.After;
@@ -72,7 +71,6 @@ public class ExternalActionsIntegrationTest {
       ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
 
   private File buildableCommandFile;
-  private ProcessExecutor defaultExecutor;
   private BuckEventBus eventBusForTests;
   private BuckEventBusForTests.CapturingEventListener eventBusListener;
   private ProcessExecutor downwardApiProcessExecutor;
@@ -91,7 +89,7 @@ public class ExternalActionsIntegrationTest {
   @Before
   public void setUp() throws Exception {
     buildableCommandFile = temporaryFolder.newFile("buildable_command").toFile();
-    defaultExecutor = new DefaultProcessExecutor(new TestConsole());
+    ProcessExecutor defaultExecutor = new DefaultProcessExecutor(new TestConsole());
     eventBusForTests = BuckEventBusForTests.newInstance();
     eventBusListener = new BuckEventBusForTests.CapturingEventListener();
     eventBusForTests.register(eventBusListener);
@@ -131,8 +129,7 @@ public class ExternalActionsIntegrationTest {
     assertTrue(Files.isDirectory(actualOutput.getPath()));
 
     StepEvent.Started expectedStartEvent =
-        StepEvent.started(
-            "mkdir", String.format("mkdir -p %s", actualOutput.getPath()), UUID.randomUUID());
+        StepEvent.started("mkdir", String.format("mkdir -p %s", actualOutput.getPath()));
     StepEvent.Finished expectedFinishEvent = StepEvent.finished(expectedStartEvent, 0);
     List<String> actualStepEvents = eventBusListener.getStepEventLogMessages();
     assertThat(actualStepEvents, hasSize(2));
@@ -156,7 +153,7 @@ public class ExternalActionsIntegrationTest {
     assertThat(result.getExitCode(), equalTo(0));
 
     StepEvent.Started expectedStepStartEvent =
-        StepEvent.started("console_event_step", "console event: sneaky", UUID.randomUUID());
+        StepEvent.started("console_event_step", "console event: sneaky");
     StepEvent.Finished expectedStepFinishEvent = StepEvent.finished(expectedStepStartEvent, 0);
 
     waitTillEventsProcessed();
@@ -166,7 +163,7 @@ public class ExternalActionsIntegrationTest {
     assertThat(actualStepEventLogs.get(0), equalTo(expectedStepStartEvent.toLogMessage()));
     assertThat(actualStepEventLogs.get(1), equalTo(expectedStepFinishEvent.toLogMessage()));
 
-    expectedStepStartEvent = StepEvent.started("log_event_step", "log: beaky", UUID.randomUUID());
+    expectedStepStartEvent = StepEvent.started("log_event_step", "log: beaky");
     expectedStepFinishEvent = StepEvent.finished(expectedStepStartEvent, 0);
     assertThat(actualStepEventLogs.get(2), equalTo(expectedStepStartEvent.toLogMessage()));
     assertThat(actualStepEventLogs.get(3), equalTo(expectedStepFinishEvent.toLogMessage()));

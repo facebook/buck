@@ -24,7 +24,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.util.UUID;
 
 /**
  * Step runner that executes the steps the given {@link IsolatedStep}s.
@@ -61,9 +60,8 @@ public class IsolatedStepsRunner {
       context.getStdErr().println(step.getIsolatedStepDescription(context));
     }
 
-    UUID uuid = UUID.randomUUID();
     StepEvent.Started started =
-        StepEvent.started(step.getShortName(), step.getIsolatedStepDescription(context), uuid);
+        StepEvent.started(step.getShortName(), step.getIsolatedStepDescription(context));
     IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
     isolatedEventBus.post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;

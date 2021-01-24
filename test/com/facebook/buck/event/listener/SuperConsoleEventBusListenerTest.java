@@ -130,7 +130,6 @@ public class SuperConsoleEventBusListenerTest {
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
   @Rule public final Timeout timeout = Timeout.seconds(10);
 
-  private FileSystem vfs;
   private Path logPath;
   private BuildRuleDurationTracker durationTracker;
   private final SuperConsoleConfig emptySuperConsoleConfig =
@@ -145,7 +144,7 @@ public class SuperConsoleEventBusListenerTest {
 
   @Before
   public void setUp() {
-    vfs = Jimfs.newFileSystem(Configuration.unix());
+    FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     logPath = vfs.getPath("log.txt");
     durationTracker = new BuildRuleDurationTracker();
   }
@@ -449,9 +448,7 @@ public class SuperConsoleEventBusListenerTest {
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
-    UUID stepUuid = UUID.randomUUID();
-    StepEvent.Started stepEventStarted =
-        StepEvent.started(stepShortName, stepDescription, stepUuid);
+    StepEvent.Started stepEventStarted = StepEvent.started(stepShortName, stepDescription);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(stepEventStarted, 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -468,9 +465,8 @@ public class SuperConsoleEventBusListenerTest {
 
     String innerStepShortName = "doing_something_inner";
     String innerStepDescription = "working hard (for real)";
-    UUID innerStepUuid = UUID.randomUUID();
     StepEvent.Started innerStepEventStarted =
-        StepEvent.started(innerStepShortName, innerStepDescription, innerStepUuid);
+        StepEvent.started(innerStepShortName, innerStepDescription);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             innerStepEventStarted, 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -904,9 +900,7 @@ public class SuperConsoleEventBusListenerTest {
 
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
-    UUID stepUuid = UUID.randomUUID();
-    StepEvent.Started stepEventStarted =
-        StepEvent.started(stepShortName, stepDescription, stepUuid);
+    StepEvent.Started stepEventStarted = StepEvent.started(stepShortName, stepDescription);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(stepEventStarted, 800L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -1238,8 +1232,7 @@ public class SuperConsoleEventBusListenerTest {
             "Testing... 0.7 sec",
             "     - //:test... 0.1 sec"));
 
-    UUID stepUuid = new UUID(0, 1);
-    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid);
+    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc");
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             stepEventStarted, 3300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -1545,8 +1538,7 @@ public class SuperConsoleEventBusListenerTest {
             "Testing... 0.7 sec",
             "     - //:test... 0.1 sec"));
 
-    UUID stepUuid = new UUID(0, 1);
-    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid);
+    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc");
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             stepEventStarted, 3300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -1873,8 +1865,7 @@ public class SuperConsoleEventBusListenerTest {
             "Testing... 0.7 sec",
             "     - //:test... 0.1 sec"));
 
-    UUID stepUuid = new UUID(0, 1);
-    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc", stepUuid);
+    StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc");
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             stepEventStarted, 3300L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -2026,7 +2017,6 @@ public class SuperConsoleEventBusListenerTest {
     FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
     String stepShortName = "doing_something";
     String stepDescription = "working hard";
-    UUID stepUuid = UUID.randomUUID();
 
     FakeRuleKeyFactory ruleKeyFactory =
         new FakeRuleKeyFactory(ImmutableMap.of(fakeTarget, new RuleKey("aaaa")));
@@ -2064,8 +2054,7 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(started, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
     // Post events that run a step for 100ms.
-    StepEvent.Started stepEventStarted =
-        StepEvent.started(stepShortName, stepDescription, stepUuid);
+    StepEvent.Started stepEventStarted = StepEvent.started(stepShortName, stepDescription);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(stepEventStarted, 0L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
     eventBus.postWithoutConfiguring(
@@ -2112,8 +2101,7 @@ public class SuperConsoleEventBusListenerTest {
             "     - //banana:stand... 0.1 sec (preparing)"));
 
     // Post events that run another step.
-    StepEvent.Started step2EventStarted =
-        StepEvent.started(stepShortName, stepDescription, stepUuid);
+    StepEvent.Started step2EventStarted = StepEvent.started(stepShortName, stepDescription);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             step2EventStarted, 400L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -2699,11 +2687,7 @@ public class SuperConsoleEventBusListenerTest {
       eventBus.register(this);
     }
 
-    /**
-     * Every event should have been previous expected via {@link #expectCalculation()}
-     *
-     * @param e
-     */
+    /** Every event should have been previous expected via {@link #expectCalculation()} */
     @Subscribe
     public void progressCalculationDoneListener(ProgressEvent.ProjectGenerationProgressUpdated e) {
       phaser.arriveAndDeregister();
