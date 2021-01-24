@@ -149,21 +149,23 @@ public abstract class IsolatedExecutionContext implements Closeable {
   /** Creates SubContext */
   public IsolatedExecutionContext createSubContext(
       PrintStream newStdout, PrintStream newStderr, Optional<Verbosity> verbosityOverride) {
-    Console console =
+    Console console = getConsole();
+    Console newConsole =
         new Console(
-            verbosityOverride.orElse(this.getConsole().getVerbosity()),
+            verbosityOverride.orElse(console.getVerbosity()),
             newStdout,
             newStderr,
-            this.getConsole().getAnsi());
+            console.getAnsi());
 
     // This should replace (or otherwise retain) all of the closeable parts of the context.
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(getIsolatedEventBus())
-        .setConsole(console)
+        .setConsole(newConsole)
         .setPlatform(getPlatform())
         .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
         .setRuleCellRoot(getRuleCellRoot())
         .setClassLoaderCache(getClassLoaderCache().addRef())
+        .setEnvironment(getEnvironment())
         .setActionId(getActionId())
         .build();
   }
