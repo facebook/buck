@@ -67,7 +67,7 @@ public class ExternalActionsExecutable {
             NAMED_PIPE_FACTORY.connectAsWriter(parsedEnvVars.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(outputStream);
-      Logger.get("").addHandler(new ExternalLogHandler(outputStream));
+      Logger.get("").addHandler(new ExternalLogHandler(outputStream, DOWNWARD_PROTOCOL));
       executeSteps(args, parsedEnvVars, console, outputStream);
     } catch (Exception e) {
       handleExceptionAndTerminate(Thread.currentThread(), console, e);

@@ -18,7 +18,7 @@ package com.facebook.buck.external.log;
 
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogEvent;
-import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -32,10 +32,12 @@ import java.util.logging.LogRecord;
 public class ExternalLogHandler extends Handler {
 
   private final OutputStream outputStream;
+  private final DownwardProtocol downwardProtocol;
   private volatile boolean closed = false;
 
-  public ExternalLogHandler(OutputStream outputStream) {
+  public ExternalLogHandler(OutputStream outputStream, DownwardProtocol downwardProtocol) {
     this.outputStream = outputStream;
+    this.downwardProtocol = downwardProtocol;
   }
 
   @Override
@@ -56,9 +58,7 @@ public class ExternalLogHandler extends Handler {
             .setLoggerName(record.getLoggerName())
             .build();
     try {
-      DownwardProtocolType.BINARY
-          .getDownwardProtocol()
-          .write(createLogEventTypeMessage(), event, outputStream);
+      downwardProtocol.write(createLogEventTypeMessage(), event, outputStream);
     } catch (IOException e) {
       throw new RuntimeException(
           String.format("Failed to write event to named pipe: %s", event), e);

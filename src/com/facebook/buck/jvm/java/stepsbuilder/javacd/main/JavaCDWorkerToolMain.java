@@ -65,9 +65,9 @@ public class JavaCDWorkerToolMain {
     try (NamedPipeWriter namedPipe =
             NAMED_PIPE_FACTORY.connectAsWriter(workerToolParsedEnvs.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
-      // establish downward protocol type as binary
+      // establish downward protocol type
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(outputStream);
-      Logger.get("").addHandler(new ExternalLogHandler(outputStream));
+      Logger.get("").addHandler(new ExternalLogHandler(outputStream, DOWNWARD_PROTOCOL));
 
       executeSteps(workerToolParsedEnvs, console, outputStream);
 

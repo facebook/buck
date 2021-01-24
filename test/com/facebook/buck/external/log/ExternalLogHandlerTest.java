@@ -39,6 +39,9 @@ import org.junit.rules.ExpectedException;
 
 public class ExternalLogHandlerTest {
 
+  private static final DownwardProtocol DOWNWARD_PROTOCOL =
+      DownwardProtocolType.JSON.getDownwardProtocol();
+
   @Rule public final ExpectedException exception = ExpectedException.none();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -48,7 +51,7 @@ public class ExternalLogHandlerTest {
   @Before
   public void setUp() throws IOException {
     tempFile = temporaryFolder.newFile("tmp_file").toFile();
-    testHandler = new ExternalLogHandler(new FileOutputStream(tempFile));
+    testHandler = new ExternalLogHandler(new FileOutputStream(tempFile), DOWNWARD_PROTOCOL);
   }
 
   @Test
@@ -60,11 +63,10 @@ public class ExternalLogHandlerTest {
 
     testHandler.publish(record);
 
-    DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
     InputStream inputStream = new FileInputStream(tempFile);
 
-    EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
-    LogEvent actualLogEvent = protocol.readEvent(inputStream, actualEventType);
+    EventTypeMessage.EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
+    LogEvent actualLogEvent = DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType);
 
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.LOG_EVENT));
     assertThat(actualLogEvent, equalTo(getExpectedLogEvent(LogLevel.WARN, logMessage, loggerName)));
