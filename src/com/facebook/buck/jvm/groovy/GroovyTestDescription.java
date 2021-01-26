@@ -176,7 +176,6 @@ public class GroovyTestDescription
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
         args.getResources(),
-        args.getUnbundledResourcesRoot(),
         javaBuckConfig
             .getDelegate()
             .getView(TestBuckConfig.class)

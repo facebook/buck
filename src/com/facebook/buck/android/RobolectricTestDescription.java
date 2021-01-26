@@ -391,7 +391,6 @@ public class RobolectricTestDescription
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
         args.getResources(),
-        args.getUnbundledResourcesRoot(),
         args.getRobolectricRuntimeDependency(),
         args.getRobolectricManifest(),
         javaRuntimeConfig

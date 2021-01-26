@@ -73,7 +73,6 @@ public class RobolectricTest extends JavaTest {
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
       ImmutableSortedSet<SourcePath> resources,
-      Optional<SourcePath> unbundledResourcesRoot,
       Optional<SourcePath> robolectricRuntimeDependency,
       SourcePath robolectricManifest,
       Tool javaRuntimeLauncher,
@@ -109,7 +108,6 @@ public class RobolectricTest extends JavaTest {
         stdOutLogLevel,
         stdErrLogLevel,
         resources,
-        unbundledResourcesRoot,
         useRelativePathsInClasspathFile,
         withDownwardApi);
     this.androidPlatformTarget = androidPlatformTarget;

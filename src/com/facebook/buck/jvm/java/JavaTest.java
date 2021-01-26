@@ -151,7 +151,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ForkMode forkMode;
 
   private final ImmutableSet<SourcePath> resources;
-  private final Optional<SourcePath> unbundledResourcesRoot;
   private final boolean useRelativePathsInClasspathFile;
   private final boolean withDownwardApi;
 
@@ -177,7 +176,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
       ImmutableSet<SourcePath> resources,
-      Optional<SourcePath> unbundledResourcesRoot,
       boolean useRelativePathsInClasspathFile,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
@@ -199,7 +197,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
     this.resources = ImmutableSet.copyOf(resources);
-    this.unbundledResourcesRoot = unbundledResourcesRoot;
     this.withDownwardApi = withDownwardApi;
     this.useRelativePathsInClasspathFile = useRelativePathsInClasspathFile;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
@@ -649,12 +646,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *     when this test is executed
    */
   protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
-    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    unbundledResourcesRoot.ifPresent(
-        sourcePath ->
-            builder.add(
-                buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath()));
-    return builder
+    return ImmutableSet.<Path>builder()
         .addAll(
             compiledTestsLibrary.getTransitiveClasspaths().stream()
                 .map(
