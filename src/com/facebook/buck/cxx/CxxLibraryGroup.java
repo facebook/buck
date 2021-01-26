@@ -83,7 +83,8 @@ public class CxxLibraryGroup extends NoopBuildRule
         HasRuntimeDeps,
         NativeTestable,
         LegacyNativeLinkableGroup,
-        LegacyNativeLinkTargetGroup {
+        LegacyNativeLinkTargetGroup,
+        CxxResourcesProvider {
 
   private static final Logger LOG = Logger.get(CxxLibraryGroup.class);
 
@@ -115,6 +116,7 @@ public class CxxLibraryGroup extends NoopBuildRule
   private final boolean reexportAllHeaderDependencies;
   private final boolean supportsOmnibusLinking;
   private final Optional<Boolean> useArchive;
+  private final ImmutableMap<CxxResourceName, SourcePath> resources;
 
   private final CxxLibraryDescriptionDelegate delegate;
 
@@ -164,6 +166,7 @@ public class CxxLibraryGroup extends NoopBuildRule
       boolean reexportAllHeaderDependencies,
       boolean supportsOmnibusLinking,
       Optional<Boolean> useArchive,
+      ImmutableMap<CxxResourceName, SourcePath> resources,
       CxxLibraryDescriptionDelegate delegate) {
     super(buildTarget, projectFilesystem);
     this.declaredDeps = declaredDeps;
@@ -189,11 +192,24 @@ public class CxxLibraryGroup extends NoopBuildRule
     this.delegate = delegate;
     this.transitiveCxxPreprocessorInputCache = new TransitiveCxxPreprocessorInputCache(this);
     this.linkableCache = LegacyNativeLinkableGroup.getNativeLinkableCache(this);
+    this.resources = resources;
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
     return !supportedPlatformsRegex.isPresent()
         || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
+  }
+
+  @Override
+  public ImmutableMap<CxxResourceName, SourcePath> getCxxResources() {
+    return resources;
+  }
+
+  @Override
+  public void forEachCxxResourcesDep(
+      BuildRuleResolver resolver, Consumer<CxxResourcesProvider> consumer) {
+    deps.forEachForAllPlatforms(CxxResourceUtils.filterConsumer(resolver, consumer));
+    exportedDeps.forEachForAllPlatforms(CxxResourceUtils.filterConsumer(resolver, consumer));
   }
 
   @Override

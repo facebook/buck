@@ -483,6 +483,11 @@ public class CxxLibraryFactory {
             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies()),
         args.getSupportsMergedLinking().orElse(true),
         args.getUseArchive(),
+        CxxResourceUtils.fullyQualify(
+            buildTarget,
+            args.getHeaderNamespace(),
+            args.getResources()
+                .toNameMap(buildTarget, graphBuilder.getSourcePathResolver(), "resources")),
         delegate);
   }
 

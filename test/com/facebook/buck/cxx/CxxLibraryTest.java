@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -213,6 +214,7 @@ public class CxxLibraryTest {
             true,
             true,
             Optional.empty(),
+            ImmutableMap.of(),
             CxxLibraryDescriptionDelegate.noop());
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
@@ -276,6 +278,7 @@ public class CxxLibraryTest {
             true,
             true,
             Optional.empty(),
+            ImmutableMap.of(),
             CxxLibraryDescriptionDelegate.noop());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();

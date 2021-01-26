@@ -103,6 +103,12 @@ public class CxxTestIntegrationTest {
     Map<String, String> result =
         new ObjectMapper().readValue(file, new TypeReference<Map<String, String>>() {});
     MatcherAssert.assertThat(
-        result, Matchers.equalTo(ImmutableMap.of("foo/resource.txt", "resource/resource.txt")));
+        result,
+        Matchers.equalTo(
+            ImmutableMap.of(
+                "foo/resource.txt",
+                "resource/resource.txt",
+                "foo/lib_resource.txt",
+                "../../../../foo/lib_resource.txt")));
   }
 }

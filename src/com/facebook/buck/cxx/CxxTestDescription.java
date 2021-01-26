@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -48,7 +47,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -56,7 +54,6 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.test.config.TestBuckConfig;
-import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
@@ -307,17 +304,16 @@ public class CxxTestDescription
         };
 
     // Convert incoming map keyed by relative resource names to their fully qualified variants.
-    ForwardRelativePath resourceBase =
-        args.getHeaderNamespace()
-            .map(ForwardRelativePath::of)
-            .orElse(buildTarget.getBaseName().getPath());
     ImmutableMap<CxxResourceName, SourcePath> namedResources =
-        MoreMaps.transformKeys(
-            args.getResources()
-                .toNameMap(buildTarget, graphBuilder.getSourcePathResolver(), "resources"),
-            name ->
-                new CxxResourceName(
-                    resourceBase.resolve(PathFormatter.pathWithUnixSeparators(name))));
+        CxxResourceUtils.gatherResources(
+            graphBuilder,
+            CxxResourceUtils.fullyQualify(
+                buildTarget,
+                args.getHeaderNamespace(),
+                args.getResources()
+                    .toNameMap(buildTarget, graphBuilder.getSourcePathResolver(), "resources")),
+            Iterables.filter(
+                args.getCxxDeps().get(graphBuilder, cxxPlatform), CxxResourcesProvider.class));
 
     CxxTest test;
 

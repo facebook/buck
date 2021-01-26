@@ -1,3 +1,10 @@
+cxx_library(
+    name = "lib",
+    resources = [
+        "lib_resource.txt",
+    ],
+)
+
 genrule(
     name = "resource",
     out = "resource.txt",
@@ -8,4 +15,7 @@ cxx_test(
     name = "test",
     srcs = ["Test.cpp"],
     resources = [":resource"],
+    deps = [
+        ":lib",
+    ],
 )

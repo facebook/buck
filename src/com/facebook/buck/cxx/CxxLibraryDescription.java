@@ -551,7 +551,8 @@ public class CxxLibraryDescription
   }
 
   @RuleArg
-  interface AbstractCxxLibraryDescriptionArg extends CommonArg, HasVersionUniverse {
+  interface AbstractCxxLibraryDescriptionArg
+      extends CommonArg, HasVersionUniverse, HasCxxResources {
     /** Whether the library should be included in merge map codegen. */
     @Value.Default
     default boolean getIncludeInAndroidMergeMapOutput() {
