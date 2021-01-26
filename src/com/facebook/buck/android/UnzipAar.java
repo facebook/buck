@@ -148,7 +148,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
             Path classesJar = unpackDirectory.resolve("classes.jar");
             JavacEventSinkToBuckEventBusBridge eventSink =
-                new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus().isolated());
+                new JavacEventSinkToBuckEventBusBridge(context.getIsolatedEventBus());
             if (!filesystem.exists(classesJar)) {
               new JarBuilder()
                   .setObserver(new LoggingJarBuilderObserver(eventSink))

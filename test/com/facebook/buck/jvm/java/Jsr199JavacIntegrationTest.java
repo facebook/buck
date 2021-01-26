@@ -134,7 +134,7 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -190,7 +190,7 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -299,7 +299,7 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -402,7 +402,7 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus().isolated()),
+            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
