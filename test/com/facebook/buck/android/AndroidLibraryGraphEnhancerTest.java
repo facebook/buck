@@ -41,7 +41,6 @@ import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.util.DependencyMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +61,6 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
@@ -86,7 +84,6 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
@@ -132,7 +129,6 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
@@ -201,7 +197,6 @@ public class AndroidLibraryGraphEnhancerTest {
                         .setTargetLevel("7")
                         .build())
                 .build(),
-            DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
@@ -245,7 +240,6 @@ public class AndroidLibraryGraphEnhancerTest {
             JavacFactoryHelper.createJavacFactory(javaConfig)
                 .create(graphBuilder, null, UnconfiguredTargetConfiguration.INSTANCE),
             options,
-            DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),

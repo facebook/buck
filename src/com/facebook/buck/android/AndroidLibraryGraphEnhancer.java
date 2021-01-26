@@ -28,7 +28,6 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -45,7 +44,6 @@ public class AndroidLibraryGraphEnhancer {
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final Javac javac;
   private final JavacOptions javacOptions;
-  private final DependencyMode resourceDependencyMode;
   private final boolean forceFinalResourceIds;
   private final Optional<String> resourceUnionPackage;
   private final Optional<String> finalRName;
@@ -60,7 +58,6 @@ public class AndroidLibraryGraphEnhancer {
       SortedSet<BuildRule> buildRuleDeps,
       Javac javac,
       JavacOptions javacOptions,
-      DependencyMode resourceDependencyMode,
       boolean forceFinalResourceIds,
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
@@ -77,7 +74,6 @@ public class AndroidLibraryGraphEnhancer {
         JavacOptions.builder(javacOptions)
             .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
             .build();
-    this.resourceDependencyMode = resourceDependencyMode;
     this.forceFinalResourceIds = forceFinalResourceIds;
     this.resourceUnionPackage = resourceUnionPackage;
     this.finalRName = finalRName;
@@ -99,24 +95,11 @@ public class AndroidLibraryGraphEnhancer {
       return previouslyCreated.map(input -> (DummyRDotJava) input);
     }
 
-    ImmutableSet<HasAndroidResourceDeps> androidResourceDeps;
-
-    switch (resourceDependencyMode) {
-      case FIRST_ORDER:
-        androidResourceDeps =
-            RichStream.from(originalDeps)
-                .filter(HasAndroidResourceDeps.class)
-                .filter(input -> input.getRes() != null)
-                .toImmutableSet();
-        break;
-      case TRANSITIVE:
-        androidResourceDeps =
-            UnsortedAndroidResourceDeps.createFrom(originalDeps).getResourceDeps();
-        break;
-      default:
-        throw new IllegalStateException(
-            "Invalid resource dependency mode: " + resourceDependencyMode);
-    }
+    ImmutableSet<HasAndroidResourceDeps> androidResourceDeps =
+        RichStream.from(originalDeps)
+            .filter(HasAndroidResourceDeps.class)
+            .filter(input -> input.getRes() != null)
+            .toImmutableSet();
 
     if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
       return Optional.empty();

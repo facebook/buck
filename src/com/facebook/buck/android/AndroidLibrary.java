@@ -42,7 +42,6 @@ import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
-import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -265,7 +264,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
               javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               rDotJavacOptions,
-              DependencyMode.FIRST_ORDER,
               /* forceFinalResourceIds */ false,
               args.getResourceUnionPackage(),
               args.getFinalRName(),
