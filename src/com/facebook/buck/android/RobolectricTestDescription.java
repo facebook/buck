@@ -56,7 +56,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
-import com.facebook.buck.util.DependencyMode;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -175,23 +174,6 @@ public class RobolectricTestDescription
             args);
 
     CellPathResolver cellPathResolver = context.getCellPathResolver();
-    AndroidLibraryGraphEnhancer graphEnhancer =
-        new AndroidLibraryGraphEnhancer(
-            buildTarget,
-            projectFilesystem,
-            ImmutableSortedSet.copyOf(
-                Iterables.concat(
-                    params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
-            javacOptions,
-            DependencyMode.TRANSITIVE,
-            args.isForceFinalResourceIds(),
-            args.getResourceUnionPackage(),
-            /* rName */ Optional.empty(),
-            args.isUseOldStyleableFormat(),
-            /* skipNonUnionRDotJava */ false,
-            downwardApiConfig.isEnabledForAndroid());
-
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget,
@@ -201,11 +183,14 @@ public class RobolectricTestDescription
     ImmutableList<Arg> vmArgs =
         ImmutableList.copyOf(Lists.transform(args.getVmArgs(), macrosConverter::convert));
 
-    Optional<DummyRDotJava> dummyRDotJava =
-        graphEnhancer.getBuildableForAndroidResources(
-            graphBuilder, /* createBuildableIfEmpty */ true);
-    Preconditions.checkArgument(dummyRDotJava.isPresent());
-    DummyRDotJava actualDummyRDotJava = dummyRDotJava.get();
+    ImmutableSortedSet<BuildRule> originalDeps =
+        ImmutableSortedSet.copyOf(
+            Iterables.concat(
+                params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps())));
+    ImmutableList<HasAndroidResourceDeps> androidResourceDeps =
+        UnsortedAndroidResourceDeps.createFrom(originalDeps).getResourceDeps().stream()
+            .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
+            .collect(ImmutableList.toImmutableList());
 
     RobolectricTestDescriptionArg testLibraryArgs = args;
 
@@ -223,8 +208,9 @@ public class RobolectricTestDescription
 
     FilteredResourcesProvider resourcesProvider =
         new IdentityResourcesProvider(
-            actualDummyRDotJava.getAndroidResourceDeps().stream()
+            androidResourceDeps.stream()
                 .map(HasAndroidResourceDeps::getRes)
+                .filter(Objects::nonNull)
                 .collect(ImmutableList.toImmutableList()));
 
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
@@ -273,6 +259,8 @@ public class RobolectricTestDescription
     graphBuilder.addToIndex(aapt2Link);
     AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
 
+    boolean useTargetsWithOnlyAssets =
+        javaBuckConfig.getDelegate().getBooleanValue("test", "use_targets_with_only_assets", false);
     MergeAssets binaryResources =
         new MergeAssets(
             buildTarget.withAppendedFlavors(
@@ -280,7 +268,11 @@ public class RobolectricTestDescription
             projectFilesystem,
             graphBuilder,
             Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
-            actualDummyRDotJava.getAndroidResourceDeps().stream()
+            androidResourceDeps.stream()
+                .filter(
+                    useTargetsWithOnlyAssets
+                        ? resourceDep -> true
+                        : resourceDep -> resourceDep.getRes() != null)
                 .map(HasAndroidResourceDeps::getAssets)
                 .filter(Objects::nonNull)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
@@ -314,7 +306,8 @@ public class RobolectricTestDescription
             Optional.empty(),
             ImmutableList.of(aaptOutputInfo.getPathToRDotTxt()),
             args.getResourceUnionPackage(),
-            actualDummyRDotJava.getAndroidResourceDeps().stream()
+            androidResourceDeps.stream()
+                .filter(resources -> resources.getRes() != null)
                 .map(HasAndroidResourceDeps::getBuildTarget)
                 .map(graphBuilder::requireRule)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),

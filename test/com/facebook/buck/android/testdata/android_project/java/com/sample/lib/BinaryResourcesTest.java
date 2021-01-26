@@ -63,6 +63,7 @@ public class BinaryResourcesTest {
         builder.add(entries.nextElement().getName());
       }
       assertTrue(builder.build().contains("assets/hilarity.txt"));
+      assertTrue(builder.build().contains("assets/asset_file.txt"));
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {

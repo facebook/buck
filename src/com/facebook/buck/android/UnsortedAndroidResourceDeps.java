@@ -68,7 +68,9 @@ public class UnsortedAndroidResourceDeps {
             if (rule instanceof HasAndroidResourceDeps) {
               androidResourceRule = (HasAndroidResourceDeps) rule;
             }
-            if (androidResourceRule != null && androidResourceRule.getRes() != null) {
+            if (androidResourceRule != null
+                && (androidResourceRule.getRes() != null
+                    || androidResourceRule.getAssets() != null)) {
               androidResources.add(androidResourceRule);
             }
 
