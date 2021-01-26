@@ -266,7 +266,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               rDotJavacOptions,
               args.getResourceUnionPackage(),
               args.getFinalRName(),
-              /* useOldStyleableFormat */ false,
               args.isSkipNonUnionRDotJava(),
               downwardApiConfig.isEnabledForAndroid());
 

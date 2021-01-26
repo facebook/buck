@@ -63,7 +63,6 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC_OPTIONS,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false,
             false);
 
@@ -85,7 +84,6 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC_OPTIONS,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false,
             false);
 
@@ -129,7 +127,6 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC_OPTIONS,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false,
             false);
 
@@ -196,7 +193,6 @@ public class AndroidLibraryGraphEnhancerTest {
                 .build(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false,
             false);
     Optional<DummyRDotJava> dummyRDotJava =
@@ -238,7 +234,6 @@ public class AndroidLibraryGraphEnhancerTest {
             options,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false,
             false);
     Optional<DummyRDotJava> result =

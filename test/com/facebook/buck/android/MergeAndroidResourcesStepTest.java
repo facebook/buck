@@ -111,8 +111,7 @@ public class MergeAndroidResourcesStepTest {
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             ImmutableSet.of(),
-            entriesBuilder.getProjectFilesystem(),
-            false);
+            entriesBuilder.getProjectFilesystem());
 
     assertEquals(1, packageNameToResources.keySet().size());
     SortedSet<RDotTxtEntry> resources = packageNameToResources.get(sharedPackageName);
@@ -182,8 +181,7 @@ public class MergeAndroidResourcesStepTest {
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             ImmutableSet.of(),
-            entriesBuilder.getProjectFilesystem(),
-            false);
+            entriesBuilder.getProjectFilesystem());
 
     assertEquals(23, packageNameToResources.size());
 
@@ -291,8 +289,7 @@ public class MergeAndroidResourcesStepTest {
         Optional.empty(),
         /* bannedDuplicateResourceTypes */ EnumSet.of(RType.STRING),
         ImmutableSet.of(),
-        entriesBuilder.getProjectFilesystem(),
-        false);
+        entriesBuilder.getProjectFilesystem());
   }
 
   @Test
@@ -331,7 +328,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -400,7 +396,6 @@ public class MergeAndroidResourcesStepTest {
             /* overrideSymbolsPath */ ImmutableList.of(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -485,7 +480,6 @@ public class MergeAndroidResourcesStepTest {
             /* overrideSymbolsPath */ ImmutableList.of(),
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -548,7 +542,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ false,
             Optional.of("com.package"),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ true);
 
     ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
@@ -599,7 +592,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ false,
             Optional.of("com.package"),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
@@ -671,7 +663,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ false,
             Optional.of("res"),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ true);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -743,7 +734,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ false,
             Optional.of("res1"),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -792,7 +782,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ false,
             Optional.of("resM"),
             /* rName */ Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -841,7 +830,6 @@ public class MergeAndroidResourcesStepTest {
             /* forceFinalResourceIds */ true,
             Optional.of("res1"),
             Optional.of("R2"),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -967,7 +955,6 @@ public class MergeAndroidResourcesStepTest {
             /* overrideSymbolsPath */ ImmutableList.of(),
             Optional.empty(),
             Optional.empty(),
-            /* useOldStyleableFormat */ false,
             false);
 
     StepExecutionResult result = mergeStep.execute(TestExecutionContext.newInstance());

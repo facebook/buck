@@ -46,7 +46,6 @@ public class AndroidLibraryGraphEnhancer {
   private final JavacOptions javacOptions;
   private final Optional<String> resourceUnionPackage;
   private final Optional<String> finalRName;
-  private final boolean useOldStyleableFormat;
   private final ProjectFilesystem projectFilesystem;
   private final boolean skipNonUnionRDotJava;
   private final boolean withDownwardApi;
@@ -59,7 +58,6 @@ public class AndroidLibraryGraphEnhancer {
       JavacOptions javacOptions,
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
-      boolean useOldStyleableFormat,
       boolean skipNonUnionRDotJava,
       boolean withDownwardApi) {
     this.projectFilesystem = projectFilesystem;
@@ -74,7 +72,6 @@ public class AndroidLibraryGraphEnhancer {
             .build();
     this.resourceUnionPackage = resourceUnionPackage;
     this.finalRName = finalRName;
-    this.useOldStyleableFormat = useOldStyleableFormat;
     this.skipNonUnionRDotJava = skipNonUnionRDotJava;
     this.withDownwardApi = withDownwardApi;
   }
@@ -121,7 +118,6 @@ public class AndroidLibraryGraphEnhancer {
                   javac,
                   resourceUnionPackage,
                   finalRName,
-                  useOldStyleableFormat,
                   skipNonUnionRDotJava);
             });
 

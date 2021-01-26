@@ -91,7 +91,6 @@ public class DummyRDotJava extends AbstractBuildRule
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final Optional<String> unionPackage;
   @AddToRuleKey private final Optional<String> finalRName;
-  @AddToRuleKey private final boolean useOldStyleableFormat;
   @AddToRuleKey private final boolean skipNonUnionRDotJava;
 
   @AddToRuleKey
@@ -109,7 +108,6 @@ public class DummyRDotJava extends AbstractBuildRule
       Javac javac,
       Optional<String> unionPackage,
       Optional<String> finalRName,
-      boolean useOldStyleableFormat,
       boolean skipNonUnionRDotJava) {
     this(
         buildTarget,
@@ -120,7 +118,6 @@ public class DummyRDotJava extends AbstractBuildRule
         javac,
         unionPackage,
         finalRName,
-        useOldStyleableFormat,
         abiPaths(androidResourceDeps),
         skipNonUnionRDotJava);
   }
@@ -134,7 +131,6 @@ public class DummyRDotJava extends AbstractBuildRule
       Javac javac,
       Optional<String> unionPackage,
       Optional<String> finalRName,
-      boolean useOldStyleableFormat,
       ImmutableList<SourcePath> abiInputs,
       boolean skipNonUnionRDotJava) {
     super(buildTarget, projectFilesystem);
@@ -144,7 +140,6 @@ public class DummyRDotJava extends AbstractBuildRule
         androidResourceDeps.stream()
             .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
             .collect(ImmutableList.toImmutableList());
-    this.useOldStyleableFormat = useOldStyleableFormat;
     this.skipNonUnionRDotJava = skipNonUnionRDotJava;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;
@@ -221,7 +216,6 @@ public class DummyRDotJava extends AbstractBuildRule
               /* forceFinalResourceIds */ false,
               unionPackage,
               /* rName */ Optional.empty(),
-              useOldStyleableFormat,
               skipNonUnionRDotJava);
       steps.add(mergeStep);
 
@@ -237,7 +231,6 @@ public class DummyRDotJava extends AbstractBuildRule
                 /* forceFinalResourceIds */ true,
                 unionPackage,
                 finalRName,
-                useOldStyleableFormat,
                 skipNonUnionRDotJava);
         steps.add(mergeFinalRStep);
 

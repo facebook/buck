@@ -100,7 +100,6 @@ public class DummyRDotJavaTest {
             DEFAULT_JAVAC,
             Optional.empty(),
             Optional.of("R2"),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
@@ -200,7 +199,6 @@ public class DummyRDotJavaTest {
             DEFAULT_JAVAC,
             Optional.empty(),
             Optional.empty(),
-            /* useOldStyleableFormat */ false,
             /* skipNonUnionRDotJava */ false);
     assertEquals(
         BuildTargetPaths.getScratchPath(

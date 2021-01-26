@@ -79,7 +79,6 @@ public class MergeAndroidResourcesStep implements Step {
   private final Optional<Path> duplicateResourceWhitelistPath;
   private final Optional<String> unionPackage;
   private final String rName;
-  private final boolean useOldStyleableFormat;
   private final ImmutableList<Path> overrideSymbolsPath;
   private final boolean skipNonUnionRDotJava;
 
@@ -102,7 +101,6 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableList<Path> overrideSymbolsPath,
       Optional<String> unionPackage,
       Optional<String> rName,
-      boolean useOldStyleableFormat,
       boolean skipNonUnionRDotJava) {
     this.filesystem = filesystem;
     this.pathResolver = pathResolver;
@@ -115,7 +113,6 @@ public class MergeAndroidResourcesStep implements Step {
     this.unionPackage = unionPackage;
     this.overrideSymbolsPath = overrideSymbolsPath;
     this.rName = rName.orElse("R");
-    this.useOldStyleableFormat = useOldStyleableFormat;
     this.skipNonUnionRDotJava = skipNonUnionRDotJava;
   }
 
@@ -127,7 +124,6 @@ public class MergeAndroidResourcesStep implements Step {
       boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> rName,
-      boolean useOldStyleableFormat,
       boolean skipNonUnionRDotJava) {
     return new MergeAndroidResourcesStep(
         filesystem,
@@ -141,7 +137,6 @@ public class MergeAndroidResourcesStep implements Step {
         ImmutableList.of(),
         unionPackage,
         rName,
-        useOldStyleableFormat,
         skipNonUnionRDotJava);
   }
 
@@ -167,7 +162,6 @@ public class MergeAndroidResourcesStep implements Step {
         overrideSymbolsPath,
         unionPackage,
         /* rName */ Optional.empty(),
-        /* useOldStyleableFormat */ false,
         /* skipNonUnionRDotJava */ false);
   }
 
@@ -249,8 +243,7 @@ public class MergeAndroidResourcesStep implements Step {
               overrideSymbols,
               bannedDuplicateResourceTypes,
               duplicateResourceWhitelist,
-              filesystem,
-              useOldStyleableFormat);
+              filesystem);
 
       ImmutableSet.Builder<String> requiredPackages = ImmutableSet.builder();
 
@@ -410,8 +403,7 @@ public class MergeAndroidResourcesStep implements Step {
       Optional<SetMultimap<String, RDotTxtEntry>> overrides,
       EnumSet<RType> bannedDuplicateResourceTypes,
       Set<String> duplicateResourceWhitelist,
-      ProjectFilesystem filesystem,
-      boolean useOldStyleableFormat)
+      ProjectFilesystem filesystem)
       throws DuplicateResourceException {
     // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
     // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
@@ -484,12 +476,6 @@ public class MergeAndroidResourcesStep implements Step {
             continue;
           }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));
-
-        } else if (useOldStyleableFormat) {
-          if (resource.idValue.startsWith("0x7f")) {
-            Objects.requireNonNull(enumerator);
-            resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
-          }
         } else {
           if (resourceToIdValuesMap.containsKey(resource)) {
             resource = Objects.requireNonNull(resourceToIdValuesMap.get(resource));
