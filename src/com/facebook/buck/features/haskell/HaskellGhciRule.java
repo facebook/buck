@@ -71,6 +71,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule {
@@ -417,7 +418,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               String template;
               template =
                   new String(Files.readAllBytes(ghciIservScriptTemplate), StandardCharsets.UTF_8);
-              ST st = new ST(template);
+              ST st = new ST(new STGroup(), template);
               ImmutableSet.Builder<String> preloadLibrariesB = ImmutableSet.builder();
               for (String libPath : preloadLibs.keySet()) {
                 preloadLibrariesB.add(

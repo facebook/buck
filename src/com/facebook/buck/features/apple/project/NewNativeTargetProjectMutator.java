@@ -87,6 +87,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -849,6 +850,7 @@ class NewNativeTargetProjectMutator {
     try {
       template =
           new ST(
+              new STGroup(),
               Resources.toString(
                   Resources.getResource(NewNativeTargetProjectMutator.class, JS_BUNDLE_TEMPLATE),
                   StandardCharsets.UTF_8));

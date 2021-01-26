@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 /**
  * A step that creates an {@link ST} by reading a template from {@code templatePath}, calls {@code
@@ -72,7 +73,7 @@ public class StringTemplateStep implements Step {
     String template;
     template = new String(Files.readAllBytes(templatePath), StandardCharsets.UTF_8);
 
-    ST st = new ST(template);
+    ST st = new ST(new STGroup(), template);
 
     for (Map.Entry<String, ?> ent : values.entrySet()) {
       st = st.add(ent.getKey(), ent.getValue());

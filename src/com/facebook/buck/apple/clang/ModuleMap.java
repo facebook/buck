@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 /**
  * Creates a modulemap file that uses an explicit `header` declaration for each header in the
@@ -108,7 +109,7 @@ public class ModuleMap {
    * @return A string representation of the modulemap.
    */
   public String render() {
-    return new ST(template)
+    return new ST(new STGroup(), template)
         .add("module_name", moduleName)
         .add("headers", headers)
         .add("include_swift_header", swiftMode.includeSwift())

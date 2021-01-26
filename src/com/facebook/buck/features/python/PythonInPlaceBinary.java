@@ -52,6 +52,7 @@ import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
@@ -150,6 +151,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     return () -> {
       ST st =
           new ST(
+                  new STGroup(),
                   packageStyle == PackageStyle.INPLACE
                       ? getRunInplaceResource()
                       : getRunInplaceLiteResource())

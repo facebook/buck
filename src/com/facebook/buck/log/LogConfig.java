@@ -35,6 +35,7 @@ import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger; // NOPMD
 import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
 
 /**
  * Constructed by java.util.logging.LogManager via the system property
@@ -137,7 +138,7 @@ public class LogConfig {
       throws IOException {
     try {
       String template = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
-      ST st = new ST(template);
+      ST st = new ST(new STGroup(), template);
       st.add(
           "default_file_pattern",
           PathFormatter.pathWithUnixSeparators(logConfigSetup.getLogFilePath()));
