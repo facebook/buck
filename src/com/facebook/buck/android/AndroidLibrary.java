@@ -264,7 +264,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
               javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               rDotJavacOptions,
-              /* forceFinalResourceIds */ false,
               args.getResourceUnionPackage(),
               args.getFinalRName(),
               /* useOldStyleableFormat */ false,

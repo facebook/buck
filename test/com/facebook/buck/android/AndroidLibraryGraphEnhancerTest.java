@@ -61,7 +61,6 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
@@ -84,7 +83,6 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
@@ -129,7 +127,6 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
@@ -197,7 +194,6 @@ public class AndroidLibraryGraphEnhancerTest {
                         .setTargetLevel("7")
                         .build())
                 .build(),
-            /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
@@ -240,7 +236,6 @@ public class AndroidLibraryGraphEnhancerTest {
             JavacFactoryHelper.createJavacFactory(javaConfig)
                 .create(graphBuilder, null, UnconfiguredTargetConfiguration.INSTANCE),
             options,
-            /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,

@@ -89,7 +89,6 @@ public class DummyRDotJava extends AbstractBuildRule
   private final ImmutableSortedSet<BuildRule> buildDeps;
   @AddToRuleKey private final JavacToJarStepFactory compileStepFactory;
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private final boolean forceFinalResourceIds;
   @AddToRuleKey private final Optional<String> unionPackage;
   @AddToRuleKey private final Optional<String> finalRName;
   @AddToRuleKey private final boolean useOldStyleableFormat;
@@ -108,7 +107,6 @@ public class DummyRDotJava extends AbstractBuildRule
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
       Javac javac,
-      boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
@@ -120,7 +118,6 @@ public class DummyRDotJava extends AbstractBuildRule
         androidResourceDeps,
         compileStepFactory,
         javac,
-        forceFinalResourceIds,
         unionPackage,
         finalRName,
         useOldStyleableFormat,
@@ -135,7 +132,6 @@ public class DummyRDotJava extends AbstractBuildRule
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
       Javac javac,
-      boolean forceFinalResourceIds,
       Optional<String> unionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
@@ -153,7 +149,6 @@ public class DummyRDotJava extends AbstractBuildRule
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;
     this.javac = javac;
-    this.forceFinalResourceIds = forceFinalResourceIds;
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
     this.abiInputs = abiInputs;
@@ -223,7 +218,7 @@ public class DummyRDotJava extends AbstractBuildRule
               sourcePathResolver,
               androidResourceDeps,
               rDotJavaSrcFolder.getPath(),
-              forceFinalResourceIds,
+              /* forceFinalResourceIds */ false,
               unionPackage,
               /* rName */ Optional.empty(),
               useOldStyleableFormat,

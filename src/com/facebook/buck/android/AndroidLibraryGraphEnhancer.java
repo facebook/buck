@@ -44,7 +44,6 @@ public class AndroidLibraryGraphEnhancer {
   private final ImmutableSortedSet<BuildRule> originalDeps;
   private final Javac javac;
   private final JavacOptions javacOptions;
-  private final boolean forceFinalResourceIds;
   private final Optional<String> resourceUnionPackage;
   private final Optional<String> finalRName;
   private final boolean useOldStyleableFormat;
@@ -58,7 +57,6 @@ public class AndroidLibraryGraphEnhancer {
       SortedSet<BuildRule> buildRuleDeps,
       Javac javac,
       JavacOptions javacOptions,
-      boolean forceFinalResourceIds,
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
@@ -74,7 +72,6 @@ public class AndroidLibraryGraphEnhancer {
         JavacOptions.builder(javacOptions)
             .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
             .build();
-    this.forceFinalResourceIds = forceFinalResourceIds;
     this.resourceUnionPackage = resourceUnionPackage;
     this.finalRName = finalRName;
     this.useOldStyleableFormat = useOldStyleableFormat;
@@ -122,7 +119,6 @@ public class AndroidLibraryGraphEnhancer {
                   androidResourceDeps,
                   compileToJarStepFactory,
                   javac,
-                  forceFinalResourceIds,
                   resourceUnionPackage,
                   finalRName,
                   useOldStyleableFormat,
