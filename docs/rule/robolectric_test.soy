@@ -58,15 +58,6 @@ with Robolectric test runner. It extends from <code>java_test()</code> rule.
 {/call}
 
 {call buck.arg}
-  {param name: 'force_final_resource_ids' /}
-  {param default : 'True' /}
-  {param desc}
-  Set it to false if using Robolectric version greater than 3.2 or higher
-  as Robolectric requires resources id's to be non final.
-  {/param}
-{/call}
-
-{call buck.arg}
   {param name: 'extra_kotlinc_arguments' /}
   {param default : '[]' /}
   {param desc}

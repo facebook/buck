@@ -440,21 +440,6 @@ public class RobolectricTestDescription
 
     Optional<String> getResourceUnionPackage();
 
-    @Value.Default
-    default boolean isUseOldStyleableFormat() {
-      return false;
-    }
-
-    @Value.Default
-    default boolean isForceFinalResourceIds() {
-      return true;
-    }
-
-    @Value.Default
-    default boolean isUseBinaryResources() {
-      return false;
-    }
-
     ImmutableSet<String> getLocalesForBinaryResources();
 
     Optional<String> getPreferredDensityForBinaryResources();
