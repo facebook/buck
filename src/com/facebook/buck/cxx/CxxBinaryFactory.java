@@ -47,6 +47,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.util.Optional;
 
 public class CxxBinaryFactory {
@@ -235,6 +236,15 @@ public class CxxBinaryFactory {
         args.getFrameworks(),
         args.getTests(),
         target.withoutFlavors(cxxPlatforms.getFlavors()),
+        CxxResourceUtils.gatherResources(
+            graphBuilder,
+            CxxResourceUtils.fullyQualify(
+                target,
+                args.getHeaderNamespace(),
+                args.getResources()
+                    .toNameMap(target, graphBuilder.getSourcePathResolver(), "resources")),
+            Iterables.filter(
+                args.getCxxDeps().get(graphBuilder, cxxPlatform), CxxResourcesProvider.class)),
         cxxBuckConfig.shouldCacheBinaries());
   }
 

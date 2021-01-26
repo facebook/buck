@@ -41,6 +41,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -62,6 +63,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSortedSet<BuildTarget> tests;
   private final ImmutableSortedSet<FrameworkPath> frameworks;
   private final BuildTarget platformlessTarget;
+  private final ImmutableMap<CxxResourceName, SourcePath> resources;
   private final boolean cacheable;
 
   public CxxBinary(
@@ -74,6 +76,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Iterable<FrameworkPath> frameworks,
       Iterable<BuildTarget> tests,
       BuildTarget platformlessTarget,
+      ImmutableMap<CxxResourceName, SourcePath> resources,
       boolean cacheable) {
     super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
@@ -82,6 +85,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.tests = ImmutableSortedSet.copyOf(tests);
     this.frameworks = ImmutableSortedSet.copyOf(frameworks);
     this.platformlessTarget = platformlessTarget;
+    this.resources = resources;
     this.cacheable = cacheable;
     performChecks();
   }
@@ -119,7 +123,10 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of();
+    ImmutableList.Builder<Step> builder = ImmutableList.builder();
+    CxxResourceUtils.addResourceSteps(
+        context.getSourcePathResolver(), linkRule, resources, builder);
+    return builder.build();
   }
 
   @Override

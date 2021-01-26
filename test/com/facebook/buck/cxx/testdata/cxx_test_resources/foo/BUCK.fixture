@@ -19,3 +19,12 @@ cxx_test(
         ":lib",
     ],
 )
+
+cxx_binary(
+    name = "bin",
+    srcs = ["Test.cpp"],
+    resources = [":resource"],
+    deps = [
+        ":lib",
+    ],
+)

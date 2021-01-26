@@ -216,6 +216,7 @@ public class HalideLibraryDescription
         ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
         buildTarget.withoutFlavors(cxxPlatformsProvider.getUnresolvedCxxPlatforms().getFlavors()),
+        ImmutableMap.of(),
         cxxBuckConfig.shouldCacheBinaries());
   }
 

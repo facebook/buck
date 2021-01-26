@@ -17,16 +17,23 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.ConsumingTraverser;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.util.MoreMaps;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -84,5 +91,31 @@ public class CxxResourceUtils {
         consumer.accept((CxxResourcesProvider) rule);
       }
     };
+  }
+
+  // Return a path that's consistently locatable from the binary output path.
+  public static RelPath getResourcesFile(RelPath binary) {
+    return MorePaths.appendSuffix(binary, ".resources.json");
+  }
+
+  /** Add {@link Step}s to create a JSON file for the given resources. */
+  public static void addResourceSteps(
+      SourcePathResolverAdapter resolver,
+      BuildRule binary,
+      ImmutableMap<CxxResourceName, SourcePath> resources,
+      ImmutableCollection.Builder<Step> builder) {
+    RelPath output = resolver.getCellUnsafeRelPath(binary.getSourcePathToOutput());
+    RelPath resourcesFile = getResourcesFile(output);
+    builder.add(RmIsolatedStep.of(resourcesFile));
+    if (!resources.isEmpty()) {
+      builder.add(
+          new CxxResourcesStep(
+              resourcesFile,
+              resolver.getAbsolutePath(binary.getSourcePathToOutput()).getParent(),
+              ImmutableMap.copyOf(
+                  MoreMaps.transformKeys(
+                      Maps.transformValues(resources, resolver::getAbsolutePath),
+                      CxxResourceName::getNameAsPath))));
+    }
   }
 }

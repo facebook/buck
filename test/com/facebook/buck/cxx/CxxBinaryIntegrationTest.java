@@ -65,6 +65,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
@@ -72,6 +74,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -82,6 +85,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.hamcrest.Matchers;
@@ -2478,6 +2482,26 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//bin:bin#default").assertSuccess("run //bin:bin#default");
     workspace.runBuckCommand("build", "//bin:bin1").assertSuccess("build //bin:bin1");
     workspace.runBuckCommand("run", "//bin:bin1").assertSuccess("run //bin:bin1");
+  }
+
+  @Test
+  public void testResources() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_test_resources", tmp);
+    workspace.setUp();
+    Path path =
+        workspace.getDestPath().resolve(workspace.buildAndReturnRelativeOutput("//foo:bin"));
+    File file = new File(path + ".resources.json");
+    Map<String, String> result =
+        new ObjectMapper().readValue(file, new TypeReference<Map<String, String>>() {});
+    assertThat(
+        result,
+        Matchers.equalTo(
+            ImmutableMap.of(
+                "foo/resource.txt",
+                "resource/resource.txt",
+                "foo/lib_resource.txt",
+                "../../../../foo/lib_resource.txt")));
   }
 
   private ImmutableSortedSet<Path> findFiles(AbsPath root, PathMatcher matcher) throws IOException {

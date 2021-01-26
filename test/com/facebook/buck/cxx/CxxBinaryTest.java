@@ -85,6 +85,7 @@ public class CxxBinaryTest {
                 ImmutableSortedSet.of(),
                 ImmutableList.of(),
                 target,
+                ImmutableMap.of(),
                 false));
     ImmutableList<String> command =
         binary

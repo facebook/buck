@@ -47,20 +47,17 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
-import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.Memoizer;
-import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -151,21 +148,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-
-    RelPath resourcesFile = getResourcesFile(context.getSourcePathResolver());
-    builder.add(RmIsolatedStep.of(resourcesFile));
-    if (!resources.isEmpty()) {
-      SourcePathResolverAdapter resolver = context.getSourcePathResolver();
-      builder.add(
-          new CxxResourcesStep(
-              resourcesFile,
-              resolver.getAbsolutePath(binary.getSourcePathToOutput()).getParent(),
-              ImmutableMap.copyOf(
-                  MoreMaps.transformKeys(
-                      Maps.transformValues(resources, resolver::getAbsolutePath),
-                      CxxResourceName::getNameAsPath))));
-    }
-
+    CxxResourceUtils.addResourceSteps(context.getSourcePathResolver(), binary, resources, builder);
     return builder.build();
   }
 

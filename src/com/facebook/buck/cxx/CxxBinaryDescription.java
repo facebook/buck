@@ -179,7 +179,8 @@ public class CxxBinaryDescription
   }
 
   @RuleArg
-  interface AbstractCxxBinaryDescriptionArg extends CxxBinaryDescription.CommonArg {
+  interface AbstractCxxBinaryDescriptionArg
+      extends CxxBinaryDescription.CommonArg, HasCxxResources {
     @Override
     default CxxBinaryDescriptionArg withDepsQuery(Query query) {
       if (getDepsQuery().equals(Optional.of(query))) {
