@@ -48,6 +48,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -387,7 +388,11 @@ public class CxxTestDescriptionTest {
       graphBuilder = new TestActionGraphBuilder();
       addFramework(graphBuilder, filesystem);
       builder =
-          createTestBuilder().setFramework(framework).setResources(ImmutableSortedSet.of(resource));
+          createTestBuilder()
+              .setFramework(framework)
+              .setResources(
+                  SourceSortedSet.ofUnnamedSources(
+                      ImmutableSortedSet.of(FakeSourcePath.of(resource))));
       CxxTest cxxTestWithResources = builder.build(graphBuilder, filesystem);
       RuleKey ruleKeyWithResource = getRuleKey(graphBuilder, cxxTestWithResources);
 
@@ -405,7 +410,9 @@ public class CxxTestDescriptionTest {
       TargetNode<?> cxxTestWithResources =
           createTestBuilder()
               .setFramework(framework)
-              .setResources(ImmutableSortedSet.of(resource))
+              .setResources(
+                  SourceSortedSet.ofUnnamedSources(
+                      ImmutableSortedSet.of(FakeSourcePath.of(resource))))
               .build();
       assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelativePath.ofPath(resource)));
     }
@@ -557,7 +564,10 @@ public class CxxTestDescriptionTest {
           createTestBuilder()
               .setLinkStyle(Linker.LinkableDepType.SHARED)
               .setUseDefaultTestMain(false)
-              .setResources(ImmutableSortedSet.of(filesystem.getPath("foo", "resource.dat")))
+              .setResources(
+                  SourceSortedSet.ofUnnamedSources(
+                      ImmutableSortedSet.of(
+                          FakeSourcePath.of(filesystem.getPath("foo", "resource.dat")))))
               .setFramework(framework)
               .build();
       ActionGraphBuilder graphBuilder =

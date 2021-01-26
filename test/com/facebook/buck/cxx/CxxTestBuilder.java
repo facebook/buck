@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 public class CxxTestBuilder
@@ -107,7 +106,7 @@ public class CxxTestBuilder
     return this;
   }
 
-  public CxxTestBuilder setResources(ImmutableSortedSet<Path> resources) {
+  public CxxTestBuilder setResources(SourceSortedSet resources) {
     getArgForPopulating().setResources(resources);
     return this;
   }

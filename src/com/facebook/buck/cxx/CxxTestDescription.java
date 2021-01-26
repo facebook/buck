@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -33,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -55,12 +56,12 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.test.config.TestBuckConfig;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,12 +69,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 public class CxxTestDescription
     implements DescriptionWithTargetGraph<CxxTestDescriptionArg>,
@@ -308,6 +306,19 @@ public class CxxTestDescription
           return deps.build();
         };
 
+    // Convert incoming map keyed by relative resource names to their fully qualified variants.
+    ForwardRelativePath resourceBase =
+        args.getHeaderNamespace()
+            .map(ForwardRelativePath::of)
+            .orElse(buildTarget.getBaseName().getPath());
+    ImmutableMap<CxxResourceName, SourcePath> namedResources =
+        MoreMaps.transformKeys(
+            args.getResources()
+                .toNameMap(buildTarget, graphBuilder.getSourcePathResolver(), "resources"),
+            name ->
+                new CxxResourceName(
+                    resourceBase.resolve(PathFormatter.pathWithUnixSeparators(name))));
+
     CxxTest test;
 
     CxxTestType type = args.getFramework().orElse(getDefaultTestType());
@@ -323,9 +334,7 @@ public class CxxTestDescription
                   cxxLinkAndCompileRules.executable,
                   testEnv,
                   testArgs,
-                  FluentIterable.from(args.getResources())
-                      .transform(p -> PathSourcePath.of(projectFilesystem, p))
-                      .toSortedSet(Ordering.natural()),
+                  namedResources,
                   args.getAdditionalCoverageTargets(),
                   additionalDeps,
                   args.getLabels(),
@@ -354,9 +363,7 @@ public class CxxTestDescription
                   cxxLinkAndCompileRules.executable,
                   testEnv,
                   testArgs,
-                  FluentIterable.from(args.getResources())
-                      .transform(p -> PathSourcePath.of(projectFilesystem, p))
-                      .toSortedSet(Ordering.natural()),
+                  namedResources,
                   args.getAdditionalCoverageTargets(),
                   additionalDeps,
                   args.getLabels(),
@@ -471,7 +478,8 @@ public class CxxTestDescription
   }
 
   @RuleArg
-  interface AbstractCxxTestDescriptionArg extends CxxBinaryDescription.CommonArg, HasTestTimeout {
+  interface AbstractCxxTestDescriptionArg
+      extends CxxBinaryDescription.CommonArg, HasTestTimeout, HasCxxResources {
     Optional<CxxTestType> getFramework();
 
     ImmutableMap<String, StringWithMacros> getEnv();
@@ -481,9 +489,6 @@ public class CxxTestDescription
     Optional<Boolean> getRunTestSeparately();
 
     Optional<Boolean> getUseDefaultTestMain();
-
-    @Value.NaturalOrder
-    ImmutableSortedSet<Path> getResources();
 
     ImmutableSet<SourcePath> getAdditionalCoverageTargets();
 

@@ -73,7 +73,7 @@ public class CxxTestTest {
           new CommandTool.Builder().build(),
           ImmutableMap.of(),
           ImmutableList.of(),
-          ImmutableSortedSet.of(),
+          ImmutableMap.of(),
           ImmutableSet.of(),
           unused2 -> ImmutableSortedSet.of(),
           ImmutableSet.of(),

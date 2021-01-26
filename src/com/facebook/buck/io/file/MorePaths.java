@@ -86,6 +86,10 @@ public class MorePaths {
     return RelPath.of(getParentOrEmpty(path.getPath()));
   }
 
+  public static RelPath appendSuffix(RelPath path, String suffix) {
+    return RelPath.of(getParentOrEmpty(path).resolve(path.getFileName() + suffix));
+  }
+
   /**
    * Get the path of a file relative to a base directory.
    *

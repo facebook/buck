@@ -56,6 +56,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step:test_step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//src/com/facebook/buck/step/isolatedsteps/cxx:cxx_steps",
         "//src/com/facebook/buck/support/cli/config:config",
         "//src/com/facebook/buck/test:test",

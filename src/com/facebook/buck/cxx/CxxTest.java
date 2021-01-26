@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -40,22 +41,27 @@ import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.Memoizer;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -78,7 +84,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildRule binary;
   private final Tool executable;
 
-  @AddToRuleKey private final ImmutableSortedSet<? extends SourcePath> resources;
+  @AddToRuleKey private final ImmutableMap<CxxResourceName, SourcePath> resources;
 
   private final ImmutableSet<SourcePath> additionalCoverageTargets;
   private final Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>>
@@ -99,7 +105,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool executable,
       ImmutableMap<String, Arg> env,
       ImmutableList<Arg> args,
-      ImmutableSortedSet<? extends SourcePath> resources,
+      ImmutableMap<CxxResourceName, SourcePath> resources,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDepsSupplier,
       ImmutableSet<String> labels,
@@ -135,10 +141,32 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return executable;
   }
 
+  // Return a path that's consistently locatable from the binary output path.
+  private RelPath getResourcesFile(SourcePathResolverAdapter resolver) {
+    RelPath output = resolver.getCellUnsafeRelPath(binary.getSourcePathToOutput());
+    return MorePaths.appendSuffix(output, ".resources.json");
+  }
+
   @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return ImmutableList.of();
+    ImmutableList.Builder<Step> builder = ImmutableList.builder();
+
+    RelPath resourcesFile = getResourcesFile(context.getSourcePathResolver());
+    builder.add(RmIsolatedStep.of(resourcesFile));
+    if (!resources.isEmpty()) {
+      SourcePathResolverAdapter resolver = context.getSourcePathResolver();
+      builder.add(
+          new CxxResourcesStep(
+              resourcesFile,
+              resolver.getAbsolutePath(binary.getSourcePathToOutput()).getParent(),
+              ImmutableMap.copyOf(
+                  MoreMaps.transformKeys(
+                      Maps.transformValues(resources, resolver::getAbsolutePath),
+                      CxxResourceName::getNameAsPath))));
+    }
+
+    return builder.build();
   }
 
   /** @return the path to which the test exit code output is written. */
@@ -289,11 +317,18 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // always available to run the test.
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return Stream.concat(
-            additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream(),
-            BuildableSupport.getDeps(
-                getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver))
-        .map(BuildRule::getBuildTarget);
+    ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
+    additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream()
+        .map(BuildRule::getBuildTarget)
+        .forEach(deps::add);
+    BuildableSupport.getDeps(getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver)
+        .map(BuildRule::getBuildTarget)
+        .forEach(deps::add);
+    resources.values().stream()
+        .flatMap(r -> Streams.stream(buildRuleResolver.getRule(r)))
+        .map(BuildRule::getBuildTarget)
+        .forEach(deps::add);
+    return deps.build().stream();
   }
 
   @Override
@@ -322,11 +357,19 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     // Add resources to required paths.
-    resources.stream()
+    resources.values().stream()
         .map(
             sourcePath ->
                 buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
         .forEach(requiredPaths::add);
+
+    // Add path to resources file.
+    if (!resources.isEmpty()) {
+      requiredPaths.add(
+          getProjectFilesystem()
+              .resolve(getResourcesFile(buildContext.getSourcePathResolver()))
+              .getPath());
+    }
 
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())

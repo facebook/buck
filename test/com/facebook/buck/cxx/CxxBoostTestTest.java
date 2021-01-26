@@ -95,7 +95,7 @@ public class CxxBoostTestTest {
             new CommandTool.Builder().addArg(StringArg.of("")).build(),
             ImmutableMap.of(),
             ImmutableList.of(),
-            ImmutableSortedSet.of(),
+            ImmutableMap.of(),
             ImmutableSet.of(),
             unused -> ImmutableSortedSet.of(),
             ImmutableSet.of(),

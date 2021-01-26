@@ -29,9 +29,16 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map;
+import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,5 +89,20 @@ public class CxxTestIntegrationTest {
   public void testTestsWithStrippingBehaveSimilarToUnstripped() throws IOException {
     runAndAssertSpinningTestTimesOutWithPerRuleTimeout(
         ImmutableSet.of(StripStyle.ALL_SYMBOLS.getFlavor()));
+  }
+
+  @Test
+  public void testResources() throws IOException {
+    assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_test_resources", temp);
+    workspace.setUp();
+    Path path =
+        workspace.getDestPath().resolve(workspace.buildAndReturnRelativeOutput("//foo:test"));
+    File file = new File(path + ".resources.json");
+    Map<String, String> result =
+        new ObjectMapper().readValue(file, new TypeReference<Map<String, String>>() {});
+    MatcherAssert.assertThat(
+        result, Matchers.equalTo(ImmutableMap.of("foo/resource.txt", "resource/resource.txt")));
   }
 }

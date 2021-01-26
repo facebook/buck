@@ -1,0 +1,11 @@
+genrule(
+    name = "resource",
+    out = "resource.txt",
+    cmd = 'touch "$OUT"',
+)
+
+cxx_test(
+    name = "test",
+    srcs = ["Test.cpp"],
+    resources = [":resource"],
+)

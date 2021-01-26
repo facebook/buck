@@ -75,7 +75,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
       Tool executable,
       ImmutableMap<String, Arg> env,
       ImmutableList<Arg> args,
-      ImmutableSortedSet<? extends SourcePath> resources,
+      ImmutableMap<CxxResourceName, SourcePath> resources,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDeps,
       ImmutableSet<String> labels,
