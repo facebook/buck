@@ -1,6 +1,7 @@
 robolectric_test(
     name = "tip",
     srcs = glob(["src/**/*.java"]),
+    robolectric_manifest = "TestAndroidManifest.xml",
     source = "1.8",
     target = "1.8",
 )

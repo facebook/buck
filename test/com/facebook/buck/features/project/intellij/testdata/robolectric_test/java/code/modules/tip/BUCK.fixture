@@ -1,4 +1,5 @@
 robolectric_test(
     name = "tip",
     srcs = glob(["src/**/*.java"]),
+    robolectric_manifest = "TestAndroidManifest.xml",
 )

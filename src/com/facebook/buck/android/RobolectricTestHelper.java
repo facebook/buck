@@ -38,14 +38,14 @@ class RobolectricTestHelper {
   static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
   private final MergeAssets binaryResources;
-  private final Optional<SourcePath> robolectricManifest;
+  private final SourcePath robolectricManifest;
   private final Optional<SourcePath> robolectricRuntimeDependency;
   private final ProjectFilesystem projectFilesystem;
 
   RobolectricTestHelper(
       MergeAssets binaryResources,
       Optional<SourcePath> robolectricRuntimeDependency,
-      Optional<SourcePath> robolectricManifest,
+      SourcePath robolectricManifest,
       ProjectFilesystem projectFilesystem) {
     this.binaryResources = binaryResources;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
@@ -58,12 +58,12 @@ class RobolectricTestHelper {
       ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolverAdapter pathResolver) {
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
-    robolectricManifest.ifPresent(
-        s ->
-            vmArgsBuilder.add(
-                String.format(
-                    "-D%s=%s",
-                    RobolectricTestHelper.ROBOLECTRIC_MANIFEST, pathResolver.getAbsolutePath(s))));
+
+    vmArgsBuilder.add(
+        String.format(
+            "-D%s=%s",
+            RobolectricTestHelper.ROBOLECTRIC_MANIFEST,
+            pathResolver.getAbsolutePath(robolectricManifest)));
     robolectricRuntimeDependency.ifPresent(
         s ->
             vmArgsBuilder.add(
@@ -93,9 +93,7 @@ class RobolectricTestHelper {
         sourcePathResolverAdapter
             .getAbsolutePath(binaryResources.getSourcePathToOutput())
             .getPath());
-    robolectricManifest.ifPresent(
-        robolectricManifest ->
-            builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath()));
+    builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath());
 
     robolectricRuntimeDependency.ifPresent(
         robolectricRuntimeDir -> {

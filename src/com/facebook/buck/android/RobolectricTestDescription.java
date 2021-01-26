@@ -200,12 +200,6 @@ public class RobolectricTestDescription
             buildTarget.getTargetConfiguration(),
             AndroidPlatformTarget.class);
 
-    Optional<SourcePath> maybeRoboManifest = args.getRobolectricManifest();
-    Preconditions.checkArgument(
-        maybeRoboManifest.isPresent(),
-        "You must specify a manifest when running a robolectric test.");
-    SourcePath robolectricManifest = maybeRoboManifest.get();
-
     FilteredResourcesProvider resourcesProvider =
         new IdentityResourcesProvider(
             androidResourceDeps.stream()
@@ -234,7 +228,7 @@ public class RobolectricTestDescription
             projectFilesystem,
             graphBuilder,
             compileables,
-            robolectricManifest,
+            args.getRobolectricManifest(),
             args.getManifestEntries(),
             0,
             ImmutableList.of(),
@@ -292,7 +286,7 @@ public class RobolectricTestDescription
                 "android_merged_manifest",
                 graphBuilder
                     .getSourcePathResolver()
-                    .getCellUnsafeRelPath(robolectricManifest)
+                    .getCellUnsafeRelPath(args.getRobolectricManifest())
                     .toString()));
 
     graphBuilder.addToIndex(unitTestOptions);
@@ -436,7 +430,7 @@ public class RobolectricTestDescription
 
     Optional<SourcePath> getRobolectricRuntimeDependency();
 
-    Optional<SourcePath> getRobolectricManifest();
+    SourcePath getRobolectricManifest();
 
     Optional<String> getResourceUnionPackage();
 

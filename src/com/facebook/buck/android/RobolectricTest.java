@@ -75,7 +75,7 @@ public class RobolectricTest extends JavaTest {
       ImmutableSortedSet<SourcePath> resources,
       Optional<SourcePath> unbundledResourcesRoot,
       Optional<SourcePath> robolectricRuntimeDependency,
-      Optional<SourcePath> robolectricManifest,
+      SourcePath robolectricManifest,
       Tool javaRuntimeLauncher,
       boolean includeBootClasspathInRequiredPaths,
       boolean useRelativePathsInClasspathFile,

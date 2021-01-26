@@ -19,6 +19,7 @@
       <sourceFolder url="file://$MODULE_DIR$/../../../buck-out/android/java/code/modules/gen" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="true" packagePrefix="java.code.modules" />
       <sourceFolder url="file://$MODULE_DIR$/tip/src" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />

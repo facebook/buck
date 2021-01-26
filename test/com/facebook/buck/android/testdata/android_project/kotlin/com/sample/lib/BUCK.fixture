@@ -105,6 +105,7 @@ robolectric_test(
         "Sample2.kt",
     ]),
     language = "KOTLIN",
+    robolectric_manifest = "TestAndroidManifest.xml",
     visibility = [
         "PUBLIC",
     ],
@@ -121,6 +122,7 @@ robolectric_test(
         "*.kt",
         "JavaClass.java",
     ]),
+    robolectric_manifest = "TestAndroidManifest.xml",
     language = "KOTLIN",
     visibility = [
         "PUBLIC",
