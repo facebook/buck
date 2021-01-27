@@ -86,7 +86,7 @@ public class JUnitStep extends ShellStep {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws InterruptedException, IOException {
-    ensureClasspathArgfile();
+    ensureClasspathArgfile(context.getBuildCellRootPath());
     return super.execute(context);
   }
 
@@ -106,9 +106,9 @@ public class JUnitStep extends ShellStep {
   }
 
   /** Ensures the classpath argfile for Java 9+ invocations has been created. */
-  public void ensureClasspathArgfile() throws IOException {
+  public void ensureClasspathArgfile(Path buildCellRootPath) throws IOException {
     if (junitJvmArgs.shouldUseClasspathArgfile()) {
-      junitJvmArgs.writeClasspathArgfile(filesystem, classpathArgfile.get());
+      junitJvmArgs.writeClasspathArgfile(filesystem, classpathArgfile.get(), buildCellRootPath);
     }
   }
 

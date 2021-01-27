@@ -20,6 +20,7 @@ import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -44,7 +45,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -600,7 +600,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public void onPreTest(BuildContext buildContext) throws IOException {
-    Preconditions.checkNotNull(externalJunitStep).ensureClasspathArgfile();
+    Preconditions.checkNotNull(externalJunitStep)
+        .ensureClasspathArgfile(buildContext.getBuildCellRootPath());
   }
 
   @Override
@@ -621,8 +622,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         .map(
                             path ->
                                 useRelativePathsInClasspathFile
-                                    ? ProjectFilesystemUtils.relativize(
-                                            getProjectFilesystem().getRootPath(), path)
+                                    ? AbsPath.of(buildContext.getBuildCellRootPath())
+                                        .relativize(path)
                                         .getPath()
                                     : path)
                         .collect(ImmutableSet.toImmutableSet());

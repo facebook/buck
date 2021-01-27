@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Verbosity;
@@ -277,7 +277,8 @@ abstract class JUnitJvmArgs {
   }
 
   /** Writes an argfile for the classpath to a file, which is supported in Java 9+. */
-  public void writeClasspathArgfile(ProjectFilesystem filesystem, Path argfile) throws IOException {
+  public void writeClasspathArgfile(
+      ProjectFilesystem filesystem, Path argfile, Path buildCellRootPath) throws IOException {
     StringBuilder builder = new StringBuilder();
     builder.append("-classpath");
     builder.append(System.lineSeparator());
@@ -285,8 +286,7 @@ abstract class JUnitJvmArgs {
 
     Path testRunnerClasspath =
         useRelativePathsInClasspathFile()
-            ? ProjectFilesystemUtils.relativize(filesystem.getRootPath(), getTestRunnerClasspath())
-                .getPath()
+            ? AbsPath.of(buildCellRootPath).relativize(getTestRunnerClasspath()).getPath()
             : getTestRunnerClasspath();
 
     builder.append(escapePathForArgfile(testRunnerClasspath.toString()));
