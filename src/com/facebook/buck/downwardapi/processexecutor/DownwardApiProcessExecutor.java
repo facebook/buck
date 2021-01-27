@@ -108,9 +108,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   private final String actionId;
   private final IsolatedEventBus buckEventBus;
   private final NamedPipeFactory namedPipeFactory;
-
-  @SuppressWarnings("unused")
-  private Clock clock;
+  private final Clock clock;
 
   @VisibleForTesting
   DownwardApiProcessExecutor(
@@ -136,7 +134,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     String namedPipeName = namedPipe.getName();
 
     NamedPipeEventHandler namedPipeEventHandler =
-        getNamedPipeEventHandler(namedPipe, DownwardApiExecutionContext.of(buckEventBus));
+        getNamedPipeEventHandler(namedPipe, DownwardApiExecutionContext.of(buckEventBus, clock));
     namedPipeEventHandler.runOn(DOWNWARD_API_READER_THREAD_POOL);
 
     ProcessExecutorParams updatedParams =

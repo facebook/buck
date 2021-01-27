@@ -22,6 +22,7 @@ import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
+import com.facebook.buck.util.timing.Clock;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -75,8 +76,11 @@ public abstract class DownwardApiExecutionContext {
     getIsolatedEventBus().post(event, atTime, getInvokingThreadId());
   }
 
-  public static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus) {
+  /** Creates {@link DownwardApiExecutionContext} */
+  public static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus, Clock clock) {
     return ImmutableDownwardApiExecutionContext.ofImpl(
-        Instant.now(), buckEventBus, Thread.currentThread().getId());
+        Instant.ofEpochMilli(clock.currentTimeMillis()),
+        buckEventBus,
+        Thread.currentThread().getId());
   }
 }

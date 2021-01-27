@@ -46,7 +46,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
+
     DownwardApiProcessExecutor downwardApiProcessExecutor = context.getDownwardApiProcessExecutor();
+
     WorkerToolExecutor workerToolExecutor =
         new JavaCDWorkerToolExecutor(
             downwardApiProcessExecutor, buildJavaCommand, javaRuntimeLauncherCommand);
