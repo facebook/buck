@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from xplat.build_infra.buck_api.buck_repo import BuckRepo
+from xplat.build_infra.buck_e2e.api.buck_repo import BuckRepo
 from xplat.build_infra.buck_e2e.asserts import assert_parse_error, expect_failure
 from xplat.build_infra.buck_e2e.repo_workspace import (
     buck_test,
