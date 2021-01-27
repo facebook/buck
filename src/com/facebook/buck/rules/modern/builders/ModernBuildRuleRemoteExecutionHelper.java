@@ -108,17 +108,18 @@ import javax.annotation.Nullable;
 public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelper {
 
   private static final Logger LOG = Logger.get(ModernBuildRuleRemoteExecutionHelper.class);
+
   private static final Path TRAMPOLINE =
       Paths.get(
           System.getProperty(
               "buck.path_to_isolated_trampoline",
               "src/com/facebook/buck/rules/modern/builders/trampoline.sh"));
 
-  private static final String pluginResources = System.getProperty("buck.module.resources");
-  private static final String pluginRoot = System.getProperty("pf4j.pluginsDir");
+  private static final String PLUGIN_RESOURCES = System.getProperty("buck.module.resources");
+  private static final String PLUGIN_ROOT = System.getProperty("pf4j.pluginsDir");
   // necessary for isolated buck to work correctly
-  private static final String baseBuckOutDir = BuckConstant.getBuckOutputPath().toString();
-  public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
+  private static final String BASE_BUCK_OUT_DIR = BuckConstant.getBuckOutputPath().toString();
+  private static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
   public static final Path METADATA_PATH = Paths.get(".buck.metadata");
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
@@ -165,9 +166,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     }
 
     RequiredFile(RelPath path, FileNode fileNode, UploadDataSupplier dataSupplier) {
-      this.path = path.getPath();
-      this.fileNode = fileNode;
-      this.dataSupplier = dataSupplier;
+      this(path.getPath(), fileNode, dataSupplier);
     }
   }
 
@@ -288,7 +287,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                   });
             },
             IOException.class);
-    if (pluginResources == null || pluginRoot == null) {
+    if (PLUGIN_RESOURCES == null || PLUGIN_ROOT == null) {
       pluginFiles = () -> new ClassPath(ImmutableList.of(), ImmutableList.of());
     } else {
       pluginFiles = prepareClassPath(ModernBuildRuleRemoteExecutionHelper::findPlugins);
@@ -387,7 +386,6 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                     rule.getClass());
                 return true;
               });
-
       return false;
     }
   }
@@ -637,10 +635,10 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private static ImmutableList<Path> findPlugins() throws IOException {
     ImmutableList.Builder<Path> pathsBuilder = ImmutableList.builder();
-    try (Stream<Path> files = Files.walk(Paths.get(pluginRoot))) {
+    try (Stream<Path> files = Files.walk(Paths.get(PLUGIN_ROOT))) {
       files.filter(Files::isRegularFile).forEach(pathsBuilder::add);
     }
-    try (Stream<Path> files = Files.walk(Paths.get(pluginResources))) {
+    try (Stream<Path> files = Files.walk(Paths.get(PLUGIN_RESOURCES))) {
       files.filter(Files::isRegularFile).forEach(pathsBuilder::add);
     }
     return pathsBuilder.build();
@@ -689,8 +687,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, AbsPath cellPrefixRoot) {
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
-    String relativePluginRoot = relativizePathString(cellPrefixRoot, pluginRoot);
-    String relativePluginResources = relativizePathString(cellPrefixRoot, pluginResources);
+    String relativePluginRoot = relativizePathString(cellPrefixRoot, PLUGIN_ROOT);
+    String relativePluginResources = relativizePathString(cellPrefixRoot, PLUGIN_RESOURCES);
     return ImmutableSortedMap.<String, String>naturalOrder()
         .put("CLASSPATH", classpathArg(bootstrapClasspath))
         .put("BUCK_CLASSPATH", classpathArg(classpath))
@@ -701,7 +699,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                 .collect(Collectors.joining(" ")))
         .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersion.getMajorVersion()))
         .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
-        .put("BASE_BUCK_OUT_DIR", baseBuckOutDir)
+        .put("BASE_BUCK_OUT_DIR", BASE_BUCK_OUT_DIR)
         .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
         // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
         .put("BUCK_DISTCC", "0")
