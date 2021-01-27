@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -102,9 +103,12 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus, String actionId) {
+      DownwardApiProcessExecutorFactory factory,
+      IsolatedEventBus buckEventBus,
+      String actionId,
+      Clock clock) {
     return factory.create(
-        this, ConsoleParams.of(ansi.isAnsiTerminal(), verbosity), buckEventBus, actionId);
+        this, ConsoleParams.of(ansi.isAnsiTerminal(), verbosity), buckEventBus, actionId, clock);
   }
 
   @Override

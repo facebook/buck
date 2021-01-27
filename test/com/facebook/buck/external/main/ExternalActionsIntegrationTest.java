@@ -44,6 +44,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -95,7 +96,11 @@ public class ExternalActionsIntegrationTest {
     eventBusForTests.register(eventBusListener);
     downwardApiProcessExecutor =
         DownwardApiProcessExecutor.FACTORY.create(
-            defaultExecutor, CONSOLE_PARAMS, eventBusForTests.isolated(), TEST_ACTION_ID);
+            defaultExecutor,
+            CONSOLE_PARAMS,
+            eventBusForTests.isolated(),
+            TEST_ACTION_ID,
+            FakeClock.doNotCare());
 
     String packageName = getClass().getPackage().getName().replace('.', '/');
     URL binary = Resources.getResource(packageName + "/external_actions_bin_for_tests.jar");

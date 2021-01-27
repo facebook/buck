@@ -32,6 +32,7 @@ import com.facebook.buck.util.DownwardApiProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -74,14 +75,16 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         ProcessExecutor delegate,
         ConsoleParams consoleParams,
         IsolatedEventBus buckEventBus,
-        String actionId) {
+        String actionId,
+        Clock clock) {
       return new DownwardApiProcessExecutor(
           delegate,
           consoleParams,
           buckEventBus,
           actionId,
           NamedPipeFactory.getFactory(
-              DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE));
+              DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE),
+          clock);
     }
   }
 
@@ -106,19 +109,24 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   private final IsolatedEventBus buckEventBus;
   private final NamedPipeFactory namedPipeFactory;
 
+  @SuppressWarnings("unused")
+  private Clock clock;
+
   @VisibleForTesting
   DownwardApiProcessExecutor(
       ProcessExecutor delegate,
       ConsoleParams consoleParams,
       IsolatedEventBus buckEventBus,
       String actionId,
-      NamedPipeFactory namedPipeFactory) {
+      NamedPipeFactory namedPipeFactory,
+      Clock clock) {
     super(delegate);
     this.isAnsiTerminal = consoleParams.isAnsiEscapeSequencesEnabled();
     this.verbosity = consoleParams.getVerbosity();
     this.buckEventBus = buckEventBus;
     this.actionId = actionId;
     this.namedPipeFactory = namedPipeFactory;
+    this.clock = clock;
   }
 
   @Override
@@ -214,7 +222,10 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus, String actionId) {
+      DownwardApiProcessExecutorFactory factory,
+      IsolatedEventBus buckEventBus,
+      String actionId,
+      Clock clock) {
     return this;
   }
 }

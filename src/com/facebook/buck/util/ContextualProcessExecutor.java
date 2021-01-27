@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -101,7 +102,10 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus, String actionId) {
+      DownwardApiProcessExecutorFactory factory,
+      IsolatedEventBus buckEventBus,
+      String actionId,
+      Clock clock) {
     String ansiEnabled = context.get(ANSI_ESCAPE_SEQUENCES_ENABLED);
     Preconditions.checkNotNull(ansiEnabled, ANSI_ESCAPE_SEQUENCES_ENABLED + " key is not provided");
     boolean ansiEscapeSequencesEnabled = Boolean.parseBoolean(ansiEnabled);
@@ -111,6 +115,10 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
     Verbosity verbosity = Verbosity.valueOf(verbosityString);
 
     return factory.create(
-        this, ConsoleParams.of(ansiEscapeSequencesEnabled, verbosity), buckEventBus, actionId);
+        this,
+        ConsoleParams.of(ansiEscapeSequencesEnabled, verbosity),
+        buckEventBus,
+        actionId,
+        clock);
   }
 }

@@ -61,6 +61,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -285,24 +286,26 @@ public class InstallCommand extends BuildCommand {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
 
+      ExecutionContext executionContext = getExecutionContext();
       if (buildRule instanceof HasInstallableApk) {
         exitCode =
-            installApk((HasInstallableApk) buildRule, getExecutionContext(), pathResolver, params);
+            installApk((HasInstallableApk) buildRule, executionContext, pathResolver, params);
         if (exitCode != ExitCode.SUCCESS) {
           return exitCode;
         }
       } else if (buildRule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) buildRule;
         InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
-        params.getBuckEventBus().post(started);
-        ExecutionContext context = build.getExecutionContext();
-        ProcessExecutor processExecutor = context.getProcessExecutor();
+        BuckEventBus buckEventBus = executionContext.getBuckEventBus();
+        buckEventBus.post(started);
+        ProcessExecutor processExecutor = executionContext.getProcessExecutor();
         if (appleBundle.isWithDownwardApi()) {
           processExecutor =
               processExecutor.withDownwardAPI(
                   DownwardApiProcessExecutor.FACTORY,
-                  context.getBuckEventBus().isolated(),
-                  "install-command:" + buildRule.getFullyQualifiedName());
+                  buckEventBus.isolated(),
+                  "install-command:" + buildRule.getFullyQualifiedName(),
+                  executionContext.getClock());
         }
 
         InstallResult installResult =
@@ -312,14 +315,12 @@ public class InstallCommand extends BuildCommand {
                 appleBundle.getProjectFilesystem(),
                 processExecutor,
                 pathResolver);
-        params
-            .getBuckEventBus()
-            .post(
-                InstallEvent.finished(
-                    started,
-                    installResult.getExitCode() == ExitCode.SUCCESS,
-                    installResult.getLaunchedPid(),
-                    Optional.empty()));
+        buckEventBus.post(
+            InstallEvent.finished(
+                started,
+                installResult.getExitCode() == ExitCode.SUCCESS,
+                installResult.getLaunchedPid(),
+                Optional.empty()));
         exitCode = installResult.getExitCode();
         if (exitCode != ExitCode.SUCCESS) {
           return exitCode;
@@ -492,20 +493,22 @@ public class InstallCommand extends BuildCommand {
     String platformName = appleBundle.getPlatformName();
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
     if (isSimulator(platformName)) {
-      if (appleConfig.useIdb())
+      if (appleConfig.useIdb()) {
         return installAppleBundleForSimulatorIdb(
             params, appleBundle, pathResolver, projectFilesystem, processExecutor);
-      else
+      } else {
         return installAppleBundleForSimulator(
             params, appleBundle, pathResolver, projectFilesystem, processExecutor);
+      }
     }
     if (isDevice(platformName)) {
-      if (appleConfig.useIdb())
+      if (appleConfig.useIdb()) {
         return installAppleBundleForDeviceIbd(
             params, appleBundle, projectFilesystem, processExecutor, pathResolver);
-      else
+      } else {
         return installAppleBundleForDevice(
             params, appleBundle, projectFilesystem, processExecutor, pathResolver);
+      }
     }
     params
         .getConsole()
@@ -1390,6 +1393,7 @@ public class InstallCommand extends BuildCommand {
   }
 
   private static class TriggerCloseable implements Closeable {
+
     private final Cells root;
     private final CommandRunnerParams params;
     private final Closer closer;

@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.util.timing.Clock;
 
 /** Factory interface that creates {@code ProcessExecutor} which supports Downward API. */
 public interface DownwardApiProcessExecutorFactory {
@@ -26,5 +27,6 @@ public interface DownwardApiProcessExecutorFactory {
       ProcessExecutor delegate,
       ConsoleParams consoleParams,
       IsolatedEventBus buckEventBus,
-      String actionId);
+      String actionId,
+      Clock clock);
 }

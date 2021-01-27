@@ -65,6 +65,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -456,7 +457,8 @@ public class DownwardApiProcessExecutorTest {
           public NamedPipeReader connectAsReader(Path namedPipePath) {
             throw new UnsupportedOperationException();
           }
-        });
+        },
+        FakeClock.doNotCare());
   }
 
   private ProcessExecutorParams getProcessExecutorParams() {
