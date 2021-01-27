@@ -332,9 +332,7 @@ class CachingBuildRuleBuilder {
             ContextualProcessExecutor.ANSI_ESCAPE_SEQUENCES_ENABLED,
             consoleParams.isAnsiEscapeSequencesEnabled(),
             ContextualProcessExecutor.VERBOSITY,
-            consoleParams.getVerbosity(),
-            ContextualProcessExecutor.ACTION_ID,
-            rule.getFullyQualifiedName());
+            consoleParams.getVerbosity());
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
@@ -1331,7 +1329,7 @@ class CachingBuildRuleBuilder {
           StepExecutionContext.from(
               executionContext,
               rule.getProjectFilesystem().getRootPath(),
-              contextualProcessExecutor.getActionId()),
+              rule.getFullyQualifiedName()),
           step,
           Optional.of(rule.getBuildTarget()));
 
@@ -1460,7 +1458,7 @@ class CachingBuildRuleBuilder {
           StepExecutionContext.from(
               executionContext.withProcessExecutor(contextualProcessExecutor),
               rule.getProjectFilesystem().getRootPath(),
-              contextualProcessExecutor.getActionId());
+              rule.getFullyQualifiedName());
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {

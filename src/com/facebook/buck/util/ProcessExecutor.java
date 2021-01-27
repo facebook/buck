@@ -125,7 +125,7 @@ public interface ProcessExecutor {
 
   /** Creates a {@code ProcessExecutor} that supports Downward API */
   ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus);
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus, String actionId);
 
   /**
    * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional,

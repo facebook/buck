@@ -102,12 +102,9 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus) {
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus, String actionId) {
     return factory.create(
-        this,
-        ConsoleParams.of(ansi.isAnsiTerminal(), verbosity),
-        buckEventBus,
-        "UNKNOWN_ACTION_ID");
+        this, ConsoleParams.of(ansi.isAnsiTerminal(), verbosity), buckEventBus, actionId);
   }
 
   @Override

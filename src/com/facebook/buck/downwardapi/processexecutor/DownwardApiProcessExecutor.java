@@ -214,7 +214,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   @Override
   public ProcessExecutor withDownwardAPI(
-      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus) {
+      DownwardApiProcessExecutorFactory factory, IsolatedEventBus buckEventBus, String actionId) {
     return this;
   }
 }

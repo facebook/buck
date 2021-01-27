@@ -132,7 +132,8 @@ public class ProcessExecutorTest {
         new DefaultProcessExecutor(new TestConsole(Verbosity.ALL))
             .withDownwardAPI(
                 DownwardApiProcessExecutor.FACTORY,
-                new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")).isolated());
+                new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("fake")).isolated(),
+                "test_action_id");
 
     String cmd = Platform.detect() == Platform.WINDOWS ? "cmd /C echo Hello" : "echo Hello";
     ProcessExecutorParams params = ProcessExecutorParams.ofCommand(makeCommandArray(cmd));

@@ -96,7 +96,8 @@ public abstract class IsolatedExecutionContext implements Closeable {
   public DownwardApiProcessExecutor getDownwardApiProcessExecutor() {
     return (DownwardApiProcessExecutor)
         getProcessExecutor()
-            .withDownwardAPI(DownwardApiProcessExecutor.FACTORY, getIsolatedEventBus());
+            .withDownwardAPI(
+                DownwardApiProcessExecutor.FACTORY, getIsolatedEventBus(), getActionId());
   }
 
   @Value.Default

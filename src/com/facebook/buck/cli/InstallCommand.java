@@ -300,7 +300,9 @@ public class InstallCommand extends BuildCommand {
         if (appleBundle.isWithDownwardApi()) {
           processExecutor =
               processExecutor.withDownwardAPI(
-                  DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+                  DownwardApiProcessExecutor.FACTORY,
+                  context.getBuckEventBus().isolated(),
+                  "install-command:" + buildRule.getFullyQualifiedName());
         }
 
         InstallResult installResult =
