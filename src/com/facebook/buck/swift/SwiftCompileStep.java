@@ -19,7 +19,6 @@ package com.facebook.buck.swift;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
@@ -133,9 +132,7 @@ class SwiftCompileStep extends SwiftCompileStepBase {
             : context.getProcessExecutor();
 
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
     Result processResult =
         getTransformedProcessResult(processExecutor.launchAndExecute(params), willTransformStderr);

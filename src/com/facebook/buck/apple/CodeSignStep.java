@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -103,9 +102,7 @@ class CodeSignStep implements Step {
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
     if (LOG.isDebugEnabled()) {
       LOG.debug("codesign command: %s", Joiner.on(" ").join(processExecutorParams.getCommand()));

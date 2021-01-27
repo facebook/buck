@@ -23,7 +23,6 @@ import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.event.StepEvent.Started;
-import com.facebook.buck.step.StepExecutionResults;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +49,7 @@ enum StepEventHandler implements EventHandler<StepEvent> {
             Objects.requireNonNull(
                 stepStartedEvents.remove(eventId),
                 "Started step with event id: " + eventId + " is not found");
-        context.postEvent(finished(started, StepExecutionResults.SUCCESS_EXIT_CODE), timestamp);
+        context.postEvent(finished(started, 0), timestamp);
         break;
 
       case UNKNOWN:

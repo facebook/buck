@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -118,9 +117,7 @@ public class PythonRunTestsStep implements Step {
             .build();
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(

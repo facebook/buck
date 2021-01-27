@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.cxx.toolchain.Archiver;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -128,9 +127,7 @@ class ArchiveStep implements Step {
 
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
 
     ProcessExecutor.Result result = processExecutor.launchAndExecute(params);

@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -205,9 +204,7 @@ public class JUnitStep extends ShellStep {
           try {
             ProcessExecutor processExecutor = context.getProcessExecutor();
             if (isWithDownwardApi()) {
-              processExecutor =
-                  processExecutor.withDownwardAPI(
-                      DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+              processExecutor = context.getDownwardApiProcessExecutor();
             }
 
             processExecutor.launchAndExecute(

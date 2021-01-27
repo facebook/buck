@@ -25,7 +25,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -142,9 +141,7 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
               .build();
       ProcessExecutor processExecutor = context.getProcessExecutor();
       if (withDownwardApi) {
-        processExecutor =
-            processExecutor.withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+        processExecutor = context.getDownwardApiProcessExecutor();
       }
 
       ProcessExecutor.Result result = processExecutor.launchAndExecute(params);

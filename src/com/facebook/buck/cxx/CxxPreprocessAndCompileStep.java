@@ -23,7 +23,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -233,9 +232,7 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
 
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
 
     ProcessExecutor.Result result = processExecutor.launchAndExecute(params);

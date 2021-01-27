@@ -20,7 +20,6 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -157,9 +156,7 @@ class SwiftStdlibStep implements Step {
       throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     if (withDownwardApi) {
-      executor =
-          executor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      executor = context.getDownwardApiProcessExecutor();
     }
 
     ProcessExecutorParams params = makeProcessExecutorParams(context, getSwiftStdlibCommand());

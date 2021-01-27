@@ -33,7 +33,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -218,9 +217,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
               ProcessExecutor executor = context.getProcessExecutor();
               if (withDownwardApi) {
-                executor =
-                    executor.withDownwardAPI(
-                        DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+                executor = context.getDownwardApiProcessExecutor();
               }
 
               try (ProcessExecutor.LaunchedProcess process =

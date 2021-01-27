@@ -43,7 +43,6 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -223,9 +222,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                 ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
                 ProcessExecutor processExecutor = context.getProcessExecutor();
                 if (withDownwardApi) {
-                  processExecutor =
-                      processExecutor.withDownwardAPI(
-                          DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+                  processExecutor = context.getDownwardApiProcessExecutor();
                 }
 
                 if (linker == null) {

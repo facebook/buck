@@ -22,7 +22,6 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.OptionsConsumer;
@@ -88,9 +87,7 @@ class GroovycStep extends IsolatedStep {
     writePathToSourcesList(context.getRuleCellRoot(), sourceFilePaths);
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
     return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }

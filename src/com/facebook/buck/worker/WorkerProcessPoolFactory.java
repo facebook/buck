@@ -17,7 +17,6 @@
 package com.facebook.buck.worker;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
@@ -169,9 +168,7 @@ public class WorkerProcessPoolFactory {
     Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
     return new WorkerProcess(processExecutor, processParams, filesystem, stdErr, tmpDir);
   }

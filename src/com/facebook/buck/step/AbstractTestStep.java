@@ -18,7 +18,6 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -98,9 +97,7 @@ public abstract class AbstractTestStep implements Step {
     // Run the test process, saving the exit code.
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
-      executor =
-          executor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+      executor = context.getDownwardApiProcessExecutor();
     }
 
     ImmutableSet<ProcessExecutor.Option> options =

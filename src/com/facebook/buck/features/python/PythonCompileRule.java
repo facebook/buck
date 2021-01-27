@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -156,10 +155,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                   ImmutableList<String> command = builder.build();
                   ProcessExecutor processExecutor = context.getProcessExecutor();
                   if (withDownwardApi) {
-                    processExecutor =
-                        processExecutor.withDownwardAPI(
-                            DownwardApiProcessExecutor.FACTORY,
-                            context.getBuckEventBus().isolated());
+                    processExecutor = context.getDownwardApiProcessExecutor();
                   }
                   return StepExecutionResult.of(
                       processExecutor.launchAndExecute(

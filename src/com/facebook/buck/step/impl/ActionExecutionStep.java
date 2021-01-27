@@ -21,7 +21,6 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -52,9 +51,7 @@ public class ActionExecutionStep implements Step {
     BuckEventBus buckEventBus = context.getBuckEventBus();
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor =
-          processExecutor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, buckEventBus.isolated());
+      processExecutor = context.getDownwardApiProcessExecutor();
     }
 
     ActionExecutionContext executionContext =

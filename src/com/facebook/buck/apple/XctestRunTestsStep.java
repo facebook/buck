@@ -19,7 +19,6 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -126,9 +125,7 @@ class XctestRunTestsStep implements Step {
 
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
-      executor =
-          executor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+      executor = context.getDownwardApiProcessExecutor();
     }
     try (LaunchedProcess launchedProcess = executor.launchProcess(params)) {
 

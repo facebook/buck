@@ -39,7 +39,6 @@ import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -419,9 +418,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
         ProcessExecutor processExecutor = context.getProcessExecutor();
         if (withDownwardApi) {
-          processExecutor =
-              processExecutor.withDownwardAPI(
-                  DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+          processExecutor = context.getDownwardApiProcessExecutor();
         }
 
         AppleDeviceController appleDeviceController =

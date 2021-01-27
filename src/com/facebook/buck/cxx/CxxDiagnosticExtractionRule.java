@@ -26,7 +26,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -254,9 +253,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
       Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
       ProcessExecutor processExecutor = context.getProcessExecutor();
       if (withDownwardApi) {
-        processExecutor =
-            processExecutor.withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus().isolated());
+        processExecutor = context.getDownwardApiProcessExecutor();
       }
 
       ProcessExecutor.Result result =

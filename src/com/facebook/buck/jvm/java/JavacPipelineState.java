@@ -22,7 +22,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ProcessExecutor;
@@ -112,9 +111,7 @@ public class JavacPipelineState implements RulePipelineState {
 
       ProcessExecutor processExecutor = firstOrderContext.getProcessExecutor();
       if (withDownwardApi) {
-        processExecutor =
-            processExecutor.withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+        processExecutor = context.getDownwardApiProcessExecutor();
       }
 
       JavacExecutionContext javacExecutionContext =

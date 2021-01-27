@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.execution.context;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.StepEvent;
@@ -90,6 +91,13 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * target.
    */
   public abstract String getActionId();
+
+  @Value.Lazy
+  public DownwardApiProcessExecutor getDownwardApiProcessExecutor() {
+    return (DownwardApiProcessExecutor)
+        getProcessExecutor()
+            .withDownwardAPI(DownwardApiProcessExecutor.FACTORY, getIsolatedEventBus());
+  }
 
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {

@@ -25,7 +25,6 @@ import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -85,10 +84,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     Path buildableCommandPath = writeBuildableCommandAndGetPath();
-    ProcessExecutor downwardApiProcessExecutor =
-        context
-            .getProcessExecutor()
-            .withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+    DownwardApiProcessExecutor downwardApiProcessExecutor = context.getDownwardApiProcessExecutor();
     return StepExecutionResult.of(
         downwardApiProcessExecutor.launchAndExecute(
             ProcessExecutorParams.builder()

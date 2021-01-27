@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
@@ -213,9 +212,7 @@ public class ShellStepDelegate {
 
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
-      executor =
-          executor.withDownwardAPI(
-              DownwardApiProcessExecutor.FACTORY, context.getIsolatedEventBus());
+      executor = context.getDownwardApiProcessExecutor();
     }
 
     ProcessExecutor.Result result =
