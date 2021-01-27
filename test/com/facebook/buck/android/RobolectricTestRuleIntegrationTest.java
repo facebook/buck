@@ -173,9 +173,7 @@ public class RobolectricTestRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    workspace
-        .runBuckTest("//java/com/sample/lib:test", "-c", "test.use_targets_with_only_assets=true")
-        .assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 
   @Test
@@ -185,9 +183,7 @@ public class RobolectricTestRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    workspace
-        .runBuckTest("//java/com/sample/lib:test", "-c", "test.use_targets_with_only_assets=true")
-        .assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 
   @Test
@@ -198,12 +194,7 @@ public class RobolectricTestRuleIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
-    workspace
-        .runBuckTest(
-            "//java/com/sample/lib:test_robolectric_runtime_dep",
-            "-c",
-            "test.use_targets_with_only_assets=true")
-        .assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test_robolectric_runtime_dep").assertSuccess();
   }
 
   @Test
@@ -213,8 +204,6 @@ public class RobolectricTestRuleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    workspace
-        .runBuckTest("//java/com/sample/lib:test", "-c", "test.use_targets_with_only_assets=true")
-        .assertSuccess();
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
 }

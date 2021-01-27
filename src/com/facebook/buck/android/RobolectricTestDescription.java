@@ -253,8 +253,6 @@ public class RobolectricTestDescription
     graphBuilder.addToIndex(aapt2Link);
     AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
 
-    boolean useTargetsWithOnlyAssets =
-        javaBuckConfig.getDelegate().getBooleanValue("test", "use_targets_with_only_assets", false);
     MergeAssets binaryResources =
         new MergeAssets(
             buildTarget.withAppendedFlavors(
@@ -263,10 +261,6 @@ public class RobolectricTestDescription
             graphBuilder,
             Optional.of(aaptOutputInfo.getPrimaryResourcesApkPath()),
             androidResourceDeps.stream()
-                .filter(
-                    useTargetsWithOnlyAssets
-                        ? resourceDep -> true
-                        : resourceDep -> resourceDep.getRes() != null)
                 .map(HasAndroidResourceDeps::getAssets)
                 .filter(Objects::nonNull)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
