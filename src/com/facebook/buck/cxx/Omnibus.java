@@ -144,8 +144,10 @@ public class Omnibus {
 
     hasher.putBoolean(preferStrippedObjects);
 
-    return root.withAppendedFlavors(
-        InternalFlavor.of("omnibus-root-" + hasher.hash().toString().substring(0, 9)));
+    BuildTarget finalTargetWithoutConfigFlavor = getRootLinkTarget(dummyOmnibus.getTarget(), root);
+
+    return finalTargetWithoutConfigFlavor.withAppendedFlavors(
+        InternalFlavor.of("omnibus-config-" + hasher.hash().toString().substring(0, 9)));
   }
 
   private static BuildTarget getDummyRootTarget(BuildTarget root) {
@@ -952,7 +954,7 @@ public class Omnibus {
    * @param cellPathResolver
    * @param nativeLinkTargetRoots root nodes which will be included in the omnibus link.
    * @param nativeLinkableRoots root nodes which are to be excluded from the omnibus link.
-   * @param deduplciateRoots whether to deduplicate root links which are identical across multiple
+   * @param deduplicateRoots whether to deduplicate root links which are identical across multiple
    *     independent omnibus links.
    * @return a map of shared library names to their containing {@link SourcePath}s.
    */
@@ -969,7 +971,7 @@ public class Omnibus {
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots,
       boolean preferStrippedObjects,
-      Optional<Boolean> deduplciateRoots) {
+      Optional<Boolean> deduplicateRoots) {
 
     ImmutableOmnibusLibraries.Builder libs = ImmutableOmnibusLibraries.builder();
 
@@ -993,7 +995,7 @@ public class Omnibus {
     Function<BuildTarget, BuildTarget> independentRootLinkTargetFn =
         target -> getRootLinkTarget(buildTarget, target);
     Function<BuildTarget, BuildTarget> rootLinkTargetFn =
-        deduplciateRoots.orElse(cxxBuckConfig.getOmnibusDeduplicateRoots())
+        deduplicateRoots.orElse(cxxBuckConfig.getOmnibusDeduplicateRoots())
             ? getDeduplicatedRootLinkTargetFn(
                 graphBuilder, cxxPlatform, extraLdflags, spec, dummyOmnibus, preferStrippedObjects)
             : independentRootLinkTargetFn;
