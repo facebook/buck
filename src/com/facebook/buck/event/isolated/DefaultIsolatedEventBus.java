@@ -35,7 +35,6 @@ import com.facebook.buck.event.utils.EventBusUtils;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
-import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -66,17 +65,14 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   private final DownwardProtocol downwardProtocol;
 
   public DefaultIsolatedEventBus(
-      BuildId buildId,
-      OutputStream outputStream,
-      long startExecutionEpochMillis,
-      DownwardProtocol downwardProtocol) {
+      BuildId buildId, OutputStream outputStream, Clock clock, DownwardProtocol downwardProtocol) {
     this(
         buildId,
         outputStream,
-        new DefaultClock(true),
+        clock,
         MoreExecutors.listeningDecorator(MostExecutors.newSingleThreadExecutor(THREAD_NAME)),
         DEFAULT_SHUTDOWN_TIMEOUT_MS,
-        startExecutionEpochMillis,
+        clock.currentTimeMillis(),
         downwardProtocol);
   }
 
@@ -186,7 +182,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void timestamp(SimplePerfEvent event, long threadId) {
-    timestamp((BuckEvent) event, Thread.currentThread().getId());
+    timestamp((BuckEvent) event, threadId);
   }
 
   @Override

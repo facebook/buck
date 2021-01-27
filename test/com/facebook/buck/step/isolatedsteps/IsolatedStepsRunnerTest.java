@@ -238,7 +238,8 @@ public class IsolatedStepsRunnerTest {
         Platform.detect(),
         defaultProcessExecutor,
         AbsPath.get(root.toString()),
-        ACTION_ID);
+        ACTION_ID,
+        FakeClock.doNotCare());
   }
 
   private StepEvent getAndAssertStepEvent(

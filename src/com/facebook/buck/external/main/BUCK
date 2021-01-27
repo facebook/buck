@@ -18,6 +18,7 @@ java_library(
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/timing:timing",
         "//third-party/java/guava:guava",
     ],
 )

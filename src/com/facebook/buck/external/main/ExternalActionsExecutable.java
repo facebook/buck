@@ -38,6 +38,8 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import java.io.OutputStream;
 
@@ -101,13 +103,12 @@ public class ExternalActionsExecutable {
     ImmutableList<IsolatedStep> stepsToExecute =
         BuildStepsRetriever.getStepsForBuildable(parsedArgs);
 
-    long startExecutionEpochMillis = System.currentTimeMillis();
+    // no need to measure thread CPU time as this is an external process and we do not pass thread
+    // time back to buck with Downward API
+    Clock clock = new DefaultClock(false);
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(
-            parsedEnvVars.getBuildUuid(),
-            outputStream,
-            startExecutionEpochMillis,
-            DOWNWARD_PROTOCOL)) {
+            parsedEnvVars.getBuildUuid(), outputStream, clock, DOWNWARD_PROTOCOL)) {
       IsolatedExecutionContext executionContext =
           IsolatedExecutionContext.of(
               eventBus,
@@ -115,7 +116,8 @@ public class ExternalActionsExecutable {
               Platform.detect(),
               new DefaultProcessExecutor(console),
               parsedEnvVars.getRuleCellRoot(),
-              parsedEnvVars.getActionId());
+              parsedEnvVars.getActionId(),
+              clock);
       IsolatedStepsRunner.execute(stepsToExecute, executionContext);
     }
   }

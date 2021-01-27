@@ -38,6 +38,8 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
@@ -154,10 +156,12 @@ public class JavaCDWorkerToolMain {
       Console console,
       OutputStream outputStream)
       throws IOException {
-    long startExecutionMillis = System.currentTimeMillis();
+
+    // no need to measure thread CPU time as this is an external process and we do not pass thread
+    // time back to buck with Downward API
+    Clock clock = new DefaultClock(false);
     try (IsolatedEventBus eventBus =
-        new DefaultIsolatedEventBus(
-            buildUuid, outputStream, startExecutionMillis, DOWNWARD_PROTOCOL)) {
+        new DefaultIsolatedEventBus(buildUuid, outputStream, clock, DOWNWARD_PROTOCOL)) {
       IsolatedExecutionContext executionContext =
           IsolatedExecutionContext.of(
               eventBus,
@@ -165,7 +169,8 @@ public class JavaCDWorkerToolMain {
               Platform.detect(),
               new DefaultProcessExecutor(console),
               ruleCellRoot,
-              actionId);
+              actionId,
+              clock);
       IsolatedStepsRunner.execute(isolatedSteps, executionContext);
     }
   }

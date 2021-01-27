@@ -16,9 +16,12 @@
 
 package com.facebook.buck.step.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.artifact.Artifact;
@@ -48,6 +51,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -56,7 +60,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -77,7 +80,7 @@ public class ActionExecutionStepTest {
     FakeAction.FakeActionExecuteLambda actionFunction =
         (srcs, inputs, outputs, ctx) -> {
           assertEquals(ImmutableSortedSet.of(), inputs);
-          assertThat(outputs, Matchers.hasSize(1));
+          assertThat(outputs, hasSize(1));
           assertEquals(
               ExplicitBuildTargetSourcePath.of(
                   buildTarget,
@@ -113,10 +116,10 @@ public class ActionExecutionStepTest {
 
     assertThat(
         consoleEventListener.getConsoleEventLogMessages(),
-        Matchers.contains(
-            Matchers.containsString(
+        contains(
+            containsString(
                 "my error 1" + System.lineSeparator() + "java.lang.RuntimeException: message"),
-            Matchers.containsString("my test info")));
+            containsString("my test info")));
   }
 
   @Test
@@ -213,6 +216,7 @@ public class ActionExecutionStepTest {
         .setProcessExecutor(new FakeProcessExecutor())
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
         .setRuleCellRoot(rootPath)
-        .setActionId("test_action_id");
+        .setActionId("test_action_id")
+        .setClock(FakeClock.doNotCare());
   }
 }

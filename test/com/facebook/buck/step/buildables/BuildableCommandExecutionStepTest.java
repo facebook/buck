@@ -35,6 +35,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
@@ -75,7 +76,8 @@ public class BuildableCommandExecutionStepTest {
     StepExecutionResult result = testStep.execute(createExecutionContext(projectFilesystem));
     assertThat(result.getExitCode(), equalTo(0));
     assertThat(
-        result.getStderr().get(), stringContainsInOrder("Received args:", "buildable_command_"));
+        result.getStderr().orElseThrow(IllegalStateException::new),
+        stringContainsInOrder("Received args:", "buildable_command_"));
   }
 
   private StepExecutionContext createExecutionContext(ProjectFilesystem projectFilesystem) {
@@ -93,6 +95,7 @@ public class BuildableCommandExecutionStepTest {
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
         .setRuleCellRoot(rootPath)
         .setActionId("test_action_id")
+        .setClock(FakeClock.doNotCare())
         .build();
   }
 }

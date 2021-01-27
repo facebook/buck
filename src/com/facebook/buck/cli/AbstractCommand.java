@@ -390,7 +390,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
                 buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
-            .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation());
+            .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation())
+            .setClock(params.getClock());
     return builder;
   }
 

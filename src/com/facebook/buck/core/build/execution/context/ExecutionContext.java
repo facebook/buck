@@ -31,6 +31,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
@@ -56,6 +57,9 @@ public abstract class ExecutionContext implements Closeable {
   public abstract ImmutableMap<String, String> getEnvironment();
 
   public abstract ProcessExecutor getProcessExecutor();
+
+  /** Returns clock associated with the current invocation. */
+  public abstract Clock getClock();
 
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {

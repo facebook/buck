@@ -38,6 +38,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -108,6 +109,7 @@ public class TestActionExecutionRunner {
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .setRuleCellRoot(rootPath)
                 .setActionId(action.getBuildTarget().getFullyQualifiedName())
+                .setClock(FakeClock.doNotCare())
                 .build());
 
     return ImmutableExecutionDetails.ofImpl(action, executionResult);

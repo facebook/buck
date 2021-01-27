@@ -72,6 +72,7 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -112,7 +113,8 @@ public abstract class IsolatedBuildableBuilder {
   private final Path metadataPath;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
-  IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath) throws IOException {
+  IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath, Clock clock)
+      throws IOException {
     AbsPath canonicalWorkRoot = AbsPath.of(workRoot.toRealPath()).normalize();
     AbsPath canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
     this.metadataPath = metadataPath;
@@ -209,7 +211,8 @@ public abstract class IsolatedBuildableBuilder {
             .setEnvironment(clientEnvironment)
             .setBuildCellRootPath(canonicalProjectRoot.getPath())
             .setProcessExecutor(processExecutor)
-            .setProjectFilesystemFactory(projectFilesystemFactory);
+            .setProjectFilesystemFactory(projectFilesystemFactory)
+            .setClock(clock);
 
     this.buildContext =
         BuildContext.of(

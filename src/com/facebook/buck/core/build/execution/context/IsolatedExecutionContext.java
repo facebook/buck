@@ -30,6 +30,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import java.io.Closeable;
@@ -49,7 +50,8 @@ public abstract class IsolatedExecutionContext implements Closeable {
       Platform platform,
       ProcessExecutor processExecutor,
       AbsPath ruleCellRoot,
-      String actionId) {
+      String actionId,
+      Clock clock) {
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(eventBus)
         .setConsole(console)
@@ -57,6 +59,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setProcessExecutor(processExecutor)
         .setRuleCellRoot(ruleCellRoot)
         .setActionId(actionId)
+        .setClock(clock)
         .build();
   }
 
@@ -91,6 +94,9 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * target.
    */
   public abstract String getActionId();
+
+  /** Returns clock associated with the current invocation. */
+  public abstract Clock getClock();
 
   @Value.Lazy
   public DownwardApiProcessExecutor getDownwardApiProcessExecutor() {
@@ -176,6 +182,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setClassLoaderCache(getClassLoaderCache().addRef())
         .setEnvironment(getEnvironment())
         .setActionId(getActionId())
+        .setClock(getClock())
         .build();
   }
 }

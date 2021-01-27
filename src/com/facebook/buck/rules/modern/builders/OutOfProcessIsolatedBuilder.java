@@ -25,6 +25,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.console.ConsoleBuckEventListener;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -105,8 +106,9 @@ public class OutOfProcessIsolatedBuilder {
     Path projectRoot = Paths.get(args[1]);
     HashCode hash = HashCode.fromString(args[2]);
     Path metadataPath = Paths.get(args[3]);
+    Clock clock = new DefaultClock();
 
-    new IsolatedBuildableBuilder(buildDir, projectRoot, metadataPath) {
+    new IsolatedBuildableBuilder(buildDir, projectRoot, metadataPath, clock) {
 
       @Override
       protected Console createConsole() {
@@ -115,8 +117,8 @@ public class OutOfProcessIsolatedBuilder {
 
       @Override
       protected BuckEventBus createEventBus(Console console) {
-        BuckEventBus buckEventBus =
-            new DefaultBuckEventBus(new DefaultClock(), new BuildId("whatever"));
+
+        BuckEventBus buckEventBus = new DefaultBuckEventBus(clock, new BuildId("whatever"));
         buckEventBus.register(new ConsoleBuckEventListener(console));
         return buckEventBus;
       }
