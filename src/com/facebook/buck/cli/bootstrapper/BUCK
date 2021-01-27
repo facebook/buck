@@ -13,8 +13,9 @@ java_library(
     name = "bootstrapper_lib",
     srcs = glob(["*.java"]),
     visibility = [
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main_lib",
         "//test/...",
-        "//third-party/java/aosp:tests",
+        "//third-party/java/aosp:aosp",
         "//third-party/java/bazel:tests",
         "//tools/...",
     ],
