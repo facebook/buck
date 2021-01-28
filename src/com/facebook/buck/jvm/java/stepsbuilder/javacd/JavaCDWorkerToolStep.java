@@ -26,6 +26,7 @@ import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.impl.BaseWorkerToolExecutor;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
@@ -95,10 +96,12 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
     @Override
     public ImmutableList<String> getStartWorkerToolCommand() {
-      int runArgumentsCount = 2;
+      int runArgumentsCount = 3;
       return ImmutableList.<String>builderWithExpectedSize(
               javaRuntimeLauncherCommand.size() + runArgumentsCount)
           .addAll(javaRuntimeLauncherCommand)
+          // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
+          .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
           .add("-jar")
           .add(getJavaCDJarPath())
           .build();
