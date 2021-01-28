@@ -38,6 +38,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
@@ -66,14 +67,14 @@ public class JavaCDWorkerToolMain {
         WorkerToolParsedEnvs.parse(EnvVariablesProvider.getSystemEnv());
     Console console = createConsole(workerToolParsedEnvs);
 
-    try (NamedPipeWriter namedPipe =
+    try (NamedPipeWriter eventNamedPipe =
             NAMED_PIPE_FACTORY.connectAsWriter(workerToolParsedEnvs.getEventPipe());
-        OutputStream outputStream = namedPipe.getOutputStream()) {
+        OutputStream eventsOutputStream = eventNamedPipe.getOutputStream()) {
       // establish downward protocol type
-      DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(outputStream);
-      Logger.get("").addHandler(new ExternalLogHandler(outputStream, DOWNWARD_PROTOCOL));
+      DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(eventsOutputStream);
+      Logger.get("").addHandler(new ExternalLogHandler(eventsOutputStream, DOWNWARD_PROTOCOL));
 
-      executeSteps(workerToolParsedEnvs, console, outputStream);
+      handleCommands(workerToolParsedEnvs, console, eventsOutputStream);
 
     } catch (Exception e) {
       handleExceptionAndTerminate(Thread.currentThread(), console, e);
@@ -100,96 +101,101 @@ public class JavaCDWorkerToolMain {
     System.exit(1);
   }
 
-  private static void executeSteps(
-      WorkerToolParsedEnvs workerToolParsedEnvs, Console console, OutputStream outputStream)
+  private static void handleCommands(
+      WorkerToolParsedEnvs workerToolParsedEnvs, Console console, OutputStream eventsOutputStream)
       throws Exception {
-    try (NamedPipeReader namedPipe =
-            NAMED_PIPE_FACTORY.connectAsReader(workerToolParsedEnvs.getCommandPipe());
-        InputStream inputStream = namedPipe.getInputStream()) {
 
-      while (true) {
-        CommandTypeMessage commandTypeMessage = CommandTypeMessage.parseDelimitedFrom(inputStream);
-        CommandTypeMessage.CommandType commandType = commandTypeMessage.getCommandType();
+    BuildId buildUuid = workerToolParsedEnvs.getBuildUuid();
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+    Platform platform = Platform.detect();
+    // no need to measure thread CPU time as this is an external process and we do not pass thread
+    // time back to buck with Downward API
+    Clock clock = new DefaultClock(false);
 
-        switch (commandType) {
-          case EXECUTE_COMMAND:
-            ExecuteCommand executeCommand = ExecuteCommand.parseDelimitedFrom(inputStream);
-            LOG.info("Execute command received: %s", executeCommand);
+    try (IsolatedEventBus eventBus =
+        new DefaultIsolatedEventBus(buildUuid, eventsOutputStream, clock, DOWNWARD_PROTOCOL)) {
 
-            BuildJavaCommand buildJavaCommand = BuildJavaCommand.parseDelimitedFrom(inputStream);
+      try (NamedPipeReader commandsNamedPipe =
+              NAMED_PIPE_FACTORY.connectAsReader(workerToolParsedEnvs.getCommandPipe());
+          InputStream commandsInputStream = commandsNamedPipe.getInputStream()) {
 
-            JavaCDWorkerToolStepsBuilder javaCDWorkerToolStepsBuilder =
-                new JavaCDWorkerToolStepsBuilder(buildJavaCommand);
-            AbsPath ruleCellRoot = javaCDWorkerToolStepsBuilder.getRuleCellRoot();
-            ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
+        while (true) {
+          CommandTypeMessage commandTypeMessage =
+              CommandTypeMessage.parseDelimitedFrom(commandsInputStream);
+          CommandTypeMessage.CommandType commandType = commandTypeMessage.getCommandType();
 
-            String actionId = executeCommand.getActionId();
-            int exitCode =
-                executeJavaCompilationCommand(
-                    isolatedSteps,
-                    ruleCellRoot,
-                    workerToolParsedEnvs.getBuildUuid(),
-                    actionId,
-                    console,
-                    outputStream);
+          switch (commandType) {
+            case EXECUTE_COMMAND:
+              ExecuteCommand executeCommand =
+                  ExecuteCommand.parseDelimitedFrom(commandsInputStream);
+              String actionId = executeCommand.getActionId();
+              BuildJavaCommand buildJavaCommand =
+                  BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
+              LOG.info("Execute command with action id: %s received", actionId);
 
-            ResultEvent resultEvent =
-                ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode).build();
-            DOWNWARD_PROTOCOL.write(
-                EventTypeMessage.newBuilder()
-                    .setEventType(EventTypeMessage.EventType.RESULT_EVENT)
-                    .build(),
-                resultEvent,
-                outputStream);
-            break;
+              handleBuildJavaCommand(
+                  actionId,
+                  buildJavaCommand,
+                  eventsOutputStream,
+                  eventBus,
+                  platform,
+                  processExecutor,
+                  console,
+                  clock);
+              break;
 
-          case SHUTDOWN_COMMAND:
-            ShutdownCommand shutdownCommand = ShutdownCommand.parseDelimitedFrom(inputStream);
-            LOG.info("Shutdown command received: %s", shutdownCommand);
-            return;
+            case SHUTDOWN_COMMAND:
+              ShutdownCommand shutdownCommand =
+                  ShutdownCommand.parseDelimitedFrom(commandsInputStream);
+              LOG.info(
+                  "Shutdown command received: %s. Stopping javacd worker tool...", shutdownCommand);
+              return;
 
-          case START_PIPELINE_COMMAND:
-            // TODO: msemko : Implement pipelining support
-            throw new UnsupportedOperationException("Pipelining support not yet implemented!");
-          case UNKNOWN:
-          case UNRECOGNIZED:
-          default:
-            throw new IllegalStateException(commandType + " is not supported!");
+            case START_PIPELINE_COMMAND:
+              // TODO: msemko : Implement pipelining support
+              throw new UnsupportedOperationException("Pipelining support not yet implemented!");
+
+            case UNKNOWN:
+            case UNRECOGNIZED:
+            default:
+              throw new IllegalStateException(commandType + " is not supported!");
+          }
         }
       }
     }
   }
 
-  private static int executeJavaCompilationCommand(
-      ImmutableList<IsolatedStep> isolatedSteps,
-      AbsPath ruleCellRoot,
-      BuildId buildUuid,
+  private static void handleBuildJavaCommand(
       String actionId,
+      BuildJavaCommand buildJavaCommand,
+      OutputStream eventsOutputStream,
+      IsolatedEventBus eventBus,
+      Platform platform,
+      ProcessExecutor processExecutor,
       Console console,
-      OutputStream outputStream)
+      Clock clock)
       throws IOException {
 
-    // no need to measure thread CPU time as this is an external process and we do not pass thread
-    // time back to buck with Downward API
-    Clock clock = new DefaultClock(false);
-    try (IsolatedEventBus eventBus =
-        new DefaultIsolatedEventBus(buildUuid, outputStream, clock, DOWNWARD_PROTOCOL)) {
-      IsolatedExecutionContext executionContext =
-          IsolatedExecutionContext.of(
-              eventBus,
-              console,
-              Platform.detect(),
-              new DefaultProcessExecutor(console),
-              ruleCellRoot,
-              actionId,
-              clock);
-      // TODO: msemko investigate if `IsolatedStepsRunner.execute()` catch error and log it without
-      // re-throwing.
-      IsolatedStepsRunner.execute(isolatedSteps, executionContext);
-    }
+    JavaCDWorkerToolStepsBuilder javaCDWorkerToolStepsBuilder =
+        new JavaCDWorkerToolStepsBuilder(buildJavaCommand);
+    AbsPath ruleCellRoot = javaCDWorkerToolStepsBuilder.getRuleCellRoot();
+    ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
+    IsolatedExecutionContext executionContext =
+        IsolatedExecutionContext.of(
+            eventBus, console, platform, processExecutor, ruleCellRoot, actionId, clock);
+
+    // TODO: msemko investigate if `IsolatedStepsRunner.execute()` catch error and log it without
+    // re-throwing.
+    IsolatedStepsRunner.execute(isolatedSteps, executionContext);
 
     // TODO : msemko : return a valid exit code in case of failure in
     // `IsolatedStepsRunner.execute()`
-    return 0;
+    int exitCode = 0;
+    ResultEvent resultEvent =
+        ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode).build();
+    DOWNWARD_PROTOCOL.write(
+        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.RESULT_EVENT).build(),
+        resultEvent,
+        eventsOutputStream);
   }
 }
