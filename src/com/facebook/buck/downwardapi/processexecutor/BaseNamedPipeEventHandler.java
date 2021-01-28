@@ -188,7 +188,11 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   private void maybeSetProtocol(NamedPipeServer namedPipeServer) {
     if (namedPipeServer instanceof SupportsDownwardProtocol) {
-      ((SupportsDownwardProtocol) namedPipeServer).setProtocol(downwardProtocol);
+      SupportsDownwardProtocol supportsDownwardProtocol =
+          (SupportsDownwardProtocol) namedPipeServer;
+      if (supportsDownwardProtocol.getProtocol() == null) {
+        supportsDownwardProtocol.setProtocol(downwardProtocol);
+      }
     }
   }
 
