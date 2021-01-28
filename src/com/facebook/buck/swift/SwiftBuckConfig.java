@@ -32,6 +32,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
   public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
+  public static final String EMIT_CLANG_MODULE_BREADCRUMBS = "emit_clang_module_breadcrumbs";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
   public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
   public static final String SLICE_APP_BUNDLE_RUNTIME = "slice_app_bundle_runtime";
@@ -107,6 +108,16 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getCopyStdlibToFrameworks() {
     return delegate.getBooleanValue(SECTION_NAME, COPY_STDLIB_TO_FRAMEWORKS, false);
+  }
+
+  /**
+   * If enabled Swift will emit paths to the dependent pcm files of Swift modules in the debug info.
+   * This is used as a fallback path in LLDB to get type information when source is unavailable. The
+   * corresponding compiler flag is `-no-clang-module-breadcrumbs`. Enabling this will mark the
+   * output as uncacheable.
+   */
+  public boolean getEmitClangModuleBreadcrumbs() {
+    return delegate.getBooleanValue(SECTION_NAME, EMIT_CLANG_MODULE_BREADCRUMBS, true);
   }
 
   /**

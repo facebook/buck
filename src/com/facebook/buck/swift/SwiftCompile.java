@@ -151,7 +151,9 @@ public class SwiftCompile extends SwiftCompileBase {
     //     is passed, caching needs to be disabled as the artifacts are not machine-independent.
     //
     // See https://github.com/ios-bazel-users/ios-bazel-users/blob/master/DebuggableRemoteSwift.md
-    return !bridgingHeader.isPresent() && !shouldSerializeDebuggingOptions();
+    return !bridgingHeader.isPresent()
+        && !shouldEmitClangModuleBreadcrumbs
+        && !shouldSerializeDebuggingOptions();
   }
 
   @Override

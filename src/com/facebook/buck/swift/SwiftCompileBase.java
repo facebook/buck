@@ -131,6 +131,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean useDebugPrefixMap;
 
+  @AddToRuleKey protected final boolean shouldEmitClangModuleBreadcrumbs;
+
   // The following fields do not have to be part of the rulekey, all the other must.
 
   private BuildableSupport.DepsSupplier depsSupplier;
@@ -218,6 +220,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.inputBasedEnabled = swiftBuckConfig.getInputBasedCompileEnabled();
     this.debugPrefixMap = debugPrefixMap;
     this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
+    this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     performChecks(buildTarget);
   }
 
@@ -333,6 +336,12 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
               entry ->
                   compilerArgs.add(
                       DEBUG_PREFIX_MAP_FLAG, entry.getKey().toString() + "=" + entry.getValue()));
+    }
+
+    if (!shouldEmitClangModuleBreadcrumbs) {
+      // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
+      // and are not shareable across machines.
+      compilerArgs.add("-no-clang-module-breadcrumbs");
     }
 
     return compilerArgs.build();

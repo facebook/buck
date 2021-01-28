@@ -307,6 +307,40 @@ public class SwiftLibraryIntegrationTest {
   }
 
   @Test
+  public void testEmitClangModuleBreadcrumbArgsAreIncludedInCompilerCommand() {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget swiftCompileTarget =
+        buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections("[swift]", "emit_clang_module_breadcrumbs = False")
+            .build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftCompile buildRule =
+        (SwiftCompile)
+            swiftLibraryDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                swiftCompileTarget,
+                TestBuildRuleParams.create(),
+                createDummySwiftArg());
+
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    ImmutableList<Step> steps = buildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    SwiftCompileStep compileStep = (SwiftCompileStep) steps.get(1);
+    ImmutableList<String> compilerCommand =
+        ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
+
+    assertThat(compilerCommand, Matchers.hasItem("-no-clang-module-breadcrumbs"));
+  }
+
+  @Test
   public void testSwiftCompileDebugPathPrefixFlags() throws NoSuchBuildTargetException {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
