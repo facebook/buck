@@ -23,6 +23,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
 import com.facebook.buck.workertool.WorkerToolExecutor;
+import com.facebook.buck.workertool.impl.BaseWorkerToolExecutor;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Objects;
@@ -82,7 +83,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   }
 
   /** JavaCD worker tool. */
-  private static class JavaCDWorkerToolExecutor extends WorkerToolExecutor {
+  private static class JavaCDWorkerToolExecutor extends BaseWorkerToolExecutor {
 
     private final ImmutableList<String> javaRuntimeLauncherCommand;
 
