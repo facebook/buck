@@ -130,13 +130,16 @@ public abstract class WorkerToolExecutor {
   }
 
   /** Shuts down launched worker tool. */
-  public void shutdown() throws InterruptedException, IOException {
+  public void shutdown() {
     try {
       CommandTypeMessage shutdownCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.SHUTDOWN_COMMAND);
       shutdownCommandTypeMessage.writeDelimitedTo(outputStream);
       ShutdownCommand shutdownCommand = ShutdownCommand.getDefaultInstance();
       shutdownCommand.writeDelimitedTo(outputStream);
+    } catch (IOException e) {
+      LOG.error(
+          e, "Cannot write shutdown command for for named pipe: %s", namedPipeWriter.getName());
     } finally {
       shutdownFutureIfNotDone();
       waitTillLaunchedProcessFinish();
@@ -150,26 +153,35 @@ public abstract class WorkerToolExecutor {
     }
   }
 
-  private void waitTillLaunchedProcessFinish() throws InterruptedException {
-    ProcessExecutor.Result executionResult =
-        downwardApiProcessExecutor.execute(
-            launchedProcess,
-            ImmutableSet.<ProcessExecutor.Option>builder()
-                .add(ProcessExecutor.Option.EXPECTING_STD_OUT)
-                .add(ProcessExecutor.Option.EXPECTING_STD_ERR)
-                .build(),
-            Optional.empty(),
-            Optional.of(SHUTDOWN_TIMEOUT_UNIT.toMillis(SHUTDOWN_TIMEOUT)),
-            Optional.of(
-                process ->
-                    LOG.error(
-                        "Timeout while waiting for a launched worker tool process %s to terminate.",
-                        getStartWorkerToolCommand())));
-    int exitCode = executionResult.getExitCode();
-    if (exitCode != 0) {
-      LOG.error(
-          "Exit code: %s%n[stdOut]%n%s%n[stdErr]%n%s%n",
-          exitCode, executionResult.getStdout().orElse(""), executionResult.getStderr().orElse(""));
+  private void waitTillLaunchedProcessFinish() {
+    try {
+      ProcessExecutor.Result executionResult =
+          downwardApiProcessExecutor.execute(
+              launchedProcess,
+              ImmutableSet.<ProcessExecutor.Option>builder()
+                  .add(ProcessExecutor.Option.EXPECTING_STD_OUT)
+                  .add(ProcessExecutor.Option.EXPECTING_STD_ERR)
+                  .build(),
+              Optional.empty(),
+              Optional.of(SHUTDOWN_TIMEOUT_UNIT.toMillis(SHUTDOWN_TIMEOUT)),
+              Optional.of(
+                  process ->
+                      LOG.error(
+                          "Timeout while waiting for a launched worker tool process %s to terminate.",
+                          getStartWorkerToolCommand())));
+
+      int exitCode = executionResult.getExitCode();
+      if (exitCode != 0) {
+        LOG.error(
+            "Exit code: %s%n[stdOut]%n%s%n[stdErr]%n%s%n",
+            exitCode,
+            executionResult.getStdout().orElse(""),
+            executionResult.getStderr().orElse(""));
+      }
+
+    } catch (InterruptedException e) {
+      LOG.warn("Waiting for launched worker tool process has been interrupted.");
+      Thread.currentThread().interrupt();
     }
   }
 
