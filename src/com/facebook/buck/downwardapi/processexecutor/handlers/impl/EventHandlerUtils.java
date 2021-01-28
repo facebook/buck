@@ -39,7 +39,7 @@ public class EventHandlerUtils {
 
   /** Returns appropriate event handler for a given {@code eventType}. */
   @SuppressWarnings("unchecked")
-  public static <T extends AbstractMessage> EventHandler<T> getEventHandler(
+  public static <T extends AbstractMessage> EventHandler<T> getStandardEventHandler(
       EventTypeMessage.EventType eventType) {
     switch (eventType) {
       case CONSOLE_EVENT:
@@ -60,7 +60,9 @@ public class EventHandlerUtils {
       case RESULT_EVENT:
       case PIPELINE_FINISHED_EVENT:
         throw new IllegalStateException(
-            "Client code is required to pass a custom event handler for this type : " + eventType);
+            "Client code is required to handle this event type: "
+                + eventType
+                + " with a custom event handler");
 
       case END_EVENT:
       case UNKNOWN:

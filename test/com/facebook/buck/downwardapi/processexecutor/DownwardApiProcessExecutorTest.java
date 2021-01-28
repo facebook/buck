@@ -42,6 +42,8 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.testutil.LogRecordMatcher;
@@ -61,6 +63,7 @@ import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.NamedPipeEventHandlerFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
@@ -302,6 +305,8 @@ public class DownwardApiProcessExecutorTest {
                         "in the thread: " + DownwardApiProcessExecutor.HANDLER_THREAD_POOL_NAME);
               }
             }));
+
+    buckEventBus.unregister(listener);
   }
 
   private void waitTillEventsProcessed() throws InterruptedException {
@@ -416,6 +421,75 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
   }
 
+  @Test
+  public void downwardApiWithClientsEventHandlers() throws IOException, InterruptedException {
+    ProcessExecutorParams params =
+        getProcessExecutorParams(namedPipeReader.getName(), buckEventBus);
+
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try {
+                    writeIntoNamedPipeProcess(namedPipeReader.getName());
+                  } catch (Exception e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    AtomicInteger eventsReceivedByClientsHandlers = new AtomicInteger();
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(
+            namedPipeReader,
+            buckEventBus,
+            params,
+            fakeProcess,
+            (namedPipe, context) ->
+                new CustomNamedEventPipeHandler(
+                    namedPipe, context, eventsReceivedByClientsHandlers));
+
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+
+    waitTillEventsProcessed();
+    assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));
+  }
+
+  private static class CustomNamedEventPipeHandler extends BaseNamedPipeEventHandler {
+
+    private final ImmutableMap<EventTypeMessage.EventType, EventHandler<AbstractMessage>>
+        eventHandlers;
+
+    CustomNamedEventPipeHandler(
+        NamedPipeReader namedPipe,
+        DownwardApiExecutionContext downwardApiExecutionContext,
+        AtomicInteger eventsReceivedByClientsHandlers) {
+      super(namedPipe, downwardApiExecutionContext);
+      this.eventHandlers =
+          ImmutableMap.<EventTypeMessage.EventType, EventHandler<AbstractMessage>>builder()
+              .put(LOG_EVENT, (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(1))
+              .put(CONSOLE_EVENT, (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(2))
+              .put(
+                  CHROME_TRACE_EVENT,
+                  (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(10))
+              .put(STEP_EVENT, (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(100))
+              .put(
+                  EXTERNAL_EVENT,
+                  (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(500))
+              .build();
+    }
+
+    @Override
+    void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
+      EventHandler<AbstractMessage> handler = eventHandlers.get(eventType);
+      handler.handleEvent(getContext(), event);
+    }
+  }
+
   private DownwardApiExecutionResult launchAndExecute(DownwardApiProcessExecutor processExecutor)
       throws InterruptedException, IOException {
     ProcessExecutor.Result result = processExecutor.launchAndExecute(getProcessExecutorParams());
@@ -427,6 +501,16 @@ public class DownwardApiProcessExecutorTest {
       BuckEventBus buckEventBus,
       ProcessExecutorParams params,
       FakeProcess fakeProcess) {
+    return getDownwardApiProcessExecutor(
+        namedPipe, buckEventBus, params, fakeProcess, DefaultNamedPipeEventHandler.FACTORY);
+  }
+
+  private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
+      NamedPipeReader namedPipe,
+      BuckEventBus buckEventBus,
+      ProcessExecutorParams params,
+      FakeProcess fakeProcess,
+      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory) {
     ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> fakeProcessesBuilder =
         ImmutableMap.<ProcessExecutorParams, FakeProcess>builder().put(params, fakeProcess);
 
@@ -459,7 +543,7 @@ public class DownwardApiProcessExecutorTest {
           }
         },
         clock,
-        DefaultNamedPipeEventHandler.FACTORY);
+        namedPipeEventHandlerFactory);
   }
 
   private ProcessExecutorParams getProcessExecutorParams() {

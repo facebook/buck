@@ -39,7 +39,8 @@ public class DefaultNamedPipeEventHandler extends BaseNamedPipeEventHandler {
 
   @Override
   void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
-    EventHandler<AbstractMessage> eventHandler = EventHandlerUtils.getEventHandler(eventType);
+    EventHandler<AbstractMessage> eventHandler =
+        EventHandlerUtils.getStandardEventHandler(eventType);
     try {
       eventHandler.handleEvent(getContext(), event);
     } catch (Exception e) {
