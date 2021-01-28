@@ -97,7 +97,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private Optional<Future<?>> running = Optional.empty();
   @Nullable private volatile DownwardProtocol downwardProtocol = null;
 
-  BaseNamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
+  public BaseNamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
     this.namedPipe = namedPipe;
     this.context = context;
   }
@@ -161,7 +161,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     }
   }
 
-  abstract void processEvent(EventType eventType, AbstractMessage event);
+  protected abstract void processEvent(EventType eventType, AbstractMessage event);
 
   /**
    * Terminate and wait for {@link BaseNamedPipeEventHandler} to finish processing events.

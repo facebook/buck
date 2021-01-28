@@ -5,6 +5,7 @@ java_library(
         "//src/com/facebook/buck/...",
     ],
     deps = [
+        "//src-gen:downward-model",
         "//src-gen:javacd-model",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",

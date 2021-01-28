@@ -5,6 +5,7 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
+        "//src-gen:downward-model",
         "//src-gen:javacd-model",
         "//src-gen:worker-tool-model",
         "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",

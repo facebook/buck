@@ -484,7 +484,7 @@ public class DownwardApiProcessExecutorTest {
     }
 
     @Override
-    void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
+    protected void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
       EventHandler<AbstractMessage> handler = eventHandlers.get(eventType);
       handler.handleEvent(getContext(), event);
     }

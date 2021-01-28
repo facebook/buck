@@ -33,12 +33,13 @@ public class DefaultNamedPipeEventHandler extends BaseNamedPipeEventHandler {
 
   public static final NamedPipeEventHandlerFactory FACTORY = DefaultNamedPipeEventHandler::new;
 
-  DefaultNamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
+  public DefaultNamedPipeEventHandler(
+      NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
     super(namedPipe, context);
   }
 
   @Override
-  void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
+  protected void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
     EventHandler<AbstractMessage> eventHandler =
         EventHandlerUtils.getStandardEventHandler(eventType);
     try {

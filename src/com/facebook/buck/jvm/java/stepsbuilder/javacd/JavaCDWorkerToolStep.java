@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -25,8 +25,8 @@ import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 /** JavaCD worker tool isolated step. */
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
@@ -47,40 +47,53 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
 
-    DownwardApiProcessExecutor downwardApiProcessExecutor = context.getDownwardApiProcessExecutor();
+    // TODO: msemko: get it from wt pool
+    WorkerToolExecutor workerToolExecutor = getLaunchedWorkerTool(context);
 
+    try {
+      ResultEvent resultEvent =
+          workerToolExecutor.executeCommand(context.getActionId(), buildJavaCommand);
+
+      return StepExecutionResult.builder()
+          .setExitCode(resultEvent.getExitCode())
+          .setExecutedCommand(workerToolExecutor.getStartWorkerToolCommand())
+          .setStderr(String.format("ResultEvent : %s", resultEvent))
+          .build();
+
+    } catch (ExecutionException e) {
+      return StepExecutionResult.builder()
+          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+          .setExecutedCommand(workerToolExecutor.getStartWorkerToolCommand())
+          .setStderr(String.format("ActionId: %s", context.getActionId()))
+          .setCause(e)
+          .build();
+    } finally {
+      // TODO: msemko: return wt into a pool
+      workerToolExecutor.shutdown();
+    }
+  }
+
+  private WorkerToolExecutor getLaunchedWorkerTool(IsolatedExecutionContext context)
+      throws IOException {
     WorkerToolExecutor workerToolExecutor =
-        new JavaCDWorkerToolExecutor(
-            downwardApiProcessExecutor, buildJavaCommand, javaRuntimeLauncherCommand);
-
-    String actionId = context.getActionId();
-    workerToolExecutor.executeCommand(actionId);
-
-    return StepExecutionResults.SUCCESS;
+        new JavaCDWorkerToolExecutor(context, javaRuntimeLauncherCommand);
+    workerToolExecutor.launchWorker();
+    return workerToolExecutor;
   }
 
   /** JavaCD worker tool. */
   private static class JavaCDWorkerToolExecutor extends WorkerToolExecutor {
 
-    private final BuildJavaCommand buildJavaCommand;
     private final ImmutableList<String> javaRuntimeLauncherCommand;
 
     public JavaCDWorkerToolExecutor(
-        DownwardApiProcessExecutor downwardApiProcessExecutor,
-        BuildJavaCommand buildJavaCommand,
-        ImmutableList<String> javaRuntimeLauncherCommand) {
-      super(downwardApiProcessExecutor);
-      this.buildJavaCommand = buildJavaCommand;
+        IsolatedExecutionContext context, ImmutableList<String> javaRuntimeLauncherCommand) {
+      super(context);
       this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
     }
 
     @Override
-    protected void writeExecuteCommandTo(OutputStream outputStream) throws IOException {
-      buildJavaCommand.writeDelimitedTo(outputStream);
-    }
-
-    @Override
-    protected ImmutableList<String> getStartWorkerToolCommand() {
+    public ImmutableList<String> getStartWorkerToolCommand() {
       int runArgumentsCount = 2;
       return ImmutableList.<String>builderWithExpectedSize(
               javaRuntimeLauncherCommand.size() + runArgumentsCount)

@@ -20,6 +20,8 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -122,12 +124,22 @@ public class JavaCDWorkerToolMain {
             ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
 
             String actionId = executeCommand.getActionId();
-            executeJavaCompilationCommand(
-                isolatedSteps,
-                ruleCellRoot,
-                workerToolParsedEnvs.getBuildUuid(),
-                actionId,
-                console,
+            int exitCode =
+                executeJavaCompilationCommand(
+                    isolatedSteps,
+                    ruleCellRoot,
+                    workerToolParsedEnvs.getBuildUuid(),
+                    actionId,
+                    console,
+                    outputStream);
+
+            ResultEvent resultEvent =
+                ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode).build();
+            DOWNWARD_PROTOCOL.write(
+                EventTypeMessage.newBuilder()
+                    .setEventType(EventTypeMessage.EventType.RESULT_EVENT)
+                    .build(),
+                resultEvent,
                 outputStream);
             break;
 
@@ -148,7 +160,7 @@ public class JavaCDWorkerToolMain {
     }
   }
 
-  private static void executeJavaCompilationCommand(
+  private static int executeJavaCompilationCommand(
       ImmutableList<IsolatedStep> isolatedSteps,
       AbsPath ruleCellRoot,
       BuildId buildUuid,
@@ -171,7 +183,13 @@ public class JavaCDWorkerToolMain {
               ruleCellRoot,
               actionId,
               clock);
+      // TODO: msemko investigate if `IsolatedStepsRunner.execute()` catch error and log it without
+      // re-throwing.
       IsolatedStepsRunner.execute(isolatedSteps, executionContext);
     }
+
+    // TODO : msemko : return a valid exit code in case of failure in
+    // `IsolatedStepsRunner.execute()`
+    return 0;
   }
 }
