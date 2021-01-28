@@ -104,11 +104,17 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   @Override
   public ProcessExecutor withDownwardAPI(
       DownwardApiProcessExecutorFactory factory,
+      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
       String actionId,
       Clock clock) {
     return factory.create(
-        this, ConsoleParams.of(ansi.isAnsiTerminal(), verbosity), buckEventBus, actionId, clock);
+        this,
+        namedPipeEventHandlerFactory,
+        ConsoleParams.of(ansi.isAnsiTerminal(), verbosity),
+        buckEventBus,
+        actionId,
+        clock);
   }
 
   @Override

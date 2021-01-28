@@ -19,6 +19,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.util.DelegateLaunchedProcess;
+import com.facebook.buck.util.NamedPipeEventHandler;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;

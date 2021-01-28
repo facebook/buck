@@ -103,6 +103,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
   @Override
   public ProcessExecutor withDownwardAPI(
       DownwardApiProcessExecutorFactory factory,
+      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
       String actionId,
       Clock clock) {
@@ -116,6 +117,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
 
     return factory.create(
         this,
+        namedPipeEventHandlerFactory,
         ConsoleParams.of(ansiEscapeSequencesEnabled, verbosity),
         buckEventBus,
         actionId,

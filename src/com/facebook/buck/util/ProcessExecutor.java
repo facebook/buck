@@ -127,6 +127,7 @@ public interface ProcessExecutor {
   /** Creates a {@code ProcessExecutor} that supports Downward API */
   ProcessExecutor withDownwardAPI(
       DownwardApiProcessExecutorFactory factory,
+      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
       String actionId,
       Clock clock);
@@ -253,6 +254,7 @@ public interface ProcessExecutor {
 
   /** Callback passed by callers to write input to a launched process. */
   interface Stdin {
+
     void writeTo(OutputStream stdin) throws IOException;
 
     /** @return a {@Stdin} wrapping a constant {@link String} */

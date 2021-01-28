@@ -1,6 +1,22 @@
+INTERFACES = [
+    "NamedPipe.java",
+    "NamedPipeReader.java",
+    "NamedPipeWriter.java",
+    "NamedPipeServer.java",
+]
+
+java_library(
+    name = "interfaces",
+    srcs = glob(INTERFACES),
+    visibility = ["PUBLIC"],
+)
+
 java_library(
     name = "namedpipes",
-    srcs = glob(["**/*.java"]),
+    srcs = glob(
+        ["**/*.java"],
+        exclude = INTERFACES,
+    ),
     tests = [
         "//test/com/facebook/buck/io/namedpipes:unit",
     ],
@@ -14,4 +30,5 @@ java_library(
         "//third-party/java/jna:jna-platform",
         "//third-party/java/jsr:jsr305",
     ],
+    exported_deps = [":interfaces"],
 )

@@ -105,7 +105,7 @@ public class DownwardApiProcessExecutorTest {
 
   private static final Logger LOG = Logger.get(DownwardApiProcessExecutorTest.class);
 
-  private static final Logger EVENT_HANDLER_LOGGER = NamedPipeEventHandler.LOG;
+  private static final Logger EVENT_HANDLER_LOGGER = BaseNamedPipeEventHandler.LOGGER;
   private static Level EVENT_HANDLER_LOGGER_INITIAL_LEVEL;
 
   private static final String TEST_LOGGER_NAME = "crazy.tool.name";
@@ -134,7 +134,8 @@ public class DownwardApiProcessExecutorTest {
 
   @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);
 
-  @Rule public TestLogSink executorLogSink = new TestLogSink(NamedPipeEventHandler.class.getName());
+  @Rule
+  public TestLogSink executorLogSink = new TestLogSink(BaseNamedPipeEventHandler.class.getName());
 
   private NamedPipeReader namedPipeReader;
   private BuckEventBus buckEventBus;
@@ -457,7 +458,8 @@ public class DownwardApiProcessExecutorTest {
             throw new UnsupportedOperationException();
           }
         },
-        clock);
+        clock,
+        DefaultNamedPipeEventHandler.FACTORY);
   }
 
   private ProcessExecutorParams getProcessExecutorParams() {

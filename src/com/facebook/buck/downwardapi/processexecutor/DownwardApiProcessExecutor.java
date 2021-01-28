@@ -29,6 +29,8 @@ import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateProcessExecutor;
 import com.facebook.buck.util.DownwardApiProcessExecutorFactory;
+import com.facebook.buck.util.NamedPipeEventHandler;
+import com.facebook.buck.util.NamedPipeEventHandlerFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -65,28 +67,22 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   private static final Logger LOG = Logger.get(DownwardApiProcessExecutor.class);
 
-  public static final DownwardApiProcessExecutorFactory FACTORY = Factory.INSTANCE;
-
-  private enum Factory implements DownwardApiProcessExecutorFactory {
-    INSTANCE;
-
-    @Override
-    public DownwardApiProcessExecutor create(
-        ProcessExecutor delegate,
-        ConsoleParams consoleParams,
-        IsolatedEventBus buckEventBus,
-        String actionId,
-        Clock clock) {
-      return new DownwardApiProcessExecutor(
-          delegate,
-          consoleParams,
-          buckEventBus,
-          actionId,
-          NamedPipeFactory.getFactory(
-              DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE),
-          clock);
-    }
-  }
+  public static final DownwardApiProcessExecutorFactory FACTORY =
+      (ProcessExecutor delegate,
+          NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
+          ConsoleParams consoleParams,
+          IsolatedEventBus buckEventBus,
+          String actionId,
+          Clock clock) ->
+          new DownwardApiProcessExecutor(
+              delegate,
+              consoleParams,
+              buckEventBus,
+              actionId,
+              NamedPipeFactory.getFactory(
+                  DownwardPOSIXNamedPipeFactory.INSTANCE, WindowsNamedPipeFactory.INSTANCE),
+              clock,
+              namedPipeEventHandlerFactory);
 
   @VisibleForTesting static final String HANDLER_THREAD_POOL_NAME = "DownwardApiHandler";
 
@@ -109,6 +105,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   private final IsolatedEventBus buckEventBus;
   private final NamedPipeFactory namedPipeFactory;
   private final Clock clock;
+  private final NamedPipeEventHandlerFactory namedPipeEventHandlerFactory;
 
   @VisibleForTesting
   DownwardApiProcessExecutor(
@@ -117,7 +114,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       IsolatedEventBus buckEventBus,
       String actionId,
       NamedPipeFactory namedPipeFactory,
-      Clock clock) {
+      Clock clock,
+      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory) {
     super(delegate);
     this.isAnsiTerminal = consoleParams.isAnsiEscapeSequencesEnabled();
     this.verbosity = consoleParams.getVerbosity();
@@ -125,6 +123,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     this.actionId = actionId;
     this.namedPipeFactory = namedPipeFactory;
     this.clock = clock;
+    this.namedPipeEventHandlerFactory = namedPipeEventHandlerFactory;
   }
 
   @Override
@@ -134,7 +133,8 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     String namedPipeName = namedPipe.getName();
 
     NamedPipeEventHandler namedPipeEventHandler =
-        getNamedPipeEventHandler(namedPipe, DownwardApiExecutionContext.of(buckEventBus, clock));
+        namedPipeEventHandlerFactory.create(
+            namedPipe, DownwardApiExecutionContext.of(buckEventBus, clock));
     namedPipeEventHandler.runOn(DOWNWARD_API_READER_THREAD_POOL);
 
     ProcessExecutorParams updatedParams =
@@ -181,11 +181,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     return builder.build();
   }
 
-  private NamedPipeEventHandler getNamedPipeEventHandler(
-      NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
-    return new NamedPipeEventHandler(namedPipe, context);
-  }
-
   @Override
   public DownwardApiExecutionResult execute(
       ProcessExecutor.LaunchedProcess launchedProcess,
@@ -221,6 +216,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   @Override
   public ProcessExecutor withDownwardAPI(
       DownwardApiProcessExecutorFactory factory,
+      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
       String actionId,
       Clock clock) {

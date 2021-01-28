@@ -16,19 +16,18 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.util.timing.Clock;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeoutException;
 
-/** Factory interface that creates {@link ProcessExecutor} which supports Downward API. */
-@FunctionalInterface
-public interface DownwardApiProcessExecutorFactory {
+/** Named pipe event handler - process events that came from named pipe with DownwardAPI */
+public interface NamedPipeEventHandler {
 
-  /** Creates {@link ProcessExecutor} which supports Downward API. */
-  ProcessExecutor create(
-      ProcessExecutor delegate,
-      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
-      ConsoleParams consoleParams,
-      IsolatedEventBus buckEventBus,
-      String actionId,
-      Clock clock);
+  /** Runs handler on the given {@code threadPool} */
+  void runOn(ThreadPoolExecutor threadPool);
+
+  /** Terminate and wait for {@link NamedPipeEventHandler} to finish processing events. */
+  void terminateAndWait()
+      throws CancellationException, InterruptedException, ExecutionException, TimeoutException;
 }

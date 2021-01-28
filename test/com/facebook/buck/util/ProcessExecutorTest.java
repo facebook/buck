@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.testutil.TestConsole;
@@ -132,6 +133,7 @@ public class ProcessExecutorTest {
         new DefaultProcessExecutor(new TestConsole(Verbosity.ALL))
             .withDownwardAPI(
                 DownwardApiProcessExecutor.FACTORY,
+                DefaultNamedPipeEventHandler.FACTORY,
                 new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("fake")).isolated(),
                 "test_action_id",
                 FakeClock.doNotCare());

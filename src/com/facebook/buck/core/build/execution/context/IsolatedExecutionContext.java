@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.execution.context;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -27,6 +28,8 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.NamedPipeEventHandler;
+import com.facebook.buck.util.NamedPipeEventHandlerFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
@@ -98,12 +101,23 @@ public abstract class IsolatedExecutionContext implements Closeable {
   /** Returns clock associated with the current invocation. */
   public abstract Clock getClock();
 
+  /** Returns {@link DownwardApiProcessExecutor}. */
   @Value.Lazy
   public DownwardApiProcessExecutor getDownwardApiProcessExecutor() {
+    return getDownwardApiProcessExecutor(DefaultNamedPipeEventHandler.FACTORY);
+  }
+
+  /**
+   * Returns {@link DownwardApiProcessExecutor} that would use {@link NamedPipeEventHandler} create
+   * by passed {@link NamedPipeEventHandlerFactory}
+   */
+  public DownwardApiProcessExecutor getDownwardApiProcessExecutor(
+      NamedPipeEventHandlerFactory namedPipeEventReaderFactory) {
     return (DownwardApiProcessExecutor)
         getProcessExecutor()
             .withDownwardAPI(
                 DownwardApiProcessExecutor.FACTORY,
+                namedPipeEventReaderFactory,
                 getIsolatedEventBus(),
                 getActionId(),
                 getClock());

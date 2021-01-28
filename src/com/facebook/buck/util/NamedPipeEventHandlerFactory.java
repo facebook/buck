@@ -16,19 +16,13 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.io.namedpipes.NamedPipeReader;
 
-/** Factory interface that creates {@link ProcessExecutor} which supports Downward API. */
+/** Factory interface that creates {@link NamedPipeEventHandler} . */
 @FunctionalInterface
-public interface DownwardApiProcessExecutorFactory {
+public interface NamedPipeEventHandlerFactory {
 
-  /** Creates {@link ProcessExecutor} which supports Downward API. */
-  ProcessExecutor create(
-      ProcessExecutor delegate,
-      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
-      ConsoleParams consoleParams,
-      IsolatedEventBus buckEventBus,
-      String actionId,
-      Clock clock);
+  /** Creates {@link NamedPipeEventHandler}. */
+  NamedPipeEventHandler create(NamedPipeReader namedPipe, DownwardApiExecutionContext context);
 }

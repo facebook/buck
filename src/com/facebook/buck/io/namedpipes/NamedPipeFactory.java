@@ -45,7 +45,7 @@ public interface NamedPipeFactory {
    */
   NamedPipeReader connectAsReader(Path namedPipePath) throws IOException;
 
-  /** Returns platform specific implementation of {@code NamedPipeFactory}. */
+  /** Returns platform specific implementation of {@link NamedPipeFactory}. */
   static NamedPipeFactory getFactory() {
     if (Platform.detect() == Platform.WINDOWS) {
       return WindowsNamedPipeFactory.INSTANCE;
@@ -54,7 +54,7 @@ public interface NamedPipeFactory {
   }
 
   /**
-   * Returns platform specific implementation of {@code NamedPipeFactory} based on the given
+   * Returns platform specific implementation of {@link NamedPipeFactory} based on the given
    * factories.
    */
   static NamedPipeFactory getFactory(

@@ -60,6 +60,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -303,6 +304,7 @@ public class InstallCommand extends BuildCommand {
           processExecutor =
               processExecutor.withDownwardAPI(
                   DownwardApiProcessExecutor.FACTORY,
+                  DefaultNamedPipeEventHandler.FACTORY,
                   buckEventBus.isolated(),
                   "install-command:" + buildRule.getFullyQualifiedName(),
                   executionContext.getClock());

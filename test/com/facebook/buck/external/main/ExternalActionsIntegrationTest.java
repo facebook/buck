@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -97,6 +98,7 @@ public class ExternalActionsIntegrationTest {
     downwardApiProcessExecutor =
         DownwardApiProcessExecutor.FACTORY.create(
             defaultExecutor,
+            DefaultNamedPipeEventHandler.FACTORY,
             CONSOLE_PARAMS,
             eventBusForTests.isolated(),
             TEST_ACTION_ID,
