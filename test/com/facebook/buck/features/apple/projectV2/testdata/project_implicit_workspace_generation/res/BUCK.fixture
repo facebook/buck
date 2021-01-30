@@ -4,3 +4,8 @@ apple_resource(
     files = ["img.jpg"],
     visibility = ["PUBLIC"],
 )
+
+alias(
+    name = "res-alias",
+    actual = ":res",
+)

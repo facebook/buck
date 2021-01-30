@@ -31,6 +31,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -55,6 +56,7 @@ import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.features.alias.AbstractAliasDescription;
 import com.facebook.buck.features.apple.common.PathOutputPresenter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionArg;
@@ -505,11 +507,21 @@ public class XCodeProjectCommandHelper {
         TargetNode<XcodeWorkspaceConfigDescriptionArg> castedWorkspaceNode =
             castToXcodeWorkspaceTargetNode(inputNode);
         workspaceArgs = castedWorkspaceNode.getConstructorArg();
+      } else if (inputNode.getDescription() instanceof AbstractAliasDescription) {
+        BuildTarget actualTarget = resolveBuildTargetFromAliasNode(inputNode);
+        TargetNode<?> actualNode = targetGraphCreationResult.getTargetGraph().get(actualTarget);
+        if (canGenerateImplicitWorkspaceForDescription(actualNode.getDescription())) {
+          workspaceArgs = createImplicitWorkspaceArgs(actualNode);
+        } else {
+          throw new HumanReadableException(
+              "%s must point to a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test",
+              inputNode);
+        }
       } else if (canGenerateImplicitWorkspaceForDescription(inputNode.getDescription())) {
         workspaceArgs = createImplicitWorkspaceArgs(inputNode);
       } else {
         throw new HumanReadableException(
-            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test",
+            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, apple_test, or an alias pointing to one of the above.",
             inputNode);
       }
 
@@ -573,6 +585,18 @@ public class XCodeProjectCommandHelper {
     }
 
     return generationResultsBuilder.build();
+  }
+
+  @SuppressWarnings(value = "unchecked")
+  private static BuildTarget resolveBuildTargetFromAliasNode(TargetNode<?> inputNode) {
+    Preconditions.checkArgument(inputNode.getDescription() instanceof AbstractAliasDescription);
+    // We are trying to use the same codepath for both Alias and ConfiguredAlias, which means we
+    // don't have a single type for the constructor arg. We know it will be the right type though
+    // since it is coming off of the right target node.
+    TargetNode<BuildRuleArg> castedNode = (TargetNode<BuildRuleArg>) inputNode;
+    AbstractAliasDescription<BuildRuleArg> description =
+        (AbstractAliasDescription<BuildRuleArg>) castedNode.getDescription();
+    return description.resolveActualBuildTarget(castedNode.getConstructorArg());
   }
 
   @SuppressWarnings(value = "unchecked")

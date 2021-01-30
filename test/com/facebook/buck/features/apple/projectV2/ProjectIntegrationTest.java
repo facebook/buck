@@ -154,6 +154,16 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratesWorkspaceFromAlias() throws IOException {
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
+
+    ProcessResult result = workspace.runBuckCommand("project", "//bin:alias");
+    result.assertSuccess();
+    Files.exists(workspace.resolve("test/test.xcworkspace/contents.xcworkspacedata"));
+    Files.exists(workspace.resolve("test/test.xcodeproj/project.pbxproj"));
+  }
+
+  @Test
   public void testGeneratesWorkspaceFromBundle() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
 
@@ -203,7 +213,20 @@ public class ProjectIntegrationTest {
     assertThat(
         processResult.getStderr(),
         containsString(
-            "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test"));
+            "//res:res must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, apple_test, or an alias pointing to one of the above"));
+  }
+
+  @Test
+  public void testAttemptingToGenerateWorkspaceFromAliasPointingToResourceTargetIsABuildError()
+      throws IOException {
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
+
+    ProcessResult processResult = workspace.runBuckCommand("project", "//res:res-alias");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "//res:res-alias must point to a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test"));
   }
 
   @Test

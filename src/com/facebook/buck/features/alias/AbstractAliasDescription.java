@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableCollection;
 public abstract class AbstractAliasDescription<T extends BuildRuleArg>
     implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T> {
 
-  abstract BuildTarget resolveActualBuildTarget(T arg);
+  public abstract BuildTarget resolveActualBuildTarget(T arg);
 
   @Override
   public BuildRule createBuildRule(

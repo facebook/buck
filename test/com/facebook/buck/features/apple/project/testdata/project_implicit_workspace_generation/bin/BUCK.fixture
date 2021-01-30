@@ -12,3 +12,8 @@ apple_bundle(
     info_plist = "Info.plist",
     visibility = ["PUBLIC"],
 )
+
+alias(
+    name = "alias",
+    actual = ":app",
+)
