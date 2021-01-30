@@ -29,6 +29,7 @@ public class BuckStarlarkModule {
 
   /** Set Buck-specific {@link Module} data. */
   public static void setClientData(Module module, Label label) {
+    Preconditions.checkState(module.getClientData() == null);
     module.setClientData(label);
   }
 

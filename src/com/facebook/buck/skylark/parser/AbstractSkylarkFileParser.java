@@ -188,8 +188,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               readConfigContext,
               implicitLoad.getExtensionData());
 
-      Module module = getGlobals(getBuckOrPackage().fileKind, containingLabel);
-      BuckStarlarkModule.setClientData(module, createContainingLabel(basePath));
+      Module module = makeModule(getBuckOrPackage().fileKind, containingLabel);
       exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
 
       ImmutableList.Builder<String> loadedPaths =
@@ -314,7 +313,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return file;
   }
 
-  private Module getGlobals(FileKind fileKind, Label label) {
+  private Module makeModule(FileKind fileKind, Label label) {
     Module module =
         fileKind == FileKind.BZL
             ? buckGlobals.makeBuckLoadContextGlobals()
@@ -343,7 +342,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       //  hoping we will create identical module during evaluation.
       //  This is not right.
       //  We should delay validation until extension construction.
-      Resolver.resolveFile(result, getGlobals(fileKind, label));
+      Resolver.resolveFile(result, makeModule(fileKind, label));
       Event.replayEventsOn(eventHandler, result.errors());
 
       if (!result.errors().isEmpty()) {
@@ -711,8 +710,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       StarlarkFile ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
-      Module module = getGlobals(FileKind.BZL, load.getLabel());
-      BuckStarlarkModule.setClientData(module, load.getLabel());
+      Module module = makeModule(FileKind.BZL, load.getLabel());
       exec(
           ast,
           module,
