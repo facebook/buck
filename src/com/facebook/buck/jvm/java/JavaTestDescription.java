@@ -197,6 +197,7 @@ public class JavaTestDescription
         javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
             ? java11OptionsForTests
             : javaOptionsForTests;
+    JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
 
     Optional<BuildTarget> runner = args.getRunner();
     Optional<TestRunnerSpec> runnerSpecs = args.getSpecs();
@@ -267,9 +268,8 @@ public class JavaTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaRuntimeConfig
-            .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeVersion(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         cxxLibraryEnhancement.requiredPaths,

@@ -147,6 +147,7 @@ public class KotlinTestDescription
         javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
             ? java11OptionsForTests
             : javaOptionsForTests;
+    JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
@@ -167,9 +168,8 @@ public class KotlinTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaRuntimeConfig
-            .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeVersion(),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         ImmutableMap.of(), /* nativeLibsEnvironment */
         ImmutableSet.of(), /* nativeLibsRequiredPaths */

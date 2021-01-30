@@ -115,6 +115,8 @@ public class AndroidInstrumentationTestDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
 
+    JavaOptions javaOptions = javaOptionsForTests.apply(buildTarget.getTargetConfiguration());
+
     return new AndroidInstrumentationTest(
         buildTarget,
         projectFilesystem,
@@ -127,10 +129,9 @@ public class AndroidInstrumentationTestDescription
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        javaOptionsForTests
-            .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(
-                context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeLauncher(
+            context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeVersion(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(testBuckConfig.getDefaultTestRuleTimeoutMs()),
@@ -138,8 +139,7 @@ public class AndroidInstrumentationTestDescription
         getRelativePackagedResource(projectFilesystem, "kxml2.jar"),
         getRelativePackagedResource(projectFilesystem, "guava.jar"),
         getRelativePackagedResource(projectFilesystem, "android-tools-common.jar"),
-        downwardApiConfig.isEnabledForAndroid(),
-        testBuckConfig.getJavaForTestsVersion());
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   /**

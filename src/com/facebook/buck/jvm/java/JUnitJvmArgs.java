@@ -138,7 +138,7 @@ abstract class JUnitJvmArgs {
   abstract Optional<TestSelectorList> getTestSelectorList();
 
   /** @return The version of Java that we are using to run the tests, if specified */
-  abstract OptionalInt getJavaForTestsVersion();
+  abstract OptionalInt getJavaRuntimeVersion();
 
   /** @return True if relative paths should be used in the classpath file */
   @Value.Default
@@ -166,7 +166,7 @@ abstract class JUnitJvmArgs {
 
     if (isCodeCoverageEnabled()) {
       String exclClassLoader =
-          getJavaForTestsVersion().isPresent() && getJavaForTestsVersion().getAsInt() >= 9
+          getJavaRuntimeVersion().isPresent() && getJavaRuntimeVersion().getAsInt() >= 9
               ? ",exclclassloader=jdk.internal.reflect.DelegatingClassLoader"
               : "";
       args.add(
@@ -273,7 +273,7 @@ abstract class JUnitJvmArgs {
   /** Whether or not we should use an argfile for the classpath when invoking Java. */
   public boolean shouldUseClasspathArgfile() {
     return getTargetJavaVersion() >= 9
-        || (getJavaForTestsVersion().isPresent() && getJavaForTestsVersion().getAsInt() >= 9);
+        || (getJavaRuntimeVersion().isPresent() && getJavaRuntimeVersion().getAsInt() >= 9);
   }
 
   /** Writes an argfile for the classpath to a file, which is supported in Java 9+. */

@@ -355,6 +355,7 @@ public class RobolectricTestDescription
         javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
             ? java11OptionsForTests
             : javaOptionsForTests;
+    JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
 
     return new RobolectricTest(
         buildTarget,
@@ -387,9 +388,8 @@ public class RobolectricTestDescription
         args.getResources(),
         args.getRobolectricRuntimeDependency(),
         args.getRobolectricManifest(),
-        javaRuntimeConfig
-            .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeVersion(),
         javaBuckConfig
             .getDelegate()
             .getBooleanValue("test", "include_boot_classpath_in_required_paths", true),

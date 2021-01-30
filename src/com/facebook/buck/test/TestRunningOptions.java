@@ -22,7 +22,6 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableMap;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import org.immutables.value.Value;
 
@@ -77,8 +76,6 @@ public abstract class TestRunningOptions {
   public abstract Optional<String> getPathToXmlTestOutput();
 
   public abstract Optional<String> getPathToJavaAgent();
-
-  public abstract OptionalInt getJavaForTestsVersion();
 
   @Value.Default
   public Set<CoverageReportFormat> getCoverageReportFormats() {

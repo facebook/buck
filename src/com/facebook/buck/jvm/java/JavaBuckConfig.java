@@ -54,7 +54,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public static final CommandTool DEFAULT_JAVA_TOOL =
       new CommandTool.Builder().addArg("java").build();
   static final JavaOptions DEFAULT_JAVA_OPTIONS =
-      ImmutableJavaOptions.ofImpl(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
+      JavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
 
   private final BuckConfig delegate;
   private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;
@@ -90,14 +90,16 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public JavaOptions getDefaultJavaOptionsForTests() {
     return getToolForExecutable("java_for_tests")
         .map(ConstantToolProvider::new)
-        .map(JavaOptions::of)
+        .map(
+            tool ->
+                JavaOptions.of(tool, getDelegate().getInteger("test", "java_for_tests_version")))
         .orElseGet(this::getDefaultJavaOptions);
   }
 
   public JavaOptions getDefaultJava11OptionsForTests() {
     return getToolForExecutable("java11_for_tests")
         .map(ConstantToolProvider::new)
-        .map(JavaOptions::of)
+        .map(tool -> JavaOptions.of(tool, OptionalInt.of(11)))
         .orElseGet(this::getDefaultJavaOptionsForTests);
   }
 

@@ -157,6 +157,7 @@ public class ScalaTestDescription
         javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
             ? java11OptionsForTests
             : javaOptionsForTests;
+    JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
 
     return new JavaTest(
         buildTarget,
@@ -168,9 +169,8 @@ public class ScalaTestDescription
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaRuntimeConfig
-            .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntimeVersion(),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         cxxLibraryEnhancement.requiredPaths,

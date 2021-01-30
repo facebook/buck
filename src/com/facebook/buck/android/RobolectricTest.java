@@ -39,6 +39,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Stream;
@@ -76,6 +77,7 @@ public class RobolectricTest extends JavaTest {
       Optional<SourcePath> robolectricRuntimeDependency,
       SourcePath robolectricManifest,
       Tool javaRuntimeLauncher,
+      OptionalInt javaRuntimeVersion,
       boolean includeBootClasspathInRequiredPaths,
       boolean useRelativePathsInClasspathFile,
       boolean withDownwardApi) {
@@ -97,6 +99,7 @@ public class RobolectricTest extends JavaTest {
         testType,
         targetLevel,
         javaRuntimeLauncher,
+        javaRuntimeVersion,
         vmArgs,
         nativeLibsEnvironment,
         nativeLibsRequiredPaths,

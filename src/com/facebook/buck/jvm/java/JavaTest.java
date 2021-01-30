@@ -79,6 +79,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
@@ -110,6 +111,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<AdditionalClasspathEntriesProvider> additionalClasspathEntriesProvider;
 
   private final Tool javaRuntimeLauncher;
+
+  private final OptionalInt javaRuntimeVersion;
 
   private final ImmutableList<Arg> vmArgs;
 
@@ -165,6 +168,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestType testType,
       String targetLevel,
       Tool javaRuntimeLauncher,
+      OptionalInt javaRuntimeVersion,
       List<Arg> vmArgs,
       Map<String, String> nativeLibsEnvironment,
       Set<Path> nativeLibsRequiredPaths,
@@ -182,6 +186,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.compiledTestsLibrary = compiledTestsLibrary;
     this.additionalClasspathEntriesProvider = additionalClasspathEntriesProvider;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.javaRuntimeVersion = javaRuntimeVersion;
     this.vmArgs = ImmutableList.copyOf(vmArgs);
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.nativeLibsRequiredPaths = ImmutableSet.copyOf(nativeLibsRequiredPaths);
@@ -262,7 +267,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setDefaultTestTimeoutMillis(options.getDefaultTestTimeoutMillis())
             .setDebugEnabled(options.isDebugEnabled())
             .setPathToJavaAgent(options.getPathToJavaAgent())
-            .setJavaForTestsVersion(options.getJavaForTestsVersion())
+            .setJavaRuntimeVersion(javaRuntimeVersion)
             .setBuildId(buildId)
             .setBuckModuleBaseSourceCodePath(
                 getBuildTarget()

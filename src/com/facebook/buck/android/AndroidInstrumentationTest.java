@@ -89,6 +89,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final AndroidPlatformTarget androidPlatformTarget;
 
   private final Tool javaRuntimeLauncher;
+  private final OptionalInt javaRuntimeVersion;
 
   private final ImmutableSet<String> labels;
 
@@ -102,7 +103,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final PackagedResource guavaJar;
   private final PackagedResource toolsCommonJar;
   private final boolean withDownwardApi;
-  private final OptionalInt javaForTestsVersion;
 
   private final ImmutableMap<String, Arg> env;
 
@@ -118,17 +118,18 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Set<String> labels,
       Set<String> contacts,
       Tool javaRuntimeLauncher,
+      OptionalInt javaRuntimeVersion,
       Optional<Long> testRuleTimeoutMs,
       PackagedResource ddmlibJar,
       PackagedResource kxml2Jar,
       PackagedResource guavaJar,
       PackagedResource toolsCommonJar,
-      boolean withDownwardApi,
-      OptionalInt javaForTestsVersion) {
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.apk = apk;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.javaRuntimeVersion = javaRuntimeVersion;
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
@@ -137,7 +138,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.guavaJar = guavaJar;
     this.toolsCommonJar = toolsCommonJar;
     this.withDownwardApi = withDownwardApi;
-    this.javaForTestsVersion = javaForTestsVersion;
     this.env = env;
   }
 
@@ -318,7 +318,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .setDebugEnabled(debugEnabled)
             .setTestRunner(testRunner)
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
-            .setTestRunnerJavaVersion(javaForTestsVersion)
+            .setTestRunnerJavaVersion(javaRuntimeVersion)
             .setDdmlibJarPath(ddmlib)
             .setTestFilter(classFilterArg)
             .setKxmlJarPath(kxml2)

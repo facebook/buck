@@ -23,6 +23,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableCollection;
+import java.util.OptionalInt;
 
 @BuckStyleValue
 public abstract class JavaOptions {
@@ -39,7 +40,13 @@ public abstract class JavaOptions {
     depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps(targetConfiguration));
   }
 
+  public abstract OptionalInt getJavaRuntimeVersion();
+
   public static JavaOptions of(ToolProvider javaRuntimeProvider) {
-    return ImmutableJavaOptions.ofImpl(javaRuntimeProvider);
+    return ImmutableJavaOptions.ofImpl(javaRuntimeProvider, OptionalInt.empty());
+  }
+
+  public static JavaOptions of(ToolProvider javaRuntimeProvider, OptionalInt javaRuntimeVersion) {
+    return ImmutableJavaOptions.ofImpl(javaRuntimeProvider, javaRuntimeVersion);
   }
 }
