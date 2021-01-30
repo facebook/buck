@@ -36,16 +36,19 @@ class RobolectricTestHelper {
   static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
   private final MergeAssets binaryResources;
+  private final ImmutableSet<Path> externalResourcesPaths;
   private final SourcePath robolectricManifest;
   private final Optional<SourcePath> robolectricRuntimeDependency;
   private final ProjectFilesystem projectFilesystem;
 
   RobolectricTestHelper(
       MergeAssets binaryResources,
+      ImmutableSet<Path> externalResourcesPaths,
       Optional<SourcePath> robolectricRuntimeDependency,
       SourcePath robolectricManifest,
       ProjectFilesystem projectFilesystem) {
     this.binaryResources = binaryResources;
+    this.externalResourcesPaths = externalResourcesPaths;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricManifest = robolectricManifest;
     this.projectFilesystem = projectFilesystem;
@@ -86,6 +89,7 @@ class RobolectricTestHelper {
             .getAbsolutePath(binaryResources.getSourcePathToOutput())
             .getPath());
     builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath());
+    externalResourcesPaths.stream().map(projectFilesystem::resolve).forEach(builder::add);
 
     robolectricRuntimeDependency.ifPresent(
         robolectricRuntimeDir -> {
@@ -99,10 +103,7 @@ class RobolectricTestHelper {
             throw new RuntimeException(
                 "Unable to get directory contents for " + robolectricRuntimeDir, e);
           }
-          builder.addAll(
-              relativePaths.stream()
-                  .map(projectFilesystem::resolve)
-                  .collect(ImmutableSet.toImmutableSet()));
+          relativePaths.stream().map(projectFilesystem::resolve).forEach(builder::add);
         });
 
     return builder.build();

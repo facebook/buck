@@ -113,6 +113,10 @@ public class RobolectricTestRuleIntegrationTest {
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, robolectricResourcesPaths.size());
 
+    long externalResourcesCount =
+        requiredPaths.stream().filter(path -> path.contains("some_navigation.xml")).count();
+    assertEquals(1, externalResourcesCount);
+
     // The classpath arg file should use relative paths except for the bootclasspath, which uses an
     // absolute path.
     ImmutableList<String> classpathArgfile =

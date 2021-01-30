@@ -74,6 +74,7 @@ public class RobolectricTest extends JavaTest {
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
       ImmutableSortedSet<SourcePath> resources,
+      ImmutableSet<Path> externalResourcesPaths,
       Optional<SourcePath> robolectricRuntimeDependency,
       SourcePath robolectricManifest,
       Tool javaRuntimeLauncher,
@@ -117,6 +118,7 @@ public class RobolectricTest extends JavaTest {
     this.robolectricTestHelper =
         new RobolectricTestHelper(
             binaryResources,
+            externalResourcesPaths,
             robolectricRuntimeDependency,
             robolectricManifest,
             getProjectFilesystem());

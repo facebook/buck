@@ -97,6 +97,7 @@ robolectric_test(
     name = "test",
     srcs = glob(["BinaryResourcesTest.java"]),
     robolectric_manifest = "TestAndroidManifest.xml",
+    external_resources_paths = ["../../../../res/com/sample/navigation/res/navigation/some_navigation.xml"],
     resources = ["some_file.txt"],
     visibility = [
         "PUBLIC",

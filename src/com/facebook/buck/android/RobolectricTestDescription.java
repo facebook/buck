@@ -20,6 +20,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -69,6 +70,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Objects;
@@ -386,6 +388,7 @@ public class RobolectricTestDescription
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
         args.getResources(),
+        args.getExternalResourcesPaths(),
         args.getRobolectricRuntimeDependency(),
         args.getRobolectricManifest(),
         javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
@@ -430,6 +433,10 @@ public class RobolectricTestDescription
     ImmutableSet<String> getLocalesForBinaryResources();
 
     Optional<String> getPreferredDensityForBinaryResources();
+
+    @Hint(isInput = false)
+    @Value.NaturalOrder
+    ImmutableSortedSet<Path> getExternalResourcesPaths();
 
     @Value.Default
     default ManifestEntries getManifestEntries() {
