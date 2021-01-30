@@ -33,8 +33,6 @@ import java.util.stream.Stream;
 
 /** A helper class for {@link RobolectricTest} */
 class RobolectricTestHelper {
-  static final String ROBOLECTRIC_MANIFEST = "buck.robolectric_manifest";
-
   static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
   private final MergeAssets binaryResources;
@@ -58,12 +56,6 @@ class RobolectricTestHelper {
       ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolverAdapter pathResolver) {
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
-
-    vmArgsBuilder.add(
-        String.format(
-            "-D%s=%s",
-            RobolectricTestHelper.ROBOLECTRIC_MANIFEST,
-            pathResolver.getAbsolutePath(robolectricManifest)));
     robolectricRuntimeDependency.ifPresent(
         s ->
             vmArgsBuilder.add(
