@@ -255,6 +255,7 @@ public class GenruleBuildableTest {
     assertEquals("aapt", env.get("AAPT"));
     assertEquals("aapt2", env.get("AAPT2"));
     assertEquals(sdkDir.toString(), env.get("ANDROID_HOME"));
+    assertEquals(sdkDir.toString(), env.get("ANDROID_SDK_ROOT"));
     assertEquals(ndkDir.toString(), env.get("NDK_HOME"));
   }
 

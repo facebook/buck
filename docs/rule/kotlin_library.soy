@@ -72,8 +72,8 @@ the <code>resources</code> argument.
   Kotlin compiler plugins</a> to use when compiling this library.
   This takes a list of source paths, each of which will be prefixed
   with <code>-Xplugin=</code> and passed as extra arguments to the compiler.
-  Unlike <code>extra_kotlinc_arguments</code>, these can be <em>source paths</em>,
-  not just strings (though <code>extra_kotlinc_arguments</code> should be used
+  Unlike <code>free_compiler_args</code>, these can be <em>source paths</em>,
+  not just strings (though <code>free_compiler_args</code> should be used
   to specify plugin compiler options with <code>-P</code>).
   <p>
   For example, if you want to use{sp}
@@ -115,10 +115,109 @@ remote_file(
 {/call}
 
 {call buck.arg}
-  {param name: 'extra_kotlinc_arguments' /}
+  {param name: 'free_compiler_args' /}
   {param default: '[]' /}
   {param desc}
-  List of additional arguments to pass into the Kotlin compiler.
+    A list of additional compiler arguments.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'all_warnings_as_errors' /}
+  {param default: 'false' /}
+  {param desc}
+    Report an error if there are any warnings.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'suppress_warnings' /}
+  {param default: 'false' /}
+  {param desc}
+    Generate no warnings.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'verbose' /}
+  {param default: 'false' /}
+  {param desc}
+    Enable verbose logging output.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'include_runtime' /}
+  {param default: 'false' /}
+  {param desc}
+    Include Kotlin runtime in to resulting .jar
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'jvm_target' /}
+  {param default: '1.6' /}
+  {param desc}
+    Target version of the generated JVM bytecode (1.6 or 1.8), default is 1.6
+    Possible values: "1.6", "1.8"
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'jdk_home' /}
+  {param default: 'None' /}
+  {param desc}
+    Path to JDK home directory to include into classpath, if differs from default JAVA_HOME
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'no_jdk' /}
+  {param default: 'false' /}
+  {param desc}
+    Don't include Java runtime into classpath.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'no_stdlib' /}
+  {param default: 'true' /}
+  {param desc}
+    Don't include kotlin-stdlib.jar or kotlin-reflect.jar into classpath.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'no_reflect' /}
+  {param default: 'true' /}
+  {param desc}
+    Don't include kotlin-reflect.jar into classpath.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'java_parameters' /}
+  {param default: 'false' /}
+  {param desc}
+    Generate metadata for Java 1.8 reflection on method parameters.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'api_version' /}
+  {param default: 'None' /}
+  {param desc}
+    Allow to use declarations only from the specified version of bundled libraries.
+    Possible values: "1.0", "1.1", "1.2", "1.3", "1.4 (EXPERIMENTAL)".
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'language_version' /}
+  {param default: 'None' /}
+  {param desc}
+    Provide source compatibility with specified language version.
+    Possible values: "1.0", "1.1", "1.2", "1.3", "1.4 (EXPERIMENTAL)".
   {/param}
 {/call}
 

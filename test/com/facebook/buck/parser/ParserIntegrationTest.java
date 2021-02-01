@@ -436,7 +436,7 @@ public class ParserIntegrationTest {
             "//python/implicit_in_extension_bzl:main",
             "-c",
             "parser.disable_implicit_native_rules=true"),
-        "NameError: global name 'java_library' is not defined",
+        "NameError: name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 5");
     assertParseFailedWithSubstrings(

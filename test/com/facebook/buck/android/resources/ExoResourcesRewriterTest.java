@@ -85,7 +85,7 @@ public class ExoResourcesRewriterTest {
     primaryResourceTable.dump(new PrintStream(baos));
     String content = new String(baos.toByteArray(), Charsets.UTF_8);
     Path expectedPath = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.primary"));
-    String expected = filesystem.readFileIfItExists(expectedPath).get();
+    String expected = filesystem.readFileIfItExists(expectedPath).get().replaceAll("\r\n", "\n");
 
     assertEquals(expected, content);
 
@@ -96,7 +96,7 @@ public class ExoResourcesRewriterTest {
     exoResourceTable.dump(new PrintStream(baos));
     content = new String(baos.toByteArray(), Charsets.UTF_8);
     expectedPath = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.exo"));
-    expected = filesystem.readFileIfItExists(expectedPath).get();
+    expected = filesystem.readFileIfItExists(expectedPath).get().replaceAll("\r\n", "\n");
 
     assertEquals(expected, content);
   }

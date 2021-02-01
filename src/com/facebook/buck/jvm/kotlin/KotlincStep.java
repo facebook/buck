@@ -40,15 +40,12 @@ public class KotlincStep implements Step {
 
   private static final String CLASSPATH_FLAG = "-classpath";
   private static final String DESTINATION_FLAG = "-d";
-  private static final String INCLUDE_RUNTIME_FLAG = "-include-runtime";
-  private static final String EXCLUDE_REFLECT = "-no-reflect";
-  private static final String VERBOSE = "-verbose";
+  private static final String VERBOSE_FLAG = "-verbose";
 
   private final Kotlinc kotlinc;
   private final ImmutableSortedSet<Path> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
-  private final ImmutableList<String> verboseModeOnlyExtraArguments;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ProjectFilesystem filesystem;
   private final Path pathToSrcsList;
@@ -63,7 +60,6 @@ public class KotlincStep implements Step {
       ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
-      ImmutableList<String> verboseModeOnlyExtraArguments,
       ProjectFilesystem filesystem,
       Optional<Path> workingDirectory) {
     this.invokingRule = invokingRule;
@@ -73,7 +69,6 @@ public class KotlincStep implements Step {
     this.kotlinc = kotlinc;
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
-    this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
     this.filesystem = filesystem;
     this.workingDirectory = workingDirectory;
   }
@@ -156,10 +151,6 @@ public class KotlincStep implements Step {
                       path -> filesystem.resolve(path).toAbsolutePath().toString())));
     }
 
-    builder.add(INCLUDE_RUNTIME_FLAG);
-    builder.add(EXCLUDE_REFLECT);
-    builder.add(VERBOSE);
-
     if (!extraArguments.isEmpty()) {
       for (String extraArgument : extraArguments) {
         if (!extraArgument.isEmpty()) {
@@ -168,13 +159,8 @@ public class KotlincStep implements Step {
       }
     }
 
-    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()
-        && !verboseModeOnlyExtraArguments.isEmpty()) {
-      for (String extraArgument : verboseModeOnlyExtraArguments) {
-        if (!extraArgument.isEmpty()) {
-          builder.add(extraArgument);
-        }
-      }
+    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
+      builder.add(VERBOSE_FLAG);
     }
 
     return builder.build();

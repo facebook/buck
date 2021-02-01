@@ -235,7 +235,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.sun.jna.Pointer;
+import com.sun.jna.Native;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -284,7 +284,7 @@ public final class MainRunner {
    *
    * <p>See: https://github.com/java-native-access/jna/issues/652
    */
-  public static final int JNA_POINTER_SIZE = Pointer.SIZE;
+  public static final int JNA_POINTER_SIZE = Native.POINTER_SIZE;
 
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
       Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));

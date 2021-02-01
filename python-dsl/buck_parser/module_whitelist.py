@@ -75,7 +75,12 @@ class ImportWhitelistManager(object):
             name = name.split(".")[0]
 
         frame = util.get_caller_frame(skip=[__name__])
+        # __import__() can be called during the call to inspect.getframeinfo() and that should
+        # be handled by the ORIGINAL_IMPORT
+        current_import = builtins.__import__
+        builtins.__import__ = ORIGINAL_IMPORT
         filename = inspect.getframeinfo(frame).filename
+        builtins.__import__ = current_import
 
         # The import will be always allowed if it was not called from a project file.
         if name in self._import_whitelist or not self._path_predicate(filename):

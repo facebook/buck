@@ -38,11 +38,16 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,7 +61,7 @@ public class WorkerProcessTest {
   }
 
   @Test
-  public void testSubmitAndWaitForJob() throws IOException {
+  public void testJob() throws IOException, ExecutionException, InterruptedException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path tmpPath = Files.createTempDirectory("tmp").toAbsolutePath().normalize();
     Path argsPath = Paths.get(tmpPath.toString(), "0.args");
@@ -72,20 +77,102 @@ public class WorkerProcessTest {
     try (WorkerProcess process =
         new WorkerProcess(
             new FakeProcessExecutor(), createDummyParams(), filesystem, workerStdErr, tmpPath)) {
-      process.setProtocol(
+      process.launchForTesting(
           new FakeWorkerProcessProtocol.FakeCommandSender() {
             @Override
-            public int receiveCommandResponse(int messageID) throws IOException {
-              // simulate the external tool and write the stdout and stderr files
+            public void send(int messageId, WorkerProcessCommand command) throws IOException {
               filesystem.writeContentsToPath(stdout.get(), stdoutPath);
               filesystem.writeContentsToPath(stderr.get(), stderrPath);
-              return super.receiveCommandResponse(messageID);
+              super.send(messageId, command);
             }
           });
 
       WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
-      assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));
+      assertThat(process.submitJob(jobArgs).get(), Matchers.equalTo(expectedResult));
       assertThat(filesystem.readFileIfItExists(argsPath).get(), Matchers.equalTo(jobArgs));
+    }
+  }
+
+  @Test(timeout = 20 * 1000)
+  public void testUncleanShutdown() throws IOException, ExecutionException, InterruptedException {
+    FakeWorkerProcessProtocol.FakeCommandSender protocol =
+        new FakeWorkerProcessProtocol.FakeCommandSender() {
+          @Override
+          public void send(int messageId, WorkerProcessCommand command) throws IOException {
+            // Black hole all messages.
+          }
+        };
+
+    try (WorkerProcess process =
+        new WorkerProcess(
+            new FakeProcessExecutor(),
+            createDummyParams(),
+            new FakeProjectFilesystem(),
+            Paths.get("stderr"),
+            Paths.get("tmp").toAbsolutePath().normalize())) {
+      process.launchForTesting(protocol);
+
+      ListenableFuture<WorkerJobResult> job = process.submitJob("do stuff");
+      try {
+        job.get(1000, TimeUnit.MILLISECONDS);
+        fail("Should have thrown timeout exception?");
+      } catch (TimeoutException ignored) {
+      }
+
+      assertFalse(protocol.isClosed());
+      process.close();
+      assertTrue(protocol.isClosed());
+
+      try {
+        job.get();
+        fail("Should have thrown exception from job.get");
+      } catch (ExecutionException ignored) {
+      }
+    }
+  }
+
+  @Test(timeout = 20 * 1000)
+  public void testDeadProcess() throws IOException, ExecutionException, InterruptedException {
+    FakeWorkerProcessProtocol.FakeCommandSender protocol =
+        new FakeWorkerProcessProtocol.FakeCommandSender() {
+          @Override
+          public void send(int messageId, WorkerProcessCommand command) throws IOException {
+            // Noop
+          }
+
+          @Override
+          public WorkerProcessProtocol.CommandResponse receiveNextCommandResponse()
+              throws IOException {
+            throw new IOException("IO Exception!");
+          }
+        };
+
+    try (WorkerProcess process =
+        new WorkerProcess(
+            new FakeProcessExecutor(),
+            createDummyParams(),
+            new FakeProjectFilesystem(),
+            Paths.get("stderr"),
+            Paths.get("tmp").toAbsolutePath().normalize())) {
+      process.launchForTesting(protocol);
+
+      ListenableFuture<WorkerJobResult> job = process.submitJob("do stuff");
+      try {
+        job.get();
+        fail("Should have thrown execution exception?");
+      } catch (ExecutionException ignored) {
+      }
+
+      ListenableFuture<WorkerJobResult> job2 = process.submitJob("do more stuff");
+      try {
+        job2.get();
+        fail("Should have thrown execution exception?");
+      } catch (ExecutionException ignored) {
+      }
+
+      assertFalse(protocol.isClosed());
+      process.close();
+      assertTrue(protocol.isClosed());
     }
   }
 
@@ -101,11 +188,63 @@ public class WorkerProcessTest {
             new FakeProjectFilesystem(),
             Paths.get("stderr"),
             Paths.get("tmp").toAbsolutePath().normalize())) {
-      process.setProtocol(protocol);
+      process.launchForTesting(protocol);
 
       assertFalse(protocol.isClosed());
       process.close();
       assertTrue(protocol.isClosed());
+    }
+  }
+
+  @Test(timeout = 20 * 1000)
+  public void testConcurrentExecution()
+      throws IOException, InterruptedException, ExecutionException {
+    CountDownLatch latch = new CountDownLatch(2);
+
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path tmpPath = Files.createTempDirectory("tmp").toAbsolutePath().normalize();
+    Path workerStdErr = Paths.get(tmpPath.toString(), "stderr");
+
+    Optional<String> stdout = Optional.of("my stdout");
+    Optional<String> stderr = Optional.of("my stderr");
+
+    FakeWorkerProcessProtocol.FakeCommandSender protocol =
+        new FakeWorkerProcessProtocol.FakeCommandSender() {
+          @Override
+          public void send(int messageId, WorkerProcessCommand command) throws IOException {
+            filesystem.writeContentsToPath(stdout.get(), command.getStdOutPath());
+            filesystem.writeContentsToPath(stderr.get(), command.getStdErrPath());
+            latch.countDown();
+            super.send(messageId, command);
+          }
+
+          @Override
+          public WorkerProcessProtocol.CommandResponse receiveNextCommandResponse()
+              throws IOException {
+            try {
+              latch.await();
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+            return super.receiveNextCommandResponse();
+          }
+        };
+
+    try (WorkerProcess process =
+        new WorkerProcess(
+            new FakeProcessExecutor(), createDummyParams(), filesystem, workerStdErr, tmpPath)) {
+      process.launchForTesting(protocol);
+
+      ListenableFuture<WorkerJobResult> result1 = process.submitJob("job1");
+      try {
+        result1.get(1000, TimeUnit.MILLISECONDS);
+        fail("Should have thrown timeout exception?");
+      } catch (TimeoutException ignored) {
+      }
+
+      ListenableFuture<WorkerJobResult> result2 = process.submitJob("job2");
+      assertThat(result1.get(), Matchers.equalTo(WorkerJobResult.of(0, stdout, stderr)));
+      assertThat(result2.get(), Matchers.equalTo(WorkerJobResult.of(0, stdout, stderr)));
     }
   }
 

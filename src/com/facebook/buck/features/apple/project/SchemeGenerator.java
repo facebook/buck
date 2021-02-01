@@ -93,6 +93,8 @@ class SchemeGenerator {
           ImmutableMap<
               SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
       additionalSchemeActions;
+  private final Optional<String> applicationLanguage;
+  private final Optional<String> applicationRegion;
 
   public SchemeGenerator(
       ProjectFilesystem projectFilesystem,
@@ -117,7 +119,9 @@ class SchemeGenerator {
           additionalSchemeActions,
       XCScheme.LaunchAction.LaunchStyle launchStyle,
       Optional<XCScheme.LaunchAction.WatchInterface> watchInterface,
-      Optional<String> notificationPayloadFile) {
+      Optional<String> notificationPayloadFile,
+      Optional<String> applicationLanguage,
+      Optional<String> applicationRegion) {
     this.projectFilesystem = projectFilesystem;
     this.primaryTarget = primaryTarget;
     this.watchInterface = watchInterface;
@@ -137,6 +141,8 @@ class SchemeGenerator {
     this.expandVariablesBasedOn = expandVariablesBasedOn;
     this.additionalSchemeActions = additionalSchemeActions;
     this.notificationPayloadFile = notificationPayloadFile;
+    this.applicationLanguage = applicationLanguage;
+    this.applicationRegion = applicationRegion;
 
     LOG.verbose(
         "Generating scheme with build targets %s, test build targets %s, test bundle targets %s",
@@ -259,7 +265,9 @@ class SchemeGenerator {
             additionalCommandsForSchemeAction(
                 SchemeActionType.TEST,
                 AdditionalActions.POST_SCHEME_ACTIONS,
-                primaryBuildReference));
+                primaryBuildReference),
+            applicationLanguage,
+            applicationRegion);
 
     for (PBXTarget target : orderedRunTestTargets) {
       XCScheme.BuildableReference buildableReference =
@@ -295,7 +303,9 @@ class SchemeGenerator {
                         SchemeActionType.LAUNCH,
                         AdditionalActions.POST_SCHEME_ACTIONS,
                         primaryBuildReference),
-                    notificationPayloadFile));
+                    notificationPayloadFile,
+                    applicationLanguage,
+                    applicationRegion));
 
         profileAction =
             Optional.of(
@@ -475,6 +485,14 @@ class SchemeGenerator {
       testActionElem.appendChild(environmentVariablesElement);
     }
 
+    if (testAction.getApplicationLanguage().isPresent()) {
+      testActionElem.setAttribute("language", testAction.getApplicationLanguage().get());
+    }
+
+    if (testAction.getApplicationRegion().isPresent()) {
+      testActionElem.setAttribute("region", testAction.getApplicationRegion().get());
+    }
+
     return testActionElem;
   }
 
@@ -549,6 +567,14 @@ class SchemeGenerator {
       Element environmentVariablesElement =
           serializeEnvironmentVariables(doc, launchAction.getEnvironmentVariables().get());
       launchActionElem.appendChild(environmentVariablesElement);
+    }
+
+    if (launchAction.getApplicationLanguage().isPresent()) {
+      launchActionElem.setAttribute("language", launchAction.getApplicationLanguage().get());
+    }
+
+    if (launchAction.getApplicationRegion().isPresent()) {
+      launchActionElem.setAttribute("region", launchAction.getApplicationRegion().get());
     }
 
     return launchActionElem;

@@ -608,7 +608,7 @@ public class PythonBinaryIntegrationTest {
                 (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
             .map(path -> tmp.getRoot().relativize(path))
             .collect(ImmutableList.toImmutableList());
-    Assert.assertEquals(3, pycFiles.size());
+    Assert.assertEquals(4, pycFiles.size());
   }
 
   @Test

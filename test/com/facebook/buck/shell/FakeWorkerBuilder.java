@@ -98,6 +98,11 @@ public class FakeWorkerBuilder
     }
 
     @Override
+    public boolean isAsync() {
+      return false;
+    }
+
+    @Override
     public HashCode getInstanceKey() {
       return hashCode;
     }

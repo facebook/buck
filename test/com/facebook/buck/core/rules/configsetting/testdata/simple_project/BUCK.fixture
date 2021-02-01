@@ -6,6 +6,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -17,6 +18,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -27,6 +29,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 config_setting(
@@ -180,6 +183,7 @@ genrule(
     }),
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 genrule(
@@ -190,6 +194,7 @@ genrule(
     }) + ["c.txt"],
     out = "select_concat_out.txt",
     cmd = "cat $SRCS > $OUT",
+    cmd_exe = "type %SRCS% > %OUT%",
 )
 
 config_setting(

@@ -7,12 +7,15 @@ install_dlang: &install_dlang
   name: Install Dlang
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
+      # gpg depends on the latest git, re-install it.
+      brew remove -f git
+      brew install git
       brew install gpg
     fi
     curl https://dlang.org/install.sh | bash -s dmd-2.091.0
     source ~/dlang/dmd-2.091.0/activate
     dmd --version
-    
+
 install_lua: &install_lua
   name: Install Lua
   command: |
@@ -27,7 +30,7 @@ install_lua: &install_lua
       sudo make macosx install
     fi
     lua -v
-    
+
 install_ocaml: &install_ocaml
   name: Install Ocaml
   command: |
@@ -48,7 +51,7 @@ install_openjdk8: &install_openjdk8
       sudo apt-get update && sudo apt-get install openjdk-8-jdk
       sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
     elif [ "${PLATFORM}" == "macos" ]; then
-      brew cask install adoptopenjdk8
+      brew install --cask adoptopenjdk8
     fi
     java -version
 
@@ -106,9 +109,12 @@ install_python: &install_python
     fi
     pyenv versions
     export PATH="$(pyenv root)/shims:${PATH}"
-    python_version=`python --version`
+    python_version=`python --version` || python_version="Python Not Found"
     # Skip installation if Python 3.6.2 restored frm cache.
     if [ "${python_version}" != "Python 3.6.2" ]; then
+      # In the case that pyenv is upgraded to a new version, the cached python
+      # is broken and should be uninstalled.
+      pyenv uninstall -f 3.6.2
       pyenv install -s 3.6.2
       pyenv global 3.6.2 system
     else
@@ -171,7 +177,7 @@ run_buck_build: &run_buck_build
     ./bin/buck build buck --out "${BUCK_PEX_LOCATION}" || { cat "buck-out/log/buck-0.log"; exit 1; }
 
 linux_environment: &linux_environment
-  # Use string constant for values, no environment variables 
+  # Use string constant for values, no environment variables
   PLATFORM: "linux"
   BUCKROOT: "/home/circleci/buck"
   ANDROID_SDK: "/home/circleci/android-sdk"
@@ -195,6 +201,17 @@ windows_environment: &windows_environment
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
 
+dockerhub: &dockerhub
+  context:
+    - DOCKERHUB_TOKEN
+
+tags_only_filter: &tags_only_filter
+  filters:
+    tags:
+      only: /^v20.*/
+    branches:
+      ignore: /.*/
+
 jobs:
   linux_build_openjdk8:
     environment:
@@ -210,34 +227,34 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - ~/android-sdk
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - save_cache:
           paths:
             - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - save_cache:
           paths:
             - ~/buck/buck-out
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           name: Run Build Tests
           command: |
@@ -259,7 +276,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -272,13 +289,13 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -304,20 +321,20 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -342,7 +359,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -355,7 +372,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -367,7 +384,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -397,7 +414,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -414,7 +431,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -424,7 +441,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -450,7 +467,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -463,7 +480,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -473,7 +490,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -499,7 +516,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -512,7 +529,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -522,7 +539,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -548,7 +565,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -561,7 +578,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -571,11 +588,11 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
-          name: Need android-27 and android-28 to run the tests, install them. 
+          name: Need android-27 and android-28 to run the tests, install them.
           command: |
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             echo 'y' |sdkmanager --install "platforms;android-27"
@@ -604,7 +621,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -617,7 +634,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -627,11 +644,158 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
           name: Run Android NDK 18 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  linux_test_android_ndk_19:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 19
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r19c
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 19 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  linux_test_android_ndk_20:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 20
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r20b
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 20 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  linux_test_android_ndk_21:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 21
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-linux"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r21d
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 21 Tests
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
@@ -654,34 +818,34 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - ~/android-sdk
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - save_cache:
           paths:
             - ~/.pyenv
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - save_cache:
           paths:
             - ~/buck/buck-out
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           name: Run Build Tests
           command: |
@@ -703,7 +867,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -716,13 +880,13 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -747,20 +911,20 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -787,7 +951,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -800,9 +964,20 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
+      - run:
+          # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
+          # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
+          name: Reinstall Python2
+          command: |
+            brew uninstall python@2 || echo "python2 was not installed."
+            url=https://www.python.org/ftp/python/2.7.17/python-2.7.17-macosx10.9.pkg
+            curl -R -L -O $url
+            sudo installer -pkg python-2.7.17-macosx10.9.pkg -target /
+            # 2to3 causes python3 installation to fail, delete it.
+            rm -f /usr/local/bin/2to3
       - run:
           <<: *install_python
       - run:
@@ -810,15 +985,9 @@ jobs:
       - run:
           <<: *install_dlang
       - run:
-          # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
-          # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
-          name: Reinstall Python2
-          command: |
-            brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
-      - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -837,6 +1006,7 @@ jobs:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
             # But there are some test failures, exclude them for now and fix them later.
             ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
+          no_output_timeout: 1h
 
   macos_test_heavy_integration:
     environment:
@@ -850,7 +1020,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_lua
       - run:
@@ -867,7 +1037,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -877,7 +1047,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -905,7 +1075,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -918,7 +1088,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -928,7 +1098,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -954,7 +1124,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -967,7 +1137,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -977,7 +1147,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -1003,7 +1173,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -1016,7 +1186,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -1026,7 +1196,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -1063,7 +1233,7 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -1076,7 +1246,7 @@ jobs:
           <<: *install_golang
       - restore_cache:
           # Change this key when upgrading python.
-          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_rust
       - run:
@@ -1086,7 +1256,7 @@ jobs:
       - run:
           <<: *run_ant_build
       - restore_cache:
-          key: v1.0-buck-macos-build-{{ .Branch }}
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
       - run:
@@ -1099,6 +1269,154 @@ jobs:
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  macos_test_android_ndk_19:
+    environment:
+      <<: *macos_environment
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.1"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 19
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r19c "${PLATFORM}"
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 19 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  macos_test_android_ndk_20:
+    environment:
+      <<: *macos_environment
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.1"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 20
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r20b "${PLATFORM}"
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 20 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
+  macos_test_android_ndk_21:
+    environment:
+      <<: *macos_environment
+    working_directory: "/Users/distiller/buck"
+    macos:
+      xcode: "11.3.1"
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_android_sdk
+      - run:
+          name: Install Android NDK 21
+          command: |
+            cd "${BUCKROOT}"
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            ./scripts/circleci_unzip_android_ndk.sh android-ndk-r21d "${PLATFORM}"
+      - run:
+          <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
+      - run:
+          <<: *install_python
+      - run:
+          <<: *install_dlang
+      - run:
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
+      - run:
+          name: Run Android NDK 21 Tests
+          command: |
+            export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
+            export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
+            set -eux
+            ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
+            ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
+
   windows_build_test:
     environment:
       <<: *windows_environment
@@ -1127,13 +1445,41 @@ jobs:
           name: Buck build
           command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
           shell: cmd.exe
+
+  windows_tests:
+    environment:
+      <<: *windows_environment
+    working_directory: "C:\\Users\\circleci\\buck"
+    executor: win/default
+    steps:
+      - checkout
+      - run:
+          name: Install ant
+          command: choco install ant --version=1.9.7
+          shell: cmd.exe
+      - run:
+          name: Install OpenJDK8
+          command: choco install adoptopenjdk8
+          shell: cmd.exe
+      - run:
+          # on Windows, python3 is installed as python but buck expect the name python3
+          name: Create symlink to python
+          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+          shell: powershell.exe
+      - run:
+          name: Ant build
+          command: cd %BUCKROOT% && refreshenv && ant
+          shell: cmd.exe
+      - run:
+          name: Buck build
+          command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
+          shell: cmd.exe
       # We know there are some Windows test failures, comment out for now. They should be fixed.
-      #- run:
-      #    name: Run Windows tests
-      #    command: |
-      #      cd %BUCKROOT%
-      #      bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
-      #    shell: cmd.exe
+      - run:
+          name: Run Windows tests
+          command: |
+            cd %BUCKROOT% && refreshenv && bin\buck test --all --test-selectors=:windows_failures.txt --test-selectors=:windows_cxx_support.txt
+          shell: cmd.exe
 
   macos_publish_release:
     environment:
@@ -1197,6 +1543,17 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Make sure Python3 exists
+          command: |
+            $pythonpath=(Split-Path((Get-Command python).Path))
+            If (Test-Path -Path ${pythonpath}\python3.exe) {
+              echo "using ${pythonpath}\python3.exe"
+            }
+            else {
+              cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
+            }
+          shell: powershell.exe
+      - run:
           name: Upgrade pip
           command: python3 -m pip install --upgrade pip
       - run:
@@ -1215,6 +1572,36 @@ jobs:
             python3 ./tools/release/publish_release.py --no-build-deb --no-build-homebrew --github-token ${GITHUB_TOKEN} --chocolatey-token ${CHOCO_TOKEN} --use-existing-release --version ${VERSION} --output-dir artifacts
           shell: bash.exe
 
+  publish_docs:
+    environment:
+      <<: *linux_environment
+    working_directory: "/home/circleci/buck"
+    machine:
+      image: ubuntu-1604:201903-01
+    steps:
+      - checkout
+      - run:
+          <<: *install_openjdk8
+      - run:
+          # android_sdk needed to build java docs.
+          <<: *install_android_sdk
+      - run:
+          <<: *install_python
+      - run:
+          # We do not want to build buck, install the latest release instead.
+          name: Install Buck
+          command: |
+            url=`curl -sH "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/facebook/buck/releases/latest |grep "browser_download_url.*deb" |awk '{gsub("\"", "", $2); print $2}'`
+            curl -L -O $url
+            filename=`basename ${url}`
+            sudo dpkg -i ${filename} || echo "Warning: Buck installed without dependencies."
+      - run:
+          name: Publish docs
+          command: |
+            export ANDROID_HOME="${ANDROID_SDK}"
+            cd docs
+            ./publish.sh --start-soyweb
+
 workflows:
   version: 2.1
   linux_jobs:
@@ -1229,6 +1616,9 @@ workflows:
       - linux_test_android_ndk_16
       - linux_test_android_ndk_17
       - linux_test_android_ndk_18
+      - linux_test_android_ndk_19
+      - linux_test_android_ndk_20
+      - linux_test_android_ndk_21
 
   macos_jobs:
     jobs:
@@ -1241,28 +1631,24 @@ workflows:
       - macos_test_android_ndk_16
       - macos_test_android_ndk_17
       - macos_test_android_ndk_18
+      - macos_test_android_ndk_19
+      - macos_test_android_ndk_20
+      - macos_test_android_ndk_21
 
   windows_jobs:
     jobs:
       - windows_build_test
+      - windows_tests
 
   publish_jobs:
     jobs:
       - macos_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: [*tags_only_filter, *dockerhub]
       - linux_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: [*tags_only_filter, *dockerhub]
       - windows_publish_release:
-          filters:
-            tags:
-              only: /^v20.*/
-            branches:
-              ignore: /.*/
+          <<: [*tags_only_filter, *dockerhub]
+      - publish_docs:
+          requires:
+            - linux_publish_release
+          <<: *tags_only_filter

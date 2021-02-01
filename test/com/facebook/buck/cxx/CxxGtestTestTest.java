@@ -133,7 +133,25 @@ public class CxxGtestTestTest {
           ObjectMappers.readValue(summaries, SUMMARIES_REFERENCE);
       ImmutableList<TestResultSummary> actualSummaries =
           test.parseResults(exitCode, output, results);
-      assertEquals(sample, expectedSummaries, actualSummaries);
+      // The lines in expectedSummaries are read from a data file and are separated by "\n". On Windows
+      // platform, the generated actualSummaries are separated by "\r\n", which is actually the expected
+      // result. In order to make the test pass, change the actualSummaries.
+      ImmutableList.Builder<TestResultSummary> linuxActualSummaryBuilder = ImmutableList.builder();
+
+      for (TestResultSummary testSummary: actualSummaries) {
+        linuxActualSummaryBuilder.add(new TestResultSummary(
+          testSummary.getTestCaseName(),
+          testSummary.getTestName(),
+          testSummary.getType(),
+          testSummary.getTime(),
+          testSummary.getMessage(),
+          testSummary.getStacktrace(),
+          testSummary.getStdOut().replaceAll("\r", ""),
+          testSummary.getStdErr()
+        ));
+      }
+
+      assertEquals(sample, expectedSummaries, linuxActualSummaryBuilder.build());
     }
   }
 }

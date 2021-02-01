@@ -31,3 +31,8 @@
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest.*
 !com.facebook.buck.core.model.graph.action.computation.ActionGraphCacheIntegrationTest
+!com.facebook.buck.cli.bootstrapper.class_loader_test.ClassLoaderTest
+!com.facebook.buck.features.python.PexStepTest
+!com.facebook.buck.maven.ResolverIntegrationTest
+!com.facebook.buck.features.python.PythonBinaryIntegrationTest
+!com.facebook.buck.rules.modern.builders.HybridLocalStrategyTest#testJobsGetStolenConsistently

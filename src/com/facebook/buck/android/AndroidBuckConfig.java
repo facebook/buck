@@ -64,7 +64,7 @@ public class AndroidBuckConfig {
   }
 
   private static final ImmutableList<String> DEFAULT_SDK_PATH_SEARCH_ORDER =
-      ImmutableList.of("ANDROID_SDK", "ANDROID_HOME", CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER);
+      ImmutableList.of("ANDROID_SDK", "ANDROID_HOME", "ANDROID_SDK_ROOT", CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER);
   private static final ImmutableList<String> DEFAULT_ADB_SEARCH_ORDER =
       ImmutableList.of(SDK_ENTRY_IN_ADB_PATH_SEARCH_ORDER, PATH_ENTRY_IN_ADB_PATH_SEARCH_ORDER);
   private static final ImmutableList<NdkSearchOrderEntry> DEFAULT_NDK_SEARCH_ORDER =
@@ -154,7 +154,7 @@ public class AndroidBuckConfig {
    * SDK (for example, {@code ANDROID_SDK}).
    *
    * <p>If nothing is specified in {@code .buckconfig} the default order is: {@code ANDROID_SDK},
-   * {@code ANDROID_HOME}, {@code <CONFIG>}
+   * {@code ANDROID_HOME}, {@code ANDROID_SDK_ROOT}, {@code <CONFIG>}
    */
   public ImmutableList<String> getSdkPathSearchOrder() {
     return delegate

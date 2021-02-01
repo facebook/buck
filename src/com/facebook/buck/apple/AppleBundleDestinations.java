@@ -36,6 +36,9 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
   public abstract Path getExecutablesPath();
 
   @AddToRuleKey(stringify = true)
+  public abstract Path getAppClipsPath();
+
+  @AddToRuleKey(stringify = true)
   public abstract Path getFrameworksPath();
 
   @AddToRuleKey(stringify = true)
@@ -62,6 +65,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           OSX_CONTENTS_PATH,
           OSX_CONTENTS_PATH.resolve("Resources"),
           OSX_CONTENTS_PATH.resolve("MacOS"),
+          OSX_CONTENTS_PATH,
           OSX_CONTENTS_PATH.resolve("Frameworks"),
           OSX_CONTENTS_PATH.resolve("PlugIns"),
           OSX_CONTENTS_PATH,
@@ -75,6 +79,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
       ImmutableAppleBundleDestinations.of(
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"),
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Resources"),
+          OSX_FRAMEWORK_CONTENTS_PATH,
           OSX_FRAMEWORK_CONTENTS_PATH,
           OSX_FRAMEWORK_CONTENTS_PATH.resolve("Frameworks"),
           OSX_FRAMEWORK_CONTENTS_PATH,
@@ -90,6 +95,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
           IOS_CONTENTS_PATH,
           IOS_CONTENTS_PATH,
           IOS_CONTENTS_PATH,
+          IOS_CONTENTS_PATH.resolve("AppClips"),
           IOS_CONTENTS_PATH.resolve("Frameworks"),
           IOS_CONTENTS_PATH.resolve("PlugIns"),
           IOS_CONTENTS_PATH.resolve("Watch"),
@@ -101,6 +107,7 @@ abstract class AppleBundleDestinations implements AddsToRuleKey {
   private static final Path IOS_FRAMEWORK_CONTENTS_PATH = Paths.get("");
   public static final AppleBundleDestinations IOS_FRAMEWORK_DESTINATIONS =
       ImmutableAppleBundleDestinations.of(
+          IOS_FRAMEWORK_CONTENTS_PATH,
           IOS_FRAMEWORK_CONTENTS_PATH,
           IOS_FRAMEWORK_CONTENTS_PATH,
           IOS_FRAMEWORK_CONTENTS_PATH,

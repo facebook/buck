@@ -652,7 +652,8 @@ public class GenruleBuildable implements Buildable {
    *   <li><code>GEN_DIR</code>, Buck's gendir
    *   <li><code>SRCDIR</code>, the symlink-populated source directory readable to the command
    *   <li><code>TMP</code>, the temp directory usable by the command
-   *   <li><code>ANDROID_HOME</code>, the path to the Android SDK (if present)
+   *   <li><code>ANDROID_HOME</code>, deprecated, the path to the Android SDK (if present)
+   *   <li><code>ANDROID_SDK_ROOT</code>, the path to the Android SDK (if present)
    *   <li><code>DX</code>, the path to the Android DX executable (if present)
    *   <li><code>ZIPALIGN</code>, the path to the Android Zipalign executable (if present)
    *   <li><code>AAPT</code>, the path to the Android AAPT executable (if present)
@@ -704,6 +705,8 @@ public class GenruleBuildable implements Buildable {
     androidTools.ifPresent(
         tools -> {
           environmentVariablesBuilder.put("ANDROID_HOME", tools.getAndroidSdkLocation().toString());
+          environmentVariablesBuilder.put(
+              "ANDROID_SDK_ROOT", tools.getAndroidSdkLocation().toString());
           environmentVariablesBuilder.put("DX", tools.getAndroidPathToDx().toString());
           environmentVariablesBuilder.put("ZIPALIGN", tools.getAndroidPathToZipalign().toString());
           environmentVariablesBuilder.put(
@@ -758,6 +761,7 @@ public class GenruleBuildable implements Buildable {
                   workerMacroArg.getStartupCommand(),
                   workerMacroArg.getEnvironment(),
                   workerMacroArg.getMaxWorkers(),
+                  workerMacroArg.isAsync(),
                   workerMacroArg.getPersistentWorkerKey().isPresent()
                       ? Optional.of(
                           WorkerProcessIdentity.of(

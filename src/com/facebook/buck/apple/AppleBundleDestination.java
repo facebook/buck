@@ -25,6 +25,7 @@ import java.nio.file.Path;
 public enum AppleBundleDestination {
   RESOURCES,
   FRAMEWORKS,
+  APPCLIPS,
   EXECUTABLES,
   PLUGINS,
   XPCSERVICES;
@@ -43,6 +44,8 @@ public enum AppleBundleDestination {
         return destinations.getResourcesPath();
       case EXECUTABLES:
         return destinations.getExecutablesPath();
+      case APPCLIPS:
+        return destinations.getAppClipsPath();
       case FRAMEWORKS:
         return destinations.getFrameworksPath();
       case PLUGINS:

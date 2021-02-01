@@ -633,6 +633,8 @@ class NewNativeTargetProjectMutator {
     switch (destination) {
       case FRAMEWORKS:
         return PBXCopyFilesBuildPhase.Destination.FRAMEWORKS;
+      case APPCLIPS:
+        return PBXCopyFilesBuildPhase.Destination.APPCLIPS;
       case EXECUTABLES:
         return PBXCopyFilesBuildPhase.Destination.EXECUTABLES;
       case RESOURCES:

@@ -4,3 +4,7 @@
 !com.facebook.buck.cxx.PrecompiledHeaderFeatureTest
 !com.facebook.buck.cxx.PrecompiledHeaderFeatureTest.*
 !com.facebook.buck.cxx.CxxLinkableEnhancerTest#createCxxLinkableBuildRuleExecutableVsShared
+!com.facebook.buck.cxx.CxxRawHeadersIntegrationTest
+!com.facebook.buck.features.go.GoBinaryIntegrationTest
+!com.facebook.buck.features.go.GoTestIntegrationTest
+!com.facebook.buck.features.go.GoProjectIntegrationTest

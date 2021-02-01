@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="jna-5.6.0">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-5.6.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-5.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

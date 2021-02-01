@@ -338,7 +338,7 @@ public class BuildCommandErrorsIntegrationTest {
         Matchers.stringContainsInOrder(
             "BUILD FAILED: The rule //missing_target:bar could not be found.",
             "Please check the spelling and whether it is one of the 23 targets in ",
-            Paths.get("missing_target", "BUCK").toString() + ". (915 bytes)",
+            Paths.get("missing_target", "BUCK").toString(),
             "3 similar targets in ",
             "  //missing_target:barWithSomeLongSuffix",
             "  //missing_target:baz",

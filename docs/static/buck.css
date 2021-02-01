@@ -552,7 +552,17 @@ footer {
 .display-platform-ios .toggler .button-ios,
 .display-platform-android .toggler .button-android,
 .display-platform-other .toggler .button-other,
-.display-platform-java .toggler .button-java {
+.display-platform-java .toggler .button-java,
+.disp-os-mac .toggler .button-mac,
+.disp-os-linux .toggler .button-linux,
+.disp-os-windows .toggler .button-windows,
+.disp-platform-ios .toggler .button-ios,
+.disp-platform-android .toggler .button-android,
+.disp-platform-macos .toggler .button-macos,
+.disp-platform-linuxos .toggler .button-linuxos,
+.disp-language-java .toggler .button-java,
+.disp-language-kotlin .toggler .button-kotlin,
+.disp-language-rust .toggler .button-rust {
   background-color: #05A5D1;
   color: white;
 }
@@ -561,6 +571,12 @@ block {
   display: none;
 }
 
+.disp-platform-android.disp-os-mac.disp-language-java .android.mac.java,
+.disp-platform-android.disp-os-linux.disp-language-java .android.linux.java,
+.disp-platform-android.disp-os-mac.disp-language-kotlin .android.mac.kotlin,
+.disp-platform-android.disp-os-linux.disp-language-kotlin .android.linux.kotlin,
+.disp-platform-macos.disp-os-mac.disp-language-rust .macos.mac.rust,
+.disp-platform-linuxos.disp-os-linux.disp-language-rust .linuxos.linux.rust,
 .display-platform-ios.display-os-mac .ios.mac,
 .display-platform-ios.display-os-linux .ios.linux,
 .display-platform-ios.display-os-windows .ios.windows,

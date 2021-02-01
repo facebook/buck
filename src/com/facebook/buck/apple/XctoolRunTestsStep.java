@@ -74,6 +74,7 @@ class XctoolRunTestsStep implements Step {
       Executors.newSingleThreadScheduledExecutor();
   private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
   private static final String FB_REFERENCE_IMAGE_DIR = "FB_REFERENCE_IMAGE_DIR";
+  private static final String IMAGE_DIFF_DIR = "IMAGE_DIFF_DIR";
 
   private final ProjectFilesystem filesystem;
 
@@ -96,6 +97,7 @@ class XctoolRunTestsStep implements Step {
   private final Optional<String> logLevel;
   private final Optional<Long> timeoutInMs;
   private final Optional<String> snapshotReferenceImagesPath;
+  private final Optional<String> snapshotImagesDiffPath;
   private final Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths;
   private final boolean isUsingXCodeBuildTool;
 
@@ -172,7 +174,8 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevelEnvironmentVariable,
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
-      Optional<String> snapshotReferenceImagesPath) {
+      Optional<String> snapshotReferenceImagesPath,
+      Optional<String> snapshotImagesDiffPath) {
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty()
             && appTestBundleToHostAppPaths.isEmpty()
@@ -207,6 +210,7 @@ class XctoolRunTestsStep implements Step {
     this.logLevel = logLevel;
     this.timeoutInMs = timeoutInMs;
     this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+    this.snapshotImagesDiffPath = snapshotImagesDiffPath;
     // Super hacky, but xcodebuildtool is an alternative wrapper
     // around xcodebuild and forwarding the -f arguments only makes
     // sense in that context.
@@ -238,6 +242,11 @@ class XctoolRunTestsStep implements Step {
     if (snapshotReferenceImagesPath.isPresent()) {
       environment.put(
           XCTOOL_ENV_VARIABLE_PREFIX + FB_REFERENCE_IMAGE_DIR, snapshotReferenceImagesPath.get());
+    }
+
+    if (snapshotImagesDiffPath.isPresent()) {
+      environment.put(
+        XCTOOL_ENV_VARIABLE_PREFIX + IMAGE_DIFF_DIR, snapshotImagesDiffPath.get());
     }
 
     environment.putAll(this.environmentOverrides);

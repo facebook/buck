@@ -31,6 +31,8 @@ public interface HasAppleBundleFields {
 
   Optional<String> getXcodeProductType();
 
+  Optional<Boolean> getIsAppClip();
+
   ImmutableMap<String, String> getInfoPlistSubstitutions();
 
   @Value.Default

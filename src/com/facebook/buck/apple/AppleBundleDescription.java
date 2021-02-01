@@ -222,7 +222,8 @@ public class AppleBundleDescription
         swiftBuckConfig.getUseLipoThin(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        resourceFilter);
+        resourceFilter,
+        args.getIsAppClip());
   }
 
   /**

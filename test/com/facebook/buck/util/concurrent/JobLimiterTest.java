@@ -68,8 +68,8 @@ public class JobLimiterTest {
     }
 
     // Two jobs should start.
-    assertTrue(jobStarted.tryAcquire(50, TimeUnit.MILLISECONDS));
-    assertTrue(jobStarted.tryAcquire(50, TimeUnit.MILLISECONDS));
+    assertTrue(jobStarted.tryAcquire(100, TimeUnit.MILLISECONDS));
+    assertTrue(jobStarted.tryAcquire(100, TimeUnit.MILLISECONDS));
 
     assertEquals(2, jobsRunning.get());
 

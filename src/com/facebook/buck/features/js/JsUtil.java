@@ -112,6 +112,7 @@ public class JsUtil {
                 tool.getCommandPrefix(pathResolver),
                 tool.getEnvironment(pathResolver),
                 worker.getMaxWorkers(),
+                worker.isAsync(),
                 worker.isPersistent()
                     ? Optional.of(
                         WorkerProcessIdentity.of(buildTarget.toString(), worker.getInstanceKey()))

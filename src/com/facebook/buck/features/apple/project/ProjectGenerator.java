@@ -3394,6 +3394,11 @@ public class ProjectGenerator {
                 CopyFilePhaseDestinationSpec.of(
                     PBXCopyFilesBuildPhase.Destination.PRODUCTS,
                     Optional.of("$(CONTENTS_FOLDER_PATH)/Watch")));
+          } else if (isAppClipApplicationNode(targetNode)) {
+            return Optional.of(
+                CopyFilePhaseDestinationSpec.of(
+                  PBXCopyFilesBuildPhase.Destination.APPCLIPS,
+                  Optional.of("$(CONTENTS_FOLDER_PATH)/AppClips")));
           } else {
             return Optional.of(
                 CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.EXECUTABLES));
@@ -3434,6 +3439,11 @@ public class ProjectGenerator {
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.RESOURCES));
     } else if (targetNode.getDescription() instanceof PrebuiltAppleFrameworkDescription) {
+      PrebuiltAppleFrameworkDescriptionArg frameworkDescriptionArg =
+          (PrebuiltAppleFrameworkDescriptionArg) targetNode.getConstructorArg();
+      if (frameworkDescriptionArg.getPreferredLinkage() == NativeLinkableGroup.Linkage.STATIC) {
+        return Optional.empty();
+      }
       return Optional.of(
           CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS));
     } else if (targetNode.getDescription() instanceof PrebuiltCxxLibraryDescription) {
@@ -4709,6 +4719,9 @@ public class ProjectGenerator {
         }
       } else if (binaryNode.getDescription() instanceof AppleBinaryDescription) {
         if (extension == AppleBundleExtension.APP) {
+          if (targetNode.getConstructorArg().getIsAppClip().orElse(false)) {
+            return ProductTypes.APP_CLIP;
+          }
           return ProductTypes.APPLICATION;
         }
       } else if (binaryNode.getDescription() instanceof AppleTestDescription) {
@@ -4862,6 +4875,21 @@ public class ProjectGenerator {
       AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
       return arg.getXcodeProductType()
           .equals(Optional.of(ProductTypes.WATCH_APPLICATION.getIdentifier()));
+    }
+    return false;
+  }
+
+  /**
+   * Determines if a target node is for AppClip application
+   *
+   * @param targetNode A target node
+   * @return If the given target node is for an AppClip application
+   */
+  private static boolean isAppClipApplicationNode(TargetNode<?> targetNode) {
+    if (targetNode.getDescription() instanceof AppleBundleDescription) {
+      AppleBundleDescriptionArg arg = (AppleBundleDescriptionArg) targetNode.getConstructorArg();
+      return arg.getXcodeProductType()
+        .equals(Optional.of(ProductTypes.APP_CLIP.getIdentifier()));
     }
     return false;
   }

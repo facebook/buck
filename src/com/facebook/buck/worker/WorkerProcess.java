@@ -25,15 +25,22 @@ import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.ThreadSafe;
 
+@ThreadSafe
 public class WorkerProcess implements Closeable {
 
   private static final Logger LOG = Logger.get(WorkerProcess.class);
@@ -45,8 +52,12 @@ public class WorkerProcess implements Closeable {
   private final Path stdErr;
   private final AtomicInteger currentMessageID = new AtomicInteger();
   private boolean handshakePerformed = false;
+  private final ConcurrentHashMap<Integer, SettableFuture<Integer>> commandExitCodes =
+      new ConcurrentHashMap<>();
   @Nullable private WorkerProcessProtocol.CommandSender protocol;
   @Nullable private ProcessExecutor.LaunchedProcess launchedProcess;
+  private final Thread readerThread;
+  private volatile boolean shutdownReaderThread = false;
 
   /**
    * Worker process is a process that stays alive and receives commands which describe jobs. Worker
@@ -73,10 +84,14 @@ public class WorkerProcess implements Closeable {
         processParams.withRedirectError(ProcessBuilder.Redirect.to(stdErr.toFile()));
     this.filesystem = filesystem;
     this.tmpPath = tmpPath;
+    this.readerThread = new Thread(this::readerLoop);
+    this.readerThread.setDaemon(true);
+    this.readerThread.setName(
+        "Worker Process IO Thread: " + Joiner.on(' ').join(processParams.getCommand()));
   }
 
   public boolean isAlive() {
-    return launchedProcess != null && launchedProcess.isAlive();
+    return launchedProcess != null && launchedProcess.isAlive() && !shutdownReaderThread;
   }
 
   public synchronized void ensureLaunchAndHandshake() throws IOException {
@@ -84,7 +99,7 @@ public class WorkerProcess implements Closeable {
       return;
     }
     LOG.debug(
-        "Starting up process %d using command: \'%s\'",
+        "Starting up process %d using command: '%s'",
         this.hashCode(), Joiner.on(' ').join(processParams.getCommand()));
     launchedProcess = executor.launchProcess(processParams);
     protocol =
@@ -102,14 +117,11 @@ public class WorkerProcess implements Closeable {
     LOG.debug("Handshaking with process %d", this.hashCode());
     protocol.handshake(currentMessageID.getAndIncrement());
     handshakePerformed = true;
+    readerThread.start();
   }
 
-  public synchronized WorkerJobResult submitAndWaitForJob(String jobArgs) throws IOException {
-    Preconditions.checkState(
-        protocol != null,
-        "Tried to submit a job to the worker process before the handshake was performed.");
-
-    int messageID = currentMessageID.getAndAdd(1);
+  public ListenableFuture<WorkerJobResult> submitJob(String jobArgs) throws IOException {
+    int messageID = currentMessageID.getAndIncrement();
     Path argsPath = Paths.get(tmpPath.toString(), String.format("%d.args", messageID));
     Path stdoutPath = Paths.get(tmpPath.toString(), String.format("%d.out", messageID));
     Path stderrPath = Paths.get(tmpPath.toString(), String.format("%d.err", messageID));
@@ -117,31 +129,66 @@ public class WorkerProcess implements Closeable {
     filesystem.deleteFileAtPathIfExists(stderrPath);
     filesystem.writeContentsToPath(jobArgs, argsPath);
 
-    LOG.debug(
-        "Sending job %d to process %d \n" + " job arguments: \'%s\'",
-        messageID, this.hashCode(), jobArgs);
-    protocol.send(messageID, ImmutableWorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
-    LOG.debug("Receiving response for job %d from process %d", messageID, this.hashCode());
-    int exitCode = protocol.receiveCommandResponse(messageID);
-    Optional<String> stdout = filesystem.readFileIfItExists(stdoutPath);
-    Optional<String> stderr = filesystem.readFileIfItExists(stderrPath);
-    LOG.debug(
-        "Job %d for process %d finished \n"
-            + "  exit code: %d \n"
-            + "  stdout: %s \n"
-            + "  stderr: %s",
-        messageID, this.hashCode(), exitCode, stdout.orElse(""), stderr.orElse(""));
+    SettableFuture<Integer> exitCodeFuture = SettableFuture.create();
+    commandExitCodes.put(messageID, exitCodeFuture);
 
-    return WorkerJobResult.of(exitCode, stdout, stderr);
+    try {
+      synchronized (this) {
+        Preconditions.checkState(
+            protocol != null,
+            "Tried to submit a job to the worker process before the handshake was performed.");
+
+        Preconditions.checkState(!shutdownReaderThread, "Submitting job to a closed worker");
+
+        LOG.debug(
+            "Sending job %d to process %d \n" + " job arguments: '%s'",
+            messageID, this.hashCode(), jobArgs);
+        protocol.send(
+            messageID, ImmutableWorkerProcessCommand.of(argsPath, stdoutPath, stderrPath));
+      }
+
+    } catch (Throwable t) {
+      commandExitCodes.remove(messageID);
+      throw t;
+    }
+
+    // Notify the reader thread to start reading if it isn't already.
+    synchronized (readerThread) {
+      readerThread.notify();
+    }
+
+    return exitCodeFuture.transform(
+        (exitCode) -> {
+          LOG.debug(
+              "Receiving response for job %d from process %d - %d",
+              messageID, this.hashCode(), exitCode);
+          Optional<String> stdout = filesystem.readFileIfItExists(stdoutPath);
+          Optional<String> stderr = filesystem.readFileIfItExists(stderrPath);
+          LOG.debug(
+              "Job %d for process %d finished \n"
+                  + "  exit code: %d \n"
+                  + "  stdout: %s \n"
+                  + "  stderr: %s",
+              messageID, this.hashCode(), exitCode, stdout.orElse(""), stderr.orElse(""));
+
+          return WorkerJobResult.of(exitCode, stdout, stderr);
+        },
+        MoreExecutors.directExecutor());
   }
 
   @Override
   public synchronized void close() {
     LOG.debug("Closing process %d", this.hashCode());
     try {
+      // Notify the reader thread to exit.
+      synchronized (readerThread) {
+        shutdownReaderThread = true;
+        readerThread.notify();
+      }
       if (protocol != null) {
         protocol.close();
       }
+      readerThread.join(5000);
       Files.deleteIfExists(stdErr);
     } catch (Exception e) {
       LOG.debug(e, "Error closing worker process %s.", processParams.getCommand());
@@ -170,7 +217,85 @@ public class WorkerProcess implements Closeable {
   }
 
   @VisibleForTesting
-  void setProtocol(WorkerProcessProtocol.CommandSender protocolMock) {
+  void launchForTesting(WorkerProcessProtocol.CommandSender protocolMock) {
     this.protocol = protocolMock;
+    handshakePerformed = true;
+    readerThread.start();
+  }
+
+  private void processNextCommandResponse() throws Throwable {
+    Preconditions.checkState(
+        protocol != null,
+        "Tried to submit a job to the worker process before the handshake was performed.");
+
+    Preconditions.checkState(
+        !Thread.holdsLock(this),
+        "About to block on input, should not be holding the lock that prevents new jobs");
+    WorkerProcessProtocol.CommandResponse commandResponse = protocol.receiveNextCommandResponse();
+    SettableFuture<Integer> result = commandExitCodes.remove(commandResponse.getCommandId());
+    Preconditions.checkState(
+        result != null,
+        "Received message id %s with no corresponding waiter! (result was %s)",
+        commandResponse.getCommandId(),
+        commandResponse.getExitCode());
+
+    result.set(commandResponse.getExitCode());
+  }
+
+  private void readerLoop() {
+    boolean readerAlive = true;
+    while (true) {
+      // A dance here to avoid calling `processNextCommandResponse` if we're not waiting for any
+      // commands. In the best case scenario, where we don't call `close()` until all commands are
+      // done, this will avoid painful exceptions in `close()`.
+      //
+      // This uses `readerThread` instead of `this` as the lock so `close()` can block out
+      // `submitJob`, but still wait for this thread to exit.
+      synchronized (readerThread) {
+        while (!shutdownReaderThread && commandExitCodes.isEmpty()) {
+          try {
+            readerThread.wait();
+          } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        if (shutdownReaderThread) {
+          break;
+        }
+      }
+
+      if (!readerAlive) {
+        failAllFutures();
+        continue;
+      }
+
+      try {
+        processNextCommandResponse();
+      } catch (Throwable t) {
+        // The WorkerProcessProtocol isn't really conducive to concurrency, so we just assume
+        // that shutdowns will cause some kind of exception. In case of a orderly shutdown, we
+        // wouldn't have any jobs running, so we wouldn't even enter processNextCommandResponse.
+        // The code here can only happen if e.g. the worker process crashed.
+
+        // TODO(mikekap): Maybe fail the jobs themselves with this exception, but kill the noise
+        // if 5 jobs fail with the same message.
+        LOG.error(t, "Worker pool process failed");
+        readerAlive = false;
+      }
+    }
+
+    failAllFutures();
+  }
+
+  private void failAllFutures() {
+    while (!commandExitCodes.isEmpty()) {
+      HashSet<Integer> keys = new HashSet<>(commandExitCodes.keySet());
+      for (Integer key : keys) {
+        SettableFuture<Integer> result = commandExitCodes.remove(key);
+        if (result != null) {
+          result.setException(new RuntimeException("Worker process error"));
+        }
+      }
+    }
   }
 }

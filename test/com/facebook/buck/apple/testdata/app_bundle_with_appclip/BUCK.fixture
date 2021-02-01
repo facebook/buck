@@ -1,0 +1,17 @@
+apple_bundle(
+    name = "ExampleApp",
+    visibility = ["PUBLIC"],
+    extension = "app",
+    binary = ":ExampleAppBinary#iphonesimulator-x86_64",
+    product_name = "ExampleApp",
+    info_plist = "AppClipApp/Info.plist",
+    deps = ["//Clip:Clip"]
+)
+
+apple_binary(
+    name = "ExampleAppBinary",
+    visibility = ["PUBLIC"],
+    swift_version = "5",
+    target_sdk_version = "14.0",
+    srcs = glob(["AppClipApp/*.swift",])
+)

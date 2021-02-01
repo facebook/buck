@@ -1164,6 +1164,34 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void appClipApplicationBundle() throws IOException {
+    ProjectWorkspace workspace =
+      TestDataHelper.createProjectWorkspaceForScenario(this, "app_bundle_with_appclip", tmp);
+    workspace.setUp();
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:ExampleApp#iphonesimulator-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath =
+      workspace.getPath(
+        BuildTargetPaths.getGenPath(
+          filesystem,
+          target.withAppendedFlavors(
+            AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
+            AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+          "%s")
+          .resolve(target.getShortName() + ".app"));
+    assertTrue(Files.exists(appPath.resolve("ExampleApp")));
+    assertTrue(Files.exists(appPath.resolve("Info.plist")));
+
+    Path appClipPath = appPath.resolve("AppClips/Clip.app/");
+    
+    assertTrue(Files.exists(appClipPath.resolve("Clip")));
+    assertTrue(Files.exists(appClipPath.resolve("Info.plist")));
+    assertFalse(Files.exists(appClipPath.resolve("Frameworks")));
+  }
+
+  @Test
   public void copiesFrameworkBundleIntoFrameworkDirectory() throws Exception {
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));

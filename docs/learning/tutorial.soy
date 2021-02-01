@@ -19,7 +19,7 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'Tutorial' /}
+    {param title: 'Tutorials' /}
     {param navid: 'learning_tutorial' /}
     {param prettify: true /}
     {param description}
@@ -41,6 +41,35 @@
 </blockquote>
 </p>
 
+<div class="toggler">
+  <table>
+    <tr>
+      <td><span><strong>Platform:</strong></span></td>
+      <td>
+        <a href="javascript:void(0);" class="button-android" onclick="display('platform', 'android')">Android</a>
+        <a href="javascript:void(0);" class="button-macos" onclick="display('platform', 'macos')">MacOS</a>
+        <a href="javascript:void(0);" class="button-linuxos" onclick="display('platform', 'linuxos')">Linux</a>
+      </td>
+    </tr>
+    <tr>
+      <td><span><strong>Development OS:</strong></span></td>
+      <td>
+        <a href="javascript:void(0);" class="button-mac" onclick="display('os', 'mac')">macOS</a>
+        <a href="javascript:void(0);" class="button-linux" onclick="display('os', 'linux')">Linux</a>
+      </td>
+    </tr>
+    <tr>
+      <td><span><strong>Language:</strong></span></td>
+      <td>
+        <a href="javascript:void(0);" class="button-java" onclick="display('language', 'java')">Java</a>
+        <a href="javascript:void(0);" class="button-kotlin" onclick="display('language', 'kotlin')">Kotlin</a>
+        <a href="javascript:void(0);" class="button-rust" onclick="display('language', 'rust')">Rust</a>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<span><block class="macos mac linuxos linux android java kotlin rust" /></span>
 <h2>Path Setup</h2>
 
 <p>
@@ -54,11 +83,10 @@ sudo ln -s ${PWD}/bin/buckd /usr/bin/buckd
 </pre>
 {/literal}
 
-
 <h2>Create Project</h2>
 
 <p>
-  We are going to build a sample Android application. We should start our project in an empty directory, so create a new one and navigate to it:
+  We are going to build a sample application. We should start our project in an empty directory, so create a new one and navigate to it:
 </p>
 
 {literal}<pre>
@@ -74,14 +102,16 @@ cd ~/my-first-buck-project/
 
 <h2>Compile Your Code</h2>
 
+<span><block class="mac linux android java kotlin" /></span>
 <p>
-  Android applications are typically written in Java, so the first thing we will do is configure Buck to compile Java code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk</code>, run the following command to set a <code>ANDROID_SDK</code> environment variable that tells Buck where to find your Android SDK:
+  Android applications are typically written in Java and kotlin, so the first thing we will do is to configure Buck to compile code against the Android API. To do so, Buck needs to know where your Android SDK is. Assuming that your Android SDK is installed in <code>~/android-sdk</code>, run the following command to set a <code>ANDROID_SDK</code> environment variable that tells Buck where to find your Android SDK:
 </p>
 
 {literal}<pre>
 export ANDROID_SDK=$HOME/android-sdk
 </pre>{/literal}
 
+<span><block class="mac linux android java" /></span>
 <p>
   Now that Buck can locate your Android SDK, it is time to compile some Java code. First, we create a simple <code>Activity</code> at <code>java/com/example/activity/MyFirstActivity.java</code>:
 </p>
@@ -126,6 +156,124 @@ echo "android_library(
 </blockquote>
 </p>
 
+<span><block class="mac linux android kotlin" /></span>
+<p>
+  Now that Buck can locate your Android SDK, it is time to compile some kotlin code. First, we create a simple <code>Activity</code> at <code>kotlin/com/example/activity/MyFirstActivity.kt</code>:
+</p>
+
+{literal}<pre>
+mkdir -p kotlin/com/example/activity/
+echo "package com.example.activity
+
+import android.app.Activity
+import android.os.Bundle
+
+class MyFirstActivity : Activity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
+}" > kotlin/com/example/activity/MyFirstActivity.kt
+</pre>{/literal}
+
+<p>
+  Now we need a build file that defines a build rule to compile this kotlin code, so we create an <code><a href="rule/android_library.html">android_library()</a></code> rule in <code>kotlin/com/example/activity/BUCK</code>:
+</p>
+
+{literal}<pre>
+echo "android_library(
+  name = 'activity',
+  srcs = glob(['*.kt']),
+  language = "KOTLIN",
+  visibility = [ 'PUBLIC' ],
+)" > kotlin/com/example/activity/BUCK
+</pre>{/literal}
+
+<p>
+  Now we can compile our Java code using Buck:
+</p>
+
+<pre>buck build{sp}//kotlin/com/example/activity:activity</pre>
+
+<p>
+<blockquote>
+  Buck generates its output in the <code>buck-out</code> directory, so this is a good time to specify <code>buck-out</code> as something that should be ignored by your version control system.
+</blockquote>
+</p>
+
+<span><block class="mac linux linuxos macos kotlin rust " /></span>
+<p>
+  First, we create rust source files and directories:
+</p>
+{literal}<pre>
+mkdir -p src/front_of_house
+echo "mod front_of_house;
+
+pub use crate::front_of_house::hosting;
+pub use crate::front_of_house::serving;
+
+fn main() {
+    hosting::add_to_waitlist();
+    hosting::seat_at_table();
+    serving::take_order();
+    serving::serve_order();
+    serving::take_payment();
+}" > src/main.rs
+
+echo "pub mod hosting;
+pub mod serving;" > src/front_of_house.rs
+
+echo "pub fn add_to_waitlist() {
+    println!(\"Added to watinglist.\");
+}
+
+pub fn seat_at_table() {
+    println!(\"Seated at table.\");
+}" > src/front_of_house/hosting.rs
+
+echo "pub fn take_order() {
+    println!(\"Ordered.\");
+}
+
+pub fn serve_order() {
+    println!(\"Order served.\");
+}
+
+pub fn take_payment() {
+    println!(\"Payment done.\");
+} > src/front_of_house/serving.rs
+</pre>{/literal}
+
+<p>
+  Now we need a build file that defines a build rule to compile this Java code, so we create an <code><a href="rule/rust_binary.html">rust_binary()</a></code> rule in <code>BUCK</code>:
+{literal}<pre>
+echo "rust_binary(
+    name = 'restaurant',
+    srcs = glob(
+        ['src/**/*.rs'],
+    ),
+)" >BUCK
+</pre>{/literal}
+</p>
+
+<p>
+Now we can build our rust code using Buck:
+</p>
+
+<pre>buck build{sp}:restaurant</pre>
+
+<p>
+And run the sample:
+</p>
+<pre>buck run{sp}:restaurant</pre>
+
+<p>
+<blockquote>
+  Buck generates its output in the <code>buck-out</code> directory, so this is a good time to specify <code>buck-out</code> as something that should be ignored by your version control system.
+</blockquote>
+</p>
+
+<span><block class="mac linux android java kotlin" /></span>
 <h2>Package Resources</h2>
 
 <p>
@@ -229,8 +377,8 @@ echo "android_binary(
   manifest_entries = {
     'version_code': 1,
     'version_name': '1.0',
-    'min_sdk_version': 16,
-    'target_sdk_version': 23
+    'min_sdk_version': 26,
+    'target_sdk_version': 29
   },
   keystore = ':debug_keystore',
   deps = [
@@ -279,6 +427,7 @@ echo "[alias]
 
 <pre>buck install app</pre>
 
+<span><block class="mac linux android java" /></span>
 <h2>Create an IntelliJ Project</h2>
 
 <p>
@@ -324,4 +473,100 @@ echo "/.buckd
 
     {/param}
   {/call}
+
+{literal}
+<script>
+// Convert <div>...<span><block /></span>...</div>
+// Into <div>...<block />...</div>
+var blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  var span = blocks[i].parentNode;
+  var container = span.parentNode;
+  container.insertBefore(block, span);
+  container.removeChild(span);
+}
+// Convert <div>...<block />content<block />...</div>
+// Into <div>...<block>content</block><block />...</div>
+blocks = document.getElementsByTagName('block');
+for (var i = 0; i < blocks.length; ++i) {
+  var block = blocks[i];
+  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
+    block.appendChild(block.nextSibling);
+  }
+}
+function display(type, value) {
+  var container = document.getElementsByTagName('block')[0].parentNode;
+  container.className = 'disp-' + type + '-' + value + ' ' +
+    container.className.replace(RegExp('disp-' + type + '-[a-z]+ ?'), '');
+}
+
+// If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
+// us as close as possible to the correct platform and dev os using the hashtag and block walk up.
+var foundHash = false;
+if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
+  var hashLinks = document.querySelectorAll('a.hash-link');
+  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
+    if (hashLinks[i].hash === window.location.hash) {
+      var parent = hashLinks[i].parentElement;
+      while (parent) {
+        if (parent.tagName === 'BLOCK') {
+          var devOS = null;
+          var targetPlatform = null;
+          var languageToUse = null;
+          // Could be more than one target os and dev platform, but just choose some sort of order
+          // of priority here.
+
+          // Dev OS
+          if (parent.className.indexOf('mac') > -1) {
+            devOS = 'mac';
+          } else if (parent.className.indexOf('linux') > -1) {
+            devOS = 'linux';
+          } else if (parent.className.indexOf('windows') > -1) {
+            devOS = 'windows';
+          } else {
+            break; // assume we don't have anything.
+          }
+
+          // Target Platform
+          if (parent.className.indexOf('ios') > -1) {
+            targetPlatform = 'ios';
+          } else if (parent.className.indexOf('android') > -1) {
+            targetPlatform = 'android';
+          } else {
+            break; // assume we don't have anything.
+          }
+
+          // Language
+          if (parent.className.indexOf('java') > -1) {
+            languageToUse = 'java';
+          } else if (parent.className.indexOf('kotlin') > -1) {
+            languageToUse = 'kotlin';
+          } else {
+            break;
+          }
+
+          // We would have broken out if both targetPlatform and devOS hadn't been filled.
+          display('os', devOS);
+          display('platform', targetPlatform);
+          display('language', languageToUse);
+          foundHash = true;
+          break;
+        }
+        parent = parent.parentElement;
+      }
+    }
+  }
+}
+// Do the default if there is no matching hash
+if (!foundHash) {
+  var isMac = navigator.platform.toLowerCase().indexOf('mac') !== -1;
+  var isLinux = navigator.platform.toLowerCase().indexOf('linux') !== -1;
+  display('os', isMac ? 'mac' : (isLinux ? 'linux' : 'windows'));
+  display('platform', 'android');
+  display('language', 'java');
+}
+</script>
+{/literal}
+
 {/template}

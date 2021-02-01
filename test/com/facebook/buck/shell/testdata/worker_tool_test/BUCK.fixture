@@ -139,3 +139,30 @@ genrule(
     out = "output.txt",
     cmd = "$(worker :worker_crash_on_start) $OUT",
 )
+
+worker_tool(
+    name = "worker_async",
+    args = [
+        "--num-jobs",
+        "2",
+        "--async",
+        "1"
+    ],
+    exe = ":external_tool",
+    solo_async = True,
+    max_workers = -1,
+)
+
+genrule(
+    name = "async-test0",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker_async) $OUT",
+)
+
+genrule(
+    name = "async-test1",
+    srcs = [],
+    out = "output.txt",
+    cmd = "$(worker :worker_async) $OUT",
+)

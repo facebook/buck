@@ -90,7 +90,7 @@ public class ResourcesXmlTest {
       String content = new String(baos.toByteArray(), Charsets.UTF_8);
 
       Path xmltreeOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".manifest"));
-      String expected = new String(Files.readAllBytes(xmltreeOutput));
+      String expected = new String(Files.readAllBytes(xmltreeOutput)).replaceAll("\r\n", "\n");
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }
@@ -148,7 +148,7 @@ public class ResourcesXmlTest {
       String content = new String(baos.toByteArray(), Charsets.UTF_8);
 
       Path xmltreeOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".manifest.reversed"));
-      String expected = new String(Files.readAllBytes(xmltreeOutput));
+      String expected = new String(Files.readAllBytes(xmltreeOutput)).replaceAll("\r\n", "\n");
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }
   }

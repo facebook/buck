@@ -1,0 +1,458 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{namespace buck.flavors}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'Flavors' /}
+    {param navid: 'concept_flavors' /}
+    {param prettify: true /}
+    {param description}
+      Flavors in Buck are a way to specify different variations of a build 
+      that otherwise share most configuration specifications.
+    {/param}
+    {param content}
+
+<p>
+Flavors in Buck are a way to specify different variations of a build that 
+otherwise share most configuration specifications.
+</p>
+
+<p>
+Flavors can also be used to simultaneously build for two different platforms, 
+such as iOS and watchOS. Being able to build for both of these at the same 
+time is important because iOS application can have a dependency on the Watch 
+application.
+</p>
+
+<p>
+Flavors fall into a number of different categories:
+</p>
+<ul>
+  <li><a href='#platform_http'>Platform</a></li>
+  <li><a href='#linker_http'>Linker</a></li>
+  <li><a href='#symbol_http'>Symbol</a></li>
+  <li><a href='#analysis_http'>Analysis</a></li>
+  <li><a href='#header_http'>Header</a></li>
+  <li><a href='#apple_debug_http'>Apple debug</a></li>
+  <li><a href='#apple_bundles_http'>Apple bundles</a></li>
+</ul>
+
+<h2>Syntax for flavors</h2>
+
+<p>
+A flavor is specified as a suffix to a build target, with the hash mark (#) 
+used as a separator between the target and flavor.
+Examples:
+</p>
+{literal}
+<pre>
+buck build :cxx_gr_name#default
+buck build :cxx_gr_name#iphonesimulator-x86_64
+</pre>
+{/literal}
+
+<p>
+You can specify multiple flavors for a single target by separating the flavors 
+with commas:
+</p>
+{literal}
+<pre>
+buck build Libraries/3rdParty/openssl:ssl#android-armv7,static-pic
+buck build Libraries/3rdParty/openssl:ssl#android-x86,static-pic
+buck build :bundle#iphoneos-x86_64,strip-all,dwarf-and-dsym
+</pre>
+{/literal}
+
+<p>
+<b>NOTE:</b> Buck supports 
+a {call buck.concept_link}{param page: 'build_target_pattern' /}{param name: 'build target pattern' /}{/call},
+<code>...</code>, as in, <code>//apps/...</code>, that specifies that Buck 
+should recurse through build files in subdirectories, building all build 
+targets in any build files it finds. <em>This build target pattern does not 
+support specifying flavors.</em>
+</p>
+
+<h3>Default flavors</h3>
+<p>
+The <code>cxx_library</code> and <code>apple_library</code> rules support 
+specifying <em>default flavors</em>, which pertain if a build target is 
+specified 1) explicitly-that is, not using 
+a {call buck.concept_link}{param page: 'build_target_pattern' /}{param name: 'build target pattern' /}{/call}
+-and 2) without a flavor. 
+</p>
+
+<h3>Syntax for Flagfile Flavors</h3>
+<p>
+A flavor may also be specified as a suffix to an @file or --flagfile argument. 
+These flavors are used within the flagfile only and do not directly change 
+the target flavor. The separator is '#' as above, and if the separator and 
+flavor are present, the @file (aka flagfile) must end in ".py" and be a 
+Python script. The script will be called as follows:
+</p>
+
+{literal}
+<pre>
+python /path/to/flagfile.py --flavors <flavor>
+</pre>
+{/literal}
+
+<h2 id="platform_http">Platform flavors <a class="inline-link" href="#platform_http">#</a></h2>
+<p>
+These flavors denote a toolchain to use for compiling. You can also use them to 
+control conditional fields in the Buck target's rule.
+</p>
+
+<table>
+  <tr>
+    <th>Flavor</th>
+    <th>Meaning</th>
+  </tr>
+  <tr>
+    <td>android-armv7</td>
+    <td>32-bit Android device</td>
+  </tr>
+  <tr>
+    <td>android-x86</td>
+    <td>32-bit Android emulator</td>
+  </tr>
+  <tr>
+    <td>iphoneos</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>iphoneos-armv7</td>
+    <td>32-bit iPhone device</td>
+  </tr>
+  <tr>
+    <td>iphoneos-arm64</td>
+    <td>64-bit iPhone device</td>
+  </tr>
+  <tr>
+    <td>iphoneos-i386</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>iphoneos-x86_64</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>iphonesimulator</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>iphonesimulator-i386</td>
+    <td>Simulator on 32-bit Mac</td>
+  </tr>
+  <tr>
+    <td>iphonesimulator-x86_64</td>
+    <td>Simulator on 64-bit Mac</td>
+  </tr>
+  <tr>
+    <td>macosx-x86_64</td>
+    <td>Native x86_64 OSX application</td>
+  </tr>
+  <tr>
+    <td>macosx-arm64</td>
+    <td>Native arm64 OSX application</td>
+  </tr>
+  <tr>
+    <td>windows-x86_64</td>
+    <td>Native Windows application</td>
+  </tr>
+</table>
+
+<p>
+Sighted in the wild:
+</p>
+
+{literal}
+<pre>
+buck build :main#android-arm64,shared
+</pre>
+{/literal}
+
+<h2 id="linker_http">Linker flavors <a class="inline-link" href="#linker_http">#</a></h2>
+<h3>Static</h3>
+{literal}
+<pre>
+static
+</pre>
+{/literal}
+<p>
+Static library (.a)
+</p>
+
+<h3>Position-independent code (PIC)</h3>
+{literal}
+<pre>
+static-pic
+</pre>
+{/literal}
+<p>
+Static library that generates position-independent code (PIC). Note that on the Apple platforms, everything is PIC.
+</p>
+
+<h3>Shared</h3>
+<p>
+A shared library (so) or dynamically-loaded module (.dylib on Mac, .dll on Windows).
+</p>
+
+<h3>Shared interface</h3>
+{literal}
+<pre>
+shared-interface
+</pre>
+{/literal}
+<p>
+A stub library that only lists the imports and exports of a shared library. 
+You can link against this library, but it doesn't have any executable code.
+</p>
+
+<h3>Linker Map<h3>
+{literal}
+<pre>
+no-linkermap
+</pre>
+{/literal}
+
+<p>
+Specifying this flavor suppresses the generation of a LinkMap.txt file, 
+which is normally generated by the Apple linker (ld).
+</p>
+
+<h2 id="analysis_http">Analysis flavors <a class="inline-link" href="#analysis_http">#</a></h2>
+<h3>Rust language</h3>
+{literal}
+<pre>
+check
+</pre>
+{/literal}
+
+<p>
+The Rust compiler has a build mode which quickly checks syntax and type 
+correctness, but avoids codegen (which is the slowest phase of Rust 
+compilation). This flavor invokes check on the suffixed build target.
+</p>
+
+{literal} 
+<pre>
+save-analysis
+</pre>
+{/literal}
+<p>
+The <code>#save-analysis</code> flavor is an extension of #check. It performs 
+the same actions as a #check build, but also emits a .json file containing 
+full type/symbol cross-reference information, for consumption by tools like 
+RLS (Rust Language Services).
+</p>
+
+{literal}
+<pre>
+doc
+</pre>
+{/literal}
+
+<p>
+The <code>#doc</code> flavor is the equivalent of the cargo doc command. It 
+uses the rustdoc tool to generate documentation for a target and its dependencies.
+</p>
+
+<h3>Compilation database</h3>
+<p>
+If you specify one of these flavors, Buck generates analysis information about 
+your build.
+</p>
+{literal}
+<pre>
+compilation-database
+</pre>
+{/literal}
+
+<p>
+Produces a JSON file that contains (an approximation of) the compiler commands 
+for compiling each file. The output is in 
+the <a href="https://eli.thegreenplace.net/2014/05/21/compilation-databases-for-clang-based-tools">
+clang compilation database</a> format.
+</p>
+
+<h3>Infer</h3>
+{literal}
+<pre>
+infer-analyze
+infer-capture-all
+</pre>
+{/literal}
+
+<p>
+These flavors run <a href="https://fbinfer.com">Facebook's Infer tool</a> and 
+generate intermediate Infer output.
+</p>
+
+<h2 id="symbol_http">Symbol stripping flavors<a class="inline-link" href="#symbol_http">#</a></h2>
+<p>
+These flavor control how symbols are stripped from an output binary.
+</p>
+
+<h3>Strip debug</h3>
+{literal}
+<pre>
+strip-debug
+</pre>
+{/literal}
+
+<p>
+Strip debug symbols; equivalent to <code>strip -S</code>.
+</p>
+
+<h3>Strip debug and non-external</h3>
+{literal} 
+<pre>
+strip-non-global
+</pre>
+{/literal}
+
+<p>
+Strip debug and non-external symbols; equivalent to <code>strip -x</code>.
+</p>
+
+<h3>Strip all</h3>
+{literal} 
+<pre>
+strip-all
+</pre>
+{/literal}
+<p>
+Strip all the things; equivalent to strip with no arguments.
+</p>
+
+<h2 id="header_http">Header Flavors<a class="inline-link" href="#header_http">#</a></h2>
+<p>
+These flavors are used with C++ header files, in the deps or exported_deps 
+attributes of a Buck target.
+</p>
+
+<h3>Headers used to compile a libraries own files</h3>
+{literal}
+<pre>
+private-headers
+</pre>
+{/literal}
+<p>
+Symlink tree, or header map, of headers used for compiling a library's own files.
+</p>
+
+<h3>Headers used to compile files that depend on this library</h3>
+{literal} 
+<pre>
+headers
+</pre>
+{/literal}
+
+<p>
+Symlink tree, or header map, of headers used to compile files for other 
+libraries that depend on this library.
+</p>
+
+<h2 id="apple_debug_http">Apple debug flavors<a class="inline-link" href="#apple_debug_http">#</a></h2>
+<p>
+Selects the actual binary used to represent a {call buck.cxx_binary /}.
+</p>
+
+<h3>Stripped binary</h3>
+{literal}
+<pre>
+no-debug
+</pre>
+{/literal}
+
+<p>
+Selects the stripped binary
+</p>
+
+<h3>Unstripped binary</h3>
+{literal} 
+<pre>
+dwarf
+</pre>
+{/literal}
+
+<p>
+Selects the unstripped binary
+</p>
+
+<h3>Unstripped + dsym</h3>
+{literal} 
+<pre>
+dwarf-and-dsym
+</pre>
+{/literal}
+
+<p>
+Selects the unstripped binary, and the dsym file.
+</p>
+
+<h3>Other</h3>
+{literal} 
+<pre>
+apple-debuggable-binary
+</pre>
+{/literal}
+
+<p>
+Could be stripped and unstripped, depending on requirements.
+</p>
+
+<h2 id="apple_bundles_http">Apple bundles flavors<a class="inline-link" href="#apple_bundles_http">#</a></h2>
+<p>
+These flavors are legacy methods of creating app and framework bundles.
+</p>
+<p>
+<em>You should not use these.</em>
+</p>
+<p>
+Instead of these flavors, we now use the Buck rule, {call buck.apple_bundle /}
+</p>
+
+<h3>App</h3>
+{literal}
+<pre>
+app
+binary#app
+</pre>
+{/literal}
+
+<p>
+Generates an app bundle.
+</p>
+
+<h3>Framework</h3>
+{literal}
+<pre>
+framework
+library#framework
+</pre>
+{/literal}
+
+<p>
+Generates a framework.
+</p>
+
+    {/param}
+  {/call}
+{/template}

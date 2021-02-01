@@ -104,6 +104,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
       AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
+      Optional<Either<SourcePath, String>> snapshotImagesDiffPath,
       boolean useIdb,
       Path idbPath) {
     super(buildTarget, projectFilesystem, params);
@@ -121,6 +122,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
             appleDeveloperDirectoryForTestsProvider,
             isUiTest,
             snapshotReferenceImagesPath,
+            snapshotImagesDiffPath,
             useIdb,
             idbPath);
 
@@ -248,6 +250,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
     public static final String DEFAULT_DESTINATION = "default_destination";
     public static final String DEVELOPER_DIRECTORY_FOR_TESTS = "developer_directory_for_tests";
     public static final String SNAPSHOT_REFERENCE_IMG_PATH = "snapshot_reference_img_path";
+    public static final String SNAPSHOT_IMAGES_DIFF_PATH = "snapshot_images_diff_path";
 
     private static final String UI_TEST_TARGET_APP = "ui_test_target_app";
     private static final String TEST_HOST_APP = "test_host_app";
@@ -270,6 +273,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     @AddToRuleKey private final boolean isUiTest;
     private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
+    private final Optional<Either<SourcePath, String>> snapshotImagesDiffPath;
     private final boolean useIdb;
     private final Path idbPath;
 
@@ -285,6 +289,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
         boolean isUiTest,
         Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
+        Optional<Either<SourcePath, String>> snapshotImagesDiffPath,
         boolean useIdb,
         Path idbPath) {
       this.testHostApp = testHostApp;
@@ -298,6 +303,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
       this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
       this.isUiTest = isUiTest;
       this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
+      this.snapshotImagesDiffPath = snapshotImagesDiffPath;
       this.useIdb = useIdb;
       this.idbPath = idbPath;
     }
@@ -340,6 +346,19 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                       return filesystem.getPathForRelativePath(pathOrStr.getRight()).toString();
                     })
                 .orElse(""));
+
+        generator.writeStringField(
+          SNAPSHOT_IMAGES_DIFF_PATH,
+          snapshotImagesDiffPath
+            .map(
+              pathOrStr -> {
+                if (pathOrStr.isLeft()) {
+                  return sourcePathResolver.getAbsolutePath(pathOrStr.getLeft()).toString();
+                }
+
+                return filesystem.getPathForRelativePath(pathOrStr.getRight()).toString();
+              })
+            .orElse(""));
 
         generator.writeObjectField(
             UI_TEST_TARGET_APP,

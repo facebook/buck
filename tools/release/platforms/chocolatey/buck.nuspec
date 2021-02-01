@@ -19,7 +19,7 @@
     <releaseNotes></releaseNotes>
     <dependencies>
       <dependency id="python3" version="[3.6.2, 4.0)" />
-      <dependency id="jdk8" version="8.0.172" />
+      <dependency id="jdk8" version="8.0.211" />
     </dependencies>
   </metadata>
   <files>
