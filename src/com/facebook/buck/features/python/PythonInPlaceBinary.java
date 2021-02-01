@@ -222,4 +222,9 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   SymlinkTree getLinkTree() {
     return linkTree;
   }
+
+  @Override
+  public boolean supportsHashedBuckOutHardLinking() {
+    return false;
+  }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CustomHashedBuckOutLinking;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -36,7 +37,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public abstract class PythonBinary extends AbstractBuildRule
-    implements BinaryBuildRule, HasRuntimeDeps {
+    implements BinaryBuildRule, HasRuntimeDeps, CustomHashedBuckOutLinking {
 
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
   private final PythonPlatform pythonPlatform;

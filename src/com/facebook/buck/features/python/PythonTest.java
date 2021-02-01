@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CustomHashedBuckOutLinking;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -69,7 +70,11 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
+    implements TestRule,
+        HasRuntimeDeps,
+        ExternalTestRunnerRule,
+        BinaryBuildRule,
+        CustomHashedBuckOutLinking {
 
   private BuildRuleResolver ruleResolver;
   private final Supplier<? extends SortedSet<BuildRule>> originalDeclaredDeps;
@@ -326,5 +331,10 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
     this.ruleResolver = ruleResolver;
+  }
+
+  @Override
+  public boolean supportsHashedBuckOutHardLinking() {
+    return binary.supportsHashedBuckOutHardLinking();
   }
 }

@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -744,5 +745,20 @@ public class PythonBinaryIntegrationTest {
         equalTo(
             ImmutablePythonSourceDatabaseEntry.ofImpl(
                 ImmutableMap.of("bin.py", "bin.py"), ImmutableMap.of("foo.py", "foo.py"))));
+  }
+
+  @Test
+  public void inplaceBinaryAvoidsHashedBuckOutCompatHardLinking() {
+    assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
+    BuildTarget target = BuildTargetFactory.newInstance("//:bin");
+    Path path =
+        workspace.buildAndReturnOutput(
+            "-c",
+            "python.package_style=inplace",
+            "-c",
+            "project.buck_out_links_to_hashed_paths=hardlink",
+            target.getFullyQualifiedName());
+    Path linkedPath = BuildPaths.removeHashFrom(path, target).get();
+    assertTrue(Files.isSymbolicLink(linkedPath));
   }
 }
