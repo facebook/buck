@@ -30,6 +30,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.CustomHashedBuckOutLinking;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
@@ -614,6 +615,15 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     Path absolutePathWithoutHash = maybeAbsolutePathWithoutHash.get();
     MostFiles.deleteRecursivelyIfExists(absolutePathWithoutHash);
     Files.createDirectories(absolutePathWithoutHash.getParent());
+
+    // Support rule-specific output linking.
+    if (rule instanceof CustomHashedBuckOutLinking) {
+      // If this rule doesn't support hard-linking, downgrade to symlinking.
+      if (linkMode == HashedBuckOutLinkMode.HARDLINK
+          && !((CustomHashedBuckOutLinking) rule).supportsHashedBuckOutHardLinking()) {
+        linkMode = HashedBuckOutLinkMode.SYMLINK;
+      }
+    }
 
     switch (linkMode) {
       case SYMLINK:
