@@ -43,6 +43,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -2502,6 +2503,22 @@ public class CxxBinaryIntegrationTest {
                 "resource/resource.txt",
                 "foo/lib_resource.txt",
                 "../../../../foo/lib_resource.txt")));
+  }
+
+  @Test
+  public void inplaceSharedBinaryAvoidsHashedBuckOutCompatHardLinking() throws IOException {
+    assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "shared_link_style", tmp);
+    workspace.setUp();
+    BuildTarget target = BuildTargetFactory.newInstance("//:bar");
+    Path path =
+        workspace.buildAndReturnOutput(
+            "-c",
+            "project.buck_out_links_to_hashed_paths=hardlink",
+            target.getFullyQualifiedName());
+    Path linkedPath = BuildPaths.removeHashFrom(path, target).get();
+    assertTrue(Files.isSymbolicLink(linkedPath));
   }
 
   private ImmutableSortedSet<Path> findFiles(AbsPath root, PathMatcher matcher) throws IOException {

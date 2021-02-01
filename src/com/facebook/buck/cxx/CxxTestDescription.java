@@ -345,7 +345,8 @@ public class CxxTestDescription
                               .getDefaultTestRuleTimeoutMs()),
                   cxxBuckConfig.getMaximumTestOutputSize(),
                   cxxBuckConfig.checkGTestTestList(),
-                  downwardApiConfig.isEnabledForTests());
+                  downwardApiConfig.isEnabledForTests(),
+                  cxxLinkAndCompileRules.isStandalone);
           break;
         }
       case BOOST:
@@ -372,7 +373,8 @@ public class CxxTestDescription
                               .getDelegate()
                               .getView(TestBuckConfig.class)
                               .getDefaultTestRuleTimeoutMs()),
-                  downwardApiConfig.isEnabledForTests());
+                  downwardApiConfig.isEnabledForTests(),
+                  cxxLinkAndCompileRules.isStandalone);
           break;
         }
       default:

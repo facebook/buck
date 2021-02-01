@@ -102,7 +102,8 @@ public class CxxBoostTestTest {
             ImmutableSet.of(),
             /* runTestSeparately */ false,
             /* testRuleTimeoutMs */ Optional.empty(),
-            false);
+            false,
+            true);
 
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");

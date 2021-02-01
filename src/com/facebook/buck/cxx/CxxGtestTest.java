@@ -96,7 +96,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize,
       boolean checkGTestTestList,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean isStandalone) {
     super(
         buildTarget,
         projectFilesystem,
@@ -113,7 +114,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         runTestSeparately,
         testRuleTimeoutMs,
         CxxTestType.GTEST,
-        withDownwardApi);
+        withDownwardApi,
+        isStandalone);
     this.maxTestOutputSize = maxTestOutputSize;
     this.checkGTestTestList = checkGTestTestList;
   }

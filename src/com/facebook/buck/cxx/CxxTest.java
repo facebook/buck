@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CustomHashedBuckOutLinking;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -74,7 +75,11 @@ import java.util.stream.Stream;
 
 /** A no-op {@link BuildRule} which houses the logic to run and form the results for C/C++ tests. */
 public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements TestRule, HasRuntimeDeps, BinaryBuildRule, ExternalTestRunnerRule {
+    implements TestRule,
+        HasRuntimeDeps,
+        BinaryBuildRule,
+        ExternalTestRunnerRule,
+        CustomHashedBuckOutLinking {
 
   private final ImmutableMap<String, Arg> env;
   private final ImmutableList<Arg> args;
@@ -93,6 +98,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<Long> testRuleTimeoutMs;
   private final CxxTestType cxxTestType;
   protected final boolean withDownwardApi;
+  private final boolean isStandalone;
 
   public CxxTest(
       BuildTarget buildTarget,
@@ -110,7 +116,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs,
       CxxTestType cxxTestType,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean isStandalone) {
     super(buildTarget, projectFilesystem, params);
     this.binary = binary;
     this.executable = executable;
@@ -125,6 +132,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.cxxTestType = cxxTestType;
     this.withDownwardApi = withDownwardApi;
+    this.isStandalone = isStandalone;
   }
 
   @Override
@@ -388,5 +396,10 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   protected ImmutableList<Arg> getArgs() {
     return args;
+  }
+
+  @Override
+  public boolean supportsHashedBuckOutHardLinking() {
+    return isStandalone;
   }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CustomHashedBuckOutLinking;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -55,7 +56,8 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         HasRuntimeDeps,
         HasAppleDebugSymbolDeps,
         SupportsInputBasedRuleKey,
-        HasSupplementaryOutputs {
+        HasSupplementaryOutputs,
+        CustomHashedBuckOutLinking {
 
   private final CxxPlatform cxxPlatform;
   private final BuildRule linkRule;
@@ -65,6 +67,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final BuildTarget platformlessTarget;
   private final ImmutableMap<CxxResourceName, SourcePath> resources;
   private final boolean cacheable;
+  private final boolean isStandalone;
 
   public CxxBinary(
       BuildTarget buildTarget,
@@ -77,7 +80,8 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Iterable<BuildTarget> tests,
       BuildTarget platformlessTarget,
       ImmutableMap<CxxResourceName, SourcePath> resources,
-      boolean cacheable) {
+      boolean cacheable,
+      boolean isStandalone) {
     super(buildTarget, projectFilesystem, params);
     this.cxxPlatform = cxxPlatform;
     this.linkRule = linkRule;
@@ -87,6 +91,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.platformlessTarget = platformlessTarget;
     this.resources = resources;
     this.cacheable = cacheable;
+    this.isStandalone = isStandalone;
     performChecks();
   }
 
@@ -207,5 +212,10 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
     return null;
+  }
+
+  @Override
+  public boolean supportsHashedBuckOutHardLinking() {
+    return isStandalone;
   }
 }

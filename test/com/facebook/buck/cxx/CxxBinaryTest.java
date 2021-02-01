@@ -86,7 +86,8 @@ public class CxxBinaryTest {
                 ImmutableList.of(),
                 target,
                 ImmutableMap.of(),
-                false));
+                false,
+                true));
     ImmutableList<String> command =
         binary
             .getExecutableCommand(OutputLabel.defaultLabel())

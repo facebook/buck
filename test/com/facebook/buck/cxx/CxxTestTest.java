@@ -81,7 +81,8 @@ public class CxxTestTest {
           /* runTestSeparately */ false,
           TEST_TIMEOUT_MS,
           CxxTestType.GTEST,
-          false);
+          false,
+          true);
     }
 
     @Override

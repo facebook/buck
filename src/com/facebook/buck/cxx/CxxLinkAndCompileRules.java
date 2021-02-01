@@ -29,18 +29,25 @@ public class CxxLinkAndCompileRules {
   private final Optional<CxxStrip> cxxStrip;
   final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
   public final Tool executable;
+  /**
+   * Whether the final C++ link is a standalone executable (e.g. not requiring a symlink tree of
+   * DSOs).
+   */
+  public final boolean isStandalone;
 
   CxxLinkAndCompileRules(
       CxxLink cxxLink,
       Optional<CxxStrip> cxxStrip,
       ImmutableSortedSet<CxxPreprocessAndCompile> compileRules,
       Tool executable,
-      SortedSet<BuildRule> deps) {
+      SortedSet<BuildRule> deps,
+      boolean isStandalone) {
     this.cxxLink = cxxLink;
     this.cxxStrip = cxxStrip;
     this.compileRules = compileRules;
     this.executable = executable;
     this.deps = deps;
+    this.isStandalone = isStandalone;
   }
 
   public CxxLink getCxxLink() {

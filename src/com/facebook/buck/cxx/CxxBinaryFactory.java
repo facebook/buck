@@ -245,7 +245,8 @@ public class CxxBinaryFactory {
                     .toNameMap(target, graphBuilder.getSourcePathResolver(), "resources")),
             Iterables.filter(
                 args.getCxxDeps().get(graphBuilder, cxxPlatform), CxxResourcesProvider.class)),
-        cxxBuckConfig.shouldCacheBinaries());
+        cxxBuckConfig.shouldCacheBinaries(),
+        cxxLinkAndCompileRules.isStandalone);
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

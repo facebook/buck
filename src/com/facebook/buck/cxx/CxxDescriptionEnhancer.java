@@ -852,6 +852,7 @@ public class CxxDescriptionEnhancer {
 
     CommandTool.Builder executableBuilder = new CommandTool.Builder();
     Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
+    LinkableDepType linkStyle = args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC);
 
     ImmutableList<Arg> indexArgs =
         createLinkArgsForCxxBinary(
@@ -864,7 +865,7 @@ public class CxxDescriptionEnhancer {
             deps,
             executableBuilder,
             linker,
-            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            linkStyle,
             indexOutput.getPath(),
             args.getLinkerFlags(),
             args.getPlatformLinkerFlags());
@@ -1053,7 +1054,8 @@ public class CxxDescriptionEnhancer {
         cxxStrip,
         ImmutableSortedSet.copyOf(objects.keySet()),
         executableBuilder.build(),
-        deps);
+        deps,
+        !useRpathSharedLibsDir(linker, linkStyle));
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
@@ -1144,6 +1146,11 @@ public class CxxDescriptionEnhancer {
         args.getPreferStrippedObjects());
   }
 
+  private static boolean useRpathSharedLibsDir(Linker linker, LinkableDepType linkStyle) {
+    return linkStyle == Linker.LinkableDepType.SHARED
+        && linker.getSharedLibraryLoadingType() == Linker.SharedLibraryLoadingType.RPATH;
+  }
+
   private static ImmutableList<Arg> createLinkArgsForCxxBinary(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
@@ -1180,8 +1187,7 @@ public class CxxDescriptionEnhancer {
     }
 
     // Special handling for dynamically linked binaries with rpath support
-    if (linkStyle == Linker.LinkableDepType.SHARED
-        && linker.getSharedLibraryLoadingType() == Linker.SharedLibraryLoadingType.RPATH) {
+    if (useRpathSharedLibsDir(linker, linkStyle)) {
       // Create a symlink tree with for all shared libraries needed by this binary.
       MappedSymlinkTree sharedLibraries =
           requireSharedLibrarySymlinkTree(
@@ -1613,7 +1619,8 @@ public class CxxDescriptionEnhancer {
         cxxStrip,
         ImmutableSortedSet.copyOf(objects.keySet()),
         executableBuilder.build(),
-        deps);
+        deps,
+        !useRpathSharedLibsDir(linker, linkStyle));
   }
 
   /** Creates {@code CxxStrip} rule */
