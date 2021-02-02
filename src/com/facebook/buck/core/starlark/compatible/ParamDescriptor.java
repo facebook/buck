@@ -33,6 +33,7 @@ package com.facebook.buck.core.starlark.compatible;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,6 +68,19 @@ final class ParamDescriptor {
     this.allowedClasses = allowedClasses;
   }
 
+  /** Should be compatible with {@link Starlark#valid(Object)}. */
+  private static boolean validStarlarkValueClass(Class<?> clazz) {
+    return clazz == String.class
+        || clazz == Boolean.class
+        || clazz == Integer.class
+        // `Iterable` is generally not a valid Starlark type,
+        // but immutables generate constructors with this parameter type.
+        || clazz == Iterable.class
+        // Any Starlark object
+        || clazz == Object.class
+        || StarlarkValue.class.isAssignableFrom(clazz);
+  }
+
   /**
    * Returns a {@link ParamDescriptor} representing the given raw {@link Param} annotation and the
    * given semantics.
@@ -77,6 +91,17 @@ final class ParamDescriptor {
     // Compute set of allowed classes.
     List<Class<?>> allowedClasses = new ArrayList<>();
     allowedClasses.add(param.type());
+
+    for (Class<?> allowedClass : allowedClasses) {
+      // Note Starlark does this validation with annotation processor,
+      // we should do that too.
+      if (!validStarlarkValueClass(allowedClass)) {
+        throw new IllegalArgumentException(
+            String.format(
+                "Starlark-incompatible param type `%s` for param `%s`",
+                allowedClass, param.name()));
+      }
+    }
 
     return new ParamDescriptor(
         param.name(), defaultExpr, false, param.named(), true, allowedClasses);
