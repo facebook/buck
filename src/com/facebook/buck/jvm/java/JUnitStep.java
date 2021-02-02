@@ -204,7 +204,7 @@ public class JUnitStep extends ShellStep {
           try {
             ProcessExecutor processExecutor = context.getProcessExecutor();
             if (isWithDownwardApi()) {
-              processExecutor = context.getDownwardApiProcessExecutor();
+              processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
             }
 
             processExecutor.launchAndExecute(

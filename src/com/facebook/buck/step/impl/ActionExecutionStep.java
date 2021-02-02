@@ -51,7 +51,7 @@ public class ActionExecutionStep implements Step {
     BuckEventBus buckEventBus = context.getBuckEventBus();
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
 
     ActionExecutionContext executionContext =

@@ -418,7 +418,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
         ProcessExecutor processExecutor = context.getProcessExecutor();
         if (withDownwardApi) {
-          processExecutor = context.getDownwardApiProcessExecutor();
+          processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
         }
 
         AppleDeviceController appleDeviceController =

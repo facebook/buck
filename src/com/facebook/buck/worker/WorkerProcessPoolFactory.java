@@ -168,7 +168,7 @@ public class WorkerProcessPoolFactory {
     Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
     return new WorkerProcess(processExecutor, processParams, filesystem, stdErr, tmpDir);
   }

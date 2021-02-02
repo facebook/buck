@@ -156,7 +156,7 @@ class SwiftStdlibStep implements Step {
       throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     if (withDownwardApi) {
-      executor = context.getDownwardApiProcessExecutor();
+      executor = context.getDownwardApiProcessExecutor(executor);
     }
 
     ProcessExecutorParams params = makeProcessExecutorParams(context, getSwiftStdlibCommand());

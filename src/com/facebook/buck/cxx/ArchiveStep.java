@@ -127,7 +127,7 @@ class ArchiveStep implements Step {
 
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
 
     ProcessExecutor.Result result = processExecutor.launchAndExecute(params);

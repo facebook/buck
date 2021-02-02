@@ -272,7 +272,7 @@ class XctoolRunTestsStep implements Step {
     Console console = context.getConsole();
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();

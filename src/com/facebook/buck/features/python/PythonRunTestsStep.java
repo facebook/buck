@@ -117,7 +117,7 @@ public class PythonRunTestsStep implements Step {
             .build();
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(

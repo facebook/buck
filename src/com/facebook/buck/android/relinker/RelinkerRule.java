@@ -222,7 +222,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                 ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
                 ProcessExecutor processExecutor = context.getProcessExecutor();
                 if (withDownwardApi) {
-                  processExecutor = context.getDownwardApiProcessExecutor();
+                  processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
                 }
 
                 if (linker == null) {

@@ -212,7 +212,7 @@ public class ShellStepDelegate {
 
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
-      executor = context.getDownwardApiProcessExecutor();
+      executor = context.getDownwardApiProcessExecutor(executor);
     }
 
     ProcessExecutor.Result result =

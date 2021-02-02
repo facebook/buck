@@ -111,7 +111,7 @@ public class JavacPipelineState implements RulePipelineState {
 
       ProcessExecutor processExecutor = firstOrderContext.getProcessExecutor();
       if (withDownwardApi) {
-        processExecutor = context.getDownwardApiProcessExecutor();
+        processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
       }
 
       JavacExecutionContext javacExecutionContext =

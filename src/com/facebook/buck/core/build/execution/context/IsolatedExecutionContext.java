@@ -101,10 +101,17 @@ public abstract class IsolatedExecutionContext implements Closeable {
   /** Returns clock associated with the current invocation. */
   public abstract Clock getClock();
 
-  /** Returns {@link DownwardApiProcessExecutor}. */
-  @Value.Lazy
+  /**
+   * Returns {@link DownwardApiProcessExecutor} created from the given {@link
+   * #getProcessExecutor()}.
+   */
   public DownwardApiProcessExecutor getDownwardApiProcessExecutor() {
-    return getDownwardApiProcessExecutor(DefaultNamedPipeEventHandler.FACTORY);
+    return getDownwardApiProcessExecutor(getProcessExecutor());
+  }
+
+  /** Returns {@link DownwardApiProcessExecutor} created from the given {@code processExecutor}. */
+  public DownwardApiProcessExecutor getDownwardApiProcessExecutor(ProcessExecutor processExecutor) {
+    return getDownwardApiProcessExecutor(processExecutor, DefaultNamedPipeEventHandler.FACTORY);
   }
 
   /**
@@ -113,14 +120,22 @@ public abstract class IsolatedExecutionContext implements Closeable {
    */
   public DownwardApiProcessExecutor getDownwardApiProcessExecutor(
       NamedPipeEventHandlerFactory namedPipeEventReaderFactory) {
+    return getDownwardApiProcessExecutor(getProcessExecutor(), namedPipeEventReaderFactory);
+  }
+
+  /**
+   * Returns {@link DownwardApiProcessExecutor} that would use {@link NamedPipeEventHandler} create
+   * by passed {@link NamedPipeEventHandlerFactory}
+   */
+  private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
+      ProcessExecutor processExecutor, NamedPipeEventHandlerFactory namedPipeEventReaderFactory) {
     return (DownwardApiProcessExecutor)
-        getProcessExecutor()
-            .withDownwardAPI(
-                DownwardApiProcessExecutor.FACTORY,
-                namedPipeEventReaderFactory,
-                getIsolatedEventBus(),
-                getActionId(),
-                getClock());
+        processExecutor.withDownwardAPI(
+            DownwardApiProcessExecutor.FACTORY,
+            namedPipeEventReaderFactory,
+            getIsolatedEventBus(),
+            getActionId(),
+            getClock());
   }
 
   @Value.Default

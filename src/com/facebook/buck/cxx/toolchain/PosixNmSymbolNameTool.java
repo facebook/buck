@@ -217,7 +217,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
 
               ProcessExecutor executor = context.getProcessExecutor();
               if (withDownwardApi) {
-                executor = context.getDownwardApiProcessExecutor();
+                executor = context.getDownwardApiProcessExecutor(executor);
               }
 
               try (ProcessExecutor.LaunchedProcess process =

@@ -97,7 +97,7 @@ public abstract class AbstractTestStep implements Step {
     // Run the test process, saving the exit code.
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
-      executor = context.getDownwardApiProcessExecutor();
+      executor = context.getDownwardApiProcessExecutor(executor);
     }
 
     ImmutableSet<ProcessExecutor.Option> options =

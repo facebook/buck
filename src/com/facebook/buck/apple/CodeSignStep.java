@@ -102,7 +102,7 @@ class CodeSignStep implements Step {
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
     if (LOG.isDebugEnabled()) {
       LOG.debug("codesign command: %s", Joiner.on(" ").join(processExecutorParams.getCommand()));

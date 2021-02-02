@@ -132,7 +132,7 @@ class SwiftCompileStep extends SwiftCompileStepBase {
             : context.getProcessExecutor();
 
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
     Result processResult =
         getTransformedProcessResult(processExecutor.launchAndExecute(params), willTransformStderr);

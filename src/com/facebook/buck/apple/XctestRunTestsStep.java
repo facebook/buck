@@ -125,7 +125,7 @@ class XctestRunTestsStep implements Step {
 
     ProcessExecutor executor = context.getProcessExecutor();
     if (withDownwardApi) {
-      executor = context.getDownwardApiProcessExecutor();
+      executor = context.getDownwardApiProcessExecutor(executor);
     }
     try (LaunchedProcess launchedProcess = executor.launchProcess(params)) {
 

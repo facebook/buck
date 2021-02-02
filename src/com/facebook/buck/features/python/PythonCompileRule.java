@@ -155,7 +155,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                   ImmutableList<String> command = builder.build();
                   ProcessExecutor processExecutor = context.getProcessExecutor();
                   if (withDownwardApi) {
-                    processExecutor = context.getDownwardApiProcessExecutor();
+                    processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
                   }
                   return StepExecutionResult.of(
                       processExecutor.launchAndExecute(

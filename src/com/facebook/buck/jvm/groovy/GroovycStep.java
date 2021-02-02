@@ -87,7 +87,7 @@ class GroovycStep extends IsolatedStep {
     writePathToSourcesList(context.getRuleCellRoot(), sourceFilePaths);
     ProcessExecutor processExecutor = context.getProcessExecutor();
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
     return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }

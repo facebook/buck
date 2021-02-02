@@ -230,9 +230,8 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
-
     if (withDownwardApi) {
-      processExecutor = context.getDownwardApiProcessExecutor();
+      processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
 
     ProcessExecutor.Result result = processExecutor.launchAndExecute(params);
