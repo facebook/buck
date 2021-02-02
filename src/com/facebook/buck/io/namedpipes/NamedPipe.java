@@ -23,4 +23,7 @@ public interface NamedPipe extends Closeable {
 
   /** Returns named pipe name */
   String getName();
+
+  /** Returns true if this named pipe was closed. */
+  boolean isClosed();
 }

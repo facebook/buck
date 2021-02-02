@@ -39,6 +39,7 @@ abstract class WindowsNamedPipeClientBase extends BaseNamedPipe {
   private final HANDLE handle;
 
   private final Consumer<HANDLE> closeCallback;
+  private boolean isClosed = false;
 
   public WindowsNamedPipeClientBase(Path path, HANDLE handle, Consumer<HANDLE> closeCallback) {
     super(path);
@@ -49,6 +50,12 @@ abstract class WindowsNamedPipeClientBase extends BaseNamedPipe {
   @Override
   public void close() throws IOException {
     closeCallback.accept(handle);
+    isClosed = true;
+  }
+
+  @Override
+  public boolean isClosed() {
+    return isClosed;
   }
 
   protected HANDLE getNamedPipeHandle() {

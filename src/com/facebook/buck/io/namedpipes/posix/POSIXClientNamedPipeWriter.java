@@ -39,6 +39,7 @@ public class POSIXClientNamedPipeWriter extends POSIXClientNamedPipeBase
 
   @Override
   public void close() throws IOException {
+    super.close();
     closeFileWrapper(writer);
   }
 }

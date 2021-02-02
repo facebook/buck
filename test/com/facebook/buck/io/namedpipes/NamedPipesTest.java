@@ -22,6 +22,7 @@ import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ConsoleEvent;
@@ -55,6 +56,7 @@ import org.hamcrest.junit.ExpectedException;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
@@ -63,6 +65,8 @@ public class NamedPipesTest {
   @Rule public ExpectedException expectedThrownException = ExpectedException.none();
 
   private static final Logger LOG = Logger.get(NamedPipesTest.class);
+
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -82,17 +86,19 @@ public class NamedPipesTest {
    * <p>In the end test verifies that message that were sent was received in about 1s.
    */
   @Parameters(method = "getProtocols")
-  @Test(timeout = 10_000)
+  @Test
   public void testNamedPipes(DownwardProtocolType protocolType) throws InterruptedException {
     NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
     ExecutorService executorService = MostExecutors.newSingleThreadExecutor("named_pipe_reader");
     List<ReceivedNamedPipeJsonMessage> receivedMessages = new ArrayList<>();
     String namedPipePath = null;
-    try (NamedPipeReader namedPipe = namedPipeFactory.createAsReader()) {
+    NamedPipe namedPipe = null;
+    try (NamedPipeReader namedPipeReader = namedPipeFactory.createAsReader()) {
+      namedPipe = namedPipeReader;
       namedPipePath = namedPipe.getName();
       LOG.info("Named pipe created: %s", namedPipePath);
       Future<?> future =
-          executorService.submit(readFromNamedPipeRunnable(namedPipe, receivedMessages, 3));
+          executorService.submit(readFromNamedPipeRunnable(namedPipeReader, receivedMessages, 3));
       writeIntoNamedPipe(protocolType, namedPipePath);
       future.get(1, TimeUnit.SECONDS);
     } catch (Exception e) {
@@ -103,6 +109,8 @@ public class NamedPipesTest {
 
     assertNotNull("Named pipe has not been created!", namedPipePath);
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipePath)));
+    assertNotNull("Named pipe has not been created!", namedPipe);
+    assertTrue("Named pipe has to be closed.", namedPipe.isClosed());
 
     assertEquals(
         "Expected that reader was able to read 3 messages over named pipe!",

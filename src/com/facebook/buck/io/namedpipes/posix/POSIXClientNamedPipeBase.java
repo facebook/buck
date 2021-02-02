@@ -33,8 +33,20 @@ import javax.annotation.concurrent.NotThreadSafe;
 /** Named pipe implementation based on {@code RandomAccessFile}. */
 abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
 
+  private boolean isClosed = false;
+
   public POSIXClientNamedPipeBase(Path path) {
     super(path);
+  }
+
+  @Override
+  public void close() throws IOException {
+    isClosed = true;
+  }
+
+  @Override
+  public final boolean isClosed() {
+    return isClosed;
   }
 
   protected void closeFileWrapper(RandomAccessFileWrapper fileWrapper) throws IOException {

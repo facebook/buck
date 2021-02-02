@@ -39,6 +39,7 @@ public class POSIXClientNamedPipeReader extends POSIXClientNamedPipeBase
 
   @Override
   public void close() throws IOException {
+    super.close();
     closeFileWrapper(readFile);
   }
 }

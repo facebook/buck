@@ -66,6 +66,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   private final LinkedBlockingQueue<HANDLE> openHandles;
   private final LinkedBlockingQueue<HANDLE> connectedHandles;
   private final Consumer<HANDLE> closeCallback;
+  private boolean isClosed = false;
 
   public WindowsNamedPipeServerBase(Path path) {
     super(path);
@@ -80,6 +81,11 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
             closeOpenPipe(handle);
           }
         };
+  }
+
+  @Override
+  public boolean isClosed() {
+    return isClosed;
   }
 
   protected <T extends WindowsNamedPipeClientBase> T connect(Class<T> clazz) throws IOException {
@@ -228,6 +234,8 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     List<HANDLE> handlesToDisconnect = new ArrayList<>();
     connectedHandles.drainTo(handlesToDisconnect);
     handlesToDisconnect.forEach(handle -> closeConnectedPipe(handle, true));
+
+    isClosed = true;
   }
 
   private void closeOpenPipe(HANDLE handle) {

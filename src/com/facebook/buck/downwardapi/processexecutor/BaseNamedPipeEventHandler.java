@@ -121,7 +121,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
           "Finishing reader thread for pipe: %s; interrupted = %s",
           namedPipeName, Thread.currentThread().isInterrupted());
     } catch (PipeNotConnectedException e) {
-      LOGGER.info("Named pipe %s is closed", namedPipeName);
+      LOGGER.info(e, "Named pipe %s is closed", namedPipeName);
     } catch (IOException e) {
       LOGGER.error(e, "Cannot read from named pipe: %s", namedPipeName);
     } catch (InvalidDownwardProtocolException e) {
@@ -150,7 +150,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
               processEvent(eventType, event);
             });
       } catch (PipeNotConnectedException e) {
-        LOGGER.info("Named pipe %s is closed", namedPipeName);
+        LOGGER.info(e, "Named pipe %s is closed", namedPipeName);
         break;
       } catch (IOException e) {
         LOGGER.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
@@ -171,6 +171,11 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   @Override
   public void terminateAndWait()
       throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
+    if (namedPipe.isClosed()) {
+      LOGGER.info("Named pipe %s is already closed.", namedPipe.getName());
+      return;
+    }
+
     checkState(
         namedPipe instanceof NamedPipeServer,
         "DownwardApiProcessExecutor's named pipe must be a server!");

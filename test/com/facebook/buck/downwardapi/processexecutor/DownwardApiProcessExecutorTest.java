@@ -30,6 +30,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.util.log.Logger;
@@ -200,6 +201,8 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
   }
 
   @Test
@@ -231,6 +234,8 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
 
     waitTillEventsProcessed();
     Map<Integer, BuckEvent> events = listener.events;
@@ -342,6 +347,8 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
 
     assertThat(
         "Did not find log message about unexpected protocol",
@@ -383,12 +390,21 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
 
+    List<LogRecord> records = executorLogSink.getRecords();
     assertThat(
-        executorLogSink.getRecords(),
+        records,
         hasItem(
             TestLogSink.logRecordWithMessage(
                 stringContainsInOrder("Named pipe", namedPipeReader.getName(), "is closed"))));
+    assertThat(
+        records,
+        hasItem(
+            TestLogSink.logRecordWithMessage(
+                stringContainsInOrder(
+                    "Named pipe", namedPipeReader.getName(), "is already closed."))));
   }
 
   @Test
@@ -411,6 +427,8 @@ public class DownwardApiProcessExecutorTest {
     assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
+    assertNotNull("Named pipe has not been created!", namedPipe);
+    assertTrue("Named pipe has to be closed.", namedPipe.isClosed());
 
     assertThat(
         executorLogSink.getRecords(),
@@ -454,6 +472,8 @@ public class DownwardApiProcessExecutorTest {
     assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
 
     waitTillEventsProcessed();
     assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));
@@ -796,6 +816,11 @@ public class DownwardApiProcessExecutorTest {
     @Override
     public String getName() {
       return delegate.getName();
+    }
+
+    @Override
+    public boolean isClosed() {
+      return delegate.isClosed();
     }
 
     @Override
