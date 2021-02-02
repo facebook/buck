@@ -68,9 +68,14 @@ def getTestFiles(repo_root):
     for root, dirs, files in os.walk(repo_root):
         for f in files:
             absolute_path = os.path.join(root, f)
+            absolute_path_norm = absolute_path.replace("\\", "/")
             if not f.endswith(".java"):
                 continue
-            if "testdata" in absolute_path:
+            # Exclude testdata and certain bazel tests
+            if (
+                "testdata" in absolute_path
+                or "/third-party/java/bazel/" in absolute_path_norm
+            ):
                 continue
             if not containsJUnitImport(absolute_path):
                 continue
