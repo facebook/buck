@@ -117,7 +117,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    * output as uncacheable.
    */
   public boolean getEmitClangModuleBreadcrumbs() {
-    return delegate.getBooleanValue(SECTION_NAME, EMIT_CLANG_MODULE_BREADCRUMBS, true);
+    return delegate.getBooleanValue(SECTION_NAME, EMIT_CLANG_MODULE_BREADCRUMBS, false);
   }
 
   /**
