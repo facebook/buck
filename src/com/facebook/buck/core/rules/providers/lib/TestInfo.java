@@ -38,8 +38,7 @@ import org.immutables.value.Value;
       "run_tests_separately",
       "type"
     },
-    defaultSkylarkValues = {"[]", "[]", "None", "False", "\"custom\""},
-    noneable = {"timeout_ms"})
+    defaultSkylarkValues = {"[]", "[]", "None", "False", "\"custom\""})
 public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
   public static final BuiltInProvider<TestInfo> PROVIDER =
       BuiltInProvider.of(ImmutableTestInfo.class);

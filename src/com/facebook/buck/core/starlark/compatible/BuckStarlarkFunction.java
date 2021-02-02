@@ -35,7 +35,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import javax.annotation.Nullable;
 import net.starlark.java.spelling.SpellChecker;
 
@@ -66,16 +65,14 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       String methodName,
       Constructor<?> constructor,
       List<String> namedParams,
-      List<String> defaultSkylarkValues,
-      Set<String> noneableParams) {
+      List<String> defaultSkylarkValues) {
     try {
       this.method = lookup.unreflectConstructor(constructor);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("Unable to access the supplied constructor", e);
     }
     this.methodDescriptor =
-        inferMethodDescriptor(
-            methodName, method, namedParams, defaultSkylarkValues, noneableParams);
+        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -95,16 +92,14 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       String methodName,
       Method method,
       List<String> namedParams,
-      List<String> defaultSkylarkValues,
-      Set<String> noneableParams) {
+      List<String> defaultSkylarkValues) {
     try {
       this.method = lookup.unreflect(method);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("Unable to access the supplied method", e);
     }
     this.methodDescriptor =
-        inferMethodDescriptor(
-            methodName, this.method, namedParams, defaultSkylarkValues, noneableParams);
+        inferMethodDescriptor(methodName, this.method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -120,13 +115,11 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   BuckStarlarkFunction(
       String methodName,
       ImmutableList<String> namedParams,
-      ImmutableList<String> defaultSkylarkValues,
-      Set<String> noneableParams)
+      ImmutableList<String> defaultSkylarkValues)
       throws Throwable {
     this.method = lookup.unreflect(findMethod(methodName)).bindTo(this);
     this.methodDescriptor =
-        inferMethodDescriptor(
-            methodName, method, namedParams, defaultSkylarkValues, noneableParams);
+        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   /**
@@ -137,8 +130,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       String methodName,
       MethodHandle method,
       List<String> namedParams,
-      List<String> defaultSkylarkValues,
-      Set<String> noneableParams) {
+      List<String> defaultSkylarkValues) {
 
     return MethodDescriptor.of(
         /* we hand a fake reflective method since we only use the MethodDescriptor to
@@ -146,7 +138,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
         Method object to use in many cases (e.g. if the MethodHandle is a
         constructor). */
         inferSkylarkCallableAnnotationFromMethod(
-            methodName, method, namedParams, defaultSkylarkValues, noneableParams));
+            methodName, method, namedParams, defaultSkylarkValues));
   }
 
   @Override
@@ -234,10 +226,8 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       String methodName,
       MethodHandle method,
       List<String> namedParams,
-      List<String> defaultSkylarkValues,
-      Set<String> noneableParams) {
-    return BuckStarlarkCallable.fromMethod(
-        methodName, method, namedParams, defaultSkylarkValues, noneableParams);
+      List<String> defaultSkylarkValues) {
+    return BuckStarlarkCallable.fromMethod(methodName, method, namedParams, defaultSkylarkValues);
   }
 
   // a fake method to hand to the MethodDescriptor that this uses.

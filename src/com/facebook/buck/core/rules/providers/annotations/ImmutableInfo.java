@@ -54,9 +54,4 @@ public @interface ImmutableInfo {
    *     if a kwarg is not provided.
    */
   String[] defaultSkylarkValues() default {};
-
-  /** @return an array of fields that should be noneable */
-  // TODO(pjameson): T60486516 this should probably go away in favor of inferring noneable things
-  // from an Optional or SkylarkOptional field
-  String[] noneable() default {};
 }

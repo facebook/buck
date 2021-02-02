@@ -31,7 +31,6 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.NoneType;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.Tuple;
@@ -78,15 +77,9 @@ final class ParamDescriptor {
     // Compute set of allowed classes.
     List<Class<?>> allowedClasses = new ArrayList<>();
     allowedClasses.add(param.type());
-    if (param.noneable()) {
-      // A few annotations redundantly declare NoneType.
-      if (!allowedClasses.contains(NoneType.class)) {
-        allowedClasses.add(NoneType.class);
-      }
-    }
 
     return new ParamDescriptor(
-        param.name(), defaultExpr, param.noneable(), param.named(), true, allowedClasses);
+        param.name(), defaultExpr, false, param.named(), true, allowedClasses);
   }
 
   /** @see Param#name() */

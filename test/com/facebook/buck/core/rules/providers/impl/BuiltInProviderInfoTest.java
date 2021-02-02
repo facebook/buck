@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
@@ -117,23 +116,6 @@ public class BuiltInProviderInfoTest {
       Map<String, String> validated = Dict.cast(s, String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiate(
           ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo));
-    }
-  }
-
-  @ImmutableInfo(
-      args = {"noneable_val", "val"},
-      noneable = {"noneable_val"})
-  public abstract static class SomeInfoWithNoneable
-      extends BuiltInProviderInfo<SomeInfoWithNoneable> {
-    public static final BuiltInProvider<SomeInfoWithNoneable> PROVIDER =
-        BuiltInProvider.of(ImmutableSomeInfoWithNoneable.class);
-
-    public abstract Object noneableVal();
-
-    public abstract Object val();
-
-    public static SomeInfoWithNoneable instantiateFromSkylark(Object noneableVal, Object val) {
-      return new ImmutableSomeInfoWithNoneable(noneableVal, val);
     }
   }
 
@@ -295,26 +277,6 @@ public class BuiltInProviderInfoTest {
         "SomeInfoWithInstantiate(my_info='not a number')",
         ImmutableMap.of(
             SomeInfoWithInstantiate.PROVIDER.getName(), SomeInfoWithInstantiate.PROVIDER));
-  }
-
-  @Test
-  public void allowsNoneAsAParamToStaticMethod() throws Exception {
-    ImmutableMap<String, Object> env =
-        ImmutableMap.of(SomeInfoWithNoneable.PROVIDER.getName(), SomeInfoWithNoneable.PROVIDER);
-
-    Object none = TestStarlarkParser.eval("SomeInfoWithNoneable(noneable_val=None, val=1)", env);
-    Object strValue =
-        TestStarlarkParser.eval("SomeInfoWithNoneable(noneable_val=\"foo\", val=1)", env);
-
-    assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
-    assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
-
-    assertEquals(Starlark.NONE, ((SomeInfoWithNoneable) none).noneableVal());
-    assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
-
-    thrown.expect(EvalException.class);
-    thrown.expectMessage("cannot be None");
-    TestStarlarkParser.eval("SomeInfoWithNoneable(noneable_val=None, val=None)", env);
   }
 
   @Test

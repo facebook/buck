@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.providers.lib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
@@ -29,7 +28,6 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -135,43 +133,5 @@ public class TestInfoTest {
     assertEquals(Optional.of(5L), testInfo.typedTimeoutMs());
     assertTrue(testInfo.runTestsSeparately());
     assertEquals(TYPE, testInfo.type());
-  }
-
-  @Test
-  public void coercesTimeout() throws Exception {
-    Object raw1;
-    Object raw2;
-    ImmutableMap<String, Object> map =
-        ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER);
-
-    raw1 =
-        TestStarlarkParser.eval(
-            String.format(
-                "TestInfo("
-                    + "\ntest_name=\"%s\","
-                    + "\ntest_case_name=\"%s\","
-                    + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\").timeout_ms"
-                    + "\n)",
-                TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME),
-            map);
-    raw2 =
-        TestStarlarkParser.eval(
-            String.format(
-                "TestInfo("
-                    + "\ntest_name=\"%s\","
-                    + "\ntest_case_name=\"%s\","
-                    + "\ntimeout_ms=TestInfo(test_name=\"%s\", test_case_name=\"%s\", timeout_ms=5).timeout_ms"
-                    + "\n)",
-                TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME),
-            map);
-    assertThat(raw1, Matchers.instanceOf(TestInfo.class));
-    TestInfo val1 = (TestInfo) raw1;
-    assertEquals(Starlark.NONE, val1.timeoutMs());
-    assertEquals(Optional.empty(), val1.typedTimeoutMs());
-
-    assertThat(raw2, Matchers.instanceOf(TestInfo.class));
-    TestInfo val2 = (TestInfo) raw2;
-    assertEquals(5, val2.timeoutMs());
-    assertEquals(Optional.of(5L), val2.typedTimeoutMs());
   }
 }

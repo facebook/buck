@@ -21,10 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Arrays;
 import org.junit.Rule;
@@ -38,8 +35,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void simpleArgument() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction(
-            "foo", ImmutableList.of("i"), ImmutableList.of(""), ImmutableSet.of()) {
+        new BuckStarlarkFunction("foo", ImmutableList.of("i"), ImmutableList.of("")) {
           public void foo(int i) {
             i++;
           }
@@ -56,8 +52,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void manyArgs() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction(
-            "manyArgs", ImmutableList.of("a", "b"), ImmutableList.of("", ""), ImmutableSet.of()) {
+        new BuckStarlarkFunction("manyArgs", ImmutableList.of("a", "b"), ImmutableList.of("", "")) {
           public String manyArgs(String a, String b) {
             return a + b;
           }
@@ -76,8 +71,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void skylarkCollection() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction(
-            "skylarkLists", ImmutableList.of("list"), ImmutableList.of("[]"), ImmutableSet.of()) {
+        new BuckStarlarkFunction("skylarkLists", ImmutableList.of("list"), ImmutableList.of("[]")) {
           public String skylarkLists(StarlarkList<Integer> list) {
             return list.toString();
           }
@@ -95,8 +89,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void skylarkCall() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction(
-            "toStr", ImmutableList.of("num"), ImmutableList.of(""), ImmutableSet.of()) {
+        new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of("")) {
           public String toStr(Integer num) {
             return num.toString();
           }
@@ -111,8 +104,7 @@ public class BuckStarlarkFunctionTest {
   @Test
   public void noDefaultValues() throws Throwable {
     BuckStarlarkFunction function =
-        new BuckStarlarkFunction(
-            "toStr", ImmutableList.of("num"), ImmutableList.of(), ImmutableSet.of()) {
+        new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of()) {
           public String toStr(Integer num) {
             return num.toString();
           }
@@ -128,10 +120,7 @@ public class BuckStarlarkFunctionTest {
   public void withPartialNamedAndDefault() throws Throwable {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
-            "myFoo",
-            ImmutableList.of("numNoDefault", "numWithDefault"),
-            ImmutableList.of("1"),
-            ImmutableSet.of()) {
+            "myFoo", ImmutableList.of("numNoDefault", "numWithDefault"), ImmutableList.of("1")) {
           public String myFoo(Integer mand, Integer numNoDefault, Integer withDefault) {
             return String.valueOf(mand + numNoDefault + withDefault);
           }
@@ -157,7 +146,7 @@ public class BuckStarlarkFunctionTest {
 
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
-            "myFoo", ImmutableList.of("correct", "extra"), ImmutableList.of(), ImmutableSet.of()) {
+            "myFoo", ImmutableList.of("correct", "extra"), ImmutableList.of()) {
           public String myFoo(Integer correct) {
             return "";
           }
@@ -171,38 +160,10 @@ public class BuckStarlarkFunctionTest {
 
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
-            "myFoo", ImmutableList.of(), ImmutableList.of("correct", "extra"), ImmutableSet.of()) {
+            "myFoo", ImmutableList.of(), ImmutableList.of("correct", "extra")) {
           public String myFoo(Integer correct) {
             return "";
           }
         };
-  }
-
-  @Test
-  public void allowsNoneable() throws Throwable {
-    BuckStarlarkFunction function =
-        new BuckStarlarkFunction(
-            "withNone",
-            ImmutableList.of("non_noneable", "noneable"),
-            ImmutableList.of("None"),
-            ImmutableSet.of("noneable")) {
-          public Object withNone(Object nonNoneable, Object noneable) {
-            return StarlarkList.immutableCopyOf(ImmutableList.of(nonNoneable, noneable));
-          }
-        };
-
-    ImmutableMap<String, Object> map =
-        ImmutableMap.of(function.getMethodDescriptor().getName(), function);
-    Object none = TestStarlarkParser.eval("withNone(noneable=None, non_noneable=1)[1]", map);
-    Object defaultNone = TestStarlarkParser.eval("withNone(non_noneable=1)[1]", map);
-    Object nonNull = TestStarlarkParser.eval("withNone(noneable=2, non_noneable=1)[1]", map);
-
-    assertEquals(Starlark.NONE, none);
-    assertEquals(Starlark.NONE, defaultNone);
-    assertEquals(2, nonNull);
-
-    expectedException.expect(EvalException.class);
-    expectedException.expectMessage("cannot be None");
-    TestStarlarkParser.eval("withNone(noneable=2, non_noneable=None)[1]", map);
   }
 }

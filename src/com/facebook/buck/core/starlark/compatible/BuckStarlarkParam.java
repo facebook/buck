@@ -28,34 +28,25 @@ import net.starlark.java.annot.Param;
 @SuppressWarnings("all")
 class BuckStarlarkParam {
 
-  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "", true);
-
   private final String name;
   private final Class<?> type;
   private final String defaultSkylarkValue;
-  private final boolean noneable;
 
-  private BuckStarlarkParam(
-      String name, Class<?> type, String defaultSkylarkValue, boolean noneable) {
+  private BuckStarlarkParam(String name, Class<?> type, String defaultSkylarkValue) {
     this.name = name;
     this.type = type;
     this.defaultSkylarkValue = defaultSkylarkValue;
-    this.noneable = noneable;
   }
 
   /**
    * @param parameter the parameter type class
    * @param namedParameter the name of the parameter, if any
    * @param defaultSkylarkValue the string represetnation of the default skylark value
-   * @param noneable whether this parameter can accept `None`
    * @return an instance of the skylark annotation representing a parameter of the given type and
    *     name
    */
   static BuckStarlarkParam fromParam(
-      Class<?> parameter,
-      @Nullable String namedParameter,
-      @Nullable String defaultSkylarkValue,
-      boolean noneable) {
+      Class<?> parameter, @Nullable String namedParameter, @Nullable String defaultSkylarkValue) {
     if (namedParameter == null) {
       namedParameter = "";
     }
@@ -66,7 +57,7 @@ class BuckStarlarkParam {
     if (type.isPrimitive()) {
       type = Primitives.wrap(type);
     }
-    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue, noneable);
+    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue);
   }
 
   public Class<? extends Annotation> annotationType() {
@@ -79,10 +70,6 @@ class BuckStarlarkParam {
 
   public Class<?> type() {
     return type;
-  }
-
-  public boolean noneable() {
-    return noneable;
   }
 
   public String defaultValue() {
