@@ -19,7 +19,6 @@ package com.facebook.buck.io.namedpipes.windows;
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.closeConnectedPipe;
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
 
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
@@ -35,8 +34,8 @@ import com.sun.jna.ptr.IntByReference;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -53,7 +52,6 @@ import java.util.function.Consumer;
 abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements NamedPipeServer {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
-  private static final Logger LOG = Logger.get(WindowsNamedPipeServerBase.class);
 
   private static final int KB_IN_BYTES = 1024;
   // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea?redirectedfrom=MSDN
@@ -184,18 +182,13 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   @Override
   public void prepareToClose(Future<Void> readyToClose)
       throws InterruptedException, ExecutionException, TimeoutException {
-    List<HANDLE> handlesToDisconnect = new ArrayList<>();
-
     try {
-      HANDLE handle;
       if (connectedHandles.isEmpty()) {
         // Client never connected. There should be an open handle
-        openHandles.drainTo(handlesToDisconnect);
-        disconnectNamedPipe(checkAndGetOnlyHandle(handlesToDisconnect));
+        HANDLE handle = getTheOnlyHandle(openHandles);
+        closeConnectedPipe(handle, false);
       } else {
-        connectedHandles.drainTo(handlesToDisconnect);
-        handle = checkAndGetOnlyHandle(handlesToDisconnect);
-
+        HANDLE handle = getTheOnlyHandle(connectedHandles);
         API.FlushFileBuffers(handle);
 
         try {
@@ -203,7 +196,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
           // before disconnecting.
           readyToClose.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
         } finally {
-          disconnectNamedPipe(handle);
+          closeConnectedPipe(handle, true);
         }
       }
     } catch (RuntimeException e) {
@@ -211,18 +204,12 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     }
   }
 
-  private HANDLE checkAndGetOnlyHandle(Collection<HANDLE> handles) {
-    Preconditions.checkState(
-        handles.size() == 1, "Expected one handle to disconnect, got %s", handles.size());
-    return Iterables.getOnlyElement(handles);
-  }
-
-  private void disconnectNamedPipe(HANDLE handle) {
-    boolean disconnectSuccess = API.DisconnectNamedPipe(handle);
-    if (!disconnectSuccess) {
-      int error = API.GetLastError();
-      LOG.error("Failed to disconnect named pipe; error code = %s", error);
-    }
+  private HANDLE getTheOnlyHandle(BlockingQueue<HANDLE> handles) {
+    List<HANDLE> drainList = new ArrayList<>(1);
+    handles.drainTo(drainList);
+    int size = drainList.size();
+    Preconditions.checkState(size == 1, "Expected one handle, got %s", size);
+    return Iterables.getOnlyElement(drainList);
   }
 
   @Override
