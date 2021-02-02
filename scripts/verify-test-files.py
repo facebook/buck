@@ -77,7 +77,7 @@ def getTestFiles(repo_root):
             relative_path = os.path.relpath(absolute_path, repo_root)
             if isPathIgnored(relative_path):
                 continue
-            assert os.path.exists(absolute_path), "%s doesn't exist" % line
+            assert os.path.exists(absolute_path), "%s doesn't exist" % absolute_path
             test_files.append(relative_path)
     return sorted(test_files)
 
