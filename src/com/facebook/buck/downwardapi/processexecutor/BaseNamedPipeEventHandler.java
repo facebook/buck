@@ -37,7 +37,6 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -94,7 +93,6 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private final DownwardApiExecutionContext context;
   private final SettableFuture<Void> done = SettableFuture.create();
 
-  private Optional<Future<?>> running = Optional.empty();
   @Nullable private volatile DownwardProtocol downwardProtocol = null;
 
   public BaseNamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
@@ -104,7 +102,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   @Override
   public void runOn(ThreadPoolExecutor threadPool) {
-    running = Optional.of(threadPool.submit(this::run));
+    threadPool.submit(this::run);
   }
 
   private void run() {
@@ -181,8 +179,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     try {
       namedPipeServer.prepareToClose(done);
     } catch (IOException e) {
-      LOGGER.error(e, "Failed to prepare to close named pipe. Canceling handler");
-      running.map(future -> future.cancel(true));
+      LOGGER.error(e, "Failed to prepare to close named pipe.");
     }
   }
 
