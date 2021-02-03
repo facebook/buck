@@ -21,13 +21,25 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
+import com.facebook.buck.cxx.CxxResourceName;
+import com.facebook.buck.cxx.CxxResourceUtils;
+import com.facebook.buck.file.CopyTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -36,6 +48,9 @@ public class AppleResources {
   @VisibleForTesting
   public static final Predicate<TargetNode<?>> IS_APPLE_BUNDLE_RESOURCE_NODE =
       node -> node.getDescription() instanceof HasAppleBundleResourcesDescription;
+
+  public static final Predicate<TargetNode<?>> IS_CXX_LIBRARY_NODE =
+      node -> node.getDescription() instanceof CxxLibraryDescription;
 
   // Utility class, do not instantiate.
   private AppleResources() {}
@@ -65,11 +80,57 @@ public class AppleResources {
         .toSet();
   }
 
+  // Embed C++ resources from C++ library dependencies into a "CxxResources" in the bundle.
+  private static void collectCxxLibraryResources(
+      ActionGraphBuilder resolver, TargetNode<?> node, AppleBundleResources.Builder builder) {
+    CxxLibraryDescription description = (CxxLibraryDescription) node.getDescription();
+    CxxLibraryDescriptionArg arg =
+        description.getConstructorArgType().cast(node.getConstructorArg());
+    if (!arg.getResources().isEmpty()) {
+      ForwardRelativePath cxxResRoot = ForwardRelativePath.of("CxxResources");
+      CopyTree resourceTree =
+          (CopyTree)
+              resolver.computeIfAbsent(
+                  node.getBuildTarget()
+                      .withAppendedFlavors(InternalFlavor.of("apple-cxx-resources")),
+                  target -> {
+                    ImmutableMap<CxxResourceName, SourcePath> resources =
+                        CxxResourceUtils.fullyQualify(
+                            node.getBuildTarget(),
+                            arg.getHeaderNamespace(),
+                            arg.getResources()
+                                .toNameMap(
+                                    node.getBuildTarget(),
+                                    resolver.getSourcePathResolver(),
+                                    "resources"));
+                    return new CopyTree(
+                        target,
+                        node.getFilesystem(),
+                        resolver,
+                        ImmutableSortedMap.copyOf(
+                            MoreMaps.transformKeys(
+                                resources, name -> cxxResRoot.resolve(name.getNameAsPath()))));
+                  });
+      builder.addResourceDirs(
+          SourcePathWithAppleBundleDestination.of(
+              // Apple resources are copied in using the file name of the source path, so remap
+              // the source path so that we specify the resource root base used for C++
+              // resources embedded in Apple bundles.
+              ExplicitBuildTargetSourcePath.of(
+                  resourceTree.getBuildTarget(),
+                  resolver
+                      .getSourcePathResolver()
+                      .getCellUnsafeRelPath(resourceTree.getSourcePathToOutput())
+                      .resolve(cxxResRoot.toPath(node.getFilesystem().getFileSystem()))),
+              AppleBundleDestination.RESOURCES));
+    }
+  }
+
   /** Collect resource dirs and files */
   public static <T extends ConstructorArg> AppleBundleResources collectResourceDirsAndFiles(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
-      BuildRuleResolver resolver,
+      ActionGraphBuilder resolver,
       Optional<AppleDependenciesCache> cache,
       TargetNode<T> targetNode,
       AppleCxxPlatform appleCxxPlatform,
@@ -84,12 +145,17 @@ public class AppleResources {
             cache,
             mode,
             targetNode,
-            IS_APPLE_BUNDLE_RESOURCE_NODE,
+            IS_APPLE_BUNDLE_RESOURCE_NODE.or(IS_CXX_LIBRARY_NODE),
             Optional.of(appleCxxPlatform));
     ProjectFilesystem filesystem = targetNode.getFilesystem();
 
     for (TargetNode<?> resourceNode : resourceNodes) {
       if (!filter.test(resourceNode.getBuildTarget())) {
+        continue;
+      }
+
+      if (resourceNode.getDescription() instanceof CxxLibraryDescription) {
+        collectCxxLibraryResources(resolver, resourceNode, builder);
         continue;
       }
 
@@ -99,7 +165,6 @@ public class AppleResources {
       @SuppressWarnings("unchecked")
       HasAppleBundleResourcesDescription<BuildRuleArg> description =
           (HasAppleBundleResourcesDescription<BuildRuleArg>) node.getDescription();
-
       description.addAppleBundleResources(builder, node, filesystem, resolver);
     }
     return builder.build();

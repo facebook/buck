@@ -2538,4 +2538,22 @@ public class AppleBundleIntegrationTest {
             "//:DemoAppWithDifferentDuplicatedResources#macosx-x86_64,no-debug");
     workspace.runBuckBuild(target.toString()).assertFailure();
   }
+
+  @Test
+  public void appBundleWithCxxResources() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_cxx_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        RelPath.get("DemoApp_output.expected"),
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+  }
 }
