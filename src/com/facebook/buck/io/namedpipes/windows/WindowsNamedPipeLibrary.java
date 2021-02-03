@@ -23,6 +23,7 @@ import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.W32APIOptions;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -35,7 +36,7 @@ interface WindowsNamedPipeLibrary extends WinNT, Library {
   int CLOSE_WAIT_IN_MILLIS = 500;
 
   WindowsNamedPipeLibrary INSTANCE =
-      Native.loadLibrary("kernel32", WindowsNamedPipeLibrary.class, W32APIOptions.UNICODE_OPTIONS);
+      Native.load("kernel32", WindowsNamedPipeLibrary.class, W32APIOptions.UNICODE_OPTIONS);
 
   HANDLE CreateNamedPipe(
       String lpName,
@@ -84,15 +85,22 @@ interface WindowsNamedPipeLibrary extends WinNT, Library {
 
   boolean FlushFileBuffers(HANDLE hFile);
 
-  static void closeConnectedPipe(HANDLE handle, boolean shutdown) {
+  static void closeConnectedPipe(WindowsHandle windowsHandle, boolean shutdown) {
+    HANDLE handle = windowsHandle.getHandle();
     if (!shutdown) {
       INSTANCE.WaitForSingleObject(handle, CLOSE_WAIT_IN_MILLIS);
     }
     INSTANCE.DisconnectNamedPipe(handle);
-    INSTANCE.CloseHandle(handle);
+    windowsHandle.close();
   }
 
-  static HANDLE createEvent() {
-    return INSTANCE.CreateEvent(null, true, false, null);
+  static WindowsHandle createEvent(String namedPipeName) throws IOException {
+    HANDLE handle = INSTANCE.CreateEvent(null, true, false, null);
+    if (handle == null) {
+      int error = INSTANCE.GetLastError();
+      throw new IOException(String.format("CreateEvent() failed, error code: %s", error));
+    }
+
+    return WindowsHandle.of(handle, "CreateEvent() for " + namedPipeName);
   }
 }

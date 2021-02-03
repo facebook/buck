@@ -16,7 +16,8 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
-import com.sun.jna.platform.win32.WinBase;
+import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
+
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
@@ -29,14 +30,14 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
-  private final WinNT.HANDLE namedPipeHandle;
-  private final WinNT.HANDLE writerWaitable;
+  private final WindowsHandle namedPipeHandle;
+  private final WindowsHandle writerWaitable;
   private final String namedPipeName;
 
-  protected WindowsNamedPipeOutputStream(
-      WinNT.HANDLE namedPipeHandle, WinNT.HANDLE writerWaitable, String namedPipeName) {
+  protected WindowsNamedPipeOutputStream(WindowsHandle namedPipeHandle, String namedPipeName)
+      throws IOException {
     this.namedPipeHandle = namedPipeHandle;
-    this.writerWaitable = writerWaitable;
+    this.writerWaitable = createEvent(namedPipeName);
     this.namedPipeName = namedPipeName;
   }
 
@@ -49,11 +50,9 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
   public void write(byte[] b, int off, int len) throws IOException {
     ByteBuffer data = ByteBuffer.wrap(b, off, len);
 
-    WinBase.OVERLAPPED olap = new WinBase.OVERLAPPED();
-    olap.hEvent = writerWaitable;
-    olap.write();
-
-    boolean immediate = API.WriteFile(namedPipeHandle, data, len, null, olap.getPointer());
+    WindowsOverlapped overlapped = new WindowsOverlapped(writerWaitable);
+    WinNT.HANDLE namedPipeRawHandle = namedPipeHandle.getHandle();
+    boolean immediate = API.WriteFile(namedPipeRawHandle, data, len, null, overlapped.getPointer());
     if (!immediate) {
       int error = API.GetLastError();
       if (error != WinError.ERROR_IO_PENDING) {
@@ -64,7 +63,7 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
       }
     }
     IntByReference written = new IntByReference();
-    if (!API.GetOverlappedResult(namedPipeHandle, olap.getPointer(), written, true)) {
+    if (!API.GetOverlappedResult(namedPipeRawHandle, overlapped.getPointer(), written, true)) {
       int error = API.GetLastError();
       throw new IOException(
           String.format(
@@ -76,5 +75,10 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
           String.format(
               "WriteFile() wrote less bytes than requested. Named pipe: %s", namedPipeName));
     }
+  }
+
+  @Override
+  public void close() {
+    writerWaitable.close();
   }
 }

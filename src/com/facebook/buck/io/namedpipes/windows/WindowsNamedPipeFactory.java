@@ -22,7 +22,6 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.sun.jna.platform.win32.Kernel32;
-import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,22 +68,24 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
     return new WindowsNamedPipeClientReader(path, connectToPipe(path), getCloseHandleCallback());
   }
 
-  private static WinNT.HANDLE connectToPipe(Path path) throws IOException {
+  private static WindowsHandle connectToPipe(Path path) throws IOException {
     String namedPipeName = path.toString();
     Kernel32.INSTANCE.WaitNamedPipe(namedPipeName, CONNECT_TIMEOUT_IN_MILLIS);
 
-    WinNT.HANDLE handle =
-        Kernel32.INSTANCE.CreateFile(
-            namedPipeName,
-            WinNT.GENERIC_READ | WinNT.GENERIC_WRITE,
-            0, // no sharing
-            null, // default security attributes
-            WinNT.OPEN_EXISTING, // opens existing pipe
-            WinNT.FILE_FLAG_OVERLAPPED,
-            null // no template file
-            );
+    WindowsHandle handle =
+        WindowsHandle.of(
+            Kernel32.INSTANCE.CreateFile(
+                namedPipeName,
+                WinNT.GENERIC_READ | WinNT.GENERIC_WRITE,
+                0, // no sharing
+                null, // default security attributes
+                WinNT.OPEN_EXISTING, // opens existing pipe
+                WinNT.FILE_FLAG_OVERLAPPED,
+                null // no template file
+                ),
+            "CreateFile() for " + namedPipeName);
 
-    if (WinBase.INVALID_HANDLE_VALUE.equals(handle)) {
+    if (handle.isInvalidHandle()) {
       throw new IOException(
           String.format("Could not create named pipe, error %d", Kernel32.INSTANCE.GetLastError()));
     }
@@ -92,7 +93,7 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
     return handle;
   }
 
-  private static Consumer<WinNT.HANDLE> getCloseHandleCallback() {
+  private static Consumer<WindowsHandle> getCloseHandleCallback() {
     return handle -> closeConnectedPipe(handle, true);
   }
 }

@@ -16,8 +16,9 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
+import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
+
 import com.sun.jna.Memory;
-import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
@@ -29,14 +30,14 @@ class WindowsNamedPipeInputStream extends InputStream {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
-  private final WinNT.HANDLE namedPipeHandle;
-  private final WinNT.HANDLE readerWaitable;
+  private final WindowsHandle namedPipeHandle;
+  private final WindowsHandle readerWaitable;
   private final String namedPipeName;
 
-  protected WindowsNamedPipeInputStream(
-      WinNT.HANDLE namedPipeHandle, WinNT.HANDLE readerWaitable, String namedPipeName) {
+  protected WindowsNamedPipeInputStream(WindowsHandle namedPipeHandle, String namedPipeName)
+      throws IOException {
     this.namedPipeHandle = namedPipeHandle;
-    this.readerWaitable = readerWaitable;
+    this.readerWaitable = createEvent(namedPipeName);
     this.namedPipeName = namedPipeName;
   }
 
@@ -56,11 +57,10 @@ class WindowsNamedPipeInputStream extends InputStream {
   public int read(byte[] b, int off, int len) throws IOException {
     Memory readBuffer = new Memory(len);
 
-    WinBase.OVERLAPPED olap = new WinBase.OVERLAPPED();
-    olap.hEvent = readerWaitable;
-    olap.write();
-
-    boolean immediate = API.ReadFile(namedPipeHandle, readBuffer, len, null, olap.getPointer());
+    WindowsOverlapped overlapped = new WindowsOverlapped(readerWaitable);
+    WinNT.HANDLE namedPipeRawHandle = namedPipeHandle.getHandle();
+    boolean immediate =
+        API.ReadFile(namedPipeRawHandle, readBuffer, len, null, overlapped.getPointer());
     if (!immediate) {
       int error = API.GetLastError();
       if (error != WinError.ERROR_IO_PENDING) {
@@ -72,7 +72,7 @@ class WindowsNamedPipeInputStream extends InputStream {
     }
 
     IntByReference r = new IntByReference();
-    if (!API.GetOverlappedResult(namedPipeHandle, olap.getPointer(), r, true)) {
+    if (!API.GetOverlappedResult(namedPipeRawHandle, overlapped.getPointer(), r, true)) {
       int error = API.GetLastError();
       throw new IOException(
           String.format(
@@ -83,5 +83,10 @@ class WindowsNamedPipeInputStream extends InputStream {
     byte[] byteArray = readBuffer.getByteArray(0, actualLen);
     System.arraycopy(byteArray, 0, b, off, actualLen);
     return actualLen;
+  }
+
+  @Override
+  public void close() {
+    readerWaitable.close();
   }
 }

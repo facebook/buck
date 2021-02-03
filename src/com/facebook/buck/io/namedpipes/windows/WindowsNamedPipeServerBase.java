@@ -24,6 +24,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.facebook.buck.util.CloseableWrapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.sun.jna.platform.win32.WinBase;
@@ -54,22 +55,20 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
   private static final int KB_IN_BYTES = 1024;
-  // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea?redirectedfrom=MSDN
+  // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea
   // The buffer size specified should be small enough that your process will not run out of nonpaged
   // pool, but large enough to accommodate typical requests.
   private static final int BUFFER_SIZE = 2 * KB_IN_BYTES;
 
   private static final int WAIT_FOR_HANDLER_TIMEOUT_MILLIS = 5_000;
 
-  private final LinkedBlockingQueue<HANDLE> openHandles;
-  private final LinkedBlockingQueue<HANDLE> connectedHandles;
-  private final Consumer<HANDLE> closeCallback;
+  private final LinkedBlockingQueue<WindowsHandle> openHandles = new LinkedBlockingQueue<>();
+  private final LinkedBlockingQueue<WindowsHandle> connectedHandles = new LinkedBlockingQueue<>();
+  private final Consumer<WindowsHandle> closeCallback;
   private boolean isClosed = false;
 
   public WindowsNamedPipeServerBase(Path path) {
     super(path);
-    this.openHandles = new LinkedBlockingQueue<>();
-    this.connectedHandles = new LinkedBlockingQueue<>();
     this.closeCallback =
         handle -> {
           if (connectedHandles.remove(handle)) {
@@ -87,66 +86,74 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   }
 
   protected <T extends WindowsNamedPipeClientBase> T connect(Class<T> clazz) throws IOException {
-    HANDLE handle =
-        API.CreateNamedPipe(
-            /* lpName */ getName(),
-            /* dwOpenMode */ WinNT.PIPE_ACCESS_DUPLEX | WinNT.FILE_FLAG_OVERLAPPED,
-            /* dwPipeMode */ WinBase.PIPE_REJECT_REMOTE_CLIENTS,
-            /* nMaxInstances */ WinBase.PIPE_UNLIMITED_INSTANCES,
-            /* nOutBufferSize */ BUFFER_SIZE,
-            /* nInBufferSize */ BUFFER_SIZE,
-            /* nDefaultTimeOut */ 0,
-            /* lpSecurityAttributes */ null);
-    if (WinBase.INVALID_HANDLE_VALUE.equals(handle)) {
+    String namedPipe = getName();
+    WindowsHandle handle =
+        WindowsHandle.of(
+            API.CreateNamedPipe(
+                /* lpName */ namedPipe,
+                /* dwOpenMode */ WinNT.PIPE_ACCESS_DUPLEX | WinNT.FILE_FLAG_OVERLAPPED,
+                /* dwPipeMode */ WinBase.PIPE_REJECT_REMOTE_CLIENTS,
+                /* nMaxInstances */ WinBase.PIPE_UNLIMITED_INSTANCES,
+                /* nOutBufferSize */ BUFFER_SIZE,
+                /* nInBufferSize */ BUFFER_SIZE,
+                /* nDefaultTimeOut */ 0,
+                /* lpSecurityAttributes */ null),
+            "CreateNamedPipe() for " + namedPipe);
+    if (handle.isInvalidHandle()) {
       throw new IOException(
           String.format(
-              "Could not create named pipe: %s, error %s", getName(), API.GetLastError()));
+              "Could not create named pipe: %s, error %s", namedPipe, API.GetLastError()));
     }
     openHandles.add(handle);
 
-    WinBase.OVERLAPPED overlapped = createOverlapped();
-    if (API.ConnectNamedPipe(handle, overlapped.getPointer())) {
-      openHandles.remove(handle);
-      connectedHandles.add(handle);
-      return getClient(handle, clazz);
-    }
-
-    int connectError = API.GetLastError();
-    if (connectError == WinError.ERROR_PIPE_CONNECTED) {
-      openHandles.remove(handle);
-      connectedHandles.add(handle);
-      return getClient(handle, clazz);
-    }
-
-    if (connectError == WinError.ERROR_NO_DATA) {
-      // Client has connected and disconnected between CreateNamedPipe() and ConnectNamedPipe()
-      // connection is broken, but it is returned it avoid loop here.
-      // Actual error will happen when it will try to read/write from/to pipe.
-      return getClient(handle, clazz);
-    }
-
-    if (connectError == WinError.ERROR_IO_PENDING) {
-      if (!API.GetOverlappedResult(handle, overlapped.getPointer(), new IntByReference(), true)) {
+    int connectError;
+    try (CloseableWrapper<WindowsOverlapped> closeableWrapper =
+        CloseableWrapper.of(createOverlapped(), WindowsOverlapped::close)) {
+      HANDLE rawHandle = handle.getHandle();
+      WindowsOverlapped overlapped = closeableWrapper.get();
+      if (API.ConnectNamedPipe(rawHandle, overlapped.getPointer())) {
         openHandles.remove(handle);
-        closeOpenPipe(handle);
-        throw new PipeNotConnectedException(
-            String.format(
-                "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s, previous error: %s",
-                getName(), API.GetLastError(), connectError));
+        connectedHandles.add(handle);
+        return getClient(handle, clazz);
       }
 
-      openHandles.remove(handle);
-      connectedHandles.add(handle);
-      return getClient(handle, clazz);
+      connectError = API.GetLastError();
+      if (connectError == WinError.ERROR_PIPE_CONNECTED) {
+        openHandles.remove(handle);
+        connectedHandles.add(handle);
+        return getClient(handle, clazz);
+      }
+
+      if (connectError == WinError.ERROR_NO_DATA) {
+        // Client has connected and disconnected between CreateNamedPipe() and ConnectNamedPipe()
+        // connection is broken, but it is returned it avoid loop here.
+        // Actual error will happen when it will try to read/write from/to pipe.
+        return getClient(handle, clazz);
+      }
+
+      if (connectError == WinError.ERROR_IO_PENDING) {
+        if (!API.GetOverlappedResult(
+            rawHandle, overlapped.getPointer(), new IntByReference(), true)) {
+          openHandles.remove(handle);
+          closeOpenPipe(handle);
+          throw new PipeNotConnectedException(
+              String.format(
+                  "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s, previous error: %s",
+                  namedPipe, API.GetLastError(), connectError));
+        }
+
+        openHandles.remove(handle);
+        connectedHandles.add(handle);
+        return getClient(handle, clazz);
+      }
     }
 
     throw new IOException(
         String.format(
-            "ConnectNamedPipe() failed. Named pipe: %s, error: %s", getName(), connectError));
+            "ConnectNamedPipe() failed. Named pipe: %s, error: %s", namedPipe, connectError));
   }
 
-  private <T extends WindowsNamedPipeClientBase> T getClient(HANDLE handle, Class<T> clazz)
-      throws IOException {
+  private <T extends WindowsNamedPipeClientBase> T getClient(WindowsHandle handle, Class<T> clazz) {
     if (NamedPipeWriter.class.isAssignableFrom(clazz)) {
       return clazz.cast(new WindowsNamedPipeClientWriter(getPath(), handle, closeCallback));
     }
@@ -158,11 +165,9 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     throw new IllegalStateException(clazz + " is not supported!");
   }
 
-  private WinBase.OVERLAPPED createOverlapped() {
-    WinBase.OVERLAPPED overlapped = new WinBase.OVERLAPPED();
-    overlapped.hEvent = createEvent();
-    overlapped.write();
-    return overlapped;
+  private WindowsOverlapped createOverlapped() throws IOException {
+    WindowsHandle windowsHandle = createEvent("Overlapped for " + getName());
+    return new WindowsOverlapped(windowsHandle);
   }
 
   /**
@@ -184,12 +189,14 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
       throws InterruptedException, ExecutionException, TimeoutException {
     try {
       if (connectedHandles.isEmpty()) {
-        // Client never connected. There should be an open handle
-        HANDLE handle = getTheOnlyHandle(openHandles);
-        closeConnectedPipe(handle, false);
+        if (!openHandles.isEmpty()) {
+          // Client never connected. There should be an open handle
+          WindowsHandle handle = getTheOnlyHandle(openHandles);
+          closeConnectedPipe(handle, false);
+        }
       } else {
-        HANDLE handle = getTheOnlyHandle(connectedHandles);
-        API.FlushFileBuffers(handle);
+        WindowsHandle handle = getTheOnlyHandle(connectedHandles);
+        API.FlushFileBuffers(handle.getHandle());
 
         try {
           // After flushing, we need to wait until the handler thread finishes reading everything
@@ -204,8 +211,8 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     }
   }
 
-  private HANDLE getTheOnlyHandle(BlockingQueue<HANDLE> handles) {
-    List<HANDLE> drainList = new ArrayList<>(1);
+  private WindowsHandle getTheOnlyHandle(BlockingQueue<WindowsHandle> handles) {
+    List<WindowsHandle> drainList = new ArrayList<>(1);
     handles.drainTo(drainList);
     int size = drainList.size();
     Preconditions.checkState(size == 1, "Expected one handle, got %s", size);
@@ -214,19 +221,21 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
 
   @Override
   public void close() {
-    List<HANDLE> handlesToClose = new ArrayList<>();
+    List<WindowsHandle> handlesToClose = new ArrayList<>();
     openHandles.drainTo(handlesToClose);
-    handlesToClose.forEach(this::closeOpenPipe);
+    for (WindowsHandle windowsHandle : handlesToClose) {
+      closeOpenPipe(windowsHandle);
+    }
 
-    List<HANDLE> handlesToDisconnect = new ArrayList<>();
+    List<WindowsHandle> handlesToDisconnect = new ArrayList<>();
     connectedHandles.drainTo(handlesToDisconnect);
     handlesToDisconnect.forEach(handle -> closeConnectedPipe(handle, true));
 
     isClosed = true;
   }
 
-  private void closeOpenPipe(HANDLE handle) {
-    API.CancelIoEx(handle, null);
-    API.CloseHandle(handle);
+  private void closeOpenPipe(WindowsHandle handle) {
+    API.CancelIoEx(handle.getHandle(), null);
+    handle.close();
   }
 }

@@ -16,10 +16,7 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
-import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
-
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
-import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -29,16 +26,12 @@ import java.util.function.Consumer;
 class WindowsNamedPipeClientWriter extends WindowsNamedPipeClientBase implements NamedPipeWriter {
 
   WindowsNamedPipeClientWriter(
-      Path path, WinNT.HANDLE handle, Consumer<WinNT.HANDLE> closeCallback) {
+      Path path, WindowsHandle handle, Consumer<WindowsHandle> closeCallback) {
     super(path, handle, closeCallback);
   }
 
   @Override
   public OutputStream getOutputStream() throws IOException {
-    WinNT.HANDLE writerWaitable = createEvent();
-    if (writerWaitable == null) {
-      throw new IOException(String.format("CreateEvent() failed. For named pipe: %s", getName()));
-    }
-    return new WindowsNamedPipeOutputStream(getNamedPipeHandle(), writerWaitable, getName());
+    return new WindowsNamedPipeOutputStream(getNamedPipeHandle(), getName());
   }
 }
