@@ -136,7 +136,8 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
   }
 

@@ -899,7 +899,8 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public void addToCollector(AndroidPackageableCollector collector) {
+      public void addToCollector(
+          ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
         if (args.getCanBeAsset()) {
           collector.addNativeLinkableAsset(this);
         } else {

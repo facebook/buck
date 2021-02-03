@@ -20,6 +20,7 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -174,7 +175,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     collector.addClasspathEntry(this, getSourcePathToOutput());
   }
 

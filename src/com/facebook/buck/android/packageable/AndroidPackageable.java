@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.packageable;
 
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 
@@ -50,7 +51,8 @@ public interface AndroidPackageable {
    * add Java classes, an ndk_library will add native libraries, and android_resource will add
    * resource directories.
    *
+   * @param graphBuilder
    * @param collector The {@link AndroidPackageableCollector} that will receive the content.
    */
-  void addToCollector(AndroidPackageableCollector collector);
+  void addToCollector(ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector);
 }

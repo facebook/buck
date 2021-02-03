@@ -447,7 +447,8 @@ public class DefaultJavaLibrary
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     SourcePath output = getSourcePathToOutput();
     if (output != null) {
       collector.addClasspathEntry(this, output);

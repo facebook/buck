@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -109,7 +110,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
    * for a {@code BuildConfig} with the final values for the APK.
    */
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     collector.addBuildConfig(
         getBuildTarget(),
         androidBuildConfig.getJavaPackage(),

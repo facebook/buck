@@ -22,8 +22,8 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollection.Resour
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.HasJavaClassHashes;
@@ -137,7 +137,7 @@ public class AndroidPackageableCollector {
 
   /** Add packageables */
   public void addPackageables(
-      Iterable<AndroidPackageable> packageables, BuildRuleResolver ruleResolver) {
+      Iterable<AndroidPackageable> packageables, ActionGraphBuilder ruleResolver) {
     Set<AndroidPackageable> explored = new HashSet<>();
 
     for (AndroidPackageable packageable : packageables) {
@@ -148,7 +148,7 @@ public class AndroidPackageableCollector {
   private void postOrderTraverse(
       AndroidPackageable packageable,
       Set<AndroidPackageable> explored,
-      BuildRuleResolver ruleResolver) {
+      ActionGraphBuilder ruleResolver) {
     if (explored.contains(packageable)) {
       return;
     }
@@ -157,7 +157,7 @@ public class AndroidPackageableCollector {
     for (AndroidPackageable dep : packageable.getRequiredPackageables(ruleResolver)) {
       postOrderTraverse(dep, explored, ruleResolver);
     }
-    packageable.addToCollector(this);
+    packageable.addToCollector(ruleResolver, this);
   }
 
   /**

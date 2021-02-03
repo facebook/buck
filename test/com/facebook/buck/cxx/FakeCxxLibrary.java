@@ -182,7 +182,8 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {}
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {}
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(

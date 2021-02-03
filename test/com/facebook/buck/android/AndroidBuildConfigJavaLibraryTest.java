@@ -65,7 +65,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             new FakeTool());
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
-    buildConfigJavaLibrary.addToCollector(collector);
+    buildConfigJavaLibrary.addToCollector(graphBuilder, collector);
     AndroidPackageableCollection collection = collector.build();
     assertEquals(
         ImmutableMap.of(

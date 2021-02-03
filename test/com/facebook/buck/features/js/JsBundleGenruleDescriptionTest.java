@@ -50,7 +50,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -313,13 +312,13 @@ public class JsBundleGenruleDescriptionTest {
     setUp(defaultBundleTarget.withAppendedFlavors(JsFlavors.ANDROID));
 
     JsBundleAndroid jsBundleAndroid = setup.jsBundleAndroid();
-    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    ActionGraphBuilder ruleResolver = new TestActionGraphBuilder();
     assertEquals(
         jsBundleAndroid.getRequiredPackageables(ruleResolver),
         setup.genrule().getRequiredPackageables(ruleResolver));
 
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
-    setup.genrule().addToCollector(collector);
+    setup.genrule().addToCollector(ruleResolver, collector);
     verify(collector);
   }
 
@@ -329,8 +328,9 @@ public class JsBundleGenruleDescriptionTest {
 
     assertEquals(
         ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestActionGraphBuilder()));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
-    setup.genrule().addToCollector(collector);
+    setup.genrule().addToCollector(graphBuilder, collector);
     verify(collector);
   }
 

@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -99,7 +100,8 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
           getBuildTarget(), PathSourcePath.of(getProjectFilesystem(), getLibraryPath()));

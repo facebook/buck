@@ -561,7 +561,8 @@ public class CxxLibraryGroup extends NoopBuildRule
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     if (canBeAsset) {
       collector.addNativeLinkableAsset(this);
     } else {

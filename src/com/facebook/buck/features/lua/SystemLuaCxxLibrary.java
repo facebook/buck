@@ -67,7 +67,8 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinka
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {}
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {}
 
   @Override
   public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(

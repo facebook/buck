@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -153,8 +154,9 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
-    super.addToCollector(collector);
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
+    super.addToCollector(graphBuilder, collector);
     if (useSystemLibraryLoader) {
       collector.addNativeLibsDirectoryForSystemLoader(getBuildTarget(), nativeLibsDirectory);
     } else {

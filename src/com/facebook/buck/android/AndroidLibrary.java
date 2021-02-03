@@ -159,8 +159,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
-    super.addToCollector(collector);
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
+    super.addToCollector(graphBuilder, collector);
     if (manifestFile.isPresent()) {
       collector.addManifestPiece(this.getBuildTarget(), manifestFile.get());
     }

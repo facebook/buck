@@ -452,7 +452,8 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
   }
 
   @Override
-  public void addToCollector(AndroidPackageableCollector collector) {
+  public void addToCollector(
+      ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     collector.addAssetsDirectory(getBuildTarget(), getSourcePathToOutput());
   }
 
