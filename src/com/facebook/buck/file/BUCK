@@ -63,6 +63,7 @@ java_library_with_plugins(
 java_library(
     name = "rules",
     srcs = [
+        "CopyTree.java",
         "WriteFile.java",
     ],
     visibility = ["PUBLIC"],
@@ -71,6 +72,7 @@ java_library(
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/fs:fs",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",

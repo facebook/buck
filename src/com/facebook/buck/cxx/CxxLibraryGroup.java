@@ -20,7 +20,9 @@ import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -42,11 +44,13 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
+import com.facebook.buck.file.CopyTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.function.QuintFunction;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
@@ -56,6 +60,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -567,6 +572,23 @@ public class CxxLibraryGroup extends NoopBuildRule
       collector.addNativeLinkableAsset(this);
     } else {
       collector.addNativeLinkable(this);
+    }
+    if (!resources.isEmpty()) {
+      ForwardRelativePath cxxResRoot = ForwardRelativePath.of("cxx-resources");
+      collector.addAssetsDirectory(
+          getBuildTarget(),
+          graphBuilder
+              .computeIfAbsent(
+                  getBuildTarget().withAppendedFlavors(InternalFlavor.of("android-resources")),
+                  target ->
+                      new CopyTree(
+                          target,
+                          getProjectFilesystem(),
+                          graphBuilder,
+                          ImmutableSortedMap.copyOf(
+                              MoreMaps.transformKeys(
+                                  resources, name -> cxxResRoot.resolve(name.getNameAsPath())))))
+              .getSourcePathToOutput());
     }
   }
 

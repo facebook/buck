@@ -139,4 +139,14 @@ public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
   }
+
+  @Test
+  public void testAppHasCxxResources() throws IOException {
+    String target = "//apps/cxx_resources:app";
+    Path apkPath = workspace.buildAndReturnOutput(target);
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(apkPath));
+    zipInspector.assertFileExists("assets/cxx-resources/namespace/bar.dat");
+    zipInspector.assertFileContents(
+        "assets/cxx-resources/namespace/bar.dat", workspace.getFileContents("cxx/foo.dat"));
+  }
 }

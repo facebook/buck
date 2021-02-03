@@ -1,0 +1,10 @@
+android_binary(
+    name = "app",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+        "//cxx:lib",
+    ],
+)
