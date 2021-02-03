@@ -122,8 +122,10 @@ public class RuleKeyDifferTest {
   private List<String> generateExpectedStrings(
       Collection<String> keys, ParsedRuleKeyFile originalFile, ParsedRuleKeyFile newFile)
       throws MaxDifferencesException {
-    FullRuleKey originalRuleKey = originalFile.rootNodes.get("//:target1").ruleKey;
-    FullRuleKey newRuleKey = newFile.rootNodes.get("//:target1").ruleKey;
+    FullRuleKey originalRuleKey =
+        originalFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//:target1")).ruleKey;
+    FullRuleKey newRuleKey =
+        newFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//:target1")).ruleKey;
     try (TargetScope ts =
         expectedPrinter.addTarget(originalRuleKey.name, originalRuleKey.key, newRuleKey.key)) {
       for (String key : keys) {
@@ -147,7 +149,7 @@ public class RuleKeyDifferTest {
     RuleKeyNode rootNode = new RuleKeyNode(rootKey);
     return new ParsedRuleKeyFile(
         filename,
-        ImmutableMap.of(rootNode.ruleKey.name, rootNode),
+        ImmutableMap.of(new RuleKeyFileParser.targetNameAndConf(rootNode.ruleKey.name), rootNode),
         ImmutableMap.<String, RuleKeyNode>builder()
             .put(rootKey.key, rootNode)
             .putAll(

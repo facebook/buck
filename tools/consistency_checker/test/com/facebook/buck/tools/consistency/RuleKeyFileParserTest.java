@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import org.hamcrest.core.StringContains;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -65,8 +66,12 @@ public class RuleKeyFileParserTest {
     ParsedRuleKeyFile parsedFile =
         parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1", "//:name4"));
 
-    Assert.assertEquals("key1", parsedFile.rootNodes.get("//:name1").ruleKey.key);
-    Assert.assertEquals("key4", parsedFile.rootNodes.get("//:name4").ruleKey.key);
+    Assert.assertEquals(
+        "key1",
+        parsedFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//:name1")).ruleKey.key);
+    Assert.assertEquals(
+        "key4",
+        parsedFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//:name4")).ruleKey.key);
     Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(4, parsedFile.rules.size());
@@ -141,7 +146,9 @@ public class RuleKeyFileParserTest {
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     ParsedRuleKeyFile parsedFile = parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
 
-    Assert.assertEquals("key1", parsedFile.rootNodes.get("//:name1").ruleKey.key);
+    Assert.assertEquals(
+        "key1",
+        parsedFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//:name1")).ruleKey.key);
     Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(1, parsedFile.rules.size());
@@ -157,6 +164,56 @@ public class RuleKeyFileParserTest {
     FullRuleKey ruleKey2 =
         new FullRuleKey(
             "key1", "//:name1", "DEFAULT", ImmutableMap.of("value", Value.stringValue("string")));
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
+      logger.write(ruleKey1);
+      logger.write(ruleKey2);
+    }
+
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
+    parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
+  }
+
+  @Test
+  public void throwOnKeysOfSameRule() throws ParseException, IOException {
+    expectedException.expect(IllegalArgumentException.class);
+    expectedException.expectMessage(
+        StringContains.containsString("Multiple entries with same key"));
+
+    FullRuleKey ruleKey1 =
+        new FullRuleKey(
+            "key1",
+            "//:name1",
+            "DEFAULT",
+            ImmutableMap.of("some_value", Value.stringValue("conf1")));
+    FullRuleKey ruleKey2 =
+        new FullRuleKey(
+            "key2",
+            "//:name1",
+            "DEFAULT",
+            ImmutableMap.of("some_value", Value.stringValue("conf2")));
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
+      logger.write(ruleKey1);
+      logger.write(ruleKey2);
+    }
+
+    RuleKeyFileParser parser = new RuleKeyFileParser(reader);
+    parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
+  }
+
+  @Test
+  public void doesNotThrowOnKeysOfSameRuleButDifferentConfigs() throws ParseException, IOException {
+    FullRuleKey ruleKey1 =
+        new FullRuleKey(
+            "key1",
+            "//:name1",
+            "DEFAULT",
+            ImmutableMap.of(".target_conf", Value.stringValue("conf1")));
+    FullRuleKey ruleKey2 =
+        new FullRuleKey(
+            "key2",
+            "//:name1",
+            "DEFAULT",
+            ImmutableMap.of(".target_conf", Value.stringValue("conf2")));
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
@@ -187,8 +244,16 @@ public class RuleKeyFileParserTest {
             ImmutableSet.of("//src/...", "//test:", "//non_existent:", "//non_existent2/..."));
 
     Assert.assertEquals(2, parsedFile.rootNodes.size());
-    Assert.assertEquals("key1", parsedFile.rootNodes.get("//src:name1").ruleKey.key);
-    Assert.assertEquals("key2", parsedFile.rootNodes.get("//test:name2").ruleKey.key);
+    Assert.assertEquals(
+        "key1",
+        parsedFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//src:name1"))
+            .ruleKey
+            .key);
+    Assert.assertEquals(
+        "key2",
+        parsedFile.rootNodes.get(new RuleKeyFileParser.targetNameAndConf("//test:name2"))
+            .ruleKey
+            .key);
     Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(4, parsedFile.rules.size());

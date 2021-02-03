@@ -63,14 +63,20 @@ public class RuleKeyDiffer {
       throws MaxDifferencesException, GraphTraversalException {
     if (!originalFile.rootNodes.keySet().equals(newFile.rootNodes.keySet())) {
       String originalTargets =
-          originalFile.rootNodes.keySet().stream().collect(Collectors.joining(","));
-      String newTargets = newFile.rootNodes.keySet().stream().collect(Collectors.joining(","));
+          originalFile.rootNodes.keySet().stream()
+              .map(RuleKeyFileParser.targetNameAndConf::toString)
+              .collect(Collectors.joining(","));
+      String newTargets =
+          newFile.rootNodes.keySet().stream()
+              .map(RuleKeyFileParser.targetNameAndConf::toString)
+              .collect(Collectors.joining(","));
       throw new GraphTraversalException(
           "Root nodes in %s do not match root nodes in %s. %s vs %s",
           originalFile.filename, newFile.filename, originalTargets, newTargets);
     }
     int visitId = 1;
-    for (Map.Entry<String, RuleKeyNode> entry : originalFile.rootNodes.entrySet()) {
+    for (Map.Entry<RuleKeyFileParser.targetNameAndConf, RuleKeyNode> entry :
+        originalFile.rootNodes.entrySet()) {
       printDiff(
           originalFile, entry.getValue(), newFile, newFile.rootNodes.get(entry.getKey()), visitId);
       visitId++;

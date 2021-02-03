@@ -24,7 +24,12 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /** A class that can parse out length prefixed, thrift compact encoded rule keys. */
 public class RuleKeyFileParser {
@@ -35,6 +40,49 @@ public class RuleKeyFileParser {
     this.reader = reader;
   }
 
+  /** A key that combines target name and target conf */
+  static class targetNameAndConf {
+    public final String targetName;
+    public final Optional<String> optionalTargetConf;
+
+    public targetNameAndConf(String targetName) {
+      this.targetName = targetName;
+      this.optionalTargetConf = Optional.empty();
+    }
+
+    public targetNameAndConf(String targetName, String targetConf) {
+      this.targetName = targetName;
+      this.optionalTargetConf = Optional.of(targetConf);
+    }
+
+    public String toString() {
+      return optionalTargetConf.isPresent()
+          ? targetName + "+" + optionalTargetConf.get()
+          : targetName;
+    }
+
+    public String getTargetName() {
+      return this.targetName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      targetNameAndConf that = (targetNameAndConf) o;
+      return targetName.equals(that.targetName)
+          && optionalTargetConf.equals(that.optionalTargetConf);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(targetName, optionalTargetConf);
+    }
+  }
   /**
    * A node in the set of all rule keys. When parsing, it tracks whether the node has been visited
    * yet or not.
@@ -57,13 +105,13 @@ public class RuleKeyFileParser {
   static class ParsedRuleKeyFile {
 
     public final Path filename;
-    public final ImmutableMap<String, RuleKeyNode> rootNodes;
+    public final ImmutableMap<targetNameAndConf, RuleKeyNode> rootNodes;
     public final Map<String, RuleKeyNode> rules;
     public final Duration parseTime;
 
     public ParsedRuleKeyFile(
         Path filename,
-        ImmutableMap<String, RuleKeyNode> rootNodes,
+        ImmutableMap<targetNameAndConf, RuleKeyNode> rootNodes,
         Map<String, RuleKeyNode> rules,
         Duration parseTime) {
       this.filename = filename;
@@ -112,7 +160,7 @@ public class RuleKeyFileParser {
           e, filename, "File size is too large (>2.1 billion objects would be deserialized");
     }
 
-    ImmutableMap.Builder<String, RuleKeyNode> rootNodesBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<targetNameAndConf, RuleKeyNode> rootNodesBuilder = ImmutableMap.builder();
     Map<String, RuleKeyNode> rules = new HashMap<>();
 
     try {
@@ -128,7 +176,15 @@ public class RuleKeyFileParser {
                       .filter(prefix -> ruleKey.name.startsWith(prefix))
                       .findFirst()
                       .isPresent()) {
-                rootNodesBuilder.put(ruleKey.name, newNode);
+
+                if (ruleKey.getValues().containsKey(".target_conf")) {
+                  rootNodesBuilder.put(
+                      new targetNameAndConf(
+                          ruleKey.name, ruleKey.getValues().get(".target_conf").toString()),
+                      newNode);
+                } else {
+                  rootNodesBuilder.put(new targetNameAndConf(ruleKey.name), newNode);
+                }
               }
             }
             RuleKeyNode oldValue = rules.put(ruleKey.key, newNode);
@@ -150,11 +206,15 @@ public class RuleKeyFileParser {
       }
     }
 
-    ImmutableMap<String, RuleKeyNode> rootNodes = rootNodesBuilder.build();
+    ImmutableMap<targetNameAndConf, RuleKeyNode> rootNodes = rootNodesBuilder.build();
+    Set<String> rootNames =
+        rootNodes.keySet().stream()
+            .map(targetNameAndConf::getTargetName)
+            .collect(Collectors.toCollection(HashSet::new));
     for (String targetName : targetNames) {
       if (!targetName.endsWith("/...")
           && !targetName.endsWith(":")
-          && !rootNodes.containsKey(targetName)) {
+          && !rootNames.contains(targetName)) {
         throw new ParseException(filename, "Could not find %s in %s", targetName, filename);
       }
     }
