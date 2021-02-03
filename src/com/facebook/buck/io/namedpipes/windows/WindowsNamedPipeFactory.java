@@ -21,6 +21,10 @@ import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.cl
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.io.namedpipes.windows.handle.DefaultWindowsHandleFactory;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
@@ -37,14 +41,17 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
 
   private static final int CONNECT_TIMEOUT_IN_MILLIS = 1_000;
 
+  @VisibleForTesting
+  public static WindowsHandleFactory windowsHandleFactory = new DefaultWindowsHandleFactory();
+
   @Override
   public NamedPipeWriter createAsWriter() {
-    return new WindowsNamedPipeServerWriter(createPath());
+    return new WindowsNamedPipeServerWriter(createPath(), windowsHandleFactory);
   }
 
   @Override
   public NamedPipeReader createAsReader() {
-    return new WindowsNamedPipeServerReader(createPath());
+    return new WindowsNamedPipeServerReader(createPath(), windowsHandleFactory);
   }
 
   private static Path createPath() {
@@ -60,12 +67,14 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
 
   @Override
   public NamedPipeWriter connectAsWriter(Path path) throws IOException {
-    return new WindowsNamedPipeClientWriter(path, connectToPipe(path), getCloseHandleCallback());
+    return new WindowsNamedPipeClientWriter(
+        path, connectToPipe(path), getCloseHandleCallback(), windowsHandleFactory);
   }
 
   @Override
   public NamedPipeReader connectAsReader(Path path) throws IOException {
-    return new WindowsNamedPipeClientReader(path, connectToPipe(path), getCloseHandleCallback());
+    return new WindowsNamedPipeClientReader(
+        path, connectToPipe(path), getCloseHandleCallback(), windowsHandleFactory);
   }
 
   private static WindowsHandle connectToPipe(Path path) throws IOException {
@@ -73,7 +82,7 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
     Kernel32.INSTANCE.WaitNamedPipe(namedPipeName, CONNECT_TIMEOUT_IN_MILLIS);
 
     WindowsHandle handle =
-        WindowsHandle.of(
+        windowsHandleFactory.create(
             Kernel32.INSTANCE.CreateFile(
                 namedPipeName,
                 WinNT.GENERIC_READ | WinNT.GENERIC_WRITE,
@@ -87,7 +96,9 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
 
     if (handle.isInvalidHandle()) {
       throw new IOException(
-          String.format("Could not create named pipe, error %d", Kernel32.INSTANCE.GetLastError()));
+          String.format(
+              "Could not create named pipe: %s, error code %s",
+              namedPipeName, Kernel32.INSTANCE.GetLastError()));
     }
 
     return handle;

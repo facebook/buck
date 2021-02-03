@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.namedpipes.windows;
+package com.facebook.buck.io.namedpipes.windows.handle;
 
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.INSTANCE;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.google.common.base.Preconditions;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
 import java.io.Closeable;
@@ -27,23 +26,16 @@ import java.util.Optional;
 import java.util.StringJoiner;
 
 /** Wrapper around {@link WinNT.HANDLE} that is used to track if close() has been called. */
-class WindowsHandle implements Closeable {
+public class WindowsHandle implements Closeable {
 
   private static final Logger LOG = Logger.get(WindowsHandle.class);
 
   private Optional<WinNT.HANDLE> handle;
   private final String description;
 
-  private WindowsHandle(Optional<WinNT.HANDLE> handle, String description) {
+  WindowsHandle(Optional<WinNT.HANDLE> handle, String description) {
     this.handle = handle;
     this.description = description;
-  }
-
-  /** Creates {@link WindowsHandle} */
-  public static WindowsHandle of(WinNT.HANDLE handle, String description) {
-    Preconditions.checkArgument(
-        handle != null, "Handle has to be non null. Description: " + description);
-    return new WindowsHandle(Optional.of(handle), description);
   }
 
   public boolean isInvalidHandle() {

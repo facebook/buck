@@ -17,6 +17,8 @@
 package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.sun.jna.platform.win32.WinBase;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -37,13 +39,18 @@ abstract class WindowsNamedPipeClientBase extends BaseNamedPipe {
   private final WindowsHandle handle;
 
   private final Consumer<WindowsHandle> closeCallback;
+  private final WindowsHandleFactory windowsHandleFactory;
   private boolean isClosed = false;
 
   public WindowsNamedPipeClientBase(
-      Path path, WindowsHandle handle, Consumer<WindowsHandle> closeCallback) {
+      Path path,
+      WindowsHandle handle,
+      Consumer<WindowsHandle> closeCallback,
+      WindowsHandleFactory windowsHandleFactory) {
     super(path);
     this.handle = handle;
     this.closeCallback = closeCallback;
+    this.windowsHandleFactory = windowsHandleFactory;
   }
 
   @Override
@@ -59,5 +66,9 @@ abstract class WindowsNamedPipeClientBase extends BaseNamedPipe {
 
   protected WindowsHandle getNamedPipeHandle() {
     return handle;
+  }
+
+  protected WindowsHandleFactory getWindowsHandleFactory() {
+    return windowsHandleFactory;
   }
 }

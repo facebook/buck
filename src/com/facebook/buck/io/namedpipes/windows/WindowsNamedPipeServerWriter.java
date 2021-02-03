@@ -17,6 +17,7 @@
 package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -24,8 +25,8 @@ import java.nio.file.Path;
 /** Server implementation of Windows name pipe writer. */
 class WindowsNamedPipeServerWriter extends WindowsNamedPipeServerBase implements NamedPipeWriter {
 
-  public WindowsNamedPipeServerWriter(Path path) {
-    super(path);
+  public WindowsNamedPipeServerWriter(Path path, WindowsHandleFactory windowsHandleFactory) {
+    super(path, windowsHandleFactory);
   }
 
   @Override

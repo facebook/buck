@@ -48,6 +48,7 @@ import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.testutil.LogRecordMatcher;
+import com.facebook.buck.downwardapi.testutil.TestWindowsHandleFactory;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -68,6 +69,7 @@ import com.facebook.buck.util.NamedPipeEventHandlerFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.collect.ImmutableList;
@@ -118,12 +120,18 @@ public class DownwardApiProcessExecutorTest {
   private static final String TEST_COMMAND = "test_command";
   private static final String TEST_ACTION_ID = "test_action_id";
 
+  private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
+      new TestWindowsHandleFactory();
+
   @BeforeClass
   public static void beforeClass() {
     // store the initial log level in the variable
     EVENT_HANDLER_LOGGER_INITIAL_LEVEL = EVENT_HANDLER_LOGGER.getLevel();
     // add ability to check all level of logs from class under the test.
     EVENT_HANDLER_LOGGER.setLevel(Level.ALL);
+
+    // override WindowsHandleFactory with a test one
+    WindowsNamedPipeFactory.windowsHandleFactory = TEST_WINDOWS_HANDLE_FACTORY;
   }
 
   @AfterClass
@@ -203,6 +211,13 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyAllWindowsHandlesAreClosed();
+  }
+
+  private void verifyAllWindowsHandlesAreClosed() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
+    }
   }
 
   @Test
@@ -236,6 +251,7 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyAllWindowsHandlesAreClosed();
 
     waitTillEventsProcessed();
     Map<Integer, BuckEvent> events = listener.events;
@@ -349,6 +365,7 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyAllWindowsHandlesAreClosed();
 
     assertThat(
         "Did not find log message about unexpected protocol",
@@ -392,6 +409,7 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyAllWindowsHandlesAreClosed();
 
     List<LogRecord> records = executorLogSink.getRecords();
     assertThat(
@@ -429,6 +447,7 @@ public class DownwardApiProcessExecutorTest {
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
     assertNotNull("Named pipe has not been created!", namedPipe);
     assertTrue("Named pipe has to be closed.", namedPipe.isClosed());
+    verifyAllWindowsHandlesAreClosed();
 
     assertThat(
         executorLogSink.getRecords(),
@@ -436,7 +455,6 @@ public class DownwardApiProcessExecutorTest {
             TestLogSink.logRecordWithMessage(
                 stringContainsInOrder(
                     "Unhandled exception while reading from named pipe: ", namedPipeName))));
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
   }
 
   @Test
@@ -474,6 +492,7 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyAllWindowsHandlesAreClosed();
 
     waitTillEventsProcessed();
     assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));

@@ -18,6 +18,8 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
 
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.sun.jna.Memory;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
@@ -34,10 +36,13 @@ class WindowsNamedPipeInputStream extends InputStream {
   private final WindowsHandle readerWaitable;
   private final String namedPipeName;
 
-  protected WindowsNamedPipeInputStream(WindowsHandle namedPipeHandle, String namedPipeName)
+  protected WindowsNamedPipeInputStream(
+      WindowsHandle namedPipeHandle,
+      String namedPipeName,
+      WindowsHandleFactory windowsHandleFactory)
       throws IOException {
     this.namedPipeHandle = namedPipeHandle;
-    this.readerWaitable = createEvent(namedPipeName);
+    this.readerWaitable = createEvent(namedPipeName, windowsHandleFactory);
     this.namedPipeName = namedPipeName;
   }
 

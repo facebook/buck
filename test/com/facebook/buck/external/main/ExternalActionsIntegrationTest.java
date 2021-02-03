@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
+import com.facebook.buck.downwardapi.testutil.TestWindowsHandleFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.ConsoleEvent;
@@ -34,6 +35,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.external.parser.ExternalArgsParser;
+import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -45,6 +47,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,8 +64,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.LogRecord;
+import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -87,6 +92,15 @@ public class ExternalActionsIntegrationTest {
   @Rule
   public TestLogSink logEventLogSink =
       new TestLogSink(FakeBuckEventWritingAction.LogEventStep.class.getName());
+
+  private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
+      new TestWindowsHandleFactory();
+
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    // override WindowsHandleFactory with a test one
+    WindowsNamedPipeFactory.windowsHandleFactory = TEST_WINDOWS_HANDLE_FACTORY;
+  }
 
   @Before
   public void setUp() throws Exception {
@@ -158,6 +172,7 @@ public class ExternalActionsIntegrationTest {
     ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
 
     assertThat(result.getExitCode(), equalTo(0));
+    verifyAllWindowsHandlesAreClosed();
 
     StepEvent.Started expectedStepStartEvent =
         StepEvent.started("console_event_step", "console event: sneaky");
@@ -191,7 +206,7 @@ public class ExternalActionsIntegrationTest {
     // AbstractBuckEvent
     assertThat(actualPerfEvents.get(1), equalTo("PerfEvent.test_perf_event_title.Finished()"));
 
-    String logMessagesFromConsoleEvent = getLogMessagesAsSingleString(consoleEventLogSink).get();
+    String logMessagesFromConsoleEvent = getLogMessagesAsSingleString(consoleEventLogSink);
     assertThat(
         logMessagesFromConsoleEvent,
         containsString("Starting ConsoleEventStep execution for message sneaky!"));
@@ -199,13 +214,19 @@ public class ExternalActionsIntegrationTest {
         logMessagesFromConsoleEvent,
         containsString("Finished ConsoleEventStep execution for message sneaky!"));
 
-    String logMessagesFromLogEvent = getLogMessagesAsSingleString(logEventLogSink).get();
+    String logMessagesFromLogEvent = getLogMessagesAsSingleString(logEventLogSink);
     assertThat(logMessagesFromLogEvent, containsString("beaky"));
   }
 
   private void waitTillEventsProcessed() throws InterruptedException {
     ExecutorServiceUtils.waitTillAllTasksCompleted(
         (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL);
+  }
+
+  private void verifyAllWindowsHandlesAreClosed() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
+    }
   }
 
   @Test
@@ -308,9 +329,9 @@ public class ExternalActionsIntegrationTest {
         Optional.empty());
   }
 
-  private Optional<String> getLogMessagesAsSingleString(TestLogSink logSink) {
+  private String getLogMessagesAsSingleString(TestLogSink logSink) {
     return logSink.getRecords().stream()
         .map(LogRecord::getMessage)
-        .reduce((record, acc) -> String.join(System.lineSeparator(), record, acc));
+        .collect(Collectors.joining(System.lineSeparator()));
   }
 }

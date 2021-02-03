@@ -17,6 +17,7 @@
 package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -24,8 +25,8 @@ import java.nio.file.Path;
 /** Server implementation of Windows name pipe reader. */
 class WindowsNamedPipeServerReader extends WindowsNamedPipeServerBase implements NamedPipeReader {
 
-  public WindowsNamedPipeServerReader(Path path) {
-    super(path);
+  public WindowsNamedPipeServerReader(Path path, WindowsHandleFactory windowsHandleFactory) {
+    super(path, windowsHandleFactory);
   }
 
   @Override

@@ -17,6 +17,8 @@
 package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -26,12 +28,16 @@ import java.util.function.Consumer;
 class WindowsNamedPipeClientReader extends WindowsNamedPipeClientBase implements NamedPipeReader {
 
   WindowsNamedPipeClientReader(
-      Path path, WindowsHandle handle, Consumer<WindowsHandle> closeCallback) {
-    super(path, handle, closeCallback);
+      Path path,
+      WindowsHandle handle,
+      Consumer<WindowsHandle> closeCallback,
+      WindowsHandleFactory windowsHandleFactory) {
+    super(path, handle, closeCallback, windowsHandleFactory);
   }
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return new WindowsNamedPipeInputStream(getNamedPipeHandle(), getName());
+    return new WindowsNamedPipeInputStream(
+        getNamedPipeHandle(), getName(), getWindowsHandleFactory());
   }
 }

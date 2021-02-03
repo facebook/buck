@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.sun.jna.Library;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
@@ -31,7 +33,7 @@ import java.nio.ByteBuffer;
  *
  * <p>Ported from {@link com.facebook.nailgun.NGWin32NamedPipeLibrary}
  */
-interface WindowsNamedPipeLibrary extends WinNT, Library {
+public interface WindowsNamedPipeLibrary extends WinNT, Library {
 
   int CLOSE_WAIT_IN_MILLIS = 500;
 
@@ -85,22 +87,32 @@ interface WindowsNamedPipeLibrary extends WinNT, Library {
 
   boolean FlushFileBuffers(HANDLE hFile);
 
+  /**
+   * Invokes {@link #disconnectAndCloseHandle}. If {@code shutdown} is {@code false} invokes {@link
+   * #WaitForSingleObject} and only then dispatches to {@link #disconnectAndCloseHandle}.
+   */
   static void closeConnectedPipe(WindowsHandle windowsHandle, boolean shutdown) {
-    HANDLE handle = windowsHandle.getHandle();
     if (!shutdown) {
-      INSTANCE.WaitForSingleObject(handle, CLOSE_WAIT_IN_MILLIS);
+      INSTANCE.WaitForSingleObject(windowsHandle.getHandle(), CLOSE_WAIT_IN_MILLIS);
     }
-    INSTANCE.DisconnectNamedPipe(handle);
+    disconnectAndCloseHandle(windowsHandle);
+  }
+
+  /** Invokes {@link #DisconnectNamedPipe} and then {@link WindowsHandle#close()}. */
+  static void disconnectAndCloseHandle(WindowsHandle windowsHandle) {
+    INSTANCE.DisconnectNamedPipe(windowsHandle.getHandle());
     windowsHandle.close();
   }
 
-  static WindowsHandle createEvent(String namedPipeName) throws IOException {
+  /** Creates {@link WindowsHandle} that wraps the result of {@link #CreateEvent} result. */
+  static WindowsHandle createEvent(String namedPipeName, WindowsHandleFactory windowsHandleFactory)
+      throws IOException {
     HANDLE handle = INSTANCE.CreateEvent(null, true, false, null);
     if (handle == null) {
       int error = INSTANCE.GetLastError();
       throw new IOException(String.format("CreateEvent() failed, error code: %s", error));
     }
 
-    return WindowsHandle.of(handle, "CreateEvent() for " + namedPipeName);
+    return windowsHandleFactory.create(handle, "CreateEvent() for " + namedPipeName);
   }
 }

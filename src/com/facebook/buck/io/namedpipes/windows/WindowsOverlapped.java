@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinBase;
 

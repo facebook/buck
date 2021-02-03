@@ -24,6 +24,8 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.util.CloseableWrapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -65,10 +67,12 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   private final LinkedBlockingQueue<WindowsHandle> openHandles = new LinkedBlockingQueue<>();
   private final LinkedBlockingQueue<WindowsHandle> connectedHandles = new LinkedBlockingQueue<>();
   private final Consumer<WindowsHandle> closeCallback;
+  private final WindowsHandleFactory windowsHandleFactory;
   private boolean isClosed = false;
 
-  public WindowsNamedPipeServerBase(Path path) {
+  public WindowsNamedPipeServerBase(Path path, WindowsHandleFactory windowsHandleFactory) {
     super(path);
+    this.windowsHandleFactory = windowsHandleFactory;
     this.closeCallback =
         handle -> {
           if (connectedHandles.remove(handle)) {
@@ -88,7 +92,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   protected <T extends WindowsNamedPipeClientBase> T connect(Class<T> clazz) throws IOException {
     String namedPipe = getName();
     WindowsHandle handle =
-        WindowsHandle.of(
+        windowsHandleFactory.create(
             API.CreateNamedPipe(
                 /* lpName */ namedPipe,
                 /* dwOpenMode */ WinNT.PIPE_ACCESS_DUPLEX | WinNT.FILE_FLAG_OVERLAPPED,
@@ -155,18 +159,20 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
 
   private <T extends WindowsNamedPipeClientBase> T getClient(WindowsHandle handle, Class<T> clazz) {
     if (NamedPipeWriter.class.isAssignableFrom(clazz)) {
-      return clazz.cast(new WindowsNamedPipeClientWriter(getPath(), handle, closeCallback));
+      return clazz.cast(
+          new WindowsNamedPipeClientWriter(getPath(), handle, closeCallback, windowsHandleFactory));
     }
 
     if (NamedPipeReader.class.isAssignableFrom(clazz)) {
-      return clazz.cast(new WindowsNamedPipeClientReader(getPath(), handle, closeCallback));
+      return clazz.cast(
+          new WindowsNamedPipeClientReader(getPath(), handle, closeCallback, windowsHandleFactory));
     }
 
     throw new IllegalStateException(clazz + " is not supported!");
   }
 
   private WindowsOverlapped createOverlapped() throws IOException {
-    WindowsHandle windowsHandle = createEvent("Overlapped for " + getName());
+    WindowsHandle windowsHandle = createEvent("Overlapped for " + getName(), windowsHandleFactory);
     return new WindowsOverlapped(windowsHandle);
   }
 
