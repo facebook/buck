@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.completion;
 
-import com.facebook.buck.intellij.ideabuck.configurations.AbstractConfigurationEditor;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
@@ -39,7 +38,7 @@ public class BuckTargetAutoPopupHandler extends TypedHandlerDelegate {
         || (charTyped != '/' && charTyped != ':')) {
       return Result.CONTINUE;
     }
-    if (AbstractConfigurationEditor.isFileFromRunConfigurationEditor(file)) {
+    if (BuckCompletionUtils.isNonBuckFile(file)) {
       AutoPopupController.getInstance(project).scheduleAutoPopup(editor);
       return Result.STOP;
     }

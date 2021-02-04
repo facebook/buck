@@ -16,30 +16,22 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
-import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
-import com.intellij.codeInsight.daemon.impl.analysis.FileHighlightingSetting;
-import com.intellij.codeInsight.daemon.impl.analysis.HighlightLevelUtil;
-import com.intellij.lang.Language;
-import com.intellij.openapi.editor.Document;
+import com.facebook.buck.intellij.ideabuck.completion.BuckLanguageTextField;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Key;
-import com.intellij.psi.PsiFile;
 import com.intellij.ui.LanguageTextField;
 import com.intellij.ui.components.JBLabel;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
-import java.awt.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /** Base menu class for editing Buck command run configs */
 public abstract class AbstractConfigurationEditor<T extends AbstractConfiguration>
     extends SettingsEditor<T> {
-  private static final Key<String> FROM_RUN_CONFIG_EDITOR = Key.create("FROM_RUN_CONFIG_EDITOR");
-
   private final LanguageTextField mTargets;
   private final JBTextField mAdditionalParams;
   private final JBTextField mBuckExecutablePath;
@@ -50,9 +42,7 @@ public abstract class AbstractConfigurationEditor<T extends AbstractConfiguratio
     root = new JPanel(new GridBagLayout());
     final JBLabel targetLabel = new JBLabel();
     targetLabel.setText("Targets (required)");
-    mTargets =
-        new LanguageTextField(
-            BuckLanguage.INSTANCE, project, "", new ConfigurationEditorDocumentCreator());
+    mTargets = new BuckLanguageTextField(project);
     mTargets.setToolTipText("Specify buck targets");
 
     final JBLabel additionalParamsLabel = new JBLabel();
@@ -133,23 +123,5 @@ public abstract class AbstractConfigurationEditor<T extends AbstractConfiguratio
   @Override
   protected JComponent createEditor() {
     return root;
-  }
-
-  public static boolean isFileFromRunConfigurationEditor(PsiFile psiFile) {
-    return psiFile.getUserData(FROM_RUN_CONFIG_EDITOR) != null;
-  }
-
-  private static class ConfigurationEditorDocumentCreator
-      extends LanguageTextField.SimpleDocumentCreator {
-    @Override
-    public Document createDocument(String value, @Nullable Language language, Project project) {
-      return LanguageTextField.createDocument(value, language, project, this);
-    }
-
-    @Override
-    public void customizePsiFile(PsiFile file) {
-      file.putUserData(FROM_RUN_CONFIG_EDITOR, "");
-      HighlightLevelUtil.forceRootHighlighting(file, FileHighlightingSetting.SKIP_HIGHLIGHTING);
-    }
   }
 }

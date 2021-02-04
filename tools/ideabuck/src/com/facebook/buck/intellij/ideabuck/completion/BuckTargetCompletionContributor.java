@@ -21,7 +21,6 @@ import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
-import com.facebook.buck.intellij.ideabuck.configurations.AbstractConfigurationEditor;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
@@ -67,7 +66,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       return;
     }
     result = result.withPrefixMatcher(tokens[tokens.length - 1]);
-    if (AbstractConfigurationEditor.isFileFromRunConfigurationEditor(psiFile)) {
+    if (BuckCompletionUtils.isNonBuckFile(psiFile)) {
       Document document = psiFile.getViewProvider().getDocument();
       if (document == null) {
         return;
