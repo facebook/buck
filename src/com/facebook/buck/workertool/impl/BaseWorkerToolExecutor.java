@@ -21,13 +21,13 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiLaunchedProcess;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
@@ -63,7 +63,7 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
 
   private NamedPipeWriter namedPipeWriter;
   private OutputStream outputStream;
-  private LaunchedProcess launchedProcess;
+  private DownwardApiLaunchedProcess launchedProcess;
 
   private String executingActionId;
   @Nullable private SettableFuture<ResultEvent> resultEventFuture;
@@ -208,5 +208,10 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
 
   private ImmutableMap<String, String> buildEnvs(String namedPipeName) {
     return ImmutableMap.of(WorkerToolConstants.ENV_COMMAND_PIPE, namedPipeName);
+  }
+
+  @Override
+  public void updateThreadId() {
+    launchedProcess.updateThreadId();
   }
 }

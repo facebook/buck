@@ -127,7 +127,12 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
   }
 
   @Override
-  public ProcessExecutor.LaunchedProcess launchProcess(
+  public DownwardApiLaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
+    return launchProcess(params, ImmutableMap.of());
+  }
+
+  @Override
+  public DownwardApiLaunchedProcess launchProcess(
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
     NamedPipeReader namedPipe = namedPipeFactory.createAsReader();
     String namedPipeName = namedPipe.getName();

@@ -83,4 +83,14 @@ public abstract class DownwardApiExecutionContext {
         buckEventBus,
         Thread.currentThread().getId());
   }
+
+  /**
+   * Creates {@link DownwardApiExecutionContext} from the existing {@code context}, but with a new
+   * {@code threadId}
+   */
+  public static DownwardApiExecutionContext from(
+      DownwardApiExecutionContext context, long threadId) {
+    return ImmutableDownwardApiExecutionContext.ofImpl(
+        context.getStartExecutionInstant(), context.getIsolatedEventBus(), threadId);
+  }
 }

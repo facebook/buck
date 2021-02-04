@@ -80,6 +80,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     WorkerToolExecutor workerToolExecutor =
         new JavaCDWorkerToolExecutor(context, javaRuntimeLauncherCommand);
     workerToolExecutor.launchWorker();
+    workerToolExecutor.updateThreadId();
     return workerToolExecutor;
   }
 

@@ -30,4 +30,14 @@ public interface NamedPipeEventHandler {
   /** Terminate and wait for {@link NamedPipeEventHandler} to finish processing events. */
   void terminateAndWait()
       throws CancellationException, InterruptedException, ExecutionException, TimeoutException;
+
+  /**
+   * Updates thread id that would be set into events handled by the current event handler.
+   *
+   * <p>Named pipe event handler is created together with launched process. If launched process is
+   * reused by multiple building threads that means that thread id set into downward API execution
+   * context is no longer a valid one. Thread id is set into events processed by named pipe event
+   * handler and that is why it should be updated in case of thread switching.
+   */
+  void updateThreadId();
 }

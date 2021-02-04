@@ -40,4 +40,7 @@ public interface WorkerToolExecutor {
 
   /** Returns a command that starts Worker Tool process. */
   ImmutableList<String> getStartWorkerToolCommand();
+
+  /** Updates thread id that would be set into events handled by worker tool executor. */
+  void updateThreadId();
 }

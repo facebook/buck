@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /** Process launched inside the {@link DownwardApiProcessExecutor} */
-class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
+public class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
 
   private static final Logger LOG = Logger.get(DownwardApiLaunchedProcess.class);
 
@@ -81,5 +81,13 @@ class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
   @VisibleForTesting
   boolean isReaderThreadTerminated() {
     return readerThreadTerminated;
+  }
+
+  /**
+   * Updates thread id that would be set into events received from named pipe by the current
+   * launched process.
+   */
+  public void updateThreadId() {
+    namedPipeEventHandler.updateThreadId();
   }
 }
