@@ -20,6 +20,8 @@ import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.cr
 
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
@@ -59,7 +61,7 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
     WinNT.HANDLE namedPipeRawHandle = namedPipeHandle.getHandle();
     boolean immediate = API.WriteFile(namedPipeRawHandle, data, len, null, overlapped.getPointer());
     if (!immediate) {
-      int error = API.GetLastError();
+      int error = Kernel32.INSTANCE.GetLastError();
       if (error != WinError.ERROR_IO_PENDING) {
         throw new IOException(
             String.format(
@@ -69,11 +71,10 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
     }
     IntByReference written = new IntByReference();
     if (!API.GetOverlappedResult(namedPipeRawHandle, overlapped.getPointer(), written, true)) {
-      int error = API.GetLastError();
       throw new IOException(
           String.format(
-              "GetOverlappedResult() failed for write operation. Named pipe: %s, error code: %s",
-              namedPipeName, error));
+              "GetOverlappedResult() failed for write operation. Named pipe: %s, error: %s",
+              namedPipeName, Kernel32Util.getLastErrorMessage()));
     }
     if (written.getValue() != len) {
       throw new IOException(

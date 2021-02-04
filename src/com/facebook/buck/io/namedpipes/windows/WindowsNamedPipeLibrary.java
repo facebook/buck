@@ -22,6 +22,7 @@ import com.sun.jna.Library;
 import com.sun.jna.Memory;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.WinNT;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.W32APIOptions;
@@ -68,8 +69,6 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
       IntByReference lpNumberOfBytesWritten,
       Pointer lpOverlapped);
 
-  boolean CloseHandle(HANDLE hObject);
-
   boolean GetOverlappedResult(
       HANDLE hFile, Pointer lpOverlapped, IntByReference lpNumberOfBytesTransferred, boolean wait);
 
@@ -82,8 +81,6 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
       String lpName);
 
   int WaitForSingleObject(HANDLE hHandle, int dwMilliseconds);
-
-  int GetLastError();
 
   boolean FlushFileBuffers(HANDLE hFile);
 
@@ -109,8 +106,8 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
       throws IOException {
     HANDLE handle = INSTANCE.CreateEvent(null, true, false, null);
     if (handle == null) {
-      int error = INSTANCE.GetLastError();
-      throw new IOException(String.format("CreateEvent() failed, error code: %s", error));
+      throw new IOException(
+          String.format("CreateEvent() failed, error: %s", Kernel32Util.getLastErrorMessage()));
     }
 
     return windowsHandleFactory.create(handle, "CreateEvent() for " + namedPipeName);

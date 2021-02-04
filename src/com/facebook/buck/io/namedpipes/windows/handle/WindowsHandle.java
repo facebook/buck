@@ -16,9 +16,9 @@
 
 package com.facebook.buck.io.namedpipes.windows.handle;
 
-import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.INSTANCE;
-
 import com.facebook.buck.core.util.log.Logger;
+import com.sun.jna.platform.win32.Kernel32Util;
+import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT;
 import java.io.Closeable;
@@ -57,9 +57,10 @@ public class WindowsHandle implements Closeable {
       return;
     }
 
-    if (!INSTANCE.CloseHandle(getHandle())) {
-      int error = INSTANCE.GetLastError();
-      LOG.error("CloseHandle() failed. Handle: %s, error code: %s", toString(), error);
+    try {
+      Kernel32Util.closeHandle(getHandle());
+    } catch (Win32Exception e) {
+      LOG.error(e, "Failed to close handle: %s", toString());
     }
     handle = Optional.empty();
   }

@@ -29,6 +29,8 @@ import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.util.CloseableWrapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinError;
 import com.sun.jna.platform.win32.WinNT;
@@ -106,7 +108,8 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     if (handle.isInvalidHandle()) {
       throw new IOException(
           String.format(
-              "Could not create named pipe: %s, error %s", namedPipe, API.GetLastError()));
+              "Could not create named pipe: %s, error %s",
+              namedPipe, Kernel32Util.getLastErrorMessage()));
     }
     openHandles.add(handle);
 
@@ -121,7 +124,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
         return getClient(handle, clazz);
       }
 
-      connectError = API.GetLastError();
+      connectError = Kernel32.INSTANCE.GetLastError();
       if (connectError == WinError.ERROR_PIPE_CONNECTED) {
         openHandles.remove(handle);
         connectedHandles.add(handle);
@@ -143,7 +146,9 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
           throw new PipeNotConnectedException(
               String.format(
                   "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s, previous error: %s",
-                  namedPipe, API.GetLastError(), connectError));
+                  namedPipe,
+                  Kernel32Util.getLastErrorMessage(),
+                  Kernel32Util.formatMessageFromLastErrorCode(connectError)));
         }
 
         openHandles.remove(handle);
