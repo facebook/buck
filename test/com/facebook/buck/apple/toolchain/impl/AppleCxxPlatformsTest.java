@@ -82,6 +82,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -1329,6 +1330,35 @@ public class AppleCxxPlatformsTest {
     SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     assertThat(
         Arg.stringify(appleCxxPlatform.getCxxPlatform().getCxxflags(), resolver), hasItem("-flag"));
+  }
+
+  @Test
+  public void stripSwiftSymbols() {
+    AppleCxxPlatform appleCxxPlatform =
+        buildAppleCxxPlatform(
+            projectFilesystem.getPath("/Developer1"),
+            FakeBuckConfig.builder().setSections("[apple]", "strip_swift_symbols = false").build());
+    assertEquals(
+        appleCxxPlatform.getCxxPlatform().getStripDebugFlags(),
+        ImmutableList.of(StringArg.of("-S")));
+    assertEquals(
+        appleCxxPlatform.getCxxPlatform().getStripNonGlobalFlags(),
+        ImmutableList.of(StringArg.of("-x")));
+    assertEquals(appleCxxPlatform.getCxxPlatform().getStripAllFlags(), ImmutableList.of());
+
+    appleCxxPlatform =
+        buildAppleCxxPlatform(
+            projectFilesystem.getPath("/Developer2"),
+            FakeBuckConfig.builder().setSections("[apple]", "strip_swift_symbols = true").build());
+    assertEquals(
+        appleCxxPlatform.getCxxPlatform().getStripDebugFlags(),
+        ImmutableList.of(StringArg.of("-S")));
+    assertEquals(
+        appleCxxPlatform.getCxxPlatform().getStripNonGlobalFlags(),
+        ImmutableList.of(StringArg.of("-x"), StringArg.of("-T")));
+    assertEquals(
+        appleCxxPlatform.getCxxPlatform().getStripAllFlags(),
+        ImmutableList.of(StringArg.of("-r"), StringArg.of("-u"), StringArg.of("-T")));
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithSwiftToolchain() {

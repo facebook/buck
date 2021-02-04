@@ -184,6 +184,6 @@ cxx_toolchain(
     nm = "//tools:unimplemented",
     objcopy_for_shared_library_interface = "//tools:unimplemented",
     ranlib = "//tools:ranlib",
-    strip = "//tools:strip",
+    strip = "//apple_toolchain/tools:strip",
     visibility = ["PUBLIC"],
 )

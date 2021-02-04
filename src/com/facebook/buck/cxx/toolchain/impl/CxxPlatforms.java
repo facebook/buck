@@ -146,7 +146,10 @@ public class CxxPlatforms {
       boolean publicHeadersSymlinksEnabled,
       boolean privateHeadersSymlinksEnabled,
       PicType picTypeForSharedLinking,
-      Optional<Boolean> linkWithArchives) {
+      Optional<Boolean> linkWithArchives,
+      Optional<ImmutableList<Arg>> stripDebugFlags,
+      Optional<ImmutableList<Arg>> stripNonGlobalFlags,
+      Optional<ImmutableList<Arg>> stripAllFlags) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -201,6 +204,9 @@ public class CxxPlatforms {
         .setUseArgFile(cxxBuckConfig.getUseArgFile())
         .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited());
 
+    stripDebugFlags.ifPresent(builder::setStripDebugFlags);
+    stripNonGlobalFlags.ifPresent(builder::setStripNonGlobalFlags);
+    stripAllFlags.ifPresent(builder::setStripAllFlags);
     linkWithArchives.ifPresent(builder::setRequiresArchives);
     cxxBuckConfig.getRequiresArchives().ifPresent(builder::setRequiresArchives);
 
@@ -279,7 +285,10 @@ public class CxxPlatforms {
         defaultPlatform.getPublicHeadersSymlinksEnabled(),
         defaultPlatform.getPrivateHeadersSymlinksEnabled(),
         defaultPlatform.getPicTypeForSharedLinking(),
-        Optional.of(defaultPlatform.getRequiresArchives()));
+        Optional.of(defaultPlatform.getRequiresArchives()),
+        Optional.of(defaultPlatform.getStripDebugFlags()),
+        Optional.of(defaultPlatform.getStripNonGlobalFlags()),
+        Optional.of(defaultPlatform.getStripAllFlags()));
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {

@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.RelPath;
@@ -58,7 +59,7 @@ public class AppleToolchainIntegrationTest {
             "%s");
     assertEquals(
         String.format(
-            "strip:%n"
+            "strip x:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -96,7 +97,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals(
         String.format(
             "universal file:%n"
-                + "strip:%n"
+                + "strip x:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -112,7 +113,7 @@ public class AppleToolchainIntegrationTest {
                 + "linker: lpath: %s/sdk/lib%n"
                 + "linker: libs: objc%n"
                 + "universal file:%n"
-                + "strip:%n"
+                + "strip x:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -144,7 +145,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     assertEquals(
         String.format(
-            "strip:%n"
+            "strip x:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -231,7 +232,7 @@ public class AppleToolchainIntegrationTest {
             "%s");
     assertEquals(
         String.format(
-            "strip:%n"
+            "strip x:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -249,5 +250,34 @@ public class AppleToolchainIntegrationTest {
             sdkPath,
             sdkPath),
         workspace.getFileContents(output.resolve("TestApp")));
+  }
+
+  @Test
+  public void testAppleToolchainStripArgs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+    workspace.addBuckConfigLocalOption(
+        "apple", "toolchain_set_target", "//apple_toolchain:toolchain");
+    workspace.setUp();
+
+    verifyStripArgs(workspace, "strip-debug", "S");
+    verifyStripArgs(workspace, "strip-non-global", "x");
+    verifyStripArgs(workspace, "strip-all", "");
+
+    workspace.addBuckConfigLocalOption("apple", "strip_swift_symbols", "true");
+
+    verifyStripArgs(workspace, "strip-debug", "S");
+    verifyStripArgs(workspace, "strip-non-global", "Tx");
+    verifyStripArgs(workspace, "strip-all", "rTu");
+  }
+
+  private void verifyStripArgs(ProjectWorkspace workspace, String stripFlavor, String expectedArgs)
+      throws IOException {
+    Path output = workspace.buildAndReturnOutput("//:TestApp#iphoneos-arm64," + stripFlavor);
+    assertTrue(
+        workspace
+            .getFileContents(output.resolve("TestApp"))
+            .startsWith(String.format("strip %s:", expectedArgs)));
   }
 }

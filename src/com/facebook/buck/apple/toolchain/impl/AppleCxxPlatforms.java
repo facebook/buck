@@ -23,6 +23,7 @@ import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescriptionSwiftEnhancer;
+import com.facebook.buck.apple.AppleStripFlags;
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -52,6 +53,7 @@ import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
@@ -438,6 +440,7 @@ public class AppleCxxPlatforms {
     ImmutableList<Arg> cflagsArgs = ImmutableList.copyOf(StringArg.from(cflags));
 
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    boolean stripSwift = appleConfig.getStripSwiftSymbolsEnabled();
 
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
@@ -484,7 +487,10 @@ public class AppleCxxPlatforms {
             cxxBuckConfig.getPublicHeadersSymlinksEnabled(),
             cxxBuckConfig.getPrivateHeadersSymlinksEnabled(),
             PicType.PIC,
-            Optional.empty());
+            Optional.empty(),
+            Optional.of(AppleStripFlags.getStripArgs(StripStyle.DEBUGGING_SYMBOLS, stripSwift)),
+            Optional.of(AppleStripFlags.getStripArgs(StripStyle.NON_GLOBAL_SYMBOLS, stripSwift)),
+            Optional.of(AppleStripFlags.getStripArgs(StripStyle.ALL_SYMBOLS, stripSwift)));
 
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);

@@ -314,6 +314,9 @@ public class DefaultCxxPlatforms {
         cxxBuckConfig.getPublicHeadersSymlinksEnabled(),
         cxxBuckConfig.getPrivateHeadersSymlinksEnabled(),
         picTypeForSharedLinking,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 

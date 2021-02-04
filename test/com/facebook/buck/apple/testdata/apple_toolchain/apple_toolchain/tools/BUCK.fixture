@@ -27,6 +27,8 @@ define_impl("momc")
 
 define_impl("swiftc")
 
+define_impl("strip")
+
 genrule(
     name = "gen-sdk",
     cmd = "mkdir $OUT; echo test > $OUT/testfile; mkdir $OUT/lib; mkdir $OUT/Frameworks",

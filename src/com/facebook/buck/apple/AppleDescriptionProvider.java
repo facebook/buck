@@ -136,6 +136,6 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             appleLibraryDescription),
         new SceneKitAssetsDescription(),
         new AppleToolchainSetDescription(),
-        new AppleToolchainDescription());
+        new AppleToolchainDescription(appleConfig));
   }
 }
