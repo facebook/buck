@@ -31,12 +31,13 @@ import com.facebook.buck.core.starlark.rule.attr.impl.SourceListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringListAttribute;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Sequence;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Sequence;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 
 /** Class that actually instantiates Attribute objects for user defined rules */
 public class AttrModule implements AttrModuleApi {
@@ -48,18 +49,40 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder intAttribute(
-      Integer defaultValue, String doc, Boolean mandatory, StarlarkList<Integer> values)
+      StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<StarlarkInt> values)
       throws EvalException {
-    List<Integer> validatedValues = Sequence.cast(values, Integer.class, null);
-    return IntAttribute.of(defaultValue, doc, mandatory, validatedValues);
+    List<StarlarkInt> validatedValues = Sequence.cast(values, StarlarkInt.class, null);
+    return IntAttribute.of(
+        defaultValue.toInt("defaultValue"),
+        doc,
+        mandatory,
+        validatedValues.stream()
+            .map(
+                i -> {
+                  try {
+                    return i.toInt("defaultValue");
+                  } catch (EvalException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Override
   public AttributeHolder intListAttribute(
-      StarlarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<StarlarkInt> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<Integer> validatedDefaultValue =
-        ImmutableList.copyOf(Sequence.cast(defaultValue, Integer.class, null));
+        ImmutableList.copyOf(Sequence.cast(defaultValue, StarlarkInt.class, null)).stream()
+            .map(
+                i -> {
+                  try {
+                    return i.toInt("defaultValue");
+                  } catch (EvalException e) {
+                    throw new RuntimeException(e);
+                  }
+                })
+            .collect(ImmutableList.toImmutableList());
 
     return IntListAttribute.of(validatedDefaultValue, doc, mandatory, allowEmpty);
   }

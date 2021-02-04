@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
@@ -64,7 +65,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,6 +75,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import net.starlark.java.eval.StarlarkList;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -154,11 +155,9 @@ public class SkylarkProjectBuildFileParserTest {
       parser.getManifest(buildFile);
       fail();
     } catch (BuildFileParseException e) {
-      Event event = Iterables.getOnlyElement(eventCollector);
-      assertThat(event.getKind(), is(EventKind.ERROR));
       assertThat(
-          event.getMessage(),
-          is(
+          e.getMessage(),
+          endsWith(
               "Cannot register rule src:guava of type prebuilt_jar with content {name=guava, binary_jar=guava.jar} again."));
     }
   }
@@ -414,13 +413,12 @@ public class SkylarkProjectBuildFileParserTest {
       fail("Should not reach here.");
     } catch (BuildFileParseException e) {
       assertThat(e.getMessage(), startsWith("Cannot evaluate file "));
+      assertThat(
+          e.getMessage(),
+          stringContainsInOrder(
+              "prebuilt_jar requires name and binary_jar but they are not provided.",
+              "Need help? See https://dev.buck.build/rule/prebuilt_jar"));
     }
-    assertThat(eventCollector.count(), is(1));
-    assertThat(
-        eventCollector.iterator().next().getMessage(),
-        stringContainsInOrder(
-            "prebuilt_jar requires name and binary_jar but they are not provided.",
-            "Need help? See https://dev.buck.build/rule/prebuilt_jar"));
   }
 
   @Test

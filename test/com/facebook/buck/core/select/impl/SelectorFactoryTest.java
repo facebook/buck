@@ -30,8 +30,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.List;
+import net.starlark.java.eval.Starlark;
 import org.junit.Before;
 import org.junit.Test;
 

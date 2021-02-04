@@ -329,7 +329,7 @@ public class PythonDslUserDefinedRuleIntegrationTest {
             .assertExitCode(ExitCode.PARSE_ERROR)
             .getStderr();
     // Skylark error, not a python one
-    assertThat(stderr, Matchers.containsString("invalid_attr.bzl:6:"));
+    assertThat(stderr, Matchers.containsString("invalid_attr.bzl\", line 6, column 31"));
     assertThat(
         stderr,
         Matchers.containsString("parameter 'default' got value of type 'string', want 'int'"));

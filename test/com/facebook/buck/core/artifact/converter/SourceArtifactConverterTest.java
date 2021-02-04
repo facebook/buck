@@ -36,10 +36,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Paths;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.syntax.Location;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 

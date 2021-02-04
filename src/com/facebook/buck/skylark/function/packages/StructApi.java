@@ -30,19 +30,18 @@
 
 package com.facebook.buck.skylark.function.packages;
 
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.annot.StarlarkDocumentationCategory;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 
 /** Interface for the "struct" object in the build API. */
 @StarlarkBuiltin(
     name = "struct",
-    category = StarlarkDocumentationCategory.BUILTIN,
     doc =
         "A generic object with fields."
             + "<p>Structs fields cannot be reassigned once the struct is created. Two structs are "
@@ -114,7 +113,7 @@ public interface StructApi extends StarlarkValue {
         extraKeywords =
             @Param(
                 name = "kwargs",
-                type = Dict.class,
+                allowedTypes = @ParamType(type = Dict.class),
                 defaultValue = "{}",
                 doc = "Dictionary of arguments."),
         useStarlarkThread = true,

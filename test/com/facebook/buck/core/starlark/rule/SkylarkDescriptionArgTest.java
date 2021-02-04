@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
-import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
@@ -51,8 +50,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
+import net.starlark.java.eval.Starlark;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -62,7 +60,7 @@ public class SkylarkDescriptionArgTest {
   @Rule public ExpectedException expected = ExpectedException.none();
 
   @Test
-  public void throwsWhenInvalidFieldIsRequested() throws EvalException, LabelSyntaxException {
+  public void throwsWhenInvalidFieldIsRequested() throws Exception {
 
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
@@ -72,7 +70,7 @@ public class SkylarkDescriptionArgTest {
   }
 
   @Test
-  public void throwsWhenSettingWithAnInvalidName() throws LabelSyntaxException, EvalException {
+  public void throwsWhenSettingWithAnInvalidName() throws Exception {
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
 
@@ -82,7 +80,7 @@ public class SkylarkDescriptionArgTest {
   }
 
   @Test
-  public void throwsWhenSettingAfterBuilding() throws LabelSyntaxException, EvalException {
+  public void throwsWhenSettingAfterBuilding() throws Exception {
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
     arg.setPostCoercionValue(ParamName.bySnakeCase("name"), "ohmy");
@@ -94,7 +92,7 @@ public class SkylarkDescriptionArgTest {
   }
 
   @Test
-  public void getsValuesThatHaveBeenSet() throws LabelSyntaxException, EvalException {
+  public void getsValuesThatHaveBeenSet() throws Exception {
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
 
@@ -103,7 +101,7 @@ public class SkylarkDescriptionArgTest {
   }
 
   @Test
-  public void getsLabelsAndLicenses() throws LabelSyntaxException, EvalException {
+  public void getsLabelsAndLicenses() throws Exception {
     ImmutableSortedSet<DefaultBuildTargetSourcePath> licenses =
         ImmutableSortedSet.of(
             DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:LICENSE")),
@@ -118,7 +116,7 @@ public class SkylarkDescriptionArgTest {
   }
 
   @Test
-  public void defaultValuesUsedWhenMarshalling() throws LabelSyntaxException, EvalException {
+  public void defaultValuesUsedWhenMarshalling() throws Exception {
     DefaultConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellNameResolver cellNameResolver =

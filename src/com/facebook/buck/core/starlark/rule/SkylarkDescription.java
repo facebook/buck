@@ -45,18 +45,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Sequence;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Sequence;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
 
 /**
  * Description for User Defined Rules. This Description runs user-supplied implementation functions
@@ -105,7 +105,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       // TODO: Verify that we get providers back, validate types, etc, etc
       return getProviderInfos(returnedProviders, ImmutableSet.of(), ctx, implementation, args);
     } catch (EvalException e) {
-      throw new RuleAnalysisException(e, e.print());
+      throw new RuleAnalysisException(e, e.toString());
     } catch (InterruptedException e) {
       throw new RuleAnalysisException(e, "Interrupted while analyzing rule");
     } catch (LabelSyntaxException e) {

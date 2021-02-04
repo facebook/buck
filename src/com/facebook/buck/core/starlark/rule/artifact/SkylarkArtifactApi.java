@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.starlark.rule.artifact;
 
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Helper struct fields that should be available to users of Artifact inside of user defined rules
@@ -28,10 +28,7 @@ import net.starlark.java.annot.StarlarkMethod;
  * presently expose root, dirname, or path to give a fully constructed path from the repository
  * root. Should this be necessary in the future, we may expose those things.
  */
-@StarlarkBuiltin(
-    name = "Artifact",
-    doc = "Represents either a generated file, or a source file",
-    title = "Artifact")
+@StarlarkBuiltin(name = "Artifact", doc = "Represents either a generated file, or a source file")
 public interface SkylarkArtifactApi extends StarlarkValue {
 
   @StarlarkMethod(

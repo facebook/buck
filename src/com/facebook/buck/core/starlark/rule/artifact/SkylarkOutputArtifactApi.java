@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.starlark.rule.artifact;
 
-import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Dummy interface to represent {@link com.facebook.buck.core.artifact.OutputArtifact} in skylark

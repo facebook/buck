@@ -30,9 +30,9 @@
 package com.facebook.buck.skylark.function.packages;
 
 import com.facebook.buck.util.types.Pair;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.StarlarkValue;
+import net.starlark.java.syntax.Location;
 
 /**
  * Base class for declared providers {@see Provider} defined in native code.

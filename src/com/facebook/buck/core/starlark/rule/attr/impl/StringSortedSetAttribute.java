@@ -24,8 +24,8 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkList;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkList;
 
 /** Class that represents a sorted set of uniq strings */
 @BuckStyleValue

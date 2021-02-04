@@ -36,12 +36,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import com.google.devtools.build.lib.syntax.Parameter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
+import net.starlark.java.syntax.Parameter;
 
 /**
  * Function Signatures for BUILD language (same as Python)

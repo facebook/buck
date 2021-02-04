@@ -34,25 +34,27 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.Resolver;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkFile;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.Program;
+import net.starlark.java.syntax.StarlarkFile;
+import net.starlark.java.syntax.SyntaxError;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class SkylarkBuildModuleTest {
+
+  @Rule public ExpectedException expected = ExpectedException.none();
 
   private AbsPath root;
   private EventCollector eventHandler;
@@ -75,30 +77,29 @@ public class SkylarkBuildModuleTest {
 
   @Test
   public void packageIsNotAllowed() throws Exception {
+    expected.expect(SyntaxError.Exception.class);
+    expected.expectMessage("name 'package' is not defined");
     evaluate("package()", false);
-    assertEquals(eventHandler.iterator().next().getMessage(), "name 'package' is not defined");
   }
 
-  private Module evaluate(String expression, boolean expectSuccess)
-      throws IOException, InterruptedException {
+  private Module evaluate(String expression, boolean expectSuccess) throws Exception {
     AbsPath buildFile = root.resolve("BUCK");
     Files.write(buildFile.getPath(), ImmutableList.of(expression));
     return evaluate(buildFile, expectSuccess);
   }
 
-  private Module evaluate(AbsPath buildFile, boolean expectSuccess)
-      throws IOException, InterruptedException {
+  private Module evaluate(AbsPath buildFile, boolean expectSuccess) throws Exception {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return evaluate(buildFile, mutability, expectSuccess);
     }
   }
 
   private Module evaluate(AbsPath buildFile, Mutability mutability, boolean expectSuccess)
-      throws IOException, InterruptedException {
+      throws Exception {
     byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
-            ParserInput.create(
+            ParserInput.fromString(
                 new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
     ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
@@ -118,7 +119,6 @@ public class SkylarkBuildModuleTest {
                 ImmutableMap.of()))
         .setup(env);
 
-    Resolver.resolveFile(buildFileAst, module);
     if (!buildFileAst.errors().isEmpty()) {
       for (SyntaxError error : buildFileAst.errors()) {
         eventHandler.handle(Event.error(error.location(), error.message()));
@@ -128,10 +128,11 @@ public class SkylarkBuildModuleTest {
     }
 
     try {
-      EvalUtils.exec(buildFileAst, module, env);
+      Program program = Program.compileFile(buildFileAst, module);
+      Starlark.execFileProgram(program, module, env);
       Assert.assertTrue(expectSuccess);
     } catch (EvalException e) {
-      eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+      eventHandler.handle(Event.error(e.getDeprecatedLocation(), e.getMessage()));
       Assert.assertFalse(expectSuccess);
     }
     return module;

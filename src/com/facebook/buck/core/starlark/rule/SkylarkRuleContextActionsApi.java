@@ -19,15 +19,16 @@ package com.facebook.buck.core.starlark.rule;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilderApi;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkArtifactApi;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.NoneType;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Struct containing methods that create actions within the implementation function of a user
@@ -35,7 +36,6 @@ import net.starlark.java.annot.StarlarkMethod;
  */
 @StarlarkBuiltin(
     name = "actions",
-    title = "actions",
     doc = "Struct containing methods to create actions within a rule's implementation method")
 public interface SkylarkRuleContextActionsApi extends StarlarkValue {
 
@@ -49,16 +49,14 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
                 "Values to initialize the new Args object with. If a list is provided, "
                     + "these args are passed to `Args.add_all`. If a single non-list item is "
                     + "provided, it is passed to `Args.add`.",
-            defaultValue = "None",
-            noneable = true,
-            type = Object.class),
+            defaultValue = "None"),
         @Param(
             name = "format",
             doc =
                 "A format string to apply after stringifying each argument. This must contain one "
                     + "or more %s. Each will be replaced with the string value of each argument "
                     + "at execution time.",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             named = true,
             defaultValue = "\"%s\"")
       })
@@ -68,14 +66,17 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
       name = "copy_file",
       doc = "Copies a file from `src` to `dst`",
       parameters = {
-        @Param(name = "src", doc = "The file to copy", type = Artifact.class, named = true),
+        @Param(
+            name = "src",
+            doc = "The file to copy",
+            allowedTypes = @ParamType(type = Artifact.class),
+            named = true),
         @Param(
             name = "dest",
             doc =
                 "The destination to copy to. This may either be a file declared with "
                     + "`declare_file` or in an `output` attribute, or a string that will be used "
                     + "to declare a new file (which is returned by this function)",
-            type = Object.class,
             allowedTypes = {@ParamType(type = Artifact.class), @ParamType(type = String.class)},
             named = true),
       },
@@ -94,7 +95,7 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
             doc =
                 "The name of the file that will be created. This must be relative and not traverse "
                     + "upward in the filesystem",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             named = true)
       },
       useStarlarkThread = true)
@@ -111,21 +112,19 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
                     + "be at least one argument. Empty lists will result in a build failure. Any "
                     + "`OutputArtifact`s must be written to by the specified executable.",
             named = true,
-            type = StarlarkList.class,
+            allowedTypes = @ParamType(type = StarlarkList.class),
             defaultValue = "[]"),
         @Param(
             name = "short_name",
             doc = "The short name to display for this action in logs and the console",
             named = true,
-            noneable = true,
-            type = String.class,
+            allowedTypes = {@ParamType(type = String.class), @ParamType(type = NoneType.class)},
             defaultValue = "None"),
         @Param(
             name = "env",
             doc = "Environment variables that should be set when this action is executed",
             named = true,
-            noneable = true,
-            type = Dict.class,
+            allowedTypes = {@ParamType(type = Dict.class), @ParamType(type = NoneType.class)},
             defaultValue = "None")
       })
   void run(StarlarkList<Object> arguments, Object shortName, Object userEnv) throws EvalException;
@@ -162,7 +161,7 @@ public interface SkylarkRuleContextActionsApi extends StarlarkValue {
         @Param(
             name = "is_executable",
             doc = "For Posix platforms, whether this file should be made executable",
-            type = Boolean.class,
+            allowedTypes = @ParamType(type = Boolean.class),
             named = true,
             defaultValue = "False")
       },

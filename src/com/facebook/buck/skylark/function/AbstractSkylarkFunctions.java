@@ -22,12 +22,6 @@ import com.facebook.buck.skylark.function.select.SelectorValue;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Tuple;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,15 +32,19 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.NoneType;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.Tuple;
 
 /**
  * Abstract class containing function definitions shared by {@link SkylarkBuildModule} and {@link
  * SkylarkPackageModule}.
- *
- * <p>Note: @SkylarkModule does not support having the same name for multiple classes in {@link
- * com.google.devtools.build.lib.syntax.Starlark#addModule(ImmutableMap.Builder, Object)} and since
- * we want the shared functions to also be under "native", we must subclass.
  */
 public abstract class AbstractSkylarkFunctions {
 
@@ -69,16 +67,15 @@ public abstract class AbstractSkylarkFunctions {
       parameters = {
         @Param(
             name = "section",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             doc = "the name of the .buckconfig section with the desired value."),
         @Param(
             name = "field",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             doc = "the name of the .buckconfig field with the desired value."),
         @Param(
             name = "defaultValue",
-            noneable = true,
-            type = String.class,
+            allowedTypes = {@ParamType(type = String.class), @ParamType(type = NoneType.class)},
             defaultValue = "None",
             doc = "the value to return if the desired value is not set in the .buckconfig."),
       },
@@ -99,7 +96,9 @@ public abstract class AbstractSkylarkFunctions {
   @StarlarkMethod(
       name = "sha256",
       doc = "Computes a sha256 digest for a string. Returns the hex representation of the digest.",
-      parameters = {@Param(name = "value", type = String.class, named = true)})
+      parameters = {
+        @Param(name = "value", allowedTypes = @ParamType(type = String.class), named = true)
+      })
   public String sha256(String value) {
     return Hashing.sha256().hashString(value, StandardCharsets.UTF_8).toString();
   }
@@ -108,7 +107,9 @@ public abstract class AbstractSkylarkFunctions {
   @StarlarkMethod(
       name = "load_symbols",
       doc = "Loads symbols into the current build context.",
-      parameters = {@Param(name = "symbols", type = Dict.class, named = true)},
+      parameters = {
+        @Param(name = "symbols", allowedTypes = @ParamType(type = Dict.class), named = true)
+      },
       useStarlarkThread = true)
   public void loadSymbols(Dict<?, ?> symbols /* <String, Any> */, StarlarkThread env) {
     LoadSymbolsContext loadSymbolsContext = env.getThreadLocal(LoadSymbolsContext.class);
@@ -130,15 +131,15 @@ public abstract class AbstractSkylarkFunctions {
       doc =
           "new function with partial application of the given arguments and keywords. "
               + "Roughly equivalent to functools.partial.",
-      parameters = {@Param(name = "func", type = StarlarkCallable.class)},
+      parameters = {
+        @Param(name = "func", allowedTypes = @ParamType(type = StarlarkCallable.class))
+      },
       extraPositionals = @Param(name = "args"),
       extraKeywords = @Param(name = "kwargs"))
-  public StarlarkCallable partial(
-      StarlarkCallable func, Tuple<Object> args, Dict<String, Object> kwargs) {
+  public StarlarkCallable partial(StarlarkCallable func, Tuple args, Dict<String, Object> kwargs) {
     return new StarlarkCallable() {
       @Override
-      public Object call(
-          StarlarkThread thread, Tuple<Object> inner_args, Dict<String, Object> inner_kwargs)
+      public Object call(StarlarkThread thread, Tuple inner_args, Dict<String, Object> inner_kwargs)
           throws EvalException, InterruptedException {
         // Sadly, neither Dict.plus() nor MethodLibrary.dict() are accessible.
         Dict<String, Object> merged_args = Dict.copyOf(thread.mutability(), kwargs);
@@ -165,10 +166,13 @@ public abstract class AbstractSkylarkFunctions {
               + "configurable</a>. See "
               + "<a href=\"$BE_ROOT/functions.html#select\">build encyclopedia</a> for details.",
       parameters = {
-        @Param(name = "x", type = Dict.class, doc = "The parameter to convert."),
+        @Param(
+            name = "x",
+            allowedTypes = @ParamType(type = Dict.class),
+            doc = "The parameter to convert."),
         @Param(
             name = "no_match_error",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             defaultValue = "''",
             doc = "Optional custom error to report if no condition matches.",
             named = true)
@@ -193,8 +197,8 @@ public abstract class AbstractSkylarkFunctions {
       name = "select_equal_internal",
       doc = "Test Only. Check equality between two select expressions",
       parameters = {
-        @Param(name = "first", type = SelectorList.class),
-        @Param(name = "other", type = SelectorList.class),
+        @Param(name = "first", allowedTypes = @ParamType(type = SelectorList.class)),
+        @Param(name = "other", allowedTypes = @ParamType(type = SelectorList.class)),
       },
       documented = false)
   public boolean selectEqualInternal(SelectorList first, SelectorList other) {
@@ -289,8 +293,8 @@ public abstract class AbstractSkylarkFunctions {
       name = "select_map",
       doc = "Iterate over and modify a select expression using the map function",
       parameters = {
-        @Param(name = "selector_list", type = SelectorList.class),
-        @Param(name = "func", type = StarlarkCallable.class)
+        @Param(name = "selector_list", allowedTypes = @ParamType(type = SelectorList.class)),
+        @Param(name = "func", allowedTypes = @ParamType(type = StarlarkCallable.class))
       },
       useStarlarkThread = true)
   public SelectorList select_map(
@@ -372,8 +376,8 @@ public abstract class AbstractSkylarkFunctions {
       name = "select_test",
       doc = "Test values in the select expression using the given function",
       parameters = {
-        @Param(name = "selector_list", type = SelectorList.class),
-        @Param(name = "func", type = StarlarkCallable.class)
+        @Param(name = "selector_list", allowedTypes = @ParamType(type = SelectorList.class)),
+        @Param(name = "func", allowedTypes = @ParamType(type = StarlarkCallable.class))
       },
       useStarlarkThread = true)
   public boolean select_test(

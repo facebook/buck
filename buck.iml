@@ -174,5 +174,6 @@
     <orderEntry type="module" module-name="bazel" />
     <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
     <orderEntry type="module" module-name="buck" />
+    <orderEntry type="library" name="compile-testing" level="project" />
   </component>
 </module>

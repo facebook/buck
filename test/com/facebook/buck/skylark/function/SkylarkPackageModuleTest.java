@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.function;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -35,20 +36,18 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.Resolver;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkFile;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.Program;
+import net.starlark.java.syntax.StarlarkFile;
+import net.starlark.java.syntax.SyntaxError;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,30 +78,32 @@ public class SkylarkPackageModuleTest {
 
   @Test
   public void nonPackageFunctionsAreNotAllowed() throws Exception {
-    evaluate("pkg = package_name()", false);
-    assertEquals(eventHandler.iterator().next().getMessage(), "name 'package_name' is not defined");
+    try {
+      evaluate("pkg = package_name()", false);
+      fail("unreachable");
+    } catch (SyntaxError.Exception e) {
+      assertEquals("name 'package_name' is not defined", e.getMessage());
+    }
   }
 
-  private ParseContext evaluate(String expression, boolean expectSuccess)
-      throws IOException, InterruptedException {
+  private ParseContext evaluate(String expression, boolean expectSuccess) throws Exception {
     AbsPath buildFile = root.resolve("PACKAGE");
     Files.write(buildFile.getPath(), ImmutableList.of(expression));
     return evaluate(buildFile, expectSuccess);
   }
 
-  private ParseContext evaluate(AbsPath buildFile, boolean expectSuccess)
-      throws IOException, InterruptedException {
+  private ParseContext evaluate(AbsPath buildFile, boolean expectSuccess) throws Exception {
     try (Mutability mutability = Mutability.create("PACKAGE")) {
       return evaluate(buildFile, mutability, expectSuccess);
     }
   }
 
   private ParseContext evaluate(AbsPath buildFile, Mutability mutability, boolean expectSuccess)
-      throws IOException, InterruptedException {
+      throws Exception {
     byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
-            ParserInput.create(
+            ParserInput.fromString(
                 new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
     ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
@@ -123,7 +124,6 @@ public class SkylarkPackageModuleTest {
                 ImmutableMap.of()));
     parseContext.setup(env);
 
-    Resolver.resolveFile(buildFileAst, module);
     if (!buildFileAst.errors().isEmpty()) {
       for (SyntaxError error : buildFileAst.errors()) {
         eventHandler.handle(Event.error(error.location(), error.message()));
@@ -133,10 +133,11 @@ public class SkylarkPackageModuleTest {
     }
 
     try {
-      EvalUtils.exec(buildFileAst, module, env);
+      Program program = Program.compileFile(buildFileAst, module);
+      Starlark.execFileProgram(program, module, env);
       assertTrue(expectSuccess);
     } catch (EvalException e) {
-      eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+      eventHandler.handle(Event.error(e.getDeprecatedLocation(), e.getMessage()));
       assertFalse(expectSuccess);
     }
     return parseContext;

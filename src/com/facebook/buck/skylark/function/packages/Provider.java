@@ -29,8 +29,8 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.eval.StarlarkValue;
+import net.starlark.java.syntax.Location;
 
 /**
  * Declared Provider (a constructor for {@link Info}).
@@ -62,7 +62,7 @@ public interface Provider extends StarlarkValue {
 
   /**
    * Returns an error message format string for instances to use for their {@link
-   * com.google.devtools.build.lib.syntax.ClassObject#getErrorMessageForUnknownField(String)}.
+   * net.starlark.java.eval.Structure#getErrorMessageForUnknownField(String)}.
    *
    * <p>The format string must contain one {@code '%s'} placeholder for the field name.
    */

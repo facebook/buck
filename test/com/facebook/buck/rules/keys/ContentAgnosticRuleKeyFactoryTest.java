@@ -40,10 +40,10 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import net.starlark.java.syntax.Location;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 

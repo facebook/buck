@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Simple interface to expose {@link com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs}

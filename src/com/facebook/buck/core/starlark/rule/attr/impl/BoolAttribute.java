@@ -20,7 +20,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
+import net.starlark.java.eval.Printer;
 
 /** Class that represents an Boolean attribute to a user defined rule */
 @BuckStyleValue

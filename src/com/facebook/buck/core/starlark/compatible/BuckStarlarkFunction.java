@@ -20,12 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
@@ -36,7 +30,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkThread;
 import net.starlark.java.spelling.SpellChecker;
+import net.starlark.java.syntax.Location;
 
 /**
  * Marker class that makes some method exposable to skylark.
@@ -177,7 +177,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
         throw new EvalException(null, "method invocation failed: " + e, e.getCause());
       } else {
         // This is unlikely to happen
-        throw new EvalException("method invocation failed: " + e);
+        throw new EvalException("method invocation failed: " + e, e);
       }
     }
   }
@@ -378,8 +378,11 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
     }
     if (!ok) {
       throw Starlark.errorf(
-          "in call, parameter '%s' got value of type '%s', want '%s'",
-          param.getName(), Starlark.type(value), param.getTypeErrorMessage());
+          "in call %s(), parameter '%s' got value of type '%s', want '%s'",
+          methodDescriptor.getName(),
+          param.getName(),
+          Starlark.type(value),
+          param.getTypeErrorMessage());
     }
 
     // None is valid if and only if the parameter is marked noneable,

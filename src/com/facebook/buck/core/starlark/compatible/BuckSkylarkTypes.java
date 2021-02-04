@@ -21,14 +21,13 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Sequence;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Map;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Sequence;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkList;
 
 /**
  * Container class for helper methods having to deal with Skylark types. e.g. list or map conversion
@@ -115,13 +114,14 @@ public class BuckSkylarkTypes {
    * identity function.
    *
    * @param arg A value from the skylark interpreter. This should only be primitive objects, or
-   *     {@link com.google.devtools.build.lib.syntax.StarlarkValue} instances
+   *     {@link net.starlark.java.eval.StarlarkValue} instances
    * @return
    *     <li>The original object if it was already an immutable {@link
-   *         com.google.devtools.build.lib.syntax.StarlarkValue} or a primitive value
-   *     <li>an immutable {@link StarlarkList} if the original object is a {@link StarlarkList} and
-   *         all values were immutable or could be made immutable. As above, this may be a copy, or
-   *         inner elements may have had to be copied if they were mutable
+   *         net.starlark.java.eval.StarlarkValue} or a primitive value
+   *     <li>an immutable {@link net.starlark.java.eval.StarlarkList} if the original object is a
+   *         {@link net.starlark.java.eval.StarlarkList} and all values were immutable or could be
+   *         made immutable. As above, this may be a copy, or inner elements may have had to be
+   *         copied if they were mutable
    *     <li>An immutable {@link Dict} if the original object is a {@link Dict} and all keys and
    *         values were immutable, or could be made so. Again, note that copies may be made in
    *         order to make mutable objects immutable
@@ -138,14 +138,14 @@ public class BuckSkylarkTypes {
     // custom objects should be vanishingly small.
 
     // Grab frozen objects and primitives
-    if (EvalUtils.isImmutable(arg)) {
+    if (Starlark.isImmutable(arg)) {
       return arg;
     }
 
     if (arg instanceof StarlarkList<?>) {
       StarlarkList<?> listArg = ((StarlarkList<?>) arg);
       return listArg.stream()
-          .filter(a -> !EvalUtils.isImmutable(a))
+          .filter(a -> !Starlark.isImmutable(a))
           .findFirst()
           // if we have a mutable element, like a sub list, try to make it immutable
           .map(
@@ -223,8 +223,8 @@ public class BuckSkylarkTypes {
 
   /**
    * Checks if a given value is 'Immutable'. This mostly works like {@link
-   * com.google.devtools.build.lib.syntax.EvalUtils#isImmutable(java.lang.Object)}, but it can also
-   * handle {@link com.google.common.collect.ImmutableCollection} and {@link
+   * Starlark#isImmutable(java.lang.Object)}, but it can also handle {@link
+   * com.google.common.collect.ImmutableCollection} and {@link
    * com.google.common.collect.ImmutableMap}
    */
   public static boolean isImmutable(Object o) {
@@ -233,7 +233,7 @@ public class BuckSkylarkTypes {
     } else if (o instanceof ImmutableMap<?, ?>) {
       return ((ImmutableMap<?, ?>) o).values().stream().allMatch(BuckSkylarkTypes::isImmutable);
     } else {
-      return EvalUtils.isImmutable(o);
+      return Starlark.isImmutable(o);
     }
   }
 }

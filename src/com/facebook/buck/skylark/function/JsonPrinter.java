@@ -16,12 +16,13 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.protobuf.TextFormat;
 import java.util.List;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.Structure;
+import net.starlark.java.syntax.Location;
 
 /**
  * Prints JSON representation of Skylark instances, which includes all primitive times and structs,
@@ -44,13 +45,15 @@ class JsonPrinter {
       throws EvalException {
     if (value == Starlark.NONE) {
       sb.append("null");
-    } else if (value instanceof ClassObject) {
-      printJson((ClassObject) value, sb, loc);
+    } else if (value instanceof Structure) {
+      printJson((Structure) value, sb, loc);
     } else if (value instanceof List) {
       printJson((List<?>) value, sb, loc, key);
     } else if (value instanceof String) {
       printJson((String) value, sb);
-    } else if (value instanceof Integer || value instanceof Boolean) {
+    } else if (value instanceof Integer
+        || value instanceof StarlarkInt
+        || value instanceof Boolean) {
       sb.append(value);
     } else {
       String errorMessage =
@@ -84,7 +87,7 @@ class JsonPrinter {
     sb.append('"');
   }
 
-  private static void printJson(ClassObject value, StringBuilder sb, Location loc)
+  private static void printJson(Structure value, StringBuilder sb, Location loc)
       throws EvalException {
     sb.append('{');
     String join = "";

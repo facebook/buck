@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.providers;
 
-import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * The information, which is a struct-like object, passed between rules during rule analysis. This

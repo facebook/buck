@@ -23,11 +23,11 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Verify;
-import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import net.starlark.java.syntax.Location;
 
 /**
  * Factory for managing and creating the various {@link Artifact}s for a specific {@link
@@ -78,7 +78,7 @@ public class BuildArtifactFactory {
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link com.facebook.buck.core.rules.actions.Action}s are being created for
    * @param location the location within the extension file where this artifact was declared. {@link
-   *     Location.BUILTIN} may be used if not applicable.
+   *     Location#BUILTIN} may be used if not applicable.
    * @return a {@link DeclaredArtifact} for the given path
    * @throws ArtifactDeclarationException if the provided output path is invalid in some way
    */
@@ -93,7 +93,7 @@ public class BuildArtifactFactory {
    * @param output the output path relative to the package path for the current rule that the {@link
    *     com.facebook.buck.core.rules.actions.Action}s are being created for
    * @param location the location within the extension file where this artifact was declared. {@link
-   *     Location.BUILTIN} may be used if not applicable.
+   *     Location#BUILTIN} may be used if not applicable.
    * @return a {@link DeclaredArtifact} for the given path
    * @throws ArtifactDeclarationException if the provided output path is invalid in some way
    */

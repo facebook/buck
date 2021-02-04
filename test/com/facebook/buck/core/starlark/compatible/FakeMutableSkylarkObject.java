@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 
 /** Simple skylark object that is mutable and cannot be made immutable */
 public class FakeMutableSkylarkObject implements StarlarkValue {

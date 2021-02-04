@@ -22,9 +22,9 @@ import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Mutability;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Test;
 
 public class AuditRulesCommandTest {
@@ -38,7 +38,7 @@ public class AuditRulesCommandTest {
     assertEquals("3.14", AuditRulesCommand.createDisplayString(3.14));
     assertEquals("\"Hello, world!\"", AuditRulesCommand.createDisplayString("Hello, world!"));
     assertEquals("[\n]", AuditRulesCommand.createDisplayString(ImmutableList.<String>of()));
-    ImmutableList<String> testList = ImmutableList.of("foo", "bar", "baz");
+    StarlarkList<String> testList = StarlarkList.immutableOf("foo", "bar", "baz");
     assertEquals(
         "[\n  \"foo\",\n  \"bar\",\n  \"baz\",\n]",
         AuditRulesCommand.createDisplayString(testList));
@@ -48,25 +48,27 @@ public class AuditRulesCommandTest {
     assertEquals(
         "{\n  \"foo\": [\n    1,\n  ],\n}",
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", ImmutableList.of(1))));
-    Dict<String, String> testDict = Dict.of(null, "one", "two");
+    Dict<String, String> testDict = Dict.copyOf(null, ImmutableMap.of("one", "two"));
     assertEquals(
         "select({\n  \"one\": \"two\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(
                 ImmutableList.of(SelectorValue.copyOf(testDict, "")), String.class)));
-    Dict<String, String> testDict2 = Dict.of(Mutability.create(), "three", "four");
+    Dict<String, String> testDict2 =
+        Dict.copyOf(Mutability.create(), ImmutableMap.of("three", "four"));
     Dict<String, String> twoEntryDict = Dict.of(Mutability.create());
-    twoEntryDict.putAll(testDict, Location.BUILTIN);
-    twoEntryDict.putAll(testDict2, Location.BUILTIN);
+    twoEntryDict.putEntries(testDict);
+    twoEntryDict.putEntries(testDict2);
     assertEquals(
         "select({\n  \"one\": \"two\",\n  \"three\": \"four\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(
                 ImmutableList.of(SelectorValue.copyOf(twoEntryDict, "")), String.class)));
-    Dict<String, ImmutableList<String>> testDict3 = Dict.of(null, "foo", testList);
-    Dict<String, ImmutableList<String>> result = Dict.of(Mutability.create());
-    result.putAll(testDict3, Location.BUILTIN);
-    result.putAll(Dict.of(null, "bar", testList), Location.BUILTIN);
+    Dict<String, StarlarkList<String>> testDict3 =
+        Dict.copyOf(null, ImmutableMap.of("foo", testList));
+    Dict<String, StarlarkList<String>> result = Dict.of(Mutability.create());
+    result.putEntries(testDict3);
+    result.putEntries(Dict.copyOf(null, ImmutableMap.of("bar", testList)));
     testDict3 = result;
     // ListWithSelects with SelectorValue only
     assertEquals(

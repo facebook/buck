@@ -30,15 +30,15 @@ import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.skylark.parser.pojoizer.BuildFileManifestPojoizer;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkThread;
 
 /**
  * Responsible for creating instances of Skylark functions based on Buck's {@link BaseDescription}s.
@@ -46,8 +46,7 @@ import java.util.stream.Collectors;
  * <p>For example for a {@link com.facebook.buck.jvm.java.JavaLibraryDescription} instance, a
  * Skylark function using snake case of its name prefix will be created - {@code java_library}.
  *
- * <p>Callers can setup created functions in the {@link
- * com.google.devtools.build.lib.syntax.StarlarkThread}.
+ * <p>Callers can setup created functions in the {@link net.starlark.java.eval.StarlarkThread}.
  */
 public class RuleFunctionFactory {
 

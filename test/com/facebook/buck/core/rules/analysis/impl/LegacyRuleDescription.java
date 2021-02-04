@@ -48,8 +48,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -58,6 +56,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.StarlarkList;
 
 public class LegacyRuleDescription
     implements LegacyProviderCompatibleDescription<LegacyRuleDescriptionArg> {

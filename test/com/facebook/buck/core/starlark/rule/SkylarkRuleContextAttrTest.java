@@ -42,8 +42,8 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.Paths;
+import net.starlark.java.eval.Printer;
 import org.junit.Before;
 import org.junit.Test;
 

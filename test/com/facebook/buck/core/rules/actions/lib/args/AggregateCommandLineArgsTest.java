@@ -50,13 +50,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.function.Function;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.syntax.Location;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -69,7 +69,7 @@ public class AggregateCommandLineArgsTest {
   }
 
   @Test
-  public void returnsProperStreamAndArgCount() throws EvalException {
+  public void returnsProperStreamAndArgCount() throws Exception {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
     Artifact path2 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("other_file")));

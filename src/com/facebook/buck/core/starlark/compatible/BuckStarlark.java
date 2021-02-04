@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.syntax.StarlarkSemantics;
+import net.starlark.java.eval.StarlarkSemantics;
 
 /** Constants for Buck variant of Starlark */
 public class BuckStarlark {
@@ -25,5 +25,5 @@ public class BuckStarlark {
 
   /** Starlark semantics used in Buck */
   public static final StarlarkSemantics BUCK_STARLARK_SEMANTICS =
-      StarlarkSemantics.builderWithDefaults().build();
+      StarlarkSemantics.builder().setBool(StarlarkSemantics.ALLOW_RECURSION, true).build();
 }

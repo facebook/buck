@@ -20,13 +20,13 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.annot.StarlarkDocumentationCategory;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
 
 /**
  * A class for the Skylark native module providing functions for parsing package files. It provides
@@ -35,7 +35,6 @@ import net.starlark.java.annot.StarlarkMethod;
  */
 @StarlarkBuiltin(
     name = "native",
-    category = StarlarkDocumentationCategory.BUILTIN,
     doc =
         "A built-in module providing native rules and other package helper functions. "
             + "All native rules appear as functions in this module, e.g. "
@@ -53,23 +52,21 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       parameters = {
         @Param(
             name = "inherit",
-            type = Boolean.class,
+            allowedTypes = @ParamType(type = Boolean.class),
             defaultValue = "False",
             positional = false,
             named = true,
             doc = "whether to inherit properties from the parent package."),
         @Param(
             name = CommonParamNames.VISIBILITY_NAME,
-            type = StarlarkList.class,
-            generic1 = String.class,
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class),
             defaultValue = "[]",
             named = true,
             positional = false,
             doc = "a list of build patterns to make targets visible to."),
         @Param(
             name = CommonParamNames.WITHIN_VIEW_NAME,
-            type = StarlarkList.class,
-            generic1 = String.class,
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class),
             defaultValue = "[]",
             named = true,
             positional = false,

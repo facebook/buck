@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.providers;
 
-import com.google.devtools.build.lib.syntax.StarlarkValue;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Declared Provider (a constructor for {@link ProviderInfo}).

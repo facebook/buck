@@ -23,9 +23,10 @@ import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import java.util.Optional;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -38,14 +39,14 @@ public class LegacyProviderInfoCollectionImplTest {
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
-    providerInfoCollection.getIndex(new Object());
+    providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, new Object());
   }
 
   @Test
   public void containsKeyThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
-    providerInfoCollection.containsKey(new Object());
+    providerInfoCollection.containsKey(BuckStarlark.BUCK_STARLARK_SEMANTICS, new Object());
   }
 
   @Test
@@ -54,7 +55,9 @@ public class LegacyProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
 
     assertEquals(Optional.empty(), providerInfoCollection.get(provider));
-    assertEquals(Starlark.NONE, providerInfoCollection.getIndex(provider));
+    assertEquals(
+        Starlark.NONE,
+        providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, provider));
   }
 
   @Test

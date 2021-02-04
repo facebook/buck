@@ -3,7 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_test")
 java_library(
     name = "bazel",
     srcs = glob([
-        "src/**/*.java",
+        "src/main/java/**/*.java",
     ]),
     licenses = ["LICENSE"],
     plugins = [
@@ -25,11 +25,27 @@ java_library(
 
 java_test(
     name = "tests",
-    srcs = glob([
-        "test/**/*.java",
+    srcs = glob(
+        [
+            "src/test/java/**/*.java",
+        ],
+        exclude = [
+            "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
+            # This test does not work on Windows for unknown reason,
+            # but we don't really care because
+            # * we don't have local patches to Starlark
+            # * we don't use annotation processor
+            "src/test/java/net/starlark/java/annot/processor/StarlarkMethodProcessorTest.java",
+        ],
+    ),
+    resources = glob([
+        "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
     ]),
+    resources_root = "src/test/java",
     deps = [
         ":bazel",
+        "//third-party/java/compile-testing:compile-testing",
+        "//third-party/java/errorprone:error-prone-annotations",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",

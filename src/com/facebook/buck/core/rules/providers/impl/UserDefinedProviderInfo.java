@@ -21,19 +21,19 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkValue;
+import net.starlark.java.eval.Structure;
 
 /**
  * {@link ProviderInfo} that is created by a {@link Provider} that is defined at runtime by a user.
  * e.g. {@code FooInfo = provider(fields=["foo"]); info = FooInfo(foo="bar")} in a build file
  */
 public class UserDefinedProviderInfo
-    implements ProviderInfo<UserDefinedProviderInfo>, StarlarkValue, ClassObject {
+    implements ProviderInfo<UserDefinedProviderInfo>, StarlarkValue, Structure {
 
   private final Provider<UserDefinedProviderInfo> provider;
   private final ImmutableMap<String, Object> fieldValues;
@@ -46,7 +46,7 @@ public class UserDefinedProviderInfo
    * @param fieldValues A mapping of field names to their values. Note that the names must be valid
    *     skylark identifiers as they are accessed via {@code info_instance.<field>}. The values must
    *     be valid when used in the Skylark interpreter. That is, either primitives, or instances of
-   *     {@link com.google.devtools.build.lib.syntax.StarlarkValue}
+   *     {@link StarlarkValue}
    */
   public UserDefinedProviderInfo(
       Provider<UserDefinedProviderInfo> provider, ImmutableMap<String, Object> fieldValues) {
@@ -74,7 +74,7 @@ public class UserDefinedProviderInfo
               if (pair.getFirst() != 0) {
                 printer.append(", ");
               }
-              printer.format("%s = ", pair.getSecond().getKey());
+              Printer.format(printer, "%s = ", pair.getSecond().getKey());
               printer.repr(pair.getSecond().getValue());
             });
     printer.append(")");
@@ -105,7 +105,7 @@ public class UserDefinedProviderInfo
     }
     immutable =
         fieldValues.values().stream()
-            .allMatch(o -> EvalUtils.isImmutable(Objects.requireNonNull(o)));
+            .allMatch(o -> Starlark.isImmutable(Objects.requireNonNull(o)));
     return immutable;
   }
 }

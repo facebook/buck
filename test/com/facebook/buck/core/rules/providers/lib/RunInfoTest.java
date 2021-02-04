@@ -47,15 +47,16 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.Location;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -72,7 +73,10 @@ public class RunInfoTest {
   public void errorOnInvalidEnvType() throws EvalException {
 
     try (Mutability mut = Mutability.create("test")) {
-      Object env = Dict.of(getEnv(mut).mutability(), "foo", 1, "bar", 2);
+      Object env =
+          Dict.copyOf(
+              getEnv(mut).mutability(),
+              ImmutableMap.of("foo", StarlarkInt.of(1), "bar", StarlarkInt.of(2)));
       thrown.expect(EvalException.class);
       // Broken cast, but this can apparently happen, so... verify :)
       RunInfo.instantiateFromSkylark((Dict<String, String>) env, ImmutableList.of("value"));
@@ -93,7 +97,9 @@ public class RunInfoTest {
     thrown.expectMessage("Invalid command line argument type");
 
     RunInfo.instantiateFromSkylark(
-        Dict.empty(), StarlarkList.immutableCopyOf(ImmutableList.of(ImmutableList.of(1))));
+        Dict.empty(),
+        StarlarkList.immutableCopyOf(
+            StarlarkList.immutableCopyOf(StarlarkList.immutableOf(Starlark.NONE))));
   }
 
   @Test
@@ -132,7 +138,7 @@ public class RunInfoTest {
   public void handlesListOfArgs() throws EvalException {
     RunInfo runInfo =
         RunInfo.instantiateFromSkylark(
-            Dict.empty(), StarlarkList.immutableCopyOf(ImmutableList.of("foo", 1)));
+            Dict.empty(), StarlarkList.immutableCopyOf(ImmutableList.of("foo", StarlarkInt.of(1))));
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -172,7 +178,8 @@ public class RunInfoTest {
 
       StarlarkThread environment = getEnv(mut);
       Dict<String, String> env =
-          Dict.of(environment.mutability(), "foo", "foo_val", "bar", "bar_val");
+          Dict.copyOf(
+              environment.mutability(), ImmutableMap.of("foo", "foo_val", "bar", "bar_val"));
       StarlarkList<Object> args =
           StarlarkList.of(
               environment.mutability(),
@@ -183,7 +190,7 @@ public class RunInfoTest {
       RunInfo info = RunInfo.instantiateFromSkylark(env, args);
 
       // Make sure we're freezing properly
-      args.add("arg3", Location.BUILTIN);
+      args.addElement("arg3");
       env.pop("foo", "", environment);
 
       new WriteAction(
@@ -214,7 +221,9 @@ public class RunInfoTest {
 
   @Test
   public void isImmutable() throws LabelSyntaxException, EvalException, InterruptedException {
-    CommandLineArgs args1 = CommandLineArgsFactory.from(ImmutableList.of(1, 2, 3));
+    CommandLineArgs args1 =
+        CommandLineArgsFactory.from(
+            ImmutableList.of(StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(3)));
     CommandLineArgs args = new ImmutableRunInfo(ImmutableMap.of(), args1);
 
     assertTrue(args.isImmutable());

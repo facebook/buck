@@ -28,18 +28,18 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
+import net.starlark.java.eval.Structure;
 
 /**
  * The struct representing the 'attr' property of the 'ctx' struct passed to a user defined rule's
  * implementation function
  */
-public class SkylarkRuleContextAttr implements ClassObject, StarlarkValue {
+public class SkylarkRuleContextAttr implements Structure, StarlarkValue {
 
   private final String methodName;
   private final Map<String, Attribute<?>> attributes;

@@ -1,13 +1,2 @@
-This version contains a copy of a subset of bazel repository (revision
-9fba7c5cf577f6b2e7537b894ce90ce81e352d77 at the moment of writing)
-with certain modifications needed
-for Buck.
-
-Incomplete list of changes:
-* recursion is allowed
-* removed logger from NestedSet (the change is no longer needed,
-  since NestedSet no longer depends on flogger)
-* heavily changes Attribute and Label classes
-* many operations changed to public to be usable outside of the package
-* disabled certain tests for features not used in Buck (e. g. serialization)
-* Remove CPU profiler
+This version contains a copy of a net.starlark.java from bazel
+repository (revision fbbac6b295b9ef0ea1999dc3ae9df29eceffbe88).

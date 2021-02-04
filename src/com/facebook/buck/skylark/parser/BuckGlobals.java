@@ -34,11 +34,11 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import java.util.function.Function;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.Structure;
 import org.immutables.value.Value.Lazy;
 
 /**
@@ -143,7 +143,7 @@ public abstract class BuckGlobals {
         .collect(ImmutableMap.toImmutableMap(BuiltInProvider::getName, Function.identity()));
   }
 
-  private ClassObject getNativeModule() {
+  private Structure getNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
     builder.putAll(getBuckRuleFunctions());
     addNativeModuleFunctions(builder);

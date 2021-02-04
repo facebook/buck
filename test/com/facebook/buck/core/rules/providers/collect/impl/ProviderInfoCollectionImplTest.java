@@ -29,14 +29,15 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,11 +50,11 @@ public class ProviderInfoCollectionImplTest {
       new ImmutableDefaultInfo(Dict.empty(), StarlarkList.empty());
 
   @Test
-  public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
+  public void getIndexThrowsWhenKeyNotProvider() throws Exception {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
-    providerInfoCollection.getIndex(new Object());
+    providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, new Object());
   }
 
   @Test
@@ -61,7 +62,7 @@ public class ProviderInfoCollectionImplTest {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
-    providerInfoCollection.containsKey(new Object());
+    providerInfoCollection.containsKey(BuckStarlark.BUCK_STARLARK_SEMANTICS, new Object());
   }
 
   @Test
@@ -69,9 +70,14 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
 
-    assertTrue(providerInfoCollection.containsKey(DEFAULT_INFO.getProvider()));
+    assertTrue(
+        providerInfoCollection.containsKey(
+            BuckStarlark.BUCK_STARLARK_SEMANTICS, DEFAULT_INFO.getProvider()));
     assertEquals(Optional.of(DEFAULT_INFO), providerInfoCollection.get(DEFAULT_INFO.getProvider()));
-    assertSame(DEFAULT_INFO, providerInfoCollection.getIndex(DEFAULT_INFO.getProvider()));
+    assertSame(
+        DEFAULT_INFO,
+        providerInfoCollection.getIndex(
+            BuckStarlark.BUCK_STARLARK_SEMANTICS, DEFAULT_INFO.getProvider()));
   }
 
   @Test
@@ -80,12 +86,12 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().build(DEFAULT_INFO);
 
-    assertFalse(providerInfoCollection.containsKey(provider));
+    assertFalse(providerInfoCollection.containsKey(BuckStarlark.BUCK_STARLARK_SEMANTICS, provider));
     assertEquals(Optional.empty(), providerInfoCollection.get(provider));
   }
 
   @Test
-  public void getCorrectInfoWhenMultipleProvidersPresent() throws EvalException {
+  public void getCorrectInfoWhenMultipleProvidersPresent() throws Exception {
     FakeBuiltInProvider builtinProvider1 = new FakeBuiltInProvider("fake1");
     FakeInfo fakeInfo1 = new FakeInfo(builtinProvider1);
 
@@ -98,8 +104,12 @@ public class ProviderInfoCollectionImplTest {
     assertEquals(Optional.of(fakeInfo1), providerInfoCollection.get(builtinProvider1));
     assertEquals(Optional.of(fakeInfo2), providerInfoCollection.get(builtInProvider2));
 
-    assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1));
-    assertEquals(fakeInfo2, providerInfoCollection.getIndex(builtInProvider2));
+    assertEquals(
+        fakeInfo1,
+        providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, builtinProvider1));
+    assertEquals(
+        fakeInfo2,
+        providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, builtInProvider2));
   }
 
   @Test
@@ -124,7 +134,7 @@ public class ProviderInfoCollectionImplTest {
   }
 
   @Test
-  public void returnsCorrectSkylarkValues() throws EvalException {
+  public void returnsCorrectSkylarkValues() throws Exception {
     FakeBuiltInProvider builtinProvider1 = new FakeBuiltInProvider("fake1");
     FakeInfo fakeInfo1 = new FakeInfo(builtinProvider1);
 
@@ -133,8 +143,12 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().put(fakeInfo1).build(DEFAULT_INFO);
 
-    assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1));
-    assertEquals(Starlark.NONE, providerInfoCollection.getIndex(builtinProvider2));
+    assertEquals(
+        fakeInfo1,
+        providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, builtinProvider1));
+    assertEquals(
+        Starlark.NONE,
+        providerInfoCollection.getIndex(BuckStarlark.BUCK_STARLARK_SEMANTICS, builtinProvider2));
   }
 
   @Test

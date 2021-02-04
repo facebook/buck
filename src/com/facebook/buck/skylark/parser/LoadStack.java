@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.Location;
+import net.starlark.java.syntax.Location;
 
 /** Stack of load statements in .bzl files. */
 abstract class LoadStack {

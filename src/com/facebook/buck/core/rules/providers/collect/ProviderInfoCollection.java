@@ -20,8 +20,8 @@ import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
-import com.google.devtools.build.lib.syntax.SkylarkIndexable;
 import java.util.Optional;
+import net.starlark.java.eval.StarlarkIndexable;
 
 /**
  * Represents a collection of {@link Provider}s and their corresponding {@link ProviderInfo}.
@@ -29,10 +29,10 @@ import java.util.Optional;
  * <p>This is a mapping of the {@link Provider} via the {@link Provider.Key} to the corresponding
  * {@link ProviderInfo} information that the {@link Provider} propagates.
  *
- * <p>This is {@link SkylarkIndexable}, so that this can be used to access individual provider
+ * <p>This is {@link StarlarkIndexable}, so that this can be used to access individual provider
  * information from within skylark extension rule implementations.
  */
-public interface ProviderInfoCollection extends SkylarkIndexable {
+public interface ProviderInfoCollection extends StarlarkIndexable {
 
   /** @return the {@link ProviderInfo} of the specific type given the {@link Provider} */
   <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider);

@@ -56,6 +56,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.StarlarkInt;
 
 /**
  * A base implementation for rule key builders.
@@ -280,6 +281,8 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
       hasher.putCharacter((Character) val);
     } else if (val instanceof Number) {
       hasher.putNumber((Number) val);
+    } else if (val instanceof StarlarkInt) {
+      hasher.putNumber(((StarlarkInt) val).toNumber());
     } else if (val instanceof String) {
       hasher.putString((String) val);
     } else if (val instanceof Pattern) {

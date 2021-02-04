@@ -24,8 +24,9 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkList;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 
 /** Class that represents a list of integers */
 @BuckStyleValue
@@ -64,13 +65,15 @@ public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>>
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, ImmutableList<Integer>, StarlarkList<Integer>>
+  public PostCoercionTransform<
+          RuleAnalysisContext, ImmutableList<Integer>, StarlarkList<StarlarkInt>>
       getPostCoercionTransform() {
     return (coercedValue, analysisContext) -> postCoercionTransform(coercedValue);
   }
 
-  private StarlarkList<Integer> postCoercionTransform(ImmutableList<Integer> coercedValue) {
-    return StarlarkList.immutableCopyOf(coercedValue);
+  private StarlarkList<StarlarkInt> postCoercionTransform(ImmutableList<Integer> coercedValue) {
+    return StarlarkList.immutableCopyOf(
+        coercedValue.stream().map(StarlarkInt::of).collect(ImmutableList.toImmutableList()));
   }
 
   public static IntListAttribute of(

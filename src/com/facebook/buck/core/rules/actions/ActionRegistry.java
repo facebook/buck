@@ -23,8 +23,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataRegistry;
-import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
+import net.starlark.java.syntax.Location;
 
 /**
  * The registry for {@link Action}s, which creates its corresponding {@link ActionWrapperData}.

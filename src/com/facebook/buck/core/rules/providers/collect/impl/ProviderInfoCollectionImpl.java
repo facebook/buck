@@ -23,10 +23,11 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkSemantics;
 
 /** Implementation of {@link ProviderInfoCollection}. */
 public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
@@ -39,14 +40,14 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   }
 
   @Override
-  public Object getIndex(Object key) throws EvalException {
+  public Object getIndex(StarlarkSemantics semantics, Object key) throws EvalException {
     verifyKeyIsProvider(
         key, "Type Target only supports indexing by object constructors, got %s instead");
     return BuckSkylarkTypes.skylarkValueFromNullable(getNullable(((Provider<?>) key)));
   }
 
   @Override
-  public boolean containsKey(Object key) throws EvalException {
+  public boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException {
     verifyKeyIsProvider(
         key, "Type Target only supports querying by object constructors, got %s instead");
     return contains((Provider<?>) key);

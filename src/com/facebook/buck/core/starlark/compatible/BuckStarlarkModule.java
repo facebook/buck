@@ -18,13 +18,10 @@ package com.facebook.buck.core.starlark.compatible;
 
 import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.StarlarkThread;
 
-/**
- * Utilities to work with {@link com.google.devtools.build.lib.syntax.Module} in Buck embedding of
- * Starlark.
- */
+/** Utilities to work with {@link Module} in Buck embedding of Starlark. */
 public class BuckStarlarkModule {
 
   /** Set Buck-specific {@link Module} data. */

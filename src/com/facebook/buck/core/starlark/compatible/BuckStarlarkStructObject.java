@@ -19,17 +19,17 @@ package com.facebook.buck.core.starlark.compatible;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
-import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
+import net.starlark.java.eval.Structure;
+import net.starlark.java.syntax.Location;
 
 /**
- * Marks a Java object as accessible by Skylark as a struct-like object called {@link ClassObject}.
+ * Marks a Java object as accessible by Skylark as a struct-like object called {@link Structure}.
  * This also marks it as a {@link StarlarkValue}.
  *
  * <p>A struct like object is an object containing fields accessible via the dot syntax, like {@code
@@ -37,7 +37,7 @@ import javax.annotation.Nullable;
  *
  * <p>We currently do not support method calls.
  */
-public abstract class BuckStarlarkStructObject implements ClassObject, StarlarkValue {
+public abstract class BuckStarlarkStructObject implements Structure, StarlarkValue {
 
   private @Nullable ImmutableMap<String, Method> values;
 
@@ -55,7 +55,7 @@ public abstract class BuckStarlarkStructObject implements ClassObject, StarlarkV
       // conversions.
       return method.invoke(this);
     } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new EvalException(Location.BUILTIN, e);
+      throw new EvalException(e);
     }
   }
 
@@ -83,7 +83,7 @@ public abstract class BuckStarlarkStructObject implements ClassObject, StarlarkV
   @Override
   public void repr(Printer printer) {
     boolean first = true;
-    printer.format("%s(", getDeclaredClass());
+    Printer.format(printer, "%s(", getDeclaredClass());
     // Sort by key to ensure deterministic output.
     for (String fieldName : Ordering.natural().sortedCopy(getFieldNames())) {
       if (!first) {

@@ -17,8 +17,8 @@
 package com.facebook.buck.core.starlark.testutil;
 
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.StarlarkThread;
 
 public class TestStarlarkThread {
 

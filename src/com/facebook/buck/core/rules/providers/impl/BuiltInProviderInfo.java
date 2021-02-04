@@ -21,8 +21,8 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkStructObject;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Objects;
+import net.starlark.java.eval.EvalException;
 
 /**
  * Represents a {@link ProviderInfo} that is defined in Java. The corresponding {@link Provider} is

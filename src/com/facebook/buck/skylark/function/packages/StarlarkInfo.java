@@ -34,21 +34,20 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.HasBinary;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.TokenKind;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.HasBinary;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.Structure;
+import net.starlark.java.syntax.Location;
+import net.starlark.java.syntax.TokenKind;
 
 /** An Info (provider instance) for providers defined in Starlark. */
-public final class StarlarkInfo extends StructImpl implements HasBinary, ClassObject {
+public final class StarlarkInfo extends StructImpl implements HasBinary, Structure {
 
   // For a n-element info, the table contains n key strings, sorted,
   // followed by the n corresponding legal Starlark values.
@@ -270,7 +269,7 @@ public final class StarlarkInfo extends StructImpl implements HasBinary, ClassOb
     // end of every top-level statement, then we can assume that exported implies frozen, and just
     // return true here without a traversal.
     for (int i = table.length / 2; i < table.length; i++) {
-      if (!EvalUtils.isImmutable(table[i])) {
+      if (!Starlark.isImmutable(table[i])) {
         return false;
       }
     }

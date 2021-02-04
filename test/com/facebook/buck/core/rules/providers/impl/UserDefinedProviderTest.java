@@ -26,10 +26,10 @@ import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Starlark;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.syntax.Location;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class UserDefinedProviderTest {
     provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
     String expectedRepr = "FooInfo(foo, bar, baz) defined at package/file.bzl:5:6";
 
-    assertEquals(expectedRepr, Printer.getPrinter().repr(provider).toString());
+    assertEquals(expectedRepr, new Printer().repr(provider).toString());
   }
 
   @Test
@@ -108,7 +108,8 @@ public class UserDefinedProviderTest {
 
     try (TestMutableEnv env = new TestMutableEnv()) {
       thrown.expect(Exception.class);
-      thrown.expectMessage("Tried to call a Provider before exporting it");
+      thrown.expectMessage(
+          "Tried to get name before function has been assigned to a variable and exported");
       Starlark.call(
           env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", "foo_value"));
     }

@@ -34,21 +34,18 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.Resolver;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkFile;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.Program;
+import net.starlark.java.syntax.StarlarkFile;
+import net.starlark.java.syntax.SyntaxError;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -65,7 +62,7 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobFindsIncludedFiles() throws IOException, InterruptedException, EvalException {
+  public void testGlobFindsIncludedFiles() throws Exception {
     Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
@@ -77,8 +74,7 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobFindsIncludedFilesUsingKeyword()
-      throws IOException, InterruptedException, EvalException {
+  public void testGlobFindsIncludedFilesUsingKeyword() throws Exception {
     Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
@@ -90,8 +86,7 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobExcludedElementsAreNotReturned()
-      throws IOException, InterruptedException, EvalException {
+  public void testGlobExcludedElementsAreNotReturned() throws Exception {
     Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
@@ -146,19 +141,17 @@ public class GlobTest {
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
   }
 
-  private Module assertEvaluate(AbsPath buildFile)
-      throws IOException, InterruptedException, EvalException {
+  private Module assertEvaluate(AbsPath buildFile) throws Exception {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return assertEvaluate(buildFile, mutability);
     }
   }
 
-  private Module assertEvaluate(AbsPath buildFile, Mutability mutability)
-      throws IOException, InterruptedException, EvalException {
+  private Module assertEvaluate(AbsPath buildFile, Mutability mutability) throws Exception {
     byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
-            ParserInput.create(
+            ParserInput.fromString(
                 new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
     ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
@@ -180,7 +173,6 @@ public class GlobTest {
                 ImmutableMap.of()))
         .setup(env);
 
-    Resolver.resolveFile(buildFileAst, module);
     if (!buildFileAst.errors().isEmpty()) {
       for (SyntaxError error : buildFileAst.errors()) {
         eventHandler.handle(Event.error(error.location(), error.message()));
@@ -188,7 +180,8 @@ public class GlobTest {
       fail();
     }
 
-    EvalUtils.exec(buildFileAst, module, env);
+    Program program = Program.compileFile(buildFileAst, module);
+    Starlark.execFileProgram(program, module, env);
 
     return module;
   }

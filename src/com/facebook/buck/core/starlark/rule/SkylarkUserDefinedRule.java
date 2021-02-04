@@ -38,16 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkFunction;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -55,9 +45,18 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkFunction;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.Tuple;
+import net.starlark.java.syntax.Location;
 
 /**
- * The {@link BaseFunction} that is returned by `rule()`. Accepts user-specified parameters, and
+ * The {@link StarlarkCallable} that is returned by `rule()`. Accepts user-specified parameters, and
  * adds invocations to the parse context. Type checking is done with coercion later; it is not
  * checked in this class.
  */
@@ -70,7 +69,7 @@ public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExporta
   @Nullable private Label label = null;
   @Nullable private String exportedName = null;
   @VisibleForTesting final FunctionSignature signature;
-  private final Tuple<Object> defaultValues;
+  private final Tuple defaultValues;
   private final Location location;
   private final StarlarkCallable implementation;
   private final ImmutableMap<ParamName, Attribute<?>> attrs;
@@ -160,7 +159,7 @@ public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExporta
   private static Object[] matchSignaturePrivate(
       FunctionSignature signature,
       StarlarkCallable func, // only for use in error messages
-      Tuple<Object> defaults,
+      Tuple defaults,
       @Nullable Mutability mu,
       Object[] positional,
       Object[] named)
@@ -195,8 +194,7 @@ public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExporta
       // and this is actually the same as in Python.
       Object varargs;
       if (numPositionalArgs > numPositionalParams) {
-        varargs =
-            Tuple.wrap(Arrays.copyOfRange(positional, numPositionalParams, numPositionalArgs));
+        varargs = Tuple.of(Arrays.copyOfRange(positional, numPositionalParams, numPositionalArgs));
         numPositionalArgs = numPositionalParams; // clip numPositionalArgs
       } else {
         varargs = Tuple.empty();
@@ -268,7 +266,7 @@ public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExporta
                 func);
           }
           int sz = kwargs.size();
-          kwargs.put(keyword, value, null);
+          kwargs.putEntry(keyword, value);
           if (kwargs.size() == sz) {
             throw Starlark.errorf(
                 "%s got multiple values for keyword argument '%s'", func, keyword);

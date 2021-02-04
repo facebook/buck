@@ -16,10 +16,11 @@
 
 package com.facebook.buck.tools.documentation.generator.skylark.signatures;
 
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Collections;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.StarlarkList;
 
 public class DummyFunction {
 
@@ -27,7 +28,10 @@ public class DummyFunction {
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       parameters = {
-        @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
+        @Param(
+            name = "seed",
+            allowedTypes = @ParamType(type = String.class),
+            doc = "the first element of the returned list."),
       },
       documented = false,
       useStarlarkThread = true)

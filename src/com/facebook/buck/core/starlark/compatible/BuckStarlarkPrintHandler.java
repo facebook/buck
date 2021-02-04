@@ -18,7 +18,7 @@ package com.facebook.buck.core.starlark.compatible;
 
 import com.facebook.buck.core.starlark.eventhandler.Event;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.eval.StarlarkThread;
 
 /** Starlark print handler for Buck. */
 public class BuckStarlarkPrintHandler implements StarlarkThread.PrintHandler {

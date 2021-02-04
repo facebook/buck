@@ -43,12 +43,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -61,6 +55,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.Location;
 
 public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescriptionArg> {
 
@@ -179,10 +179,9 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
 
       for (Map.Entry<String, ImmutableSet<String>> labelsToNamedOutnames : namedOuts.entrySet()) {
         try {
-          dict.put(
+          dict.putEntry(
               labelsToNamedOutnames.getKey(),
-              declareArtifacts(actionRegistry, labelsToNamedOutnames.getValue()),
-              Location.BUILTIN);
+              declareArtifacts(actionRegistry, labelsToNamedOutnames.getValue()));
         } catch (EvalException e) {
           throw new HumanReadableException("Invalid name %s", labelsToNamedOutnames.getKey());
         }

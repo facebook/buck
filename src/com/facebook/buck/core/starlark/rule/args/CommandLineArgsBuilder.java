@@ -24,10 +24,11 @@ import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsFactory;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 
 /** Struct exposed to skylark to create {@link CommandLineArgs} instances. */
 public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
@@ -51,7 +52,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
     // CommandLineArgsBuilder instances here and call .build() on them, but we just don't
     // right now
     if (arg instanceof String
-        || arg instanceof Integer
+        || arg instanceof StarlarkInt
         || arg instanceof CommandLineItem
         || arg instanceof Artifact
         || arg instanceof OutputArtifact

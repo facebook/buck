@@ -30,11 +30,11 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.syntax.Location;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -186,7 +186,7 @@ public class ArtifactImplTest {
     assertFalse(artifact.isSource());
     assertEquals(
         String.format("<generated file '%s'>", expectedShortPath),
-        Printer.getPrinter().repr(artifact).toString());
+        new Printer().repr(artifact).toString());
 
     ArtifactImpl artifact2 =
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/no_ext"), Location.BUILTIN);

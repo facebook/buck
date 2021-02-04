@@ -30,12 +30,13 @@ import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Set;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 import org.hamcrest.Matchers;
 import org.immutables.value.Value;
 import org.junit.Rule;
@@ -55,7 +56,7 @@ public class BuiltInProviderInfoTest {
 
     public abstract String str();
 
-    public abstract int myInfo();
+    public abstract StarlarkInt myInfo();
   }
 
   @ImmutableInfo(
@@ -87,7 +88,7 @@ public class BuiltInProviderInfoTest {
         BuiltInProvider.of(ImmutableInfoWithMap.class);
 
     @Value.Parameter(order = 0)
-    public abstract Dict<String, Integer> map();
+    public abstract Dict<String, StarlarkInt> map();
   }
 
   @ImmutableInfo(args = {"val"})
@@ -96,7 +97,7 @@ public class BuiltInProviderInfoTest {
     public static final BuiltInProvider<InfoWithNoDefaultValOnAnnotation> PROVIDER =
         BuiltInProvider.of(ImmutableInfoWithNoDefaultValOnAnnotation.class);
 
-    public abstract Integer val();
+    public abstract StarlarkInt val();
   }
 
   @ImmutableInfo(
@@ -111,11 +112,11 @@ public class BuiltInProviderInfoTest {
 
     public abstract String myInfo();
 
-    public static SomeInfoWithInstantiate instantiateFromSkylark(Dict<String, String> s, int myInfo)
-        throws EvalException {
+    public static SomeInfoWithInstantiate instantiateFromSkylark(
+        Dict<String, String> s, StarlarkInt myInfo) throws EvalException {
       Map<String, String> validated = Dict.cast(s, String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiate(
-          ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo));
+          ImmutableList.copyOf(validated.keySet()), myInfo.toString());
     }
   }
 
@@ -153,17 +154,17 @@ public class BuiltInProviderInfoTest {
 
   @Test
   public void someInfoProviderCreatesCorrectInfo() throws Exception {
-    SomeInfo someInfo1 = new ImmutableSomeInfo("a", 1);
+    SomeInfo someInfo1 = new ImmutableSomeInfo("a", StarlarkInt.of(1));
     assertEquals("a", someInfo1.str());
-    assertEquals(1, someInfo1.myInfo());
+    assertEquals(StarlarkInt.of(1), someInfo1.myInfo());
 
-    SomeInfo someInfo2 = someInfo1.getProvider().createInfo("b", 2);
+    SomeInfo someInfo2 = someInfo1.getProvider().createInfo("b", StarlarkInt.of(2));
     assertEquals("b", someInfo2.str());
-    assertEquals(2, someInfo2.myInfo());
+    assertEquals(StarlarkInt.of(2), someInfo2.myInfo());
 
-    SomeInfo someInfo3 = SomeInfo.PROVIDER.createInfo("c", 3);
+    SomeInfo someInfo3 = SomeInfo.PROVIDER.createInfo("c", StarlarkInt.of(3));
     assertEquals("c", someInfo3.str());
-    assertEquals(3, someInfo3.myInfo());
+    assertEquals(StarlarkInt.of(3), someInfo3.myInfo());
 
     Object o =
         TestStarlarkParser.eval(
@@ -173,7 +174,7 @@ public class BuiltInProviderInfoTest {
     assertThat(o, Matchers.instanceOf(SomeInfo.class));
     SomeInfo someInfo4 = (SomeInfo) o;
     assertEquals("d", someInfo4.str());
-    assertEquals(4, someInfo4.myInfo());
+    assertEquals(StarlarkInt.of(4), someInfo4.myInfo());
   }
 
   @Test
@@ -192,11 +193,15 @@ public class BuiltInProviderInfoTest {
   @Test
   public void infoWithMapCanBeCreatedProperly()
       throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    InfoWithMap someInfo1 = new ImmutableInfoWithMap(Dict.of(null, "a", 1));
-    assertEquals(Dict.of(null, "a", 1), someInfo1.map());
+    InfoWithMap someInfo1 =
+        new ImmutableInfoWithMap(Dict.copyOf(null, ImmutableMap.of("a", StarlarkInt.of(1))));
+    assertEquals(Dict.copyOf(null, ImmutableMap.of("a", StarlarkInt.of(1))), someInfo1.map());
 
-    InfoWithMap someInfo2 = someInfo1.getProvider().createInfo(Dict.of(null, "b", 2));
-    assertEquals(Dict.of(null, "b", 2), someInfo2.map());
+    InfoWithMap someInfo2 =
+        someInfo1
+            .getProvider()
+            .createInfo(Dict.copyOf(null, ImmutableMap.of("b", StarlarkInt.of(2))));
+    assertEquals(Dict.copyOf(null, ImmutableMap.of("b", StarlarkInt.of(2))), someInfo2.map());
 
     InfoWithMap someInfo3 = InfoWithMap.PROVIDER.createInfo(Dict.of(null));
     assertEquals(Dict.<String, Integer>of(null), someInfo3.map());
@@ -205,9 +210,9 @@ public class BuiltInProviderInfoTest {
   @Test
   public void differentInfoInstanceProviderKeyEquals()
       throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    SomeInfo someInfo1 = new ImmutableSomeInfo("a", 1);
+    SomeInfo someInfo1 = new ImmutableSomeInfo("a", StarlarkInt.of(1));
 
-    SomeInfo someInfo2 = SomeInfo.PROVIDER.createInfo("b", 2);
+    SomeInfo someInfo2 = SomeInfo.PROVIDER.createInfo("b", StarlarkInt.of(2));
 
     assertEquals(SomeInfo.PROVIDER.getKey(), someInfo1.getProvider().getKey());
     assertEquals(someInfo1.getProvider().getKey(), someInfo2.getProvider().getKey());
@@ -222,7 +227,7 @@ public class BuiltInProviderInfoTest {
   public void defaultValuesWorkInStarlarkContext() throws Exception {
 
     assertEquals(
-        new ImmutableSomeInfo("default value", 2),
+        new ImmutableSomeInfo("default value", StarlarkInt.of(2)),
         TestStarlarkParser.eval(
             ImmutableSomeInfo.PROVIDER.getName() + "(my_info=2)",
             ImmutableMap.of(ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)));
@@ -232,7 +237,7 @@ public class BuiltInProviderInfoTest {
   public void infoWithNoDefaultValueOnAnnotationWorks() throws Exception {
 
     assertEquals(
-        new ImmutableInfoWithNoDefaultValOnAnnotation(2),
+        new ImmutableInfoWithNoDefaultValOnAnnotation(StarlarkInt.of(2)),
         TestStarlarkParser.eval(
             ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName() + "(val=2)",
             ImmutableMap.of(
@@ -301,7 +306,9 @@ public class BuiltInProviderInfoTest {
         new TestMutableEnv(
             ImmutableMap.of(
                 "SomeInfoWithMutableAndImmutable", SomeInfoWithMutableAndImmutable.PROVIDER))) {
-      StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 1, 2, 3);
+      StarlarkList<StarlarkInt> mutableList =
+          StarlarkList.of(
+              env.getEnv().mutability(), StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(3));
       env.getModule().setGlobal("mutable_list", mutableList);
 
       out =

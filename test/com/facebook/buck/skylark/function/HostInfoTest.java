@@ -41,12 +41,12 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.stream.Collectors;
+import net.starlark.java.eval.EvalException;
 import org.junit.Assert;
 import org.junit.Test;
 

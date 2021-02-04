@@ -40,9 +40,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Path;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.StarlarkList;
 import org.immutables.value.Value;
 
 public class CsharpLibraryDescription

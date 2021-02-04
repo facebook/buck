@@ -30,20 +30,18 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.Resolver;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkFile;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.EnumSet;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.Program;
+import net.starlark.java.syntax.StarlarkFile;
+import net.starlark.java.syntax.SyntaxError;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -114,7 +112,7 @@ public class ReadConfigTest {
     byte[] buildFileContent = Files.readAllBytes(buildFile.getPath());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(
-            ParserInput.create(
+            ParserInput.fromString(
                 new String(buildFileContent, StandardCharsets.UTF_8), buildFile.toString()));
 
     ImmutableMap.Builder<String, Object> vars = ImmutableMap.builder();
@@ -127,7 +125,6 @@ public class ReadConfigTest {
     ReadConfigContext readConfigContext = new ReadConfigContext(rawConfig);
     readConfigContext.setup(env);
 
-    Resolver.resolveFile(buildFileAst, module);
     if (!buildFileAst.errors().isEmpty()) {
       for (SyntaxError error : buildFileAst.errors()) {
         eventHandler.handle(Event.error(error.location(), error.message()));
@@ -136,8 +133,9 @@ public class ReadConfigTest {
     }
 
     try {
-      EvalUtils.exec(buildFileAst, module, env);
-    } catch (EvalException e) {
+      Program program = Program.compileFile(buildFileAst, module);
+      Starlark.execFileProgram(program, module, env);
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
     return module;

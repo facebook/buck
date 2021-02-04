@@ -21,14 +21,15 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.io.Resources;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,7 +39,10 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       parameters = {
-        @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
+        @Param(
+            name = "seed",
+            allowedTypes = @ParamType(type = String.class),
+            doc = "the first element of the returned list."),
       },
       documented = false,
       useStarlarkThread = true)

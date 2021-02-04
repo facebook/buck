@@ -531,7 +531,8 @@ public class ParserIntegrationTest {
             "parser.polyglot_parsing_enabled=true",
             "-c",
             "parser.disable_implicit_native_rules=true"),
-        "BUCK:2:1: 'native' value has no field or method 'java_library'");
+        "BUCK\", line 2, column 7",
+        "'native' value has no field or method 'java_library'");
     workspace
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",

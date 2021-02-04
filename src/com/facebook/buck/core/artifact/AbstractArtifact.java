@@ -18,8 +18,8 @@ package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
+import net.starlark.java.eval.Starlark;
 
 /**
  * The abstract {@link Artifact} with information on whether or not the artifact is a bound

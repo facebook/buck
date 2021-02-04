@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.Module;
+import net.starlark.java.eval.Module;
 
 /**
  * Captures {@link Module} and information related to its parsing like all other extensions used in

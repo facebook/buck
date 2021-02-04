@@ -20,6 +20,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.label.CommandLineItem;
 import com.google.common.collect.ImmutableList;
+import net.starlark.java.eval.StarlarkInt;
 
 /**
  * Factory class that returns more efficient implementations of {@link CommandLineArgs} depending on
@@ -67,6 +68,19 @@ public class CommandLineArgsFactory {
   @SuppressWarnings("unchecked")
   public static CommandLineArgs from(ImmutableList<Object> args, String formatString)
       throws CommandLineArgException {
+
+    args =
+        args.stream()
+            .map(
+                a -> {
+                  if (a instanceof StarlarkInt) {
+                    return ((StarlarkInt) a).toNumber();
+                  } else {
+                    return a;
+                  }
+                })
+            .collect(ImmutableList.toImmutableList());
+
     boolean foundCommandLineArg = false;
     boolean foundNonCommandLineArg = false;
 

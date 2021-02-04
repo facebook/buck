@@ -22,8 +22,10 @@ import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Arrays;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -36,9 +38,7 @@ public class BuckStarlarkFunctionTest {
   public void simpleArgument() throws Throwable {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction("foo", ImmutableList.of("i"), ImmutableList.of("")) {
-          public void foo(int i) {
-            i++;
-          }
+          public void foo(StarlarkInt i) {}
         };
 
     assertEquals("foo", function.getMethodDescriptor().getName());
@@ -46,7 +46,7 @@ public class BuckStarlarkFunctionTest {
         Iterables.getOnlyElement(Arrays.asList(function.getMethodDescriptor().getParameters()));
 
     assertEquals("i", param.getName());
-    assertEquals(ImmutableList.of(Integer.class), param.getAllowedClasses());
+    assertEquals(ImmutableList.of(StarlarkInt.class), param.getAllowedClasses());
   }
 
   @Test
@@ -90,7 +90,7 @@ public class BuckStarlarkFunctionTest {
   public void skylarkCall() throws Throwable {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of("")) {
-          public String toStr(Integer num) {
+          public String toStr(StarlarkInt num) {
             return num.toString();
           }
         };
@@ -105,7 +105,7 @@ public class BuckStarlarkFunctionTest {
   public void noDefaultValues() throws Throwable {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction("toStr", ImmutableList.of("num"), ImmutableList.of()) {
-          public String toStr(Integer num) {
+          public String toStr(StarlarkInt num) {
             return num.toString();
           }
         };
@@ -121,8 +121,10 @@ public class BuckStarlarkFunctionTest {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
             "myFoo", ImmutableList.of("numNoDefault", "numWithDefault"), ImmutableList.of("1")) {
-          public String myFoo(Integer mand, Integer numNoDefault, Integer withDefault) {
-            return String.valueOf(mand + numNoDefault + withDefault);
+          public String myFoo(StarlarkInt mand, StarlarkInt numNoDefault, StarlarkInt withDefault)
+              throws EvalException {
+            return String.valueOf(
+                mand.toInt("e") + numNoDefault.toInt("e") + withDefault.toInt("e"));
           }
         };
 

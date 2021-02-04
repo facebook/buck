@@ -21,8 +21,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
 import java.util.List;
+import net.starlark.java.eval.Printer;
 
 /** Class that represents a String attribute to a user defined rule */
 @BuckStyleValue

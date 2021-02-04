@@ -20,20 +20,18 @@ import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkFunction;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
-import net.starlark.java.annot.StarlarkGlobalLibrary;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkFunction;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
 
 /**
  * Interface for a global Skylark library containing rule-related helper and registration functions.
  */
-@StarlarkGlobalLibrary
 public interface SkylarkRuleFunctionsApi {
   @StarlarkMethod(
       name = "Label",
@@ -43,7 +41,10 @@ public interface SkylarkRuleFunctionsApi {
               + "attributes. The argument must refer to an absolute label. "
               + "Example: <br><pre class=language-python>Label(\"//tools:default\")</pre>",
       parameters = {
-        @Param(name = "label_string", type = String.class, doc = "the label string."),
+        @Param(
+            name = "label_string",
+            allowedTypes = @ParamType(type = String.class),
+            doc = "the label string."),
       },
       useStarlarkThread = true)
   Label label(String labelString, StarlarkThread env) throws EvalException;
@@ -59,8 +60,7 @@ public interface SkylarkRuleFunctionsApi {
       parameters = {
         @Param(
             name = "implementation",
-            type = StarlarkFunction.class,
-            noneable = false,
+            allowedTypes = @ParamType(type = StarlarkFunction.class),
             positional = true,
             named = true,
             doc =
@@ -68,7 +68,7 @@ public interface SkylarkRuleFunctionsApi {
                     + "and if it returns anything, it must return a list of ProviderInfo objects."),
         @Param(
             name = "attrs",
-            type = Dict.class,
+            allowedTypes = @ParamType(type = Dict.class),
             positional = false,
             named = true,
             doc =
@@ -78,7 +78,7 @@ public interface SkylarkRuleFunctionsApi {
                     + "implementation function"),
         @Param(
             name = "infer_run_info",
-            type = Boolean.class,
+            allowedTypes = @ParamType(type = Boolean.class),
             positional = false,
             named = true,
             defaultValue = "False",
@@ -91,7 +91,7 @@ public interface SkylarkRuleFunctionsApi {
                     + "an error will occur. "),
         @Param(
             name = "test",
-            type = Boolean.class,
+            allowedTypes = @ParamType(type = Boolean.class),
             positional = false,
             named = true,
             defaultValue = "False",
@@ -124,7 +124,7 @@ public interface SkylarkRuleFunctionsApi {
       parameters = {
         @Param(
             name = "doc",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             named = true,
             defaultValue = "''",
             doc =
@@ -149,7 +149,6 @@ public interface SkylarkRuleFunctionsApi {
               @ParamType(type = StarlarkList.class, generic1 = String.class),
               @ParamType(type = Dict.class)
             },
-            noneable = false,
             named = true,
             positional = false,
             defaultValue = "[]")

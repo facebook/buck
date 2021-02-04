@@ -20,13 +20,15 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsApi;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.NoneType;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Struct for creating more efficient and validated lists of arguments to pass to actions' command
@@ -51,7 +53,7 @@ public interface CommandLineArgsBuilderApi extends StarlarkValue {
             named = false,
             allowedTypes = {
               @ParamType(type = String.class),
-              @ParamType(type = Integer.class),
+              @ParamType(type = StarlarkInt.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
               @ParamType(type = OutputArtifact.class),
@@ -66,14 +68,14 @@ public interface CommandLineArgsBuilderApi extends StarlarkValue {
                     + "common \"--flag value\" pattern; however, for longer lists of arguments, "
                     + "use `Args.add_all()`",
             named = false,
-            noneable = true,
             allowedTypes = {
               @ParamType(type = String.class),
-              @ParamType(type = Integer.class),
+              @ParamType(type = StarlarkInt.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
               @ParamType(type = OutputArtifact.class),
-              @ParamType(type = CommandLineArgsApi.class)
+              @ParamType(type = CommandLineArgsApi.class),
+              @ParamType(type = NoneType.class),
             }),
         @Param(
             name = "format",
@@ -81,7 +83,7 @@ public interface CommandLineArgsBuilderApi extends StarlarkValue {
                 "A format string to apply after stringifying each argument. This must contain one "
                     + "or more %s. Each will be replaced with the string value of each argument "
                     + "at execution time.",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             named = true,
             positional = false,
             defaultValue = "\"%s\"")
@@ -99,14 +101,14 @@ public interface CommandLineArgsBuilderApi extends StarlarkValue {
             name = "values",
             doc =
                 "Values to add to the existing `Args` object. See `args.add()` for type restrictions",
-            type = StarlarkList.class),
+            allowedTypes = @ParamType(type = StarlarkList.class)),
         @Param(
             name = "format",
             doc =
                 "A format string to apply after stringifying each argument. This must contain one "
                     + "or more %s. Each will be replaced with the string value of each argument "
                     + "at execution time.",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             named = true,
             defaultValue = "\"%s\"")
       })

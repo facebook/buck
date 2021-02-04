@@ -28,9 +28,9 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkList;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Test;
 
 public class SkylarkDependencyTest {
@@ -69,7 +69,7 @@ public class SkylarkDependencyTest {
             ProviderInfoCollectionImpl.builder()
                 .build(new ImmutableDefaultInfo(Dict.empty(), StarlarkList.empty())));
 
-    assertEquals("<dependency //foo:bar>", Printer.getPrinter().repr(dep).toString());
+    assertEquals("<dependency //foo:bar>", new Printer().repr(dep).toString());
   }
 
   @Test

@@ -26,9 +26,10 @@ import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBu
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Test;
 
 public class SkylarkRuleContextArgsTest {
@@ -37,7 +38,7 @@ public class SkylarkRuleContextArgsTest {
   public void addAddsArg() throws EvalException, LabelSyntaxException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add(1, Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING)
+            .add(StarlarkInt.of(1), Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING)
             .add(
                 "--foo",
                 Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
@@ -58,7 +59,9 @@ public class SkylarkRuleContextArgsTest {
             .addAll(
                 StarlarkList.immutableCopyOf(
                     ImmutableList.of(
-                        1, "--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()))),
+                        StarlarkInt.of(1),
+                        "--foo",
+                        Label.parseAbsolute("//foo:bar", ImmutableMap.of()))),
                 CommandLineArgs.DEFAULT_FORMAT_STRING)
             .build();
 

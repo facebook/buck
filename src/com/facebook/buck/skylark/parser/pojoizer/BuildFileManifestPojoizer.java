@@ -24,14 +24,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
 
 /** Utility class to convert parser-created objects to equivalent POJO-typed objects */
 public class BuildFileManifestPojoizer {
@@ -95,7 +96,7 @@ public class BuildFileManifestPojoizer {
 
   /**
    * Convert Starlark object parameter to an object compatible with buck raw target node value.
-   * Return {@code null} for {@link com.google.devtools.build.lib.syntax.Starlark#NONE}.
+   * Return {@code null} for {@link Starlark#NONE}.
    */
   public static Object convertToPojo(Object obj) throws EvalException {
     if (obj instanceof Boolean
@@ -103,6 +104,8 @@ public class BuildFileManifestPojoizer {
         || obj instanceof Integer
         || obj == Starlark.NONE) {
       return obj;
+    } else if (obj instanceof StarlarkInt) {
+      return ((StarlarkInt) obj).toInt("convert to pojo");
     } else if (obj instanceof List<?>) {
       return convertListToPojo((List<?>) obj);
     } else if (obj instanceof Map<?, ?>) {
@@ -113,7 +116,7 @@ public class BuildFileManifestPojoizer {
       SelectorList skylarkSelectorList = (SelectorList) obj;
       // recursively convert list elements
       ImmutableList<Object> elements = convertListToPojo(skylarkSelectorList.getElements());
-      return ListWithSelects.of(elements, skylarkSelectorList.getType());
+      return ListWithSelects.of(elements, convertClassToPojo(skylarkSelectorList.getType()));
     } else if (obj instanceof com.facebook.buck.skylark.function.select.SelectorValue) {
       com.facebook.buck.skylark.function.select.SelectorValue skylarkSelectorValue =
           (com.facebook.buck.skylark.function.select.SelectorValue) obj;
@@ -137,6 +140,14 @@ public class BuildFileManifestPojoizer {
     } else {
       throw new EvalException(
           String.format("don't know how to convert %s to POJO", obj.getClass().getName()));
+    }
+  }
+
+  private static Class<?> convertClassToPojo(Class<?> clazz) {
+    if (StarlarkInt.class.isAssignableFrom(clazz)) {
+      return Integer.class;
+    } else {
+      return clazz;
     }
   }
 }

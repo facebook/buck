@@ -20,11 +20,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.skylark.function.packages.StructProvider;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Arrays;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.syntax.Location;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -58,7 +59,9 @@ public class JsonPrinterTest {
 
   @Test
   public void listIsPrintedAsList() throws Exception {
-    assertEquals("[\"foo\",4]", print(StarlarkList.immutableCopyOf(Arrays.asList("foo", 4))));
+    assertEquals(
+        "[\"foo\",4]",
+        print(StarlarkList.immutableCopyOf(Arrays.asList("foo", StarlarkInt.of(4)))));
   }
 
   @Test

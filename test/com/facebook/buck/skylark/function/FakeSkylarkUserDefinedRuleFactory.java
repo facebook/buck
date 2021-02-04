@@ -29,15 +29,15 @@ import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkCallable;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Map;
 import java.util.function.Function;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.Tuple;
+import net.starlark.java.syntax.Location;
 
 /** Simple container class to make constructing {@link SkylarkUserDefinedRule}s easier in tests */
 public class FakeSkylarkUserDefinedRuleFactory {
@@ -96,8 +96,8 @@ public class FakeSkylarkUserDefinedRuleFactory {
     StarlarkCallable implementation =
         new StarlarkCallable() {
           @Override
-          public Object call(
-              StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs) {
+          public Object call(StarlarkThread thread, Tuple args, Dict<String, Object> kwargs)
+              throws EvalException, InterruptedException {
             Preconditions.checkArgument(args.size() == 1);
             Preconditions.checkArgument(args.get(0) instanceof SkylarkRuleContext);
             return callable.apply((SkylarkRuleContext) args.get(0));

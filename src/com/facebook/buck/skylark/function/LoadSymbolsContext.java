@@ -17,9 +17,9 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.Map;
+import net.starlark.java.eval.StarlarkThread;
 
 /** Store symbols exported by {@code load_symbols}. */
 public class LoadSymbolsContext {

@@ -18,14 +18,14 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.starlark.eventhandler.Event;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
-import com.google.devtools.build.lib.syntax.Argument;
-import com.google.devtools.build.lib.syntax.CallExpression;
-import com.google.devtools.build.lib.syntax.DefStatement;
-import com.google.devtools.build.lib.syntax.ForStatement;
-import com.google.devtools.build.lib.syntax.IfStatement;
-import com.google.devtools.build.lib.syntax.Node;
-import com.google.devtools.build.lib.syntax.NodeVisitor;
-import com.google.devtools.build.lib.syntax.StarlarkFile;
+import net.starlark.java.syntax.Argument;
+import net.starlark.java.syntax.CallExpression;
+import net.starlark.java.syntax.DefStatement;
+import net.starlark.java.syntax.ForStatement;
+import net.starlark.java.syntax.IfStatement;
+import net.starlark.java.syntax.Node;
+import net.starlark.java.syntax.NodeVisitor;
+import net.starlark.java.syntax.StarlarkFile;
 
 /** Validate {@code BUCK} file syntax, which is more restrictive than {@code .bzl}. */
 class StarlarkBuckFileSyntax {

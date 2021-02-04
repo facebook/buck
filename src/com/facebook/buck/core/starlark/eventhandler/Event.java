@@ -32,14 +32,16 @@ package com.facebook.buck.core.starlark.eventhandler;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Preconditions;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.SyntaxError;
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.Location;
+import net.starlark.java.syntax.SyntaxError;
 
 /**
  * An event is a situation encountered by the build system that's worth reporting: A 3-tuple of
@@ -175,8 +177,19 @@ public final class Event implements Serializable {
   }
 
   /** Reports an error. */
+  public static Event error(
+      @Nullable ImmutableList<StarlarkThread.CallStackEntry> callStack, String message) {
+    if (callStack == null || callStack.isEmpty()) {
+      return error(message);
+    } else {
+      // TODO(nga): print full stack
+      return error(callStack.get(callStack.size() - 1).location, message);
+    }
+  }
+
+  /** Reports an error. */
   public static Event error(String message) {
-    return error(null, message);
+    return error((Location) null, message);
   }
 
   /** Reports a warning. */

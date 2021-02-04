@@ -30,20 +30,20 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
-import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import net.starlark.java.annot.Param;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkValue;
+import net.starlark.java.eval.Tuple;
 
-/** A value class for storing {@link Param} metadata to avoid using Java proxies. */
+/** A value class for storing param metadata to avoid using Java proxies. */
 final class ParamDescriptor {
 
   private final String name;
@@ -72,7 +72,7 @@ final class ParamDescriptor {
   private static boolean validStarlarkValueClass(Class<?> clazz) {
     return clazz == String.class
         || clazz == Boolean.class
-        || clazz == Integer.class
+        || clazz == StarlarkInt.class
         // `Iterable` is generally not a valid Starlark type,
         // but immutables generate constructors with this parameter type.
         || clazz == Iterable.class
@@ -82,8 +82,8 @@ final class ParamDescriptor {
   }
 
   /**
-   * Returns a {@link ParamDescriptor} representing the given raw {@link Param} annotation and the
-   * given semantics.
+   * Returns a {@link ParamDescriptor} representing the given raw param annotation and the given
+   * semantics.
    */
   static ParamDescriptor of(BuckStarlarkParam param) {
     String defaultExpr = param.defaultValue();
@@ -165,9 +165,9 @@ final class ParamDescriptor {
     } else if (expr.equals("unbound")) {
       return Starlark.UNBOUND;
     } else if (expr.equals("0")) {
-      return 0;
+      return StarlarkInt.of(0);
     } else if (expr.equals("1")) {
-      return 1;
+      return StarlarkInt.of(1);
     } else if (expr.equals("[]")) {
       return StarlarkList.empty();
     } else if (expr.equals("{}")) {

@@ -24,10 +24,10 @@ import com.facebook.buck.event.FakeBuckEventListener;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.Location;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.logging.Level;
+import net.starlark.java.syntax.Location;
 import org.junit.Assert;
 import org.junit.Test;
 

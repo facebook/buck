@@ -18,6 +18,7 @@ package com.facebook.buck.skylark;
 
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableMap;
+import net.starlark.java.eval.StarlarkInt;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,6 +29,6 @@ public class StarlarkRecursionTest {
     Object r =
         TestStarlarkParser.eval(
             "def fact(n): return 1 if n <= 1 else n * fact(n - 1)\nfact(5)", ImmutableMap.of());
-    Assert.assertEquals(120, r);
+    Assert.assertEquals(StarlarkInt.of(120), r);
   }
 }

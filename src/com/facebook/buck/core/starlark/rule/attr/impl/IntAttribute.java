@@ -16,13 +16,16 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
 import java.util.List;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkInt;
 
 /** Class that represents an Integer attribute to a user defined rule */
 @BuckStyleValue
@@ -56,6 +59,11 @@ public abstract class IntAttribute extends Attribute<Integer> {
   @Override
   protected void validateCoercedValue(Integer value) throws CoerceFailedException {
     validateValueInList(getValues(), value);
+  }
+
+  @Override
+  public PostCoercionTransform<RuleAnalysisContext, Integer, ?> getPostCoercionTransform() {
+    return (coercedValue, additionalData) -> StarlarkInt.of(coercedValue);
   }
 
   public static IntAttribute of(

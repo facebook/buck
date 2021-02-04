@@ -19,7 +19,7 @@ package com.facebook.buck.core.starlark.compatible;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.google.devtools.build.lib.syntax.EvalException;
+import net.starlark.java.eval.EvalException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;

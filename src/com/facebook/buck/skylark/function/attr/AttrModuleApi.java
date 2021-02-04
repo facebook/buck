@@ -18,20 +18,20 @@ package com.facebook.buck.skylark.function.attr;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.annot.StarlarkDocumentationCategory;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.NoneType;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkValue;
 
 /** Skylark module used to configure the attribute schema for user defined rules */
 @StarlarkBuiltin(
     name = "attr",
-    title = "attr",
-    doc = "A module which contains methods to define parameters for user defined rules",
-    category = StarlarkDocumentationCategory.TOP_LEVEL_TYPE)
+    doc = "A module which contains methods to define parameters for user defined rules")
 public interface AttrModuleApi extends StarlarkValue {
   @StarlarkMethod(
       name = "int",
@@ -41,38 +41,33 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "0",
-            noneable = false,
             positional = false,
             named = true,
-            type = Integer.class),
+            allowedTypes = @ParamType(type = StarlarkInt.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = AttributeConstants.VALUES_PARAM_NAME,
             doc = AttributeConstants.VALUES_PARAM_DOC,
             defaultValue = AttributeConstants.VALUES_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            generic1 = Integer.class,
-            type = StarlarkList.class)
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = StarlarkInt.class))
       })
   AttributeHolder intAttribute(
-      Integer defaultValue, String doc, Boolean mandatory, StarlarkList<Integer> values)
+      StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<StarlarkInt> values)
       throws EvalException;
 
   @StarlarkMethod(
@@ -83,37 +78,33 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "[]",
-            noneable = false,
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = Integer.class),
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = Integer.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "allow_empty",
             doc = "Whether the list may be empty",
             defaultValue = "False",
             positional = false,
             named = true,
-            type = Boolean.class)
+            allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder intListAttribute(
-      StarlarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<StarlarkInt> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @StarlarkMethod(
@@ -124,35 +115,30 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "''",
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = AttributeConstants.VALUES_PARAM_NAME,
             doc = AttributeConstants.VALUES_PARAM_DOC,
             defaultValue = AttributeConstants.VALUES_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            generic1 = String.class,
-            type = StarlarkList.class)
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class))
       })
   AttributeHolder stringAttribute(
       String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
@@ -166,34 +152,30 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "[]",
-            noneable = false,
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = String.class),
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "allow_empty",
             doc = "Whether the list may be empty",
             defaultValue = "False",
             positional = false,
             named = true,
-            type = Boolean.class)
+            allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder stringListAttribute(
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
@@ -207,26 +189,23 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "False",
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
       })
   AttributeHolder boolAttribute(boolean defaultValue, String doc, boolean mandatory)
       throws EvalException;
@@ -247,27 +226,23 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC_NO_NONE,
             defaultValue = "None",
-            noneable = true,
             positional = false,
             named = true,
-            type = String.class,
-            generic1 = String.class),
+            allowedTypes = {@ParamType(type = String.class), @ParamType(type = NoneType.class)}),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class)
+            allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder sourceAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException;
@@ -287,34 +262,30 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "[]",
-            noneable = false,
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = String.class),
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "allow_empty",
             doc = "Whether the source list may be empty",
             defaultValue = "False",
             positional = false,
             named = true,
-            type = Boolean.class)
+            allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder sourceListAttribute(
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
@@ -331,27 +302,23 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC_NO_NONE,
             defaultValue = "None",
-            noneable = true,
             positional = false,
             named = true,
-            type = String.class,
-            generic1 = String.class),
+            allowedTypes = {@ParamType(type = String.class), @ParamType(type = NoneType.class)}),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "providers",
             doc =
@@ -360,8 +327,7 @@ public interface AttrModuleApi extends StarlarkValue {
             defaultValue = "[]",
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = Provider.class)
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = Provider.class))
       })
   AttributeHolder depAttribute(
       Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
@@ -378,34 +344,30 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "[]",
-            noneable = false,
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = String.class),
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "allow_empty",
             doc = "Whether the dep list may be empty",
             defaultValue = "False",
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "providers",
             doc =
@@ -414,8 +376,7 @@ public interface AttrModuleApi extends StarlarkValue {
             defaultValue = "[]",
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = Provider.class)
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = Provider.class))
       })
   AttributeHolder depListAttribute(
       StarlarkList<String> defaultValue,
@@ -440,26 +401,23 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC_NO_NONE,
             defaultValue = "None",
-            noneable = true,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = {@ParamType(type = NoneType.class), @ParamType(type = String.class)}),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = "True",
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
       })
   AttributeHolder outputAttribute(Object defaultValue, String doc, boolean mandatory)
       throws EvalException;
@@ -479,34 +437,30 @@ public interface AttrModuleApi extends StarlarkValue {
             name = AttributeConstants.DEFAULT_PARAM_NAME,
             doc = AttributeConstants.DEFAULT_PARAM_DOC,
             defaultValue = "[]",
-            noneable = false,
             positional = false,
             named = true,
-            type = StarlarkList.class,
-            generic1 = String.class),
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class)),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
             doc = AttributeConstants.DOC_PARAM_DOC,
             defaultValue = AttributeConstants.DOC_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = String.class),
+            allowedTypes = @ParamType(type = String.class)),
         @Param(
             name = AttributeConstants.MANDATORY_PARAM_NAME,
             doc = AttributeConstants.MANDATORY_PARAM_DOC,
             defaultValue = AttributeConstants.MANDATORY_PARAM_DEFAULT_VALUE,
-            noneable = false,
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
         @Param(
             name = "allow_empty",
             doc = "Whether the list may be empty",
             defaultValue = "False",
             positional = false,
             named = true,
-            type = Boolean.class),
+            allowedTypes = @ParamType(type = Boolean.class)),
       })
   AttributeHolder outputListAttribute(
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)

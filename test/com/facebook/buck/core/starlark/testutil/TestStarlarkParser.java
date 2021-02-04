@@ -18,22 +18,22 @@ package com.facebook.buck.core.starlark.testutil;
 
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.CallExpression;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Expression;
-import com.google.devtools.build.lib.syntax.FileOptions;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Map;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.syntax.CallExpression;
+import net.starlark.java.syntax.Expression;
+import net.starlark.java.syntax.FileOptions;
+import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.SyntaxError;
 
 public class TestStarlarkParser {
 
   public static CallExpression parseFuncall(String expr) {
     try {
-      return (CallExpression) Expression.parse(ParserInput.create(expr, "noname.bzl"));
+      return (CallExpression) Expression.parse(ParserInput.fromString(expr, "noname.bzl"));
     } catch (SyntaxError.Exception syntaxError) {
       throw new RuntimeException(syntaxError);
     }
@@ -41,7 +41,8 @@ public class TestStarlarkParser {
 
   public static Object eval(StarlarkThread env, Module module, String expr)
       throws EvalException, InterruptedException, SyntaxError.Exception {
-    return EvalUtils.exec(ParserInput.create(expr, "eval.bzl"), FileOptions.DEFAULT, module, env);
+    return Starlark.execFile(
+        ParserInput.fromString(expr, "eval.bzl"), FileOptions.DEFAULT, module, env);
   }
 
   public static Object eval(String expr, Map<String, Object> globals) throws Exception {

@@ -31,13 +31,13 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Optional;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.StarlarkList;
 
 public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescriptionArg> {
 

@@ -28,15 +28,15 @@ import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.syntax.Location;
 
 /**
  * An implementation of an {@link AbstractArtifact} that internally transitions from a {@link
@@ -192,7 +192,7 @@ class ArtifactImpl extends AbstractArtifact
     this.location = Location.BUILTIN;
   }
 
-  /** Get the location where this artifact was declared. {@link Location.BUILTIN} is valid */
+  /** Get the location where this artifact was declared. {@link Location#BUILTIN} is valid */
   public Location getDeclaredLocation() {
     return location;
   }

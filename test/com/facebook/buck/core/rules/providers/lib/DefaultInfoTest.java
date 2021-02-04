@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.lang.reflect.InvocationTargetException;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Test;
 
 public class DefaultInfoTest {

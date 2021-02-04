@@ -30,12 +30,12 @@ import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkList;
 
 /**
  * The standard {@link com.facebook.buck.core.rules.providers.Provider} that describes how to run a

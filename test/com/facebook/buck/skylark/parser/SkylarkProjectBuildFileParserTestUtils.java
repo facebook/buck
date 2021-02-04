@@ -36,10 +36,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.StarlarkFile;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import net.starlark.java.syntax.StarlarkFile;
 import org.hamcrest.Matchers;
 
 public class SkylarkProjectBuildFileParserTestUtils {

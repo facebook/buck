@@ -34,15 +34,14 @@ import com.facebook.buck.util.CommandLineException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.Map;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
 
 /**
  * Container for all methods that create actions within the implementation function of a user
@@ -127,7 +126,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
   @Override
   public CommandLineArgsBuilderApi args(Object args, String formatString) throws EvalException {
     CommandLineArgsBuilder builder = new CommandLineArgsBuilder();
-    if (!EvalUtils.isNullOrNone(args)) {
+    if (!Starlark.isNullOrNone(args)) {
       if (args instanceof StarlarkList) {
         builder.addAll((StarlarkList<?>) args, formatString);
       } else {
@@ -174,7 +173,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     }
 
     String shortNameValidated;
-    if (EvalUtils.isNullOrNone(shortName)) {
+    if (Starlark.isNullOrNone(shortName)) {
       if (firstArgument instanceof Artifact) {
         shortNameValidated =
             String.format("run action %s", ((Artifact) firstArgument).getBasename());

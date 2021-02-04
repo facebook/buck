@@ -28,9 +28,9 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkList;
 
 /**
  * Represents a list of dependencies. These are exposed to users as {@link ProviderInfoCollection}

@@ -899,7 +899,7 @@
       target="8">
       <compilerarg value="-processorpath" />
       <compilerarg value="third-party/java/auto/auto-value-1.6.3rc1.jar" />
-      <src path="third-party/java/bazel/src"/>
+      <src path="third-party/java/bazel/src/main/java"/>
       <classpath>
         <pathelement location="third-party/java/guava/guava-25.1-jre.jar" />
         <pathelement location="third-party/java/jsr/jsr305.jar" />

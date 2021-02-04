@@ -29,10 +29,10 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
 import java.util.Optional;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkList;
 
 /** Represents a list of targets. Currently used only for {@code default_target_platform}. */
 @BuckStyleValue

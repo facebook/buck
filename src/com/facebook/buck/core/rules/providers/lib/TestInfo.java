@@ -21,10 +21,11 @@ import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProviderInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 import org.immutables.value.Value;
 
 /** Provider that passes along information needed by the buck test runner / external test runners */
@@ -69,7 +70,13 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
   @Value.Lazy
   public Optional<Long> typedTimeoutMs() {
     Object raw = timeoutMs();
-    return raw == Starlark.NONE ? Optional.empty() : Optional.of(((Number) raw).longValue());
+    try {
+      return raw == Starlark.NONE
+          ? Optional.empty()
+          : Optional.of(((StarlarkInt) raw).toLong("TestInfo.timeout_ms"));
+    } catch (EvalException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /** Create an instance from native values */
@@ -102,7 +109,7 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
         testCaseName,
         BuckSkylarkTypes.toJavaList(labels, String.class, "labels must be a list of strings"),
         BuckSkylarkTypes.toJavaList(contacts, String.class, "contacts must be a list of strings"),
-        BuckSkylarkTypes.validateNoneOrType(Number.class, timeoutMs),
+        BuckSkylarkTypes.validateNoneOrType(StarlarkInt.class, timeoutMs),
         runTestsSeparately,
         type);
   }

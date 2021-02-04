@@ -41,17 +41,18 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.CallExpression;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.Tuple;
+import net.starlark.java.syntax.CallExpression;
+import net.starlark.java.syntax.Location;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,7 +72,7 @@ public class SkylarkUserDefinedRuleTest {
 
     private final String name;
     private final FunctionSignature signature;
-    private final Tuple<Object> defaultValues;
+    private final Tuple defaultValues;
 
     public SimpleFunction(String name, FunctionSignature signature) {
       this.name = name;
@@ -100,7 +101,8 @@ public class SkylarkUserDefinedRuleTest {
     }
 
     @Override
-    public Object call(StarlarkThread thread, Tuple<Object> args, Dict<String, Object> kwargs) {
+    public Object call(StarlarkThread thread, Tuple args, Dict<String, Object> kwargs)
+        throws EvalException, InterruptedException {
       throw new UnsupportedOperationException();
     }
   }
@@ -361,7 +363,8 @@ public class SkylarkUserDefinedRuleTest {
               env,
               rule,
               ImmutableList.of(),
-              ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val", "arg4", 2));
+              ImmutableMap.of(
+                  "name", "some_rule_name", "arg2", "arg2_val", "arg4", StarlarkInt.of(2)));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, "some_rule_name").getRecordedRules();
@@ -459,9 +462,9 @@ public class SkylarkUserDefinedRuleTest {
                   "arg2",
                   "arg2_val",
                   "arg3",
-                  1,
+                  StarlarkInt.of(1),
                   "arg4",
-                  2));
+                  StarlarkInt.of(2)));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, "some_rule_name").getRecordedRules();

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.syntax.Location;
 import java.lang.invoke.MethodHandle;
 import java.util.List;
+import net.starlark.java.syntax.Location;
 
 /**
  * An instance of the skylark annotation that we create and pass around to piggy-back off skylark

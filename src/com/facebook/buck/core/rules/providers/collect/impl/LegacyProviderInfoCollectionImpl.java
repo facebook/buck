@@ -20,9 +20,10 @@ import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkSemantics;
 
 /** Implementation of {@link ProviderInfoCollection}. */
 public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection {
@@ -33,14 +34,14 @@ public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection 
   private LegacyProviderInfoCollectionImpl() {}
 
   @Override
-  public Object getIndex(Object key) throws EvalException {
+  public Object getIndex(StarlarkSemantics semantics, Object key) throws EvalException {
     verifyKeyIsProvider(
         key, "Type Target only supports indexing by object constructors, got %s instead");
     return Starlark.NONE;
   }
 
   @Override
-  public boolean containsKey(Object key) throws EvalException {
+  public boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException {
     verifyKeyIsProvider(
         key, "Type Target only supports querying by object constructors, got %s instead");
     return false;

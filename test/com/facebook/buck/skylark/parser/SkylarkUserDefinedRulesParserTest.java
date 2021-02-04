@@ -30,7 +30,6 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.starlark.eventhandler.Event;
 import com.facebook.buck.core.starlark.eventhandler.EventCollector;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
@@ -97,21 +96,15 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   private void assertParserFails(
-      EventCollector eventCollector,
-      SkylarkProjectBuildFileParser parser,
-      AbsPath buildFile,
-      String substring)
+      SkylarkProjectBuildFileParser parser, AbsPath buildFile, String substring)
       throws IOException, InterruptedException {
 
     thrown.expect(BuildFileParseException.class);
 
     try {
       parser.getManifest(buildFile);
-
     } catch (BuildFileParseException e) {
-      Event event = eventCollector.iterator().next();
-      assertEquals(EventKind.ERROR, event.getKind());
-      assertThat(event.getMessage(), containsString(substring));
+      assertThat(e.getMessage(), containsString(substring));
       throw e;
     }
   }
@@ -155,7 +148,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "got element of type string, want int");
+    assertParserFails(parser, buildFile, "got element of type string, want int");
   }
 
   @Test
@@ -177,7 +170,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "got value of type 'string', want 'bool'");
+    assertParserFails(parser, buildFile, "got value of type 'string', want 'bool'");
   }
 
   @Test
@@ -200,7 +193,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "got element of type int, want string");
+    assertParserFails(parser, buildFile, "got element of type int, want string");
   }
 
   @Test
@@ -227,10 +220,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
-        parser,
-        buildFile,
-        "parameter 'default' got value of type 'int', want 'list'");
+        parser, buildFile, "parameter 'default' got value of type 'int', want 'list'");
   }
 
   @Test
@@ -265,7 +255,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "want 'string or NoneType'");
+    assertParserFails(parser, buildFile, "want 'string or NoneType'");
   }
 
   @Test
@@ -280,8 +270,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "got value of type 'int', want 'string or NoneType'");
+    assertParserFails(parser, buildFile, "got value of type 'int', want 'string or NoneType'");
   }
 
   @Test
@@ -296,7 +285,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected a sequence of 'Provider'");
+    assertParserFails(parser, buildFile, "expected a sequence of 'Provider'");
   }
 
   @Test
@@ -322,7 +311,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "got value of type 'int', want 'list'");
+    assertParserFails(parser, buildFile, "got value of type 'int', want 'list'");
   }
 
   @Test
@@ -337,7 +326,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "expected a sequence of 'Provider'");
+    assertParserFails(parser, buildFile, "expected a sequence of 'Provider'");
   }
 
   @Test
@@ -363,7 +352,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "want 'list'");
+    assertParserFails(parser, buildFile, "want 'list'");
   }
 
   @Test
@@ -388,10 +377,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
-        parser,
-        buildFile,
-        "parameter 'default' got value of type 'int', want 'list'");
+        parser, buildFile, "parameter 'default' got value of type 'int', want 'list'");
   }
 
   @Test
@@ -414,7 +400,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "want 'string or NoneType'");
+    assertParserFails(parser, buildFile, "want 'NoneType or string'");
   }
 
   @Test
@@ -427,10 +413,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
-        parser,
-        noDefault,
-        "output attributes must have a default value, or be mandatory");
+        parser, noDefault, "output attributes must have a default value, or be mandatory");
   }
 
   @Test
@@ -456,7 +439,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "got value of type 'int', want 'list'");
+    assertParserFails(parser, buildFile, "got value of type 'int', want 'list'");
   }
 
   @Test
@@ -470,7 +453,6 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
         parser,
         buildFile,
         "parameter 'implementation' got value of type 'string', want 'function'");
@@ -485,7 +467,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(eventCollector, parser, buildFile, "got value of type 'int', want 'dict'");
+    assertParserFails(parser, buildFile, "got value of type 'int', want 'dict'");
   }
 
   @Test
@@ -498,7 +480,6 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
         parser,
         buildFile,
         "Implementation function '_impl' must accept a single 'ctx' argument. Accepts 0 arguments");
@@ -515,7 +496,6 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
         parser,
         buildFile,
         "Implementation function '_impl' must accept a single 'ctx' argument. Accepts 2 arguments");
@@ -532,10 +512,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
-        parser,
-        buildFile,
-        "parameter 'infer_run_info' got value of type 'int', want 'bool'");
+        parser, buildFile, "parameter 'infer_run_info' got value of type 'int', want 'bool'");
   }
 
   @Test
@@ -548,8 +525,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "parameter 'test' got value of type 'int', want 'bool'");
+    assertParserFails(parser, buildFile, "parameter 'test' got value of type 'int', want 'bool'");
   }
 
   @Test
@@ -579,7 +555,6 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
         parser,
         buildFile,
         "got dict<string, int> for 'attrs keyword of rule()', want dict<string, AttributeHolder>");
@@ -595,8 +570,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "Attribute name 'foo-bar' is not a valid identifier");
+    assertParserFails(parser, buildFile, "Attribute name 'foo-bar' is not a valid identifier");
   }
 
   @Test
@@ -608,8 +582,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "Attribute name '' is not a valid identifier");
+    assertParserFails(parser, buildFile, "Attribute name '' is not a valid identifier");
   }
 
   @Test
@@ -623,10 +596,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector,
-        parser,
-        buildFile,
-        "Provided attr 'name' shadows implicit attribute. Please remove it.");
+        parser, buildFile, "Provided attr 'name' shadows implicit attribute. Please remove it.");
   }
 
   @Test

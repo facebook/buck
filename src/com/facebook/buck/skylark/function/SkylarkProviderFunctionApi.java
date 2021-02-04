@@ -16,15 +16,15 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
-import net.starlark.java.annot.StarlarkGlobalLibrary;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.NoneType;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Interface for a global Skylark library containing the provider method.
@@ -32,7 +32,6 @@ import net.starlark.java.annot.StarlarkMethod;
  * <p>This is only separate from {@link SkylarkRuleFunctionsApi} at the moment so that new
  * extensibility functionality can be disabled behind configuration until it has stabilized.
  */
-@StarlarkGlobalLibrary
 public interface SkylarkProviderFunctionApi {
 
   @StarlarkMethod(
@@ -46,7 +45,7 @@ public interface SkylarkProviderFunctionApi {
       parameters = {
         @Param(
             name = "doc",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             named = true,
             defaultValue = "''",
             doc =
@@ -66,9 +65,9 @@ public interface SkylarkProviderFunctionApi {
                     + "All fields are optional.",
             allowedTypes = {
               @ParamType(type = StarlarkList.class, generic1 = String.class),
-              @ParamType(type = Dict.class)
+              @ParamType(type = Dict.class),
+              @ParamType(type = NoneType.class),
             },
-            noneable = true,
             named = true,
             positional = false,
             defaultValue = "None")

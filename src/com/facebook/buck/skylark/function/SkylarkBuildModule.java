@@ -21,17 +21,17 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.skylark.function.packages.Info;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.StarlarkList;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.annot.StarlarkDocumentationCategory;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkThread;
 
 /**
  * A class for the Skylark native module providing functions for parsing build files. It includes
@@ -40,7 +40,6 @@ import net.starlark.java.annot.StarlarkMethod;
  */
 @StarlarkBuiltin(
     name = "native",
-    category = StarlarkDocumentationCategory.BUILTIN,
     doc =
         "A built-in module providing native rules and other package helper functions. "
             + "All native rules appear as functions in this module, e.g. "
@@ -88,7 +87,12 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       doc =
           "Returns True if there is a previously defined rule with provided name, "
               + "or False if the rule with such name does not exist.",
-      parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
+      parameters = {
+        @Param(
+            name = "name",
+            allowedTypes = @ParamType(type = String.class),
+            doc = "The name of the rule.")
+      },
       useStarlarkThread = true)
   public Boolean ruleExists(String name, StarlarkThread env) throws EvalException {
     ParseContext parseContext = ParseContext.getParseContext(env, "rule_exists");
@@ -102,21 +106,19 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       parameters = {
         @Param(
             name = "include",
-            type = StarlarkList.class,
-            generic1 = String.class,
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class),
             named = true,
             doc = "a list of strings specifying patterns of files to include."),
         @Param(
             name = "exclude",
-            type = StarlarkList.class,
-            generic1 = String.class,
+            allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class),
             defaultValue = "[]",
             positional = false,
             named = true,
             doc = "a list of strings specifying patterns of files to exclude."),
         @Param(
             name = "exclude_directories",
-            type = Boolean.class,
+            allowedTypes = @ParamType(type = Boolean.class),
             defaultValue = "True",
             positional = false,
             named = true,
@@ -207,13 +209,11 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       parameters = {
         @Param(
             name = "symbol",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             doc = "the symbol from implicitly loaded files to return."),
         @Param(
             name = "default",
-            type = Object.class,
             defaultValue = "None",
-            noneable = true,
             doc = "if no implicit symbol with the requested name exists, return this value."),
       })
   public @Nullable Object implicitPackageSymbol(

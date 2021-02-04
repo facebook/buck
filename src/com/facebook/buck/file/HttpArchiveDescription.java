@@ -41,12 +41,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import com.google.devtools.build.lib.syntax.Dict;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import net.starlark.java.eval.Dict;
+import net.starlark.java.eval.StarlarkList;
 
 /**
  * A description for downloading an archive over http and extracting it (versus the combo logic

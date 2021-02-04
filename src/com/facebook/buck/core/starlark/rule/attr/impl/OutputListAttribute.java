@@ -25,8 +25,8 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkList;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkList;
 
 /**
  * Represents a list of output files.

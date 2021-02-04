@@ -35,7 +35,6 @@ import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.devtools.build.lib.syntax.NoneType;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -53,6 +52,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.NoneType;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 

@@ -25,12 +25,12 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import net.starlark.java.eval.Starlark;
 
 /** Factory to create {@link Selector} using raw (non-coerced) data. */
 public class SelectorFactory {

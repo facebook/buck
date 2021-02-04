@@ -26,13 +26,12 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.BuckIsDyingException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Location;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.file.FileSystemLoopException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import net.starlark.java.eval.EvalException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -157,8 +156,7 @@ public class ExceptionHandlerRegistryTest {
   public void testWithRuleAnalysisException() {
     Exception e =
         new RuleAnalysisException(
-            new EvalException(Location.BUILTIN, new IllegalStateException("Bad state")),
-            "error with user function");
+            new EvalException(new IllegalStateException("Bad state")), "error with user function");
     assertThat(registry.handleException(e), is(ExitCode.BUILD_ERROR));
   }
 

@@ -66,13 +66,13 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
+import net.starlark.java.eval.EvalException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -830,8 +830,7 @@ public class BuckGlobalStateLifecycleManagerTest {
   }
 
   @Test
-  public void whenNothingChangedOriginalKnownRuleTypesReturned()
-      throws LabelSyntaxException, EvalException {
+  public void whenNothingChangedOriginalKnownRuleTypesReturned() throws Exception {
     buckGlobalStateLifecycleManager.resetBuckGlobalState();
 
     Cells cells =

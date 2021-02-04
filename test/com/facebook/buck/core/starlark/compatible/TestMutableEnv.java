@@ -17,10 +17,10 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Module;
-import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
+import net.starlark.java.eval.Module;
+import net.starlark.java.eval.Mutability;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkThread;
 
 /** Simple try-with-resources class that creates and cleans up a mutable environment */
 public class TestMutableEnv implements AutoCloseable {

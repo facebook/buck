@@ -22,10 +22,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Starlark;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +49,7 @@ public class SourceArtifactImplTest {
     assertTrue(artifact.isSource());
     assertEquals(
         String.format("<source file '%s'>", expectedShortPath),
-        Printer.getPrinter().repr(artifact).toString());
+        new Printer().repr(artifact).toString());
 
     assertTrue(artifact.isImmutable());
   }

@@ -35,16 +35,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.io.Serializable;
 import java.util.Arrays;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.annot.StarlarkDocumentationCategory;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * A class to identify a BUILD target. All targets belong to exactly one package. The name of a
@@ -54,10 +54,7 @@ import net.starlark.java.annot.StarlarkMethod;
  *
  * <p>Parsing is robust against bad input, for example, from the command line.
  */
-@StarlarkBuiltin(
-    name = "Label",
-    category = StarlarkDocumentationCategory.BUILTIN,
-    doc = "A BUILD target identifier.")
+@StarlarkBuiltin(name = "Label", doc = "A BUILD target identifier.")
 public final class Label
     implements Comparable<Label>, Serializable, StarlarkValue, CommandLineItem {
 
@@ -445,7 +442,7 @@ public final class Label
       parameters = {
         @Param(
             name = "relName",
-            type = String.class,
+            allowedTypes = @ParamType(type = String.class),
             doc = "The label that will be resolved relative to this one.")
       },
       useStarlarkThread = true)

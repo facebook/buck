@@ -24,10 +24,11 @@ import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Starlark;
-import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
+import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -42,7 +43,8 @@ public class TestInfoTest {
 
   @Test
   public void errorOnInvalidLabelsType() throws EvalException {
-    Object labels = StarlarkList.immutableCopyOf(ImmutableList.of("label1", "label2", 1));
+    Object labels =
+        StarlarkList.immutableCopyOf(ImmutableList.of("label1", "label2", StarlarkInt.of(1)));
     StarlarkList<String> contacts =
         StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com"));
     thrown.expect(EvalException.class);
@@ -61,7 +63,8 @@ public class TestInfoTest {
   public void errorOnInvalidContactsType() throws EvalException {
     StarlarkList<String> labels =
         StarlarkList.immutableCopyOf(ImmutableList.of("label1", "label2"));
-    Object contacts = StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com", 1));
+    Object contacts =
+        StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com", StarlarkInt.of(1)));
     thrown.expect(EvalException.class);
     // Broken cast, but this can apparently happen, so... verify :)
     TestInfo.instantiateFromSkylark(

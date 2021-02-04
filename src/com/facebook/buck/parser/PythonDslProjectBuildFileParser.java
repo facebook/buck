@@ -71,7 +71,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.CountingInputStream;
-import com.google.devtools.build.lib.syntax.Starlark;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,6 +91,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Starlark;
 
 /**
  * Delegates to buck.py for parsing of buck build files. Constructed on demand for the parsing phase

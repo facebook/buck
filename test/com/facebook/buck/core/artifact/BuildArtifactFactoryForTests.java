@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.devtools.build.lib.syntax.Location;
 import java.nio.file.Path;
+import net.starlark.java.syntax.Location;
 
 public class BuildArtifactFactoryForTests {
 
