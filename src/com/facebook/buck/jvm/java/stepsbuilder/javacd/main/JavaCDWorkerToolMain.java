@@ -180,13 +180,14 @@ public class JavaCDWorkerToolMain {
         new JavaCDWorkerToolStepsBuilder(buildJavaCommand);
     AbsPath ruleCellRoot = javaCDWorkerToolStepsBuilder.getRuleCellRoot();
     ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
-    IsolatedExecutionContext executionContext =
+    try (IsolatedExecutionContext executionContext =
         IsolatedExecutionContext.of(
-            eventBus, console, platform, processExecutor, ruleCellRoot, actionId, clock);
+            eventBus, console, platform, processExecutor, ruleCellRoot, actionId, clock)) {
 
-    // TODO: msemko investigate if `IsolatedStepsRunner.execute()` catch error and log it without
-    // re-throwing.
-    IsolatedStepsRunner.execute(isolatedSteps, executionContext);
+      // TODO: msemko investigate if `IsolatedStepsRunner.execute()` catch error and log it without
+      // re-throwing.
+      IsolatedStepsRunner.execute(isolatedSteps, executionContext);
+    }
 
     // TODO : msemko : return a valid exit code in case of failure in
     // `IsolatedStepsRunner.execute()`

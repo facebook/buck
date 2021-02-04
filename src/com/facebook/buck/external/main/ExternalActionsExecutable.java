@@ -107,17 +107,17 @@ public class ExternalActionsExecutable {
     // time back to buck with Downward API
     Clock clock = new DefaultClock(false);
     try (IsolatedEventBus eventBus =
-        new DefaultIsolatedEventBus(
-            parsedEnvVars.getBuildUuid(), outputStream, clock, DOWNWARD_PROTOCOL)) {
-      IsolatedExecutionContext executionContext =
-          IsolatedExecutionContext.of(
-              eventBus,
-              console,
-              Platform.detect(),
-              new DefaultProcessExecutor(console),
-              parsedEnvVars.getRuleCellRoot(),
-              parsedEnvVars.getActionId(),
-              clock);
+            new DefaultIsolatedEventBus(
+                parsedEnvVars.getBuildUuid(), outputStream, clock, DOWNWARD_PROTOCOL);
+        IsolatedExecutionContext executionContext =
+            IsolatedExecutionContext.of(
+                eventBus,
+                console,
+                Platform.detect(),
+                new DefaultProcessExecutor(console),
+                parsedEnvVars.getRuleCellRoot(),
+                parsedEnvVars.getActionId(),
+                clock)) {
       IsolatedStepsRunner.execute(stepsToExecute, executionContext);
     }
   }
