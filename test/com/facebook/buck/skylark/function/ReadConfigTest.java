@@ -69,6 +69,21 @@ public class ReadConfigTest {
   }
 
   @Test
+  public void defaultValueNoneIfPresent() throws Exception {
+    rawConfig = ImmutableMap.of("foo", ImmutableMap.of("bar", "baz"));
+    assertThat(
+        evaluate("value = read_config('foo', 'bar', None)").getGlobals().get("value"),
+        equalTo("baz"));
+  }
+
+  @Test
+  public void defaultValueNoneIfAbsent() throws Exception {
+    assertThat(
+        evaluate("value = read_config('foo', 'bar', None)").getGlobals().get("value"),
+        equalTo(Starlark.NONE));
+  }
+
+  @Test
   public void noneIsReturnedWhenFieldIsNotPresent() throws Exception {
     assertThat(
         evaluate("value = read_config('foo', 'bar')").getGlobals().get("value"),
