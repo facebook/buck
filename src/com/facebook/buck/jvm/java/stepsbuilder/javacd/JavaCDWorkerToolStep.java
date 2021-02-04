@@ -36,13 +36,26 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
 
   private final BuildJavaCommand buildJavaCommand;
-  private final ImmutableList<String> javaRuntimeLauncherCommand;
+  private final ImmutableList<String> launchJavaCDCommand;
 
   public JavaCDWorkerToolStep(
       BuildJavaCommand buildJavaCommand, ImmutableList<String> javaRuntimeLauncherCommand) {
     super("javacd_wt");
     this.buildJavaCommand = buildJavaCommand;
-    this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
+    this.launchJavaCDCommand = getLaunchJavaCDCommand(javaRuntimeLauncherCommand);
+  }
+
+  private static ImmutableList<String> getLaunchJavaCDCommand(
+      ImmutableList<String> javaRuntimeLauncherCommand) {
+    int runArgumentsCount = 3;
+    return ImmutableList.<String>builderWithExpectedSize(
+            javaRuntimeLauncherCommand.size() + runArgumentsCount)
+        .addAll(javaRuntimeLauncherCommand)
+        // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
+        .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
+        .add("-jar")
+        .add(Objects.requireNonNull(System.getProperty(JAVACD_ENV_VARIABLE)))
+        .build();
   }
 
   @Override
@@ -58,14 +71,14 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
       return StepExecutionResult.builder()
           .setExitCode(resultEvent.getExitCode())
-          .setExecutedCommand(workerToolExecutor.getStartWorkerToolCommand())
+          .setExecutedCommand(launchJavaCDCommand)
           .setStderr(String.format("ResultEvent : %s", resultEvent))
           .build();
 
     } catch (ExecutionException e) {
       return StepExecutionResult.builder()
           .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
-          .setExecutedCommand(workerToolExecutor.getStartWorkerToolCommand())
+          .setExecutedCommand(launchJavaCDCommand)
           .setStderr(String.format("ActionId: %s", context.getActionId()))
           .setCause(e)
           .build();
@@ -78,7 +91,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private WorkerToolExecutor getLaunchedWorkerTool(IsolatedExecutionContext context)
       throws IOException {
     WorkerToolExecutor workerToolExecutor =
-        new JavaCDWorkerToolExecutor(context, javaRuntimeLauncherCommand);
+        new JavaCDWorkerToolExecutor(context, launchJavaCDCommand);
     workerToolExecutor.launchWorker();
     workerToolExecutor.updateThreadId();
     return workerToolExecutor;
@@ -87,29 +100,17 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   /** JavaCD worker tool. */
   private static class JavaCDWorkerToolExecutor extends BaseWorkerToolExecutor {
 
-    private final ImmutableList<String> javaRuntimeLauncherCommand;
+    private final ImmutableList<String> startWorkerToolCommand;
 
     public JavaCDWorkerToolExecutor(
-        IsolatedExecutionContext context, ImmutableList<String> javaRuntimeLauncherCommand) {
+        IsolatedExecutionContext context, ImmutableList<String> startWorkerToolCommand) {
       super(context);
-      this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
+      this.startWorkerToolCommand = startWorkerToolCommand;
     }
 
     @Override
     public ImmutableList<String> getStartWorkerToolCommand() {
-      int runArgumentsCount = 3;
-      return ImmutableList.<String>builderWithExpectedSize(
-              javaRuntimeLauncherCommand.size() + runArgumentsCount)
-          .addAll(javaRuntimeLauncherCommand)
-          // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
-          .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
-          .add("-jar")
-          .add(getJavaCDJarPath())
-          .build();
-    }
-
-    private String getJavaCDJarPath() {
-      return Objects.requireNonNull(System.getProperty(JAVACD_ENV_VARIABLE));
+      return startWorkerToolCommand;
     }
   }
 }
