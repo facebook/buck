@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -93,8 +94,6 @@ public interface CxxPlatform extends FlavorConvertible {
   ImmutableMultimap<Linker.LinkableDepType, Arg> getRuntimeLdflags();
 
   ToolProvider getStrip();
-
-  ImmutableList<Arg> getStripFlags();
 
   ArchiverProvider getAr();
 
@@ -174,6 +173,24 @@ public interface CxxPlatform extends FlavorConvertible {
   @Value.Default
   default boolean getRequiresArchives() {
     return true;
+  }
+
+  /** @return the flags to use when applying DEBUGGING_SYMBOLS strip style. */
+  @Value.Default
+  default ImmutableList<Arg> getStripDebugFlags() {
+    return ImmutableList.of(StringArg.of("-S"));
+  }
+
+  /** @return the flags to use when applying NON_GLOBAL_SYMBOLS strip style. */
+  @Value.Default
+  default ImmutableList<Arg> getStripNonGlobalFlags() {
+    return ImmutableList.of(StringArg.of("-x"));
+  }
+
+  /** @return the flags to use when applying ALL_SYMBOLS strip style. */
+  @Value.Default
+  default ImmutableList<Arg> getStripAllFlags() {
+    return ImmutableList.of();
   }
 
   static Builder builder() {

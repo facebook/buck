@@ -1639,6 +1639,7 @@ public class CxxDescriptionEnhancer {
             baseBuildTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
             stripBuildTarget ->
                 new CxxStrip(
+                    cxxPlatform,
                     stripBuildTarget,
                     projectFilesystem,
                     Preconditions.checkNotNull(
@@ -1983,6 +1984,7 @@ public class CxxDescriptionEnhancer {
                             .withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
                         target ->
                             new CxxStrip(
+                                cxxPlatform,
                                 target,
                                 filesystem,
                                 object,

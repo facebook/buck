@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -24,10 +25,13 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -57,6 +61,7 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
   private final boolean isCacheable;
 
   public CxxStrip(
+      CxxPlatform cxxPlatform,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePath unstrippedBinary,
@@ -70,7 +75,12 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(output, unstrippedBinary, stripStyle, strip, withDownwardApi));
+        new Impl(
+            output,
+            unstrippedBinary,
+            strip,
+            getStripArgs(cxxPlatform, stripStyle),
+            withDownwardApi));
     this.isCacheable = isCacheable;
 
     Preconditions.checkArgument(
@@ -83,6 +93,19 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
         "CxxStrip rule %s should contain one of the strip style flavors (%s)",
         this,
         StripStyle.FLAVOR_DOMAIN.getFlavors());
+  }
+
+  private static ImmutableList<Arg> getStripArgs(CxxPlatform cxxPlatform, StripStyle stripStyle) {
+    switch (stripStyle) {
+      case DEBUGGING_SYMBOLS:
+        return cxxPlatform.getStripDebugFlags();
+      case NON_GLOBAL_SYMBOLS:
+        return cxxPlatform.getStripNonGlobalFlags();
+      case ALL_SYMBOLS:
+        return cxxPlatform.getStripAllFlags();
+      default:
+        throw new HumanReadableException("Invalid strip style %s", stripStyle.toString());
+    }
   }
 
   public static BuildTarget removeStripStyleFlavorInTarget(
@@ -113,8 +136,8 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
     return buildTarget;
   }
 
-  public StripStyle getStripStyle() {
-    return getBuildable().stripStyle;
+  public ImmutableList<Arg> getStripFlags() {
+    return getBuildable().stripArgs;
   }
 
   @Override
@@ -131,19 +154,19 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
 
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final SourcePath unstrippedBinary;
-    @AddToRuleKey private final StripStyle stripStyle;
     @AddToRuleKey private final Tool strip;
+    @AddToRuleKey private final ImmutableList<Arg> stripArgs;
     @AddToRuleKey private final boolean withDownwardApi;
 
     public Impl(
         OutputPath output,
         SourcePath unstrippedBinary,
-        StripStyle stripStyle,
         Tool strip,
+        ImmutableList<Arg> stripArgs,
         boolean withDownwardApi) {
       this.output = output;
       this.unstrippedBinary = unstrippedBinary;
-      this.stripStyle = stripStyle;
+      this.stripArgs = stripArgs;
       this.strip = strip;
       this.withDownwardApi = withDownwardApi;
     }
@@ -161,13 +184,14 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
       if (output.equals(outputPathResolver.getRootPath().getPath())) {
         steps.add(RmStep.of(BuildCellRelativePath.of(output), true));
       }
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       steps.add(
           new StripSymbolsStep(
               buildContext.getSourcePathResolver().getAbsolutePath(unstrippedBinary).getPath(),
               output,
-              strip.getCommandPrefix(buildContext.getSourcePathResolver()),
-              strip.getEnvironment(buildContext.getSourcePathResolver()),
-              stripStyle.getStripToolArgs(),
+              strip.getCommandPrefix(resolver),
+              strip.getEnvironment(resolver),
+              Arg.stringify(stripArgs, resolver),
               filesystem,
               withDownwardApi));
       return steps.build();

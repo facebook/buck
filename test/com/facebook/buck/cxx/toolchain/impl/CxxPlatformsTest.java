@@ -52,9 +52,11 @@ import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -352,5 +354,13 @@ public class CxxPlatformsTest {
                 InternalFlavor.of("custom"))
             .getArchiveContents(),
         archiveContents);
+  }
+
+  @Test
+  public void testDefaultStripFlags() {
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
+    assertEquals(platform.getStripDebugFlags(), ImmutableList.of(StringArg.of("-S")));
+    assertEquals(platform.getStripNonGlobalFlags(), ImmutableList.of(StringArg.of("-x")));
+    assertEquals(platform.getStripAllFlags(), ImmutableList.of());
   }
 }

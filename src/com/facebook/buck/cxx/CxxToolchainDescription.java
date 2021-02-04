@@ -300,10 +300,6 @@ public class CxxToolchainDescription
     cxxPlatform.setRequiresArchives(args.getRequiresArchives());
 
     cxxPlatform.setStrip(ToolProviders.getToolProvider(args.getStrip()));
-    cxxPlatform.setStripFlags(
-        args.getStripFlags().stream()
-            .map(macrosConverter::convert)
-            .collect(ImmutableList.toImmutableList()));
 
     cxxPlatform.setRanlib(args.getRanlib().map(ToolProviders::getToolProvider));
     cxxPlatform.setRanlibflags(
@@ -573,9 +569,6 @@ public class CxxToolchainDescription
 
     /** Ranlib flags. */
     ImmutableList<StringWithMacros> getRanlibFlags();
-
-    /** Strip flags. */
-    ImmutableList<StringWithMacros> getStripFlags();
 
     /** Flags for linking the c/c++ runtime for static libraries. */
     ImmutableList<StringWithMacros> getStaticDepRuntimeLdFlags();

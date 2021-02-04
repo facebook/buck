@@ -374,13 +374,35 @@ public class CxxBinaryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
-    CxxBinaryBuilder binaryBuilder =
-        new CxxBinaryBuilder(
-            BuildTargetFactory.newInstance("//:foo")
-                .withFlavors(
-                    platform.getFlavor(),
-                    InternalFlavor.of("shared"),
-                    StripStyle.ALL_SYMBOLS.getFlavor()));
+    validateStripFlags(
+        filesystem,
+        BuildTargetFactory.newInstance("//:foo")
+            .withFlavors(
+                platform.getFlavor(),
+                InternalFlavor.of("shared"),
+                StripStyle.ALL_SYMBOLS.getFlavor()),
+        platform.getStripAllFlags());
+    validateStripFlags(
+        filesystem,
+        BuildTargetFactory.newInstance("//:foo")
+            .withFlavors(
+                platform.getFlavor(),
+                InternalFlavor.of("shared"),
+                StripStyle.DEBUGGING_SYMBOLS.getFlavor()),
+        platform.getStripDebugFlags());
+    validateStripFlags(
+        filesystem,
+        BuildTargetFactory.newInstance("//:foo")
+            .withFlavors(
+                platform.getFlavor(),
+                InternalFlavor.of("shared"),
+                StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()),
+        platform.getStripNonGlobalFlags());
+  }
+
+  private void validateStripFlags(
+      ProjectFilesystem filesystem, BuildTarget buildTarget, ImmutableList<Arg> expectedFlags) {
+    CxxBinaryBuilder binaryBuilder = new CxxBinaryBuilder(buildTarget);
     binaryBuilder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.c"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -389,7 +411,7 @@ public class CxxBinaryDescriptionTest {
     assertThat(resultRule.getLinkRule(), Matchers.instanceOf(CxxStrip.class));
 
     CxxStrip strip = (CxxStrip) resultRule.getLinkRule();
-    assertThat(strip.getStripStyle(), equalTo(StripStyle.ALL_SYMBOLS));
+    assertEquals(strip.getStripFlags(), expectedFlags);
   }
 
   @Test

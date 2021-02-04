@@ -233,7 +233,6 @@ public class CxxFlags {
     cxxPlatformBuilder.setAsmppflags(expandMacros.apply(cxxPlatform.getAsmppflags()));
     cxxPlatformBuilder.setAsmflags(expandMacros.apply(cxxPlatform.getAsmflags()));
     cxxPlatformBuilder.setLdflags(expandMacros.apply(cxxPlatform.getLdflags()));
-    cxxPlatformBuilder.setStripFlags(expandMacros.apply(cxxPlatform.getStripFlags()));
     cxxPlatformBuilder.setArflags(expandMacros.apply(cxxPlatform.getArflags()));
     cxxPlatformBuilder.setRanlibflags(expandMacros.apply(cxxPlatform.getRanlibflags()));
   }
