@@ -122,6 +122,12 @@ public class TargetGraphHashing {
       StringHashing.hashStringAndLength(hasher, node.getBuildTarget().toString());
       JsonObjectHashing.hashJsonObject(hasher, nodeAttributes);
       hasher.putString(ruleKeyConfiguration.getCoreKey(), StandardCharsets.UTF_8);
+      // Include whether we use target config hashing in the target hash, so that CI systems that
+      // use target hashing will trigger builds when this changes.
+      hasher.putBoolean(
+          node.getFilesystem()
+              .getBuckPaths()
+              .shouldIncludeTargetConfigHash(node.getBuildTarget().getCellRelativeBasePath()));
 
       // Hash the contents of all input files and directories.
       ProjectFilesystem cellFilesystem = node.getFilesystem();
