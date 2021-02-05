@@ -21,12 +21,15 @@ import static org.easymock.EasyMock.createMock;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.util.config.ConfigBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 
 /**
@@ -37,6 +40,19 @@ public class FakeBuildContext {
 
   /** Utility class: do not instantiate. */
   private FakeBuildContext() {}
+
+  public static final Tool NOOP_TOOL =
+      new Tool() {
+        @Override
+        public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
+          return ImmutableList.of();
+        }
+
+        @Override
+        public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
+          return ImmutableMap.of();
+        }
+      };
 
   /** A BuildContext which doesn't touch the host filesystem or actually execute steps. */
   public static final BuildContext NOOP_CONTEXT =
@@ -55,7 +71,9 @@ public class FakeBuildContext {
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
         false,
-        cellPathResolver);
+        cellPathResolver,
+        false,
+        NOOP_TOOL);
   }
 
   /**
@@ -76,7 +94,9 @@ public class FakeBuildContext {
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
         false,
-        cellPathResolver);
+        cellPathResolver,
+        false,
+        NOOP_TOOL);
   }
 
   public static BuildContext create(
@@ -88,6 +108,13 @@ public class FakeBuildContext {
         DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
 
     return BuildContext.of(
-        pathResolver, path, new FakeJavaPackageFinder(), buckEventBus, false, cellPathResolver);
+        pathResolver,
+        path,
+        new FakeJavaPackageFinder(),
+        buckEventBus,
+        false,
+        cellPathResolver,
+        false,
+        NOOP_TOOL);
   }
 }

@@ -40,6 +40,7 @@ import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.CleanBuildShutdownException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -107,14 +108,17 @@ public class Build implements Closeable {
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
     BuildId buildId = executionContext.getBuildId();
     Cell rootCell = cells.getRootCell();
+    BuildBuckConfig buildBuckConfig = cells.getBuckConfig().getView(BuildBuckConfig.class);
     return BuildEngineBuildContext.of(
         BuildContext.of(
             graphBuilder.getSourcePathResolver(),
             rootCell.getRoot().getPath(),
             javaPackageFinder,
             executionContext.getBuckEventBus(),
-            cells.getBuckConfig().getView(BuildBuckConfig.class).getShouldDeleteTemporaries(),
-            executionContext.getCellPathResolver()),
+            buildBuckConfig.getShouldDeleteTemporaries(),
+            executionContext.getCellPathResolver(),
+            buildBuckConfig.areExternalActionsEnabled(),
+            cells.getBuckConfig().getView(JavaBuckConfig.class).getDefaultJavaRuntime()),
         artifactCache,
         clock,
         buildId,

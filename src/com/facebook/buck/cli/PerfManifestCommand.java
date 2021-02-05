@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.PerfManifestCommand.Context;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
 import com.facebook.buck.core.cell.Cell;
@@ -187,6 +188,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
               && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys()) {
             try {
               Cell rootCell = params.getCells().getRootCell();
+              JavaBuckConfig javaBuckConfig = rootCell.getBuckConfigView(JavaBuckConfig.class);
               CellPathResolver cellPathResolver = rootCell.getCellPathResolver();
               usedInputs.put(
                   rule,
@@ -196,13 +198,14 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                               BuildContext.of(
                                   graphBuilder.getSourcePathResolver(),
                                   rootCell.getRoot().getPath(),
-                                  rootCell
-                                      .getBuckConfig()
-                                      .getView(JavaBuckConfig.class)
-                                      .createDefaultJavaPackageFinder(),
+                                  javaBuckConfig.createDefaultJavaPackageFinder(),
                                   params.getBuckEventBus(),
                                   false,
-                                  cellPathResolver),
+                                  cellPathResolver,
+                                  rootCell
+                                      .getBuckConfigView(BuildBuckConfig.class)
+                                      .areExternalActionsEnabled(),
+                                  javaBuckConfig.getDefaultJavaOptions().getJavaRuntime()),
                               cellPathResolver)));
             } catch (Exception e) {
               throw new BuckUncheckedExecutionException(

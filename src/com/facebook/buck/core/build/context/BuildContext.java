@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.context;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
@@ -39,20 +40,28 @@ public abstract class BuildContext {
 
   public abstract CellPathResolver getCellPathResolver();
 
+  public abstract boolean shouldExecuteInSeparateProcess();
+
+  public abstract Tool getDefaultJavaRuntime();
+
   public static BuildContext of(
       SourcePathResolverAdapter sourcePathResolver,
       Path buildCellRootPath,
       JavaPackageFinder javaPackageFinder,
       BuckEventBus eventBus,
       boolean shouldDeleteTemporaries,
-      CellPathResolver cellPathResolver) {
+      CellPathResolver cellPathResolver,
+      boolean shouldExecuteInSeparateProcess,
+      Tool defaultJavaRuntime) {
     return ImmutableBuildContext.ofImpl(
         sourcePathResolver,
         buildCellRootPath,
         javaPackageFinder,
         eventBus,
         shouldDeleteTemporaries,
-        cellPathResolver);
+        cellPathResolver,
+        shouldExecuteInSeparateProcess,
+        defaultJavaRuntime);
   }
 
   public BuildContext withBuildCellRootPath(Path buildCellRootPath) {
@@ -65,7 +74,9 @@ public abstract class BuildContext {
         getJavaPackageFinder(),
         getEventBus(),
         getShouldDeleteTemporaries(),
-        getCellPathResolver());
+        getCellPathResolver(),
+        shouldExecuteInSeparateProcess(),
+        getDefaultJavaRuntime());
   }
 
   public BuildContext withEventBus(BuckEventBus eventBus) {
@@ -78,7 +89,9 @@ public abstract class BuildContext {
         getJavaPackageFinder(),
         eventBus,
         getShouldDeleteTemporaries(),
-        getCellPathResolver());
+        getCellPathResolver(),
+        shouldExecuteInSeparateProcess(),
+        getDefaultJavaRuntime());
   }
 
   public BuildContext withJavaPackageFinder(JavaPackageFinder javaPackageFinder) {
@@ -91,7 +104,9 @@ public abstract class BuildContext {
         javaPackageFinder,
         getEventBus(),
         getShouldDeleteTemporaries(),
-        getCellPathResolver());
+        getCellPathResolver(),
+        shouldExecuteInSeparateProcess(),
+        getDefaultJavaRuntime());
   }
 
   public BuildContext withSourcePathResolver(SourcePathResolverAdapter sourcePathResolver) {
@@ -104,6 +119,8 @@ public abstract class BuildContext {
         getJavaPackageFinder(),
         getEventBus(),
         getShouldDeleteTemporaries(),
-        getCellPathResolver());
+        getCellPathResolver(),
+        shouldExecuteInSeparateProcess(),
+        getDefaultJavaRuntime());
   }
 }
