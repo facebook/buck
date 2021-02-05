@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="compile-testing">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/compile-testing/compile-testing-0.19.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/compile-testing/compile-testing-0.19-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
