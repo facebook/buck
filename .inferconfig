@@ -1,5 +1,6 @@
 {
   "biabduction": false,
+  "buck-java-flavor": true,
   "eradicate": true,
   "report-whitelist-path-regex": [
     "src",
