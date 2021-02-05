@@ -16,29 +16,21 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.OptionalInt;
 
 @BuckStyleValue
 public abstract class JavaOptions {
-  public abstract ToolProvider getJavaRuntimeProvider();
-
-  public Tool getJavaRuntimeLauncher(
-      BuildRuleResolver ruleResolver, TargetConfiguration targetConfiguration) {
-    return getJavaRuntimeProvider().resolve(ruleResolver, targetConfiguration);
-  }
+  public abstract Tool getJavaRuntime();
 
   public abstract OptionalInt getJavaRuntimeVersion();
 
-  public static JavaOptions of(ToolProvider javaRuntimeProvider) {
-    return ImmutableJavaOptions.ofImpl(javaRuntimeProvider, OptionalInt.empty());
+  public static JavaOptions of(Tool javaRuntime) {
+    return of(javaRuntime, OptionalInt.empty());
   }
 
-  public static JavaOptions of(ToolProvider javaRuntimeProvider, OptionalInt javaRuntimeVersion) {
-    return ImmutableJavaOptions.ofImpl(javaRuntimeProvider, javaRuntimeVersion);
+  public static JavaOptions of(Tool javaRuntime, OptionalInt javaRuntimeVersion) {
+    return ImmutableJavaOptions.ofImpl(javaRuntime, javaRuntimeVersion);
   }
 }

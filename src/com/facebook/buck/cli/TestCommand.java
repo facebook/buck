@@ -315,7 +315,6 @@ public class TestCommand extends BuildCommand {
 
   private ExitCode runTestsInternal(
       CommandRunnerParams params,
-      BuildRuleResolver ruleResolver,
       BuildEngine buildEngine,
       Build build,
       BuildContext buildContext,
@@ -336,7 +335,6 @@ public class TestCommand extends BuildCommand {
       int exitCodeInt =
           TestRunning.runTests(
               params,
-              ruleResolver,
               testRules,
               rulesUnderTestForCoverage,
               StepExecutionContext.from(
@@ -792,7 +790,6 @@ public class TestCommand extends BuildCommand {
           }
           return runTestsInternal(
               params,
-              actionGraphAndBuilder.getActionGraphBuilder(),
               cachingBuildEngine,
               build,
               buildContext,

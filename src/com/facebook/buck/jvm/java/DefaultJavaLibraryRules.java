@@ -441,9 +441,7 @@ public abstract class DefaultJavaLibraryRules {
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
             javaBuckConfig.isJavaCDEnabled(),
-            javaBuckConfig
-                .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(actionGraphBuilder, buildTarget.getTargetConfiguration()));
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -489,10 +487,7 @@ public abstract class DefaultJavaLibraryRules {
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
                 javaBuckConfig.isJavaCDEnabled(),
-                javaBuckConfig
-                    .getDefaultJavaOptions()
-                    .getJavaRuntimeLauncher(
-                        actionGraphBuilder, buildTarget.getTargetConfiguration()));
+                javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -544,9 +539,7 @@ public abstract class DefaultJavaLibraryRules {
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
-            javaBuckConfig
-                .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())));
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime()));
   }
 
   @Nullable
@@ -568,9 +561,7 @@ public abstract class DefaultJavaLibraryRules {
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
-            javaBuckConfig
-                .getDefaultJavaOptions()
-                .getJavaRuntimeLauncher(graphBuilder, libraryTarget.getTargetConfiguration())));
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime()));
   }
 
   @Nullable

@@ -107,9 +107,7 @@ public class AndroidBuildConfigDescription
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.isJavaCDEnabled(),
-        javaBuckConfig
-            .getDefaultJavaOptions()
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   /**

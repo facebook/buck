@@ -153,9 +153,7 @@ public class GwtBinaryDescription
         context.getProjectFilesystem(),
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
-        javaOptions
-            .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
         args.getVmArgs(),
         args.getStyle().orElse(DEFAULT_STYLE),
         args.getDraftCompile().orElse(DEFAULT_DRAFT_COMPILE),

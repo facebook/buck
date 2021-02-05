@@ -253,9 +253,7 @@ public class AndroidPrebuiltAarDescription
         args.isUseSystemLibraryLoader(),
         withDownwardApi,
         javaBuckConfig.isJavaCDEnabled(),
-        javaBuckConfig
-            .getDefaultJavaOptions()
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   @Override

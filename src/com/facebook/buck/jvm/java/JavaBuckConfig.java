@@ -24,7 +24,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
@@ -53,8 +52,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final CommandTool DEFAULT_JAVA_TOOL =
       new CommandTool.Builder().addArg("java").build();
-  static final JavaOptions DEFAULT_JAVA_OPTIONS =
-      JavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
+  static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaOptions.of(DEFAULT_JAVA_TOOL);
 
   private final BuckConfig delegate;
   private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;
@@ -81,15 +79,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public JavaOptions getDefaultJavaOptions() {
-    return getToolForExecutable("java")
-        .map(ConstantToolProvider::new)
-        .map(JavaOptions::of)
-        .orElse(DEFAULT_JAVA_OPTIONS);
+    return getToolForExecutable("java").map(JavaOptions::of).orElse(DEFAULT_JAVA_OPTIONS);
   }
 
   public JavaOptions getDefaultJavaOptionsForTests() {
     return getToolForExecutable("java_for_tests")
-        .map(ConstantToolProvider::new)
         .map(
             tool ->
                 JavaOptions.of(tool, getDelegate().getInteger("test", "java_for_tests_version")))
@@ -98,14 +92,12 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public JavaOptions getDefaultJava11OptionsForTests() {
     return getToolForExecutable("java11_for_tests")
-        .map(ConstantToolProvider::new)
         .map(tool -> JavaOptions.of(tool, OptionalInt.of(11)))
         .orElseGet(this::getDefaultJavaOptionsForTests);
   }
 
   public JavaOptions getDefaultJavaOptionsForCodeCoverage() {
     return getToolForExecutable("java_for_code_coverage")
-        .map(ConstantToolProvider::new)
         .map(JavaOptions::of)
         .orElseGet(this::getDefaultJavaOptions);
   }

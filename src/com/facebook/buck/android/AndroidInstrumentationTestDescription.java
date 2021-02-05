@@ -129,8 +129,7 @@ public class AndroidInstrumentationTestDescription
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        javaOptions.getJavaRuntimeLauncher(
-            context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)

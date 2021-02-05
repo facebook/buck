@@ -154,7 +154,7 @@ public class AndroidBinaryFactory {
         args.isCompressAssetLibraries(),
         args.getAssetCompressionAlgorithm(),
         args.getManifestEntries(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         androidPlatformTarget
             .getZipalignToolProvider()
             .resolve(graphBuilder, buildTarget.getTargetConfiguration()),

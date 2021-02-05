@@ -169,7 +169,7 @@ public class ScalaTestDescription
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         cxxLibraryEnhancement.nativeLibsEnvironment,

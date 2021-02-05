@@ -391,7 +391,7 @@ public class RobolectricTestDescription
         args.getExternalResourcesPaths(),
         args.getRobolectricRuntimeDependency(),
         args.getRobolectricManifest(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         javaBuckConfig
             .getDelegate()

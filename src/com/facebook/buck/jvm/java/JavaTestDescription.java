@@ -228,9 +228,7 @@ public class JavaTestDescription
               buildTarget.withFlavors(InternalFlavor.of("bin")),
               projectFilesystem,
               params.copyAppendingExtraDeps(transitiveClasspathDeps),
-              javaRuntimeConfig
-                  .apply(buildTarget.getTargetConfiguration())
-                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+              javaRuntimeConfig.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
               testRunner.getMainClass(),
               args.getManifestFile().orElse(null),
               true,
@@ -268,7 +266,7 @@ public class JavaTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,

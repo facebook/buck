@@ -157,7 +157,7 @@ public class GroovyTestDescription
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         /* nativeLibsEnvironment */ ImmutableMap.of(),

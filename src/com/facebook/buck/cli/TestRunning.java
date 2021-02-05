@@ -26,7 +26,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -36,7 +35,6 @@ import com.facebook.buck.core.test.event.TestStatusMessageEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.BuckEventBus;
@@ -125,7 +123,6 @@ public class TestRunning {
   @SuppressWarnings("PMD.EmptyCatchBlock")
   public static int runTests(
       CommandRunnerParams params,
-      BuildRuleResolver ruleResolver,
       Iterable<TestRule> tests,
       ImmutableSet<JavaLibrary> rulesUnderTestForCoverage,
       StepExecutionContext executionContext,
@@ -413,27 +410,13 @@ public class TestRunning {
             javaBuckConfig.createDefaultJavaPackageFinder();
 
         JavaOptions javaOptions = javaBuckConfig.getDefaultJavaOptionsForCodeCoverage();
-        ToolProvider javaRuntimeProvider = javaOptions.getJavaRuntimeProvider();
-        Preconditions.checkState(
-            Iterables.isEmpty(
-                // TODO(nga): ignores default_target_platform and platform detector
-                javaRuntimeProvider.getParseTimeDeps(
-                    params
-                        .getTargetConfiguration()
-                        .orElse(UnconfiguredTargetConfiguration.INSTANCE))),
-            "Using a rule-defined java runtime does not currently support generating code coverage.");
 
         StepRunner.runStep(
             executionContext,
             getReportCommand(
                 rulesUnderTestForCoverage,
                 defaultJavaPackageFinder,
-                // TODO(nga): ignores default_target_platform and platform detector
-                javaRuntimeProvider.resolve(
-                    ruleResolver,
-                    params
-                        .getTargetConfiguration()
-                        .orElse(UnconfiguredTargetConfiguration.INSTANCE)),
+                javaOptions.getJavaRuntime(),
                 params.getCells().getRootCell().getFilesystem(),
                 ruleFinder,
                 JacocoConstants.getJacocoOutputDir(params.getCells().getRootCell().getFilesystem()),

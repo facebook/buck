@@ -141,9 +141,7 @@ public class JavaBinaryDescription
             binaryBuildTarget,
             projectFilesystem,
             params.copyAppendingExtraDeps(transitiveClasspathDeps),
-            javaOptions
-                .apply(buildTarget.getTargetConfiguration())
-                .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+            javaOptions.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
             args.getMergeManifests().orElse(true),
@@ -188,9 +186,7 @@ public class JavaBinaryDescription
               innerJar,
               javaBinary,
               nativeLibraries,
-              javaOptions
-                  .apply(buildTarget.getTargetConfiguration())
-                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+              javaOptions.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
               downwardApiConfig.isEnabledForJava());
     }
 

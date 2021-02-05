@@ -133,7 +133,7 @@ public class AndroidBundleFactory {
         args.isCompressAssetLibraries(),
         args.getAssetCompressionAlgorithm(),
         args.getManifestEntries(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        javaOptions.getJavaRuntime(),
         androidPlatformTarget
             .getZipalignToolProvider()
             .resolve(graphBuilder, buildTarget.getTargetConfiguration()),

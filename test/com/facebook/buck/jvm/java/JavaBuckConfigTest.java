@@ -83,24 +83,17 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavaOptions javaOptions = config.getDefaultJavaOptions();
     assertEquals(
-        ImmutableList.of("java"),
-        javaOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        ImmutableList.of("java"), javaOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of("java"),
-        javaForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        javaForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions java11ForTestsOptions = config.getDefaultJava11OptionsForTests();
     assertEquals(
         ImmutableList.of("java"),
-        java11ForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        java11ForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -130,23 +123,17 @@ public class JavaBuckConfigTest {
     JavaOptions javaOptions = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of(javaCommand),
-        javaOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        javaOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
-        javaForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        javaForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions java11ForTestsOptions = config.getDefaultJava11OptionsForTests();
     assertEquals(
         ImmutableList.of(java11ForTestsCommand),
-        java11ForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        java11ForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -163,9 +150,7 @@ public class JavaBuckConfigTest {
     JavaOptions options = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of(java.toString()),
-        options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        options.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -181,17 +166,12 @@ public class JavaBuckConfigTest {
 
     JavaOptions options = config.getDefaultJavaOptionsForTests();
     assertEquals(
-        ImmutableList.of(javaCommand),
-        options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        ImmutableList.of(javaCommand), options.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions java11options = config.getDefaultJava11OptionsForTests();
     assertEquals(
         ImmutableList.of(javaCommand),
-        java11options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        java11options.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -209,9 +189,7 @@ public class JavaBuckConfigTest {
     JavaOptions java11options = config.getDefaultJava11OptionsForTests();
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
-        java11options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
-            .getCommandPrefix(PATH_RESOLVER));
+        java11options.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test

@@ -453,7 +453,6 @@ public class TestRunningTest {
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
-            new TestActionGraphBuilder(),
             ImmutableList.of(separateTest1, separateTest2, separateTest3),
             ImmutableSet.of(),
             fakeExecutionContext,
@@ -611,7 +610,6 @@ public class TestRunningTest {
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
-            new TestActionGraphBuilder(),
             ImmutableList.of(
                 separateTest1,
                 parallelTest1,
@@ -730,7 +728,6 @@ public class TestRunningTest {
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
-            new TestActionGraphBuilder(),
             ImmutableList.of(failingTest),
             ImmutableSet.of(),
             fakeExecutionContext,
