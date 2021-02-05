@@ -600,6 +600,9 @@ public abstract class CxxSourceRuleFactory {
                           .skip(1) // drop the binary
                           .map(a -> ArgFactory.from(a));
 
+                  CompilerDelegate compilerDelegate =
+                      makeCompilerDelegateForPreprocessAndCompile(source);
+
                   CxxToolFlags ppFlags =
                       CxxToolFlags.copyOf(
                           Stream.concat(
@@ -616,7 +619,9 @@ public abstract class CxxSourceRuleFactory {
                   return new CxxInferCapture(
                       target,
                       getProjectFilesystem(),
+                      getActionGraphBuilder(),
                       ImmutableSortedSet.copyOf(depsBuilder.build()),
+                      compilerDelegate,
                       ppFlags,
                       cFlags,
                       source.getPath(),

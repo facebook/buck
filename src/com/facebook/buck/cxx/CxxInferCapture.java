@@ -26,8 +26,11 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -49,6 +52,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -60,6 +64,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
 
+  @AddToRuleKey private final CompilerDelegate compilerDelegate;
   @AddToRuleKey private final InferBuckConfig inferConfig;
   @AddToRuleKey private final CxxToolFlags preprocessorFlags;
   @AddToRuleKey private final CxxToolFlags compilerFlags;
@@ -75,11 +80,14 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   private final RelPath resultsDir;
 
   @AddToRuleKey private final boolean withDownwardApi;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   CxxInferCapture(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
       ImmutableSortedSet<BuildRule> buildDeps,
+      CompilerDelegate compilerDelegate,
       CxxToolFlags preprocessorFlags,
       CxxToolFlags compilerFlags,
       SourcePath input,
@@ -91,6 +99,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
+    this.compilerDelegate = compilerDelegate;
     this.preprocessorFlags = preprocessorFlags;
     this.compilerFlags = compilerFlags;
     this.input = input;
@@ -105,11 +114,17 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     this.resultsDir =
         BuildTargetPaths.getGenPath(
             getProjectFilesystem().getBuckPaths(), this.getBuildTarget(), "infer-out-%s");
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return buildDeps;
+    return ImmutableSortedSet.copyOf(Sets.union(buildDeps, depsSupplier.get()));
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 
   private CxxToolFlags getSearchPathFlags(SourcePathResolverAdapter pathResolver) {

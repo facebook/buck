@@ -30,13 +30,18 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.GccCompiler;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -93,10 +98,22 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     ImmutableList.of())),
             ImmutableSortedSet.of());
 
+    CompilerDelegate cd =
+        new CompilerDelegate(
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            new GccCompiler(
+                new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("compiler"))),
+                ToolType.CXX,
+                false),
+            CxxToolFlags.of(),
+            Optional.empty());
+
     return new CxxInferCapture(
         buildTarget,
         filesystem,
+        new TestActionGraphBuilder(),
         ImmutableSortedSet.of(),
+        cd,
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         FakeSourcePath.of("src.c"),
