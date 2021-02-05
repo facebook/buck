@@ -649,8 +649,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     ImmutableSortedSet<RelPath> entriesToJar =
         ImmutableSortedSet.orderedBy(RelPath.comparator()).add(classesDir).build();
     Optional<RelPath> manifestRelFile =
-        manifestFile.map(
-            sourcePath -> sourcePathResolver.getCellUnsafeRelPath(filesystem, sourcePath));
+        manifestFile.map(sourcePath -> sourcePathResolver.getCellRelPath(filesystem, sourcePath));
     return getOutputJarPath(buildTarget, filesystem.getBuckPaths())
         .map(
             output ->

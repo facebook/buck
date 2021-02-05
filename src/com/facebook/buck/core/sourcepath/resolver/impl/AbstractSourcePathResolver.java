@@ -127,7 +127,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   public ImmutableSortedSet<RelPath> getAllRelativePaths(
       ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths) {
     return sourcePaths.stream()
-        .flatMap(sourcePath -> getCellUnsafeRelPath(projectFilesystem, sourcePath).stream())
+        .flatMap(sourcePath -> getRelativePath(projectFilesystem, sourcePath).stream())
         .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 
@@ -144,8 +144,8 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
    * @return The {@link Path} instances the {@code sourcePath} refers to, ideally relative to its
    *     owning {@link ProjectFilesystem}. Absolute path may get returned however!
    *     <p>We should make sure that {@link #getPathPrivateImpl} always returns a relative path
-   *     after which we should simply call {@link #getCellUnsafeRelPath}. Until then we still need
-   *     this nonsense.
+   *     after which we should simply call {@link #getRelativePath}. Until then we still need this
+   *     nonsense.
    */
   @Override
   public ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath) {
@@ -240,7 +240,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   @Override
-  public ImmutableSortedSet<RelPath> getCellUnsafeRelPath(
+  public ImmutableSortedSet<RelPath> getRelativePath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     return getAbsolutePath(sourcePath).stream()
         .map(path -> projectFilesystem.relativize(path))

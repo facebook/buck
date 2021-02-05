@@ -31,6 +31,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface SourcePathResolver {
+
   <T> ImmutableMap<T, ImmutableSortedSet<AbsPath>> getMappedPaths(Map<T, SourcePath> sourcePathMap);
 
   ProjectFilesystem getFilesystem(SourcePath sourcePath);
@@ -49,7 +50,13 @@ public interface SourcePathResolver {
   /**
    * @return The {@link RelPath} instances the {@code sourcePath} refers to, relative to its owning
    *     {@link ProjectFilesystem}.
+   * @deprecated
+   *     <p>Since the relative path returned does not work across cells. Use {@link
+   *     #getAbsolutePath} * and relativize to a {@code projectFilesystem} in the cross-cell case or
+   *     use {@link #getRelativePath(ProjectFilesystem, SourcePath) that receives an appropriate
+   *     {@code projectFilesystem}}.
    */
+  @Deprecated
   ImmutableSortedSet<RelPath> getCellUnsafeRelPath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getIdeallyRelativePath(SourcePath sourcePath);
@@ -72,7 +79,7 @@ public interface SourcePathResolver {
    * @return {@link RelPath} instances to the given {@link SourcePath} that is relative to the given
    *     {@link ProjectFilesystem}
    */
-  ImmutableSortedSet<RelPath> getCellUnsafeRelPath(
+  ImmutableSortedSet<RelPath> getRelativePath(
       ProjectFilesystem projectFilesystem, SourcePath sourcePath);
 
   /**
