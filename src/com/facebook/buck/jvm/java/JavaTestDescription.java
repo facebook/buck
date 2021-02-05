@@ -306,9 +306,6 @@ public class JavaTestDescription
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
-    javaOptionsForTests
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   public interface CoreArg extends HasTestTimeout, JavaLibraryDescription.CoreArg {

@@ -16,13 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.google.common.collect.ImmutableCollection;
 import java.util.OptionalInt;
 
 @BuckStyleValue
@@ -32,12 +30,6 @@ public abstract class JavaOptions {
   public Tool getJavaRuntimeLauncher(
       BuildRuleResolver ruleResolver, TargetConfiguration targetConfiguration) {
     return getJavaRuntimeProvider().resolve(ruleResolver, targetConfiguration);
-  }
-
-  public void addParseTimeDeps(
-      ImmutableCollection.Builder<BuildTarget> depsBuilder,
-      TargetConfiguration targetConfiguration) {
-    depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps(targetConfiguration));
   }
 
   public abstract OptionalInt getJavaRuntimeVersion();

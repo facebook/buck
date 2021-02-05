@@ -189,11 +189,7 @@ public class GroovyTestDescription
       CellNameResolver cellRoots,
       GroovyTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptionsForTests
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
-  }
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   @RuleArg
   interface AbstractGroovyTestDescriptionArg

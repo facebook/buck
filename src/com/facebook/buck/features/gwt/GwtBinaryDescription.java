@@ -173,11 +173,7 @@ public class GwtBinaryDescription
       CellNameResolver cellRoots,
       GwtBinaryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
-      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptions
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
-  }
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   @RuleArg
   interface AbstractGwtBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {

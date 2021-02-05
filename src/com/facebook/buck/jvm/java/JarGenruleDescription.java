@@ -108,11 +108,7 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
       CellNameResolver cellRoots,
       JarGenruleDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
-      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptions
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
-  }
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   /** jar_genrule constructor arg. */
   @RuleArg

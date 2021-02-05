@@ -165,11 +165,7 @@ public class AndroidInstrumentationTestDescription
       CellNameResolver cellRoots,
       AndroidInstrumentationTestDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
-      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptionsForTests
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
-  }
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   @RuleArg
   interface AbstractAndroidInstrumentationTestDescriptionArg extends BuildRuleArg, HasTestTimeout {

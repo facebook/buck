@@ -276,10 +276,6 @@ public class AndroidBinaryDescription
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
-    javaOptions
-        .apply(targetConfiguration)
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
-
     Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
 
     if (constructorArg.getRedex()) {

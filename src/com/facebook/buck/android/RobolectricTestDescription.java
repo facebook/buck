@@ -413,9 +413,6 @@ public class RobolectricTestDescription
     targetGraphOnlyDepsBuilder.addAll(
         getCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    javaOptionsForTests
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }

@@ -231,9 +231,6 @@ public class JavaBinaryDescription
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
-    javaOptions
-        .apply(buildTarget.getTargetConfiguration())
-        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   @RuleArg
