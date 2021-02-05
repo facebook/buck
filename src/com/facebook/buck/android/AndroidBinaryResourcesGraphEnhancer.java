@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -106,8 +105,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ImmutableSet<String> extraFilteredResources;
   private final Optional<SourcePath> resourceStableIds;
   private final boolean withDownwardApi;
-  private final boolean shouldExecuteInSeparateProcess;
-  private final Tool javaRuntimeLauncher;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -144,9 +141,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean shouldAapt2KeepRawValues,
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
-      boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean withDownwardApi) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -182,8 +177,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
     this.withDownwardApi = withDownwardApi;
-    this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 
   @BuckStyleValueWithBuilder
@@ -377,8 +370,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             resultBuilder,
             aaptOutputInfo,
             packageStringAssets,
-            withDownwardApi,
-            shouldExecuteInSeparateProcess);
+            withDownwardApi);
 
         // Create a rule that copies the AndroidManifest. This allows the AndroidBinary rule (and
         // exopackage installation rules) to have a runtime dep on the manifest without having to
@@ -438,8 +430,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableAndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
       AaptOutputInfo aaptOutputInfo,
       Optional<PackageStringAssets> packageStringAssets,
-      boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess) {
+      boolean withDownwardApi) {
     SourcePath pathToRDotTxt;
     ImmutableList<ExopackagePathAndHash> exoResources;
     if (exopackageForResources) {
@@ -450,9 +441,7 @@ class AndroidBinaryResourcesGraphEnhancer {
           createSplitResourcesRule(
               aaptOutputInfo.getPrimaryResourcesApkPath(),
               aaptOutputInfo.getPathToRDotTxt(),
-              withDownwardApi,
-              shouldExecuteInSeparateProcess,
-              javaRuntimeLauncher);
+              withDownwardApi);
       MergeThirdPartyJarResources mergeThirdPartyJarResource =
           createMergeThirdPartyJarResources(
               packageableCollection.getPathsToThirdPartyJars().values());
@@ -541,11 +530,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   }
 
   private SplitResources createSplitResourcesRule(
-      SourcePath aaptOutputPath,
-      SourcePath aaptRDotTxtPath,
-      boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      SourcePath aaptOutputPath, SourcePath aaptRDotTxtPath, boolean withDownwardApi) {
     BuildTarget target = buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR);
     return new SplitResources(
         target,
@@ -556,9 +541,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         androidPlatformTarget
             .getZipalignToolProvider()
             .resolve(graphBuilder, target.getTargetConfiguration()),
-        withDownwardApi,
-        shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        withDownwardApi);
   }
 
   private Aapt2Link createAapt2Link(

@@ -26,7 +26,6 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.DxToolchain;
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -74,7 +73,6 @@ public class AndroidInstrumentationApkDescription
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
-  private final BuildBuckConfig buildBuckConfig;
 
   public AndroidInstrumentationApkDescription(
       JavaBuckConfig javaBuckConfig,
@@ -83,8 +81,7 @@ public class AndroidInstrumentationApkDescription
       DxConfig dxConfig,
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
-      DownwardApiConfig downwardApiConfig,
-      BuildBuckConfig buildBuckConfig) {
+      DownwardApiConfig downwardApiConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -93,7 +90,6 @@ public class AndroidInstrumentationApkDescription
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.buildBuckConfig = buildBuckConfig;
   }
 
   @Override
@@ -241,7 +237,6 @@ public class AndroidInstrumentationApkDescription
             androidBuckConfig.getAaptNoResourceRemoval(),
             javaBuckConfig,
             downwardApiConfig,
-            buildBuckConfig,
             javacFactory,
             toolchainProvider
                 .getByName(

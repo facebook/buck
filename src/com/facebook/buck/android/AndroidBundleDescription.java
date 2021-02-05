@@ -22,7 +22,6 @@ import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
@@ -84,7 +83,6 @@ public class AndroidBundleDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
-  private final BuildBuckConfig buildBuckConfig;
   private final JavacFactory javacFactory;
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
@@ -104,13 +102,11 @@ public class AndroidBundleDescription
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       DownwardApiConfig downwardApiConfig,
-      BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider,
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBundleFactory androidBundleFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.buildBuckConfig = buildBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
     this.androidBuckConfig = androidBuckConfig;
@@ -185,7 +181,6 @@ public class AndroidBundleDescription
             dxConfig,
             proGuardConfig,
             downwardApiConfig,
-            buildBuckConfig,
             cellRoots,
             context.getTargetGraph(),
             buildTarget,

@@ -24,7 +24,6 @@ import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -95,7 +94,6 @@ public class AndroidBinaryDescription
   private final AndroidInstallConfig androidInstallConfig;
   private final AdbConfig adbConfig;
   private final DownwardApiConfig downwardApiConfig;
-  private final BuildBuckConfig buildBuckConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBinaryFactory androidBinaryFactory;
@@ -109,7 +107,6 @@ public class AndroidBinaryDescription
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       DownwardApiConfig downwardApiConfig,
-      BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider,
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBinaryFactory androidBinaryFactory) {
@@ -121,7 +118,6 @@ public class AndroidBinaryDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.buildBuckConfig = buildBuckConfig;
     this.androidInstallConfig = androidInstallConfig;
     this.adbConfig = adbConfig;
     this.toolchainProvider = toolchainProvider;
@@ -189,7 +185,6 @@ public class AndroidBinaryDescription
             dxConfig,
             proGuardConfig,
             downwardApiConfig,
-            buildBuckConfig,
             cellRoots,
             context.getTargetGraph(),
             buildTarget,

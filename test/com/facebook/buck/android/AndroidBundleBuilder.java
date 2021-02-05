@@ -70,7 +70,6 @@ public class AndroidBundleBuilder
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(buckConfig),
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
-            CxxPlatformUtils.DEFAULT_EXTERNAL_ACTIONS_CONFIG,
             createToolchainProviderForAndroidBundle(),
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(

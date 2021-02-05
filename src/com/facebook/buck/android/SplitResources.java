@@ -68,9 +68,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt,
       Tool zipalignTool,
-      boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -83,9 +81,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
             Paths.get(EXO_RESOURCES_APK_FILE_NAME),
             Paths.get(PRIMARY_RESOURCES_APK_FILE_NAME),
             Paths.get(R_TXT_FILE_NAME),
-            withDownwardApi,
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            withDownwardApi));
   }
 
   SourcePath getPathToRDotTxt() {
@@ -124,10 +120,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
         Path exoResourcesOutputPath,
         Path primaryResourcesOutputPath,
         Path rDotTxtOutputPath,
-        boolean withDownwardApi,
-        boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        boolean withDownwardApi) {
       this.buildTarget = buildTarget;
       this.exoResourcesOutputPath = new OutputPath(exoResourcesOutputPath);
       this.primaryResourcesOutputPath = new OutputPath(primaryResourcesOutputPath);
