@@ -389,4 +389,11 @@ public class Logger {
   public Handler[] getHandlers() {
     return logger.getHandlers();
   }
+
+  /** Cleans existing handlers associated with the logger. */
+  public void cleanHandlers() {
+    for (Handler handler : getHandlers()) {
+      logger.removeHandler(handler);
+    }
+  }
 }

@@ -72,7 +72,9 @@ public class JavaCDWorkerToolMain {
         OutputStream eventsOutputStream = eventNamedPipe.getOutputStream()) {
       // establish downward protocol type
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(eventsOutputStream);
-      Logger.get("").addHandler(new ExternalLogHandler(eventsOutputStream, DOWNWARD_PROTOCOL));
+      Logger logger = Logger.get("");
+      logger.cleanHandlers();
+      logger.addHandler(new ExternalLogHandler(eventsOutputStream, DOWNWARD_PROTOCOL));
 
       handleCommands(workerToolParsedEnvs, console, eventsOutputStream);
 
@@ -92,7 +94,13 @@ public class JavaCDWorkerToolMain {
 
   private static void handleExceptionAndTerminate(
       Thread thread, Console console, Throwable throwable) {
+    // Remove an existing `ExternalLogHandler` handler that depend on the closed event pipe stream.
+    Logger logger = Logger.get("");
+    logger.cleanHandlers();
+
     String errorMessage = ErrorLogger.getUserFriendlyMessage(throwable);
+    // this method logs the message with log.warn that would be noop as all logger handlers have
+    // been cleaned and prints the message into a std err.
     console.printErrorText(
         "Failed to execute java compilation action. Thread: "
             + thread

@@ -69,7 +69,11 @@ public class ExternalActionsExecutable {
             NAMED_PIPE_FACTORY.connectAsWriter(parsedEnvVars.getEventPipe());
         OutputStream outputStream = namedPipe.getOutputStream()) {
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(outputStream);
-      Logger.get("").addHandler(new ExternalLogHandler(outputStream, DOWNWARD_PROTOCOL));
+
+      Logger logger = Logger.get("");
+      logger.cleanHandlers();
+      logger.addHandler(new ExternalLogHandler(outputStream, DOWNWARD_PROTOCOL));
+
       executeSteps(args, parsedEnvVars, console, outputStream);
     } catch (Exception e) {
       handleExceptionAndTerminate(Thread.currentThread(), console, e);
@@ -87,7 +91,13 @@ public class ExternalActionsExecutable {
 
   private static void handleExceptionAndTerminate(
       Thread thread, Console console, Throwable throwable) {
+    // Remove an existing `ExternalLogHandler` handler that depend on the closed event pipe stream.
+    Logger logger = Logger.get("");
+    logger.cleanHandlers();
+
     String errorMessage = ErrorLogger.getUserFriendlyMessage(throwable);
+    // this method logs the message with log.warn that would be noop as all logger handlers have
+    // been cleaned and prints the message into a std err.
     console.printErrorText(
         "Failed to execute external action. Thread: "
             + thread
