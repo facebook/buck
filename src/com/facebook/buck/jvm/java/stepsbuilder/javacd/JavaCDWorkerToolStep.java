@@ -63,9 +63,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       throws IOException, InterruptedException {
 
     // TODO: msemko: get it from wt pool
-    WorkerToolExecutor workerToolExecutor = getLaunchedWorkerTool(context);
-
-    try {
+    try (WorkerToolExecutor workerToolExecutor = getLaunchedWorkerTool(context)) {
       ResultEvent resultEvent =
           workerToolExecutor.executeCommand(context.getActionId(), buildJavaCommand);
 
@@ -82,9 +80,6 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
           .setStderr(String.format("ActionId: %s", context.getActionId()))
           .setCause(e)
           .build();
-    } finally {
-      // TODO: msemko: return wt into a pool
-      workerToolExecutor.shutdown();
     }
   }
 
@@ -93,7 +88,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     WorkerToolExecutor workerToolExecutor =
         new JavaCDWorkerToolExecutor(context, launchJavaCDCommand);
     workerToolExecutor.launchWorker();
-    workerToolExecutor.updateThreadId();
+    workerToolExecutor.prepareForReuse();
     return workerToolExecutor;
   }
 

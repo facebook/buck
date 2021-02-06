@@ -130,7 +130,7 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public void shutdown() {
+  public void close() {
     try {
       CommandTypeMessage shutdownCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.SHUTDOWN_COMMAND);
@@ -211,7 +211,12 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public void updateThreadId() {
+  public void prepareForReuse() {
     launchedProcess.updateThreadId();
+  }
+
+  @Override
+  public boolean isAlive() {
+    return launchedProcess != null && launchedProcess.isAlive();
   }
 }
