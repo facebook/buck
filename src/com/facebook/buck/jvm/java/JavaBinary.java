@@ -151,7 +151,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       commands.add(
           SymlinkFileStep.of(
               filesystem,
-              sourcePathResolver.getCellRelPath(filesystem, metaInfDirectory).getPath(),
+              sourcePathResolver.getRelativePath(filesystem, metaInfDirectory).getPath(),
               stagingTarget.getPath()));
 
       overrideIncludePaths =
@@ -164,9 +164,9 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       includePaths = sourcePathResolver.getAllRelativePaths(filesystem, getTransitiveClasspaths());
     }
 
-    RelPath outputFile = sourcePathResolver.getCellRelPath(filesystem, getSourcePathToOutput());
+    RelPath outputFile = sourcePathResolver.getRelativePath(filesystem, getSourcePathToOutput());
     RelPath manifestPath =
-        manifestFile == null ? null : sourcePathResolver.getCellRelPath(filesystem, manifestFile);
+        manifestFile == null ? null : sourcePathResolver.getRelativePath(filesystem, manifestFile);
 
     Step jar =
         new JarDirectoryStep(

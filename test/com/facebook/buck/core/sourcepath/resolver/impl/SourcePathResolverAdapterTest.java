@@ -83,7 +83,7 @@ public class SourcePathResolverAdapterTest {
         testAdapter.getIdeallyRelativePath(mockSourcePath),
         Matchers.contains(Paths.get("path-10")));
     assertThat(
-        testAdapter.getCellRelPath(projectFilesystem, mockSourcePath).getPath(),
+        testAdapter.getRelativePath(projectFilesystem, mockSourcePath).getPath(),
         Matchers.contains(Paths.get("path100")));
     assertThat(
         testAdapter.getMappedPaths(ImmutableMap.of("tee", mockSourcePath, "hee", mockSourcePath)),
@@ -129,7 +129,7 @@ public class SourcePathResolverAdapterTest {
     EasyMock.expect(mockResolver.getRelativePath(projectFilesystem, mockSourcePath))
         .andReturn(getMockRelPaths(2, 100));
     EasyMock.replay(mockResolver);
-    testAdapter.getCellRelPath(projectFilesystem, mockSourcePath);
+    testAdapter.getRelativePath(projectFilesystem, mockSourcePath);
   }
 
   @Test

@@ -56,7 +56,7 @@ public class SourcePathResolverAdapter {
    * @deprecated
    *     <p>Since the relative path returned does not work across cells. Use {@link
    *     #getAbsolutePath} and relativize to a {@code projectFilesystem} in the cross-cell case or
-   *     use {@link #getCellRelPath(ProjectFilesystem, SourcePath) that receives an appropriate
+   *     use {@link #getRelativePath(ProjectFilesystem, SourcePath) that receives an appropriate
    *     {@code projectFilesystem}}.
    */
   @Deprecated
@@ -76,7 +76,7 @@ public class SourcePathResolverAdapter {
    * Returns the {@link RelPath} associated with the given {@link SourcePath} relative to the given
    * {@link ProjectFilesystem}.
    */
-  public RelPath getCellRelPath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
+  public RelPath getRelativePath(ProjectFilesystem projectFilesystem, SourcePath sourcePath) {
     return Iterables.getOnlyElement(resolver.getRelativePath(projectFilesystem, sourcePath));
   }
 

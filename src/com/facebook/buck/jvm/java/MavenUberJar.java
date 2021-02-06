@@ -108,7 +108,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext context, BuildableContext buildableContext) {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     ProjectFilesystem filesystem = getProjectFilesystem();
-    RelPath pathToOutput = sourcePathResolver.getCellRelPath(filesystem, getSourcePathToOutput());
+    RelPath pathToOutput = sourcePathResolver.getRelativePath(filesystem, getSourcePathToOutput());
     MkdirStep mkOutputDirStep =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -131,7 +131,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return RichStream.from(rules)
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
-        .map(s -> sourcePathResolver.getCellRelPath(filesystem, s))
+        .map(s -> sourcePathResolver.getRelativePath(filesystem, s))
         .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
   }
 

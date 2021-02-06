@@ -148,12 +148,12 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
     if (arg.getRes().get().isLeft()) {
       // Left is a simple source path
       return Optional.of(
-          sourcePathResolver.getCellRelPath(filesystem, arg.getRes().get().getLeft()).getPath());
+          sourcePathResolver.getRelativePath(filesystem, arg.getRes().get().getLeft()).getPath());
     } else {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
           sourcePathResolver
-              .getCellRelPath(
+              .getRelativePath(
                   filesystem,
                   DefaultBuildTargetSourcePath.of(
                       targetNode
@@ -181,7 +181,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
       // Right is a mapped set of paths, so we need the symlink tree
       return Optional.of(
           sourcePathResolver
-              .getCellRelPath(
+              .getRelativePath(
                   targetNode.getFilesystem(),
                   DefaultBuildTargetSourcePath.of(
                       targetNode
