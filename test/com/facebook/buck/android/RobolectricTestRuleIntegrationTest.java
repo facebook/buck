@@ -210,4 +210,31 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
+
+  @Test
+  public void testRobolectricTestSpecifiesCorrectClasses() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    workspace.addBuckConfigLocalOption("test", "java_for_tests_version", "11");
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("command"));
+    //noinspection unchecked
+    ImmutableList<String> commandArgs =
+        ImmutableList.<String>builder().addAll((Iterable<String>) spec.get("command")).build();
+
+    assertTrue(commandArgs.contains("com.facebook.sample.BinaryResourcesTest"));
+    assertFalse(commandArgs.contains("com.sample.R"));
+  }
 }

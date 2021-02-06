@@ -43,12 +43,14 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -308,14 +310,6 @@ public class RobolectricTestDescription
     params =
         params.copyAppendingExtraDeps(ImmutableSortedSet.of(generateRDotJava, unitTestOptions));
 
-    ImmutableSortedSet<SourcePath> updatedSrcs =
-        ImmutableSortedSet.<SourcePath>naturalOrder()
-            .addAll(testLibraryArgs.getSrcs())
-            .add(generateRDotJava.getSourcePathToRZip())
-            .build();
-
-    testLibraryArgs = testLibraryArgs.withSrcs(updatedSrcs);
-
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
             buildTarget,
@@ -331,6 +325,38 @@ public class RobolectricTestDescription
 
     BuildTarget testLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+
+    DefaultJavaLibrary rDotJavaLibrary =
+        DefaultJavaLibrary.rulesBuilder(
+                buildTarget.withAppendedFlavors(InternalFlavor.of("rdotjavalibrary")),
+                projectFilesystem,
+                context.getToolchainProvider(),
+                params,
+                graphBuilder,
+                compilerFactory.getCompiler(
+                    AndroidLibraryDescription.JvmLanguage.JAVA,
+                    javacFactory,
+                    buildTarget.getTargetConfiguration()),
+                javaBuckConfig,
+                downwardApiConfig,
+                null,
+                cellPathResolver)
+            .setJavacOptions(
+                javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY))
+            .setSrcs(ImmutableList.of(generateRDotJava.getSourcePathToRZip()))
+            .setDeps(new JavaLibraryDeps.Builder(graphBuilder).build())
+            .build()
+            .buildLibrary();
+    graphBuilder.addToIndex(rDotJavaLibrary);
+    params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(rDotJavaLibrary));
+
+    ImmutableSortedSet<BuildTarget> updatedDeps =
+        ImmutableSortedSet.<BuildTarget>naturalOrder()
+            .addAll(testLibraryArgs.getDeps())
+            .add(rDotJavaLibrary.getBuildTarget())
+            .build();
+
+    testLibraryArgs = testLibraryArgs.withDeps(updatedDeps);
 
     JavaLibrary testsLibrary =
         graphBuilder.addToIndex(
