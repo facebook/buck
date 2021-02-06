@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_EXTERNAL_ACTIONS_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA8_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
@@ -1069,6 +1070,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* noResourceRemoval */ false,
         DEFAULT_JAVA_CONFIG,
         DEFAULT_DOWNWARD_API_CONFIG,
+        DEFAULT_EXTERNAL_ACTIONS_CONFIG,
         JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),
         ANDROID_JAVAC_OPTIONS,
         args.getExopackageMode(),

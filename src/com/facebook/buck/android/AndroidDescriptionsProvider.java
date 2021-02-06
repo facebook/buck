@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.AdbConfig;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
@@ -57,6 +58,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
     TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    BuildBuckConfig buildBuckConfig = buckConfig.getView(BuildBuckConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
@@ -86,6 +88,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             dxConfig,
             downwardApiConfig,
+            buildBuckConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
@@ -98,6 +101,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             dxConfig,
             downwardApiConfig,
+            buildBuckConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(androidBuckConfig, downwardApiConfig)),
@@ -108,7 +112,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             dxConfig,
             toolchainProvider,
             androidBuckConfig,
-            downwardApiConfig),
+            downwardApiConfig,
+            buildBuckConfig),
         new AndroidInstrumentationTestDescription(
             testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(

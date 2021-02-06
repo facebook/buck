@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -45,7 +46,6 @@ import org.junit.Test;
 
 public class BuildableWithExternalActionTest {
 
-  private ActionGraphBuilder actionGraphBuilder;
   private BuildContext buildContext;
   private ProjectFilesystem projectFilesystem;
   private OutputPathResolver outputPathResolver;
@@ -53,7 +53,7 @@ public class BuildableWithExternalActionTest {
 
   @Before
   public void setUp() {
-    actionGraphBuilder = new TestActionGraphBuilder();
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder();
     buildContext =
         FakeBuildContext.withSourcePathResolver(actionGraphBuilder.getSourcePathResolver());
     projectFilesystem = new FakeProjectFilesystem();
@@ -69,7 +69,7 @@ public class BuildableWithExternalActionTest {
 
   @Test
   public void canGetStepsWithoutBuildableCommandExecutionStep() {
-    Buildable buildable = new FakeBuildable("test_arg");
+    Buildable buildable = new FakeBuildable(false, "test_arg");
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
             buildContext, projectFilesystem, outputPathResolver, buildCellRelativePathFactory);
@@ -78,18 +78,7 @@ public class BuildableWithExternalActionTest {
 
   @Test
   public void canGetStepsWithBuildableCommandExecutionStep() {
-    buildContext =
-        BuildContext.of(
-            buildContext.getSourcePathResolver(),
-            buildContext.getBuildCellRootPath(),
-            buildContext.getJavaPackageFinder(),
-            buildContext.getEventBus(),
-            buildContext.getShouldDeleteTemporaries(),
-            buildContext.getCellPathResolver(),
-            true,
-            buildContext.getDefaultJavaRuntime());
-
-    Buildable buildable = new FakeBuildable("test_arg");
+    Buildable buildable = new FakeBuildable(true, "test_arg");
 
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
@@ -107,7 +96,8 @@ public class BuildableWithExternalActionTest {
 
     private final String arg;
 
-    private FakeBuildable(String arg) {
+    private FakeBuildable(boolean shouldUseExternalActions, String arg) {
+      super(shouldUseExternalActions, new FakeTool());
       this.arg = arg;
     }
 

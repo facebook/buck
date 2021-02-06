@@ -759,18 +759,20 @@ public class TestCommand extends BuildCommand {
           if (isBuildFiltered(params.getBuckConfig())) {
             testRules = filterTestRules(params.getBuckConfig(), explicitBuildTargets, testRules);
           }
-          BuildBuckConfig buildBuckConfig = params.getBuckConfig().getView(BuildBuckConfig.class);
-          JavaBuckConfig javaBuckConfig = params.getBuckConfig().getView(JavaBuckConfig.class);
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
                   rootCell.getRoot().getPath(),
-                  javaBuckConfig.createDefaultJavaPackageFinder(),
+                  cells
+                      .getBuckConfig()
+                      .getView(JavaBuckConfig.class)
+                      .createDefaultJavaPackageFinder(),
                   params.getBuckEventBus(),
-                  buildBuckConfig.getShouldDeleteTemporaries(),
-                  cellPathResolver,
-                  buildBuckConfig.areExternalActionsEnabled(),
-                  javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+                  params
+                      .getBuckConfig()
+                      .getView(BuildBuckConfig.class)
+                      .getShouldDeleteTemporaries(),
+                  cellPathResolver);
 
           TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
           // Once all of the rules are built, then run the tests.

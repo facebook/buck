@@ -82,10 +82,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return getToolForExecutable("java").map(JavaOptions::of).orElse(DEFAULT_JAVA_OPTIONS);
   }
 
-  public Tool getDefaultJavaRuntime() {
-    return getDefaultJavaOptions().getJavaRuntime();
-  }
-
   public JavaOptions getDefaultJavaOptionsForTests() {
     return getToolForExecutable("java_for_tests")
         .map(

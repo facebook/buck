@@ -21,6 +21,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
@@ -61,6 +62,7 @@ public class AndroidBinaryGraphEnhancerFactory {
       DxConfig dxConfig,
       ProGuardConfig proGuardConfig,
       DownwardApiConfig downwardApiConfig,
+      BuildBuckConfig buildBuckConfig,
       CellPathResolver cellPathResolver,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
@@ -188,6 +190,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         androidBuckConfig.getAaptNoResourceRemoval(),
         javaBuckConfig,
         downwardApiConfig,
+        buildBuckConfig,
         javacFactory,
         toolchainProvider
             .getByName(

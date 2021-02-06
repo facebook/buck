@@ -27,6 +27,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -194,6 +195,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean noResourceRemoval,
       JavaBuckConfig javaBuckConfig,
       DownwardApiConfig downwardApiConfig,
+      BuildBuckConfig buildBuckConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
@@ -313,7 +315,9 @@ public class AndroidBinaryGraphEnhancer {
             shouldAapt2KeepRawValues,
             extraFilteredResources,
             resourceStableIds,
-            downwardApiConfig.isEnabledForAndroid());
+            downwardApiConfig.isEnabledForAndroid(),
+            buildBuckConfig.areExternalActionsEnabled(),
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;

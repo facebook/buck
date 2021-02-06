@@ -217,7 +217,7 @@ public abstract class IsolatedBuildableBuilder {
             .setProcessExecutor(processExecutor)
             .setProjectFilesystemFactory(projectFilesystemFactory)
             .setClock(clock);
-    BuildBuckConfig buildBuckConfig = buckConfig.getView(BuildBuckConfig.class);
+
     this.buildContext =
         BuildContext.of(
             new SourcePathResolverAdapter(
@@ -247,10 +247,8 @@ public abstract class IsolatedBuildableBuilder {
             canonicalProjectRoot.getPath(),
             javaPackageFinder,
             eventBus,
-            buildBuckConfig.getShouldDeleteTemporaries(),
-            cellPathResolver,
-            buildBuckConfig.areExternalActionsEnabled(),
-            buckConfig.getView(JavaBuckConfig.class).getDefaultJavaRuntime());
+            buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries(),
+            cellPathResolver);
 
     this.toolchainProviderFunction =
         cellName -> {
