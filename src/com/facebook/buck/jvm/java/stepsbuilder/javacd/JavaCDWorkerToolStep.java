@@ -22,8 +22,11 @@ import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.impl.BaseWorkerToolExecutor;
+import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +37,10 @@ import java.util.concurrent.ExecutionException;
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
   private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
+
+  // TODO : msemko : make pool size configurable. Introduce configuration properties
+  private static final int POOL_CAPACITY =
+      (int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.75);
 
   private final BuildJavaCommand buildJavaCommand;
   private final ImmutableList<String> launchJavaCDCommand;
@@ -62,8 +69,29 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
 
-    // TODO: msemko: get it from wt pool
-    try (WorkerToolExecutor workerToolExecutor = getLaunchedWorkerTool(context)) {
+    WorkerProcessPool<WorkerToolExecutor> workerToolPool =
+        WorkerToolPoolFactory.getPool(
+            context,
+            launchJavaCDCommand,
+            () -> {
+              WorkerToolExecutor workerToolExecutor =
+                  new JavaCDWorkerToolExecutor(context, launchJavaCDCommand);
+              workerToolExecutor.launchWorker();
+              return workerToolExecutor;
+            },
+            POOL_CAPACITY);
+
+    try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
+        workerToolPool.borrowWorkerProcess()) {
+      WorkerToolExecutor workerToolExecutor = borrowedWorkerTool.get();
+      return executeBuildJavaCommand(context, workerToolExecutor);
+    }
+  }
+
+  private StepExecutionResult executeBuildJavaCommand(
+      IsolatedExecutionContext context, WorkerToolExecutor workerToolExecutor)
+      throws IOException, InterruptedException {
+    try {
       ResultEvent resultEvent =
           workerToolExecutor.executeCommand(context.getActionId(), buildJavaCommand);
 
@@ -81,15 +109,6 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
           .setCause(e)
           .build();
     }
-  }
-
-  private WorkerToolExecutor getLaunchedWorkerTool(IsolatedExecutionContext context)
-      throws IOException {
-    WorkerToolExecutor workerToolExecutor =
-        new JavaCDWorkerToolExecutor(context, launchJavaCDCommand);
-    workerToolExecutor.launchWorker();
-    workerToolExecutor.prepareForReuse();
-    return workerToolExecutor;
   }
 
   /** JavaCD worker tool. */
