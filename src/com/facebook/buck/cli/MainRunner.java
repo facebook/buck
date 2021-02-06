@@ -227,6 +227,7 @@ import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
@@ -891,7 +892,7 @@ public final class MainRunner {
       stackedFileHashCache = Optional.of(fileHashCache);
 
       Optional<WebServer> webServer = buckGlobalState.getWebServer();
-      ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools =
+      ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools =
           buckGlobalState.getPersistentWorkerPools();
       TestBuckConfig testConfig = buckConfig.getView(TestBuckConfig.class);
       ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);

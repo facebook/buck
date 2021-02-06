@@ -25,6 +25,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerJobResult;
 import com.facebook.buck.worker.WorkerProcessPool;
@@ -76,11 +77,11 @@ public class WorkerShellStep implements Step {
       throws IOException, InterruptedException {
     // Use the process's startup command as the key.
     WorkerJobParams paramsToUse = getWorkerJobParamsToUse(context.getPlatform());
-    WorkerProcessPool pool =
+    WorkerProcessPool<DefaultWorkerProcess> pool =
         factory.getWorkerProcessPool(context, paramsToUse.getWorkerProcessParams());
     WorkerJobResult result;
-    try (BorrowedWorkerProcess process = pool.borrowWorkerProcess()) {
-      result = process.submitAndWaitForJob(getExpandedJobArgs(context));
+    try (BorrowedWorkerProcess<DefaultWorkerProcess> process = pool.borrowWorkerProcess()) {
+      result = process.get().submitAndWaitForJob(getExpandedJobArgs(context));
     }
 
     Verbosity verbosity = context.getVerbosity();

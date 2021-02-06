@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -59,14 +60,15 @@ public class WorkerProcessPoolFactory {
    * Returns an existing WorkerProcessPool for the given job params if one exists, otherwise creates
    * a new one.
    */
-  public WorkerProcessPool getWorkerProcessPool(
+  public WorkerProcessPool<DefaultWorkerProcess> getWorkerProcessPool(
       StepExecutionContext context, WorkerProcessParams paramsToUse) {
-    ConcurrentMap<String, WorkerProcessPool> processPoolMap;
+    ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> processPoolMap;
     String key;
     HashCode workerHash;
-    if (paramsToUse.getWorkerProcessIdentity().isPresent()
-        && context.getPersistentWorkerPools().isPresent()) {
-      processPoolMap = context.getPersistentWorkerPools().get();
+    Optional<ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>> persistentWorkerPools =
+        context.getPersistentWorkerPools();
+    if (paramsToUse.getWorkerProcessIdentity().isPresent() && persistentWorkerPools.isPresent()) {
+      processPoolMap = persistentWorkerPools.get();
       key = paramsToUse.getWorkerProcessIdentity().get().getPersistentWorkerKey();
       workerHash = paramsToUse.getWorkerProcessIdentity().get().getWorkerHash();
     } else {
@@ -76,7 +78,7 @@ public class WorkerProcessPoolFactory {
     }
 
     // If the worker pool has a different hash, recreate the pool.
-    WorkerProcessPool pool = processPoolMap.get(key);
+    WorkerProcessPool<DefaultWorkerProcess> pool = processPoolMap.get(key);
     if (pool != null && !pool.getPoolHash().equals(workerHash)) {
       if (processPoolMap.remove(key, pool)) {
         pool.close();
@@ -101,10 +103,10 @@ public class WorkerProcessPoolFactory {
     return pool;
   }
 
-  private WorkerProcessPool createWorkerProcessPool(
+  private WorkerProcessPool<DefaultWorkerProcess> createWorkerProcessPool(
       StepExecutionContext context,
       WorkerProcessParams paramsToUse,
-      ConcurrentMap<String, WorkerProcessPool> processPoolMap,
+      ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> processPoolMap,
       String key,
       HashCode workerHash) {
     ProcessExecutorParams processParams =
@@ -117,18 +119,18 @@ public class WorkerProcessPoolFactory {
     Path workerTmpDir = paramsToUse.getTempDir();
     AtomicInteger workerNumber = new AtomicInteger(0);
 
-    WorkerProcessPool newPool =
-        new WorkerProcessPool(
+    WorkerProcessPool<DefaultWorkerProcess> newPool =
+        new WorkerProcessPool<>(
             paramsToUse.getMaxWorkers(),
             workerHash,
             () -> {
               Path tmpDir = workerTmpDir.resolve(Integer.toString(workerNumber.getAndIncrement()));
               filesystem.mkdirs(tmpDir);
-              WorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
+              DefaultWorkerProcess process = createWorkerProcess(processParams, context, tmpDir);
               process.ensureLaunchAndHandshake();
               return process;
             });
-    WorkerProcessPool previousPool = processPoolMap.putIfAbsent(key, newPool);
+    WorkerProcessPool<DefaultWorkerProcess> previousPool = processPoolMap.putIfAbsent(key, newPool);
     // If putIfAbsent does not return null, then that means another thread beat this thread
     // into putting an WorkerProcessPool in the map for this key. If that's the case, then we
     // should ignore newPool and return the existing one.
@@ -162,7 +164,7 @@ public class WorkerProcessPoolFactory {
   }
 
   @VisibleForTesting
-  public WorkerProcess createWorkerProcess(
+  public DefaultWorkerProcess createWorkerProcess(
       ProcessExecutorParams processParams, StepExecutionContext context, Path tmpDir)
       throws IOException {
     Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
@@ -170,6 +172,6 @@ public class WorkerProcessPoolFactory {
     if (withDownwardApi) {
       processExecutor = context.getDownwardApiProcessExecutor(processExecutor);
     }
-    return new WorkerProcess(processExecutor, processParams, filesystem, stdErr, tmpDir);
+    return new DefaultWorkerProcess(processExecutor, processParams, filesystem, stdErr, tmpDir);
   }
 }

@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import java.io.Closeable;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,26 +43,25 @@ import javax.annotation.concurrent.ThreadSafe;
  * are acquired with {@link #borrowWorkerProcess()}, which returns
  */
 @ThreadSafe
-public class WorkerProcessPool implements Closeable {
-  private static final Logger LOG = Logger.get(WorkerProcessPool.class);
+public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
 
   private final int capacity;
-  private final BlockingQueue<WorkerLifecycle> availableWorkers;
-  private final WorkerLifecycle[] workerLifecycles;
+  private final BlockingQueue<WorkerLifecycle<T>> availableWorkers;
+  private final WorkerLifecycle<T>[] workerLifecycles;
   private final HashCode poolHash;
 
+  @SuppressWarnings("unchecked")
   public WorkerProcessPool(
-      int maxWorkers,
-      HashCode poolHash,
-      ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess) {
-    capacity = maxWorkers;
-    availableWorkers = new LinkedBlockingStack<>();
-    workerLifecycles = new WorkerLifecycle[maxWorkers];
+      int maxWorkers, HashCode poolHash, ThrowingSupplier<T, IOException> startWorkerProcess) {
+    this.capacity = maxWorkers;
+    this.availableWorkers = new LinkedBlockingStack<>();
+    this.workerLifecycles =
+        (WorkerLifecycle<T>[]) Array.newInstance(WorkerLifecycle.class, maxWorkers);
     this.poolHash = poolHash;
 
     Arrays.setAll(
         workerLifecycles,
-        ignored -> new WorkerLifecycle(startWorkerProcess, availableWorkers::add));
+        ignored -> new WorkerLifecycle<>(startWorkerProcess, availableWorkers::add));
     Collections.addAll(availableWorkers, workerLifecycles);
   }
 
@@ -70,12 +70,12 @@ public class WorkerProcessPool implements Closeable {
    * returns it. Borrowed worker processes must be relased by calling {@link
    * BorrowedWorkerProcess#close()} after using them.
    */
-  public BorrowedWorkerProcess borrowWorkerProcess() throws InterruptedException {
-    return new BorrowedWorkerProcess(availableWorkers.take());
+  public BorrowedWorkerProcess<T> borrowWorkerProcess() throws InterruptedException {
+    return new BorrowedWorkerProcess<>(availableWorkers.take());
   }
 
   @VisibleForTesting
-  Optional<BorrowedWorkerProcess> borrowWorkerProcess(int timeout, TimeUnit unit)
+  Optional<BorrowedWorkerProcess<T>> borrowWorkerProcess(int timeout, TimeUnit unit)
       throws InterruptedException {
     return Optional.ofNullable(availableWorkers.poll(timeout, unit))
         .map(BorrowedWorkerProcess::new);
@@ -87,7 +87,7 @@ public class WorkerProcessPool implements Closeable {
 
     // remove all available workers
     int numAvailableWorkers = availableWorkers.drainTo(new ArrayList<>(capacity));
-    for (WorkerLifecycle lifecycle : this.workerLifecycles) {
+    for (WorkerLifecycle<T> lifecycle : this.workerLifecycles) {
       try {
         lifecycle.close();
       } catch (Throwable t) {
@@ -107,7 +107,7 @@ public class WorkerProcessPool implements Closeable {
     return capacity;
   }
 
-  HashCode getPoolHash() {
+  public HashCode getPoolHash() {
     return poolHash;
   }
 
@@ -121,24 +121,26 @@ public class WorkerProcessPool implements Closeable {
    * pool with a consumer trying to acquire a worker in parallel.
    */
   @ThreadSafe
-  private static class WorkerLifecycle
-      implements Closeable, ThrowingSupplier<WorkerProcess, IOException> {
+  static class WorkerLifecycle<T extends WorkerProcess>
+      implements Closeable, ThrowingSupplier<T, IOException> {
 
-    private final ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess;
-    private final Consumer<WorkerLifecycle> onWorkerProcessReturn;
+    private static final Logger LOG = Logger.get(WorkerLifecycle.class);
+
+    private final ThrowingSupplier<T, IOException> startWorkerProcess;
+    private final Consumer<WorkerLifecycle<T>> onWorkerProcessReturn;
     private boolean isClosed = false;
-    @Nullable private WorkerProcess workerProcess;
+    @Nullable private T workerProcess;
 
-    private WorkerLifecycle(
-        ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess,
-        Consumer<WorkerLifecycle> onWorkerProcessReturn) {
+    WorkerLifecycle(
+        ThrowingSupplier<T, IOException> startWorkerProcess,
+        Consumer<WorkerLifecycle<T>> onWorkerProcessReturn) {
       this.startWorkerProcess = startWorkerProcess;
       this.onWorkerProcessReturn = onWorkerProcessReturn;
     }
 
     /** Allows to retrieve the wrapped worker process, starting it up if necessary. */
     @Override
-    public synchronized WorkerProcess get() throws IOException {
+    public synchronized T get() throws IOException {
       Preconditions.checkState(!isClosed, "Worker was already terminated");
       // If the worker is broken, destroy it
       if (workerProcess != null && !workerProcess.isAlive()) {
@@ -179,16 +181,18 @@ public class WorkerProcessPool implements Closeable {
    * <p>Ownership must be returned to the pool by calling {@link #close()} after finishing to use
    * the worker.
    *
-   * <p>Since BorrowedWorkerProcess implements Closable, it can be used with a try-with-resources
-   * statement.
+   * <p>Since {@link BorrowedWorkerProcess} implements {@link Closeable}, it can be used with a
+   * try-with-resources statement.
    *
-   * <p>BorrowedWorkerProcess is not threadsafe, and is expected to be used by one thread at a time
-   * only. Concurrency control is handled by {@link WorkerProcessPool} and {@link WorkerLifecycle}.
+   * <p>{@link BorrowedWorkerProcess} is not thread-safe, and is expected to be used by one thread
+   * at a time only. Concurrency control is handled by {@link WorkerProcessPool} and {@link
+   * WorkerLifecycle}.
    */
-  public static class BorrowedWorkerProcess implements Closeable {
-    @Nullable private WorkerLifecycle lifecycle;
+  public static class BorrowedWorkerProcess<T extends WorkerProcess> implements Closeable {
 
-    private BorrowedWorkerProcess(WorkerLifecycle lifecycle) {
+    @Nullable private WorkerLifecycle<T> lifecycle;
+
+    BorrowedWorkerProcess(WorkerLifecycle<T> lifecycle) {
       this.lifecycle = Objects.requireNonNull(lifecycle);
     }
 
@@ -196,25 +200,18 @@ public class WorkerProcessPool implements Closeable {
     @Override
     public void close() {
       if (lifecycle != null) {
-        WorkerLifecycle lifecycle = this.lifecycle;
+        WorkerLifecycle<T> lifecycle = this.lifecycle;
         this.lifecycle = null;
         lifecycle.makeAvailable();
       }
     }
 
-    /**
-     * Submits a job to the worker, and returns the result.
-     *
-     * @throws IOException
-     */
-    public WorkerJobResult submitAndWaitForJob(String expandedJobArgs) throws IOException {
-      return get().submitAndWaitForJob(expandedJobArgs);
-    }
-
-    @VisibleForTesting
-    WorkerProcess get() throws IOException {
+    /** Returns an instance of {@link WorkerProcess} wrapped by this object. */
+    public T get() throws IOException {
       Preconditions.checkState(lifecycle != null, "BorrowedWorker has already been closed.");
-      return lifecycle.get();
+      T workerProcess = lifecycle.get();
+      workerProcess.prepareForReuse();
+      return workerProcess;
     }
   }
 }

@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class FakeWorkerProcess extends WorkerProcess {
+public class FakeWorkerProcess extends DefaultWorkerProcess {
 
   private final ImmutableMap<String, WorkerJobResult> jobArgsToJobResultMap;
   private boolean isAlive;

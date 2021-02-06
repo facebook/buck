@@ -16,10 +16,11 @@
 
 package com.facebook.buck.worker;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -43,7 +44,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -69,23 +69,27 @@ public class WorkerProcessTest {
     Optional<String> stdout = Optional.of("my stdout");
     Optional<String> stderr = Optional.of("my stderr");
 
-    try (WorkerProcess process =
-        new WorkerProcess(
+    try (DefaultWorkerProcess process =
+        new DefaultWorkerProcess(
             new FakeProcessExecutor(), createDummyParams(), filesystem, workerStdErr, tmpPath)) {
       process.setProtocol(
           new FakeWorkerProcessProtocol.FakeCommandSender() {
             @Override
-            public int receiveCommandResponse(int messageID) throws IOException {
+            public int receiveCommandResponse(int messageId) throws IOException {
               // simulate the external tool and write the stdout and stderr files
-              filesystem.writeContentsToPath(stdout.get(), stdoutPath);
-              filesystem.writeContentsToPath(stderr.get(), stderrPath);
-              return super.receiveCommandResponse(messageID);
+              filesystem.writeContentsToPath(
+                  stdout.orElseThrow(IllegalStateException::new), stdoutPath);
+              filesystem.writeContentsToPath(
+                  stderr.orElseThrow(IllegalStateException::new), stderrPath);
+              return super.receiveCommandResponse(messageId);
             }
           });
 
       WorkerJobResult expectedResult = WorkerJobResult.of(exitCode, stdout, stderr);
-      assertThat(process.submitAndWaitForJob(jobArgs), Matchers.equalTo(expectedResult));
-      assertThat(filesystem.readFileIfItExists(argsPath).get(), Matchers.equalTo(jobArgs));
+      assertThat(process.submitAndWaitForJob(jobArgs), equalTo(expectedResult));
+      assertThat(
+          filesystem.readFileIfItExists(argsPath).orElseThrow(IllegalStateException::new),
+          equalTo(jobArgs));
     }
   }
 
@@ -94,8 +98,8 @@ public class WorkerProcessTest {
     FakeWorkerProcessProtocol.FakeCommandSender protocol =
         new FakeWorkerProcessProtocol.FakeCommandSender();
 
-    try (WorkerProcess process =
-        new WorkerProcess(
+    try (DefaultWorkerProcess process =
+        new DefaultWorkerProcess(
             new FakeProcessExecutor(),
             createDummyParams(),
             new FakeProjectFilesystem(),
@@ -123,8 +127,8 @@ public class WorkerProcessTest {
     } else {
       script = "./script.py";
     }
-    try (WorkerProcess workerProcess =
-        new WorkerProcess(
+    try (DefaultWorkerProcess workerProcess =
+        new DefaultWorkerProcess(
             new DefaultProcessExecutor(console),
             ProcessExecutorParams.builder()
                 .setCommand(ImmutableList.of(script))

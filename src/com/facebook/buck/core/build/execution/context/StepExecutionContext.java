@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.io.Closer;
 import java.nio.file.Path;
@@ -72,7 +73,8 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
    * Worker process pools that are persisted across buck invocations inside buck daemon. If buck is
    * running without daemon, there will be no persisted pools.
    */
-  public abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
+  public abstract Optional<ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>>
+      getPersistentWorkerPools();
 
   /**
    * The absolute path to the cell where this build was invoked.
@@ -106,7 +108,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
    * invocation finishes, thus, these pools are not persisted across buck invocations.
    */
   @Value.Default
-  public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
+  public ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();
   }
 

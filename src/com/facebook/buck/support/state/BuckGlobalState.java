@@ -40,6 +40,7 @@ import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.WatchedFileHashCache;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
@@ -76,7 +77,8 @@ public final class BuckGlobalState implements Closeable {
   private final LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot;
   private final EventBus fileEventBus;
   private final Optional<WebServer> webServer;
-  private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
+  private final ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>
+      persistentWorkerPools;
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
@@ -97,7 +99,7 @@ public final class BuckGlobalState implements Closeable {
       LoadingCache<CanonicalCellName, BuildFileManifestCache> buildFileManifestCachePerRoot,
       EventBus fileEventBus,
       Optional<WebServer> webServer,
-      ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools,
+      ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools,
       VersionedTargetGraphCache versionedTargetGraphCache,
       ActionGraphCache actionGraphCache,
       RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler,
@@ -178,7 +180,7 @@ public final class BuckGlobalState implements Closeable {
     return knownRuleTypesProvider;
   }
 
-  public ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
+  public ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> getPersistentWorkerPools() {
     return persistentWorkerPools;
   }
 
@@ -257,7 +259,7 @@ public final class BuckGlobalState implements Closeable {
   }
 
   private void shutdownPersistentWorkerPools() {
-    for (WorkerProcessPool pool : persistentWorkerPools.values()) {
+    for (WorkerProcessPool<?> pool : persistentWorkerPools.values()) {
       try {
         pool.close();
       } catch (Exception e) {

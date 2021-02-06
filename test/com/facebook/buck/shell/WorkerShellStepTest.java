@@ -33,10 +33,10 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.FakeWorkerProcess;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerJobResult;
-import com.facebook.buck.worker.WorkerProcess;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPool;
@@ -139,21 +139,22 @@ public class WorkerShellStepTest {
 
   private StepExecutionContext createExecutionContextWith(
       ImmutableMap<String, WorkerJobResult> jobArgs, int poolCapacity) {
-    WorkerProcessPool workerProcessPool =
-        new WorkerProcessPool(
+    WorkerProcessPool<DefaultWorkerProcess> workerProcessPool =
+        new WorkerProcessPool<>(
             poolCapacity,
             Hashing.sha1().hashString(fakeWorkerStartupCommand, StandardCharsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
 
-    ConcurrentHashMap<String, WorkerProcessPool> workerProcessMap = new ConcurrentHashMap<>();
+    ConcurrentHashMap<String, WorkerProcessPool<DefaultWorkerProcess>> workerProcessMap =
+        new ConcurrentHashMap<>();
     workerProcessMap.put(fakeWorkerStartupCommand, workerProcessPool);
 
-    WorkerProcessPool persistentWorkerProcessPool =
-        new WorkerProcessPool(
+    WorkerProcessPool<DefaultWorkerProcess> persistentWorkerProcessPool =
+        new WorkerProcessPool<>(
             poolCapacity,
             Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, StandardCharsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
-    ConcurrentHashMap<String, WorkerProcessPool> persistentWorkerProcessMap =
+    ConcurrentHashMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerProcessMap =
         new ConcurrentHashMap<>();
     persistentWorkerProcessMap.put(persistentWorkerKey, persistentWorkerProcessPool);
 
@@ -423,7 +424,7 @@ public class WorkerShellStepTest {
             Optional.empty(),
             new WorkerProcessPoolFactory(new FakeProjectFilesystem(), false) {
               @Override
-              public WorkerProcess createWorkerProcess(
+              public DefaultWorkerProcess createWorkerProcess(
                   ProcessExecutorParams processParams, StepExecutionContext context, Path tmpDir)
                   throws IOException {
                 try {
@@ -464,10 +465,11 @@ public class WorkerShellStepTest {
       t.join();
     }
 
-    Collection<WorkerProcessPool> pools = context.getWorkerProcessPools().values();
+    Collection<WorkerProcessPool<DefaultWorkerProcess>> pools =
+        context.getWorkerProcessPools().values();
     assertThat(pools.size(), Matchers.equalTo(1));
 
-    WorkerProcessPool pool = pools.iterator().next();
+    WorkerProcessPool<DefaultWorkerProcess> pool = pools.iterator().next();
     assertThat(pool.getCapacity(), Matchers.equalTo(2));
   }
 

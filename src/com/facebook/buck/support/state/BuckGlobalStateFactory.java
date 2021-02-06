@@ -55,6 +55,7 @@ import com.facebook.buck.util.cache.impl.WatchedFileHashCache;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -170,7 +171,8 @@ public class BuckGlobalStateFactory {
       cursor = watchman.buildNamedWatchmanCursorMap();
     }
     LOG.debug("Using Watchman Cursor: %s", cursor);
-    ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools = new ConcurrentHashMap<>();
+    ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools =
+        new ConcurrentHashMap<>();
 
     return new BuckGlobalState(
         cells,

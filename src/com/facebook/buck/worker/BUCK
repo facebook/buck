@@ -33,13 +33,28 @@ java_library(
     ],
 )
 
+java_library(
+    name = "worker_pool",
+    srcs = [
+        "WorkerProcess.java",
+        "WorkerProcessPool.java",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/function:function",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
 java_immutables_library(
     name = "worker_process",
     srcs = [
+        "DefaultWorkerProcess.java",
         "WorkerJobResult.java",
-        "WorkerProcess.java",
         "WorkerProcessCommand.java",
-        "WorkerProcessPool.java",
         "WorkerProcessProtocol.java",
         "WorkerProcessProtocolZero.java",
     ],
@@ -58,4 +73,5 @@ java_immutables_library(
         "//src/com/facebook/buck/util/string:string",
         "//third-party/java/gson:gson",
     ],
+    exported_deps = [":worker_pool"],
 )

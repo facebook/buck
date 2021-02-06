@@ -55,6 +55,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -108,7 +109,8 @@ public abstract class CommandRunnerParams {
 
   public abstract Optional<WebServer> getWebServer();
 
-  public abstract ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools();
+  public abstract ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>
+      getPersistentWorkerPools();
 
   public abstract BuckConfig getBuckConfig();
 

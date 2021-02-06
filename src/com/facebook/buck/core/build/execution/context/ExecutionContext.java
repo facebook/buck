@@ -32,6 +32,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
@@ -118,7 +119,8 @@ public abstract class ExecutionContext implements Closeable {
    * Worker process pools that are persisted across buck invocations inside buck daemon. If buck is
    * running without daemon, there will be no persisted pools.
    */
-  public abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
+  public abstract Optional<ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>>
+      getPersistentWorkerPools();
 
   public abstract CellPathResolver getCellPathResolver();
 
@@ -147,7 +149,7 @@ public abstract class ExecutionContext implements Closeable {
    * invocation finishes, thus, these pools are not persisted across buck invocations.
    */
   @Value.Default
-  public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
+  public ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();
   }
 
