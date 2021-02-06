@@ -57,6 +57,7 @@ import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.InputStream;
@@ -163,6 +164,8 @@ public abstract class CommandRunnerParams {
    */
   public abstract Path getClientWorkingDir();
 
+  public abstract ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> getWorkerToolPools();
+
   /**
    * Create {@link BuildExecutorArgs} using this {@link CommandRunnerParams}.
    *
@@ -227,7 +230,8 @@ public abstract class CommandRunnerParams {
         getDepsAwareExecutorSupplier(),
         getMetadataProvider(),
         getGlobalState(),
-        getClientWorkingDir());
+        getClientWorkingDir(),
+        getWorkerToolPools());
   }
 
   public CommandRunnerParams withBuckConfig(BuckConfig buckConfig) {
@@ -275,6 +279,7 @@ public abstract class CommandRunnerParams {
         getDepsAwareExecutorSupplier(),
         getMetadataProvider(),
         getGlobalState(),
-        getClientWorkingDir());
+        getClientWorkingDir(),
+        getWorkerToolPools());
   }
 }

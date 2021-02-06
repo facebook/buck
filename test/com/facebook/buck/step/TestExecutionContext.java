@@ -29,6 +29,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TestExecutionContext {
 
@@ -55,7 +56,8 @@ public class TestExecutionContext {
         .setBuildCellRootPath(rootPath.getPath())
         .setRuleCellRoot(rootPath)
         .setActionId("test_action_id")
-        .setClock(FakeClock.doNotCare());
+        .setClock(FakeClock.doNotCare())
+        .setWorkerToolPools(new ConcurrentHashMap<>());
   }
 
   public static StepExecutionContext newInstance() {

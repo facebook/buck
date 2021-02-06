@@ -62,6 +62,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setRuleCellRoot(ruleCellRoot)
         .setActionId(actionId)
         .setClock(executionContext.getClock())
+        .setWorkerToolPools(executionContext.getWorkerToolPools())
         .build();
   }
 

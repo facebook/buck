@@ -34,12 +34,16 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import org.immutables.value.Value;
 
 /** The context exposed for executing {@code IsolatedStep}s */
@@ -55,6 +59,27 @@ public abstract class IsolatedExecutionContext implements Closeable {
       AbsPath ruleCellRoot,
       String actionId,
       Clock clock) {
+    return of(
+        eventBus,
+        console,
+        platform,
+        processExecutor,
+        ruleCellRoot,
+        actionId,
+        clock,
+        new ConcurrentHashMap<>());
+  }
+
+  /** Returns an {@link IsolatedExecutionContext}. */
+  public static IsolatedExecutionContext of(
+      IsolatedEventBus eventBus,
+      Console console,
+      Platform platform,
+      ProcessExecutor processExecutor,
+      AbsPath ruleCellRoot,
+      String actionId,
+      Clock clock,
+      ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> workerToolPools) {
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(eventBus)
         .setConsole(console)
@@ -63,6 +88,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setRuleCellRoot(ruleCellRoot)
         .setActionId(actionId)
         .setClock(clock)
+        .setWorkerToolPools(workerToolPools)
         .build();
   }
 
@@ -100,6 +126,8 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   /** Returns clock associated with the current invocation. */
   public abstract Clock getClock();
+
+  public abstract ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> getWorkerToolPools();
 
   /**
    * Returns {@link DownwardApiProcessExecutor} created from the given {@link
@@ -215,6 +243,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setEnvironment(getEnvironment())
         .setActionId(getActionId())
         .setClock(getClock())
+        .setWorkerToolPools(getWorkerToolPools())
         .build();
   }
 }

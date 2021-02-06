@@ -42,6 +42,7 @@ import com.google.common.io.Resources;
 import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -96,6 +97,7 @@ public class BuildableCommandExecutionStepTest {
         .setRuleCellRoot(rootPath)
         .setActionId("test_action_id")
         .setClock(FakeClock.doNotCare())
+        .setWorkerToolPools(new ConcurrentHashMap<>())
         .build();
   }
 }

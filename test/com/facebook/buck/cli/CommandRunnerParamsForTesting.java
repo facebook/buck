@@ -78,6 +78,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import javax.annotation.Nullable;
 import org.pf4j.PluginManager;
@@ -208,7 +209,8 @@ public class CommandRunnerParamsForTesting {
         depsAwareExecutorSupplier,
         MetadataProviderFactory.emptyMetadataProvider(),
         buckGlobalState,
-        cells.getRootCell().getRoot().getPath());
+        cells.getRootCell().getRoot().getPath(),
+        new ConcurrentHashMap<>());
   }
 
   public static Builder builder() {

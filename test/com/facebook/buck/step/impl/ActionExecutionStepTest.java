@@ -60,6 +60,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -217,6 +218,7 @@ public class ActionExecutionStepTest {
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
         .setRuleCellRoot(rootPath)
         .setActionId("test_action_id")
-        .setClock(FakeClock.doNotCare());
+        .setClock(FakeClock.doNotCare())
+        .setWorkerToolPools(new ConcurrentHashMap<>());
   }
 }

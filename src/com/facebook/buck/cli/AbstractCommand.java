@@ -391,7 +391,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
             .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation())
-            .setClock(params.getClock());
+            .setClock(params.getClock())
+            .setWorkerToolPools(params.getWorkerToolPools());
     return builder;
   }
 

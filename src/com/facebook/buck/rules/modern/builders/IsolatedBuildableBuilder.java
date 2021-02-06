@@ -73,6 +73,8 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -90,6 +92,8 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 import org.pf4j.PluginManager;
 import org.pf4j.PluginWrapper;
@@ -326,7 +330,15 @@ public abstract class IsolatedBuildableBuilder {
     }
 
     try (Scope ignored = LeafEvents.scope(eventBus, "steps");
-        CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus)) {
+        CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus);
+        CloseableWrapper<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
+            workerToolPoolsWrapper =
+                CloseableWrapper.of(
+                    new ConcurrentHashMap<>(),
+                    map -> {
+                      map.values().forEach(WorkerProcessPool::close);
+                      map.clear();
+                    })) {
       BuildTarget buildTarget = reconstructed.target;
       ProjectFilesystem filesystem =
           filesystemFunction.apply(buildTarget.getCell().getLegacyName());
@@ -353,6 +365,7 @@ public abstract class IsolatedBuildableBuilder {
           executionContextBuilder
               .setRuleCellRoot(filesystem.getRootPath())
               .setActionId(buildTarget.getFullyQualifiedName())
+              .setWorkerToolPools(workerToolPoolsWrapper.get())
               .build();
       for (Step step :
           ModernBuildRule.stepsForBuildable(

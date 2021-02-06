@@ -229,6 +229,7 @@ import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -269,6 +270,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -982,7 +984,15 @@ public final class MainRunner {
                       verbosity,
                       logStreamFactory);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
-          ) {
+
+          CloseableWrapper<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
+              workerToolPoolsWrapper =
+                  CloseableWrapper.of(
+                      new ConcurrentHashMap<>(),
+                      map -> {
+                        map.values().forEach(WorkerProcessPool::close);
+                        map.clear();
+                      })) {
         BuckConfigWriter.writeConfig(
             filesystem.getRootPath().getPath(), invocationInfo, buckConfig, logStreamFactory);
 
@@ -1461,7 +1471,8 @@ public final class MainRunner {
                         depsAwareExecutorSupplier,
                         metadataProvider,
                         buckGlobalState,
-                        absoluteClientPwd));
+                        absoluteClientPwd,
+                        workerToolPoolsWrapper.get()));
           } finally {
             buildEventBus.post(
                 new CacheStatsEvent(
@@ -1514,7 +1525,7 @@ public final class MainRunner {
           }
 
           // Wait all pending events to be processed before closing listeners
-          if (!buildEventBus.waitEvents(EVENT_BUS_TIMEOUT_SECONDS * 1000)) {
+          if (!buildEventBus.waitEvents(EVENT_BUS_TIMEOUT_SECONDS * 1_000)) {
             LOG.warn(
                 "Event bus did not complete all events within timeout; event listener's data"
                     + "may be incorrect");

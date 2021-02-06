@@ -34,6 +34,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
 import java.io.Closeable;
@@ -61,6 +62,8 @@ public abstract class ExecutionContext implements Closeable {
 
   /** Returns clock associated with the current invocation. */
   public abstract Clock getClock();
+
+  public abstract ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> getWorkerToolPools();
 
   @Value.Default
   public ClassLoaderCache getClassLoaderCache() {

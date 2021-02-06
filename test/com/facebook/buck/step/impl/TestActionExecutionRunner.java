@@ -42,6 +42,7 @@ import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Simple helper class that makes running an {@link Action} easier and allows tests to focus on
@@ -110,6 +111,7 @@ public class TestActionExecutionRunner {
                 .setRuleCellRoot(rootPath)
                 .setActionId(action.getBuildTarget().getFullyQualifiedName())
                 .setClock(FakeClock.doNotCare())
+                .setWorkerToolPools(new ConcurrentHashMap<>())
                 .build());
 
     return ImmutableExecutionDetails.ofImpl(action, executionResult);
