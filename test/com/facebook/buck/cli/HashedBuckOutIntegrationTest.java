@@ -33,6 +33,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -128,5 +129,22 @@ public class HashedBuckOutIntegrationTest {
     workspace.setUp();
     assertTrue(
         isHashed(workspace, "java//subdir:gen", "java", ImmutableList.of(""), ImmutableList.of()));
+  }
+
+  @Test
+  public void linkingWorksForAllGenruleOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "genrules", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "project.buck_out_links_to_hashed_paths=hardlink", "//:outputs_map")
+        .assertSuccess();
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/outputs_map/default.txt")));
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/outputs_map/out1.txt")));
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/outputs_map/out2.txt")));
+    workspace
+        .runBuckBuild("-c", "project.buck_out_links_to_hashed_paths=hardlink", "//:output")
+        .assertSuccess();
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/output/out.txt")));
   }
 }

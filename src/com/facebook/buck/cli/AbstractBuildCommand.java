@@ -582,12 +582,23 @@ abstract class AbstractBuildCommand extends AbstractCommand {
           .shouldIncludeTargetConfigHash(rule.getBuildTarget().getCellRelativeBasePath())) {
         continue;
       }
-      linkRuleToHashedBuckOut(
-          rule,
-          pathResolver,
-          buildBuckConfig.getBuckOutCompatLink(),
-          buildTargetWithOutputs.getOutputLabel(),
-          buildBuckConfig.getHashedBuckOutLinkMode());
+      if (rule instanceof HasMultipleOutputs) {
+        for (OutputLabel outputLabel : ((HasMultipleOutputs) rule).getOutputLabels()) {
+          linkRuleToHashedBuckOut(
+              rule,
+              pathResolver,
+              buildBuckConfig.getBuckOutCompatLink(),
+              outputLabel,
+              buildBuckConfig.getHashedBuckOutLinkMode());
+        }
+      } else {
+        linkRuleToHashedBuckOut(
+            rule,
+            pathResolver,
+            buildBuckConfig.getBuckOutCompatLink(),
+            buildTargetWithOutputs.getOutputLabel(),
+            buildBuckConfig.getHashedBuckOutLinkMode());
+      }
     }
   }
 
