@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.google.common.io.CharStreams;
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -54,7 +55,8 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
    */
   private static URI createURIFromEntry(ZipEntry entry) {
     try {
-      return new URI("string:///" + entry.getName());
+      URI fileUri = new File(entry.getName()).toURI();
+      return new URI("string", fileUri.getHost(), fileUri.getPath(), fileUri.getFragment());
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
