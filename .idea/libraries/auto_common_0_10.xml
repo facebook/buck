@@ -2,7 +2,6 @@
   <library name="auto-common-0.10">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/auto/auto-common-0.10.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/auto/auto-service-1.0-rc4.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/auto/auto-value-1.6.3rc1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/auto/auto-value-annotations-1.6.3rc1.jar!/" />
     </CLASSES>
