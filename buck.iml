@@ -27,6 +27,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/workertool/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/workertool/resources/proto" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp-buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
@@ -108,7 +109,6 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/versioncontrol/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/zip/collect/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/.idea" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
