@@ -127,9 +127,10 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getOutputPathFromJavaTargetNode(targetNode, buildTarget, filesystem);
     } else if (description instanceof AndroidManifestDescription) {
       return Optional.of(
-          BuildTargetPaths.getGenPath(
-                  filesystem.getBuckPaths(), buildTarget, "AndroidManifest__%s__.xml")
-              .getPath());
+          BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget)
+              .resolve(
+                  String.format(
+                      "AndroidManifest__%s__.xml", buildTarget.getShortNameAndFlavorPostfix())));
     } else if (isJvmTestTargetNode(targetNode)) {
       // Test targets compile their code into a standard library under the hood using the
       // TESTS_FLAVOR

@@ -17,30 +17,24 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
-import java.util.SortedSet;
-import java.util.function.Supplier;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
@@ -69,17 +63,7 @@ import java.util.function.Supplier;
  * )
  * </pre>
  */
-public class AndroidManifest extends AbstractBuildRule {
-
-  @AddToRuleKey private final SourcePath skeletonFile;
-
-  /** These must be sorted so the rule key is stable. */
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
-
-  @AddToRuleKey private final APKModule module;
-
-  private final RelPath pathToOutputFile;
-  private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
+public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
 
   protected AndroidManifest(
       BuildTarget buildTarget,
@@ -88,62 +72,63 @@ public class AndroidManifest extends AbstractBuildRule {
       SourcePath skeletonFile,
       APKModule module,
       Collection<SourcePath> manifestFiles) {
-    super(buildTarget, projectFilesystem);
-    this.skeletonFile = skeletonFile;
-    this.module = module;
-    this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
-    this.pathToOutputFile =
-        BuildTargetPaths.getGenPath(
-            getProjectFilesystem().getBuckPaths(), buildTarget, "AndroidManifest__%s__.xml");
-    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, finder);
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
-
-    // Clear out the old file, if it exists.
-    commands.add(
-        RmStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutputFile)));
-
-    // Make sure the directory for the output file exists.
-    commands.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                pathToOutputFile.getParent())));
-
-    commands.add(
-        new GenerateManifestStep(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(skeletonFile).getPath(),
+    super(
+        buildTarget,
+        projectFilesystem,
+        finder,
+        new Impl(
+            skeletonFile,
             module,
-            context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles).stream()
-                .map(AbsPath::getPath)
-                .collect(ImmutableSet.toImmutableSet()),
-            context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput()).getPath(),
-            getProjectFilesystem()
-                .resolve(
-                    BuildTargetPaths.getScratchPath(
-                            getProjectFilesystem(), getBuildTarget(), "%s/merge-report.txt")
-                        .getPath())));
-
-    buildableContext.recordArtifact(pathToOutputFile.getPath());
-    return commands.build();
+            ImmutableSortedSet.copyOf(manifestFiles),
+            new OutputPath(
+                String.format(
+                    "AndroidManifest__%s__.xml", buildTarget.getShortNameAndFlavorPostfix())),
+            new OutputPath("merge-report.txt")));
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutputFile);
+    return getSourcePath(getBuildable().outputPath);
+  }
+
+  static class Impl implements Buildable {
+    @AddToRuleKey private final SourcePath skeletonFile;
+    @AddToRuleKey private final APKModule module;
+    /** These must be sorted so the rule key is stable. */
+    @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
+
+    @AddToRuleKey private final OutputPath outputPath;
+    @AddToRuleKey private final OutputPath mergeReportOutputPath;
+
+    Impl(
+        SourcePath skeletonFile,
+        APKModule module,
+        ImmutableSortedSet<SourcePath> manifestFiles,
+        OutputPath outputPath,
+        OutputPath mergeReportOutputPath) {
+      this.skeletonFile = skeletonFile;
+      this.manifestFiles = manifestFiles;
+      this.module = module;
+      this.outputPath = outputPath;
+      this.mergeReportOutputPath = mergeReportOutputPath;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      return ImmutableList.of(
+          new GenerateManifestStep(
+              filesystem,
+              buildContext.getSourcePathResolver().getAbsolutePath(skeletonFile).getPath(),
+              module,
+              buildContext.getSourcePathResolver().getAllAbsolutePaths(manifestFiles).stream()
+                  .map(AbsPath::getPath)
+                  .collect(ImmutableSet.toImmutableSet()),
+              outputPathResolver.resolvePath(outputPath).getPath(),
+              outputPathResolver.resolvePath(mergeReportOutputPath).getPath()));
+    }
   }
 }
