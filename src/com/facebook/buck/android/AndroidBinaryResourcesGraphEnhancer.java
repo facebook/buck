@@ -283,7 +283,9 @@ class AndroidBinaryResourcesGraphEnhancer {
                 graphBuilder,
                 moduleManifestSkeleton.get(),
                 module,
-                packageableCollection.getAndroidManifestPieces().get(module));
+                packageableCollection.getAndroidManifestPieces().get(module),
+                shouldExecuteInSeparateProcess,
+                javaRuntimeLauncher);
         graphBuilder.addToIndex(moduleManifestMergeRule);
         manifestPath = moduleManifestMergeRule.getSourcePathToOutput();
       }
@@ -509,7 +511,9 @@ class AndroidBinaryResourcesGraphEnhancer {
               graphBuilder,
               manifestSkeleton.get(),
               module,
-              packageableCollection.getAndroidManifestPieces().values());
+              packageableCollection.getAndroidManifestPieces().values(),
+              shouldExecuteInSeparateProcess,
+              javaRuntimeLauncher);
       graphBuilder.addToIndex(manifestMergeRule);
       realManifest = manifestMergeRule.getSourcePathToOutput();
     } else {

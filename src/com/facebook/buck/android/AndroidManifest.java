@@ -18,21 +18,27 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.externalactions.android.AndroidManifestExternalAction;
+import com.facebook.buck.externalactions.android.AndroidManifestExternalActionArgs;
+import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.isolatedsteps.android.GenerateManifestStep;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 
 /**
@@ -70,7 +76,9 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
       SourcePathRuleFinder finder,
       SourcePath skeletonFile,
       APKModule module,
-      Collection<SourcePath> manifestFiles) {
+      Collection<SourcePath> manifestFiles,
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -82,7 +90,9 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
             new OutputPath(
                 String.format(
                     "AndroidManifest__%s__.xml", buildTarget.getShortNameAndFlavorPostfix())),
-            new OutputPath("merge-report.txt")));
+            new OutputPath("merge-report.txt"),
+            shouldExecuteInSeparateProcess,
+            javaRuntimeLauncher));
   }
 
   @Override
@@ -90,7 +100,10 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
     return getSourcePath(getBuildable().outputPath);
   }
 
-  static class Impl implements Buildable {
+  static class Impl extends BuildableWithExternalAction {
+    private static final String TEMP_FILE_PREFIX = "android_manifest_";
+    private static final String TEMP_FILE_SUFFIX = "";
+
     @AddToRuleKey private final SourcePath skeletonFile;
     @AddToRuleKey private final String moduleName;
     /** These must be sorted so the rule key is stable. */
@@ -104,7 +117,10 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         APKModule module,
         ImmutableSortedSet<SourcePath> manifestFiles,
         OutputPath outputPath,
-        OutputPath mergeReportOutputPath) {
+        OutputPath mergeReportOutputPath,
+        boolean shouldExecuteInSeparateProcess,
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.skeletonFile = skeletonFile;
       this.manifestFiles = manifestFiles;
       this.moduleName = module.getName();
@@ -113,18 +129,36 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
     }
 
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
+    public BuildableCommand getBuildableCommand(
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.of(
-          new GenerateManifestStep(
-              buildContext.getSourcePathResolver().getRelativePath(filesystem, skeletonFile),
-              moduleName,
-              buildContext.getSourcePathResolver().getAllRelativePaths(filesystem, manifestFiles),
-              outputPathResolver.resolvePath(outputPath),
-              outputPathResolver.resolvePath(mergeReportOutputPath)));
+        BuildContext buildContext) {
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
+      Path jsonFilePath = createTempFile(filesystem);
+      AndroidManifestExternalActionArgs jsonArgs =
+          AndroidManifestExternalActionArgs.of(
+              sourcePathResolverAdapter.getRelativePath(filesystem, skeletonFile).toString(),
+              sourcePathResolverAdapter.getAllRelativePaths(filesystem, manifestFiles).stream()
+                  .map(RelPath::toString)
+                  .collect(ImmutableSet.toImmutableSet()),
+              outputPathResolver.resolvePath(outputPath).toString(),
+              outputPathResolver.resolvePath(mergeReportOutputPath).toString(),
+              moduleName);
+      ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
+
+      return BuildableCommand.newBuilder()
+          .addExtraFiles(jsonFilePath.toString())
+          .setExternalActionClass(AndroidManifestExternalAction.class.getName())
+          .build();
+    }
+
+    private Path createTempFile(ProjectFilesystem filesystem) {
+      try {
+        return filesystem.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "Failed to create temp file when creating android manifest buildable command");
+      }
     }
   }
 }

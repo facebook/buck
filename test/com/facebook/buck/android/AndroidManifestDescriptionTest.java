@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
@@ -60,7 +61,7 @@ public class AndroidManifestDescriptionTest {
     BuildRuleParams params =
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
     BuildRule androidManifest =
-        new AndroidManifestDescription(new AndroidManifestFactory())
+        new AndroidManifestDescription(new AndroidManifestFactory(FakeBuckConfig.empty()))
             .createBuildRule(
                 TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                 buildTarget,

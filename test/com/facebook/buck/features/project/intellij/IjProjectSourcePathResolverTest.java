@@ -288,7 +288,7 @@ public class IjProjectSourcePathResolverTest {
                 AndroidManifestDescriptionArg,
                 AndroidManifestDescription,
                 AndroidManifest>(
-                new AndroidManifestDescription(new AndroidManifestFactory()),
+                new AndroidManifestDescription(new AndroidManifestFactory(FakeBuckConfig.empty())),
                 BuildTargetFactory.newInstance("//app:manifest")) {};
     builder
         .getArgForPopulating()
