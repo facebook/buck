@@ -36,7 +36,11 @@ public abstract class APKModule implements Comparable<APKModule>, AddsToRuleKey 
 
   @Value.Derived
   public boolean isRootModule() {
-    return getName().equals(APKModuleGraph.ROOT_APKMODULE_NAME);
+    return isRootModule(getName());
+  }
+
+  public static boolean isRootModule(String moduleName) {
+    return moduleName.equals(APKModuleGraph.ROOT_APKMODULE_NAME);
   }
 
   @Value.Derived

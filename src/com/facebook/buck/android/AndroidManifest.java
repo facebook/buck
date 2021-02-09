@@ -18,7 +18,6 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -32,7 +31,6 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
 
@@ -93,7 +91,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
 
   static class Impl implements Buildable {
     @AddToRuleKey private final SourcePath skeletonFile;
-    @AddToRuleKey private final APKModule module;
+    @AddToRuleKey private final String moduleName;
     /** These must be sorted so the rule key is stable. */
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
 
@@ -108,7 +106,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         OutputPath mergeReportOutputPath) {
       this.skeletonFile = skeletonFile;
       this.manifestFiles = manifestFiles;
-      this.module = module;
+      this.moduleName = module.getName();
       this.outputPath = outputPath;
       this.mergeReportOutputPath = mergeReportOutputPath;
     }
@@ -121,14 +119,11 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of(
           new GenerateManifestStep(
-              filesystem,
-              buildContext.getSourcePathResolver().getAbsolutePath(skeletonFile).getPath(),
-              module,
-              buildContext.getSourcePathResolver().getAllAbsolutePaths(manifestFiles).stream()
-                  .map(AbsPath::getPath)
-                  .collect(ImmutableSet.toImmutableSet()),
-              outputPathResolver.resolvePath(outputPath).getPath(),
-              outputPathResolver.resolvePath(mergeReportOutputPath).getPath()));
+              buildContext.getSourcePathResolver().getRelativePath(filesystem, skeletonFile),
+              moduleName,
+              buildContext.getSourcePathResolver().getAllRelativePaths(filesystem, manifestFiles),
+              outputPathResolver.resolvePath(outputPath),
+              outputPathResolver.resolvePath(mergeReportOutputPath)));
     }
   }
 }

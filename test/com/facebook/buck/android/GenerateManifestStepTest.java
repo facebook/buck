@@ -20,11 +20,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -34,8 +33,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -52,7 +49,7 @@ public class GenerateManifestStepTest {
 
   @Test
   public void testManifestGeneration() throws Exception {
-    StepExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance(tmpFolder.getRoot());
     ProjectFilesystem filesystem =
         context
             .getProjectFilesystemFactory()
@@ -61,42 +58,42 @@ public class GenerateManifestStepTest {
                 tmpFolder.getRoot(),
                 BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
 
-    Path expectedOutputPath = Paths.get("AndroidManifest.expected.xml");
-    Path skeletonPath = Paths.get("AndroidManifestSkeleton.xml");
-    ImmutableSet<Path> libraryManifestFiles =
+    RelPath expectedOutputPath = RelPath.get("AndroidManifest.expected.xml");
+    RelPath skeletonPath = RelPath.get("AndroidManifestSkeleton.xml");
+    ImmutableSet<RelPath> libraryManifestFiles =
         RichStream.of("AndroidManifestA.xml", "AndroidManifestB.xml", "AndroidManifestC.xml")
-            .map(Paths::get)
+            .map(RelPath::get)
             .toImmutableSet();
 
-    AbsPath outputPath = tmpFolder.getRoot().resolve("AndroidManifest.xml");
-    AbsPath mergeReportPath = tmpFolder.getRoot().resolve("merge-report.txt");
+    RelPath outputPath = RelPath.get("AndroidManifest.xml");
+    RelPath mergeReportPath = RelPath.get("merge-report.txt");
 
     GenerateManifestStep manifestCommand =
         new GenerateManifestStep(
-            filesystem,
             skeletonPath,
-            APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
+            APKModuleGraph.ROOT_APKMODULE_NAME,
             libraryManifestFiles,
-            outputPath.getPath(),
-            mergeReportPath.getPath());
+            outputPath,
+            mergeReportPath);
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
 
     List<String> expected =
-        Files.lines(filesystem.resolve(expectedOutputPath)).collect(Collectors.toList());
-    List<String> output = Files.lines(outputPath.getPath()).collect(Collectors.toList());
+        Files.lines(filesystem.resolve(expectedOutputPath).getPath()).collect(Collectors.toList());
+    List<String> output =
+        Files.lines(filesystem.resolve(outputPath).getPath()).collect(Collectors.toList());
 
     assertEquals(expected, output);
 
-    String report = new String(Files.readAllBytes(mergeReportPath.getPath()));
+    String report = new String(Files.readAllBytes(filesystem.resolve(mergeReportPath).getPath()));
     assertThat(report, containsString("ADDED"));
     assertThat(report, containsString("MERGED"));
   }
 
   @Test
   public void testManifestGenerationWithModule() throws Exception {
-    StepExecutionContext context = TestExecutionContext.newInstance();
+    StepExecutionContext context = TestExecutionContext.newInstance(tmpFolder.getRoot());
     ProjectFilesystem filesystem =
         context
             .getProjectFilesystemFactory()
@@ -105,35 +102,31 @@ public class GenerateManifestStepTest {
                 tmpFolder.getRoot(),
                 BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
 
-    Path expectedOutputPath = Paths.get("ModuleManifest.expected.xml");
-    Path skeletonPath = Paths.get("ModuleManifestSkeleton.xml");
-    ImmutableSet<Path> libraryManifestFiles =
+    RelPath expectedOutputPath = RelPath.get("ModuleManifest.expected.xml");
+    RelPath skeletonPath = RelPath.get("ModuleManifestSkeleton.xml");
+    ImmutableSet<RelPath> libraryManifestFiles =
         RichStream.of("AndroidManifestA.xml", "AndroidManifestB.xml", "AndroidManifestC.xml")
-            .map(Paths::get)
+            .map(RelPath::get)
             .toImmutableSet();
 
-    AbsPath outputPath = tmpFolder.getRoot().resolve("AndroidManifest.xml");
-    AbsPath mergeReportPath = tmpFolder.getRoot().resolve("merge-report.txt");
+    RelPath outputPath = RelPath.get("AndroidManifest.xml");
+    RelPath mergeReportPath = RelPath.get("merge-report.txt");
 
     GenerateManifestStep manifestCommand =
         new GenerateManifestStep(
-            filesystem,
-            skeletonPath,
-            APKModule.of("MODULE_NAME", false),
-            libraryManifestFiles,
-            outputPath.getPath(),
-            mergeReportPath.getPath());
+            skeletonPath, "MODULE_NAME", libraryManifestFiles, outputPath, mergeReportPath);
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
 
     List<String> expected =
-        Files.lines(filesystem.resolve(expectedOutputPath)).collect(Collectors.toList());
-    List<String> output = Files.lines(outputPath.getPath()).collect(Collectors.toList());
+        Files.lines(filesystem.resolve(expectedOutputPath).getPath()).collect(Collectors.toList());
+    List<String> output =
+        Files.lines(filesystem.resolve(outputPath).getPath()).collect(Collectors.toList());
 
     assertEquals(expected, output);
 
-    String report = new String(Files.readAllBytes(mergeReportPath.getPath()));
+    String report = new String(Files.readAllBytes(filesystem.resolve(mergeReportPath).getPath()));
     assertThat(report, containsString("ADDED"));
     assertThat(report, containsString("MERGED"));
   }

@@ -22,8 +22,10 @@ import com.android.manifmerger.MergingReport;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -39,23 +41,20 @@ import java.util.List;
 
 public class GenerateManifestStep implements Step {
 
-  private final ProjectFilesystem filesystem;
-  private final Path skeletonManifestPath;
-  private final ImmutableSet<Path> libraryManifestPaths;
-  private final Path outManifestPath;
-  private final Path mergeReportPath;
-  private final APKModule module;
+  private final RelPath skeletonManifestPath;
+  private final ImmutableSet<RelPath> libraryManifestPaths;
+  private final RelPath outManifestPath;
+  private final RelPath mergeReportPath;
+  private final String moduleName;
 
   public GenerateManifestStep(
-      ProjectFilesystem filesystem,
-      Path skeletonManifestPath,
-      APKModule module,
-      ImmutableSet<Path> libraryManifestPaths,
-      Path outManifestPath,
-      Path mergeReportPath) {
-    this.filesystem = filesystem;
+      RelPath skeletonManifestPath,
+      String moduleName,
+      ImmutableSet<RelPath> libraryManifestPaths,
+      RelPath outManifestPath,
+      RelPath mergeReportPath) {
     this.skeletonManifestPath = skeletonManifestPath;
-    this.module = module;
+    this.moduleName = moduleName;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
     this.outManifestPath = outManifestPath;
     this.mergeReportPath = mergeReportPath;
@@ -63,7 +62,6 @@ public class GenerateManifestStep implements Step {
 
   @Override
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-
     if (skeletonManifestPath.getNameCount() == 0) {
       throw new HumanReadableException("Skeleton manifest filepath is missing");
     }
@@ -72,41 +70,49 @@ public class GenerateManifestStep implements Step {
       throw new HumanReadableException("Output Manifest filepath is missing");
     }
 
-    Path resolvedOutManifestPath = filesystem.resolve(outManifestPath);
+    Path resolvedOutManifestPath =
+        ProjectFilesystemUtils.getPathForRelativePath(context.getRuleCellRoot(), outManifestPath);
     Files.createParentDirs(resolvedOutManifestPath.toFile());
 
     List<File> libraryManifestFiles = new ArrayList<>();
-
-    for (Path path : libraryManifestPaths) {
-      Path manifestPath = filesystem.getPathForRelativeExistingPath(path).toAbsolutePath();
+    for (RelPath path : libraryManifestPaths) {
+      Path manifestPath =
+          ProjectFilesystemUtils.getPathForRelativePath(context.getRuleCellRoot(), path);
       libraryManifestFiles.add(manifestPath.toFile());
     }
 
     File skeletonManifestFile =
-        filesystem.getPathForRelativeExistingPath(skeletonManifestPath).toAbsolutePath().toFile();
+        ProjectFilesystemUtils.getPathForRelativePath(
+                context.getRuleCellRoot(), skeletonManifestPath)
+            .toFile();
     BuckEventAndroidLogger logger = new ManifestMergerLogger(context.getBuckEventBus());
 
     MergingReport mergingReport =
-        mergeManifests(skeletonManifestFile, libraryManifestFiles, logger);
+        mergeManifests(
+            context.getRuleCellRoot(), skeletonManifestFile, libraryManifestFiles, logger);
 
     String xmlText = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
     if (context.getPlatform() == Platform.WINDOWS) {
       // Convert line endings to Lf on Windows.
       xmlText = xmlText.replace("\r\n", "\n");
     }
-    filesystem.writeContentsToPath(xmlText, resolvedOutManifestPath);
+    ProjectFilesystemUtils.writeContentsToPath(
+        context.getRuleCellRoot(), xmlText, outManifestPath.getPath());
 
     return StepExecutionResults.SUCCESS;
   }
 
   private MergingReport mergeManifests(
-      File mainManifestFile, List<File> libraryManifestFiles, BuckEventAndroidLogger logger) {
+      AbsPath ruleCellRoot,
+      File mainManifestFile,
+      List<File> libraryManifestFiles,
+      BuckEventAndroidLogger logger) {
     try {
       ManifestMerger2.Invoker<?> manifestInvoker =
           ManifestMerger2.newMerger(
               mainManifestFile, logger, ManifestMerger2.MergeType.APPLICATION);
-      if (!module.isRootModule()) {
-        manifestInvoker.setPlaceHolderValue("split", module.getName());
+      if (!APKModule.isRootModule(moduleName)) {
+        manifestInvoker.setPlaceHolderValue("split", moduleName);
       } else {
         manifestInvoker.withFeatures(ManifestMerger2.Invoker.Feature.NO_PLACEHOLDER_REPLACEMENT);
       }
@@ -117,7 +123,9 @@ public class GenerateManifestStep implements Step {
                   ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS,
                   ManifestMerger2.Invoker.Feature.SKIP_BLAME)
               .addLibraryManifests(Iterables.toArray(libraryManifestFiles, File.class))
-              .setMergeReportFile(mergeReportPath.toFile())
+              .setMergeReportFile(
+                  ProjectFilesystemUtils.getPathForRelativePath(ruleCellRoot, mergeReportPath)
+                      .toFile())
               .merge();
       if (mergingReport.getResult().isError()) {
         for (MergingReport.Record record : mergingReport.getLoggingRecords()) {
