@@ -416,7 +416,7 @@ public class DownwardApiProcessExecutorTest {
         records,
         hasItem(
             TestLogSink.logRecordWithMessage(
-                stringContainsInOrder("Named pipe", namedPipeReader.getName(), "is closed"))));
+                stringContainsInOrder("Cannot read from named pipe:", namedPipeReader.getName()))));
     assertThat(
         records,
         hasItem(
