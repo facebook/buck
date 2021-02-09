@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.step.isolatedsteps.android;
 
 import com.android.common.utils.ILogger;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
+import com.facebook.buck.android.BuckEventAndroidLogger;
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -39,7 +40,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GenerateManifestStep implements Step {
+public class GenerateManifestStep extends IsolatedStep {
 
   private final RelPath skeletonManifestPath;
   private final ImmutableSet<RelPath> libraryManifestPaths;
@@ -61,7 +62,8 @@ public class GenerateManifestStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException, InterruptedException {
     if (skeletonManifestPath.getNameCount() == 0) {
       throw new HumanReadableException("Skeleton manifest filepath is missing");
     }
@@ -85,7 +87,7 @@ public class GenerateManifestStep implements Step {
         ProjectFilesystemUtils.getPathForRelativePath(
                 context.getRuleCellRoot(), skeletonManifestPath)
             .toFile();
-    BuckEventAndroidLogger logger = new ManifestMergerLogger(context.getBuckEventBus());
+    BuckEventAndroidLogger logger = new ManifestMergerLogger(context.getIsolatedEventBus());
 
     MergingReport mergingReport =
         mergeManifests(
@@ -142,7 +144,7 @@ public class GenerateManifestStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return String.format("generate-manifest %s", skeletonManifestPath);
   }
 
@@ -152,7 +154,7 @@ public class GenerateManifestStep implements Step {
   }
 
   private static class ManifestMergerLogger extends BuckEventAndroidLogger implements ILogger {
-    public ManifestMergerLogger(BuckEventBus eventBus) {
+    public ManifestMergerLogger(IsolatedEventBus eventBus) {
       super(eventBus);
     }
 

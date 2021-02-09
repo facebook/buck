@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.step.isolatedsteps.android;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;

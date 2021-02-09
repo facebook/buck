@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.android.common.utils.ILogger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.google.common.base.Strings;
 import javax.annotation.Nullable;
@@ -26,9 +27,13 @@ import javax.annotation.Nullable;
 /** Implementation of {@link ILogger} which posts to an {@link BuckEventBus} */
 public class BuckEventAndroidLogger implements ILogger {
 
-  private final BuckEventBus eventBus;
+  private final IsolatedEventBus eventBus;
 
   public BuckEventAndroidLogger(BuckEventBus eventBus) {
+    this(eventBus.isolated());
+  }
+
+  public BuckEventAndroidLogger(IsolatedEventBus eventBus) {
     this.eventBus = eventBus;
   }
 
