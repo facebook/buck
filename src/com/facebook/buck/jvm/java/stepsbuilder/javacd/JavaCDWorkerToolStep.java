@@ -25,7 +25,8 @@ import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
-import com.facebook.buck.workertool.impl.BaseWorkerToolExecutor;
+import com.facebook.buck.workertool.WorkerToolLauncher;
+import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -74,10 +75,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
             context,
             launchJavaCDCommand,
             () -> {
-              WorkerToolExecutor workerToolExecutor =
-                  new JavaCDWorkerToolExecutor(context, launchJavaCDCommand);
-              workerToolExecutor.launchWorker();
-              return workerToolExecutor;
+              WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
+              return workerToolLauncher.launchWorker(launchJavaCDCommand);
             },
             POOL_CAPACITY);
 
@@ -108,23 +107,6 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
           .setStderr(String.format("ActionId: %s", context.getActionId()))
           .setCause(e)
           .build();
-    }
-  }
-
-  /** JavaCD worker tool. */
-  private static class JavaCDWorkerToolExecutor extends BaseWorkerToolExecutor {
-
-    private final ImmutableList<String> startWorkerToolCommand;
-
-    public JavaCDWorkerToolExecutor(
-        IsolatedExecutionContext context, ImmutableList<String> startWorkerToolCommand) {
-      super(context);
-      this.startWorkerToolCommand = startWorkerToolCommand;
-    }
-
-    @Override
-    public ImmutableList<String> getStartWorkerToolCommand() {
-      return startWorkerToolCommand;
     }
   }
 }

@@ -16,19 +16,13 @@
 
 package com.facebook.buck.workertool;
 
-import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.worker.WorkerProcess;
-import com.google.protobuf.AbstractMessage;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
-/**
- * Interface for WorkerTool executor that implements that WTv2 protocol. It executes commands by
- * sending it to worker tool using created command's named pipe file.
- */
-public interface WorkerToolExecutor extends WorkerProcess {
+/** Interface that defines a way to launch {@link WorkerToolExecutor} */
+@FunctionalInterface
+public interface WorkerToolLauncher {
 
-  /** Send an execution command to a worker tool instance and wait till the command executed. */
-  ResultEvent executeCommand(String actionId, AbstractMessage executeCommandMessage)
-      throws IOException, ExecutionException, InterruptedException;
+  /** Launches worker tool. */
+  WorkerToolExecutor launchWorker(ImmutableList<String> startCommand) throws IOException;
 }

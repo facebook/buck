@@ -35,6 +35,7 @@ import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.utils.WorkerToolConstants;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.SettableFuture;
@@ -46,13 +47,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
-/**
- * WorkerTool executor base class that implements that WTv2 protocol. It could launch worker tool
- * and send commands to it using created command's named pipe file.
- */
-public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
+/** Default implementation of {@link WorkerToolExecutor} */
+class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
-  private static final Logger LOG = Logger.get(BaseWorkerToolExecutor.class);
+  private static final Logger LOG = Logger.get(DefaultWorkerToolExecutor.class);
 
   private static final long SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
@@ -60,18 +58,36 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
 
   private final DownwardApiProcessExecutor downwardApiProcessExecutor;
+  private final ImmutableList<String> startWorkerToolCommand;
 
-  private NamedPipeWriter namedPipeWriter;
-  private OutputStream outputStream;
-  private DownwardApiLaunchedProcess launchedProcess;
+  private final NamedPipeWriter namedPipeWriter;
+  private final OutputStream outputStream;
+  private final DownwardApiLaunchedProcess launchedProcess;
 
-  private String executingActionId;
-  @Nullable private SettableFuture<ResultEvent> resultEventFuture;
+  @Nullable private volatile String executingActionId;
+  @Nullable private volatile SettableFuture<ResultEvent> resultEventFuture;
 
-  public BaseWorkerToolExecutor(IsolatedExecutionContext isolatedExecutionContext) {
+  DefaultWorkerToolExecutor(
+      IsolatedExecutionContext context, ImmutableList<String> startWorkerToolCommand)
+      throws IOException {
     this.downwardApiProcessExecutor =
-        isolatedExecutionContext.getDownwardApiProcessExecutor(
-            WorkerToolExecutorNamedPipeEventHandler::new);
+        context.getDownwardApiProcessExecutor(WorkerToolExecutorNamedPipeEventHandler::new);
+    this.startWorkerToolCommand = startWorkerToolCommand;
+
+    try {
+      this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
+      this.outputStream = namedPipeWriter.getOutputStream();
+      this.launchedProcess =
+          downwardApiProcessExecutor.launchProcess(
+              ProcessExecutorParams.builder()
+                  .addAllCommand(startWorkerToolCommand)
+                  .setEnvironment(buildEnvs(namedPipeWriter.getName()))
+                  .build());
+    } catch (IOException e) {
+      closeNamedPipe();
+      throw new IOException(
+          String.format("Can't launch a new worker tool process %s", startWorkerToolCommand), e);
+    }
   }
 
   private class WorkerToolExecutorNamedPipeEventHandler extends DefaultNamedPipeEventHandler {
@@ -91,28 +107,22 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
     }
 
     private void processResultEvent(ResultEvent resultEvent) {
-      String actionId = resultEvent.getActionId();
-      LOG.info("Received result event for action id: %s", actionId);
-      Preconditions.checkState(executingActionId.equals(actionId));
-      resultEventFuture.set(resultEvent);
+      LOG.info("Received result event for action id: %s", resultEvent.getActionId());
+      receiveResultEvent(resultEvent);
     }
   }
 
   @Override
-  public void launchWorker() throws IOException {
-    namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
-    outputStream = namedPipeWriter.getOutputStream();
-    launchedProcess =
-        downwardApiProcessExecutor.launchProcess(
-            ProcessExecutorParams.builder()
-                .addAllCommand(getStartWorkerToolCommand())
-                .setEnvironment(buildEnvs(namedPipeWriter.getName()))
-                .build());
-  }
-
-  @Override
-  public final ResultEvent executeCommand(String actionId, AbstractMessage executeCommandMessage)
+  public ResultEvent executeCommand(String actionId, AbstractMessage executeCommandMessage)
       throws IOException, ExecutionException, InterruptedException {
+    // `executingActionId` and `resultEventFuture` have to be null when a request to execute a new
+    // command arrived.
+    Preconditions.checkState(
+        executingActionId == null, "Action with id" + executingActionId + " is executing");
+    executingActionId = actionId;
+    Preconditions.checkState(resultEventFuture == null, "Result event future is not null");
+    resultEventFuture = SettableFuture.create();
+
     CommandTypeMessage executeCommandTypeMessage =
         getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
     ExecuteCommand executeCommand = ExecuteCommand.newBuilder().setActionId(actionId).build();
@@ -121,16 +131,52 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
     executeCommand.writeDelimitedTo(outputStream);
     executeCommandMessage.writeDelimitedTo(outputStream);
 
-    executingActionId = actionId;
-    resultEventFuture = SettableFuture.create();
     LOG.info("Started execution of worker tool for for actionId: %s", actionId);
 
     // TODO : msemko: add timeout/heartbeat, ... ?
-    return resultEventFuture.get();
+    ResultEvent resultEvent = resultEventFuture.get();
+    // After receiving the result from `WorkerToolExecutorNamedPipeEventHandler` set
+    // `executingActionId` and `resultEventFuture` to null that signals that new command could be
+    // executed.
+    resultEventFuture = null;
+    executingActionId = null;
+    return resultEvent;
+  }
+
+  /**
+   * Entry point to {@link WorkerToolExecutorNamedPipeEventHandler} to signal that {@link
+   * ResultEvent} is received.
+   */
+  private void receiveResultEvent(ResultEvent resultEvent) {
+    // `executingActionId` and `resultEventFuture` have to be not null that signals that executor is
+    // waiting for a result event from a launched process.
+    Preconditions.checkNotNull(executingActionId, "The is no action executing at the moment.");
+    Preconditions.checkNotNull(resultEventFuture, "Result event future is null");
+
+    String actionId = resultEvent.getActionId();
+    Preconditions.checkState(
+        actionId.equals(executingActionId),
+        String.format(
+            "Received action id %s is not equals to expected one %s", actionId, executingActionId));
+    resultEventFuture.set(resultEvent);
   }
 
   @Override
   public void close() {
+    try {
+      shutdownLaunchedProcess();
+    } finally {
+      shutdownResultEventFutureIfNotDone("No ResultEvent was received");
+      closeNamedPipe();
+    }
+  }
+
+  private void shutdownLaunchedProcess() {
+    sendShutdownCommand();
+    waitWithTimeoutTillLaunchedProcessFinished();
+  }
+
+  private void sendShutdownCommand() {
     try {
       CommandTypeMessage shutdownCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.SHUTDOWN_COMMAND);
@@ -140,20 +186,31 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
     } catch (IOException e) {
       LOG.error(
           e, "Cannot write shutdown command for for named pipe: %s", namedPipeWriter.getName());
-    } finally {
-      shutdownFutureIfNotDone();
-      waitTillLaunchedProcessFinish();
-      closeNamedPipe();
     }
   }
 
-  private void shutdownFutureIfNotDone() {
+  private void waitWithTimeoutTillLaunchedProcessFinished() {
+    waitTillLaunchedProcessFinish()
+        .ifPresent(
+            exitCode -> {
+              if (!isFinishedSuccessfully(exitCode)) {
+                LOG.warn("Worker tool process %s exit code: %s", startWorkerToolCommand, exitCode);
+              }
+            });
+  }
+
+  private boolean isFinishedSuccessfully(int exitCode) {
+    return exitCode == 0;
+  }
+
+  private void shutdownResultEventFutureIfNotDone(String errorMessage) {
     if (resultEventFuture != null && !resultEventFuture.isDone()) {
-      resultEventFuture.setException(new IllegalStateException("No ResultEvent was received"));
+      resultEventFuture.setException(new IllegalStateException(errorMessage));
     }
   }
 
-  private void waitTillLaunchedProcessFinish() {
+  /** @return {@link Optional} exit code of the process. */
+  private Optional<Integer> waitTillLaunchedProcessFinish() {
     try {
       ProcessExecutor.Result executionResult =
           downwardApiProcessExecutor.execute(
@@ -168,27 +225,37 @@ public abstract class BaseWorkerToolExecutor implements WorkerToolExecutor {
                   process ->
                       LOG.error(
                           "Timeout while waiting for a launched worker tool process %s to terminate.",
-                          getStartWorkerToolCommand())));
+                          startWorkerToolCommand)));
 
       int exitCode = executionResult.getExitCode();
-      if (exitCode != 0) {
-        LOG.error(
-            "Exit code: %s%n[stdOut]%n%s%n[stdErr]%n%s%n",
-            exitCode,
-            executionResult.getStdout().orElse(""),
-            executionResult.getStderr().orElse(""));
-      }
+
+      LOG.info(
+          "Worker tool process %s exit code: %s%n Std out: %s%n Std err: %s",
+          startWorkerToolCommand,
+          exitCode,
+          executionResult.getStdout(),
+          executionResult.getStderr());
+      return Optional.of(exitCode);
 
     } catch (InterruptedException e) {
-      LOG.warn("Waiting for launched worker tool process has been interrupted.");
+      LOG.warn(
+          "The current thread is interrupted by another thread while it is waiting for a launched process %s to finish.",
+          startWorkerToolCommand);
       Thread.currentThread().interrupt();
+      return Optional.empty();
     }
   }
 
   private void closeNamedPipe() {
+    if (namedPipeWriter == null) {
+      return;
+    }
+
     String namedPipeName = namedPipeWriter.getName();
     try {
-      outputStream.close();
+      if (outputStream != null) {
+        outputStream.close();
+      }
     } catch (IOException e) {
       LOG.error(e, "Cannot close output stream from pipe: %s", namedPipeName);
     }
