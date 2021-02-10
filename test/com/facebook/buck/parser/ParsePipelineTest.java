@@ -672,6 +672,7 @@ public class ParsePipelineTest {
               constructorArgMarshaller,
               new TargetNodeFactory(coercerFactory, new DefaultCellNameResolverProvider(cells)),
               new ThrowingPackageBoundaryChecker(buildFileTrees),
+              new NoopCellBoundaryChecker(),
               nodeListener,
               new ThrowingSelectorListResolver(),
               new ThrowingPlatformResolver(),

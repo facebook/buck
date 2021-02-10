@@ -43,6 +43,7 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
+import com.facebook.buck.parser.NoopCellBoundaryChecker;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -77,6 +78,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             new DefaultConstructorArgMarshaller(),
             new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
             new NoopPackageBoundaryChecker(),
+            new NoopCellBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             targetPlatformResolver,

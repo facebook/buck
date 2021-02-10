@@ -134,6 +134,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             new DefaultConstructorArgMarshaller(),
             new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
             new NoopPackageBoundaryChecker(),
+            new NoopCellBoundaryChecker(),
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(
                 new TestSelectableResolver(

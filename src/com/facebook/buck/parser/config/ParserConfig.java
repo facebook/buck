@@ -155,6 +155,11 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
+  public boolean getEnforceCellBoundary() {
+    return getDelegate().getBooleanValue("project", "check_cell_boundary", false);
+  }
+
+  @Value.Lazy
   public PackageBoundaryCheckMethod getPackageBoundaryCheckMethod() {
     return getDelegate()
         .getEnum("project", "package_boundary_check_method", PackageBoundaryCheckMethod.class)

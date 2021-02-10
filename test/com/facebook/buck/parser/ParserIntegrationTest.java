@@ -859,4 +859,26 @@ public class ParserIntegrationTest {
         .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
         .assertSuccess();
   }
+
+  @Test
+  public void testCellBoundaryChecksAreEnforced() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cell_boundaries", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckCommand("targets", "-c", "project.check_cell_boundary=true", "other//:bar")
+        .assertSuccess();
+    workspace
+        .runBuckCommand("targets", "-c", "project.check_cell_boundary=false", "//other:bar")
+        .assertSuccess();
+    workspace
+        .runBuckCommand("targets", "-c", "project.check_cell_boundary=true", "//other:bar")
+        .assertFailure("but is owned by cell");
+    workspace
+        .runBuckCommand("targets", "-c", "project.check_cell_boundary=false", "//:foo")
+        .assertSuccess();
+    workspace
+        .runBuckCommand("targets", "-c", "project.check_cell_boundary=true", "//:foo")
+        .assertFailure("but is owned by cell");
+  }
 }

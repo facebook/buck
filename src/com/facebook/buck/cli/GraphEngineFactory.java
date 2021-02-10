@@ -46,6 +46,7 @@ import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.BuiltTargetVerifier;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.DefaultUnconfiguredTargetNodeFactory;
+import com.facebook.buck.parser.NoopCellBoundaryChecker;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ProjectBuildFileParserFactory;
@@ -167,6 +168,8 @@ public class GraphEngineFactory {
                 new DefaultCellNameResolverProvider(new Cells(cell.getCellProvider()))),
             // TODO: replace with ThrowingPackageBoundaryChecker
             new NoopPackageBoundaryChecker(),
+            // TODO: replace with ThrowingCellBoundaryChecker
+            new NoopCellBoundaryChecker(),
             // TODO: replace with symlink checker
             (buildFile, node) -> {},
             // TODO: replace with DefaultSelectorListResolver

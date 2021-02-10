@@ -60,6 +60,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final ConstructorArgMarshaller marshaller;
   private final TargetNodeFactory targetNodeFactory;
   private final PackageBoundaryChecker packageBoundaryChecker;
+  private final CellBoundaryChecker cellBoundaryChecker;
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final SelectorListResolver selectorListResolver;
   private final TargetPlatformResolver targetPlatformResolver;
@@ -75,6 +76,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       ConstructorArgMarshaller marshaller,
       TargetNodeFactory targetNodeFactory,
       PackageBoundaryChecker packageBoundaryChecker,
+      CellBoundaryChecker cellBoundaryChecker,
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
       TargetPlatformResolver targetPlatformResolver,
@@ -87,6 +89,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
     this.packageBoundaryChecker = packageBoundaryChecker;
+    this.cellBoundaryChecker = cellBoundaryChecker;
     this.nodeListener = nodeListener;
     this.selectorListResolver = selectorListResolver;
     this.targetPlatformResolver = targetPlatformResolver;
@@ -186,6 +189,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
             unconfiguredTargetNode.getRuleType());
 
     packageBoundaryChecker.enforceBuckPackageBoundaries(targetCell, target, targetNode.getInputs());
+    cellBoundaryChecker.enforceCellBoundary(target);
 
     try {
       nodeListener.onCreate(buildFile.getPath(), targetNode);

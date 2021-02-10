@@ -233,6 +233,11 @@ public class PerBuildStateFactory {
             watchman,
             daemonicParserState.getBuildFileTrees());
 
+    CellBoundaryChecker cellBoundaryChecker =
+        parserConfig.getEnforceCellBoundary()
+            ? new ThrowingCellBoundaryChecker(cells)
+            : new NoopCellBoundaryChecker();
+
     ParserTargetNodeFromUnconfiguredTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
@@ -240,6 +245,7 @@ public class PerBuildStateFactory {
             marshaller,
             targetNodeFactory,
             packageBoundaryChecker,
+            cellBoundaryChecker,
             symlinkCheckers,
             new ThrowingSelectorListResolver(),
             new ConfigurationPlatformResolver(),
@@ -285,6 +291,7 @@ public class PerBuildStateFactory {
             marshaller,
             targetNodeFactory,
             packageBoundaryChecker,
+            cellBoundaryChecker,
             symlinkCheckers,
             selectorListResolver,
             configurationRuleRegistry.getTargetPlatformResolver(),
