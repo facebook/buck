@@ -17,6 +17,7 @@
 package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
@@ -139,8 +140,12 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private void processEvents(String namedPipeName, InputStream inputStream) {
     while (true) {
       try {
-        EventType eventType = downwardProtocol.readEventType(inputStream);
-        AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
+        EventType eventType =
+            requireNonNull(downwardProtocol.readEventType(inputStream), "event type is missing");
+        AbstractMessage event =
+            requireNonNull(
+                downwardProtocol.readEvent(inputStream, eventType),
+                "message with event type:" + eventType + " is missing");
         if (eventType.equals(EventType.END_EVENT)) {
           LOGGER.info("Received end event for named pipe %s", namedPipeName);
           break;
