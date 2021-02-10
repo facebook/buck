@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util.i18n;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
 
 import java.text.NumberFormat;
 import java.text.ParseException;

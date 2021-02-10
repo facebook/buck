@@ -17,7 +17,7 @@
 package com.facebook.buck.util.unarchive;
 
 import static com.google.common.collect.Iterables.concat;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
@@ -59,8 +60,8 @@ public class ModernBuildRuleTest {
       Assert.fail("Should have thrown an exception.");
     } catch (Exception e) {
       DeconstructedException deconstructed = ErrorLogger.deconstruct(e);
-      Assert.assertThat(deconstructed.getRootCause(), instanceOf(IllegalStateException.class));
-      Assert.assertThat(
+      assertThat(deconstructed.getRootCause(), instanceOf(IllegalStateException.class));
+      assertThat(
           deconstructed.getMessage(true),
           containsString("PublicOutputPath should not be inside rule temporary directory"));
     }

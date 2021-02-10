@@ -19,8 +19,8 @@ package com.facebook.buck.util.zip;
 import static java.util.zip.Deflater.BEST_COMPRESSION;
 import static java.util.zip.Deflater.DEFAULT_COMPRESSION;
 import static java.util.zip.Deflater.NO_COMPRESSION;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;

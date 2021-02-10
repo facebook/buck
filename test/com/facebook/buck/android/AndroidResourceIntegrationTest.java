@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;

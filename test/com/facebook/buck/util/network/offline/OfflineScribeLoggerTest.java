@@ -19,13 +19,13 @@ package com.facebook.buck.util.network.offline;
 import static com.facebook.buck.util.network.offline.OfflineScribeLogger.LOGFILE_PATTERN;
 import static com.facebook.buck.util.network.offline.OfflineScribeLogger.LOGFILE_PREFIX;
 import static com.facebook.buck.util.network.offline.OfflineScribeLogger.LOGFILE_SUFFIX;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContainingInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android.toolchain.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.FakeAndroidBuckConfig;

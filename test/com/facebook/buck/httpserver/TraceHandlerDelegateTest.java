@@ -17,9 +17,9 @@
 package com.facebook.buck.httpserver;
 
 import static org.easymock.EasyMock.expect;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.trace.BuildTraces;
 import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;

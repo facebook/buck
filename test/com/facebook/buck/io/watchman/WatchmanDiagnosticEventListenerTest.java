@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.watchman;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventListener;
@@ -27,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,7 +53,7 @@ public class WatchmanDiagnosticEventListenerTest {
     buckEventBus.post(new WatchmanDiagnosticEvent(warningDiagnostic));
     buckEventBus.post(new WatchmanDiagnosticEvent(errorDiagnostic));
 
-    Assert.assertThat(
+    assertThat(
         snoopingListener.receivedEvents,
         Matchers.contains(
             ImmutableList.of(
@@ -81,7 +82,7 @@ public class WatchmanDiagnosticEventListenerTest {
     buckEventBus.post(new WatchmanDiagnosticEvent(equalDiagnostic));
     buckEventBus.post(new WatchmanDiagnosticEvent(unequalDiagnostic));
 
-    Assert.assertThat(
+    assertThat(
         snoopingListener.receivedEvents,
         Matchers.contains(
             ImmutableList.of(

@@ -63,7 +63,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1824,7 +1823,7 @@ public class AppleBinaryIntegrationTest {
     BuildTarget target = workspace.newBuildTarget("//:real-none2#macosx-x86_64");
     ProcessResult result = workspace.runBuckCommand("run", target.getFullyQualifiedName());
     result.assertSuccess();
-    Assert.assertThat(result.getStdout(), equalTo("Hello"));
+    assertThat(result.getStdout(), equalTo("Hello"));
   }
 
   @Test

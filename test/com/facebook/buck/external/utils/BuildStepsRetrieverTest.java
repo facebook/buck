@@ -16,7 +16,7 @@
 
 package com.facebook.buck.external.utils;
 
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.external.model.ExternalAction;

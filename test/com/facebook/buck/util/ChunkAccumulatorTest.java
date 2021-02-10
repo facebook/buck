@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import org.hamcrest.Matchers;

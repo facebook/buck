@@ -16,9 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -58,8 +61,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import org.apache.thrift.TException;
-import org.hamcrest.Matchers;
-import org.hamcrest.junit.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -78,7 +79,7 @@ public class BuildCommandIntegrationTest {
     workspace.runBuckBuild("--just-build", "//:bar", "//:foo", "//:ex ample").assertSuccess();
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(
+        contains(
             BuildTargetFactory.newInstance("//:bar"),
             BuildTargetFactory.newInstance("//:touch"),
             BuildTargetFactory.newInstance("//:touch-lib")));
@@ -94,7 +95,7 @@ public class BuildCommandIntegrationTest {
     // The entire "//:bar" rule is built, not just the artifacts associated with "//:bar[label]"
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(
+        contains(
             BuildTargetFactory.newInstance("//:bar"),
             BuildTargetFactory.newInstance("//:touch"),
             BuildTargetFactory.newInstance("//:touch-lib")));
@@ -109,7 +110,7 @@ public class BuildCommandIntegrationTest {
         .assertSuccess();
     assertThat(
         workspace.getBuildLog().getAllTargets(),
-        Matchers.contains(
+        contains(
             BuildTargetFactory.newInstance("//:bar"),
             BuildTargetFactory.newInstance("//:touch"),
             BuildTargetFactory.newInstance("//:touch-lib")));
@@ -156,7 +157,7 @@ public class BuildCommandIntegrationTest {
     result.assertFailure();
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
+        containsString(
             "//:example_py does not have an output that is compatible with `buck build --out`"));
   }
 
@@ -277,9 +278,9 @@ public class BuildCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("build");
     result.assertExitCode(null, ExitCode.COMMANDLINE_ERROR);
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
-        Matchers.containsString(
+        containsString(
             "Must specify at least one build target. See https://dev.buck.build/concept/build_target_pattern.html"));
   }
 
@@ -348,23 +349,18 @@ public class BuildCommandIntegrationTest {
     String noRootDirSpecificTarget =
         workspace.runBuckBuild("subdir4:target").assertFailure().getStderr();
 
-    assertThat(
-        recursiveTarget, Matchers.containsString(String.format(expectedWhenExists, "subdir3/...")));
-    assertThat(
-        packageTarget, Matchers.containsString(String.format(expectedWhenExists, "subdir3:")));
-    assertThat(
-        specificTarget,
-        Matchers.containsString(String.format(expectedWhenExists, "subdir3:target")));
+    assertThat(recursiveTarget, containsString(String.format(expectedWhenExists, "subdir3/...")));
+    assertThat(packageTarget, containsString(String.format(expectedWhenExists, "subdir3:")));
+    assertThat(specificTarget, containsString(String.format(expectedWhenExists, "subdir3:target")));
 
     assertThat(
         noRootDirRecursiveTarget,
-        Matchers.containsString(String.format(expectedWhenNotExists, "subdir4/...")));
+        containsString(String.format(expectedWhenNotExists, "subdir4/...")));
     assertThat(
-        noRootDirPackageTarget,
-        Matchers.containsString(String.format(expectedWhenNotExists, "subdir4:")));
+        noRootDirPackageTarget, containsString(String.format(expectedWhenNotExists, "subdir4:")));
     assertThat(
         noRootDirSpecificTarget,
-        Matchers.containsString(String.format(expectedWhenNotExists, "subdir4:target")));
+        containsString(String.format(expectedWhenNotExists, "subdir4:target")));
   }
 
   @RuleArg
@@ -404,9 +400,8 @@ public class BuildCommandIntegrationTest {
                     ImmutableList.of()));
     ProcessResult result = workspace.runBuckBuild(":qq");
     result.assertFailure();
-    MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("test test test"));
-    MatcherAssert.assertThat(
-        result.getStderr(), Matchers.not(Matchers.containsString("Exception")));
+    assertThat(result.getStderr(), containsString("test test test"));
+    assertThat(result.getStderr(), not(containsString("Exception")));
   }
 
   @Test
@@ -422,7 +417,7 @@ public class BuildCommandIntegrationTest {
             .runBuckBuild("//:lib", "--target-platforms", "//:platform")
             .assertSuccess()
             .getStderr(),
-        Matchers.containsString("BUILT 1/1 JOBS"));
+        containsString("BUILT 1/1 JOBS"));
 
     workspace.addBuckConfigLocalOption("section", "config", "false");
     assertThat(
@@ -539,7 +534,7 @@ public class BuildCommandIntegrationTest {
 
     assertThat(
         workspace.runBuckBuild("--show-output", fullyQualifiedName).assertSuccess().getStderr(),
-        Matchers.containsString("100.0% CACHE MISS"));
+        containsString("100.0% CACHE MISS"));
   }
 
   @Test

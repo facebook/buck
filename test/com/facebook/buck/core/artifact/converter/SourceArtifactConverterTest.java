@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.artifact.converter;
 
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifactFactoryForTests;

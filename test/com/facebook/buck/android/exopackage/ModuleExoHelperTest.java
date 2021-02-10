@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android.exopackage;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -75,13 +77,13 @@ public class ModuleExoHelperTest {
   @Test
   public void testGetFilesToInstall() throws Exception {
     ImmutableMap<Path, Path> filesToInstall = moduleExoHelper.getFilesToInstall();
-    Assert.assertThat(filesToInstall, Matchers.aMapWithSize(1));
+    assertThat(filesToInstall, Matchers.aMapWithSize(1));
     Entry<Path, Path> entry = filesToInstall.entrySet().iterator().next();
     Path destPath = entry.getKey();
     Path sourcePath = entry.getValue();
-    Assert.assertThat(
+    assertThat(
         destPath.toString(), Matchers.startsWith(ModuleExoHelper.MODULAR_DEX_DIR.toString()));
-    Assert.assertThat(
+    assertThat(
         sourcePath.toString(),
         Matchers.endsWith(Paths.get("module_name", "secondary.jar").toString()));
   }
@@ -89,12 +91,12 @@ public class ModuleExoHelperTest {
   @Test
   public void testGetMetadataToInstall() throws Exception {
     ImmutableMap<Path, String> metadataToInstall = moduleExoHelper.getMetadataToInstall();
-    Assert.assertThat(metadataToInstall, Matchers.aMapWithSize(2));
+    assertThat(metadataToInstall, Matchers.aMapWithSize(2));
     String contents =
         metadataToInstall.get(ModuleExoHelper.MODULAR_DEX_DIR.resolve("metadata.txt"));
     Assert.assertNotNull(contents);
 
     // Check that the metadata lists the destination name of the jar
-    Assert.assertThat(contents, Matchers.startsWith("module-module_name.dex.jar "));
+    assertThat(contents, Matchers.startsWith("module-module_name.dex.jar "));
   }
 }

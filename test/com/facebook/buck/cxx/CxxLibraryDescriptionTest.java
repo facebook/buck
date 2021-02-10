@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
@@ -29,7 +30,6 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
@@ -108,7 +108,6 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -1426,7 +1425,7 @@ public class CxxLibraryDescriptionTest {
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     CxxSymlinkTreeHeaders publicHeaders = (CxxSymlinkTreeHeaders) input.getIncludes().get(0);
-    MatcherAssert.assertThat(
+    assertThat(
         Arg.stringify(
             input.getPreprocessorFlags().get(CxxSource.Type.CXX),
             graphBuilder.getSourcePathResolver()),
@@ -1462,7 +1461,7 @@ public class CxxLibraryDescriptionTest {
                         CxxDescriptionEnhancer.STATIC_FLAVOR));
     CxxPreprocessAndCompile compileRule =
         (CxxPreprocessAndCompile) graphBuilder.getRule(archiveRule.getInputs().get(0)).get();
-    MatcherAssert.assertThat(
+    assertThat(
         compileRule.getCommand(
             FakeBuildContext.NOOP_CONTEXT.withSourcePathResolver(
                 graphBuilder.getSourcePathResolver())),
@@ -1480,8 +1479,8 @@ public class CxxLibraryDescriptionTest {
         (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
     ImmutableList<SourcePath> objects =
         library.getObjects(graphBuilder, CxxPlatformUtils.DEFAULT_PLATFORM, PicType.PIC, false);
-    MatcherAssert.assertThat(objects, Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(objects, Matchers.hasSize(1));
+    assertThat(
         graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
         instanceOf(CxxPreprocessAndCompile.class));
   }
@@ -1497,8 +1496,8 @@ public class CxxLibraryDescriptionTest {
         (CxxLibraryGroup) graphBuilder.requireRule(cxxLibraryBuilder.getTarget());
     ImmutableList<SourcePath> objects =
         library.getObjects(graphBuilder, CxxPlatformUtils.DEFAULT_PLATFORM, PicType.PIC, true);
-    MatcherAssert.assertThat(objects, Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(objects, Matchers.hasSize(1));
+    assertThat(
         graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
         instanceOf(CxxStrip.class));
   }
@@ -1520,8 +1519,8 @@ public class CxxLibraryDescriptionTest {
                         CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR,
                         StripStyle.DEBUGGING_SYMBOLS.getFlavor()));
     ImmutableList<SourcePath> objects = archive.getInputs();
-    MatcherAssert.assertThat(objects, Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(objects, Matchers.hasSize(1));
+    assertThat(
         graphBuilder.getRule(objects.get(0)).orElseThrow(AssertionError::new),
         instanceOf(CxxStrip.class));
   }
@@ -1546,8 +1545,8 @@ public class CxxLibraryDescriptionTest {
                 graphBuilder,
                 cxxLibraryBuilder.getTarget().getTargetConfiguration(),
                 false);
-    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(input.getArgs(), Matchers.hasSize(1));
+    assertThat(
         graphBuilder
             .getRule(((SourcePathArg) input.getArgs().get(0)).getPath())
             .orElseThrow(AssertionError::new),
@@ -1574,8 +1573,8 @@ public class CxxLibraryDescriptionTest {
                 graphBuilder,
                 cxxLibraryBuilder.getTarget().getTargetConfiguration(),
                 false);
-    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(input.getArgs(), Matchers.hasSize(1));
+    assertThat(
         graphBuilder
             .getRule(((SourcePathArg) input.getArgs().get(0)).getPath())
             .orElseThrow(AssertionError::new),
@@ -1602,8 +1601,8 @@ public class CxxLibraryDescriptionTest {
                 graphBuilder,
                 cxxLibraryBuilder.getTarget().getTargetConfiguration(),
                 true);
-    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(input.getArgs(), Matchers.hasSize(1));
+    assertThat(
         graphBuilder
             .getRule(((SourcePathArg) input.getArgs().get(0)).getPath())
             .orElseThrow(AssertionError::new),
@@ -1628,14 +1627,14 @@ public class CxxLibraryDescriptionTest {
                 graphBuilder,
                 cxxLibraryBuilder.getTarget().getTargetConfiguration(),
                 true);
-    MatcherAssert.assertThat(input.getArgs(), Matchers.hasSize(1));
+    assertThat(input.getArgs(), Matchers.hasSize(1));
     Archive archive =
         (Archive)
             graphBuilder
                 .getRule(((HasSourcePath) input.getArgs().get(0)).getPath())
                 .orElseThrow(AssertionError::new);
-    MatcherAssert.assertThat(archive.getInputs(), Matchers.hasSize(1));
-    MatcherAssert.assertThat(
+    assertThat(archive.getInputs(), Matchers.hasSize(1));
+    assertThat(
         graphBuilder.getRule(archive.getInputs().get(0)).orElseThrow(AssertionError::new),
         instanceOf(CxxStrip.class));
   }
@@ -1655,7 +1654,7 @@ public class CxxLibraryDescriptionTest {
             .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver());
     ImmutableList<Arg> args = input.getArgs();
     Arg object = args.get(args.size() - 1);
-    MatcherAssert.assertThat(
+    assertThat(
         graphBuilder.getRule(((HasSourcePath) object).getPath()).orElseThrow(AssertionError::new),
         instanceOf(CxxStrip.class));
   }

@@ -18,8 +18,8 @@ package com.facebook.buck.apple.clang;
 
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.util.environment.Platform;

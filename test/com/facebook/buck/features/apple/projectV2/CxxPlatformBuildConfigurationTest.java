@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;

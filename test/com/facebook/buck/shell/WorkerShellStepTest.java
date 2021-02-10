@@ -17,7 +17,7 @@
 package com.facebook.buck.shell;
 
 import static java.lang.Thread.sleep;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;

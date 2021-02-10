@@ -19,10 +19,10 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ATTR;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ID;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.STYLEABLE;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
 import com.facebook.buck.android.aapt.RDotTxtEntry;

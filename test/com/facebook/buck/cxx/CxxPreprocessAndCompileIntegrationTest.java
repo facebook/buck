@@ -17,12 +17,12 @@
 package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -791,6 +790,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
                 "//:cc_env_vars")
             .assertFailure()
             .getStderr();
-    MatcherAssert.assertThat(stderr, containsString("expected_missing.h"));
+    assertThat(stderr, containsString("expected_missing.h"));
   }
 }

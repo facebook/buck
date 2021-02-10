@@ -17,8 +17,8 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.util.ExitCode;

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.randomizedtrial;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.model.BuildId;
 import java.util.Map;

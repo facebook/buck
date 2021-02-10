@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io.file;
 
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.io.File;
 import org.hamcrest.Matchers;

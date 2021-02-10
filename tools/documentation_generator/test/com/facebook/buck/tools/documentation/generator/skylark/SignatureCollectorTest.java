@@ -16,9 +16,9 @@
 
 package com.facebook.buck.tools.documentation.generator.skylark;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.reflect.ClassPath.ClassInfo;

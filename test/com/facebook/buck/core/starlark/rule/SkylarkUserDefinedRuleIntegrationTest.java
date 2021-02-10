@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.starlark.rule;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -45,7 +45,6 @@ import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
-import org.hamcrest.junit.MatcherAssert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -655,7 +654,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("//:file");
     result.assertFailure();
 
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "Cannot use select() expression when target platform is not specified"));

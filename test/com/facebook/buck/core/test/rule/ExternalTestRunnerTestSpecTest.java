@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.test.rule;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.json.ObjectMappers;

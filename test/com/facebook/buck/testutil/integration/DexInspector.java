@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.android.dex.Dex;
 import com.android.dex.DexFormat;

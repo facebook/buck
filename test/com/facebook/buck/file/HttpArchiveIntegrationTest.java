@@ -17,6 +17,7 @@
 package com.facebook.buck.file;
 
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
@@ -121,7 +122,7 @@ public class HttpArchiveIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("fetch", "//:bad_urls.tar");
 
     result.assertFailure();
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         matchesPattern(
             Pattern.compile(".*Unable to download http://.*/invalid_path.*", Pattern.DOTALL)));
@@ -152,7 +153,7 @@ public class HttpArchiveIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("fetch", "//:bad_hash.tar");
 
     result.assertFailure();
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "/foo.tar (hashes do not match. Expected 534be6d331e8f1ab7892f19e8fe23db4907bdc54f517a8b22adc82e69b6b1093, saw 4828b132aef4234e1bd3f0d003379e067061ad9bc4aa5201e3c3629f94dc2dba)"));

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -36,7 +36,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -193,19 +192,19 @@ public class TestCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertSuccess();
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
             Pattern.compile(
                 ".*PASS.*?MockTest" + System.lineSeparator() + ".*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
             Pattern.compile(
                 ".*PASS.*?MockTest2" + System.lineSeparator() + ".*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
-    Assert.assertThat(result.getStderr(), Matchers.containsString("TESTS PASSED"));
+    assertThat(result.getStderr(), Matchers.containsString("TESTS PASSED"));
   }
 
   @Test

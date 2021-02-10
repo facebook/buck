@@ -16,6 +16,8 @@
 
 package com.facebook.buck.file;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -191,7 +193,7 @@ public class HttpFileDescriptionTest {
                 .setUrls(ImmutableList.of(URI.create("https://example.com/first.exe")))
                 .build());
 
-    Assert.assertThat(buildRule, Matchers.instanceOf(HttpFileBinary.class));
+    assertThat(buildRule, Matchers.instanceOf(HttpFileBinary.class));
   }
 
   @Test
@@ -206,6 +208,6 @@ public class HttpFileDescriptionTest {
                 .setUrls(ImmutableList.of(URI.create("https://example.com/first.exe")))
                 .build());
 
-    Assert.assertThat(buildRule, Matchers.not(Matchers.instanceOf(HttpFileBinary.class)));
+    assertThat(buildRule, Matchers.not(Matchers.instanceOf(HttpFileBinary.class)));
   }
 }

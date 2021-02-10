@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.util.function.ThrowingSupplier;
@@ -132,7 +133,7 @@ public class MoreSuppliersTest {
       List<Object> results = Futures.allAsList(futures).get();
 
       Assert.assertEquals("should only have been called once", 1, delegate.getTimesCalled());
-      Assert.assertThat(
+      assertThat(
           "all result items are the same", ImmutableSet.copyOf(results), Matchers.hasSize(1));
 
       Preconditions.checkState(

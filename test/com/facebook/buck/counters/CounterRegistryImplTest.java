@@ -16,10 +16,10 @@
 
 package com.facebook.buck.counters;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;

@@ -17,9 +17,9 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolverProvider;

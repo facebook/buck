@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.base.CaseFormat;

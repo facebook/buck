@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple.toolchain;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.types.Pair;
 import org.junit.Rule;

@@ -17,7 +17,7 @@
 package com.facebook.buck.util.perf;
 
 import static com.facebook.buck.util.perf.ProcessTracker.ProcessResourceConsumptionEvent;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;

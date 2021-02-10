@@ -16,8 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.core.model.BuildTarget;

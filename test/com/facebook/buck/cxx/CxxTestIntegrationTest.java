@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -38,7 +38,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -102,7 +101,7 @@ public class CxxTestIntegrationTest {
     File file = new File(path + ".resources.json");
     Map<String, String> result =
         new ObjectMapper().readValue(file, new TypeReference<Map<String, String>>() {});
-    MatcherAssert.assertThat(
+    assertThat(
         result,
         Matchers.equalTo(
             ImmutableMap.of(

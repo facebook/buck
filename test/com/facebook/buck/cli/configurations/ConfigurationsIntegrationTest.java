@@ -16,10 +16,10 @@
 
 package com.facebook.buck.cli.configurations;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -40,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.hamcrest.Matchers;
-import org.hamcrest.junit.MatcherAssert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,7 +111,7 @@ public class ConfigurationsIntegrationTest {
         workspace.runBuckCommand(
             "build", "--target-platforms", "//config:osx_x86-64", "//:lib_with_compatible_with");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep_with_compatible_with is restricted to constraints "
@@ -134,7 +133,7 @@ public class ConfigurationsIntegrationTest {
             "//config:linux_x86_64",
             "//compatible_with:constrained_select");
     result.assertSuccess();
-    MatcherAssert.assertThat(result.getStderr(), Matchers.containsString("1 target skipped"));
+    assertThat(result.getStderr(), Matchers.containsString("1 target skipped"));
   }
 
   @Test
@@ -146,7 +145,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("build", "//:test-library");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Cannot use select() expression when target platform is not specified\n"
@@ -161,7 +160,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("build", "//invalid:lib");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "//invalid:lib: attribute 'compatible_with' cannot be configured using select"));
@@ -197,7 +196,7 @@ public class ConfigurationsIntegrationTest {
             "//:platform_dependent_genrule");
 
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Buck can't handle circular dependencies.\n"
@@ -297,7 +296,7 @@ public class ConfigurationsIntegrationTest {
         workspace.runBuckCommand(
             "build", "--target-platforms", "//config:linux_x86_64", "//compatible_with:cat_on_osx");
     result.assertSuccess();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "1 target skipped due to incompatibility with target configuration"));
@@ -358,7 +357,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "requested rule //:c1 of type constraint_setting, but it was constraint_value"));
@@ -372,7 +371,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr().replace("\r\n", "\n"),
         Matchers.containsString(
             "cycle detected when resolving configuration rule\n"
@@ -389,7 +388,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckBuild("//:j");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "parser.require_target_platform=true, "
@@ -443,7 +442,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "in config_setting rule //:c: "
@@ -459,7 +458,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "in platform rule //:p: "
@@ -500,7 +499,7 @@ public class ConfigurationsIntegrationTest {
         workspace.runBuckCommand(
             "query", "-c", "project.buck_out_include_target_config_hash=false", "deps(//...)");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
             "(?s).*Target //:j has more than one configurations \\(//:p-. and //:p-.\\)"
@@ -518,7 +517,7 @@ public class ConfigurationsIntegrationTest {
         workspace.runBuckCommand(
             "build", "-c", "project.buck_out_include_target_config_hash=false", "//...");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.matchesPattern(
             "(?s).*Target //:j has more than one configurations \\(//:p-. and //:p-.\\)"
@@ -590,7 +589,7 @@ public class ConfigurationsIntegrationTest {
         workspace.runBuckCommand(
             "build", "--target-platforms=builtin//platform:unconfigured", "//:j");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             "Cannot use select() expression when target platform is not specified"));
@@ -628,7 +627,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult result = workspace.runBuckBuild("--target-platforms=//:t", "//:g");
     result.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Cannot use select() expression when target platform is not specified\n"
@@ -671,7 +670,7 @@ public class ConfigurationsIntegrationTest {
 
     ProcessResult buildResult = workspace.runBuckBuild("--target-platforms=//:p-linux", "//:g");
     buildResult.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         buildResult.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "When checking configurable attribute \"cmd\" in //:g:"
@@ -681,7 +680,7 @@ public class ConfigurationsIntegrationTest {
     ProcessResult queryResult =
         workspace.runBuckCommand("cquery", "--target-platforms=//:p-linux", "//:g");
     queryResult.assertFailure();
-    MatcherAssert.assertThat(
+    assertThat(
         queryResult.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "When checking configurable attribute \"cmd\" in //:g:"

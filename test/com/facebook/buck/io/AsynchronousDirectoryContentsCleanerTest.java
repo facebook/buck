@@ -17,8 +17,8 @@
 package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.testutil.BuckFSProviderDeleteError;

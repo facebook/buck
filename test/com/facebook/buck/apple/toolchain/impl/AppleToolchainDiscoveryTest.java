@@ -16,11 +16,11 @@
 
 package com.facebook.buck.apple.toolchain.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.matchesPattern;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleToolchain;

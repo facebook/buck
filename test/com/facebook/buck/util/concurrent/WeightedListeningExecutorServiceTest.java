@@ -17,8 +17,8 @@
 package com.facebook.buck.util.concurrent;
 
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.types.Unit;

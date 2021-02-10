@@ -16,10 +16,10 @@
 
 package com.facebook.buck.features.apple.project;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasXPath;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertThat;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;

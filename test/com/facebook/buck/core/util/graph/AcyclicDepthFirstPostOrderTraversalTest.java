@@ -17,8 +17,8 @@
 package com.facebook.buck.core.util.graph;
 
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.google.common.collect.ImmutableList;

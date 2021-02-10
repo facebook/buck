@@ -17,9 +17,9 @@
 package com.facebook.buck.event;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildTargetFactory;

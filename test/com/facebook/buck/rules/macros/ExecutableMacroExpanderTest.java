@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;

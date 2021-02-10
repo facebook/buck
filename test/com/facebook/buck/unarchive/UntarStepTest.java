@@ -17,6 +17,7 @@
 package com.facebook.buck.unarchive;
 
 import static com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem.createJavaOnlyFilesystem;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -126,7 +127,7 @@ public class UntarStepTest {
       new UntarStep(createJavaOnlyFilesystem(), tarFile, outputDirectory, Optional.empty(), format);
       Assert.fail(String.format("Format %s should throw an exception, and it didn't", format));
     } catch (RuntimeException e) {
-      Assert.assertThat(
+      assertThat(
           e.getMessage(), Matchers.containsString("Invalid archive format given to untar step"));
     }
   }

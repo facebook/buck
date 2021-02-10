@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;

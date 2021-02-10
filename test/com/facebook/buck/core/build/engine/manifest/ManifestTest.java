@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.build.engine.manifest;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.io.ArchiveMemberPath;

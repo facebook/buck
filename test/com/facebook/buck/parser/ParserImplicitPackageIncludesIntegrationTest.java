@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -29,7 +31,6 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.stream.StreamSupport;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -229,8 +230,8 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             .map(js -> Paths.get(js.asText()))
             .collect(ImmutableList.toImmutableList());
 
-    Assert.assertThat(rootActual, Matchers.containsInAnyOrder(expectedRoot.toArray()));
-    Assert.assertThat(noSymbolActual, Matchers.containsInAnyOrder(expectedNoSymbol.toArray()));
-    Assert.assertThat(hasSymbolActual, Matchers.containsInAnyOrder(expectedHasSymbol.toArray()));
+    assertThat(rootActual, Matchers.containsInAnyOrder(expectedRoot.toArray()));
+    assertThat(noSymbolActual, Matchers.containsInAnyOrder(expectedNoSymbol.toArray()));
+    assertThat(hasSymbolActual, Matchers.containsInAnyOrder(expectedHasSymbol.toArray()));
   }
 }

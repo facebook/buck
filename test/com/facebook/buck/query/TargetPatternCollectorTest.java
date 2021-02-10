@@ -16,7 +16,7 @@
 
 package com.facebook.buck.query;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.google.common.collect.ImmutableList;

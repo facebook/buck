@@ -17,8 +17,8 @@
 package com.facebook.buck.doctor;
 
 import static com.facebook.buck.doctor.DoctorTestUtils.createDoctorConfig;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;

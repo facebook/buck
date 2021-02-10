@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -249,7 +248,7 @@ public class WindowsCxxIntegrationTest {
             "cxx.untracked_headers_whitelist=/usr/include/stdc-predef\\.h",
             "//header_check:untracked_header#windows-x86_64");
     result.assertFailure();
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             String.format(
@@ -270,7 +269,7 @@ public class WindowsCxxIntegrationTest {
             "cxx.detailed_untracked_header_messages=true",
             "//header_check:nested_untracked_header#windows-x86_64");
     result.assertFailure();
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             String.format(
@@ -293,7 +292,7 @@ public class WindowsCxxIntegrationTest {
             "cxx.detailed_untracked_header_messages=true",
             "//header_check:nested_untracked_header_with_cycle#windows-x86_64");
     result.assertFailure();
-    Assert.assertThat(
+    assertThat(
         result.getStderr(),
         Matchers.containsString(
             String.format(

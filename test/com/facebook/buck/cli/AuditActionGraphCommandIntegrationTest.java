@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -35,7 +37,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -55,7 +56,7 @@ public class AuditActionGraphCommandIntegrationTest {
     String json = result.getStdout();
     List<Map<String, Object>> root =
         (List<Map<String, Object>>) ObjectMappers.readValue(json, List.class);
-    Assert.assertThat(
+    assertThat(
         root,
         Matchers.containsInAnyOrder(
             ImmutableMap.builder()
@@ -111,22 +112,22 @@ public class AuditActionGraphCommandIntegrationTest {
         (Map<String, Object>) ObjectMappers.readValue(json, List.class).get(0);
 
     Map<String, String> outputPaths = (Map<String, String>) fields.get("outputPaths");
-    Assert.assertThat(outputPaths.entrySet(), Matchers.hasSize(2));
+    assertThat(outputPaths.entrySet(), Matchers.hasSize(2));
 
-    Assert.assertThat(outputPaths.get(OutputLabel.defaultLabel().toString()), Matchers.nullValue());
-    Assert.assertThat(
+    assertThat(outputPaths.get(OutputLabel.defaultLabel().toString()), Matchers.nullValue());
+    assertThat(
         outputPaths.get(OutputLabel.of("output1").toString()),
         Matchers.equalTo(
             asList(
                 getLegacyGenPathForTarget(targetName, workspace, "").resolve("out1").toString())));
-    Assert.assertThat(
+    assertThat(
         outputPaths.get(OutputLabel.of("output2").toString()),
         Matchers.equalTo(
             asList(
                 getLegacyGenPathForTarget(targetName, workspace, "").resolve("out2").toString())));
 
-    Assert.assertThat(fields.get("buck_output"), Matchers.equalTo(""));
-    Assert.assertThat(
+    assertThat(fields.get("buck_output"), Matchers.equalTo(""));
+    assertThat(
         fields.get("buck_outputs"),
         Matchers.equalTo(
             getExtendedNodeViewStringForNamedOutputs(
@@ -156,7 +157,7 @@ public class AuditActionGraphCommandIntegrationTest {
     String json = result.getStdout();
     List<Map<String, Object>> root =
         (List<Map<String, Object>>) ObjectMappers.readValue(json, List.class);
-    Assert.assertThat(
+    assertThat(
         root,
         Matchers.containsInAnyOrder(
             ImmutableMap.builder()
@@ -189,7 +190,7 @@ public class AuditActionGraphCommandIntegrationTest {
     String json = result.getStdout();
     List<Map<String, Object>> root =
         (List<Map<String, Object>>) ObjectMappers.readValue(json, List.class);
-    Assert.assertThat(
+    assertThat(
         root,
         Matchers.containsInAnyOrder(
             ImmutableMap.builder()
@@ -217,9 +218,9 @@ public class AuditActionGraphCommandIntegrationTest {
         workspace.runBuckCommand("audit", "actiongraph", "--dot", "//:bin").assertSuccess();
 
     String json = result.getStdout();
-    Assert.assertThat(json, Matchers.startsWith("digraph "));
-    Assert.assertThat(json, Matchers.containsString("\"//:bin\" -> \"//:other\""));
-    Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
+    assertThat(json, Matchers.startsWith("digraph "));
+    assertThat(json, Matchers.containsString("\"//:bin\" -> \"//:other\""));
+    assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
   }
 
   @Test
@@ -234,9 +235,9 @@ public class AuditActionGraphCommandIntegrationTest {
             .assertSuccess();
 
     String json = result.getStdout();
-    Assert.assertThat(json, Matchers.startsWith("digraph "));
-    Assert.assertThat(json, Matchers.containsString("\"//:pybin\" -> \"//:pylib\""));
-    Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
+    assertThat(json, Matchers.startsWith("digraph "));
+    assertThat(json, Matchers.containsString("\"//:pybin\" -> \"//:pylib\""));
+    assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
   }
 
   private AbsPath getLegacyGenPathForTarget(

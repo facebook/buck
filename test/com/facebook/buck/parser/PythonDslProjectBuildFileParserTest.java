@@ -17,11 +17,11 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.config.ParserConfig.DEFAULT_BUILD_FILE_NAME;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;

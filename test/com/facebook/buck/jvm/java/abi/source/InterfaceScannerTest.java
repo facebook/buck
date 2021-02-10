@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiTest;

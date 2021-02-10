@@ -19,10 +19,10 @@ package com.facebook.buck.doctor;
 import static com.facebook.buck.doctor.DoctorTestUtils.createDefectReport;
 import static com.facebook.buck.doctor.DoctorTestUtils.createDoctorConfig;
 import static com.facebook.buck.doctor.DoctorTestUtils.createDoctorHelper;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;

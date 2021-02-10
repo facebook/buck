@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.zip;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;

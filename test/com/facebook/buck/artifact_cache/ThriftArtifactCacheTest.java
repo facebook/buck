@@ -19,9 +19,9 @@ package com.facebook.buck.artifact_cache;
 import static com.facebook.buck.artifact_cache.thrift.ContainsResultType.CONTAINS;
 import static com.facebook.buck.artifact_cache.thrift.ContainsResultType.DOES_NOT_CONTAIN;
 import static com.facebook.buck.artifact_cache.thrift.ContainsResultType.UNKNOWN_DUE_TO_TRANSIENT_ERRORS;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;

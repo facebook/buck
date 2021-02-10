@@ -16,9 +16,9 @@
 
 package com.facebook.buck.log;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.FakeOutputStream;
 import java.io.IOException;

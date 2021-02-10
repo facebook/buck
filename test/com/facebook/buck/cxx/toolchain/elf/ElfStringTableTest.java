@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.elf;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;

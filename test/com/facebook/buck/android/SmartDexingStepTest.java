@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -50,7 +51,6 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -358,7 +358,7 @@ public class SmartDexingStepTest {
         false);
 
     String description = steps.build().get(0).getDescription(TestExecutionContext.newInstance());
-    Assert.assertThat(description, Matchers.containsString("--min-sdk-version 28"));
+    assertThat(description, Matchers.containsString("--min-sdk-version 28"));
   }
 
   @Test(expected = IllegalArgumentException.class)

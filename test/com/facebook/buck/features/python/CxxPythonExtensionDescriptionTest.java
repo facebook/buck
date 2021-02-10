@@ -17,8 +17,8 @@
 package com.facebook.buck.features.python;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
@@ -76,7 +76,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -723,7 +722,7 @@ public class CxxPythonExtensionDescriptionTest {
             .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver());
     ImmutableList<Arg> args = input.getArgs();
     Arg object = args.get(args.size() - 1);
-    MatcherAssert.assertThat(
+    assertThat(
         graphBuilder.getRule(((HasSourcePath) object).getPath()).orElseThrow(AssertionError::new),
         Matchers.instanceOf(CxxStrip.class));
   }

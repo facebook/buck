@@ -17,8 +17,8 @@
 package com.facebook.buck.file.downloader.impl;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.file.downloader.Downloader;

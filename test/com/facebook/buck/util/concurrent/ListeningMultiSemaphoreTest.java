@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.concurrent;
 
-import static org.hamcrest.junit.MatcherAssert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;

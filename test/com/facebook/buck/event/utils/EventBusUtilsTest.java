@@ -16,8 +16,8 @@
 
 package com.facebook.buck.event.utils;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.junit.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.AbstractBuckEvent;

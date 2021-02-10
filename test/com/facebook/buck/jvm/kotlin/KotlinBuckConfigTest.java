@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.kotlin;
 
 import static java.io.File.pathSeparator;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -36,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -270,8 +270,7 @@ public class KotlinBuckConfigTest {
 
     Path compilerJar =
         PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
-    Assert.assertThat(
-        compilerJar.toString(), Matchers.containsString(testDataDirectory.toString()));
+    assertThat(compilerJar.toString(), Matchers.containsString(testDataDirectory.toString()));
   }
 
   @Test

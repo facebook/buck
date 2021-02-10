@@ -17,8 +17,8 @@
 package com.facebook.buck.android;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.TemporaryPaths;

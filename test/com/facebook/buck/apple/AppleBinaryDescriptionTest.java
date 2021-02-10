@@ -17,7 +17,7 @@
 package com.facebook.buck.apple;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;

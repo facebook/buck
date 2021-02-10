@@ -16,6 +16,8 @@
 
 package com.facebook.buck.tools.consistency;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
@@ -105,14 +107,14 @@ public class TargetsStressRunnerTest {
       List<String> lines, List<String> expectedPrefixes, int randomStartIdx) {
     Assert.assertEquals(expectedPrefixes.size(), lines.size());
     int partition = randomStartIdx == -1 ? lines.size() : randomStartIdx;
-    Assert.assertThat(
+    assertThat(
         lines.subList(0, partition),
         Matchers.contains(
             expectedPrefixes.subList(0, partition).stream()
                 .map(prefix -> Matchers.startsWith(prefix))
                 .collect(ImmutableList.toImmutableList())));
 
-    Assert.assertThat(
+    assertThat(
         lines.subList(partition, lines.size()),
         Matchers.containsInAnyOrder(
             expectedPrefixes.subList(partition, expectedPrefixes.size()).stream()

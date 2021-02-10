@@ -16,10 +16,10 @@
 
 package com.facebook.buck.util;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.google.common.collect.FluentIterable;

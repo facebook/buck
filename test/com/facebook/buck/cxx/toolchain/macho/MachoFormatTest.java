@@ -18,9 +18,9 @@ package com.facebook.buck.cxx.toolchain.macho;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommand;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommandReader;

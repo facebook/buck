@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
@@ -89,7 +91,7 @@ public class AndroidBinaryFilesInfoTest {
 
     ExopackageInfo info = androidBinaryFilesInfo.getExopackageInfo().get();
     ImmutableList<DexInfo> moduleInfo = info.getModuleInfo().get();
-    Assert.assertThat(moduleInfo, Matchers.hasSize(1));
+    assertThat(moduleInfo, Matchers.hasSize(1));
     DexInfo dexInfo = moduleInfo.get(0);
     Assert.assertEquals(metadataAndSourcePath.getFirst(), dexInfo.getMetadata());
     Assert.assertEquals(metadataAndSourcePath.getSecond(), dexInfo.getDirectory());

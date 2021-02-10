@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx.toolchain.macho;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.cxx.toolchain.objectfile.ULEB128;
 import java.nio.ByteBuffer;

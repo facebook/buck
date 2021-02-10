@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.model.BuildTargetFactory;

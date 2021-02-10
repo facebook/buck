@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.python;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.junit.MatcherAssume.assumeThat;
-import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
