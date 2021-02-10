@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -59,8 +60,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -77,9 +78,9 @@ public class AppleTestIntegrationTest {
 
   @Before
   public void setUp() {
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
@@ -540,8 +541,8 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void canBuildAndRunXCUITest() throws IOException {
-    assumeTrue(false);
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
     ProjectWorkspace workspace =
@@ -610,8 +611,8 @@ public class AppleTestIntegrationTest {
   }
 
   @Test(timeout = 180000)
+  @Ignore
   public void testWithHostAppWithDsym() throws IOException, InterruptedException {
-    assumeTrue(false);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);
     workspace.setUp();
@@ -735,10 +736,9 @@ public class AppleTestIntegrationTest {
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
   }
 
-  // This test is disabled since the movement from xctool to fbxctest
   @Test
+  @Ignore("This test is disabled since the movement from xctool to fbxctest")
   public void testDependenciesLinking() throws IOException, InterruptedException {
-    assumeTrue(false);
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_dependencies_test", tmp);
     workspace.setUp();
