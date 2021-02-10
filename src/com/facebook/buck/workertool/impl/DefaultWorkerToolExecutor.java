@@ -164,7 +164,9 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @Override
   public void close() {
     try {
-      shutdownLaunchedProcess();
+      if (isAlive()) {
+        shutdownLaunchedProcess();
+      }
     } finally {
       shutdownResultEventFutureIfNotDone("No ResultEvent was received");
       closeNamedPipe();
