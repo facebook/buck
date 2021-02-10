@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -100,6 +101,7 @@ public class CxxResourceUtils {
 
   /** Add {@link Step}s to create a JSON file for the given resources. */
   public static void addResourceSteps(
+      BuildableContext buildableContext,
       SourcePathResolverAdapter resolver,
       BuildRule binary,
       ImmutableMap<CxxResourceName, SourcePath> resources,
@@ -108,6 +110,7 @@ public class CxxResourceUtils {
     RelPath resourcesFile = getResourcesFile(output);
     builder.add(RmIsolatedStep.of(resourcesFile));
     if (!resources.isEmpty()) {
+      buildableContext.recordArtifact(resourcesFile.getPath());
       builder.add(
           new CxxResourcesStep(
               resourcesFile,

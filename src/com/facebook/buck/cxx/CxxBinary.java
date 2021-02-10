@@ -130,7 +130,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
     CxxResourceUtils.addResourceSteps(
-        context.getSourcePathResolver(), linkRule, resources, builder);
+        buildableContext, context.getSourcePathResolver(), linkRule, resources, builder);
     return builder.build();
   }
 

@@ -156,7 +156,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> builder = ImmutableList.builder();
-    CxxResourceUtils.addResourceSteps(context.getSourcePathResolver(), binary, resources, builder);
+    CxxResourceUtils.addResourceSteps(
+        buildableContext, context.getSourcePathResolver(), binary, resources, builder);
     return builder.build();
   }
 
