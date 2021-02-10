@@ -595,7 +595,7 @@ public class AppleTestIntegrationTest {
             "(?s).*FAILURE FooXCTest -\\[FooXCTest testTwoPlusTwoEqualsFive\\]:.*FooXCTest.m:9.*"));
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_0000)
   public void successOnAppTestPassing() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);
@@ -610,7 +610,7 @@ public class AppleTestIntegrationTest {
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   @Ignore
   public void testWithHostAppWithDsym() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
@@ -654,7 +654,7 @@ public class AppleTestIntegrationTest {
         "-[TestHostApp magicValue]", workspace, hostAppDsym);
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   public void exitCodeIsCorrectOnAppTestFailure() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -704,7 +704,7 @@ public class AppleTestIntegrationTest {
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   LibTest"));
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   public void successForAppTestWithXib() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -912,7 +912,7 @@ public class AppleTestIntegrationTest {
         Optional.of(ImmutableList.of("i386", "x86_64")));
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   public void appleTestWithTestHostShouldSupportMultiarch() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.aapt.RDotTxtEntry.IdType.INT;
-import static com.facebook.buck.android.aapt.RDotTxtEntry.IdType.INT_ARRAY;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ATTR;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ID;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.STYLEABLE;
@@ -193,34 +191,61 @@ public class MergeAndroidResourcesStepTest {
 
     ImmutableList<RDotTxtEntry> fakeRDotTxtEntryWithIDS =
         ImmutableList.of(
-            FakeEntry.createWithId(INT, ATTR, "android_layout_gravity", "0x07f01005"),
-            FakeEntry.createWithId(INT, ATTR, "background", "0x07f01006"),
-            FakeEntry.createWithId(INT, ATTR, "backgroundSplit", "0x07f01007"),
-            FakeEntry.createWithId(INT, ATTR, "backgroundStacked", "0x07f01008"),
-            FakeEntry.createWithId(INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
-            FakeEntry.createWithId(INT, ATTR, "layout_heightPercent", "0x07f01009"),
-            FakeEntry.createWithId(INT, ATTR, "listLayout", "0x07f01002"),
-            FakeEntry.createWithId(INT, ID, "a1", "0x07f01003"),
-            FakeEntry.createWithId(INT, ID, "a2", "0x07f01004"),
             FakeEntry.createWithId(
-                INT_ARRAY, STYLEABLE, "ActionBar", "{ 0x07f01006,0x07f01007,0x07f01008 }"),
-            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_background", "0"),
-            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
-            FakeEntry.createWithId(INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
+                RDotTxtEntry.IdType.INT, ATTR, "android_layout_gravity", "0x07f01005"),
+            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ATTR, "background", "0x07f01006"),
+            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ATTR, "backgroundSplit", "0x07f01007"),
             FakeEntry.createWithId(
-                INT_ARRAY, STYLEABLE, "ActionBarLayout", "{ 0x010100f2,0x07f01005 }"),
-            FakeEntry.createWithId(INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
-            FakeEntry.createWithId(INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
+                RDotTxtEntry.IdType.INT, ATTR, "backgroundStacked", "0x07f01008"),
             FakeEntry.createWithId(
-                INT_ARRAY, STYLEABLE, "AlertDialog", "{ 0x010100f2,0x07f01001,0x7f01003b }"),
-            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_android_layout", "0"),
-            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
-            FakeEntry.createWithId(INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
+                RDotTxtEntry.IdType.INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
             FakeEntry.createWithId(
-                INT_ARRAY, STYLEABLE, "PercentLayout_Layout", "{ 0x00000000,0x07f01009 }"),
-            FakeEntry.createWithId(INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
+                RDotTxtEntry.IdType.INT, ATTR, "layout_heightPercent", "0x07f01009"),
+            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ATTR, "listLayout", "0x07f01002"),
+            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ID, "a1", "0x07f01003"),
+            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ID, "a2", "0x07f01004"),
             FakeEntry.createWithId(
-                INT, STYLEABLE, "PercentLayout_Layout_layout_heightPercent", "1"));
+                RDotTxtEntry.IdType.INT_ARRAY,
+                STYLEABLE,
+                "ActionBar",
+                "{ 0x07f01006,0x07f01007,0x07f01008 }"),
+            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_background", "0"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT_ARRAY,
+                STYLEABLE,
+                "ActionBarLayout",
+                "{ 0x010100f2,0x07f01005 }"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT_ARRAY,
+                STYLEABLE,
+                "AlertDialog",
+                "{ 0x010100f2,0x07f01001,0x7f01003b }"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_android_layout", "0"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT_ARRAY,
+                STYLEABLE,
+                "PercentLayout_Layout",
+                "{ 0x00000000,0x07f01009 }"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
+            FakeEntry.createWithId(
+                RDotTxtEntry.IdType.INT,
+                STYLEABLE,
+                "PercentLayout_Layout_layout_heightPercent",
+                "1"));
 
     assertEquals(createTestingFakesWithIds(resources), fakeRDotTxtEntryWithIDS);
   }

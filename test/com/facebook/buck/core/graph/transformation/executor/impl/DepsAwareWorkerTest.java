@@ -122,7 +122,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     }
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerCanRunSingleIndependentWork() throws InterruptedException {
     Semaphore sem = new Semaphore(0);
     TaskType task =
@@ -140,7 +140,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     sem.acquire();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerCanRunPrereqWorkFirst() throws InterruptedException, ExecutionException {
     AtomicBoolean prereqTaskDone = new AtomicBoolean();
     TaskType depsAwareTask1 =
@@ -169,7 +169,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.getFuture().get();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerCanRunDepWorkFirst() throws InterruptedException, ExecutionException {
     AtomicBoolean depTaskDone = new AtomicBoolean();
     TaskType depsAwareTask1 =
@@ -198,7 +198,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.getFuture().get();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerCanRunPrereqBeforeDep() throws InterruptedException, ExecutionException {
     AtomicBoolean prereqTaskDone = new AtomicBoolean();
     TaskType depsAwareTask1 =
@@ -233,7 +233,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.getFuture().get();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerHandlesExceptionDuringGetPrereq()
       throws InterruptedException, ExecutionException {
     Exception ex = new Exception();
@@ -258,7 +258,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask.getResultFuture().get();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerHandlesExceptionDuringGetDep() throws InterruptedException, ExecutionException {
     Exception ex = new Exception();
 
@@ -282,7 +282,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask.getResultFuture().get();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workerPropagatesExceptionDuringGetDepsToParent()
       throws InterruptedException, ExecutionException {
     Exception ex = new Exception();
@@ -315,7 +315,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     depsAwareTask2.getResultFuture().get();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void workCanBeExecutedInMultipleThreadSharingQueue() throws InterruptedException {
     // This tests that if we schedule multiple works, and one worker is occupied, the other worker
     // will pick start the other tasks
@@ -357,7 +357,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     semDone.acquire();
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void interruptThreadStopsWorker() throws InterruptedException {
 
     Semaphore workerStarted = new Semaphore(0);
@@ -418,7 +418,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
     assertFalse(taskDone.get());
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   @SuppressWarnings("PMD.EmptyWhileStmt")
   public void workerIsNotDuplicateScheduled() throws InterruptedException {
     startWorkerThread(worker1);

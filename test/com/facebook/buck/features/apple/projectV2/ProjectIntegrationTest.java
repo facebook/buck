@@ -40,6 +40,7 @@ import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -443,28 +444,29 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
   }
 
-  //  @Test(timeout = 180000)
-  //  public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
-  //    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
-  //    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-  //    ProjectWorkspace workspace = createWorkspace(this, "project_with_apple_bundle_test");
-  //
-  //    ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
-  //    result.assertSuccess();
-  //
-  //    ProcessExecutor.Result xcodeTestResult =
-  //        workspace.runCommand(
-  //            "xcodebuild",
-  //            "-workspace",
-  //            "app/bundle.xcworkspace",
-  //            "-scheme",
-  //            "bundle",
-  //            "-destination 'platform=OS X,arch=x86_64'",
-  //            "clean",
-  //            "test");
-  //    xcodeTestResult.getStderr().ifPresent(System.err::print);
-  //    assertEquals("xcodebuild should succeed", 0, xcodeTestResult.getExitCode());
-  //  }
+  @Ignore
+  @Test(timeout = 3 * 60 * 1_000)
+  public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_apple_bundle_test");
+
+    ProcessResult result = workspace.runBuckCommand("project", "//app:bundle");
+    result.assertSuccess();
+
+    ProcessExecutor.Result xcodeTestResult =
+        workspace.runCommand(
+            "xcodebuild",
+            "-workspace",
+            "app/bundle.xcworkspace",
+            "-scheme",
+            "bundle",
+            "-destination 'platform=OS X,arch=x86_64'",
+            "clean",
+            "test");
+    xcodeTestResult.getStderr().ifPresent(System.err::print);
+    assertEquals("xcodebuild should succeed", 0, xcodeTestResult.getExitCode());
+  }
 
   @Test
   public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()

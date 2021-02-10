@@ -156,7 +156,7 @@ public class TargetSpecResolverTest {
     assertEquals("Should have returned all rules.", ImmutableList.of(expectedTargets), targets);
   }
 
-  @Test(timeout = 20000)
+  @Test(timeout = 20_000)
   public void resolveTargetSpecsDoesNotHangOnException() throws Exception {
     Path buckFile = cellRoot.resolve("foo/BUCK");
     Files.createDirectories(buckFile.getParent());

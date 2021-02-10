@@ -542,7 +542,7 @@ public class AppleBinaryIntegrationTest {
         containsString("executable"));
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = 2 * 60 * 1_000)
   public void testAppleBinaryWithMultipleSwiftLibDepsHasASTPaths() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -579,7 +579,7 @@ public class AppleBinaryIntegrationTest {
     return matcher.find();
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = 2 * 60 * 1_000)
   public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
       throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
@@ -743,7 +743,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(dylibSymbolTable, containsString("T _get_value_from_c"));
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = 2 * 60 * 1_000)
   public void testAppleBinaryWithLinkGroupsWithLabelFilterWithNodeTraversal() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -1942,7 +1942,7 @@ public class AppleBinaryIntegrationTest {
     assertEquals(target, Files.readSymbolicLink(link.getPath()));
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = 2 * 60 * 1_000)
   public void testAppleBinaryWithConditionalRelinking() throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

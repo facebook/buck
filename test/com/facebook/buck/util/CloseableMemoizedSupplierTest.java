@@ -158,7 +158,7 @@ public class CloseableMemoizedSupplierTest<T extends AbstractCloseableMemoizedSu
     }
   }
 
-  @Test(timeout = 5000)
+  @Test(timeout = 5_000)
   public void testThreadSafe() throws Exception {
     final int numCalls = 50;
 

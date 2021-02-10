@@ -523,7 +523,7 @@ public class ProjectIntegrationTest {
     runXcodebuild(workspace, "Apps/TestApp.xcworkspace", "TestApp");
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

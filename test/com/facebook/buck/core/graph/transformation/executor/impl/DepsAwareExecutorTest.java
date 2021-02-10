@@ -127,7 +127,7 @@ public class DepsAwareExecutorTest<TaskType extends DepsAwareTask<Object, TaskTy
   }
 
   // timeout is set to prevent waiting for a blocking call: Ex. future.get().
-  @Test(timeout = 1000)
+  @Test(timeout = 1_000)
   public void shutdownNowStopsWorkExecutionImmediately()
       throws InterruptedException, ExecutionException {
     Semaphore task1Sem = new Semaphore(0);

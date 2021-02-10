@@ -539,7 +539,7 @@ public class CxxLibraryIntegrationTest {
     assertThat(result.getStdout(), containsString("//:foo#" + hostFlavor));
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   public void testSymlinksOnAndOff() throws IOException {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     ProjectWorkspace workspace =

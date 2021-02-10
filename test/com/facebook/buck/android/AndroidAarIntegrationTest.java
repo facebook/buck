@@ -246,7 +246,7 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileExists("jni/x86/libnative.so");
   }
 
-  @Test(timeout = 120000)
+  @Test(timeout = 2 * 60 * 1_000)
   public void testNativeLibraryDependent() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

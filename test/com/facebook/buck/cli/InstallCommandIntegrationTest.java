@@ -249,7 +249,7 @@ public class InstallCommandIntegrationTest {
     result.assertSuccess();
   }
 
-  @Test(timeout = 150000)
+  @Test(timeout = 150 * 1_000)
   public void appleBundleInstallsAndRunsInTVSimulatorWithDwarfDebugging()
       throws IOException, InterruptedException {
     assumeTrue(

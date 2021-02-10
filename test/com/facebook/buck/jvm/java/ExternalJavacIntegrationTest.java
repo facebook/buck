@@ -71,7 +71,7 @@ public class ExternalJavacIntegrationTest {
     workspace.runBuckCommand("build", "//:lib", "-v", "2").assertSuccess();
   }
 
-  @Test(timeout = 180000)
+  @Test(timeout = 3 * 60 * 1_000)
   public void whenExternalSrcZipUsedBuildingBinarySucceeds() throws IOException {
     Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
