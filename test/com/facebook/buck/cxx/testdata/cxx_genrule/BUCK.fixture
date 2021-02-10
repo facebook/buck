@@ -124,3 +124,26 @@ cxx_binary(
         ":header_lib",
     ],
 )
+
+cxx_genrule(
+    name = "chained2",
+    out = "header.h",
+    cmd = "touch $OUT",
+)
+
+cxx_genrule(
+    name = "chained1",
+    out = "header.h",
+    cmd = "cp $SRCS $OUT",
+    srcs = [":chained2"],
+)
+
+cxx_binary(
+    name = "header_bin2",
+    srcs = [
+        "header.c",
+    ],
+    headers = [
+        ":chained1",
+    ],
+)

@@ -256,4 +256,9 @@ public class CxxGenruleIntegrationTest {
   public void generatedHeader() {
     workspace.runBuckBuild("//:header_bin").assertSuccess();
   }
+
+  @Test
+  public void cxxGenruleInSrcsOfAnotherCxxGenrule() {
+    workspace.runBuckBuild("//:header_bin2").assertSuccess();
+  }
 }

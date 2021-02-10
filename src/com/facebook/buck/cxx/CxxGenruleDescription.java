@@ -64,6 +64,7 @@ import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ArgExpander;
@@ -176,20 +177,19 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    *     refers to a {@link CxxGenrule} with the given {@code platform} flavor applied.
    */
   public static SourcePath fixupSourcePath(
-      ActionGraphBuilder graphBuilder, CxxPlatform platform, SourcePath path) {
+      ActionGraphBuilder graphBuilder, Flavor platform, SourcePath path) {
     Optional<BuildRule> rule = graphBuilder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
       Genrule platformRule =
           (Genrule)
-              graphBuilder.requireRule(
-                  rule.get().getBuildTarget().withAppendedFlavors(platform.getFlavor()));
+              graphBuilder.requireRule(rule.get().getBuildTarget().withAppendedFlavors(platform));
       path = platformRule.getSourcePathToOutput();
     }
     return path;
   }
 
   public static ImmutableList<SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, ImmutableList<SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, Flavor cxxPlatform, ImmutableList<SourcePath> paths) {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
     for (SourcePath path : paths) {
       fixed.add(fixupSourcePath(graphBuilder, cxxPlatform, path));
@@ -197,10 +197,17 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     return fixed.build();
   }
 
+  public static ImmutableSet<SourcePath> fixupSourcePaths(
+      ActionGraphBuilder graphBuilder, Flavor cxxPlatform, ImmutableSet<SourcePath> paths) {
+    ImmutableSet.Builder<SourcePath> fixed = ImmutableSet.builderWithExpectedSize(paths.size());
+    for (SourcePath path : paths) {
+      fixed.add(fixupSourcePath(graphBuilder, cxxPlatform, path));
+    }
+    return fixed.build();
+  }
+
   public static ImmutableSortedSet<SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder,
-      CxxPlatform cxxPlatform,
-      ImmutableSortedSet<SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, Flavor cxxPlatform, ImmutableSortedSet<SourcePath> paths) {
     ImmutableSortedSet.Builder<SourcePath> fixed =
         new ImmutableSortedSet.Builder<>(Objects.requireNonNull(paths.comparator()));
     for (SourcePath path : paths) {
@@ -210,12 +217,28 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   public static <T> ImmutableMap<T, SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, ImmutableMap<T, SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, Flavor cxxPlatform, ImmutableMap<T, SourcePath> paths) {
     ImmutableMap.Builder<T, SourcePath> fixed = ImmutableMap.builder();
     for (Map.Entry<T, SourcePath> ent : paths.entrySet()) {
       fixed.put(ent.getKey(), fixupSourcePath(graphBuilder, cxxPlatform, ent.getValue()));
     }
     return fixed.build();
+  }
+
+  public static SourceSet fixupSourcePaths(
+      ActionGraphBuilder graphBuilder, Flavor cxxPlatform, SourceSet srcs) {
+    return srcs.match(
+        new SourceSet.Matcher<SourceSet>() {
+          @Override
+          public SourceSet named(ImmutableMap<String, SourcePath> named) {
+            return SourceSet.ofNamedSources(fixupSourcePaths(graphBuilder, cxxPlatform, named));
+          }
+
+          @Override
+          public SourceSet unnamed(ImmutableSet<SourcePath> unnamed) {
+            return SourceSet.ofUnnamedSources(fixupSourcePaths(graphBuilder, cxxPlatform, unnamed));
+          }
+        });
   }
 
   private static String shquoteJoin(Iterable<String> args) {
@@ -344,7 +367,17 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         getCxxPlatforms(buildTarget.getTargetConfiguration()).getValue(buildTarget);
     if (cxxPlatform.isPresent()) {
       return super.createBuildRule(
-          context, buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()), params, args);
+          context,
+          buildTarget.withAppendedFlavors(cxxPlatform.get().getFlavor()),
+          params,
+          CxxGenruleDescriptionArg.builder()
+              .from(args)
+              .setSrcs(
+                  fixupSourcePaths(
+                      context.getActionGraphBuilder(),
+                      cxxPlatform.get().getFlavor(),
+                      args.getSrcs()))
+              .build());
     }
 
     // Named output not supported yet for CMD without platfrom

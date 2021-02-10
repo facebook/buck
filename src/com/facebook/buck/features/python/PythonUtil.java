@@ -313,7 +313,7 @@ public class PythonUtil {
         consumer.accept(
             baseModule.resolve(entry.getKey()),
             CxxGenruleDescription.fixupSourcePath(
-                actionGraphBuilder, cxxPlatform, entry.getValue()));
+                actionGraphBuilder, cxxPlatform.getFlavor(), entry.getValue()));
       }
     }
   }

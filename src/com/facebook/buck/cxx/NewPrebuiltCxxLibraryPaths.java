@@ -110,7 +110,8 @@ abstract class NewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryPaths {
       Optional<VersionMatchedCollection<SourcePath>> versionedLib) {
     Optional<SourcePath> path =
         getParameter(parameter, lib, cxxPlatform, platformLib, selectedVersions, versionedLib);
-    return path.map(p -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, p));
+    return path.map(
+        p -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform.getFlavor(), p));
   }
 
   @Override
@@ -197,6 +198,6 @@ abstract class NewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryPaths {
             selectedVersions,
             getVersionedHeaderDirs());
     return CxxGenruleDescription.fixupSourcePaths(
-        graphBuilder, cxxPlatform, dirs.orElse(ImmutableList.of()));
+        graphBuilder, cxxPlatform.getFlavor(), dirs.orElse(ImmutableList.of()));
   }
 }

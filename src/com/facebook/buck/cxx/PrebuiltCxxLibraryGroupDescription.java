@@ -294,7 +294,7 @@ public class PrebuiltCxxLibraryGroupDescription
               getStaticLinkArgs(
                   getBuildTarget(),
                   CxxGenruleDescription.fixupSourcePaths(
-                      graphBuilder, cxxPlatform, args.getStaticLibs()),
+                      graphBuilder, cxxPlatform.getFlavor(), args.getStaticLibs()),
                   args.getStaticLink()));
           break;
         case STATIC_PIC:
@@ -302,7 +302,7 @@ public class PrebuiltCxxLibraryGroupDescription
               getStaticLinkArgs(
                   getBuildTarget(),
                   CxxGenruleDescription.fixupSourcePaths(
-                      graphBuilder, cxxPlatform, args.getStaticPicLibs()),
+                      graphBuilder, cxxPlatform.getFlavor(), args.getStaticPicLibs()),
                   args.getStaticPicLink()));
           break;
         case SHARED:
@@ -311,7 +311,7 @@ public class PrebuiltCxxLibraryGroupDescription
                   getBuildTarget(),
                   CxxGenruleDescription.fixupSourcePaths(
                       graphBuilder,
-                      cxxPlatform,
+                      cxxPlatform.getFlavor(),
                       ImmutableMap.<String, SourcePath>builder()
                           .putAll(args.getSharedLibs())
                           .putAll(args.getProvidedSharedLibs())

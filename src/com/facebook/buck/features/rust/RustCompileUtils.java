@@ -844,14 +844,17 @@ public class RustCompileUtils {
         ImmutableSortedMap.naturalOrder();
 
     srcs.stream()
-        .map(src -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, src))
+        .map(
+            src ->
+                CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform.getFlavor(), src))
         .forEach(src -> fixedBuilder.put(src, Optional.empty()));
     mappedSrcs
         .entrySet()
         .forEach(
             ent ->
                 fixedBuilder.put(
-                    CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, ent.getKey()),
+                    CxxGenruleDescription.fixupSourcePath(
+                        graphBuilder, cxxPlatform.getFlavor(), ent.getKey()),
                     Optional.of(ent.getValue())));
 
     ImmutableSortedMap<SourcePath, Optional<String>> fixed = fixedBuilder.build();
@@ -860,7 +863,10 @@ public class RustCompileUtils {
     Stream<Path> filenames =
         Stream.concat(
             srcs.stream()
-                .map(src -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, src))
+                .map(
+                    src ->
+                        CxxGenruleDescription.fixupSourcePath(
+                            graphBuilder, cxxPlatform.getFlavor(), src))
                 .map(sp -> resolver.getCellUnsafeRelPath(sp).getPath()),
             mappedSrcs.values().stream()
                 .map(
