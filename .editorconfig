@@ -9,6 +9,7 @@ tab_width = 4
 
 [*.java]
 indent_size = 2
+continuation_indent_size = 4
 tab_width = 2
 
 [{*.yml,*.yaml}]
