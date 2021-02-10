@@ -64,6 +64,7 @@ import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ArgExpander;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
@@ -105,6 +106,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
@@ -114,6 +116,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -150,6 +153,22 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   public static boolean wrapsCxxGenrule(SourcePathRuleFinder ruleFinder, SourcePath path) {
     Optional<BuildRule> rule = ruleFinder.getRule(path);
     return rule.map(CxxGenrule.class::isInstance).orElse(false);
+  }
+
+  public static boolean wrapsCxxGenrule(SourcePathRuleFinder ruleFinder, SourceSortedSet paths) {
+    Predicate<SourcePath> wrapsCxxGenrule = p -> wrapsCxxGenrule(ruleFinder, p);
+    return !paths.<Boolean>match(
+        new SourceSortedSet.Matcher<Boolean>() {
+          @Override
+          public Boolean named(ImmutableSortedMap<String, SourcePath> named) {
+            return named.values().stream().noneMatch(wrapsCxxGenrule);
+          }
+
+          @Override
+          public Boolean unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+            return unnamed.stream().noneMatch(wrapsCxxGenrule);
+          }
+        });
   }
 
   /**

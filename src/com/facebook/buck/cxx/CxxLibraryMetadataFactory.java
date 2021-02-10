@@ -236,8 +236,9 @@ public class CxxLibraryMetadataFactory {
 
             // Add platform-specific headers.
             if (!args.getExportedPlatformHeaders()
-                .getMatchingValues(cxxPlatform.getFlavor().toString())
-                .isEmpty()) {
+                    .getMatchingValues(cxxPlatform.getFlavor().toString())
+                    .isEmpty()
+                || CxxGenruleDescription.wrapsCxxGenrule(graphBuilder, args.getExportedHeaders())) {
               HeaderSymlinkTree symlinkTree =
                   (HeaderSymlinkTree)
                       graphBuilder.requireRule(

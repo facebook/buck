@@ -251,4 +251,9 @@ public class CxxGenruleIntegrationTest {
     assertTrue(
         result.getStderr().contains("Out path required in cxx_genrule for shared dynamic linking"));
   }
+
+  @Test
+  public void generatedHeader() {
+    workspace.runBuckBuild("//:header_bin").assertSuccess();
+  }
 }

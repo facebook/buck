@@ -101,3 +101,26 @@ cxx_genrule(
     default_outs = ["default.txt"],
     cmd = "echo thing1 @CMD@ > $OUT/out1.txt && echo thing2 @CMD@ > $OUT/out2.txt && echo default @CMD@ > $OUT/default.txt",
 )
+
+cxx_genrule(
+    name = "gen_header",
+    out = "header.h",
+    cmd = "touch $OUT",
+)
+
+cxx_library(
+    name = "header_lib",
+    exported_headers = [
+        ":gen_header",
+    ],
+)
+
+cxx_binary(
+    name = "header_bin",
+    srcs = [
+        "header.c",
+    ],
+    deps = [
+        ":header_lib",
+    ],
+)
