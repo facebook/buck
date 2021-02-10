@@ -19,12 +19,13 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -75,8 +76,8 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    ImmutableSortedSet<AbsPath> thirdPartyJars =
-        buildContext.getSourcePathResolver().getAllAbsolutePaths(pathsToThirdPartyJars);
+    ImmutableSortedSet<RelPath> thirdPartyJars =
+        buildContext.getSourcePathResolver().getAllRelativePaths(filesystem, pathsToThirdPartyJars);
     return ImmutableList.of(
         createMergedThirdPartyJarsStep(
             thirdPartyJars,
@@ -84,13 +85,16 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
   }
 
   private Step createMergedThirdPartyJarsStep(
-      ImmutableSet<AbsPath> thirdPartyJars, Path absoluteMergedPath) {
+      ImmutableSet<RelPath> thirdPartyJars, Path absoluteMergedPath) {
     return new AbstractExecutionStep("merging_third_party_jar_resources") {
       @Override
       public StepExecutionResult execute(StepExecutionContext context) throws IOException {
         try (ResourcesZipBuilder builder = new ResourcesZipBuilder(absoluteMergedPath)) {
-          for (AbsPath jar : thirdPartyJars) {
-            try (ZipFile base = new ZipFile(jar.toFile())) {
+          for (RelPath jar : thirdPartyJars) {
+            try (ZipFile base =
+                new ZipFile(
+                    ProjectFilesystemUtils.getPathForRelativePath(context.getRuleCellRoot(), jar)
+                        .toFile())) {
               for (ZipEntry inputEntry : Collections.list(base.entries())) {
                 if (inputEntry.isDirectory()) {
                   continue;
