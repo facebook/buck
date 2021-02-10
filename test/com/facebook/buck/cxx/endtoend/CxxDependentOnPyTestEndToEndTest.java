@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.endtoend;
 
 import static java.lang.Thread.sleep;
+import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.testutil.endtoend.ConfigSetBuilder;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
@@ -57,7 +58,7 @@ public class CxxDependentOnPyTestEndToEndTest {
   @Before
   public void assumePlatform() {
     // signal handling is far different on windows
-    Assume.assumeTrue(Platform.detect() == Platform.LINUX || Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   private void assertFileExists(EndToEndWorkspace workspace, String filename, int timeout)

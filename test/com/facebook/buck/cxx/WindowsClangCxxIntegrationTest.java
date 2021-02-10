@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -45,6 +46,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,7 +65,7 @@ public class WindowsClangCxxIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(Platform.WINDOWS));
     windowsUtils.checkAssumptions();
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "win_llvm_x64", tmp);
     workspace.setUp();

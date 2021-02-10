@@ -52,6 +52,7 @@ import java.util.Optional;
 import org.apache.commons.compress.archivers.ar.ArArchiveEntry;
 import org.apache.commons.compress.archivers.ar.ArArchiveInputStream;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -62,7 +63,7 @@ public class ArchiveStepIntegrationTest {
   @Test
   @SuppressWarnings("PMD.AvoidUsingOctalValues")
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(
@@ -171,7 +172,7 @@ public class ArchiveStepIntegrationTest {
 
   @Test
   public void inputDirs() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(
@@ -219,7 +220,7 @@ public class ArchiveStepIntegrationTest {
 
   @Test
   public void thinArchives() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(

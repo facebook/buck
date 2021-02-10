@@ -27,7 +27,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -368,7 +367,7 @@ public class GenruleIntegrationTest {
 
   @Test
   public void genruleExeMacro() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_exe_macro", temporaryFolder);
@@ -382,7 +381,7 @@ public class GenruleIntegrationTest {
 
   @Test
   public void exeMacroWorksWithDefaultOutput() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "genrule_exe_macro", temporaryFolder);

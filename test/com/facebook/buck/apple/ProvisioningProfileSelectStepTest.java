@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -54,7 +53,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -94,7 +95,7 @@ public class ProvisioningProfileSelectStepTest {
 
   @Test
   public void testFailsWithInvalidEntitlementsPlist() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(startsWith("Malformed entitlement .plist: "));
 
@@ -117,7 +118,7 @@ public class ProvisioningProfileSelectStepTest {
 
   @Test
   public void testFailsWithInvalidInfoPlist() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     thrown.expect(IOException.class);
     thrown.expectMessage(containsString("not a property list"));
 
@@ -140,7 +141,7 @@ public class ProvisioningProfileSelectStepTest {
 
   @Test
   public void testFailsWithNoSuitableProfilesFound() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "No valid non-expired provisioning profiles match for *.com.example.TestApp");
@@ -167,7 +168,7 @@ public class ProvisioningProfileSelectStepTest {
 
   @Test
   public void testDoesNotFailInDryRunMode() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     Path emptyDir =
         TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles_empty");
 
@@ -200,7 +201,7 @@ public class ProvisioningProfileSelectStepTest {
 
   @Test
   public void shouldSetProvisioningProfileHolderWhenStepIsRun() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     BuildStepResultHolder<ProvisioningProfileMetadata> profileMetadataHolder =
         new BuildStepResultHolder<>();
     ProvisioningProfileSelectStep step =

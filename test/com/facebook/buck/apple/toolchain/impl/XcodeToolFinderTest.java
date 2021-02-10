@@ -32,6 +32,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.EnumSet;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,7 +44,7 @@ public class XcodeToolFinderTest {
 
   @Before
   public void setUp() {
-    Assume.assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
   }
 
   @Test

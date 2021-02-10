@@ -34,7 +34,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleAssetCatalogDescriptionArg;
 import com.facebook.buck.apple.AppleResourceBundleDestination;
@@ -81,6 +80,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -92,7 +93,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     generatedProject =
         new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     buildRuleResolver = new TestActionGraphBuilder();

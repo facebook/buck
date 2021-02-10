@@ -20,9 +20,9 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -48,6 +48,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,7 +63,7 @@ public class ExternallyBuiltApplePackageTest {
 
   @Before
   public void setUp() {
-    assumeTrue(platform == Platform.MACOS || platform == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     bundleLocation = "Fake/Bundle/Location";
     buildTarget = BuildTargetFactory.newInstance("//foo", "package");
     projectFilesystem = new FakeProjectFilesystem();

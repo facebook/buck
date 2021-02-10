@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.environment.PlatformType;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
@@ -59,7 +58,7 @@ public class ExternalTestRunnerIntegrationTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "external_test_runner", tmp);
     workspace.setUp();
-    isWindowsOs = Platform.detect().getType() == PlatformType.WINDOWS;
+    isWindowsOs = Platform.detect() == Platform.WINDOWS;
   }
 
   @Test

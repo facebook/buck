@@ -17,11 +17,11 @@
 package com.facebook.buck.apple;
 
 import static com.facebook.buck.apple.AppleResources.IS_APPLE_BUNDLE_RESOURCE_NODE;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -50,6 +50,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Optional;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,7 +71,7 @@ public class AppleBuildRulesTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());

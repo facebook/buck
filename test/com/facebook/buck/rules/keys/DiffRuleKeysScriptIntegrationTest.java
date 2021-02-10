@@ -263,7 +263,7 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   @Test
   public void testPreprocessorSanitization() throws Exception {
-    Assume.assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "diff_rulekeys_script", tmp);

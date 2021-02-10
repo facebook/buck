@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,7 +36,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
 
   @Test
   public void prebuiltCxxLibraryFromGenrule() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
@@ -49,7 +50,7 @@ public class PrebuiltCxxLibraryIntegrationTest {
 
   @Test
   public void prebuiltCxxLibraryFromGenruleChangeFile() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();

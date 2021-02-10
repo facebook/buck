@@ -18,7 +18,6 @@ package com.facebook.buck.features.apple.projectV2;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
@@ -54,6 +53,8 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Optional;
 import org.easymock.EasyMock;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -76,7 +77,7 @@ public class XCodeProjectCommandHelperTest {
 
   @Before
   public void buildGraph() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     // Create the following dep tree:
     //

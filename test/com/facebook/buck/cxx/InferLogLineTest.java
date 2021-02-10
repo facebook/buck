@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -25,6 +25,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
 import org.hamcrest.junit.ExpectedException;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ public class InferLogLineTest {
 
   @Test
   public void testFromBuildTargetThrowsWhenPathIsNotAbsolute() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Path must be absolute");
     BuildTarget testBuildTarget =
@@ -46,7 +47,7 @@ public class InferLogLineTest {
 
   @Test
   public void testToStringWithCell() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("cellname//target:short")
             .withFlavors(
@@ -62,7 +63,7 @@ public class InferLogLineTest {
 
   @Test
   public void testToStringWithoutCell() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
             "//target", "short", CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());

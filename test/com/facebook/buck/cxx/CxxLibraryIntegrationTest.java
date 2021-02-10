@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -121,7 +122,7 @@ public class CxxLibraryIntegrationTest {
 
   @Test
   public void libraryBuildPathIsSoName() throws IOException {
-    assumeTrue(Platform.detect() == Platform.LINUX);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "shared_library", tmp);
     workspace.setUp();
@@ -170,14 +171,14 @@ public class CxxLibraryIntegrationTest {
 
   @Test
   public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.runBuckBuild("//foo:dep_one#infer-capture-all").assertSuccess();
   }
 
   @Test
   public void runInferCaptureOnLibraryWithHeadersOnly() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.runBuckBuild("//foo:headers_only_lib#infer-capture-all").assertSuccess();
   }
@@ -223,7 +224,7 @@ public class CxxLibraryIntegrationTest {
 
   @Test
   public void testCxxLibraryWithDefaultsInFlagBuildsSomething() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
@@ -280,7 +281,7 @@ public class CxxLibraryIntegrationTest {
   public void sourceChangeInHeaderOnlyDependencyDoesntCauseRebuild() throws IOException {
     // gcc doesn't support the `-all_load` flag which we need to use to ensure our symbols don't
     // get stripped. Skip the test on linux (a gcc platform) for now.
-    assumeTrue(Platform.detect() != Platform.LINUX);
+    assumeThat(Platform.detect(), not(Platform.LINUX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "explicit_header_only_caching", tmp);
     workspace.setUp();
@@ -540,7 +541,7 @@ public class CxxLibraryIntegrationTest {
 
   @Test(timeout = 180000)
   public void testSymlinksOnAndOff() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_on_off", tmp);
     workspace.setUp();

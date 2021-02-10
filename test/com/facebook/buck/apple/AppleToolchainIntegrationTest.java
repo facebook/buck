@@ -16,9 +16,9 @@
 
 package com.facebook.buck.apple;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -30,6 +30,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +40,7 @@ public class AppleToolchainIntegrationTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   @Test

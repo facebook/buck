@@ -16,9 +16,9 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -154,7 +155,8 @@ public class DuplicateResourcesTest {
 
   @Test
   public void testDuplicateResoucesFavorCloserDependencyWithLibraryDep() {
-    assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Android SDK paths don't work on Windows", Platform.detect(), not(Platform.WINDOWS));
 
     TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(ImmutableSortedSet.of(mainResTarget, androidLibraryTarget));
@@ -166,7 +168,8 @@ public class DuplicateResourcesTest {
 
   @Test
   public void testDuplicateResoucesFavorCloserDependencyWithTwoLibraryDeps() {
-    assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Android SDK paths don't work on Windows", Platform.detect(), not(Platform.WINDOWS));
 
     TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(
@@ -179,7 +182,8 @@ public class DuplicateResourcesTest {
 
   @Test
   public void testDuplicateResoucesFavorCloserDependencyWithResourceDep() {
-    assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Android SDK paths don't work on Windows", Platform.detect(), not(Platform.WINDOWS));
 
     TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(ImmutableSortedSet.of(mainResTarget, directDepResTarget));
@@ -191,7 +195,8 @@ public class DuplicateResourcesTest {
 
   @Test
   public void testDuplicateResoucesFavorCloserDependencyWithOnlyResourceDep() {
-    assumeFalse("Android SDK paths don't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Android SDK paths don't work on Windows", Platform.detect(), not(Platform.WINDOWS));
 
     TargetNode<AndroidBinaryDescriptionArg> binary =
         makeBinaryWithDeps(ImmutableSortedSet.of(directDepResTarget));

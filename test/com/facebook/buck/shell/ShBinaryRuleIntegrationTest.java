@@ -18,10 +18,10 @@ package com.facebook.buck.shell;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
@@ -37,6 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -47,7 +48,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testTrivialShBinaryRule() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_trivial", temporaryFolder);
@@ -63,7 +64,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testExecutableOnRebuild() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_caching", temporaryFolder);
@@ -121,7 +122,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryWithMappedResourcesConflicting() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_mapped_resources", temporaryFolder);
@@ -140,7 +141,7 @@ public class ShBinaryRuleIntegrationTest {
 
   private List<String> testMappedResources(String testCase) throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_mapped_resources", temporaryFolder);
@@ -155,7 +156,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryWithMappedResourcesFromCache() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_mapped_resources", temporaryFolder);
@@ -175,7 +176,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryWithResources() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_resources", temporaryFolder);
@@ -193,7 +194,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryCannotOverwriteResource() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_overwrite_violation", temporaryFolder);
@@ -208,7 +209,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryPreservesPwdEnvVar() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sh_binary_pwd", temporaryFolder);
@@ -225,7 +226,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryWithCells() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_cells", temporaryFolder);
@@ -237,7 +238,7 @@ public class ShBinaryRuleIntegrationTest {
   @Test
   public void testShBinaryWithEmbeddedCells() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "sh_binary_with_cells", temporaryFolder);
@@ -248,7 +249,7 @@ public class ShBinaryRuleIntegrationTest {
 
   @Test
   public void testShBinaryWithBuckoutOutsideRoot() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -264,7 +265,7 @@ public class ShBinaryRuleIntegrationTest {
 
   @Test
   public void testShBinaryWithTest() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

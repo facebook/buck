@@ -19,7 +19,6 @@ package com.facebook.buck.features.apple.projectV2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.core.cell.Cells;
@@ -50,6 +49,8 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.Map;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public class BuildConfigurationTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     projectFilesystem = new FakeProjectFilesystem(new DefaultClock());
     cell = (new TestCellBuilder()).setFilesystem(projectFilesystem).build();

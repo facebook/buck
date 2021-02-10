@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -58,6 +59,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,7 +86,7 @@ public class PythonTestIntegrationTest {
   public void setUp() throws IOException {
     if (packageStyle == PythonBuckConfig.PackageStyle.INPLACE
         || packageStyle == PythonBuckConfig.PackageStyle.INPLACE_LITE) {
-      assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+      Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     }
 
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_test", tmp);

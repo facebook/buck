@@ -40,6 +40,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -97,7 +99,7 @@ public class LcUuidContentsScrubberTest {
 
   @Test
   public void testUuidGetter() throws IOException, InterruptedException, Machos.MachoException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     AbsPath srcDylibPath = getHelloLibDylibPath();
@@ -126,7 +128,7 @@ public class LcUuidContentsScrubberTest {
   @Test
   public void testScrubberModifiesUuid()
       throws IOException, InterruptedException, FileScrubber.ScrubException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     // Copy the source dylib, so we can scrub the temporary copy
@@ -149,7 +151,7 @@ public class LcUuidContentsScrubberTest {
   @Test
   public void testDeterministicScrubber()
       throws IOException, FileScrubber.ScrubException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     testScrubberDeterminism(false, false);
@@ -158,7 +160,7 @@ public class LcUuidContentsScrubberTest {
   @Test
   public void testDeterministicConcurrentScrubber()
       throws IOException, FileScrubber.ScrubException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     testScrubberDeterminism(false, true);

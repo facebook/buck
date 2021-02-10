@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.matchesRegex;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -62,7 +63,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,12 +74,12 @@ public class AppleBinaryIntegrationTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   @Test
   public void testAppleBinaryBuildsBinaryWithLinkerMap() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -103,7 +103,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryBuildsBinaryWithoutLinkerMap() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -129,7 +129,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryBuildsBinaryWithoutLinkerMapUsingConfigOption() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -155,7 +155,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testAppleBinaryBuildsBinaryWithoutLinkerMapUsingConfigOptionMultiarch()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -185,7 +185,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryUsesDefaultPlatformFromArgs() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -211,7 +211,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryRespectsFlavorOverrides() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -246,7 +246,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryUsesPlatformLinkerFlags() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -270,7 +270,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void appleBinaryUsesDefaultPlatformForPlatformDeps() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -284,7 +284,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void appleBinaryExplicitPlatformForPlatformDeps() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -301,7 +301,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinarySupportsEntitlements() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -355,7 +355,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithThinLTO() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -378,7 +378,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithThinLTOWithLibraryDependency() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -424,7 +424,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithFatLTO() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -447,7 +447,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryAppBuildsAppWithDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -487,7 +487,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryAppBuildsAppWithoutDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -521,7 +521,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithSystemFrameworksBuildsSomething() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -544,7 +544,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test(timeout = 120000)
   public void testAppleBinaryWithMultipleSwiftLibDepsHasASTPaths() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -582,7 +582,7 @@ public class AppleBinaryIntegrationTest {
   @Test(timeout = 120000)
   public void testAppleBinaryWithLibraryDependencyWithSwiftSourcesBuildsSomething()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -684,7 +684,7 @@ public class AppleBinaryIntegrationTest {
 
   private void runLinkGroupTestForSingleDylib(
       String appTargetName, String dylibTargetName, String dylibName) throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -720,7 +720,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithLabelFilterWithTreeTraversal() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -745,7 +745,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test(timeout = 120000)
   public void testAppleBinaryWithLinkGroupsWithLabelFilterWithNodeTraversal() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -770,7 +770,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithPatternFilterWithTreeTraversal() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -795,7 +795,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithPatternFilterWithNodeTraversal() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -820,7 +820,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithMixedFilterWithTreeTraversal() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -845,7 +845,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupWithCuttingGenruleBranchEnabled() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -866,7 +866,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithDebugSymbolsNoFocus() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -897,7 +897,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithSelectDebugSymbolsDylibFocus() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     Path focusedTargetsPath = Files.createTempFile("focused_targets", ".json");
@@ -935,7 +935,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testAppleBinaryWithLinkGroupsWithSelectDebugSymbolsExecutableFocus()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     Path focusedTargetsPath = Files.createTempFile("focused_targets", ".json");
@@ -969,7 +969,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLinkGroupsWithMultipleDylibs() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1002,7 +1002,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testAppleBinaryWithLinkGroupsWithMultipleDylibsWithDuplicateSymbols()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1035,7 +1035,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLibraryDependencyBuildsSomething() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1060,7 +1060,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryWithLibraryDependencyBuildsApp() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1097,7 +1097,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testAppleBinaryWithLibraryDependencyWithSystemFrameworksBuildsSomething()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1124,7 +1124,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleLibraryPropagatesExportedPlatformLinkerFlags() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1139,7 +1139,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryHeaderSymlinkTree() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1190,7 +1190,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleXcodeError() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     String expectedError =
@@ -1220,7 +1220,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryIsHermetic() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1266,7 +1266,7 @@ public class AppleBinaryIntegrationTest {
 
   private void runTestAppleBinaryWithDebugFormatIsHermetic(AppleDebugFormat debugFormat)
       throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1343,7 +1343,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryBuildsFatBinaries() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1370,7 +1370,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryBuildsFatBinariesWithDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1398,7 +1398,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testFlavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStripped()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1446,7 +1446,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testFlavoredAppleBundleBuildsWithDwarfDebugFormatAndBinaryIsUnstripped()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1473,7 +1473,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testBuildingWithDwarfProducesAllCompileRulesOnDisk() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1531,7 +1531,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testBuildingWithNoDebugDoesNotProduceAllCompileRulesOnDisk() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1592,7 +1592,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testBuildingWithDwarfAndDsymDoesNotProduceAllCompileRulesOnDisk() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1655,7 +1655,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testFlavoredAppleBundleBuildsAndDsymFileIsNotCreatedAndBinaryIsStripped()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1719,7 +1719,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBundleDebugFormatRespectsDefaultConfigSettingDSYM() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1752,7 +1752,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBundleDebugFormatRespectsDefaultConfigSettingNoDebug() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1781,7 +1781,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void multiarchBinaryShouldCopyLinkMapOfComponents() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     BuildTarget singleArchI386Target =
@@ -1815,7 +1815,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testBuildEmptySourceAppleBinaryDependsOnNonEmptyAppleLibrary() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1830,7 +1830,7 @@ public class AppleBinaryIntegrationTest {
   @Test
   public void testSwiftFilesInsideBinaryAreRebuiltWhenHeaderFileTheyDependOnChanges()
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1860,7 +1860,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryBuildsFatBinariesWithSwift() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1887,7 +1887,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testSwiftStdlibsAreCopiedWithSwiftOnlyInAppExtension() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1921,7 +1921,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void linkerExtraOutputsWork() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1944,7 +1944,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test(timeout = 120000)
   public void testAppleBinaryWithConditionalRelinking() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -2016,7 +2016,7 @@ public class AppleBinaryIntegrationTest {
 
   @Test
   public void testAppleBinaryTargetSpecificSDKVersion() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -2065,14 +2065,13 @@ public class AppleBinaryIntegrationTest {
 
     // Verify that only target specific binary has deployment set to 10.14
 
-    assertThat(
-        nonSpecificTargetBuildVersion.get(), CoreMatchers.not(containsString("minos 10.14")));
+    assertThat(nonSpecificTargetBuildVersion.get(), not(containsString("minos 10.14")));
     assertThat(specificSDKTargetBuildVersion.get(), containsString("minos 10.14"));
   }
 
   @Test
   public void testAppleBinaryWithTargetTripleBuildsSomething() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =

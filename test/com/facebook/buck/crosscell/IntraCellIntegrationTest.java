@@ -19,7 +19,6 @@ package com.facebook.buck.crosscell;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
@@ -51,6 +50,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.Executors;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -140,7 +141,7 @@ public class IntraCellIntegrationTest {
 
   @Test
   public void testBuckProjectGeneratesCorrectAbsolutePaths() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(

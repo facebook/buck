@@ -41,6 +41,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,7 +80,7 @@ public class MachoDynamicLinkingTest {
   @Test
   public void testHelloWorldFlatNamespaceContainsBoundSymbols()
       throws IOException, Machos.MachoException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     List<MachoBindInfoSymbol> expectedSymbols = new ArrayList<>();
@@ -142,7 +144,7 @@ public class MachoDynamicLinkingTest {
   @Test
   public void testHelloWorldTwoLevelNamespaceContainsBoundSymbols()
       throws IOException, Machos.MachoException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     List<MachoBindInfoSymbol> expectedSymbols = new ArrayList<>();
@@ -213,7 +215,7 @@ public class MachoDynamicLinkingTest {
 
   @Test
   public void testHelloWorldContainsLazySymbol() throws IOException, Machos.MachoException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     List<MachoBindInfoSymbol> expectedSymbols = new ArrayList<>();

@@ -16,12 +16,13 @@
 
 package com.facebook.buck.jvm.java.abi;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -72,7 +73,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -6883,17 +6883,17 @@ public class StubJarTest {
   }
 
   private void notYetImplementedForMissingClasspath() {
-    assumeThat(testingMode, Matchers.not(Matchers.equalTo(MODE_SOURCE_BASED_MISSING_DEPS)));
+    assumeThat(testingMode, not(equalTo(MODE_SOURCE_BASED_MISSING_DEPS)));
   }
 
   private void notYetImplementedForSource() {
-    assumeThat(testingMode, Matchers.equalTo(MODE_JAR_BASED));
+    assumeThat(testingMode, equalTo(MODE_JAR_BASED));
   }
 
   private boolean isValidForKotlin() {
     // System.getProperty("java.class.path") returning classpath with ":" as separator which means
     // that KotlinTestCompiler crashes (separator should be ";" on Windows)
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     return !testingMode.equals(MODE_SOURCE_BASED_MISSING_DEPS);
   }
 

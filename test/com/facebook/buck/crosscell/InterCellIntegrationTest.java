@@ -20,15 +20,16 @@ import static com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.Symb
 import static com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
 import static com.facebook.buck.util.environment.Platform.WINDOWS;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -82,7 +83,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -327,16 +327,16 @@ public class InterCellIntegrationTest {
     // accidentally mixing bootclasspaths
     assertThat(
         verboseLogs,
-        Matchers.hasItem(
-            Matchers.allOf(
+        hasItem(
+            allOf(
                 containsString("javac"),
                 containsString("-bootclasspath"),
                 containsString(String.format("%sprimary.jar", File.separator)),
                 containsString("primary_lib"))));
     assertThat(
         verboseLogs,
-        Matchers.hasItem(
-            Matchers.allOf(
+        hasItem(
+            allOf(
                 containsString("javac"),
                 containsString("-bootclasspath"),
                 containsString(String.format("%ssecondary.jar", File.separator)),
@@ -668,15 +668,15 @@ public class InterCellIntegrationTest {
     zipInspector.assertFileDoesNotExist("lib/x86/lib1h.so");
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
-    assertThat(info.symbols.global, Matchers.hasItem("A"));
-    assertThat(info.symbols.global, Matchers.hasItem("B"));
-    assertThat(info.symbols.global, Matchers.hasItem("G"));
-    assertThat(info.symbols.global, Matchers.hasItem("H"));
-    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
-    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+    assertThat(info.symbols.global, hasItem("A"));
+    assertThat(info.symbols.global, hasItem("B"));
+    assertThat(info.symbols.global, hasItem("G"));
+    assertThat(info.symbols.global, hasItem("H"));
+    assertThat(info.symbols.global, hasItem("glue_1"));
+    assertThat(info.symbols.global, not(hasItem("glue_2")));
+    assertThat(info.dtNeeded, not(hasItem("libnative_merge_B.so")));
+    assertThat(info.dtNeeded, not(hasItem("libmerge_G.so")));
+    assertThat(info.dtNeeded, not(hasItem("libmerge_H.so")));
   }
 
   @Test
@@ -713,15 +713,15 @@ public class InterCellIntegrationTest {
     zipInspector.assertFileExists("lib/x86/libI.so");
 
     info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
-    assertThat(info.symbols.global, Matchers.hasItem("A"));
-    assertThat(info.symbols.global, Matchers.hasItem("B"));
-    assertThat(info.symbols.global, Matchers.hasItem("G"));
-    assertThat(info.symbols.global, Matchers.hasItem("H"));
-    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
-    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_B.so")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_G.so")));
-    assertThat(info.dtNeeded, not(Matchers.hasItem("libmerge_H.so")));
+    assertThat(info.symbols.global, hasItem("A"));
+    assertThat(info.symbols.global, hasItem("B"));
+    assertThat(info.symbols.global, hasItem("G"));
+    assertThat(info.symbols.global, hasItem("H"));
+    assertThat(info.symbols.global, hasItem("glue_1"));
+    assertThat(info.symbols.global, not(hasItem("glue_2")));
+    assertThat(info.dtNeeded, not(hasItem("libnative_merge_B.so")));
+    assertThat(info.dtNeeded, not(hasItem("libmerge_G.so")));
+    assertThat(info.dtNeeded, not(hasItem("libmerge_H.so")));
   }
 
   @Test
@@ -906,7 +906,7 @@ public class InterCellIntegrationTest {
   @Test
   public void crossCellShBinaryWithResources() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
-    assumeTrue(Platform.detect() != WINDOWS);
+    assumeThat(Platform.detect(), not(WINDOWS));
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare(

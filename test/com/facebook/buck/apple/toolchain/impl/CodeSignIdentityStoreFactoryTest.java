@@ -19,7 +19,7 @@ package com.facebook.buck.apple.toolchain.impl;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
@@ -92,7 +92,7 @@ public class CodeSignIdentityStoreFactoryTest {
 
   @Test
   public void testCodeSignIdentitiesCommandOverride() {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir =
         TestDataHelper.getTestDataDirectory(this).resolve("code_sign_identity_store");

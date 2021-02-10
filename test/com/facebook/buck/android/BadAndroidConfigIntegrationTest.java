@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -29,6 +28,8 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -48,7 +49,7 @@ public class BadAndroidConfigIntegrationTest {
    */
   @Test
   public void testBadAndroidConfigDoesNotInterfereNonAndroidBuild() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "bad_android_config", tmp);
     workspace.setUp();
     ImmutableMap<String, String> badEnvironment =

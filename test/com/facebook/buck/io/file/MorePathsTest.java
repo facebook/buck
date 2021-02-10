@@ -17,11 +17,11 @@
 package com.facebook.buck.io.file;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -41,6 +41,7 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -398,7 +399,7 @@ public class MorePathsTest {
     "D:\\other\\path",
   })
   public void windowsLongPathStringHasCorrectPrefix(String testPathString) {
-    assumeTrue(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(Platform.WINDOWS));
     String uncPrefix = "\\\\?\\";
 
     AbsPath path = AbsPath.of(Paths.get(testPathString));
@@ -412,7 +413,7 @@ public class MorePathsTest {
     "D:\\other\\path",
   })
   public void windowsLongPathStringIsAbsolute(String testPathString) {
-    assumeTrue(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), is(Platform.WINDOWS));
     String uncPrefix = "\\\\?\\";
 
     AbsPath path = AbsPath.of(Paths.get(testPathString));

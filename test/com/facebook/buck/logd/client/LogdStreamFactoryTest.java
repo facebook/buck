@@ -17,7 +17,7 @@
 package com.facebook.buck.logd.client;
 
 import static org.easymock.EasyMock.mock;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;

@@ -16,18 +16,19 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeNoException;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
 import javax.annotation.Nullable;
+import org.junit.Assume;
 
 public abstract class KotlinTestAssumptions {
   public static void assumeUnixLike() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   public static void assumeCompilerAvailable(@Nullable BuckConfig config) {

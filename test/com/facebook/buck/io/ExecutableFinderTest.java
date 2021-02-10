@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -55,7 +56,7 @@ public class ExecutableFinderTest {
   @Test
   public void testSearchPathsNonExecutableFileIsIgnored() throws IOException {
     // file.canExecute() always true for Windows
-    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Path dir1 = tmp.newFolder("foo").getPath();
     // Note this is not executable.
@@ -154,7 +155,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsWithIsExecutableFunctionFailure() throws IOException {
-    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     // Path to search
     Path baz = tmp.newFolder("baz").getPath();

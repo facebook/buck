@@ -26,7 +26,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -55,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -294,7 +294,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJni() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -305,7 +305,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJniWithWhitelist() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -315,7 +315,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJniWithWhitelistAndDangerousSymlink() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -334,7 +334,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testLDSymlinkTreeEnvVar() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -354,7 +354,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testNativeRequiredPaths() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();

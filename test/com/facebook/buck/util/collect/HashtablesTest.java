@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.collect;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 

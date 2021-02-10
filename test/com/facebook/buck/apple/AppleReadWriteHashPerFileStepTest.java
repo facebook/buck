@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -32,6 +31,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class AppleReadWriteHashPerFileStepTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     Path filesystemRootPath = tmp.newFolder().getPath();
     filesystem = TestProjectFilesystems.createProjectFilesystem(filesystemRootPath);
     context = TestExecutionContext.newInstance();

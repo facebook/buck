@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.parser;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
@@ -44,6 +45,7 @@ import java.util.concurrent.ExecutionException;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -253,7 +255,7 @@ public abstract class AbstractBuildPackageComputationTest {
 
     // Watchman throws "GetOverlappedResult() failed for read operation" while trying
     // with symlinks on Windows
-    assumeFalse(isWindows());
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     filesystem.mkdirs(Paths.get("dir1"));
     filesystem.mkdirs(Paths.get("dir2"));
@@ -513,9 +515,5 @@ public abstract class AbstractBuildPackageComputationTest {
         new DefaultGraphTransformationEngine(
             stages, estimatedNumOps, DefaultDepsAwareExecutor.of(1));
     return engine.compute(key).get();
-  }
-
-  private static boolean isWindows() {
-    return Platform.detect().getType().isWindows();
   }
 }

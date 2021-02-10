@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.toolchain.tool.impl;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Assume;
 import org.junit.Test;
 
 public class ToolTest {
@@ -108,7 +109,7 @@ public class ToolTest {
 
   @Test
   public void shouldAssumeThatToolsInDifferentAbsoluteLocationsWithTheSameNameAreTheSame() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     // Note: both file names are the same
     HashedFileTool tool1 =

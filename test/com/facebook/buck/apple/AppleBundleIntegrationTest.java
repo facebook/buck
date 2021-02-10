@@ -23,12 +23,14 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSArray;
@@ -83,7 +85,6 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,7 +102,7 @@ public class AppleBundleIntegrationTest {
   @Before
   public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
   }
 
@@ -1561,8 +1562,7 @@ public class AppleBundleIntegrationTest {
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
-    assertThat(
-        result.getStdout(), Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath));
+    assertThat(result.getStdout(), startsWith(target.getFullyQualifiedName() + " " + appPath));
 
     // test debug output
     target = BuildTargetFactory.newInstance("//:DemoApp#dwarf-and-dsym");
@@ -1574,8 +1574,7 @@ public class AppleBundleIntegrationTest {
                 target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
                 "%s")
             .resolve(target.getShortName() + ".app");
-    assertThat(
-        result.getStdout(), Matchers.startsWith(target.getFullyQualifiedName() + " " + appPath));
+    assertThat(result.getStdout(), startsWith(target.getFullyQualifiedName() + " " + appPath));
   }
 
   @Test

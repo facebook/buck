@@ -17,11 +17,11 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.config.ParserConfig.DEFAULT_BUILD_FILE_NAME;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
@@ -76,6 +76,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -155,7 +156,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessPrintsWarningToStderrThenConsoleEventPublished()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -182,7 +183,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsWarningThenConsoleEventPublished()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -222,7 +223,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsNewWatchmanWarningThenDiagnosticEventPublished()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -252,7 +253,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsErrorThenConsoleEventPublished()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -282,7 +283,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsSyntaxErrorInFileBeingParsedThenExceptionContainsFileNameOnce()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -326,7 +327,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsSyntaxErrorWithoutOffsetThenExceptionIsFormattedWithoutColumn()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -368,7 +369,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsSyntaxErrorInDifferentFileThenExceptionContainsTwoFileNames()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
@@ -432,7 +433,7 @@ public class PythonDslProjectBuildFileParserTest {
   public void whenSubprocessReturnsNonSyntaxErrorThenExceptionContainsFullStackTrace()
       throws IOException, BuildFileParseException, InterruptedException {
     // This test depends on unix utilities that don't exist on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     TestProjectBuildFileParserFactory buildFileParserFactory =
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);

@@ -16,9 +16,6 @@
 
 package com.facebook.buck.android.aapt;
 
-import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
-import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
-import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.google.common.base.Objects;
 import javax.annotation.Nullable;
 
@@ -59,21 +56,26 @@ public class RDotTxtEntryUtil {
 
     private final boolean customTypeDefined;
 
-    public static FakeEntry create(IdType idType, RType type, String name) {
+    public static FakeEntry create(
+        RDotTxtEntry.IdType idType, RDotTxtEntry.RType type, String name) {
       return new FakeEntry(idType, type, name, FAKE_ID, null, null);
     }
 
-    public static FakeEntry createWithId(IdType idType, RType type, String name, String idValue) {
+    public static FakeEntry createWithId(
+        RDotTxtEntry.IdType idType, RDotTxtEntry.RType type, String name, String idValue) {
       return new FakeEntry(idType, type, name, idValue, null, null);
     }
 
     public static FakeEntry createWithCustomDrawable(
-        IdType idType, RType type, String name, CustomDrawableType customType) {
+        RDotTxtEntry.IdType idType,
+        RDotTxtEntry.RType type,
+        String name,
+        RDotTxtEntry.CustomDrawableType customType) {
       return new FakeEntry(idType, type, name, null, customType, null);
     }
 
     public static FakeEntry createWithParent(
-        IdType idType, RType type, String name, String parent) {
+        RDotTxtEntry.IdType idType, RDotTxtEntry.RType type, String name, String parent) {
       return new FakeEntry(idType, type, name, FAKE_ID, null, parent);
     }
 

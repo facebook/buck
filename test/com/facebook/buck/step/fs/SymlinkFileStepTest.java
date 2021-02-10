@@ -17,10 +17,10 @@
 package com.facebook.buck.step.fs;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -79,7 +80,7 @@ public class SymlinkFileStepTest {
 
   @Test
   public void testReplaceMalformedSymlink() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     // Run `ln -s /path/that/does/not/exist dummy` in /tmp.
     Path root = tmpDir.getRoot().toPath();

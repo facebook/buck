@@ -24,13 +24,13 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.facebook.buck.apple.AppleConfig;
@@ -107,6 +107,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -123,7 +124,7 @@ public class AppleCxxPlatformsTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     projectFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     developerDir = projectFilesystem.getPath("/Developer");
   }

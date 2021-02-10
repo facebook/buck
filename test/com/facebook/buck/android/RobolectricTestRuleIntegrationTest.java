@@ -23,7 +23,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -203,7 +202,7 @@ public class RobolectricTestRuleIntegrationTest {
 
   @Test
   public void robolectricTestBuildsWithBinaryResources() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();

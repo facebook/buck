@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;

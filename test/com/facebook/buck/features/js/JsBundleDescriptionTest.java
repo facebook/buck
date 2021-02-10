@@ -22,7 +22,6 @@ import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -48,6 +47,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
@@ -181,7 +181,7 @@ public class JsBundleDescriptionTest {
 
     @Test
     public void testTransitiveDependenciesAcrossSubGraph() {
-      assumeTrue(Platform.detect() != Platform.WINDOWS);
+      Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
       BuildTarget firstLevelA =
           BuildTargetFactory.newInstance("//:firstA")
               .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);

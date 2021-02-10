@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cxx.toolchain.objectfile.Machos;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
@@ -37,6 +36,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.Assume;
 import org.junit.Test;
 
 public class ObjectFileScrubbersTest {
@@ -229,7 +229,7 @@ public class ObjectFileScrubbersTest {
 
   @Test
   public void emptyReplacementValue() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Map<byte[], byte[]> map =
         Machos.generateReplacementMap(ImmutableMap.of(Paths.get("/Users/fb/repo"), Paths.get("")));
@@ -245,7 +245,7 @@ public class ObjectFileScrubbersTest {
 
   @Test
   public void nonEmptyReplacementValue() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     Map<byte[], byte[]> map =
         Machos.generateReplacementMap(
@@ -263,7 +263,7 @@ public class ObjectFileScrubbersTest {
   @Test
   public void rewriteMatchingEmptyPath() {
     // Due to Unix vs Windows path separators
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell");
     Map<byte[], byte[]> replacementMap =
@@ -280,7 +280,7 @@ public class ObjectFileScrubbersTest {
   @Test
   public void rewriteMatchingNonEmptyPath() {
     // Due to Unix vs Windows path separators
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
     Map<byte[], byte[]> replacementMap =
@@ -298,7 +298,7 @@ public class ObjectFileScrubbersTest {
   @Test
   public void rewriteNonMatchingNonEmptyPath() {
     // Due to Unix vs Windows path separators
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
     Map<byte[], byte[]> replacementMap =
@@ -313,7 +313,7 @@ public class ObjectFileScrubbersTest {
   @Test
   public void rewriteToFakePathNoExempt() {
     // Due to Unix vs Windows path separators
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
 
@@ -327,7 +327,7 @@ public class ObjectFileScrubbersTest {
   @Test
   public void rewriteToFakePathExempt() {
     // Due to Unix vs Windows path separators
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     byte[] stringBytes = makeNullTerminatedCString("/Users/fb/repo/cell/folder");
 

@@ -16,8 +16,8 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -30,6 +30,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class WorkerToolRuleIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "worker_tool_test", tmpFolder);

@@ -44,6 +44,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,7 +75,7 @@ public class DylibStubContentsScrubberTest {
 
   @Test
   public void testScrubber() throws IOException, FileScrubber.ScrubException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     // Copy the source dylib, so we can scrub the temporary copy
@@ -121,7 +123,7 @@ public class DylibStubContentsScrubberTest {
   @Test
   public void testScrubberOnFrameworkWithNoExportedSymbol()
       throws IOException, FileScrubber.ScrubException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     // Copy the source dylib, so we can scrub the temporary copy

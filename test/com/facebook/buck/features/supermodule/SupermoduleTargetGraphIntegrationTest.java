@@ -17,7 +17,6 @@
 package com.facebook.buck.features.supermodule;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -31,6 +30,8 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,7 +43,7 @@ public class SupermoduleTargetGraphIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "graph-validation", tmp);
     workspace.setUp();
   }

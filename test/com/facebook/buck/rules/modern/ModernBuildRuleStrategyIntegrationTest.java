@@ -18,8 +18,8 @@ package com.facebook.buck.rules.modern;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -64,6 +64,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -299,7 +300,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   @Before
   public void setUp() throws IOException {
     // MBR strategies use a ContentAddressedStorageClient that doesn't work correctly on Windows.
-    assumeFalse(Platform.detect().equals(Platform.WINDOWS));
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, "strategies", tmpFolder);

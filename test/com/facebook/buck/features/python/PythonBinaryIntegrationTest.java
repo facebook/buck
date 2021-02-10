@@ -16,18 +16,22 @@
 
 package com.facebook.buck.features.python;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -80,8 +84,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
 import org.junit.Before;
@@ -180,9 +182,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void inplaceBinariesWriteCorrectInterpreter() throws IOException {
-    assumeThat(
-        packageStyle,
-        Matchers.in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
+    assumeThat(packageStyle, in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
 
     String expectedPythonPath =
         new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
@@ -215,7 +215,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   public void assumeThatNativeLibsAreSupported() {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     assumeThat(packageStyle, not(is(PackageStyle.INPLACE_LITE)));
     assumeThat(
         "TODO(8667197): Native libs currently don't work on El Capitan",
@@ -252,7 +252,7 @@ public class PythonBinaryIntegrationTest {
             filesystem.getBuckPaths(),
             target.withAppendedFlavors(InternalFlavor.of("omnibus-global-symbols-args")),
             "%s/version_script.txt");
-    MatcherAssert.assertThat(
+    assertThat(
         String.format("%s does not exist", linkerScriptPath),
         Files.exists(workspace.getPath(linkerScriptPath)),
         equalTo(true));
@@ -276,11 +276,11 @@ public class PythonBinaryIntegrationTest {
                 filesystem,
                 target.withAppendedFlavors(InternalFlavor.of("omnibus")),
                 "%s/linker.argsfile"));
-    MatcherAssert.assertThat(
+    assertThat(
         String.format("%s does not exist", linkerArgsPath),
         Files.exists(workspace.getPath(linkerArgsPath)),
         equalTo(true));
-    MatcherAssert.assertThat(
+    assertThat(
         String.format("%s does not exist", versionScriptPath),
         Files.exists(workspace.getPath(versionScriptPath)),
         equalTo(true));
@@ -464,8 +464,8 @@ public class PythonBinaryIntegrationTest {
     } else {
       paths = Unzip.getZipMembers(binPath);
     }
-    assertThat(expectedPaths, everyItem(Matchers.in(paths)));
-    assertThat(expectedAbsentPaths, everyItem(not(Matchers.in(paths))));
+    assertThat(expectedPaths, everyItem(in(paths)));
+    assertThat(expectedAbsentPaths, everyItem(not(in(paths))));
   }
 
   @Test
@@ -513,7 +513,7 @@ public class PythonBinaryIntegrationTest {
             .runBuckCommand("run", "//:main_module_with_prebuilt_dep_and_init_conflict_bin")
             .assertFailure()
             .getStderr(),
-        Matchers.matchesPattern(
+        matchesPattern(
             Pattern.compile(
                 ".*found duplicate entries for module \\S+ when creating python package.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
@@ -531,7 +531,7 @@ public class PythonBinaryIntegrationTest {
             .runBuckCommand("run", "//:main_module_with_prebuilt_dep_and_whl_init_conflict_bin")
             .assertFailure()
             .getStderr(),
-        Matchers.matchesPattern(Pattern.compile(expected, Pattern.MULTILINE | Pattern.DOTALL)));
+        matchesPattern(Pattern.compile(expected, Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
   /** Verify that multiple sources trying to occupy the same module cause conflict errors. */
@@ -539,7 +539,7 @@ public class PythonBinaryIntegrationTest {
   public void buildFailsWhenGeneratedSourcesConflicts() {
     assertThat(
         workspace.runBuckBuild("//:generated_source_conflict").assertFailure().getStderr(),
-        Matchers.matchesPattern(
+        matchesPattern(
             Pattern.compile(
                 ".*found duplicate entries for module \\S+ when creating python package.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
@@ -558,7 +558,7 @@ public class PythonBinaryIntegrationTest {
     Path py3 = PythonTestUtils.assumeInterpreter("python3");
     PythonTestUtils.assumeVersion(
         py3,
-        Matchers.any(String.class),
+        any(String.class),
         ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
             .greaterThanOrEqualTo("3.7"));
 
@@ -681,9 +681,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void inplaceBinaryUsesInterpreterFlags() throws IOException {
-    assumeThat(
-        packageStyle,
-        Matchers.in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
+    assumeThat(packageStyle, in(ImmutableList.of(PackageStyle.INPLACE, PackageStyle.INPLACE_LITE)));
 
     workspace.addBuckConfigLocalOption("python", "inplace_interpreter_flags", "-EsB");
     workspace.runBuckCommand("run", "//:bin").assertSuccess();
@@ -717,7 +715,7 @@ public class PythonBinaryIntegrationTest {
     Path py3 = PythonTestUtils.assumeInterpreter("python3");
     PythonTestUtils.assumeVersion(
         py3,
-        Matchers.any(String.class),
+        any(String.class),
         ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
             .greaterThanOrEqualTo("3.7"));
     Path binPath =
@@ -731,9 +729,9 @@ public class PythonBinaryIntegrationTest {
             : Unzip.getZipMembers(binPath);
     assertThat(
         paths.stream().map(PathFormatter::pathWithUnixSeparators).collect(Collectors.toList()),
-        Matchers.hasItems(
-            Matchers.matchesRegex("foo/bar/(__pycache__/)?mod(.cpython-3[0-9])?.pyc"),
-            Matchers.matchesRegex("(__pycache__/)?main(.cpython-3[0-9])?.pyc")));
+        hasItems(
+            matchesRegex("foo/bar/(__pycache__/)?mod(.cpython-3[0-9])?.pyc"),
+            matchesRegex("(__pycache__/)?main(.cpython-3[0-9])?.pyc")));
   }
 
   @Test

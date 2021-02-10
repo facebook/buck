@@ -16,8 +16,14 @@
 
 package com.facebook.buck.features.python;
 
+import static org.hamcrest.Matchers.any;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.matchesRegex;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.junit.MatcherAssume.assumeThat;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -43,7 +49,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.stream.Collectors;
-import org.hamcrest.Matchers;
 import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
 import org.junit.Before;
@@ -57,7 +62,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_package", tmp);
     workspace.setUp();
@@ -131,7 +136,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
     Path py3 = PythonTestUtils.assumeInterpreter("python3");
     PythonTestUtils.assumeVersion(
         py3,
-        Matchers.any(String.class),
+        any(String.class),
         ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
             .greaterThanOrEqualTo("3.7"));
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
@@ -144,9 +149,9 @@ public class PrebuiltPythonLibraryIntegrationTest {
             .stream()
             .map(p -> PathFormatter.pathWithUnixSeparators(dir.getPath().relativize(p)))
             .collect(ImmutableList.toImmutableList()),
-        Matchers.containsInAnyOrder(
-            Matchers.matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
-            Matchers.matchesRegex("package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")));
+        containsInAnyOrder(
+            matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
+            matchesRegex("package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")));
   }
 
   @Test
@@ -169,11 +174,10 @@ public class PrebuiltPythonLibraryIntegrationTest {
             .map(p -> binPath.getPath().relativize(p))
             .map(Path::toString)
             .collect(Collectors.toList()),
-        Matchers.everyItem(
-            Matchers.not(
-                Matchers.anyOf(
-                    Matchers.matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
-                    Matchers.matchesRegex(
-                        "package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")))));
+        everyItem(
+            not(
+                anyOf(
+                    matchesRegex("package(/__pycache__)?/file(.cpython-3[0-9])?.pyc"),
+                    matchesRegex("package(/__pycache__)?/__init__(.cpython-3[0-9])?.pyc")))));
   }
 }

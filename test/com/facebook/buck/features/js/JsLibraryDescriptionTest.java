@@ -25,7 +25,6 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -61,6 +60,7 @@ import java.util.stream.Collector.Characteristics;
 import java.util.stream.Stream;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -414,9 +414,10 @@ public class JsLibraryDescriptionTest {
 
   @Test
   public void supportsDepsQueryAppleToolchain() {
-    assumeFalse(
+    Assume.assumeThat(
         "Only for Apple OS. Invokes the AppleLibraryDescription",
-        Platform.detect() == Platform.WINDOWS);
+        Platform.detect(),
+        not(Platform.WINDOWS));
     BuildTarget a =
         BuildTargetFactory.newInstance("//query-deps:a")
             .withAppendedFlavors(JsFlavors.TRANSFORM_PROFILE_DEFAULT);

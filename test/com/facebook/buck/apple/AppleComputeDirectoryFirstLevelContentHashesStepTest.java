@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -32,6 +31,8 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,7 +44,7 @@ public class AppleComputeDirectoryFirstLevelContentHashesStepTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     filesystemRootPath =
         TestDataHelper.getTestDataDirectory(this)
             .resolve("compute_directory_1st_level_content_hashes");

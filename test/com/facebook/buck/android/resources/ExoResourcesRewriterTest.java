@@ -18,7 +18,6 @@ package com.facebook.buck.android.resources;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -34,6 +33,8 @@ import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -104,7 +105,7 @@ public class ExoResourcesRewriterTest {
 
   @Test
   public void testRewriteRTxt() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     RelPath inputRTxt = RelPath.of(Paths.get("input.R.txt"));
     String rtxtContent =
         "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0025\n"

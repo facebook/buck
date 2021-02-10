@@ -67,6 +67,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -76,7 +77,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryDiagnostic() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -147,7 +148,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsSomething() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -170,7 +171,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryHeadersOnlyWithoutSwift() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -193,7 +194,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryHeadersOnlyWithSwift() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -217,7 +218,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void appleLibraryUsesPlatformDepOfSpecifiedPlatform() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -244,7 +245,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryWithHeaderPathPrefix() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -267,7 +268,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testCanUseAHeaderWithoutPrefix() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -290,7 +291,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryWithDefaultsInConfigBuildsSomething() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -318,7 +319,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryWithDefaultsInRuleBuildsSomething() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -448,7 +449,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -471,7 +472,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryHeaderSymlinkTree() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -508,7 +509,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsFramework() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -542,7 +543,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsWithLinkerMap() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -568,7 +569,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsWithoutLinkerMapUsingFlavor() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -595,7 +596,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsWithoutLinkerMapUsingConfigOption() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -622,7 +623,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryBuildsFrameworkIOS() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
 
@@ -657,7 +658,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void appleLibraryBuildsMultiarchFramework() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -694,7 +695,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleFrameworkWithDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -727,7 +728,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleDynamicLibraryProducesDylib() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -753,7 +754,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleBinaryLinksAgainstSharedInterface() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -778,7 +779,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleSharedInterfaceProducesTheSameStubsForSameABI() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -818,7 +819,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleDynamicLibraryWithDsym() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -860,7 +861,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void frameworkContainsFrameworkDependencies() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -903,7 +904,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void frameworkDependenciesDoNotContainTransitiveDependencies() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -937,7 +938,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void noIncludeFrameworksDoesntContainFrameworkDependencies() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -971,7 +972,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryExportedHeaderSymlinkTree() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1005,7 +1006,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryIsHermetic() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1053,7 +1054,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildEmptySourceAppleLibrary() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1077,7 +1078,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildUsingPrefixHeaderFromCxxPrecompiledHeader() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1090,7 +1091,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1103,7 +1104,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildAppleLibraryThatHasSwiftWithArgfile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     testBuildAppleLibraryThatHasSwiftWithLocalConfig(
@@ -1112,7 +1113,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildAppleLibraryThatHasSwiftWithFilelist() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     testBuildAppleLibraryThatHasSwiftWithLocalConfig(
@@ -1121,7 +1122,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildAppleLibraryThatHasSwift() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     testBuildAppleLibraryThatHasSwiftWithLocalConfig(ImmutableMap.of());
@@ -1129,7 +1130,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildAppleLibraryThatHasSwiftBuildsOnWatchOSSimulator() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     UserFlavor watchosSimFlavor = UserFlavor.of("watchsimulator-i386", "buck boilerplate");
@@ -1214,7 +1215,7 @@ public class AppleLibraryIntegrationTest {
   public void testDylibSwiftScenario(
       String scenario, String dylibTargetName, String swiftRuntimeDylibTargetName)
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1253,7 +1254,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testBuildAppleLibraryUsingBridingHeaderAndSwiftDotH() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1319,7 +1320,7 @@ public class AppleLibraryIntegrationTest {
       Optional<Flavor> flavor,
       Map<String, Map<String, String>> localConfigs)
       throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1347,7 +1348,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryTargetSpecificSDKVersion() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -1407,7 +1408,7 @@ public class AppleLibraryIntegrationTest {
 
   @Test
   public void testAppleLibraryDebugPrefixMap() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =

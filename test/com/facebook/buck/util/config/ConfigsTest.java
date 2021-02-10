@@ -16,7 +16,8 @@
 
 package com.facebook.buck.util.config;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MostFiles;

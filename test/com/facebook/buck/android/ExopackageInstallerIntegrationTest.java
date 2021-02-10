@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
@@ -59,6 +58,8 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,7 +91,7 @@ public class ExopackageInstallerIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     executionContext = TestExecutionContextUtils.executionContextBuilder().build();
     currentBuildState = null;

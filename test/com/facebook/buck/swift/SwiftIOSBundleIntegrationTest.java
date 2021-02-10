@@ -159,7 +159,7 @@ public class SwiftIOSBundleIntegrationTest {
 
   @Test
   public void swiftLibraryWhenLinkStyleIsNotSharedDoesNotProduceDylib() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -202,7 +202,7 @@ public class SwiftIOSBundleIntegrationTest {
 
   @Test
   public void swiftLibraryWhenLinkStyleIsSharedShouldProduceDylib() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -258,7 +258,7 @@ public class SwiftIOSBundleIntegrationTest {
 
   @Test
   public void testSwiftSharedLibraryCustomSoname() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -298,7 +298,7 @@ public class SwiftIOSBundleIntegrationTest {
 
   @Test
   public void testSwiftPreferredLinkage() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =

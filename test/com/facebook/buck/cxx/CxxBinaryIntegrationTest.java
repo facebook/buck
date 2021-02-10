@@ -20,8 +20,11 @@ import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.oneOf;
@@ -89,7 +92,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -101,7 +103,7 @@ public class CxxBinaryIntegrationTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   @Test
@@ -961,7 +963,7 @@ public class CxxBinaryIntegrationTest {
 
     assertThat(
         simpleOnceCppCaptureTargetEntry.getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
+        equalTo(Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED)));
 
     /*
      * Check that when the used-header is changed, then a build is triggered
@@ -1292,7 +1294,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testLinkMapIsNotCached() throws Exception {
     // Currently we only support Apple platforms for generating link maps.
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
@@ -1319,7 +1321,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testLinkMapIsCached() throws Exception {
     // Currently we only support Apple platforms for generating link maps.
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
@@ -1413,7 +1415,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1431,9 +1433,8 @@ public class CxxBinaryIntegrationTest {
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget);
-    assertThat(
-        buildLog.getLogEntry(binaryTarget).getStatus(), Matchers.equalTo(BuildRuleStatus.FAIL));
-    assertThat(buildLog.getLogEntry(target).getStatus(), Matchers.equalTo(BuildRuleStatus.FAIL));
+    assertThat(buildLog.getLogEntry(binaryTarget).getStatus(), equalTo(BuildRuleStatus.FAIL));
+    assertThat(buildLog.getLogEntry(target).getStatus(), equalTo(BuildRuleStatus.FAIL));
   }
 
   @Test
@@ -1499,7 +1500,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
   }
 
   @Test
@@ -1624,7 +1625,7 @@ public class CxxBinaryIntegrationTest {
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
-        not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
+        not(equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1720,7 +1721,7 @@ public class CxxBinaryIntegrationTest {
     String optContents =
         new String(
             Files.readAllBytes(optResult.resolve("ppandcompile.argsfile")), StandardCharsets.UTF_8);
-    assertThat(Files.exists(optResult.resolve("ppandcompile.argsfile")), Matchers.equalTo(true));
+    assertThat(Files.exists(optResult.resolve("ppandcompile.argsfile")), equalTo(true));
     assertThat(
         optContents,
         containsString(
@@ -1973,8 +1974,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckBuild("//:binary_matches_default").assertSuccess();
     ProcessResult result = workspace.runBuckBuild("//:binary_no_match");
     result.assertFailure();
-    assertThat(
-        result.getStderr(), Matchers.allOf(containsString("non-void"), containsString("function")));
+    assertThat(result.getStderr(), allOf(containsString("non-void"), containsString("function")));
     workspace.runBuckBuild("//:binary_with_library_matches_default").assertSuccess();
   }
 
@@ -2099,7 +2099,7 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void testStrippedBinaryProducesBothUnstrippedAndStrippedOutputs()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget unstrippedTarget = BuildTargetFactory.newInstance("//:test");
     BuildTarget strippedTarget =
@@ -2130,11 +2130,11 @@ public class CxxBinaryIntegrationTest {
     String unstrippedOut =
         workspace.runCommand("dsymutil", "-s", unstrippedPath.toString()).getStdout().orElse("");
 
-    assertThat(strippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
-    assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("dyld_stub_binder"));
+    assertThat(strippedOut, containsStringIgnoringCase("dyld_stub_binder"));
+    assertThat(unstrippedOut, containsStringIgnoringCase("dyld_stub_binder"));
 
-    assertThat(strippedOut, not(Matchers.containsStringIgnoringCase("test.cpp")));
-    assertThat(unstrippedOut, Matchers.containsStringIgnoringCase("test.cpp"));
+    assertThat(strippedOut, not(containsStringIgnoringCase("test.cpp")));
+    assertThat(unstrippedOut, containsStringIgnoringCase("test.cpp"));
   }
 
   @Test
@@ -2173,8 +2173,8 @@ public class CxxBinaryIntegrationTest {
         workspace.getPath(
             BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), unstrippedTarget, "%s"));
 
-    assertThat(Files.exists(strippedPath), Matchers.equalTo(true));
-    assertThat(Files.exists(unstrippedPath), Matchers.equalTo(false));
+    assertThat(Files.exists(strippedPath), equalTo(true));
+    assertThat(Files.exists(unstrippedPath), equalTo(false));
   }
 
   @Test
@@ -2230,7 +2230,7 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testStrippedBinaryOutputDiffersFromUnstripped() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget unstrippedTarget = BuildTargetFactory.newInstance("//:test");
     BuildTarget strippedTarget =
@@ -2251,12 +2251,12 @@ public class CxxBinaryIntegrationTest {
 
     String strippedOutput = strippedResult.getStdout().split(" ")[1];
     String unstrippedOutput = unstrippedResult.getStdout().split(" ")[1];
-    assertThat(strippedOutput, not(Matchers.equalTo(unstrippedOutput)));
+    assertThat(strippedOutput, not(equalTo(unstrippedOutput)));
   }
 
   @Test
   public void testBuildingWithAndWithoutLinkerMap() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     BuildTarget withoutLinkerMapTarget =
@@ -2276,8 +2276,8 @@ public class CxxBinaryIntegrationTest {
     Path linkerMapPath =
         workspace.getPath(
             BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s-LinkMap.txt"));
-    assertThat(Files.exists(binaryWithLinkerMapPath), Matchers.equalTo(true));
-    assertThat(Files.exists(linkerMapPath), Matchers.equalTo(true));
+    assertThat(Files.exists(binaryWithLinkerMapPath), equalTo(true));
+    assertThat(Files.exists(linkerMapPath), equalTo(true));
 
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
@@ -2293,8 +2293,8 @@ public class CxxBinaryIntegrationTest {
         workspace.getPath(
             BuildTargetPaths.getGenPath(
                 filesystem.getBuckPaths(), withoutLinkerMapTarget, "%s-LinkMap.txt"));
-    assertThat(Files.exists(binaryWithoutLinkerMapPath), Matchers.equalTo(true));
-    assertThat(Files.exists(linkerMapPath), Matchers.equalTo(false));
+    assertThat(Files.exists(binaryWithoutLinkerMapPath), equalTo(true));
+    assertThat(Files.exists(linkerMapPath), equalTo(false));
   }
 
   @Test
@@ -2362,7 +2362,7 @@ public class CxxBinaryIntegrationTest {
         findFiles(
             tmp.getRoot().resolve("buck-out/gen"),
             tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
-    assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
+    assertThat(initialObjects, equalTo(subsequentObjects));
   }
 
   /**
@@ -2497,7 +2497,7 @@ public class CxxBinaryIntegrationTest {
         new ObjectMapper().readValue(file, new TypeReference<Map<String, String>>() {});
     assertThat(
         result,
-        Matchers.equalTo(
+        equalTo(
             ImmutableMap.of(
                 "foo/resource.txt",
                 "resource/resource.txt",

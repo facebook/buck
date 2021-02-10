@@ -35,7 +35,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
@@ -162,6 +161,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -198,7 +198,7 @@ public class ProjectGeneratorTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     clock = SettableFakeClock.DO_NOT_CARE;
     fakeProjectFilesystem = new FakeProjectFilesystem(clock);
     projectCell = (new TestCellBuilder()).setFilesystem(fakeProjectFilesystem).build();

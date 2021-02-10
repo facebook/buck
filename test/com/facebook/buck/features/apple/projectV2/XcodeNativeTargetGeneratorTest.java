@@ -19,7 +19,6 @@ package com.facebook.buck.features.apple.projectV2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
@@ -75,6 +74,8 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -106,7 +107,7 @@ public class XcodeNativeTargetGeneratorTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
 
     setupTargetGraph();
 

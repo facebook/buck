@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli.endtoend;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -83,7 +84,7 @@ public class CommandsEndToEndTest {
   @Test
   public void shouldUseTheInterpreterSpecifiedInTheEnvironment(
       EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Throwable {
-    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     for (String s : test.getTemplateSet()) {
       workspace.addPremadeTemplate(s);

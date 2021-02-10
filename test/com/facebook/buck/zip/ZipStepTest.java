@@ -17,12 +17,12 @@
 package com.facebook.buck.zip;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -63,6 +63,7 @@ import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -213,7 +214,7 @@ public class ZipStepTest {
   @Test
   public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws Exception {
     // Symlinks on Windows are _hard_. Let's go shopping.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     AbsPath parent = tmp.newFolder("zipstep");
     AbsPath out = parent.resolve("output.zip");
@@ -388,7 +389,7 @@ public class ZipStepTest {
 
   @Test
   public void zipMaintainsExecutablePermissions() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     AbsPath parent = tmp.newFolder("zipstep");
     AbsPath toZip = tmp.newFolder("zipdir");

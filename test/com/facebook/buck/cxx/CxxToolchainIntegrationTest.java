@@ -18,9 +18,9 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -74,7 +75,7 @@ public class CxxToolchainIntegrationTest {
 
   @Test
   public void testDownwardLoggingIntegration() throws IOException {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_toolchain", tmp);
@@ -100,7 +101,7 @@ public class CxxToolchainIntegrationTest {
 
   @Test
   public void testDepfilesWithCustomToolchain() throws IOException {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_toolchain", tmp);

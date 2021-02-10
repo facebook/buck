@@ -16,15 +16,16 @@
 
 package com.facebook.buck.tools.documentation.generator.skylark;
 
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.reflect.ClassPath.ClassInfo;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.starlark.java.annot.StarlarkMethod;
+import org.junit.Assume;
 import org.junit.Test;
 
 public class SignatureCollectorTest {
@@ -39,7 +40,7 @@ public class SignatureCollectorTest {
   public void findsAtLeastSkylarkSignature() throws Exception {
     // ClassPath$Scanner has issues scanning classpath on Windows and results in
     // "The filename, directory name, or volume label syntax is incorrect" exception.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     assertThat(
         SignatureCollector.getSkylarkCallables(CLASS_INFO_PREDICATE)

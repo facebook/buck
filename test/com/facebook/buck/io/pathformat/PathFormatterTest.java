@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io.pathformat;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.core.filesystems.BuckFileSystemProvider;

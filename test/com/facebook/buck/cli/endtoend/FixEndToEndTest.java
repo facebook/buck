@@ -16,8 +16,11 @@
 
 package com.facebook.buck.cli.endtoend;
 
-import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -36,7 +39,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -79,7 +81,7 @@ public class FixEndToEndTest {
   public void shouldRunLegacyFixScript(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
       throws Throwable {
     // Windows cannot execute always execute .py files directly
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     // Make sure we get '0' back in the normal case, but also make sure that we error in a
     // place where the script should fail
@@ -103,7 +105,7 @@ public class FixEndToEndTest {
     ProcessResult failureResult = buckCommand(workspace, test, "fix");
     assertThat(
         failureResult.getStderr(),
-        Matchers.matchesPattern(
+        matchesPattern(
             Pattern.compile(".*No such file or directory:.*last_buildcommand.*", Pattern.DOTALL)));
   }
 
@@ -124,10 +126,9 @@ public class FixEndToEndTest {
 
     result.assertExitCode(ExitCode.FIX_FAILED);
     assertThat(
-        result.getStderr(),
-        Matchers.containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: True"));
+        result.getStderr(), containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: True"));
   }
 
   @Test
@@ -148,10 +149,9 @@ public class FixEndToEndTest {
 
     result.assertExitCode(ExitCode.SUCCESS);
     assertThat(
-        result.getStderr(),
-        Matchers.containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: True"));
+        result.getStderr(), containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: True"));
   }
 
   @Test
@@ -171,10 +171,9 @@ public class FixEndToEndTest {
 
     result.assertExitCode(ExitCode.SUCCESS);
     assertThat(
-        result.getStderr(),
-        Matchers.containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: True"));
+        result.getStderr(), containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: True"));
   }
 
   @Test
@@ -192,7 +191,7 @@ public class FixEndToEndTest {
 
     assertThat(
         result.getStderr(),
-        Matchers.containsString("`buck fix` requires a contact for any configured scripts"));
+        containsString("`buck fix` requires a contact for any configured scripts"));
   }
 
   @Test
@@ -211,8 +210,7 @@ public class FixEndToEndTest {
     ProcessResult result =
         buckCommand(workspace, test, "fix", "--build-id", "1234-5678").assertFailure();
 
-    assertThat(
-        result.getStderr(), Matchers.containsString("Error fetching logs for build 1234-5678"));
+    assertThat(result.getStderr(), containsString("Error fetching logs for build 1234-5678"));
   }
 
   @Test
@@ -243,8 +241,7 @@ public class FixEndToEndTest {
 
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
-            "Error finding a valid previous run to get 'fix' information from"));
+        containsString("Error finding a valid previous run to get 'fix' information from"));
   }
 
   @Test
@@ -270,11 +267,10 @@ public class FixEndToEndTest {
 
     result.assertExitCode(ExitCode.SUCCESS);
     assertThat(
-        result.getStderr(),
-        Matchers.containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: True"));
-    assertThat(result.getStderr(), Matchers.containsString("user entered foobar"));
+        result.getStderr(), containsString("build_id: 2ef9b523-fc4e-48a3-aa9f-baab9ca36386"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: True"));
+    assertThat(result.getStderr(), containsString("user entered foobar"));
   }
 
   @Test
@@ -295,9 +291,7 @@ public class FixEndToEndTest {
     result.assertExitCode(ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.not(
-            Matchers.containsString(
-                "Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
+        not(containsString("Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
   }
 
   @Test
@@ -324,9 +318,7 @@ public class FixEndToEndTest {
     result.assertExitCode(ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.not(
-            Matchers.containsString(
-                "Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
+        not(containsString("Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
   }
 
   @Test
@@ -352,9 +344,7 @@ public class FixEndToEndTest {
     result.assertExitCode(ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.not(
-            Matchers.containsString(
-                "Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
+        not(containsString("Running `buck fix`. Invoke this manually with `buck fix --build-id ")));
   }
 
   @Test
@@ -378,7 +368,7 @@ public class FixEndToEndTest {
     result.assertExitCode(ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
+        containsString(
             "Error running auto-fix: `buck fix` requires a contact for any configured scripts"));
   }
 
@@ -408,12 +398,11 @@ public class FixEndToEndTest {
     result.assertExitCode(ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
-            "Running `buck fix`. Invoke this manually with `buck fix --build-id "));
-    assertThat(result.getStderr(), Matchers.containsString("command: build"));
-    assertThat(result.getStderr(), Matchers.containsString("exit_code: 5"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: False"));
+        containsString("Running `buck fix`. Invoke this manually with `buck fix --build-id "));
+    assertThat(result.getStderr(), containsString("command: build"));
+    assertThat(result.getStderr(), containsString("exit_code: 5"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: False"));
   }
 
   @Test
@@ -439,12 +428,11 @@ public class FixEndToEndTest {
     result.assertExitCode(ExitCode.PARSE_ERROR);
     assertThat(
         result.getStderr(),
-        Matchers.containsString(
-            "Running `buck fix`. Invoke this manually with `buck fix --build-id "));
-    assertThat(result.getStderr(), Matchers.containsString("command: build"));
-    assertThat(result.getStderr(), Matchers.containsString("exit_code: 5"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: False"));
+        containsString("Running `buck fix`. Invoke this manually with `buck fix --build-id "));
+    assertThat(result.getStderr(), containsString("command: build"));
+    assertThat(result.getStderr(), containsString("exit_code: 5"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: False"));
   }
 
   @Test
@@ -474,10 +462,10 @@ public class FixEndToEndTest {
             "//:foo");
 
     result.assertExitCode(ExitCode.PARSE_ERROR);
-    assertThat(result.getStderr(), Matchers.containsString("command: build"));
-    assertThat(result.getStderr(), Matchers.containsString("exit_code: 5"));
-    assertThat(result.getStderr(), Matchers.matchesPattern(JASABI_REGEX));
-    assertThat(result.getStderr(), Matchers.containsString("manually_invoked: False"));
-    assertThat(result.getStderr(), Matchers.containsString("user entered foobar"));
+    assertThat(result.getStderr(), containsString("command: build"));
+    assertThat(result.getStderr(), containsString("exit_code: 5"));
+    assertThat(result.getStderr(), matchesPattern(JASABI_REGEX));
+    assertThat(result.getStderr(), containsString("manually_invoked: False"));
+    assertThat(result.getStderr(), containsString("user entered foobar"));
   }
 }

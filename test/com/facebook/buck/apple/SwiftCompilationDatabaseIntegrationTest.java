@@ -32,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -44,8 +45,7 @@ public class SwiftCompilationDatabaseIntegrationTest {
 
   @Before
   public void setupWorkspace() throws IOException {
-    Platform platform = Platform.detect();
-    Assume.assumeTrue(platform == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
 
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

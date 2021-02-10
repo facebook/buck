@@ -18,12 +18,16 @@ package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.config.ParserConfig.DEFAULT_BUILD_FILE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -142,9 +146,9 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.concurrent.Executors;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -386,11 +390,11 @@ public class ParserWithConfigurableAttributesTest {
     Iterable<ParseEvent> events = Iterables.filter(listener.getEvents(), ParseEvent.class);
     assertThat(
         events,
-        Matchers.contains(
-            Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
-            Matchers.allOf(
-                Matchers.hasProperty("buildTargets", equalTo(buildTargets)),
-                Matchers.hasProperty("graph", equalTo(Optional.of(targetGraph))))));
+        contains(
+            hasProperty("buildTargets", equalTo(buildTargets)),
+            allOf(
+                hasProperty("buildTargets", equalTo(buildTargets)),
+                hasProperty("graph", equalTo(Optional.of(targetGraph))))));
   }
 
   @Test
@@ -1900,7 +1904,7 @@ public class ParserWithConfigurableAttributesTest {
   public void whenBuildFileContainsSourcesUnderSymLinkNewSourcesNotAddedUntilCacheCleaned()
       throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
@@ -1954,7 +1958,7 @@ public class ParserWithConfigurableAttributesTest {
   public void whenBuildFileContainsSourcesUnderSymLinkDeletedSourcesNotRemovedUntilCacheCleaned()
       throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
@@ -2009,7 +2013,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void whenSymlinksForbiddenThenParseFailsOnSymlinkInSources() throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -2044,7 +2048,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void whenSymlinksAreInReadOnlyPathsCachingIsNotDisabled() throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     AbsPath rootPath = tempDir.getRoot().toRealPath();
     BuckConfig config =
@@ -2162,7 +2166,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void defaultFlavorsInRuleArgsAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
@@ -2201,7 +2205,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void defaultFlavorsInConfigAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
@@ -2243,7 +2247,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void defaultFlavorsInArgsOverrideDefaultsFromConfig() throws Exception {
     // We depend on Xcode platforms for this test.
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), is(Platform.MACOS));
 
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent().getPath());

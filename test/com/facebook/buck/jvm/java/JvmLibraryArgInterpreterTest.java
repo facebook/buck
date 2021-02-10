@@ -17,12 +17,12 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.BuiltInJavac.DEFAULT;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -167,7 +168,7 @@ public class JvmLibraryArgInterpreterTest {
   @Test
   public void returnsExternalCompilerIfCompilerArgHasPath() throws IOException {
     // newExecutableFile cannot be executed on windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     AbsPath externalJavac = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
@@ -185,7 +186,7 @@ public class JvmLibraryArgInterpreterTest {
   @Test
   public void compilerArgTakesPrecedenceOverJavacPathArg() throws IOException {
     // newExecutableFile cannot be executed on windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     AbsPath externalJavacPath = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);

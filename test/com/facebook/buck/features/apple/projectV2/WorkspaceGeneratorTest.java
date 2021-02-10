@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasXPath;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
@@ -39,6 +38,8 @@ import java.nio.file.attribute.FileTime;
 import java.util.Optional;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -51,7 +52,7 @@ public class WorkspaceGeneratorTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
     generator = new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));

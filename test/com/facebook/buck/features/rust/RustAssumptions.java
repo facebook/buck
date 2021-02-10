@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.rust;
 
-import static org.junit.Assume.assumeFalse;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeTrue;
 
@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import org.junit.Assume;
 
 abstract class RustAssumptions {
   public static CxxPlatformsProvider getCxxPlatformsProvider() {
@@ -41,7 +42,7 @@ abstract class RustAssumptions {
   }
 
   public static void assumeRustIsConfigured() {
-    assumeFalse(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RustPlatform rustPlatform =

@@ -33,6 +33,8 @@ import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -43,7 +45,7 @@ public class ProjectIntegrationTest {
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
   }
 
   @Test
@@ -351,7 +353,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectFocus() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
     ProjectWorkspace workspace =
@@ -476,7 +478,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectWithCell() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -491,7 +493,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectWithEmbeddedCellBuckout() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -506,7 +508,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectWithCellAndMergedHeaderMap() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -523,7 +525,7 @@ public class ProjectIntegrationTest {
 
   @Test(timeout = 180000)
   public void testBuckProjectWithAppleBundleTests() throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -550,7 +552,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithEmbeddedCellBuckoutAndMergedHeaderMap()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -567,7 +569,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testBuckProjectOtherCell() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
@@ -593,7 +595,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithSwiftDependencyOnModularObjectiveCLibrary()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -610,7 +612,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithSwiftDependencyOnModularHeadersObjectiveCLibrary()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -627,7 +629,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithLibraryUsingModularImports()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -644,7 +646,7 @@ public class ProjectIntegrationTest {
   @Test
   public void testBuckProjectWithBidirectionalObjCAndSwiftInSameLibrary()
       throws IOException, InterruptedException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
@@ -661,7 +663,7 @@ public class ProjectIntegrationTest {
   @Test
   @Ignore("Currently failing")
   public void testBuckProjectUsingDefaultPlatformAttributePropagatesFlavor() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
 
@@ -678,7 +680,7 @@ public class ProjectIntegrationTest {
 
   @Test
   public void testHalide() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(
         AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
     ProjectWorkspace workspace =

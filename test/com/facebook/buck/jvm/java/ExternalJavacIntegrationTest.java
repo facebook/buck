@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -39,7 +40,7 @@ public class ExternalJavacIntegrationTest {
 
   @Test
   public void whenExternalJavacIsSetCompilationSucceeds() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
@@ -55,7 +56,7 @@ public class ExternalJavacIntegrationTest {
 
   @Test
   public void whenExternalSrcZipUsedCompilationSucceeds() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac_src_zip", tmp);
@@ -72,7 +73,7 @@ public class ExternalJavacIntegrationTest {
 
   @Test(timeout = 180000)
   public void whenExternalSrcZipUsedBuildingBinarySucceeds() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
@@ -96,7 +97,7 @@ public class ExternalJavacIntegrationTest {
 
   @Test
   public void whenExternalJavacFailsOutputIsInFailureMessage() throws IOException {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);

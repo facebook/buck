@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
@@ -55,6 +54,8 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,7 +72,7 @@ public class XcodeNativeTargetProjectWriterTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     projectFilesystem = new FakeProjectFilesystem();
     generatedProject =
         new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());

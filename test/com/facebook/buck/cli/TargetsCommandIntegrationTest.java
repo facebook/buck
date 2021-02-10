@@ -30,7 +30,6 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -78,6 +77,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.thrift.TException;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -805,7 +805,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashXcodeWorkspaceWithTests() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -819,7 +820,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashXcodeWorkspaceWithTestsForAllTargets() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -852,7 +854,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashXcodeWorkspaceWithoutTestsDiffersFromWithTests() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -872,7 +875,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashChangesAfterModifyingSourceFile() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -898,7 +902,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashChangesAfterModifyingSourceFileForAllTargets() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -941,7 +946,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testTargetHashChangesAfterDeletingSourceFile() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -1207,7 +1213,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testShowTargetsApplyDefaultFlavorsModeSingle() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -1232,7 +1239,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testShowTargetsApplyDefaultFlavorsModeAll() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();
@@ -1264,7 +1272,8 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void testShowTargetsApplyDefaultFlavorsModeDisabled() throws IOException {
-    assumeFalse("Apple CodeSign doesn't work on Windows", Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(
+        "Apple CodeSign doesn't work on Windows", Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "xcode_workspace_with_tests", tmp);
     workspace.setUp();

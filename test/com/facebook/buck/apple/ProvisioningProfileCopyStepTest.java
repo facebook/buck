@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
@@ -51,6 +50,8 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -105,7 +106,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testNoEntitlementsDoesNotMergeInvalidProfileKeys() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
 
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(
@@ -139,7 +140,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testEntitlementsDoesNotMergeInvalidProfileKeys() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(
             projectFilesystem,
@@ -171,7 +172,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testEntitlementsMergesValidProfileKeys() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(
             projectFilesystem,
@@ -202,7 +203,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testApplicationIdentifierIsValid() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(
             projectFilesystem,
@@ -224,7 +225,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testApplicationIdentifierIsInInfoPlist() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     Path infoPlistPath = testdataDir.resolve("Info.plist");
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(
@@ -245,7 +246,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testApplicationIdentifierNotInInfoPlistForFrameworks() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     Path infoPlistPath = testdataDir.resolve("Info_Framework.plist");
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(
@@ -265,7 +266,7 @@ public class ProvisioningProfileCopyStepTest {
 
   @Test
   public void testApplicationIdentifierNotInInfoPlistForWatchOSApps() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     Path infoPlistPath = testdataDir.resolve("Info_WatchOS.plist");
     ProvisioningProfileCopyStep step =
         new ProvisioningProfileCopyStep(

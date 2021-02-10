@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,8 +44,7 @@ public class CxxLinkGroupMapDatabaseIntegrationTest {
 
   @Before
   public void setupWorkspace() {
-    Platform platform = Platform.detect();
-    Assume.assumeTrue(platform == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
   }
 
   private void runCreateLinkGroupMapDatabaseTestForScenario(

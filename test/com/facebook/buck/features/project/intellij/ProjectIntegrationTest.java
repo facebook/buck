@@ -16,10 +16,14 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import static org.hamcrest.Matchers.hasXPath;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -39,8 +43,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,7 +55,7 @@ public class ProjectIntegrationTest {
   @Before
   public void setUp() {
     // These tests consistently fail on Windows due to path separator issues.
-    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   @Test
@@ -506,7 +508,7 @@ public class ProjectIntegrationTest {
     final String fileXPath =
         String.format(
             "/project/component/modules/module[contains(@filepath,'%s')]", extraModuleFilePath);
-    assertThat(XmlDomParser.parse(modulesBefore), Matchers.not(Matchers.hasXPath(fileXPath)));
+    assertThat(XmlDomParser.parse(modulesBefore), not(hasXPath(fileXPath)));
 
     // Run regenerate on the new modules
     workspace
@@ -515,7 +517,7 @@ public class ProjectIntegrationTest {
         .assertSuccess();
     assertTrue(extraModuleFile.exists());
     final String modulesAfter = workspace.getFileContents(".idea/modules.xml");
-    assertThat(XmlDomParser.parse(modulesAfter), Matchers.hasXPath(fileXPath));
+    assertThat(XmlDomParser.parse(modulesAfter), hasXPath(fileXPath));
     workspace.verify();
   }
 
@@ -596,9 +598,7 @@ public class ProjectIntegrationTest {
     String urlXpath = "/component/library/CLASSES/root/@url";
     // Assert that the library URL is inside the project root
     assertThat(
-        doc,
-        Matchers.hasXPath(
-            urlXpath, Matchers.startsWith("jar://$PROJECT_DIR$/buck-out/cells/secondary/gen/")));
+        doc, hasXPath(urlXpath, startsWith("jar://$PROJECT_DIR$/buck-out/cells/secondary/gen/")));
   }
 
   @Test

@@ -16,9 +16,10 @@
 
 package com.facebook.buck.cxx;
 
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.util.environment.Platform;
+import org.junit.Assume;
 
 public class CxxPrecompiledHeaderTestUtils {
 
@@ -27,6 +28,6 @@ public class CxxPrecompiledHeaderTestUtils {
    * test is skipped if PCH not supported.
    */
   public static void assumePrecompiledHeadersAreSupported() {
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 }

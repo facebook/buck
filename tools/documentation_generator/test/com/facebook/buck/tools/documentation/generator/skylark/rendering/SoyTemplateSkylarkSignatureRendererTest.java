@@ -17,7 +17,6 @@
 package com.facebook.buck.tools.documentation.generator.skylark.rendering;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.io.Resources;
@@ -30,6 +29,8 @@ import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.StarlarkList;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,7 +82,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
   @Before
   public void setUp() {
     // ignore windows and its new line philosophy
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
   }
 
   @Test

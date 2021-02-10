@@ -16,6 +16,8 @@
 
 package com.facebook.buck.apple.endtoend;
 
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
@@ -57,7 +59,7 @@ public class AppleEndToEndTest {
 
   @Before
   public void assumeEnvironment() {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONEOS));
   }
 

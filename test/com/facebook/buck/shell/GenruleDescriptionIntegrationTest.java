@@ -16,6 +16,7 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -192,7 +193,7 @@ public class GenruleDescriptionIntegrationTest {
 
   @Test
   public void testQueryResultsReflectTransitiveChanges() throws Exception {
-    Assume.assumeFalse(Platform.detect().equals(Platform.WINDOWS));
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     // Assert the query result starts empty
     expectGenruleOutput(":echo_with_has_debug_flag", ImmutableList.of());
 

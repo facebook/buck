@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -34,6 +34,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,7 +61,7 @@ public class JavacSpecTest {
   @Test
   public void returnsExternalCompilerIfJavacPathPresent() throws IOException {
     // newExecutableFile cannot be executed on windows.
-    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     AbsPath externalPath = tmp.newExecutableFile();
 
     SourcePath javacPath = FakeSourcePath.of(externalPath);

@@ -19,6 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -150,7 +151,7 @@ public class DefaultProjectFilesystemTest {
 
   @Test
   public void mkdirsAllowsSymlinksToDirs() throws IOException {
-    Assume.assumeTrue("System supports symlinks", !Platform.detect().equals(Platform.WINDOWS));
+    Assume.assumeThat("System supports symlinks", Platform.detect(), not(Platform.WINDOWS));
     Files.createDirectory(tmp.getRoot().resolve("real_dir").getPath());
     // Create a relative symbolic link.
     CreateSymlinksForTests.createSymLink(

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import static org.junit.Assume.assumeTrue;
+import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +48,7 @@ public class AppleAssetCatalogTest {
   @Before
   public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
   }
 
   @Test

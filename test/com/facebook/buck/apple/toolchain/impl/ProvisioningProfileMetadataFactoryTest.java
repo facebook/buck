@@ -22,7 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.dd.plist.NSDate;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
@@ -48,7 +48,7 @@ public class ProvisioningProfileMetadataFactoryTest {
 
   @Test
   public void testParseProvisioningProfileFile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
     Path testFile = testdataDir.resolve("sample.mobileprovision");
@@ -82,7 +82,7 @@ public class ProvisioningProfileMetadataFactoryTest {
 
   @Test
   public void testParseQualifiedEntitlementsProvisioningProfileFile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
     Path testFile = testdataDir.resolve("qualified_sample.mobileprovision");
@@ -95,7 +95,7 @@ public class ProvisioningProfileMetadataFactoryTest {
 
   @Test
   public void testProvisioningProfileReadCommandOverride() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
 
@@ -109,7 +109,7 @@ public class ProvisioningProfileMetadataFactoryTest {
 
   @Test
   public void testFilteredEntitlementsStripOut() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
     Path testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
     Path testFile = testdataDir.resolve("sample.mobileprovision");

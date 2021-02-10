@@ -17,11 +17,11 @@
 package com.facebook.buck.features.js;
 
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
@@ -56,6 +56,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,7 +76,7 @@ public class JsRulesIntegrationTest {
   @Before
   public void setUp() throws IOException {
     // worker tool does not work on windows
-    assumeFalse(Platform.detect() == Platform.WINDOWS);
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "js_rules", tmp);
     workspace.setUp();
     projectFilesystem = workspace.getProjectFileSystem();
@@ -367,7 +369,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void iOSApplicationContainsJsAndResources() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace.runBuckBuild("//ios:DemoApp#iphonesimulator-x86_64,no-debug").assertSuccess();
@@ -377,7 +379,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void generatesProjectWithJsBundleDependency() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace
@@ -437,7 +439,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void appleBundleDependingOnJsBundleGenruleContainsBundleAndResources() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace
@@ -451,7 +453,7 @@ public class JsRulesIntegrationTest {
 
   @Test
   public void generatesProjectWithJsBundleGenruleDependency() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     workspace
