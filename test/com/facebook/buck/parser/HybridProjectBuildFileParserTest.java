@@ -68,7 +68,8 @@ public class HybridProjectBuildFileParserTest {
     parser =
         HybridProjectBuildFileParser.using(
             ImmutableMap.of(Syntax.PYTHON_DSL, pythonDslParser, Syntax.SKYLARK, skylarkParser),
-            Syntax.PYTHON_DSL);
+            Syntax.PYTHON_DSL,
+            tmp.getRoot());
     buildFile = tmp.newFile("BUCK");
   }
 
@@ -113,7 +114,7 @@ public class HybridProjectBuildFileParserTest {
     thrown.expectMessage("Syntax [PYTHON_DSL] is not supported for build file [" + buildFile + "]");
     parser =
         HybridProjectBuildFileParser.using(
-            ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK);
+            ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK, tmp.getRoot());
     Files.write(buildFile.getPath(), "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
     parser.getManifest(buildFile);
   }

@@ -23,6 +23,7 @@ import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,11 +50,15 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
   private ImmutableMap<Syntax, ProjectBuildFileParser> parsers;
   private final Syntax defaultSyntax;
+  private final AbsPath cellRoot;
 
   private HybridProjectBuildFileParser(
-      ImmutableMap<Syntax, ProjectBuildFileParser> parsers, Syntax defaultSyntax) {
+      ImmutableMap<Syntax, ProjectBuildFileParser> parsers,
+      Syntax defaultSyntax,
+      AbsPath cellRoot) {
     this.parsers = parsers;
     this.defaultSyntax = defaultSyntax;
+    this.cellRoot = cellRoot;
   }
 
   @Override
@@ -99,6 +104,12 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
    */
   private ProjectBuildFileParser getParserForBuildFile(AbsPath buildFile)
       throws IOException, BuildFileParseException {
+    Preconditions.checkArgument(
+        buildFile.startsWith(cellRoot),
+        "build file %s must be a descendant of cell root %s",
+        buildFile,
+        cellRoot);
+
     @Nullable
     String firstLine =
         Files.asCharSource(buildFile.toFile(), StandardCharsets.UTF_8).readFirstLine();
@@ -125,7 +136,9 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
 
   /** @return The hybrid parser that supports Python DSL and Skylark syntax. */
   public static HybridProjectBuildFileParser using(
-      ImmutableMap<Syntax, ProjectBuildFileParser> parsers, Syntax defaultSyntax) {
-    return new HybridProjectBuildFileParser(parsers, defaultSyntax);
+      ImmutableMap<Syntax, ProjectBuildFileParser> parsers,
+      Syntax defaultSyntax,
+      AbsPath cellRoot) {
+    return new HybridProjectBuildFileParser(parsers, defaultSyntax, cellRoot);
   }
 }

@@ -217,7 +217,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                       udrLoader),
                   Syntax.SKYLARK,
                   skylark),
-              defaultBuildFileSyntax);
+              defaultBuildFileSyntax,
+              cell.getRoot());
     } else {
       switch (defaultBuildFileSyntax) {
         case SKYLARK:
