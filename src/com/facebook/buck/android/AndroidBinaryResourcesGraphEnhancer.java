@@ -541,7 +541,9 @@ class AndroidBinaryResourcesGraphEnhancer {
         buildTarget.withAppendedFlavors(MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR),
         projectFilesystem,
         graphBuilder,
-        pathsToThirdPartyJars);
+        pathsToThirdPartyJars,
+        shouldExecuteInSeparateProcess,
+        javaRuntimeLauncher);
   }
 
   private SplitResources createSplitResourcesRule(

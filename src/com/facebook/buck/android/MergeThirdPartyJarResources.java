@@ -22,17 +22,21 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.externalactions.android.MergeJarResourcesExternalAction;
+import com.facebook.buck.externalactions.android.MergeJarResourcesExternalActionArgs;
+import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.isolatedsteps.android.MergeJarResourcesStep;
+import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 /** Merges resources from third party jars for exo-for-resources. */
 public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdPartyJarResources.Impl> {
@@ -41,13 +45,18 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      ImmutableCollection<SourcePath> pathsToThirdPartyJars) {
+      ImmutableCollection<SourcePath> pathsToThirdPartyJars,
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         new Impl(
-            ImmutableSortedSet.copyOf(pathsToThirdPartyJars), new OutputPath("java.resources")));
+            ImmutableSortedSet.copyOf(pathsToThirdPartyJars),
+            new OutputPath("java.resources"),
+            shouldExecuteInSeparateProcess,
+            javaRuntimeLauncher));
   }
 
   @Override
@@ -55,30 +64,53 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
     return getSourcePath(getBuildable().mergedPath);
   }
 
-  static class Impl implements Buildable {
+  static class Impl extends BuildableWithExternalAction {
+    private static final String TEMP_FILE_PREFIX = "merge_jar_resources_";
+    private static final String TEMP_FILE_SUFFIX = "";
+
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
     @AddToRuleKey private final OutputPath mergedPath;
 
-    Impl(ImmutableSortedSet<SourcePath> pathsToThirdPartyJars, OutputPath mergedPath) {
+    public Impl(
+        ImmutableSortedSet<SourcePath> pathsToThirdPartyJars,
+        OutputPath mergedPath,
+        boolean shouldExecuteInSeparateProcess,
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.pathsToThirdPartyJars = pathsToThirdPartyJars;
       this.mergedPath = mergedPath;
     }
 
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
+    public BuildableCommand getBuildableCommand(
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
+        BuildContext buildContext) {
       ImmutableSortedSet<RelPath> thirdPartyJars =
           buildContext
               .getSourcePathResolver()
               .getAllRelativePaths(filesystem, pathsToThirdPartyJars);
-      buildContext.getSourcePathResolver().getAllAbsolutePaths(pathsToThirdPartyJars);
-      return ImmutableList.of(
-          new MergeJarResourcesStep(
-              thirdPartyJars,
-              filesystem.resolve(outputPathResolver.resolvePath(mergedPath).getPath())));
+      Path jsonFilePath = createTempFile(filesystem);
+
+      MergeJarResourcesExternalActionArgs jsonArgs =
+          MergeJarResourcesExternalActionArgs.of(
+              thirdPartyJars.stream().map(RelPath::toString).collect(Collectors.toList()),
+              filesystem.resolve(outputPathResolver.resolvePath(mergedPath).getPath()).toString());
+      ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
+
+      return BuildableCommand.newBuilder()
+          .addExtraFiles(jsonFilePath.toString())
+          .setExternalActionClass(MergeJarResourcesExternalAction.class.getName())
+          .build();
+    }
+
+    private Path createTempFile(ProjectFilesystem filesystem) {
+      try {
+        return filesystem.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "Failed to create temp file when creating merge jar resources buildable command");
+      }
     }
   }
 }
