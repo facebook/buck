@@ -434,4 +434,31 @@ class Foo {
       <property name="BlacklistMethods.BlacklistedMethods" value="System:getenv:0;com.facebook.buck.util.environment.EnvVariablesProvider:getSystemEnv"/>
     </properties>
   </rule>
+  <rule name="STGroupIsNotThreadSafe"
+    message="Do not use new ST(String) directly as STGroup is not threadsafe. Create and pass in a new STGroup() e.g. new ST(new STGroup(), ...)."
+    class="net.sourceforge.pmd.lang.rule.XPathRule"
+    language="java">
+    <description>STGroup is not threadsafe. new ST() uses a default global STGroup which causes race conditions
+      when using ST. To prevent this, explicitly create a new STGroup and use that in the
+      constructor of ST.</description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <![CDATA[
+//AllocationExpression[ClassOrInterfaceType[@Image='ST'] and Arguments/ArgumentList[count(Expression) < 2]]
+          ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+      <![CDATA[
+// OK
+new ST(new STGroup(), "mytemplate");
+
+// Bad
+new ST("mytemplate");
+      ]]>
+    </example>
+  </rule>
 </ruleset>
