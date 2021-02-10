@@ -35,37 +35,50 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 /** Merges resources from third party jars for exo-for-resources. */
-public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdPartyJarResources>
-    implements Buildable {
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
-  @AddToRuleKey private final OutputPath mergedPath;
+public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdPartyJarResources.Impl> {
 
   protected MergeThirdPartyJarResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       ImmutableCollection<SourcePath> pathsToThirdPartyJars) {
-    super(buildTarget, projectFilesystem, ruleFinder, MergeThirdPartyJarResources.class);
-    this.pathsToThirdPartyJars = ImmutableSortedSet.copyOf(pathsToThirdPartyJars);
-    this.mergedPath = new OutputPath("java.resources");
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new Impl(
+            ImmutableSortedSet.copyOf(pathsToThirdPartyJars), new OutputPath("java.resources")));
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return getSourcePath(mergedPath);
+    return getSourcePath(getBuildable().mergedPath);
   }
 
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext buildContext,
-      ProjectFilesystem filesystem,
-      OutputPathResolver outputPathResolver,
-      BuildCellRelativePathFactory buildCellPathFactory) {
-    ImmutableSortedSet<RelPath> thirdPartyJars =
-        buildContext.getSourcePathResolver().getAllRelativePaths(filesystem, pathsToThirdPartyJars);
-    return ImmutableList.of(
-        new MergeJarResourcesStep(
-            thirdPartyJars,
-            filesystem.resolve(outputPathResolver.resolvePath(mergedPath).getPath())));
+  static class Impl implements Buildable {
+    @AddToRuleKey private final ImmutableSortedSet<SourcePath> pathsToThirdPartyJars;
+    @AddToRuleKey private final OutputPath mergedPath;
+
+    Impl(ImmutableSortedSet<SourcePath> pathsToThirdPartyJars, OutputPath mergedPath) {
+      this.pathsToThirdPartyJars = pathsToThirdPartyJars;
+      this.mergedPath = mergedPath;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      ImmutableSortedSet<RelPath> thirdPartyJars =
+          buildContext
+              .getSourcePathResolver()
+              .getAllRelativePaths(filesystem, pathsToThirdPartyJars);
+      buildContext.getSourcePathResolver().getAllAbsolutePaths(pathsToThirdPartyJars);
+      return ImmutableList.of(
+          new MergeJarResourcesStep(
+              thirdPartyJars,
+              filesystem.resolve(outputPathResolver.resolvePath(mergedPath).getPath())));
+    }
   }
 }
