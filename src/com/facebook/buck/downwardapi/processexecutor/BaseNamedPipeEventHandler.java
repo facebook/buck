@@ -102,7 +102,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   }
 
   @Override
-  public void updateThreadId() {
+  public synchronized void updateThreadId() {
     this.context = DownwardApiExecutionContext.from(context, Thread.currentThread().getId());
   }
 
