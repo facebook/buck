@@ -185,7 +185,7 @@ class TestExecutionState implements RunProfileState {
         new ExecutionEnvironmentBuilder(mProject, debugExecutor)
             .runProfile(runSettings.getConfiguration())
             .build();
-    final int pollTimeout = 3000;
+    final int pollTimeout = 30000;
     final DebugEnvironment environment =
         new DefaultDebugEnvironment(env, state, remoteConnection, pollTimeout);
 
