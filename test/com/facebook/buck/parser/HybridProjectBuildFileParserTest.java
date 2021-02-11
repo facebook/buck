@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.config.DefaultBuildFileSyntaxMapping;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -68,7 +69,7 @@ public class HybridProjectBuildFileParserTest {
     parser =
         HybridProjectBuildFileParser.using(
             ImmutableMap.of(Syntax.PYTHON_DSL, pythonDslParser, Syntax.SKYLARK, skylarkParser),
-            Syntax.PYTHON_DSL,
+            DefaultBuildFileSyntaxMapping.ofOnly(Syntax.PYTHON_DSL),
             tmp.getRoot());
     buildFile = tmp.newFile("BUCK");
   }
@@ -114,7 +115,9 @@ public class HybridProjectBuildFileParserTest {
     thrown.expectMessage("Syntax [PYTHON_DSL] is not supported for build file [" + buildFile + "]");
     parser =
         HybridProjectBuildFileParser.using(
-            ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK, tmp.getRoot());
+            ImmutableMap.of(Syntax.SKYLARK, skylarkParser),
+            DefaultBuildFileSyntaxMapping.ofOnly(Syntax.SKYLARK),
+            tmp.getRoot());
     Files.write(buildFile.getPath(), "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
     parser.getManifest(buildFile);
   }

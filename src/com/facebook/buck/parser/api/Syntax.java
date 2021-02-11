@@ -16,7 +16,11 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public enum Syntax {
   PYTHON_DSL,
@@ -31,5 +35,19 @@ public enum Syntax {
       }
     }
     return Optional.empty();
+  }
+
+  /** Parse enum value or throw {@link com.facebook.buck.core.exceptions.HumanReadableException}. */
+  public static Syntax parseOrThrowHumanReadableException(String syntax) {
+    return from(syntax.toUpperCase(Locale.ROOT))
+        .orElseThrow(
+            () ->
+                new HumanReadableException(
+                    "unknown syntax: '"
+                        + syntax
+                        + "'; possible values: "
+                        + Arrays.stream(Syntax.values())
+                            .map(syntax1 -> "'" + syntax1.name() + "'")
+                            .collect(Collectors.joining(", "))));
   }
 }

@@ -300,10 +300,14 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    *     <p>For a list of supported syntax see {@link Syntax}.
    */
   @Value.Lazy
-  public Syntax getDefaultBuildFileSyntax() {
-    return getDelegate()
-        .getEnum("parser", "default_build_file_syntax", Syntax.class)
-        .orElse(Syntax.PYTHON_DSL);
+  public DefaultBuildFileSyntaxMapping getDefaultBuildFileSyntax() {
+    Syntax defaultValue =
+        getDelegate()
+            .getEnum("parser", "default_build_file_syntax", Syntax.class)
+            .orElse(Syntax.PYTHON_DSL);
+    Optional<String> byPath =
+        getDelegate().getValue("parser", "default_build_file_syntax_by_prefix");
+    return DefaultBuildFileSyntaxMapping.parse(byPath.orElse(""), defaultValue);
   }
 
   /**
@@ -479,7 +483,7 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
         getDelegate().getView(RuleAnalysisConfig.class).getComputationMode()
             != RuleAnalysisComputationMode.DISABLED;
     boolean canParseUdr =
-        isPolyglotParsingEnabled() || getDefaultBuildFileSyntax() == Syntax.SKYLARK;
+        isPolyglotParsingEnabled() || getDefaultBuildFileSyntax().canHaveSyntax(Syntax.SKYLARK);
     UserDefinedRulesState configuredValue =
         getDelegate()
             .getEnum("parser", "user_defined_rules", UserDefinedRulesState.class)

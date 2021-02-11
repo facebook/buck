@@ -34,6 +34,7 @@ import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.api.UserDefinedRuleLoader;
+import com.facebook.buck.parser.config.DefaultBuildFileSyntaxMapping;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
@@ -185,7 +186,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ProjectBuildFileParserOptions buildFileParserOptions,
       boolean threadSafe) {
     ProjectBuildFileParser parser;
-    Syntax defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
+    DefaultBuildFileSyntaxMapping defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
 
     // Skylark parser is thread-safe, but Python parser is not, so whenever we instantiate
     // Python parser we wrap it with ConcurrentParser to get thread safety
@@ -220,7 +221,12 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
               defaultBuildFileSyntax,
               cell.getRoot());
     } else {
-      switch (defaultBuildFileSyntax) {
+      Optional<Syntax> onlySyntax = defaultBuildFileSyntax.getOnlySyntax();
+      if (!onlySyntax.isPresent()) {
+        throw new HumanReadableException(
+            "non-trivial default build file syntax can be only enabled when polyglot parsing enabled");
+      }
+      switch (onlySyntax.get()) {
         case SKYLARK:
           parser =
               newSkylarkParser(

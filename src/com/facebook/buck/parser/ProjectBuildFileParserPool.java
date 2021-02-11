@@ -75,6 +75,6 @@ class ProjectBuildFileParserPool extends FileParserPool<BuildFileManifest> {
     // the only interpreter that benefits from pooling is Python DSL parser, which is used only in
     // polyglot mode or if default syntax is set to Python DSL
     return parserConfig.isPolyglotParsingEnabled()
-        || parserConfig.getDefaultBuildFileSyntax() == Syntax.PYTHON_DSL;
+        || parserConfig.getDefaultBuildFileSyntax().canHaveSyntax(Syntax.PYTHON_DSL);
   }
 }

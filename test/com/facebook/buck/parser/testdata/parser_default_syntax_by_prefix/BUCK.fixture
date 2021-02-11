@@ -1,0 +1,5 @@
+genrule(
+    name = "g",
+    out = "g.txt",
+    cmd = "echo " + ("python" if 0 == False else "starlark") + ">$OUT",
+)

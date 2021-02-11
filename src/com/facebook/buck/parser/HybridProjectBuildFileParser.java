@@ -17,9 +17,11 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.config.DefaultBuildFileSyntaxMapping;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.annotations.VisibleForTesting;
@@ -49,12 +51,12 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   @VisibleForTesting static final String SYNTAX_MARKER_START = "# BUILD FILE SYNTAX: ";
 
   private ImmutableMap<Syntax, ProjectBuildFileParser> parsers;
-  private final Syntax defaultSyntax;
+  private final DefaultBuildFileSyntaxMapping defaultSyntax;
   private final AbsPath cellRoot;
 
   private HybridProjectBuildFileParser(
       ImmutableMap<Syntax, ProjectBuildFileParser> parsers,
-      Syntax defaultSyntax,
+      DefaultBuildFileSyntaxMapping defaultSyntax,
       AbsPath cellRoot) {
     this.parsers = parsers;
     this.defaultSyntax = defaultSyntax;
@@ -110,11 +112,14 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
         buildFile,
         cellRoot);
 
+    ForwardRelativePath buildFileRel =
+        ForwardRelativePath.ofRelPath(cellRoot.relativize(buildFile));
+
     @Nullable
     String firstLine =
         Files.asCharSource(buildFile.toFile(), StandardCharsets.UTF_8).readFirstLine();
 
-    Syntax syntax = defaultSyntax;
+    Syntax syntax;
     if (firstLine != null && firstLine.startsWith(SYNTAX_MARKER_START)) {
       String syntaxName = firstLine.substring(SYNTAX_MARKER_START.length());
       syntax =
@@ -125,6 +130,8 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
                           String.format(
                               "Unrecognized syntax [%s] requested for build file [%s]",
                               syntaxName, buildFile)));
+    } else {
+      syntax = defaultSyntax.syntaxForPath(buildFileRel);
     }
     @Nullable ProjectBuildFileParser parser = parsers.get(syntax);
     if (parser == null) {
@@ -137,7 +144,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   /** @return The hybrid parser that supports Python DSL and Skylark syntax. */
   public static HybridProjectBuildFileParser using(
       ImmutableMap<Syntax, ProjectBuildFileParser> parsers,
-      Syntax defaultSyntax,
+      DefaultBuildFileSyntaxMapping defaultSyntax,
       AbsPath cellRoot) {
     return new HybridProjectBuildFileParser(parsers, defaultSyntax, cellRoot);
   }

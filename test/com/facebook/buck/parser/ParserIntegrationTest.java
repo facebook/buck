@@ -34,10 +34,12 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Ignore;
@@ -644,6 +646,29 @@ public class ParserIntegrationTest {
                 "parser.warn_about_deprecated_syntax=false")
             .assertSuccess();
     assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
+  }
+
+  @Test
+  public void defaultSyntaxByDefault() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "parser_default_syntax_by_prefix", temporaryFolder);
+    workspace.setUp();
+
+    ImmutableList<Pair<String, String>> expected =
+        ImmutableList.of(
+            new Pair<>("//:g", "python"),
+            new Pair<>("//s:g", "starlark"),
+            new Pair<>("//p:g", "python"),
+            new Pair<>("//s/p:g", "python"));
+
+    for (Pair<String, String> targetExpectedPair : expected) {
+      String target = targetExpectedPair.getFirst();
+      Path output = workspace.buildAndReturnOutput(target);
+      List<String> outputLines = Files.readAllLines(output);
+      assertEquals(
+          "for target " + target, ImmutableList.of(targetExpectedPair.getSecond()), outputLines);
+    }
   }
 
   @Test
