@@ -23,10 +23,13 @@ import static com.facebook.buck.downward.model.EventTypeMessage.EventType.LOG_EV
 import static com.facebook.buck.downward.model.EventTypeMessage.EventType.STEP_EVENT;
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.FINISHED;
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED;
+import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessage;
+import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessageAndLevel;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -414,15 +417,13 @@ public class DownwardApiProcessExecutorTest {
     List<LogRecord> records = executorLogSink.getRecords();
     assertThat(
         records,
-        hasItem(
-            TestLogSink.logRecordWithMessage(
-                stringContainsInOrder("Cannot read from named pipe:", namedPipeReader.getName()))));
-    assertThat(
-        records,
-        hasItem(
-            TestLogSink.logRecordWithMessage(
-                stringContainsInOrder(
-                    "Named pipe", namedPipeReader.getName(), "is already closed."))));
+        hasItems(
+            logRecordWithMessageAndLevel(
+                equalTo("Cannot connect to a named pipe: " + namedPipeReader.getName()),
+                Level.INFO),
+            logRecordWithMessageAndLevel(
+                equalTo("Named pipe " + namedPipeReader.getName() + " is already closed."),
+                Level.INFO)));
   }
 
   @Test
@@ -452,7 +453,7 @@ public class DownwardApiProcessExecutorTest {
     assertThat(
         executorLogSink.getRecords(),
         hasItem(
-            TestLogSink.logRecordWithMessage(
+            logRecordWithMessage(
                 stringContainsInOrder(
                     "Unhandled exception while reading from named pipe: ", namedPipeName))));
   }
@@ -621,9 +622,7 @@ public class DownwardApiProcessExecutorTest {
     List<LogRecord> records = testToolLogSink.getRecords();
     LogRecord logRecord = Iterables.getOnlyElement(records);
     assertThat(logRecord.getLevel(), equalTo(Level.WARNING));
-    assertThat(
-        logRecord,
-        TestLogSink.logRecordWithMessage(containsString("log message! show me to user!!!!")));
+    assertThat(logRecord, logRecordWithMessage(containsString("log message! show me to user!!!!")));
   }
 
   private void verifyConsoleEvent(BuckEvent consoleEvent) {

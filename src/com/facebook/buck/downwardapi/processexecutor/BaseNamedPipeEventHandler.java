@@ -126,6 +126,8 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
       LOGGER.info(
           "Finishing reader thread for pipe: %s; interrupted = %s",
           namedPipeName, Thread.currentThread().isInterrupted());
+    } catch (PipeNotConnectedException e) {
+      LOGGER.info(e, "Cannot connect to a named pipe: %s", namedPipeName);
     } catch (IOException e) {
       LOGGER.error(e, "Cannot read from named pipe: %s", namedPipeName);
     } catch (InvalidDownwardProtocolException e) {
