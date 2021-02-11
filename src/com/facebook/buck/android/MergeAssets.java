@@ -17,34 +17,30 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.ResourcesZipBuilder;
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.AbstractBuildRule;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.HasBrokenInputBasedRuleKey;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.collect.TreeMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -59,8 +55,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.function.Supplier;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -71,15 +65,7 @@ import java.util.zip.ZipFile;
  * <p>Android's ApkBuilder seemingly would do this, but it doesn't actually compress the assets that
  * are added.
  */
-public class MergeAssets extends AbstractBuildRule {
-  // TODO(cjhopman): This should be an input-based rule, but the asset directories are from symlink
-  // trees and the file hash caches don't currently handle those correctly. The symlink trees
-  // shouldn't actually be necessary anymore as we can just take the full list of source paths
-  // directly here.
-  @AddToRuleKey private final ImmutableSet<SourcePath> assetsDirectories;
-  @AddToRuleKey private Optional<SourcePath> baseApk;
-
-  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
+public class MergeAssets extends ModernBuildRule<MergeAssets.Impl> {
 
   public MergeAssets(
       BuildTarget buildTarget,
@@ -87,80 +73,75 @@ public class MergeAssets extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories) {
-    super(buildTarget, projectFilesystem);
-    this.baseApk = baseApk;
-    this.assetsDirectories = assetsDirectories;
-    this.buildDepsSupplier =
-        MoreSuppliers.memoize(
-            () ->
-                BuildableSupport.deriveDeps(this, ruleFinder)
-                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return buildDepsSupplier.get();
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolverAdapter pathResolver = context.getSourcePathResolver();
-    TreeMultimap<Path, Path> assets = TreeMultimap.create();
-
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                getPathToMergedAssets().getParent())));
-    steps.add(
-        new AbstractExecutionStep("finding_assets") {
-          @Override
-          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-            for (SourcePath sourcePath : assetsDirectories) {
-              RelPath relativePath = pathResolver.getCellUnsafeRelPath(sourcePath);
-              AbsPath absolutePath = pathResolver.getAbsolutePath(sourcePath);
-              ProjectFilesystem assetFilesystem = pathResolver.getFilesystem(sourcePath);
-              assetFilesystem.walkFileTree(
-                  relativePath.getPath(),
-                  new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException {
-                      Preconditions.checkState(
-                          !Files.getFileExtension(file.toString()).equals("gz"),
-                          "BUCK doesn't support adding .gz files to assets (%s).",
-                          file);
-                      assets.put(
-                          absolutePath.getPath(),
-                          absolutePath.getPath().relativize(file.normalize()));
-                      return super.visitFile(file, attrs);
-                    }
-                  });
-            }
-            return StepExecutionResults.SUCCESS;
-          }
-        });
-    steps.add(
-        new MergeAssetsStep(
-            getProjectFilesystem().getPathForRelativePath(getPathToMergedAssets()),
-            baseApk.map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath()),
-            assets));
-    buildableContext.recordArtifact(getPathToMergedAssets().getPath());
-    return steps.build();
+    super(buildTarget, projectFilesystem, ruleFinder, new Impl(assetsDirectories, baseApk));
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToMergedAssets());
+    return getSourcePath(getBuildable().outputPath);
   }
 
-  public RelPath getPathToMergedAssets() {
-    return BuildTargetPaths.getGenPath(
-        getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s/merged.assets.ap_");
+  static class Impl implements Buildable, HasBrokenInputBasedRuleKey {
+    // TODO(cjhopman): This should be an input-based rule, but the asset directories are from
+    // symlink trees and the file hash caches don't currently handle those correctly. The symlink
+    // trees shouldn't actually be necessary anymore as we can just take the full list of source
+    // paths directly here.
+    @AddToRuleKey private final ImmutableSet<SourcePath> assetsDirectories;
+    @AddToRuleKey private final Optional<SourcePath> baseApk;
+    @AddToRuleKey private final OutputPath outputPath;
+
+    Impl(ImmutableSet<SourcePath> assetsDirectories, Optional<SourcePath> baseApk) {
+      this.assetsDirectories = assetsDirectories;
+      this.baseApk = baseApk;
+      this.outputPath = new OutputPath("merged.assets.ap_");
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      SourcePathResolverAdapter pathResolver = buildContext.getSourcePathResolver();
+      TreeMultimap<Path, Path> assets = TreeMultimap.create();
+
+      ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+      steps.add(
+          new AbstractExecutionStep("finding_assets") {
+            @Override
+            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+              for (SourcePath sourcePath : assetsDirectories) {
+                RelPath relativePath = pathResolver.getCellUnsafeRelPath(sourcePath);
+                AbsPath absolutePath = pathResolver.getAbsolutePath(sourcePath);
+                ProjectFilesystem assetFilesystem = pathResolver.getFilesystem(sourcePath);
+                assetFilesystem.walkFileTree(
+                    relativePath.getPath(),
+                    new SimpleFileVisitor<Path>() {
+                      @Override
+                      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                          throws IOException {
+                        Preconditions.checkState(
+                            !Files.getFileExtension(file.toString()).equals("gz"),
+                            "BUCK doesn't support adding .gz files to assets (%s).",
+                            file);
+                        assets.put(
+                            absolutePath.getPath(),
+                            absolutePath.getPath().relativize(file.normalize()));
+                        return super.visitFile(file, attrs);
+                      }
+                    });
+              }
+              return StepExecutionResults.SUCCESS;
+            }
+          });
+      steps.add(
+          new MergeAssetsStep(
+              filesystem.getPathForRelativePath(outputPathResolver.resolvePath(outputPath)),
+              baseApk.map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath()),
+              assets));
+      return steps.build();
+    }
   }
 
   private static class MergeAssetsStep extends AbstractExecutionStep {
