@@ -47,27 +47,7 @@ public enum POSIXNamedPipeFactory implements NamedPipeFactory {
   /** Creates a named pipe with the given path. */
   public static Path createNamedPipe() throws IOException {
     Path path = Paths.get(TMP_DIR, "pipe", "buck-" + UUID.randomUUID());
-    Files.createDirectories(path.getParent());
-    String pathString = path.toString();
-    int exitCode;
-    try {
-      exitCode =
-          POSIXNamedPipeLibrary.mkfifo(
-              pathString, POSIXNamedPipeLibrary.OWNER_READ_WRITE_ACCESS_MODE);
-    } catch (LastErrorException e) {
-      throw new IOException(
-          String.format(
-              "Cannot create named pipe: %s with `mkfifo` command. Error code: %s. "
-                  + "Check where 'java.io.tmpdir':%s points to and make sure that this directory is on a filesystem that supports pipes (e.g. not EdenFS).",
-              pathString, e.getErrorCode(), TMP_DIR),
-          e);
-    }
-    if (exitCode != 0) {
-      throw new IOException(
-          String.format(
-              "Cannot create named pipe: %s with `mkfifo` command. Exit code: %s",
-              pathString, exitCode));
-    }
+    createNamedPipe(path);
     return path;
   }
 
