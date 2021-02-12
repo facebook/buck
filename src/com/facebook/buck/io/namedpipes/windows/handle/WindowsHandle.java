@@ -73,9 +73,10 @@ public class WindowsHandle implements Closeable {
       Kernel32Util.closeHandle(getHandle());
     } catch (Win32Exception e) {
       LOG.error(e, "Failed to close handle: %s", toString());
+    } finally {
+      handle = Optional.empty();
+      GLOBAL_OPEN_COUNTER.decrementAndGet();
     }
-    handle = Optional.empty();
-    GLOBAL_OPEN_COUNTER.decrementAndGet();
   }
 
   @Override
