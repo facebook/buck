@@ -39,12 +39,15 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -53,6 +56,22 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
 
+  private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
+
+  /** Returns java cd binary path supplier */
+  public static Supplier<Path> getJavacdBinaryPathSupplier() {
+    return MoreSuppliers.memoize(DefaultJavaLibraryRules::getJavaCDPath);
+  }
+
+  private static Path getJavaCDPath() {
+    return Paths.get(
+        Objects.requireNonNull(
+            System.getProperty(JAVACD_ENV_VARIABLE),
+            JAVACD_ENV_VARIABLE + " env variable is not set"));
+  }
+
+  /** Default java library constructor interface */
+  @FunctionalInterface
   public interface DefaultJavaLibraryConstructor {
 
     DefaultJavaLibrary newInstance(
@@ -78,7 +97,8 @@ public abstract class DefaultJavaLibraryRules {
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
         boolean isJavaCDEnabled,
-        Tool javaRuntimeLauncher);
+        Tool javaRuntimeLauncher,
+        Supplier<Path> javacdBinaryPathSupplier);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -441,7 +461,8 @@ public abstract class DefaultJavaLibraryRules {
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
             javaBuckConfig.isJavaCDEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+            getJavacdBinaryPathSupplier());
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -487,7 +508,8 @@ public abstract class DefaultJavaLibraryRules {
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
                 javaBuckConfig.isJavaCDEnabled(),
-                javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+                javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+                getJavacdBinaryPathSupplier());
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -539,7 +561,8 @@ public abstract class DefaultJavaLibraryRules {
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime()));
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+            getJavacdBinaryPathSupplier()));
   }
 
   @Nullable
@@ -561,7 +584,8 @@ public abstract class DefaultJavaLibraryRules {
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime()));
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+            getJavacdBinaryPathSupplier()));
   }
 
   @Nullable

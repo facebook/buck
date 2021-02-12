@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
+import java.nio.file.Path;
+import java.util.function.Supplier;
 
 /** JavaCD implementation of {@link LibraryStepsBuilderBase} interface. */
 abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaCDStepsBuilderBase<T>
@@ -42,14 +44,16 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
       Type type,
       MessageOrBuilder commandBuilder,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand) {
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      Supplier<Path> javacdBinaryPathSupplier) {
     super(
         hasAnnotationProcessing,
         spoolMode,
         withDownwardApi,
         type,
         isJavaCDEnabled,
-        javaRuntimeLauncherCommand);
+        javaRuntimeLauncherCommand,
+        javacdBinaryPathSupplier);
     this.commandBuilder = commandBuilder;
   }
 

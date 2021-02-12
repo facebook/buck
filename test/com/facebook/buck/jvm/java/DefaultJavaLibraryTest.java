@@ -1448,7 +1448,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem =
         new AllExistingProjectFilesystem() {
           @Override
-          public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
+          public boolean isDirectory(Path path, LinkOption... linkOptions) {
             return false;
           }
         };

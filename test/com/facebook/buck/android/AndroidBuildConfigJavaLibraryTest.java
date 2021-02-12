@@ -35,6 +35,7 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.Test;
@@ -62,7 +63,8 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            new FakeTool());
+            new FakeTool(),
+            () -> Paths.get("test/javacd_test.jar"));
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(graphBuilder, collector);
@@ -97,7 +99,8 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            new FakeTool());
+            new FakeTool(),
+            () -> Paths.get("test/javacd_test.jar"));
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

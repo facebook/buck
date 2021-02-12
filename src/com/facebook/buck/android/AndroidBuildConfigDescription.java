@@ -35,6 +35,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -43,8 +44,10 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AndroidBuildConfigDescription
@@ -78,19 +81,20 @@ public class AndroidBuildConfigDescription
       BuildRuleParams params,
       AndroidBuildConfigDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       BuildTarget configTarget = JavaAbis.getLibraryTarget(buildTarget);
       BuildRule configRule = graphBuilder.requireRule(configTarget);
       return CalculateClassAbi.of(
           buildTarget,
           graphBuilder,
-          context.getProjectFilesystem(),
+          projectFilesystem,
           Objects.requireNonNull(configRule.getSourcePathToOutput()));
     }
 
     return createBuildRule(
         buildTarget,
-        context.getProjectFilesystem(),
+        projectFilesystem,
         params,
         args.getPackage(),
         args.getValues(),
@@ -107,7 +111,8 @@ public class AndroidBuildConfigDescription
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.isJavaCDEnabled(),
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+        DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
   }
 
   /**
@@ -131,7 +136,8 @@ public class AndroidBuildConfigDescription
       ActionGraphBuilder graphBuilder,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<Path> javacdBinaryPathSupplier) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -188,7 +194,8 @@ public class AndroidBuildConfigDescription
         androidBuildConfig,
         withDownwardApi,
         isJavaCDEnabled,
-        javaRuntimeLauncher);
+        javaRuntimeLauncher,
+        javacdBinaryPathSupplier);
   }
 
   @Override

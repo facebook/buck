@@ -35,6 +35,8 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParameter
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Default implementation of {@link AbiJarStepsBuilder} */
@@ -48,14 +50,16 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand) {
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      Supplier<Path> javacdBinaryPathSupplier) {
     super(
         hasAnnotationProcessing,
         spoolMode,
         withDownwardApi,
         Type.ABI_JAR,
         isJavaCDEnabled,
-        javaRuntimeLauncherCommand);
+        javaRuntimeLauncherCommand,
+        javacdBinaryPathSupplier);
   }
 
   @Override

@@ -49,6 +49,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.Message;
+import java.nio.file.Path;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Creates a worker tool step that would communicate with JavaCD process. */
@@ -66,6 +68,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
   protected final Type type;
   private final boolean isJavaCDEnabled;
   private final ImmutableList<String> javaRuntimeLauncherCommand;
+  private final Supplier<Path> javacdBinaryPathSupplier;
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
@@ -73,10 +76,12 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
       boolean withDownwardApi,
       Type type,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand) {
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      Supplier<Path> javacdBinaryPathSupplier) {
     this.type = type;
     this.isJavaCDEnabled = isJavaCDEnabled;
     this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
+    this.javacdBinaryPathSupplier = javacdBinaryPathSupplier;
     commandBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
     commandBuilder.setWithDownwardApi(withDownwardApi);
     commandBuilder.setSpoolMode(spoolMode);
@@ -102,7 +107,8 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
     if (isJavaCDEnabled) {
       return ImmutableList.of(
-          new JavaCDWorkerToolStep(buildJavaCommand, javaRuntimeLauncherCommand));
+          new JavaCDWorkerToolStep(
+              buildJavaCommand, javaRuntimeLauncherCommand, javacdBinaryPathSupplier));
     }
     return new JavaCDWorkerToolStepsBuilder(buildJavaCommand).getSteps();
   }

@@ -35,7 +35,9 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSeria
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Default implementation of {@link LibraryJarStepsBuilder} */
@@ -47,7 +49,8 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand) {
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      Supplier<Path> javacdBinaryPathSupplier) {
     super(
         hasAnnotationProcessing,
         spoolMode,
@@ -55,7 +58,8 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
         Type.LIBRARY_JAR,
         LibraryJarCommand.newBuilder(),
         isJavaCDEnabled,
-        javaRuntimeLauncherCommand);
+        javaRuntimeLauncherCommand,
+        javacdBinaryPathSupplier);
   }
 
   @Override

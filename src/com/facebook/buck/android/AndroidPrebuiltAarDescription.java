@@ -42,6 +42,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
@@ -253,7 +254,8 @@ public class AndroidPrebuiltAarDescription
         args.isUseSystemLibraryLoader(),
         withDownwardApi,
         javaBuckConfig.isJavaCDEnabled(),
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+        DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
   }
 
   @Override

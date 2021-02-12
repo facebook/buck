@@ -26,6 +26,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
@@ -53,9 +55,11 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Buildable for DefaultJavaLibrary. */
@@ -78,8 +82,13 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
   @AddToRuleKey private final boolean isJavaCDEnabled;
-
   @AddToRuleKey private final Tool javaRuntimeLauncher;
+
+  @ExcludeFromRuleKey(
+      reason = "path to javacd binary is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private final Supplier<Path> javacdBinaryPathSupplier;
 
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
@@ -89,7 +98,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isJavaCDEnabled,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<Path> javacdBinaryPathSupplier) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -111,6 +121,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
+    this.javacdBinaryPathSupplier = javacdBinaryPathSupplier;
   }
 
   RelPath getPathToClassHashes(ProjectFilesystem filesystem) {
@@ -140,11 +151,13 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     LibraryJarStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(),
                 isJavaCDEnabled,
-                javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()))
+                javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
+                javacdBinaryPathSupplier)
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -169,11 +182,13 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     LibraryJarPipelineStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(),
                 isJavaCDEnabled,
-                javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver()))
+                javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
+                javacdBinaryPathSupplier)
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(

@@ -31,13 +31,12 @@ import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
+import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 
 /** JavaCD worker tool isolated step. */
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
-
-  private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
 
   // TODO : msemko : make pool size configurable. Introduce configuration properties
   private static final int POOL_CAPACITY =
@@ -47,14 +46,17 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private final ImmutableList<String> launchJavaCDCommand;
 
   public JavaCDWorkerToolStep(
-      BuildJavaCommand buildJavaCommand, ImmutableList<String> javaRuntimeLauncherCommand) {
+      BuildJavaCommand buildJavaCommand,
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      Supplier<Path> javacdBinaryPathSupplier) {
     super("javacd_wt");
     this.buildJavaCommand = buildJavaCommand;
-    this.launchJavaCDCommand = getLaunchJavaCDCommand(javaRuntimeLauncherCommand);
+    this.launchJavaCDCommand =
+        getLaunchJavaCDCommand(javaRuntimeLauncherCommand, javacdBinaryPathSupplier);
   }
 
   private static ImmutableList<String> getLaunchJavaCDCommand(
-      ImmutableList<String> javaRuntimeLauncherCommand) {
+      ImmutableList<String> javaRuntimeLauncherCommand, Supplier<Path> javacdBinaryPathSupplier) {
     int runArgumentsCount = 3;
     return ImmutableList.<String>builderWithExpectedSize(
             javaRuntimeLauncherCommand.size() + runArgumentsCount)
@@ -62,7 +64,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
         // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
         .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
         .add("-jar")
-        .add(Objects.requireNonNull(System.getProperty(JAVACD_ENV_VARIABLE)))
+        .add(javacdBinaryPathSupplier.get().toString())
         .build();
   }
 

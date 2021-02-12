@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -231,7 +232,8 @@ public class AndroidAarDescription
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
               javaBuckConfig.isJavaCDEnabled(),
-              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+              DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

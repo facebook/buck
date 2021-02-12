@@ -75,6 +75,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -467,7 +468,8 @@ public class AndroidBinaryGraphEnhancer {
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
               javaBuckConfig.isJavaCDEnabled(),
-              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+              DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -720,7 +722,8 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<Path> javacdBinaryPathSupplier) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -770,7 +773,8 @@ public class AndroidBinaryGraphEnhancer {
               graphBuilder,
               withDownwardApi,
               isJavaCDEnabled,
-              javaRuntimeLauncher);
+              javaRuntimeLauncher,
+              javacdBinaryPathSupplier);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(
@@ -1019,9 +1023,9 @@ public class AndroidBinaryGraphEnhancer {
    */
   private ImmutableSortedSet<SourcePath> getDesugarDeps(
       JavaLibrary javaLibrary, Function<BuildTarget, BuildRule> targetToRule) {
-    if (javaBuckConfig.useCompileTimeClasspathForD8Desugaring())
+    if (javaBuckConfig.useCompileTimeClasspathForD8Desugaring()) {
       return ImmutableSortedSet.copyOf(javaLibrary.getCompileTimeClasspathSourcePaths());
-    else {
+    } else {
       ImmutableSortedSet.Builder<SourcePath> resultBuilder = ImmutableSortedSet.naturalOrder();
       for (JavaLibrary library :
           JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)) {

@@ -38,7 +38,9 @@ import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * {@link JavaLibrary} that wraps the output of an {@link AndroidBuildConfig}.
@@ -59,7 +61,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       AndroidBuildConfig androidBuildConfig,
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<Path> javacdBinaryPathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -99,7 +102,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         false,
         false,
         isJavaCDEnabled,
-        javaRuntimeLauncher);
+        javaRuntimeLauncher,
+        javacdBinaryPathSupplier);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }
