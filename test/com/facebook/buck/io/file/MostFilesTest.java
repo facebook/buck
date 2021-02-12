@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -183,10 +184,13 @@ public class MostFilesTest {
 
     // sanity check
     assertTrue(Files.isSymbolicLink(linkSource));
+    assertTrue(Files.exists(linkSource, LinkOption.NOFOLLOW_LINKS));
     assertFalse(Files.exists(linkSource));
 
     // this should not fail even if target does not exist
     MostFiles.deleteRecursivelyIfExists(linkSource);
+    assertFalse(Files.isSymbolicLink(linkSource));
+    assertFalse(Files.exists(linkSource, LinkOption.NOFOLLOW_LINKS));
     assertFalse(Files.exists(linkSource));
   }
 
