@@ -62,25 +62,36 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
     boolean immediate = API.WriteFile(namedPipeRawHandle, data, len, null, overlapped.getPointer());
     if (!immediate) {
       int error = Kernel32.INSTANCE.GetLastError();
+      if (isEndOfThePipe(error)) {
+        return;
+      }
       if (error != WinError.ERROR_IO_PENDING) {
         throw new IOException(
             String.format(
-                "GetOverlappedResult() failed for write operation. Named pipe: %s, error code: %s",
-                namedPipeName, error));
+                "Cannot write into named pipe %s output steam. Error: %s",
+                namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error)));
       }
     }
     IntByReference written = new IntByReference();
     if (!API.GetOverlappedResult(namedPipeRawHandle, overlapped.getPointer(), written, true)) {
+      int error = Kernel32.INSTANCE.GetLastError();
+      if (isEndOfThePipe(error)) {
+        return;
+      }
       throw new IOException(
           String.format(
               "GetOverlappedResult() failed for write operation. Named pipe: %s, error: %s",
-              namedPipeName, Kernel32Util.getLastErrorMessage()));
+              namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error)));
     }
     if (written.getValue() != len) {
       throw new IOException(
           String.format(
               "WriteFile() wrote less bytes than requested. Named pipe: %s", namedPipeName));
     }
+  }
+
+  private boolean isEndOfThePipe(int error) {
+    return error == WinError.ERROR_BROKEN_PIPE;
   }
 
   @Override

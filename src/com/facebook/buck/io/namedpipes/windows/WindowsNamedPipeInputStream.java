@@ -70,25 +70,36 @@ class WindowsNamedPipeInputStream extends InputStream {
         API.ReadFile(namedPipeRawHandle, readBuffer, len, null, overlapped.getPointer());
     if (!immediate) {
       int error = Kernel32.INSTANCE.GetLastError();
+      if (isEndOfThePipe(error)) {
+        return 0;
+      }
       if (error != WinError.ERROR_IO_PENDING) {
         throw new IOException(
             String.format(
-                "Cannot read from named pipe %s input steam. Error code: %s",
-                namedPipeName, error));
+                "Cannot read from named pipe %s input steam. Error: %s",
+                namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error)));
       }
     }
 
     IntByReference r = new IntByReference();
     if (!API.GetOverlappedResult(namedPipeRawHandle, overlapped.getPointer(), r, true)) {
+      int error = Kernel32.INSTANCE.GetLastError();
+      if (isEndOfThePipe(error)) {
+        return 0;
+      }
       throw new IOException(
           String.format(
               "GetOverlappedResult() failed for read operation. Named pipe: %s, error: %s",
-              namedPipeName, Kernel32Util.getLastErrorMessage()));
+              namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error)));
     }
     int actualLen = r.getValue();
     byte[] byteArray = readBuffer.getByteArray(0, actualLen);
     System.arraycopy(byteArray, 0, b, off, actualLen);
     return actualLen;
+  }
+
+  private boolean isEndOfThePipe(int error) {
+    return error == WinError.ERROR_BROKEN_PIPE;
   }
 
   @Override
