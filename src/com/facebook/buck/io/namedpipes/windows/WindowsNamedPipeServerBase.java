@@ -245,8 +245,11 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     isClosed = true;
   }
 
-  private void closeOpenPipe(WindowsHandle handle) {
-    API.CancelIoEx(handle.getHandle(), null);
-    handle.close();
+  private void closeOpenPipe(WindowsHandle windowsHandle) {
+    if (windowsHandle.isClosed()) {
+      return;
+    }
+    API.CancelIoEx(windowsHandle.getHandle(), null);
+    windowsHandle.close();
   }
 }

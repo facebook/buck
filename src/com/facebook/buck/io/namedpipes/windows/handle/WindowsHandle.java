@@ -39,6 +39,9 @@ public class WindowsHandle implements Closeable {
   }
 
   public boolean isInvalidHandle() {
+    if (isClosed()) {
+      return true;
+    }
     return getHandle().equals(WinBase.INVALID_HANDLE_VALUE);
   }
 

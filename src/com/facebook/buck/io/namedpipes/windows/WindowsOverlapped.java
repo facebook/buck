@@ -17,6 +17,7 @@
 package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
+import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.WinBase;
 
@@ -30,6 +31,8 @@ class WindowsOverlapped {
   private final WindowsHandle windowsHandle;
 
   WindowsOverlapped(WindowsHandle windowsHandle) {
+    Preconditions.checkArgument(
+        !windowsHandle.isClosed(), "Windows handle " + windowsHandle + " is closed!");
     this.windowsHandle = windowsHandle;
     this.overlapped = new WinBase.OVERLAPPED();
     overlapped.hEvent = windowsHandle.getHandle();

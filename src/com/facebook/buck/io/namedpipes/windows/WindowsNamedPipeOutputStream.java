@@ -55,10 +55,13 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
 
   @Override
   public void write(byte[] b, int off, int len) throws IOException {
-    ByteBuffer data = ByteBuffer.wrap(b, off, len);
+    if (namedPipeHandle.isClosed()) {
+      return;
+    }
 
-    WindowsOverlapped overlapped = new WindowsOverlapped(writerWaitable);
     WinNT.HANDLE namedPipeRawHandle = namedPipeHandle.getHandle();
+    ByteBuffer data = ByteBuffer.wrap(b, off, len);
+    WindowsOverlapped overlapped = new WindowsOverlapped(writerWaitable);
     boolean immediate = API.WriteFile(namedPipeRawHandle, data, len, null, overlapped.getPointer());
     if (!immediate) {
       int error = Kernel32.INSTANCE.GetLastError();

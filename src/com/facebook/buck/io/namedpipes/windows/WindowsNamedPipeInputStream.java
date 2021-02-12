@@ -62,10 +62,13 @@ class WindowsNamedPipeInputStream extends InputStream {
 
   @Override
   public int read(byte[] b, int off, int len) throws IOException {
-    Memory readBuffer = new Memory(len);
+    if (namedPipeHandle.isClosed()) {
+      return 0;
+    }
 
-    WindowsOverlapped overlapped = new WindowsOverlapped(readerWaitable);
     WinNT.HANDLE namedPipeRawHandle = namedPipeHandle.getHandle();
+    Memory readBuffer = new Memory(len);
+    WindowsOverlapped overlapped = new WindowsOverlapped(readerWaitable);
     boolean immediate =
         API.ReadFile(namedPipeRawHandle, readBuffer, len, null, overlapped.getPointer());
     if (!immediate) {
