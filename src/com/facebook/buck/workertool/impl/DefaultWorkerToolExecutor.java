@@ -169,8 +169,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     runUnderLock(
         () -> {
           // `executingActionId` and `resultEventFuture` have to be null when a request to execute a
-          // new
-          // command arrived.
+          // new command arrived.
           checkState(
               executingActionId == null, "Action with id" + executingActionId + " is executing");
           executingActionId = actionId;
@@ -196,8 +195,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
         () -> {
           // After receiving the result from `WorkerToolExecutorNamedPipeEventHandler` set
           // `executingActionId` and `resultEventFuture` to null that signals that new command could
-          // be
-          // executed.
+          // be executed.
           resultEventFuture = null;
           executingActionId = null;
         });
@@ -213,8 +211,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     runUnderLock(
         () -> {
           // `executingActionId` and `resultEventFuture` have to be not null that signals that
-          // executor is
-          // waiting for a result event from a launched process.
+          // executor is waiting for a result event from a launched process.
           checkNotNull(executingActionId, "The is no action executing at the moment.");
           checkNotNull(resultEventFuture, "Result event future is null");
 
