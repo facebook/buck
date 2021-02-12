@@ -26,6 +26,7 @@ import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -97,8 +98,8 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
     if (handle.isInvalidHandle()) {
       throw new IOException(
           String.format(
-              "Could not create named pipe: %s, error code %s",
-              namedPipeName, Kernel32.INSTANCE.GetLastError()));
+              "Could not create named pipe: %s, error: %s",
+              namedPipeName, Kernel32Util.getLastErrorMessage()));
     }
 
     return handle;
