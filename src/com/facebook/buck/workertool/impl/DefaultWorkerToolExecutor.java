@@ -94,7 +94,6 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     try {
       this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
-      this.outputStream = namedPipeWriter.getOutputStream();
       this.launchedProcess =
           downwardApiProcessExecutor.launchProcess(
               ProcessExecutorParams.builder()
@@ -125,6 +124,18 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
                 closeNamedPipe();
               }
             });
+
+    try {
+      // this is a blocking operation on windows!!!
+      this.outputStream = namedPipeWriter.getOutputStream();
+    } catch (IOException e) {
+      closeNamedPipe();
+      throw new IOException(
+          String.format(
+              "Can't open an output stream for named pipe: %s. Worker id: %s",
+              namedPipeWriter.getName(), workerId),
+          e);
+    }
   }
 
   private class WorkerToolExecutorNamedPipeEventHandler extends DefaultNamedPipeEventHandler {
