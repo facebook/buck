@@ -106,8 +106,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean hasWhitelistedStrings;
 
-  @AddToRuleKey private final boolean resourceUnion;
-
   private final boolean isGrayscaleImageProcessingEnabled;
 
   @AddToRuleKey private final boolean isVerifyingStylesXmlEnabled;
@@ -152,7 +150,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled,
       boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
@@ -175,7 +172,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.manifestFile = manifestFile;
     this.symbolsOfDeps = symbolFilesFromDeps;
     this.hasWhitelistedStrings = hasWhitelistedStrings;
-    this.resourceUnion = resourceUnion;
 
     this.pathToTextSymbolsDir =
         BuildTargetPaths.getGenPath(
@@ -233,7 +229,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         assetsSrcs,
         manifestFile,
         hasWhitelistedStrings,
-        /* resourceUnion */ false,
         /* isGrayscaleImageProcessingEnabled */ false,
         /* isVerifyingStylesXmlEnabled */ false,
         /* isVerifyingXmlAttrsEnabled */ false);
@@ -252,7 +247,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean resourceUnion,
       boolean isGrayscaleImageProcessingEnabled,
       boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
@@ -275,7 +269,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        resourceUnion,
         isGrayscaleImageProcessingEnabled,
         isVerifyingStylesXmlEnabled,
         isVerifyingXmlAttrsEnabled);
