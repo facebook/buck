@@ -286,29 +286,59 @@ public class RobolectricTestDescription
                     .getSourcePathResolver()
                     .getCellUnsafeRelPath(args.getRobolectricManifest())
                     .toString()));
-
     graphBuilder.addToIndex(unitTestOptions);
+    params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(unitTestOptions));
 
-    GenerateRDotJava generateRDotJava =
-        new GenerateRDotJava(
-            buildTarget.withAppendedFlavors(InternalFlavor.of("generate_rdot_java")),
-            projectFilesystem,
-            graphBuilder,
-            EnumSet.noneOf(RDotTxtEntry.RType.class),
-            Optional.empty(),
-            ImmutableList.of(aaptOutputInfo.getPathToRDotTxt()),
-            args.getResourceUnionPackage(),
-            androidResourceDeps.stream()
-                .filter(resources -> resources.getRes() != null)
-                .map(HasAndroidResourceDeps::getBuildTarget)
-                .map(graphBuilder::requireRule)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
-            ImmutableList.of(resourcesProvider));
+    if (resourcesProvider.hasResources()) {
+      GenerateRDotJava generateRDotJava =
+          new GenerateRDotJava(
+              buildTarget.withAppendedFlavors(InternalFlavor.of("generate_rdot_java")),
+              projectFilesystem,
+              graphBuilder,
+              EnumSet.noneOf(RDotTxtEntry.RType.class),
+              Optional.empty(),
+              ImmutableList.of(aaptOutputInfo.getPathToRDotTxt()),
+              args.getResourceUnionPackage(),
+              androidResourceDeps.stream()
+                  .filter(resources -> resources.getRes() != null)
+                  .map(HasAndroidResourceDeps::getBuildTarget)
+                  .map(graphBuilder::requireRule)
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
+              ImmutableList.of(resourcesProvider));
+      graphBuilder.addToIndex(generateRDotJava);
+      params = params.copyAppendingExtraDeps(generateRDotJava);
+      DefaultJavaLibrary rDotJavaLibrary =
+          DefaultJavaLibrary.rulesBuilder(
+                  buildTarget.withAppendedFlavors(InternalFlavor.of("rdotjavalibrary")),
+                  projectFilesystem,
+                  context.getToolchainProvider(),
+                  params,
+                  graphBuilder,
+                  compilerFactory.getCompiler(
+                      AndroidLibraryDescription.JvmLanguage.JAVA,
+                      javacFactory,
+                      buildTarget.getTargetConfiguration()),
+                  javaBuckConfig,
+                  downwardApiConfig,
+                  null,
+                  cellPathResolver)
+              .setJavacOptions(
+                  javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY))
+              .setSrcs(ImmutableList.of(generateRDotJava.getSourcePathToRZip()))
+              .setDeps(new JavaLibraryDeps.Builder(graphBuilder).build())
+              .build()
+              .buildLibrary();
+      graphBuilder.addToIndex(rDotJavaLibrary);
+      params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(rDotJavaLibrary));
 
-    graphBuilder.addToIndex(generateRDotJava);
+      ImmutableSortedSet<BuildTarget> updatedDeps =
+          ImmutableSortedSet.<BuildTarget>naturalOrder()
+              .addAll(testLibraryArgs.getDeps())
+              .add(rDotJavaLibrary.getBuildTarget())
+              .build();
 
-    params =
-        params.copyAppendingExtraDeps(ImmutableSortedSet.of(generateRDotJava, unitTestOptions));
+      testLibraryArgs = testLibraryArgs.withDeps(updatedDeps);
+    }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
@@ -325,38 +355,6 @@ public class RobolectricTestDescription
 
     BuildTarget testLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
-
-    DefaultJavaLibrary rDotJavaLibrary =
-        DefaultJavaLibrary.rulesBuilder(
-                buildTarget.withAppendedFlavors(InternalFlavor.of("rdotjavalibrary")),
-                projectFilesystem,
-                context.getToolchainProvider(),
-                params,
-                graphBuilder,
-                compilerFactory.getCompiler(
-                    AndroidLibraryDescription.JvmLanguage.JAVA,
-                    javacFactory,
-                    buildTarget.getTargetConfiguration()),
-                javaBuckConfig,
-                downwardApiConfig,
-                null,
-                cellPathResolver)
-            .setJavacOptions(
-                javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY))
-            .setSrcs(ImmutableList.of(generateRDotJava.getSourcePathToRZip()))
-            .setDeps(new JavaLibraryDeps.Builder(graphBuilder).build())
-            .build()
-            .buildLibrary();
-    graphBuilder.addToIndex(rDotJavaLibrary);
-    params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(rDotJavaLibrary));
-
-    ImmutableSortedSet<BuildTarget> updatedDeps =
-        ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .addAll(testLibraryArgs.getDeps())
-            .add(rDotJavaLibrary.getBuildTarget())
-            .build();
-
-    testLibraryArgs = testLibraryArgs.withDeps(updatedDeps);
 
     JavaLibrary testsLibrary =
         graphBuilder.addToIndex(

@@ -134,3 +134,16 @@ robolectric_test(
         "//res/com/sample/top:top",
     ],
 )
+
+robolectric_test(
+    name = "test_with_no_resources",
+    srcs = ["NoResourcesTest.java"],
+    robolectric_runtime_dependency = "buck//third-party/java/robolectric:robolectric_dir",
+    robolectric_manifest = "TestAndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

@@ -236,4 +236,13 @@ public class RobolectricTestRuleIntegrationTest {
     assertTrue(commandArgs.contains("com.facebook.sample.BinaryResourcesTest"));
     assertFalse(commandArgs.contains("com.sample.R"));
   }
+
+  @Test
+  public void robolectricTestBuildsWithNoResources() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace.runBuckTest("//java/com/sample/lib:test_with_no_resources").assertSuccess();
+  }
 }
