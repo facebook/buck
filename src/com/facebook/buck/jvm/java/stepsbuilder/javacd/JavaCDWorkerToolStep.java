@@ -61,10 +61,10 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     return ImmutableList.<String>builderWithExpectedSize(
             javaRuntimeLauncherCommand.size() + runArgumentsCount)
         .addAll(javaRuntimeLauncherCommand)
-        // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
-        .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
         .add("-jar")
         .add(javacdBinaryPathSupplier.get().toString())
+        // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
+        .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
         .build();
   }
 
