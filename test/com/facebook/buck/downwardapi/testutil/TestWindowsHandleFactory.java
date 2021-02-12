@@ -52,5 +52,9 @@ public class TestWindowsHandleFactory extends DefaultWindowsHandleFactory {
                 .filter(isClosed.negate())
                 .map(Objects::toString)
                 .collect(Collectors.joining(System.lineSeparator())));
+    int numberOfOpenedHandles = WindowsHandle.getNumberOfOpenedHandles();
+    Preconditions.checkState(
+        numberOfOpenedHandles == 0,
+        "Number of opened handles: " + numberOfOpenedHandles + " is different from 0");
   }
 }

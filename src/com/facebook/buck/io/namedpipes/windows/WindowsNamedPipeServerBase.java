@@ -106,10 +106,9 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
                 /* lpSecurityAttributes */ null),
             "CreateNamedPipe() for " + namedPipe);
     if (handle.isInvalidHandle()) {
-      throw new IOException(
-          String.format(
-              "Could not create named pipe: %s, error %s",
-              namedPipe, Kernel32Util.getLastErrorMessage()));
+      throw new WindowsNamedPipeException(
+          "Could not create named pipe: %s, error %s",
+          namedPipe, Kernel32Util.getLastErrorMessage());
     }
     openHandles.add(handle);
 
@@ -145,10 +144,11 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
           closeOpenPipe(handle);
           throw new PipeNotConnectedException(
               String.format(
-                  "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s, previous error: %s",
+                  "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s, previous error: %s. Opened handles: %s",
                   namedPipe,
                   Kernel32Util.getLastErrorMessage(),
-                  Kernel32Util.formatMessageFromLastErrorCode(connectError)));
+                  Kernel32Util.formatMessageFromLastErrorCode(connectError),
+                  WindowsHandle.getNumberOfOpenedHandles()));
         }
 
         openHandles.remove(handle);
@@ -157,9 +157,9 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
       }
     }
 
-    throw new IOException(
-        String.format(
-            "ConnectNamedPipe() failed. Named pipe: %s, error: %s", namedPipe, connectError));
+    throw new WindowsNamedPipeException(
+        "ConnectNamedPipe() failed. Named pipe: %s, error: %s",
+        namedPipe, Kernel32Util.formatMessageFromLastErrorCode(connectError));
   }
 
   private <T extends WindowsNamedPipeClientBase> T getClient(WindowsHandle handle, Class<T> clazz) {
@@ -218,7 +218,11 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
         }
       }
     } catch (RuntimeException e) {
-      throw new ExecutionException("Unexpected runtime exception while preparing to close", e);
+      throw new ExecutionException(
+          String.format(
+              "Unexpected runtime exception while preparing to close. Opened handles: %s",
+              WindowsHandle.getNumberOfOpenedHandles()),
+          e);
     }
   }
 

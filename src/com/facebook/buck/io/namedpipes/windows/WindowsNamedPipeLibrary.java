@@ -113,8 +113,8 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
       throws IOException {
     HANDLE handle = INSTANCE.CreateEvent(null, true, false, null);
     if (handle == null) {
-      throw new IOException(
-          String.format("CreateEvent() failed, error: %s", Kernel32Util.getLastErrorMessage()));
+      throw new WindowsNamedPipeException(
+          "CreateEvent() failed, error: %s", Kernel32Util.getLastErrorMessage());
     }
 
     return windowsHandleFactory.create(handle, "CreateEvent() for " + namedPipeName);

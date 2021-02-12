@@ -96,10 +96,9 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
             "CreateFile() for " + namedPipeName);
 
     if (handle.isInvalidHandle()) {
-      throw new IOException(
-          String.format(
-              "Could not create named pipe: %s, error: %s",
-              namedPipeName, Kernel32Util.getLastErrorMessage()));
+      throw new WindowsNamedPipeException(
+          "Could not create named pipe: %s, error: %s.",
+          namedPipeName, Kernel32Util.getLastErrorMessage());
     }
 
     return handle;

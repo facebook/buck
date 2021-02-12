@@ -17,6 +17,7 @@
 package com.facebook.buck.io.namedpipes.windows.handle;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.google.common.annotations.VisibleForTesting;
 import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinBase;
@@ -24,11 +25,18 @@ import com.sun.jna.platform.win32.WinNT;
 import java.io.Closeable;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /** Wrapper around {@link WinNT.HANDLE} that is used to track if close() has been called. */
 public class WindowsHandle implements Closeable {
 
   private static final Logger LOG = Logger.get(WindowsHandle.class);
+
+  /**
+   * Global counter for open {@link WindowsHandle}. The value of open handles is added into every
+   * exception thrown from windows named pipes classes.
+   */
+  private static final AtomicInteger GLOBAL_OPEN_COUNTER = new AtomicInteger(0);
 
   private Optional<WinNT.HANDLE> handle;
   private final String description;
@@ -36,6 +44,7 @@ public class WindowsHandle implements Closeable {
   WindowsHandle(Optional<WinNT.HANDLE> handle, String description) {
     this.handle = handle;
     this.description = description;
+    GLOBAL_OPEN_COUNTER.incrementAndGet();
   }
 
   public boolean isInvalidHandle() {
@@ -66,6 +75,7 @@ public class WindowsHandle implements Closeable {
       LOG.error(e, "Failed to close handle: %s", toString());
     }
     handle = Optional.empty();
+    GLOBAL_OPEN_COUNTER.decrementAndGet();
   }
 
   @Override
@@ -74,5 +84,14 @@ public class WindowsHandle implements Closeable {
         .add("description='" + description + "'")
         .add("isClosed=" + isClosed())
         .toString();
+  }
+
+  /**
+   * Returns the number of opened {@link WindowsHandle} handles at the moment. The value of open
+   * handles is added into every exception thrown from windows named pipes classes.
+   */
+  @VisibleForTesting
+  public static int getNumberOfOpenedHandles() {
+    return GLOBAL_OPEN_COUNTER.get();
   }
 }

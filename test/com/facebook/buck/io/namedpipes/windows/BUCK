@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "unit",
+    deps = [
+        "//src/com/facebook/buck/io/namedpipes:namedpipes",
+        "//third-party/java/jna:jna-platform",
+        "//third-party/java/junit:junit",
+    ],
+)

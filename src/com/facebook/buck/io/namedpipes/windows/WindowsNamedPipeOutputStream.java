@@ -69,10 +69,9 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
         return;
       }
       if (error != WinError.ERROR_IO_PENDING) {
-        throw new IOException(
-            String.format(
-                "Cannot write into named pipe %s output steam. Error: %s",
-                namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error)));
+        throw new WindowsNamedPipeException(
+            "Cannot write into named pipe %s output steam. Error: %s",
+            namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error));
       }
     }
     IntByReference written = new IntByReference();
@@ -81,15 +80,13 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
       if (isEndOfThePipe(error)) {
         return;
       }
-      throw new IOException(
-          String.format(
-              "GetOverlappedResult() failed for write operation. Named pipe: %s, error: %s",
-              namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error)));
+      throw new WindowsNamedPipeException(
+          "GetOverlappedResult() failed for write operation. Named pipe: %s, error: %s",
+          namedPipeName, Kernel32Util.formatMessageFromLastErrorCode(error));
     }
     if (written.getValue() != len) {
-      throw new IOException(
-          String.format(
-              "WriteFile() wrote less bytes than requested. Named pipe: %s", namedPipeName));
+      throw new WindowsNamedPipeException(
+          "WriteFile() wrote less bytes than requested. Named pipe: %s", namedPipeName);
     }
   }
 

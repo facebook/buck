@@ -20,6 +20,7 @@ java_library(
     ),
     tests = [
         "//test/com/facebook/buck/io/namedpipes:unit",
+        "//test/com/facebook/buck/io/namedpipes/windows:unit",
     ],
     visibility = ["PUBLIC"],
     deps = [
