@@ -3,6 +3,7 @@ INTERFACES = [
     "NamedPipeReader.java",
     "NamedPipeWriter.java",
     "NamedPipeServer.java",
+    "PipeNotConnectedException.java",
 ]
 
 java_library(

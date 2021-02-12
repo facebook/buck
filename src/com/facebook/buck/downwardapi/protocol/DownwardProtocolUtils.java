@@ -27,6 +27,7 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downward.model.StepEvent;
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -99,7 +100,7 @@ class DownwardProtocolUtils {
         return converter.apply(buffer.toString());
       }
     }
-    throw new IllegalStateException("Can't read expected object!");
+    throw new PipeNotConnectedException("Can't read expected object!");
   }
 
   private static boolean isDelimiter(StringBuilder sb) {
