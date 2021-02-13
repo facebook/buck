@@ -583,7 +583,8 @@ abstract class AbstractBuildCommand extends AbstractCommand {
         continue;
       }
       if (rule instanceof HasMultipleOutputs) {
-        for (OutputLabel outputLabel : ((HasMultipleOutputs) rule).getOutputLabels()) {
+        for (OutputLabel outputLabel :
+            PathUtils.getAncestorOutputsLabels(pathResolver, (HasMultipleOutputs) rule)) {
           linkRuleToHashedBuckOut(
               rule,
               pathResolver,

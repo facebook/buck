@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
@@ -26,7 +27,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Optional;
+import java.util.TreeMap;
 
 /** Path-related utility methods for the command-line interface. */
 public class PathUtils {
@@ -85,5 +89,38 @@ public class PathUtils {
     }
 
     return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
+  }
+
+  /**
+   * @return all ancestor {@link OutputLabel}s from the given rule, such that no output contains
+   *     another.
+   */
+  static Iterable<OutputLabel> getAncestorOutputsLabels(
+      SourcePathResolverAdapter resolver, HasMultipleOutputs rule) {
+
+    // Gather and sort all output paths of this rule by their path.
+    TreeMap<AbsPath, OutputLabel> pathsToLabels =
+        new TreeMap<>(Comparator.comparing(AbsPath::getPath));
+    for (OutputLabel outputLabel : rule.getOutputLabels()) {
+      ImmutableSortedSet<SourcePath> sourcePaths = rule.getSourcePathToOutput(outputLabel);
+      if (sourcePaths != null) {
+        pathsToLabels.put(
+            resolver.getAbsolutePath(Iterables.getOnlyElement(sourcePaths)), outputLabel);
+      }
+    }
+
+    // Remove outputs which are children of other output.
+    AbsPath prev = null;
+    for (Iterator<AbsPath> itr = pathsToLabels.keySet().iterator(); itr.hasNext(); ) {
+      AbsPath element = itr.next();
+      // If this output is contained by the previous one, then remove it.
+      if (prev != null && element.startsWith(prev)) {
+        itr.remove();
+        continue;
+      }
+      prev = element;
+    }
+
+    return pathsToLabels.values();
   }
 }
