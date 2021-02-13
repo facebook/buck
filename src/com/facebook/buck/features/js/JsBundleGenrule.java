@@ -19,6 +19,7 @@ package com.facebook.buck.features.js;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -52,6 +53,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -444,10 +446,11 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     boolean skipResources = getBuildable().skipResources;
     return !skipResources && jsBundle instanceof AndroidPackageable
-        ? ((AndroidPackageable) jsBundle).getRequiredPackageables(ruleResolver)
+        ? ((AndroidPackageable) jsBundle).getRequiredPackageables(ruleResolver, ndkCxxPlatforms)
         : ImmutableList.of();
   }
 

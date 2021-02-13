@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -47,6 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /** Fake implementation of {@link CxxLibraryGroup} for testing. */
 public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -177,7 +179,8 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return ImmutableList.of();
   }
 

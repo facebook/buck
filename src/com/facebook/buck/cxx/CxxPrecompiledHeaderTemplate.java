@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Represents a precompilable header file, along with dependencies.
@@ -127,7 +129,8 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 

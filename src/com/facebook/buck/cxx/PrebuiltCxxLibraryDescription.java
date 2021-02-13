@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -83,6 +84,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -90,6 +92,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
@@ -893,9 +896,15 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+      public Iterable<AndroidPackageable> getRequiredPackageables(
+          BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
+        // Both iterables we are concating are ImmutableSets, so the returned iterator does not
+        // support remove
         return AndroidPackageableCollector.getPackageableRules(
-            args.getCxxDeps().getForAllPlatforms(ruleResolver));
+            Iterables.concat(
+                Streams.stream(ndkCxxPlatforms.get())
+                    .map(platform -> args.getCxxDeps().get(ruleResolver, platform.getCxxPlatform()))
+                    .collect(ImmutableList.toImmutableList())));
       }
 
       @Override

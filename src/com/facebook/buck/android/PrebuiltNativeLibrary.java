@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -33,6 +34,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -95,7 +97,8 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
   }
 

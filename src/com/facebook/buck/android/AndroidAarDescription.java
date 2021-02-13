@@ -22,6 +22,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -47,6 +48,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.query.Query;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
@@ -141,7 +143,18 @@ public class AndroidAarDescription
     /* assemble dirs */
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
-            buildTarget, /* buildTargetsToExcludeFromDex */ ImmutableSet.of(), apkModuleGraph);
+            buildTarget, /* buildTargetsToExcludeFromDex */
+            ImmutableSet.of(),
+            apkModuleGraph,
+            Suppliers.memoize(
+                () -> {
+                  NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+                      toolchainProvider.getByName(
+                          NdkCxxPlatformsProvider.DEFAULT_NAME,
+                          buildTarget.getTargetConfiguration(),
+                          NdkCxxPlatformsProvider.class);
+                  return ndkCxxPlatformsProvider.getResolvedNdkCxxPlatforms(graphBuilder).values();
+                }));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalBuildRuleParams.getBuildDeps()),
         graphBuilder);

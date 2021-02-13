@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -58,6 +59,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -214,7 +216,8 @@ public class PrebuiltCxxLibraryGroupDescription
     }
 
     @Override
-    public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    public Iterable<AndroidPackageable> getRequiredPackageables(
+        BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
       return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
     }
 

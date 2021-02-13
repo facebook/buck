@@ -71,6 +71,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -314,8 +315,11 @@ public class JsBundleGenruleDescriptionTest {
     JsBundleAndroid jsBundleAndroid = setup.jsBundleAndroid();
     ActionGraphBuilder ruleResolver = new TestActionGraphBuilder();
     assertEquals(
-        jsBundleAndroid.getRequiredPackageables(ruleResolver),
-        setup.genrule().getRequiredPackageables(ruleResolver));
+        jsBundleAndroid.getRequiredPackageables(
+            ruleResolver, Suppliers.ofInstance(ImmutableList.of())),
+        setup
+            .genrule()
+            .getRequiredPackageables(ruleResolver, Suppliers.ofInstance(ImmutableList.of())));
 
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(ruleResolver, collector);
@@ -327,7 +331,11 @@ public class JsBundleGenruleDescriptionTest {
     setupWithSkipResources(JsFlavors.ANDROID);
 
     assertEquals(
-        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestActionGraphBuilder()));
+        ImmutableList.of(),
+        setup
+            .genrule()
+            .getRequiredPackageables(
+                new TestActionGraphBuilder(), Suppliers.ofInstance(ImmutableList.of())));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidPackageableCollector collector = packageableCollectorMock(setup);
     setup.genrule().addToCollector(graphBuilder, collector);
@@ -337,7 +345,11 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void returnsNothingIfUnderlyingBundleIsNotForAndroid() {
     assertEquals(
-        ImmutableList.of(), setup.genrule().getRequiredPackageables(new TestActionGraphBuilder()));
+        ImmutableList.of(),
+        setup
+            .genrule()
+            .getRequiredPackageables(
+                new TestActionGraphBuilder(), Suppliers.ofInstance(ImmutableList.of())));
   }
 
   @Test

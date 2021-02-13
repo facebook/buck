@@ -88,6 +88,7 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -752,7 +753,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     // the dep in both lists). This difference is probably accidental, but it's now depended upon
     // by at least a couple projects.
     assertThat(
-        ImmutableSet.copyOf(library.getRequiredPackageables(graphBuilder)),
+        ImmutableSet.copyOf(
+            library.getRequiredPackageables(
+                graphBuilder, Suppliers.ofInstance(ImmutableList.of()))),
         equalTo(
             ImmutableSet.of(
                 graphBuilder.getRule(depLibraryTarget),

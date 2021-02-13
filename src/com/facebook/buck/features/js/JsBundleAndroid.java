@@ -19,6 +19,7 @@ package com.facebook.buck.features.js;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -36,6 +37,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
+import java.util.function.Supplier;
 
 /** Represents a combination of a JavaScript bundle *and* Android resources. */
 public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -131,7 +133,8 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return ImmutableList.of(androidResource);
   }
 

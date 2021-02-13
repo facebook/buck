@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -358,7 +359,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return AndroidPackageableCollector.getPackageableRules(getDeclaredDeps());
   }
 

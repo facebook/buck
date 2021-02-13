@@ -19,6 +19,7 @@ package com.facebook.buck.android.packageable;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection.ResourceDetails;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -30,6 +31,7 @@ import com.facebook.buck.jvm.core.HasJavaClassHashes;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +43,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class AndroidPackageableCollector {
@@ -65,16 +68,30 @@ public class AndroidPackageableCollector {
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final APKModuleGraph apkModuleGraph;
   private final AndroidPackageableFilter androidPackageableFilter;
+  private final Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms;
 
   @VisibleForTesting
   public AndroidPackageableCollector(BuildTarget collectionRoot) {
     this(collectionRoot, ImmutableSet.of(), new APKModuleGraph(TargetGraph.EMPTY, collectionRoot));
   }
 
+  @VisibleForTesting
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       APKModuleGraph apkModuleGraph) {
+    this(
+        collectionRoot,
+        buildTargetsToExcludeFromDex,
+        apkModuleGraph,
+        Suppliers.ofInstance(ImmutableList.of()));
+  }
+
+  public AndroidPackageableCollector(
+      BuildTarget collectionRoot,
+      ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
+      APKModuleGraph apkModuleGraph,
+      Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     this(
         collectionRoot,
         buildTargetsToExcludeFromDex,
@@ -84,7 +101,8 @@ public class AndroidPackageableCollector {
         ImmutableSet.of(),
         ImmutableSet.of(),
         apkModuleGraph,
-        new NoopAndroidPackageableFilter());
+        new NoopAndroidPackageableFilter(),
+        ndkCxxPlatforms);
   }
 
   public AndroidPackageableCollector(
@@ -101,7 +119,8 @@ public class AndroidPackageableCollector {
         ImmutableSet.of(),
         ImmutableSet.of(),
         apkModuleGraph,
-        androidPackageableFilter);
+        androidPackageableFilter,
+        Suppliers.ofInstance(ImmutableList.of()));
   }
 
   /**
@@ -120,7 +139,8 @@ public class AndroidPackageableCollector {
       ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
       ImmutableCollection<NativeLinkableGroup> nativeLinkableGroupAssetsToExclude,
       APKModuleGraph apkModuleGraph,
-      AndroidPackageableFilter androidPackageableFilter) {
+      AndroidPackageableFilter androidPackageableFilter,
+      Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     this.collectionRoot = collectionRoot;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
@@ -130,6 +150,7 @@ public class AndroidPackageableCollector {
     this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
     this.apkModuleGraph = apkModuleGraph;
     this.androidPackageableFilter = androidPackageableFilter;
+    this.ndkCxxPlatforms = ndkCxxPlatforms;
     apkModuleGraph
         .getAPKModules()
         .forEach(module -> resourceCollectors.put(module, new ResourceCollector()));
@@ -154,7 +175,8 @@ public class AndroidPackageableCollector {
     }
     explored.add(packageable);
 
-    for (AndroidPackageable dep : packageable.getRequiredPackageables(ruleResolver)) {
+    for (AndroidPackageable dep :
+        packageable.getRequiredPackageables(ruleResolver, ndkCxxPlatforms)) {
       postOrderTraverse(dep, explored, ruleResolver);
     }
     packageable.addToCollector(ruleResolver, this);

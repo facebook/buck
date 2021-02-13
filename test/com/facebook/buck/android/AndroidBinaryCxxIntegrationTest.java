@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -262,23 +263,19 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckCommand("build", target).assertSuccess();
   }
 
-  @Ignore
   @Test
   public void testCxxLibraryDepWithConstraints() throws IOException {
     String target = "//apps/sample:app_cxx_lib_dep_with_constraints_without_cpu_map";
-    workspace
-        .runBuckCommand("build", target, "--target-platforms", "//:android-x86_32-armv7")
-        .assertSuccess();
+    Path path =
+        workspace.buildAndReturnOutput(target, "--target-platforms", "//:android-x86_32-armv7");
 
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
+    ZipInspector zipInspector = new ZipInspector(workspace.getPath(path));
     zipInspector.assertFileExists("lib/armeabi-v7a/libnative_cxx_lib-with-platform-deps.so");
     zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_x86-only-2.so");
+    zipInspector.assertFileDoesNotExist("lib/armeabi-v7a/libnative_cxx_error.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_lib-with-platform-deps.so");
     zipInspector.assertFileExists("lib/x86/libnative_cxx_x86-only-2.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_error.so");
     if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
       zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
       zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -426,7 +427,8 @@ public class DefaultJavaLibrary
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     // TODO(jkeljo): Subtracting out provided deps is probably not the right behavior (we don't
     // do it when assembling the contents of a java_binary), but it is long-standing and projects
     // are depending upon it. The long term direction should be that we either require that

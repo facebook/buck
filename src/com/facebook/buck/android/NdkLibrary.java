@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -54,6 +55,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -226,7 +228,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 

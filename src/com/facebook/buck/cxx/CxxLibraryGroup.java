@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -64,6 +65,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.List;
@@ -557,12 +559,19 @@ public class CxxLibraryGroup extends NoopBuildRule
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
-    // Both iterables we are concatting are ImmutableSets, so the returned iterator does not support
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
+    // Both iterables we are concating are ImmutableSets, so the returned iterator does not support
     // remove
     return AndroidPackageableCollector.getPackageableRules(
         Iterables.concat(
-            deps.getForAllPlatforms(ruleResolver), exportedDeps.getForAllPlatforms(ruleResolver)));
+            Streams.stream(ndkCxxPlatforms.get())
+                .map(
+                    platform ->
+                        Iterables.concat(
+                            deps.get(ruleResolver, platform.getCxxPlatform()),
+                            exportedDeps.get(ruleResolver, platform.getCxxPlatform())))
+                .collect(ImmutableList.toImmutableList())));
   }
 
   @Override

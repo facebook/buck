@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -37,6 +38,7 @@ import com.google.common.hash.HashCode;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
@@ -170,7 +172,8 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 

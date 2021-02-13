@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android.packageable;
 
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import java.util.function.Supplier;
 
 /**
  * Something (usually a {@link BuildRule}) that can be included in an Android package
@@ -39,9 +41,15 @@ public interface AndroidPackageable {
    * interface that lets an {@link AndroidPackageable} override the default set which is all deps of
    * the type {@link AndroidPackageable}.
    *
+   * <p>TODO(agallagher): We pass in the list of all NDK C++ platforms so that native linkable deps
+   * can trim deps which aren't relevant for the given platform, but ideally, we'd handle this a bit
+   * more elegantly (e.g. collect the first-order native linkables, then use the native linkable
+   * helpers to do platform-specific traversals in each case).
+   *
    * @return All {@link AndroidPackageable}s that must be included along with this one.
    */
-  Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver);
+  Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms);
 
   /**
    * Add concrete resources to the given collector.

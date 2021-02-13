@@ -140,6 +140,9 @@ cxx_library(
     visibility = [
         "PUBLIC",
     ],
+    platform_deps = [
+        ("NOTHING", [":error"]),
+    ],
     deps = select({
         "//:x86_32-config": [":x86-only-2"],
         "DEFAULT": [],
@@ -152,6 +155,11 @@ cxx_library(
     visibility = [
         "PUBLIC",
     ],
+)
+
+cxx_library(
+    name = "error",
+    srcs = ["error.c"],
 )
 
 cxx_library(

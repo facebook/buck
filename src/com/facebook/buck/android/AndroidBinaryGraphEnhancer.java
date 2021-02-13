@@ -26,6 +26,7 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
@@ -347,7 +348,16 @@ public class AndroidBinaryGraphEnhancer {
             nativeLinkablesAssetsToExcludeGroup,
             apkModuleGraph,
             AndroidPackageableFilterFactory.createFromConfigurationMatcher(
-                originalBuildTarget, androidNativeTargetConfigurationMatcher));
+                originalBuildTarget, androidNativeTargetConfigurationMatcher),
+            Suppliers.memoize(
+                () -> {
+                  NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+                      toolchainProvider.getByName(
+                          NdkCxxPlatformsProvider.DEFAULT_NAME,
+                          originalBuildTarget.getTargetConfiguration(),
+                          NdkCxxPlatformsProvider.class);
+                  return ndkCxxPlatformsProvider.getResolvedNdkCxxPlatforms(graphBuilder).values();
+                }));
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalDeps), graphBuilder);
     AndroidPackageableCollection packageableCollection = collector.build();

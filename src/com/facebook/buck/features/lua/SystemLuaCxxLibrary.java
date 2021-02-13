@@ -18,6 +18,7 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -32,6 +33,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.function.Supplier;
 
 /** Represents the system lua c++ library. */
 public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinkableGroup {
@@ -62,7 +64,8 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinka
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+  public Iterable<AndroidPackageable> getRequiredPackageables(
+      BuildRuleResolver ruleResolver, Supplier<Iterable<NdkCxxPlatform>> ndkCxxPlatforms) {
     return ImmutableList.of();
   }
 
