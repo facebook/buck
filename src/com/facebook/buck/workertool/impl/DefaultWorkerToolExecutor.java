@@ -32,7 +32,6 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
@@ -60,13 +59,10 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   private static final Logger LOG = Logger.get(DefaultWorkerToolExecutor.class);
 
-  private static final AtomicInteger counter = new AtomicInteger();
+  private static final AtomicInteger COUNTER = new AtomicInteger();
 
   private static final long WAIT_FOR_PROCESS_SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit WAIT_FOR_PROCESS_SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
-
-  private static final long WAIT_FOR_EXECUTOR_SHUTDOWN_TIMEOUT = 100;
-  private static final TimeUnit WAIT_FOR_EXECUTOR_SHUTDOWN_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
 
@@ -87,11 +83,12 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   DefaultWorkerToolExecutor(
       IsolatedExecutionContext context, ImmutableList<String> startWorkerToolCommand)
       throws IOException {
-    this.workerId = counter.incrementAndGet();
+    this.workerId = COUNTER.incrementAndGet();
     this.downwardApiProcessExecutor =
         context.getDownwardApiProcessExecutor(WorkerToolExecutorNamedPipeEventHandler::new);
     this.startWorkerToolCommand = startWorkerToolCommand;
 
+    boolean launched = false;
     try {
       this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
       this.launchedProcess =
@@ -100,10 +97,14 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
                   .addAllCommand(startWorkerToolCommand)
                   .setEnvironment(buildEnvs(namedPipeWriter.getName()))
                   .build());
+      launched = true;
     } catch (IOException e) {
-      closeNamedPipe();
       throw new IOException(
-          String.format("Can't launch a new worker tool process %s", startWorkerToolCommand), e);
+          String.format("Cannot launch a new worker tool process %s", startWorkerToolCommand), e);
+    } finally {
+      if (!launched) {
+        closeNamedPipe();
+      }
     }
     this.workerToolProcessMonitorExecutor =
         MostExecutors.newSingleThreadExecutor("WorkerToolProcessMonitor_" + workerId);
@@ -125,16 +126,14 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
               }
             });
 
+    boolean streamOpened = false;
     try {
-      // this is a blocking operation on windows!!!
-      this.outputStream = namedPipeWriter.getOutputStream();
-    } catch (IOException e) {
-      closeNamedPipe();
-      throw new IOException(
-          String.format(
-              "Can't open an output stream for named pipe: %s. Worker id: %s",
-              namedPipeWriter.getName(), workerId),
-          e);
+      this.outputStream = DefaultWorkerToolUtils.openStreamFromNamedPipe(namedPipeWriter, workerId);
+      streamOpened = true;
+    } finally {
+      if (!streamOpened) {
+        closeNamedPipe();
+      }
     }
   }
 
@@ -284,15 +283,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     if (waitForLaunchedProcessFuture != null && !waitForLaunchedProcessFuture.isDone()) {
       waitForLaunchedProcessFuture.cancel(true);
     }
-
-    try {
-      MostExecutors.shutdown(
-          workerToolProcessMonitorExecutor,
-          WAIT_FOR_EXECUTOR_SHUTDOWN_TIMEOUT,
-          WAIT_FOR_EXECUTOR_SHUTDOWN_TIMEOUT_UNIT);
-    } catch (InterruptedException e) {
-      Threads.interruptCurrentThread();
-    }
+    DefaultWorkerToolUtils.shutdownExecutor(workerToolProcessMonitorExecutor);
   }
 
   private enum WaitOption {

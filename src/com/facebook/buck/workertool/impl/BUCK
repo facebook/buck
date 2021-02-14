@@ -1,6 +1,7 @@
 java_library(
     name = "impl",
     srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/workertool/impl:workertool_impl"],
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:downward-model",
