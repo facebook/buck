@@ -44,8 +44,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Generates the necessary information, ({@link AppleCxxConditionalLinkInfo}, to be able to
@@ -205,9 +207,18 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
       ImmutableList.Builder<RelPath> dylibPathsBuilder,
       ImmutableMap.Builder<String, String> inputPathToHashMapBuilder)
       throws IOException {
+
+    Set<RelPath> processedInputFilePaths = new HashSet<>();
+
     for (Map.Entry<SourcePath, SourcePath> fileToHashEntry : sourcePaths.entrySet()) {
       RelPath inputFilePath =
           filesystem.relativize(sourcePathResolver.getAbsolutePath(fileToHashEntry.getKey()));
+
+      if (processedInputFilePaths.contains(inputFilePath)) {
+        continue;
+      }
+
+      processedInputFilePaths.add(inputFilePath);
 
       boolean isParamInput = !nonParameterInputPaths.contains(fileToHashEntry.getKey());
       if (isParamInput && isLinkableInputFileDylib(filesystem.resolve(inputFilePath))) {
