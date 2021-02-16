@@ -162,4 +162,18 @@ public class HashedBuckOutIntegrationTest {
     assertTrue(Files.exists(workspace.getPath("buck-out/gen/gen/out1.txt")));
     assertTrue(Files.exists(workspace.getPath("buck-out/gen/gen/out2.txt")));
   }
+
+  @Test
+  public void linkingWorksForAllGenrulesWithLabelsWithNoOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "genrules_empty_outs", tmp);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("-c", "project.buck_out_links_to_hashed_paths=hardlink", "//:gen")
+        .assertSuccess();
+    workspace
+        .runBuckBuild("-c", "project.buck_out_links_to_hashed_paths=hardlink", "//:gen")
+        .assertSuccess();
+    assertTrue(Files.exists(workspace.getPath("buck-out/gen/gen/out1.txt")));
+  }
 }

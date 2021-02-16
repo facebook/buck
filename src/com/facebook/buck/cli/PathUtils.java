@@ -103,7 +103,8 @@ public class PathUtils {
         new TreeMap<>(Comparator.comparing(AbsPath::getPath));
     for (OutputLabel outputLabel : rule.getOutputLabels()) {
       ImmutableSortedSet<SourcePath> sourcePaths = rule.getSourcePathToOutput(outputLabel);
-      if (sourcePaths != null) {
+      // TODO(agallagher): Should handle labels with multiple outputs?
+      if (sourcePaths != null && sourcePaths.size() == 1) {
         pathsToLabels.put(
             resolver.getAbsolutePath(Iterables.getOnlyElement(sourcePaths)), outputLabel);
       }
