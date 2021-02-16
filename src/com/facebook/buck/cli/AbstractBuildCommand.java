@@ -610,23 +610,23 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       OutputLabel outputLabel,
       HashedBuckOutLinkMode linkMode)
       throws IOException {
-    Optional<Path> outputPath =
+    Optional<AbsPath> outputPath =
         PathUtils.getUserFacingOutputPath(pathResolver, rule, buckOutCompatLink, outputLabel);
     if (!outputPath.isPresent()) {
       return;
     }
-    Path absolutePathWithHash = outputPath.get().toAbsolutePath();
+    AbsPath absolutePathWithHash = outputPath.get();
     Optional<Path> maybeAbsolutePathWithoutHash =
-        BuildPaths.removeHashFrom(absolutePathWithHash, rule.getBuildTarget());
+        BuildPaths.removeHashFrom(absolutePathWithHash.getPath(), rule.getBuildTarget());
     if (!maybeAbsolutePathWithoutHash.isPresent()) {
       // hash was not found, for example `export_file` rule outputs files in source directory, not
       // in buck-out
       // so we don't create any links
       return;
     }
-    Path absolutePathWithoutHash = maybeAbsolutePathWithoutHash.get();
+    AbsPath absolutePathWithoutHash = AbsPath.of(maybeAbsolutePathWithoutHash.get());
     MostFiles.deleteRecursivelyIfExists(absolutePathWithoutHash);
-    Files.createDirectories(absolutePathWithoutHash.getParent());
+    Files.createDirectories(absolutePathWithoutHash.getParent().getPath());
 
     // Support rule-specific output linking.
     if (rule instanceof CustomHashedBuckOutLinking) {
@@ -639,22 +639,24 @@ abstract class AbstractBuildCommand extends AbstractCommand {
 
     switch (linkMode) {
       case SYMLINK:
-        Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
+        Files.createSymbolicLink(absolutePathWithoutHash.getPath(), absolutePathWithHash.getPath());
         break;
       case HARDLINK:
         boolean isDirectory;
         try {
           isDirectory =
-              Files.readAttributes(absolutePathWithHash, BasicFileAttributes.class).isDirectory();
+              Files.readAttributes(absolutePathWithHash.getPath(), BasicFileAttributes.class)
+                  .isDirectory();
         } catch (NoSuchFileException e) {
           // Rule did not produce a file.
           // It should not be possible, but it happens.
           return;
         }
         if (isDirectory) {
-          Files.createSymbolicLink(absolutePathWithoutHash, absolutePathWithHash);
+          Files.createSymbolicLink(
+              absolutePathWithoutHash.getPath(), absolutePathWithHash.getPath());
         } else {
-          Files.createLink(absolutePathWithoutHash, absolutePathWithHash);
+          Files.createLink(absolutePathWithoutHash.getPath(), absolutePathWithHash.getPath());
         }
         break;
       case NONE:
@@ -669,14 +671,14 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       BuildRule rule,
       OutputLabel outputLabel)
       throws IOException {
-    Optional<Path> outputPath =
+    Optional<AbsPath> outputPath =
         PathUtils.getUserFacingOutputPath(
             pathResolver,
             rule,
             buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink(),
             outputLabel);
     if (outputPath.isPresent()) {
-      Path absolutePath = outputPath.get();
+      Path absolutePath = outputPath.get().getPath();
       RelPath destPath;
       try {
         destPath = lastOutputDirPath.relativize(absolutePath);
@@ -764,7 +766,10 @@ abstract class AbstractBuildCommand extends AbstractCommand {
         PathUtils.getUserFacingOutputPath(
                 sourcePathResolverAdapter, rule, buckOutCompatLink, outputLabel)
             .map(
-                path -> isShowOutputsPathAbsolute() ? path : fileSystem.relativize(path).getPath());
+                path ->
+                    isShowOutputsPathAbsolute()
+                        ? path.getPath()
+                        : fileSystem.relativize(path).getPath());
 
     return outputPath;
   }

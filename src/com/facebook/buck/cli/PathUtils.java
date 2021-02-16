@@ -44,7 +44,7 @@ public class PathUtils {
    *     returns more than one output from {@link
    *     HasMultipleOutputs#getSourcePathToOutput(OutputLabel)}
    */
-  static Optional<Path> getUserFacingOutputPath(
+  static Optional<AbsPath> getUserFacingOutputPath(
       SourcePathResolverAdapter pathResolver,
       BuildRule rule,
       boolean buckOutCompatLink,
@@ -88,7 +88,7 @@ public class PathUtils {
       }
     }
 
-    return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
+    return outputPathOptional.map(path -> AbsPath.of(rule.getProjectFilesystem().resolve(path)));
   }
 
   /**

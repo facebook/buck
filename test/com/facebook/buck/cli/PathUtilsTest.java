@@ -63,7 +63,7 @@ public class PathUtilsTest {
     assertThat(
         PathUtils.getUserFacingOutputPath(pathResolver, rule, true, OutputLabel.defaultLabel())
             .get(),
-        Matchers.equalTo(expected.getPath()));
+        Matchers.equalTo(expected));
   }
 
   @Test
@@ -76,7 +76,7 @@ public class PathUtilsTest {
     assertThat(
         PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.defaultLabel())
             .get(),
-        Matchers.equalTo(expected.getPath()));
+        Matchers.equalTo(expected));
   }
 
   @Test
@@ -99,7 +99,7 @@ public class PathUtilsTest {
 
     assertThat(
         PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.of("bar")).get(),
-        Matchers.equalTo(expected.getPath()));
+        Matchers.equalTo(expected));
   }
 
   @Test
@@ -149,6 +149,6 @@ public class PathUtilsTest {
     assertThat(
         PathUtils.getUserFacingOutputPath(pathResolver, rule, false, OutputLabel.defaultLabel())
             .get(),
-        Matchers.equalTo(expected.getPath()));
+        Matchers.equalTo(expected));
   }
 }

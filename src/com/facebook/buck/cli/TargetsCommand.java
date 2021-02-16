@@ -1255,7 +1255,7 @@ public class TargetsCommand extends AbstractCommand {
                 rule,
                 params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
                 targetWithOutputs.getOutputLabel())
-            .map(path -> pathToString(path, params))
+            .map(path -> pathToString(path.getPath(), params))
             .ifPresent(
                 path -> {
                   // Need to call both #setOutputPath and #putOutputPathsByLabels because
