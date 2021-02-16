@@ -87,7 +87,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
     CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
     Path pathToAbiGenerationPluginJar =
-        shouldGenerateSourceAbi() ? kotlinBuckConfig.getPathToAbiGenerationPluginJar() : null;
+        shouldGenerateSourceAbi(kotlinArgs, kotlinBuckConfig) ? kotlinBuckConfig.getPathToAbiGenerationPluginJar() : null;
     return new KotlincToJarStepFactory(
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
@@ -140,6 +140,10 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean sourceAbiCopiesFromLibraryTargetOutput() {
     return true;
+  }
+
+  private static boolean shouldGenerateSourceAbi(CoreArg kotlinArgs, KotlinBuckConfig kotlinBuckConfig) {
+    return kotlinArgs.getAbiGenerationMode().orElse(kotlinBuckConfig.getAbiGenerationMode()).isSourceAbi();
   }
 
   private static ImmutableList<SourcePath> getFriendSourcePaths(

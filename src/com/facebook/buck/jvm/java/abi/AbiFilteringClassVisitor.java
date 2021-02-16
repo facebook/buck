@@ -46,18 +46,17 @@ class AbiFilteringClassVisitor extends ClassVisitor {
   private boolean hasVisibleConstructor = false;
   private Set<String> includedInnerClasses = new HashSet<>();
   private List<String> nestMembers = new ArrayList<>();
-
-  public AbiFilteringClassVisitor(ClassVisitor cv, List<String> methodsWithRetainedBody) {
-    this(cv, methodsWithRetainedBody, null);
-  }
+  private final boolean isKotlinClass;
 
   public AbiFilteringClassVisitor(
       ClassVisitor cv,
       List<String> methodsWithRetainedBody,
-      @Nullable Set<String> referencedClassNames) {
+      @Nullable Set<String> referencedClassNames,
+      boolean isKotlinClass) {
     super(Opcodes.ASM7, cv);
     this.methodsWithRetainedBody = methodsWithRetainedBody;
     this.referencedClassNames = referencedClassNames;
+    this.isKotlinClass = isKotlinClass;
   }
 
   @Override
@@ -213,7 +212,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       return false;
     }
 
-    return (access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != Opcodes.ACC_SYNTHETIC;
+    return (isKotlinClass || (access & (Opcodes.ACC_SYNTHETIC | Opcodes.ACC_BRIDGE)) != Opcodes.ACC_SYNTHETIC);
   }
 
   private boolean isInterface(int access) {

@@ -294,9 +294,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .add(MODULE_NAME)
               .add(moduleName);
 
-      Path tmpSourceAbiFolder;
       if (abiGenerationPlugin != null) {
-        tmpSourceAbiFolder = JavaAbis.getTmpGenPathForSourceAbi(projectFilesystem, invokingRule);
+        Path tmpSourceAbiFolder = JavaAbis.getTmpGenPathForSourceAbi(projectFilesystem, invokingRule);
+        addCreateFolderStep(steps, projectFilesystem, buildContext, tmpSourceAbiFolder);
         extraArguments.add("-Xplugin=" + abiGenerationPlugin);
         extraArguments.add(
             "-P", "plugin:org.jetbrains.kotlin.jvm.abi:outputDir=" + tmpSourceAbiFolder);
