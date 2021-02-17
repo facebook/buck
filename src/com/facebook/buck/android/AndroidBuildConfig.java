@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -30,20 +29,10 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.step.isolatedsteps.android.GenerateBuildConfigStep;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /**
  * {@link BuildRule} that can generate a {@code BuildConfig.java} file and compile it so it can be
@@ -208,55 +197,15 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-      Supplier<BuildConfigFields> totalFields;
-      if (valuesFile.isPresent()) {
-        ReadValuesStep readValuesStep =
-            new ReadValuesStep(
-                filesystem,
-                buildContext.getSourcePathResolver().getAbsolutePath(valuesFile.get()).getPath());
-        steps.add(readValuesStep);
-        totalFields = MoreSuppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
-      } else {
-        totalFields = Suppliers.ofInstance(defaultValues);
-      }
-
-      steps.add(
+      return ImmutableList.of(
           new GenerateBuildConfigStep(
               buildTarget.getUnflavoredBuildTarget().toString(),
               javaPackage,
               useConstantExpressions,
-              totalFields,
+              valuesFile.map(
+                  file -> buildContext.getSourcePathResolver().getRelativePath(filesystem, file)),
+              defaultValues,
               outputPathResolver.resolvePath(outputPath)));
-
-      return steps.build();
-    }
-  }
-
-  @VisibleForTesting
-  static class ReadValuesStep extends AbstractExecutionStep implements Supplier<BuildConfigFields> {
-
-    private final ProjectFilesystem filesystem;
-    private final Path valuesFile;
-
-    @Nullable private BuildConfigFields values;
-
-    public ReadValuesStep(ProjectFilesystem filesystem, Path valuesFile) {
-      super("read values from " + valuesFile);
-      this.filesystem = filesystem;
-      this.valuesFile = valuesFile;
-    }
-
-    @Override
-    public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-      values = BuildConfigFields.fromFieldDeclarations(filesystem.readLines(valuesFile));
-      return StepExecutionResults.SUCCESS;
-    }
-
-    @Override
-    public BuildConfigFields get() {
-      return Objects.requireNonNull(values);
     }
   }
 }

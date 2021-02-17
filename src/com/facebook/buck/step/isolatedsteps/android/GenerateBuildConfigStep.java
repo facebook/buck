@@ -14,45 +14,63 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.step.isolatedsteps.android;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.android.BuildConfigs;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Objects;
 import java.io.IOException;
-import java.util.function.Supplier;
+import java.util.Optional;
 
-public class GenerateBuildConfigStep implements Step {
+/** Step to generate an Android Build Config. */
+public class GenerateBuildConfigStep extends IsolatedStep {
 
   private final String source;
   private final String javaPackage;
   private final boolean useConstantExpressions;
-  private final Supplier<BuildConfigFields> fields;
+  private final Optional<RelPath> valuesFile;
+  private final BuildConfigFields defaultValues;
   private final RelPath outBuildConfigPath;
 
   public GenerateBuildConfigStep(
       String source,
       String javaPackage,
       boolean useConstantExpressions,
-      Supplier<BuildConfigFields> fields,
+      Optional<RelPath> valuesFile,
+      BuildConfigFields defaultValues,
       RelPath outBuildConfigPath) {
     this.source = source;
     this.javaPackage = javaPackage;
     this.useConstantExpressions = useConstantExpressions;
-    this.fields = fields;
+    this.valuesFile = valuesFile;
+    this.defaultValues = defaultValues;
     this.outBuildConfigPath = outBuildConfigPath;
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException, InterruptedException {
+
+    BuildConfigFields fields;
+    if (!valuesFile.isPresent()) {
+      fields = defaultValues;
+    } else {
+      fields =
+          defaultValues.putAll(
+              BuildConfigFields.fromFieldDeclarations(
+                  ProjectFilesystemUtils.readLines(
+                      context.getRuleCellRoot(), valuesFile.get().getPath())));
+    }
+
     String java =
         BuildConfigs.generateBuildConfigDotJava(
-            source, javaPackage, useConstantExpressions, fields.get());
+            source, javaPackage, useConstantExpressions, fields);
     ProjectFilesystemUtils.writeContentsToPath(
         context.getRuleCellRoot(), java, outBuildConfigPath.getPath());
 
@@ -60,7 +78,7 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return String.format("generate_build_config %s", javaPackage);
   }
 
@@ -78,12 +96,14 @@ public class GenerateBuildConfigStep implements Step {
     GenerateBuildConfigStep that = (GenerateBuildConfigStep) obj;
     return Objects.equal(this.javaPackage, that.javaPackage)
         && this.useConstantExpressions == that.useConstantExpressions
-        && Objects.equal(this.fields, that.fields)
+        && Objects.equal(this.valuesFile, that.valuesFile)
+        && Objects.equal(this.defaultValues, that.defaultValues)
         && Objects.equal(this.outBuildConfigPath, that.outBuildConfigPath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(javaPackage, useConstantExpressions, fields, outBuildConfigPath);
+    return Objects.hashCode(
+        javaPackage, useConstantExpressions, valuesFile, defaultValues, outBuildConfigPath);
   }
 }
