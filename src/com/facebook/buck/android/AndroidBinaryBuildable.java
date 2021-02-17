@@ -289,7 +289,8 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
           assetDirectoriesBuilderForThisModule);
     }
 
-    boolean shouldPackageAssetLibraries = packageAssetLibraries || !module.isRootModule();
+    // Do not package native libraries as assets for dynamic feature modules. To keep the earlier implementation intact added check for useDynamicFeature.
+    boolean shouldPackageAssetLibraries = !useDynamicFeature && (packageAssetLibraries || !module.isRootModule());
     if (!ExopackageMode.enabledForNativeLibraries(exopackageModes)
         && nativeFilesInfo.nativeLibsDirs.isPresent()
         && nativeFilesInfo.nativeLibsDirs.get().containsKey(module)) {
