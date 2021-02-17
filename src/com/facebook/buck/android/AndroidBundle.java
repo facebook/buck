@@ -79,6 +79,7 @@ import java.util.stream.Stream;
  * </pre>
  *
  * Configuration for dynamic feature (enable use_split_dex, use_dynamic_feature and application_module_configs flags) :
+ * <pre>A new configuration application_modules_with_manifest is defined to decouple the manifest behaviour from the resources. This approach is aligned with dynamic features heuristics where base manifest has complete information of the feature manifest</pre>
  * <pre>
  * android_bundle(
  *   name = 'messenger',
@@ -91,6 +92,9 @@ import java.util.stream.Stream;
  *   application_module_configs = {
  *     "feature1":['//feature1:module_root'],
  *   },
+ *   application_modules_with_manifest = [
+ *     "feature1",
+ *   ]
  * )
  * </pre>
  */
