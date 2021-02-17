@@ -32,6 +32,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaCDWorkerToolStepsBuilder;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
 import com.facebook.buck.util.Ansi;
@@ -188,18 +189,14 @@ public class JavaCDWorkerToolMain {
         new JavaCDWorkerToolStepsBuilder(buildJavaCommand);
     AbsPath ruleCellRoot = javaCDWorkerToolStepsBuilder.getRuleCellRoot();
     ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
+    StepExecutionResult stepExecutionResult;
     try (IsolatedExecutionContext executionContext =
         IsolatedExecutionContext.of(
             eventBus, console, platform, processExecutor, ruleCellRoot, actionId, clock)) {
-
-      // TODO: msemko investigate if `IsolatedStepsRunner.execute()` catch error and log it without
-      // re-throwing.
-      IsolatedStepsRunner.execute(isolatedSteps, executionContext);
+      stepExecutionResult = IsolatedStepsRunner.execute(isolatedSteps, executionContext);
     }
 
-    // TODO : msemko : return a valid exit code in case of failure in
-    // `IsolatedStepsRunner.execute()`
-    int exitCode = 0;
+    int exitCode = stepExecutionResult.getExitCode();
     ResultEvent resultEvent =
         ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode).build();
     DOWNWARD_PROTOCOL.write(
