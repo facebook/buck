@@ -107,8 +107,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean hasWhitelistedStrings;
 
-  @AddToRuleKey private final boolean isVerifyingStylesXmlEnabled;
-
   @AddToRuleKey private final boolean isVerifyingXmlAttrsEnabled;
 
   private final ImmutableSortedSet<BuildRule> deps;
@@ -149,7 +147,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
     super(
         buildTarget,
@@ -196,7 +193,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     + " was requested before it was made available.");
           }
         };
-    this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
     this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
   }
 
@@ -226,7 +222,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         assetsSrcs,
         manifestFile,
         hasWhitelistedStrings,
-        /* isVerifyingStylesXmlEnabled */ false,
         /* isVerifyingXmlAttrsEnabled */ false);
   }
 
@@ -243,7 +238,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
     this(
         buildTarget,
@@ -264,7 +258,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        isVerifyingStylesXmlEnabled,
         isVerifyingXmlAttrsEnabled);
   }
 
@@ -343,7 +336,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Objects.requireNonNull(res),
             Objects.requireNonNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
-            isVerifyingStylesXmlEnabled,
             isVerifyingXmlAttrsEnabled));
     return steps.build();
   }

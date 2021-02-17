@@ -118,7 +118,6 @@ public class MiniAapt implements Step {
   private final Path pathToOutputFile;
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final RDotTxtResourceCollector resourceCollector;
-  private final boolean isVerifyingStylesXmlEnabled;
   private final boolean isVerifyingXmlAttrsEnabled;
 
   public MiniAapt(
@@ -133,7 +132,6 @@ public class MiniAapt implements Step {
         resDirectory,
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
-        /* isVerifyingStylesXmlEnabled */ false,
         /* isVerifyingXmlAttrsEnabled */ false);
   }
 
@@ -143,14 +141,12 @@ public class MiniAapt implements Step {
       SourcePath resDirectory,
       Path pathToOutputFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
-      boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
     this.resolver = resolver;
     this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
-    this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
     this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
     this.resourceCollector = new RDotTxtResourceCollector();
   }
@@ -490,7 +486,7 @@ public class MiniAapt implements Step {
             input -> input.toString().endsWith(".xml"),
             EnumSet.of(FileVisitOption.FOLLOW_LINKS))) {
       String dirname = relativeResDir.relativize(path).getName(0).toString();
-      if (isVerifyingStylesXmlEnabled && path.endsWith("styles.xml")) {
+      if (path.endsWith("styles.xml")) {
         processStyleFile(filesystem, path, references);
       } else if (!isAValuesDir(dirname)) {
         // Ignore files under values* directories.
