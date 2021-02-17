@@ -67,15 +67,12 @@ public class AndroidBuildConfigTest {
     Step generateBuildConfigStep = steps.get(4);
     GenerateBuildConfigStep expectedStep =
         new GenerateBuildConfigStep(
-            new FakeProjectFilesystem(),
-            BuildTargetFactory.newInstance("//java/com/example:build_config")
-                .getUnflavoredBuildTarget(),
+            "build_config",
             /* javaPackage */ "com.example",
             /* useConstantExpressions */ false,
             /* constants */ Suppliers.ofInstance(BuildConfigFields.of()),
             BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), BUILD_TARGET, "%s__/BuildConfig.java")
-                .getPath());
+                filesystem.getBuckPaths(), BUILD_TARGET, "%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 

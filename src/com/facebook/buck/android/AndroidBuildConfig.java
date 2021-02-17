@@ -224,12 +224,11 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
 
       steps.add(
           new GenerateBuildConfigStep(
-              filesystem,
-              buildTarget.getUnflavoredBuildTarget(),
+              buildTarget.getUnflavoredBuildTarget().toString(),
               javaPackage,
               useConstantExpressions,
               totalFields,
-              outputPathResolver.resolvePath(outputPath).getPath()));
+              outputPathResolver.resolvePath(outputPath)));
 
       return steps.build();
     }

@@ -41,7 +41,9 @@ public class BuildConfigsTest {
     UnflavoredBuildTarget source =
         BuildTargetFactory.newInstance("//java/com/example:build_config")
             .getUnflavoredBuildTarget();
-    String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(source, "com.example.buck");
+    String observedJavaCode =
+        BuildConfigs.generateBuildConfigDotJava(
+            source.toString(), "com.example.buck", false, BuildConfigFields.of());
     assertEquals(
         "Because the 'temporary' BuildConfig.java might be used in a unit test, "
             + "DEBUG should default to true, IS_EXOPACKAGE should default to false and ."
@@ -83,7 +85,7 @@ public class BuildConfigsTest {
             .getUnflavoredBuildTarget();
     String observedJavaCode =
         BuildConfigs.generateBuildConfigDotJava(
-            source, "com.example", /* useConstantExpressions */ false, customValues);
+            source.toString(), "com.example", /* useConstantExpressions */ false, customValues);
     assertEquals(expectedJavaCode, observedJavaCode);
   }
 
@@ -116,7 +118,7 @@ public class BuildConfigsTest {
             .getUnflavoredBuildTarget();
     String observedJavaCode =
         BuildConfigs.generateBuildConfigDotJava(
-            source, "com.example", /* useConstantExpressions */ true, customValues);
+            source.toString(), "com.example", /* useConstantExpressions */ true, customValues);
     assertEquals(expectedJavaCode, observedJavaCode);
   }
 }

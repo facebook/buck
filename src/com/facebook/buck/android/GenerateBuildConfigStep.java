@@ -17,43 +17,35 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class GenerateBuildConfigStep implements Step {
 
-  private final ProjectFilesystem filesystem;
-  private final UnflavoredBuildTarget source;
+  private final String source;
   private final String javaPackage;
   private final boolean useConstantExpressions;
   private final Supplier<BuildConfigFields> fields;
-  private final Path outBuildConfigPath;
+  private final RelPath outBuildConfigPath;
 
   public GenerateBuildConfigStep(
-      ProjectFilesystem filesystem,
-      UnflavoredBuildTarget source,
+      String source,
       String javaPackage,
       boolean useConstantExpressions,
       Supplier<BuildConfigFields> fields,
-      Path outBuildConfigPath) {
-    this.filesystem = filesystem;
+      RelPath outBuildConfigPath) {
     this.source = source;
     this.javaPackage = javaPackage;
     this.useConstantExpressions = useConstantExpressions;
     this.fields = fields;
     this.outBuildConfigPath = outBuildConfigPath;
-    if (outBuildConfigPath.getNameCount() == 0) {
-      throw new HumanReadableException("Output BuildConfig.java filepath is missing");
-    }
   }
 
   @Override
@@ -61,7 +53,8 @@ public class GenerateBuildConfigStep implements Step {
     String java =
         BuildConfigs.generateBuildConfigDotJava(
             source, javaPackage, useConstantExpressions, fields.get());
-    filesystem.writeContentsToPath(java, outBuildConfigPath);
+    ProjectFilesystemUtils.writeContentsToPath(
+        context.getRuleCellRoot(), java, outBuildConfigPath.getPath());
 
     return StepExecutionResults.SUCCESS;
   }
