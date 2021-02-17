@@ -196,7 +196,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 </div></section>
 
 <footer><div class='width'>
-  &copy; Copyright Facebook, 2013 - 2020
+  &copy; Copyright Facebook, 2013 - <span id="fb-footer-year"></span>
 </div></footer>
 
 <!-- Algolia Search Code -->
@@ -220,6 +220,9 @@ docsearch({
   <script src="{ROOT}google-code-prettify/prettify.js"></script>
   <script>prettyPrint()</script>
 {/if}
+<script>
+  document.getElementById("fb-footer-year").innerHTML = new Date().getFullYear();
+</script>
 
 </body>
 </html>
