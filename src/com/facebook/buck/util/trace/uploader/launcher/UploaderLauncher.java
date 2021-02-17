@@ -18,14 +18,13 @@ package com.facebook.buck.util.trace.uploader.launcher;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /** Utility to upload chrome trace in background. */
 public class UploaderLauncher {
@@ -50,10 +49,8 @@ public class UploaderLauncher {
     }
 
     try {
-      Path pathToJavaBin =
-          Paths.get(Preconditions.checkNotNull(System.getProperty("java.home")), "bin", "java");
       String[] args = {
-        pathToJavaBin.toString(),
+        JavaBuckConfig.getJavaBinCommand(),
         "-cp",
         buckClasspath,
         "com.facebook.buck.util.trace.uploader.Main",

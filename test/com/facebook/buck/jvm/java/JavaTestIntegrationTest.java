@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -54,7 +55,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -294,7 +294,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJni() throws IOException {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -305,7 +305,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJniWithWhitelist() throws IOException {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -315,7 +315,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testWithJniWithWhitelistAndDangerousSymlink() throws IOException {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -334,12 +334,12 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testLDSymlinkTreeEnvVar() throws Exception {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
-    workspace.addBuckConfigLocalOption("java", "add_buck_ld_symlink_tree", "true");
+    workspace.addBuckConfigLocalOption(JavaBuckConfig.SECTION, "add_buck_ld_symlink_tree", "true");
 
     workspace.runBuckCommand("test", "//:jtest").assertSuccess();
     Path specOutput =
@@ -354,7 +354,7 @@ public class JavaTestIntegrationTest {
 
   @Test
   public void testNativeRequiredPaths() throws Exception {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
@@ -479,9 +479,10 @@ public class JavaTestIntegrationTest {
     assertEquals(1, testrunnerFilePath.size());
 
     // The java file path should be required.
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
     ImmutableList<String> javaFilePath =
         requiredPaths.stream()
-            .filter(path -> path.equals("java"))
+            .filter(path -> path.endsWith("java" + binaryExtension))
             .collect(ImmutableList.toImmutableList());
     assertEquals(1, javaFilePath.size());
 

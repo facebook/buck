@@ -106,7 +106,8 @@ public class JavaBinaryTest {
     String expectedClasspath =
         basePath + pathResolver.getCellUnsafeRelPath(javaBinary.getSourcePathToOutput());
 
-    List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
+    List<String> expectedCommand =
+        ImmutableList.of(JavaBuckConfig.getJavaBinCommand(), "-jar", expectedClasspath);
     assertEquals(
         expectedCommand,
         javaBinary.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver));

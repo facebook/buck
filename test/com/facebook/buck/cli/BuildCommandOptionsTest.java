@@ -38,7 +38,8 @@ public class BuildCommandOptionsTest {
   public void testCreateJavaPackageFinder() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("java", ImmutableMap.of("src_roots", "src, test")))
+            .setSections(
+                ImmutableMap.of(JavaBuckConfig.SECTION, ImmutableMap.of("src_roots", "src, test")))
             .build();
     DefaultJavaPackageFinder javaPackageFinder =
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();

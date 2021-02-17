@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -82,17 +83,20 @@ public class JavaBuckConfigTest {
   public void whenJavaIsNotSetThenJavaFromPathIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavaOptions javaOptions = config.getDefaultJavaOptions();
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
+    String javaPath =
+        Paths.get(System.getProperty("java.home"), "bin", "java" + binaryExtension).toString();
     assertEquals(
-        ImmutableList.of("java"), javaOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
+        ImmutableList.of(javaPath), javaOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
-        ImmutableList.of("java"),
+        ImmutableList.of(javaPath),
         javaForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions java11ForTestsOptions = config.getDefaultJava11OptionsForTests();
     assertEquals(
-        ImmutableList.of("java"),
+        ImmutableList.of(javaPath),
         java11ForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 

@@ -42,6 +42,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool.Builder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.ToolArg;
@@ -95,7 +96,8 @@ public class ExecutableMacroExpanderTest {
     AbsPath expectedClasspath =
         BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
+    String expectedCmd =
+        String.format("%s -jar %s $OUT", JavaBuckConfig.getJavaBinCommand(), expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -115,7 +117,8 @@ public class ExecutableMacroExpanderTest {
     AbsPath expectedClasspath =
         BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
+    String expectedCmd =
+        String.format("%s -jar %s $OUT", JavaBuckConfig.getJavaBinCommand(), expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -136,7 +139,8 @@ public class ExecutableMacroExpanderTest {
     AbsPath expectedClasspath =
         BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "%s.jar")
             .toAbsolutePath();
-    String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
+    String expectedCmd =
+        String.format("%s -jar %s $OUT", JavaBuckConfig.getJavaBinCommand(), expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 

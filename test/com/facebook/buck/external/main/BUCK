@@ -23,6 +23,7 @@ java_test(
         "//src/com/facebook/buck/external/parser:parser",
         "//src/com/facebook/buck/external/utils:utils",
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
+        "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/rules/modern:modern",
         "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",
