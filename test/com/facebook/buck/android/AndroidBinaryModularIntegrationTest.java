@@ -325,7 +325,8 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
     moduleInspector.assertTypeExists("Lcom/facebook/sample/SmallWithShared;");
     moduleInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
 
-    String sharedPath = "assets/shared0/shared02.dex";
+    String sharedPath =
+        "assets/s_small_with_shared2_with_no_resource_deps_small_with_shared_with_no_resource_deps/s_small_with_shared2_with_no_resource_deps_small_with_shared_with_no_resource_deps2.dex";
     zipInspector.assertFileDoesNotExist(sharedPath);
 
     DexInspector apkInspector = new DexInspector(apkPath, "classes2.dex");
@@ -350,7 +351,8 @@ public class AndroidBinaryModularIntegrationTest extends AbiCompilationModeTest 
 
     DexInspector apkInspector = new DexInspector(apkPath);
     apkInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Shared;");
-    String sharedPath = "assets/shared0/shared02.dex";
+    String sharedPath =
+        "assets/s_small_with_shared2_with_no_resource_deps_small_with_shared_with_no_resource_deps/s_small_with_shared2_with_no_resource_deps_small_with_shared_with_no_resource_deps2.dex";
     zipInspector.assertFileExists(sharedPath);
     DexInspector sharedInspector = new DexInspector(apkPath, sharedPath);
     sharedInspector.assertTypeExists("Lcom/facebook/sample/Shared;");
