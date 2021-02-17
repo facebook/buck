@@ -754,7 +754,9 @@ class AndroidBinaryResourcesGraphEnhancer {
             projectFilesystem,
             graphBuilder,
             baseApk,
-            ImmutableSortedSet.copyOf(assetsDirectories));
+            ImmutableSortedSet.copyOf(assetsDirectories),
+            shouldExecuteInSeparateProcess,
+            javaRuntimeLauncher);
     graphBuilder.addToIndex(mergeAssets);
     return mergeAssets;
   }

@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
@@ -267,7 +268,9 @@ public class RobolectricTestDescription
             androidResourceDeps.stream()
                 .map(HasAndroidResourceDeps::getAssets)
                 .filter(Objects::nonNull)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
+            javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
     graphBuilder.addToIndex(binaryResources);
 
     UnitTestOptions unitTestOptions =
