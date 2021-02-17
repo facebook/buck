@@ -23,6 +23,7 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -245,6 +246,10 @@ public class AndroidAarDescription
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
               javaBuckConfig.isJavaCDEnabled(),
+              javaBuckConfig
+                  .getDelegate()
+                  .getView(BuildBuckConfig.class)
+                  .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
       buildConfigRules.forEach(graphBuilder::addToIndex);

@@ -806,6 +806,7 @@ public class AndroidBinaryGraphEnhancerTest {
             graphBuilder,
             false,
             false,
+            false,
             new FakeTool(),
             () -> Paths.get("test/javacd_test.jar"));
 

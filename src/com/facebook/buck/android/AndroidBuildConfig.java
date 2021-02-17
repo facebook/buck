@@ -22,16 +22,20 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.externalactions.android.AndroidBuildConfigExternalAction;
+import com.facebook.buck.externalactions.android.AndroidBuildConfigExternalActionArgs;
+import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.isolatedsteps.android.GenerateBuildConfigStep;
+import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -134,7 +138,9 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
       String javaPackage,
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
-      boolean useConstantExpressions) {
+      boolean useConstantExpressions,
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -145,7 +151,9 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
             defaultValues,
             valuesFile,
             useConstantExpressions,
-            new OutputPath("BuildConfig.java")));
+            new OutputPath("BuildConfig.java"),
+            shouldExecuteInSeparateProcess,
+            javaRuntimeLauncher));
   }
 
   @Override
@@ -165,7 +173,10 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
     return getBuildable().defaultValues;
   }
 
-  static class Impl implements Buildable {
+  static class Impl extends BuildableWithExternalAction {
+    private static final String TEMP_FILE_PREFIX = "android_build_config_";
+    private static final String TEMP_FILE_SUFFIX = "";
+
     @AddToRuleKey private final BuildTarget buildTarget;
     @AddToRuleKey private final String javaPackage;
 
@@ -182,7 +193,10 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
         BuildConfigFields defaultValues,
         Optional<SourcePath> valuesFile,
         boolean useConstantExpressions,
-        OutputPath outputPath) {
+        OutputPath outputPath,
+        boolean shouldExecuteInSeparateProcess,
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.buildTarget = buildTarget;
       this.javaPackage = javaPackage;
       this.defaultValues = defaultValues;
@@ -192,20 +206,41 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
     }
 
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext buildContext,
+    public BuildableCommand getBuildableCommand(
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.of(
-          new GenerateBuildConfigStep(
+        BuildContext buildContext) {
+      Path jsonFilePath = createTempFile(filesystem);
+      AndroidBuildConfigExternalActionArgs jsonArgs =
+          AndroidBuildConfigExternalActionArgs.of(
               buildTarget.getUnflavoredBuildTarget().toString(),
               javaPackage,
               useConstantExpressions,
               valuesFile.map(
-                  file -> buildContext.getSourcePathResolver().getRelativePath(filesystem, file)),
-              defaultValues,
-              outputPathResolver.resolvePath(outputPath)));
+                  file ->
+                      buildContext
+                          .getSourcePathResolver()
+                          .getRelativePath(filesystem, file)
+                          .toString()),
+              defaultValues.getNameToField().values().stream()
+                  .map(BuildConfigFields.Field::toString)
+                  .collect(ImmutableList.toImmutableList()),
+              outputPathResolver.resolvePath(outputPath).toString());
+      ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
+
+      return BuildableCommand.newBuilder()
+          .addExtraFiles(jsonFilePath.toString())
+          .setExternalActionClass(AndroidBuildConfigExternalAction.class.getName())
+          .build();
+    }
+
+    private Path createTempFile(ProjectFilesystem filesystem) {
+      try {
+        return filesystem.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "Failed to create temp file when creating android build config buildable command");
+      }
     }
   }
 }

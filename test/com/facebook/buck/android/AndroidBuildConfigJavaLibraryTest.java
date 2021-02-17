@@ -59,6 +59,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
+            false,
             new FakeTool(),
             () -> Paths.get("test/javacd_test.jar"));
 
@@ -91,6 +92,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             graphBuilder,
+            false,
             false,
             false,
             new FakeTool(),
