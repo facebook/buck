@@ -69,12 +69,27 @@ import java.util.stream.Stream;
  *
  *
  * <pre>
- * android_binary(
+ * android_bundle(
  *   name = 'messenger',
  *   manifest = 'AndroidManifest.xml',
  *   deps = [
  *     '//src/com/facebook/messenger:messenger_library',
  *   ],
+ * )
+ * </pre>
+ *
+ * Configuration for dynamic feature (enable use_split_dex and application_module_configs flags) :
+ * <pre>
+ * android_bundle(
+ *   name = 'messenger',
+ *   manifest = 'AndroidManifest.xml',
+ *   deps = [
+ *     '//src/com/facebook/messenger:messenger_library',
+ *   ],
+ *   use_split_dex = True,
+ *   application_module_configs = {
+ *     "feature1":['//feature1:module_root'],
+ *   },
  * )
  * </pre>
  */
