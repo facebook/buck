@@ -25,8 +25,6 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,14 +43,12 @@ public class AndroidBuildConfigJavaLibraryTest {
   @Test
   public void testAddToCollector() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildTarget,
             projectFilesystem,
-            params,
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
                 Collections.singleton("String foo = \"bar\"")),
@@ -80,7 +76,6 @@ public class AndroidBuildConfigJavaLibraryTest {
   @Test
   public void testBuildConfigHasCorrectProperties() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = TestBuildRuleParams.create();
     BuildConfigFields fields =
         BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -89,7 +84,6 @@ public class AndroidBuildConfigJavaLibraryTest {
         AndroidBuildConfigDescription.createBuildRule(
             buildTarget,
             projectFilesystem,
-            params,
             "com.example.buck",
             /* values */ fields,
             /* valuesFile */ Optional.empty(),

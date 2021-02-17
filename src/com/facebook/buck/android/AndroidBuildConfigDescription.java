@@ -95,7 +95,6 @@ public class AndroidBuildConfigDescription
     return createBuildRule(
         buildTarget,
         projectFilesystem,
-        params,
         args.getPackage(),
         args.getValues(),
         args.getValuesFile(),
@@ -126,7 +125,6 @@ public class AndroidBuildConfigDescription
   static AndroidBuildConfigJavaLibrary createBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       String javaPackage,
       BuildConfigFields values,
       Optional<SourcePath> valuesFile,
@@ -168,16 +166,11 @@ public class AndroidBuildConfigDescription
     }
 
     // Create one build rule to generate BuildConfig.java.
-    BuildRuleParams buildConfigParams = params;
-    Optional<BuildRule> valuesFileRule = valuesFile.flatMap(graphBuilder::getRule);
-    if (valuesFileRule.isPresent()) {
-      buildConfigParams = buildConfigParams.copyAppendingExtraDeps(valuesFileRule.get());
-    }
     AndroidBuildConfig androidBuildConfig =
         new AndroidBuildConfig(
             buildConfigBuildTarget,
             projectFilesystem,
-            buildConfigParams,
+            graphBuilder,
             javaPackage,
             values,
             valuesFile,

@@ -792,13 +792,11 @@ public class AndroidBinaryGraphEnhancerTest {
     // Create an android_build_config() as a dependency of the android_binary().
     BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    BuildRuleParams buildConfigParams = TestBuildRuleParams.create();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
             buildConfigBuildTarget,
             projectFilesystem,
-            buildConfigParams,
             "com.example.buck",
             /* values */ BuildConfigFields.of(),
             /* valuesFile */ Optional.empty(),

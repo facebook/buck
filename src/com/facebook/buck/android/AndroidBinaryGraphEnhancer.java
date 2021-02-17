@@ -764,16 +764,10 @@ public class AndroidBinaryGraphEnhancer {
       String javaPackage = entry.getKey();
       Flavor flavor = InternalFlavor.of("buildconfig_" + javaPackage.replace('.', '_'));
       BuildTarget buildTargetWithFlavors = originalBuildTarget.withAppendedFlavors(flavor);
-      BuildRuleParams buildConfigParams =
-          new BuildRuleParams(
-              /* declaredDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
-              /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.of()),
-              ImmutableSortedSet.of());
       JavaLibrary buildConfigJavaLibrary =
           AndroidBuildConfigDescription.createBuildRule(
               buildTargetWithFlavors,
               projectFilesystem,
-              buildConfigParams,
               javaPackage,
               totalBuildConfigValues,
               buildConfigValuesFile,

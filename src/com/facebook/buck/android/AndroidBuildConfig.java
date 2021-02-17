@@ -16,25 +16,24 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
@@ -137,86 +136,103 @@ import javax.annotation.Nullable;
  * exploit the "final-ness" of the {@code DEBUG} constant in any whole-program optimization that it
  * performs.
  */
-public class AndroidBuildConfig extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-
-  @AddToRuleKey private final String javaPackage;
-
-  @AddToRuleKey(stringify = true)
-  private final BuildConfigFields defaultValues;
-
-  @AddToRuleKey private final Optional<SourcePath> valuesFile;
-  @AddToRuleKey private final boolean useConstantExpressions;
-  private final Path pathToOutputFile;
+public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl> {
 
   protected AndroidBuildConfig(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder sourcePathRuleFinder,
       String javaPackage,
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions) {
-    super(buildTarget, projectFilesystem, buildRuleParams);
-    this.javaPackage = javaPackage;
-    this.defaultValues = defaultValues;
-    this.valuesFile = valuesFile;
-    this.useConstantExpressions = useConstantExpressions;
-    this.pathToOutputFile =
-        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "__%s__")
-            .resolve("BuildConfig.java");
-  }
-
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-
-    Supplier<BuildConfigFields> totalFields;
-    if (valuesFile.isPresent()) {
-      ReadValuesStep readValuesStep =
-          new ReadValuesStep(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(valuesFile.get()).getPath());
-      steps.add(readValuesStep);
-      totalFields = MoreSuppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
-    } else {
-      totalFields = Suppliers.ofInstance(defaultValues);
-    }
-
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(),
-                getProjectFilesystem(),
-                pathToOutputFile.getParent())));
-    steps.add(
-        new GenerateBuildConfigStep(
-            getProjectFilesystem(),
-            getBuildTarget().getUnflavoredBuildTarget(),
+    super(
+        buildTarget,
+        projectFilesystem,
+        sourcePathRuleFinder,
+        new Impl(
+            buildTarget,
             javaPackage,
+            defaultValues,
+            valuesFile,
             useConstantExpressions,
-            totalFields,
-            pathToOutputFile));
-
-    buildableContext.recordArtifact(pathToOutputFile);
-    return steps.build();
+            new OutputPath("BuildConfig.java")));
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutputFile);
+    return getSourcePath(getBuildable().outputPath);
   }
 
   public String getJavaPackage() {
-    return javaPackage;
+    return getBuildable().javaPackage;
   }
 
   public boolean isUseConstantExpressions() {
-    return useConstantExpressions;
+    return getBuildable().useConstantExpressions;
   }
 
   public BuildConfigFields getBuildConfigFields() {
-    return defaultValues;
+    return getBuildable().defaultValues;
+  }
+
+  static class Impl implements Buildable {
+    @AddToRuleKey private final BuildTarget buildTarget;
+    @AddToRuleKey private final String javaPackage;
+
+    @AddToRuleKey(stringify = true)
+    private final BuildConfigFields defaultValues;
+
+    @AddToRuleKey private final Optional<SourcePath> valuesFile;
+    @AddToRuleKey private final boolean useConstantExpressions;
+    @AddToRuleKey private final OutputPath outputPath;
+
+    private Impl(
+        BuildTarget buildTarget,
+        String javaPackage,
+        BuildConfigFields defaultValues,
+        Optional<SourcePath> valuesFile,
+        boolean useConstantExpressions,
+        OutputPath outputPath) {
+      this.buildTarget = buildTarget;
+      this.javaPackage = javaPackage;
+      this.defaultValues = defaultValues;
+      this.valuesFile = valuesFile;
+      this.useConstantExpressions = useConstantExpressions;
+      this.outputPath = outputPath;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+      Supplier<BuildConfigFields> totalFields;
+      if (valuesFile.isPresent()) {
+        ReadValuesStep readValuesStep =
+            new ReadValuesStep(
+                filesystem,
+                buildContext.getSourcePathResolver().getAbsolutePath(valuesFile.get()).getPath());
+        steps.add(readValuesStep);
+        totalFields = MoreSuppliers.memoize(() -> defaultValues.putAll(readValuesStep.get()));
+      } else {
+        totalFields = Suppliers.ofInstance(defaultValues);
+      }
+
+      steps.add(
+          new GenerateBuildConfigStep(
+              filesystem,
+              buildTarget.getUnflavoredBuildTarget(),
+              javaPackage,
+              useConstantExpressions,
+              totalFields,
+              outputPathResolver.resolvePath(outputPath).getPath()));
+
+      return steps.build();
+    }
   }
 
   @VisibleForTesting
