@@ -26,6 +26,7 @@ import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.util.Collections;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -134,5 +135,28 @@ public class NativeGlobberTest {
     assertThat(
         globber.run(Collections.singleton("does_not_exist.txt"), Collections.emptySet(), false),
         Matchers.empty());
+  }
+
+  @Test
+  public void doesNotCrashIfEncountersNonMatchingBrokenSymlink() throws Exception {
+    Files.createDirectories(root.resolve("foo").getPath());
+    Files.write(root.resolve("foo/bar.h").getPath(), new byte[0]);
+    Files.createSymbolicLink(
+        root.resolve("foo/non-existent.cpp").getPath(),
+        root.resolve("foo/non-existent-target.cpp").getPath());
+    assertThat(
+        globber.run(ImmutableList.of("foo/*.h"), ImmutableList.of(), false),
+        equalTo(ImmutableSet.of("foo/bar.h")));
+  }
+
+  @Test
+  public void crashesIfEncountersMatchingBrokenSymlink() throws Exception {
+    Files.createDirectories(root.resolve("foo").getPath());
+    Files.write(root.resolve("foo/bar.h").getPath(), new byte[0]);
+    Files.createSymbolicLink(
+        root.resolve("foo/non-existent.cpp").getPath(),
+        root.resolve("foo/non-existent-target.cpp").getPath());
+    thrown.expect(NoSuchFileException.class);
+    globber.run(ImmutableList.of("foo/*.cpp"), ImmutableList.of(), false);
   }
 }

@@ -638,17 +638,18 @@ final class UnixGlob {
         dents = list.collect(ImmutableList.toImmutableList());
       }
       for (Path child : dents) {
+        if (!matches(pattern, child.getFileName().toString(), cache)) {
+          continue;
+        }
         BasicFileAttributes attributes = Files.readAttributes(child, BasicFileAttributes.class);
         if (attributes.isOther()) {
           // The file is a special file (fifo, etc.). No need to even match against the pattern.
           continue;
         }
-        if (matches(pattern, child.getFileName().toString(), cache)) {
-          if (attributes.isSymbolicLink()) {
-            processSymlink(AbsPath.of(child), idx, context);
-          } else {
-            processFileOrDirectory(AbsPath.of(child), Files.isDirectory(child), idx, context);
-          }
+        if (attributes.isSymbolicLink()) {
+          processSymlink(AbsPath.of(child), idx, context);
+        } else {
+          processFileOrDirectory(AbsPath.of(child), Files.isDirectory(child), idx, context);
         }
       }
     }
