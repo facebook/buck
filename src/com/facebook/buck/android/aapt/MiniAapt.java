@@ -118,7 +118,6 @@ public class MiniAapt implements Step {
   private final Path pathToOutputFile;
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final RDotTxtResourceCollector resourceCollector;
-  private final boolean isGrayscaleImageProcessingEnabled;
   private final boolean isVerifyingStylesXmlEnabled;
   private final boolean isVerifyingXmlAttrsEnabled;
 
@@ -134,7 +133,6 @@ public class MiniAapt implements Step {
         resDirectory,
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
-        /* isGrayscaleImageProcessingEnabled */ false,
         /* isVerifyingStylesXmlEnabled */ false,
         /* isVerifyingXmlAttrsEnabled */ false);
   }
@@ -145,7 +143,6 @@ public class MiniAapt implements Step {
       SourcePath resDirectory,
       Path pathToOutputFile,
       ImmutableSet<Path> pathsToSymbolsOfDeps,
-      boolean isGrayscaleImageProcessingEnabled,
       boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
     this.resolver = resolver;
@@ -153,7 +150,6 @@ public class MiniAapt implements Step {
     this.resDirectory = resDirectory;
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
-    this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
     this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
     this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
     this.resourceCollector = new RDotTxtResourceCollector();
@@ -318,7 +314,7 @@ public class MiniAapt implements Step {
         Element root = dom.getDocumentElement();
         isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
       }
-    } else if (isGrayscaleImageProcessingEnabled) {
+    } else {
       // .g.png is no longer an allowed filename in newer versions of aapt2.
       isGrayscaleImage = filename.endsWith(".g.png") || filename.endsWith(GRAYSCALE_SUFFIX);
       if (isGrayscaleImage) {

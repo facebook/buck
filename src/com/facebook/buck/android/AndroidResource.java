@@ -107,8 +107,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final boolean hasWhitelistedStrings;
 
-  private final boolean isGrayscaleImageProcessingEnabled;
-
   @AddToRuleKey private final boolean isVerifyingStylesXmlEnabled;
 
   @AddToRuleKey private final boolean isVerifyingXmlAttrsEnabled;
@@ -151,7 +149,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean isGrayscaleImageProcessingEnabled,
       boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
     super(
@@ -199,7 +196,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     + " was requested before it was made available.");
           }
         };
-    this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
     this.isVerifyingStylesXmlEnabled = isVerifyingStylesXmlEnabled;
     this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
   }
@@ -230,7 +226,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         assetsSrcs,
         manifestFile,
         hasWhitelistedStrings,
-        /* isGrayscaleImageProcessingEnabled */ false,
         /* isVerifyingStylesXmlEnabled */ false,
         /* isVerifyingXmlAttrsEnabled */ false);
   }
@@ -248,7 +243,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean isGrayscaleImageProcessingEnabled,
       boolean isVerifyingStylesXmlEnabled,
       boolean isVerifyingXmlAttrsEnabled) {
     this(
@@ -270,7 +264,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        isGrayscaleImageProcessingEnabled,
         isVerifyingStylesXmlEnabled,
         isVerifyingXmlAttrsEnabled);
   }
@@ -350,7 +343,6 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Objects.requireNonNull(res),
             Objects.requireNonNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
-            isGrayscaleImageProcessingEnabled,
             isVerifyingStylesXmlEnabled,
             isVerifyingXmlAttrsEnabled));
     return steps.build();

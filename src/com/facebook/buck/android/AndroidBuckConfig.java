@@ -275,16 +275,6 @@ public class AndroidBuckConfig {
     return delegate.getBoolean("ndk", "use_unified_headers");
   }
 
-  public boolean isGrayscaleImageProcessingEnabled() {
-    return delegate.getBooleanValue(
-        "android",
-        "resource_grayscale_enabled",
-        // TODO: `android.resource_grayscale_enabled` is the canonical value. We used to use
-        // `resources.resource_grayscale_enabled` though, so temporarily use that as a fallback to
-        // allow users to migrate.
-        delegate.getBooleanValue("resources", "resource_grayscale_enabled", false));
-  }
-
   public boolean isVerifyingStylesXmlEnabled() {
     return delegate.getBooleanValue("android", "verify_styles_xml", false);
   }

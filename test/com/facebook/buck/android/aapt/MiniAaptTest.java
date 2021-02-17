@@ -104,7 +104,6 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of(),
-            false,
             true,
             true);
 
@@ -389,7 +388,6 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of(),
-            /* isGrayscaleImageProcessingEnabled */ true,
             /* isVerifyingStylesXmlEnabled */ false,
             /* isVerifyingXmlAttrsEnabled */ false);
     aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
@@ -569,7 +567,6 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
-            false,
             true,
             true);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
@@ -615,7 +612,6 @@ public class MiniAaptTest {
             FakeSourcePath.of(filesystem, "res"),
             Paths.get("R.txt"),
             ImmutableSet.of(depRTxt),
-            false,
             true,
             true);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
