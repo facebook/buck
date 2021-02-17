@@ -60,7 +60,8 @@ public class AndroidBundleBuildable extends AndroidBinaryBuildable {
     ImmutableSortedSet<APKModule> apkModules,
     ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
     Optional<SourcePath> bundleConfigFilePath,
-    BinaryType binaryType) {
+    BinaryType binaryType,
+    boolean useDynamicFeature) {
     super(
       buildTarget,
       filesystem,
@@ -80,7 +81,8 @@ public class AndroidBundleBuildable extends AndroidBinaryBuildable {
       apkModules,
       moduleResourceApkPaths,
       bundleConfigFilePath,
-      binaryType);
+      binaryType,
+      useDynamicFeature);
   }
 
   @Override

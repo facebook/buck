@@ -107,6 +107,7 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
   protected final ProjectFilesystem filesystem;
   protected final BuildTarget buildTarget;
   protected final AndroidSdkLocation androidSdkLocation;
+  protected final boolean useDynamicFeature;
 
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
@@ -127,7 +128,8 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
       Optional<SourcePath> bundleConfigFilePath,
-      BinaryType binaryType) {
+      BinaryType binaryType,
+      boolean useDynamicFeature) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
     this.androidSdkLocation = androidSdkLocation;
@@ -147,6 +149,7 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
     this.resourceFilesInfo = resourceFilesInfo;
     this.bundleConfigFilePath = bundleConfigFilePath;
     this.binaryType = binaryType;
+    this.useDynamicFeature = useDynamicFeature;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")

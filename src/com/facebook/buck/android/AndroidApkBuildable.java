@@ -78,7 +78,8 @@ public class AndroidApkBuildable extends AndroidBinaryBuildable {
       apkModules,
       moduleResourceApkPaths,
       bundleConfigFilePath,
-      binaryType);
+      binaryType,
+      false);
   }
 
 

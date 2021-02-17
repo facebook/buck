@@ -78,7 +78,7 @@ import java.util.stream.Stream;
  * )
  * </pre>
  *
- * Configuration for dynamic feature (enable use_split_dex and application_module_configs flags) :
+ * Configuration for dynamic feature (enable use_split_dex, use_dynamic_feature and application_module_configs flags) :
  * <pre>
  * android_bundle(
  *   name = 'messenger',
@@ -87,6 +87,7 @@ import java.util.stream.Stream;
  *     '//src/com/facebook/messenger:messenger_library',
  *   ],
  *   use_split_dex = True,
+ *   use_dynamic_feature = True,
  *   application_module_configs = {
  *     "feature1":['//feature1:module_root'],
  *   },
@@ -159,7 +160,8 @@ public class AndroidBundle extends AbstractBuildRule
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       Optional<ExopackageInfo> exopackageInfo,
-      Optional<SourcePath> bundleConfigFilePath) {
+      Optional<SourcePath> bundleConfigFilePath,
+      boolean useDynamicFeature) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -222,7 +224,8 @@ public class AndroidBundle extends AbstractBuildRule
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
             bundleConfigFilePath,
-            AAB);
+            AAB,
+            useDynamicFeature);
     this.optimizer =
         new AndroidBundleOptimizer(
             getBuildTarget(),

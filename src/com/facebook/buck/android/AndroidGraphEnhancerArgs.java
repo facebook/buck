@@ -204,6 +204,11 @@ public interface AndroidGraphEnhancerArgs
   }
 
   @Value.Default
+  default boolean getUseDynamicFeature() {
+    return false;
+  }
+
+  @Value.Default
   default ImmutableSet<String> getExtraFilteredResources() {
     return ImmutableSet.of();
   }
