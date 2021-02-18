@@ -46,9 +46,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -664,20 +662,10 @@ public class APKModuleGraph implements AddsToRuleKey {
 
     // build modules based on all entries.
     Map<ImmutableSet<String>, APKModule> combinedModuleHashToModuleMap = new HashMap<>();
-    final Set<String> hashedSharedModuleSet = new HashSet<>();
+    int currentId = 0;
     for (TreeSet<String> moduleCover : sortedContainingModuleSets) {
-      final List<String> moduleCoverList = new ArrayList<>(moduleCover);
-      Collections.sort(moduleCoverList);
-      final String joinedModuleName = String.join("_", moduleCoverList);
-      String moduleName = moduleCoverList.size() > 1 ? "s_" + joinedModuleName : joinedModuleName;
-      if (moduleCoverList.size() > 1 && moduleName.length() > 254) {
-        moduleName = "s_" + String.valueOf(moduleName.hashCode());
-        if (hashedSharedModuleSet.contains(moduleName)) {
-          throw new RuntimeException(
-              "Collision while hashing shared module name " + joinedModuleName);
-        }
-        hashedSharedModuleSet.add(moduleName);
-      }
+      String moduleName =
+          moduleCover.size() == 1 ? moduleCover.iterator().next() : "shared" + currentId++;
       APKModule module = APKModule.of(moduleName, modulesWithResources.contains(moduleName));
       combinedModuleHashToModuleMap.put(ImmutableSet.copyOf(moduleCover), module);
     }
