@@ -155,11 +155,10 @@ public class Zip {
           }
         };
 
-    Path edenMagicPathElement = ProjectFilesystemUtils.getDefaultEdenMagicPathElement(rootPath);
     DirectoryStream.Filter<? super Path> ignoreFilter =
         ProjectFilesystemUtils.getIgnoreFilter(rootPath, true, ignoredPaths);
     ProjectFilesystemUtils.walkRelativeFileTree(
-        rootPath, edenMagicPathElement, baseDir, FOLLOW_LINKS, pathFileVisitor, ignoreFilter);
+        rootPath, baseDir, FOLLOW_LINKS, pathFileVisitor, ignoreFilter);
   }
 
   /** Writes entries to zipOut stream. */

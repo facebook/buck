@@ -727,13 +727,13 @@ public class ProjectFilesystemUtils {
   /** Walks a project-root relative file tree with a visitor and visit options. */
   public static void walkRelativeFileTree(
       AbsPath projectRoot,
-      Path edenMagicPathElement,
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
       DirectoryStream.Filter<? super Path> ignoreFilter)
       throws IOException {
     Path rootPath = getPathForRelativePath(projectRoot, pathRelativeToProjectRoot);
+    Path edenMagicPathElement = getDefaultEdenMagicPathElement(projectRoot);
     Function<Path, Path> pathMapper = path -> relativize(projectRoot, path).getPath();
     FileVisitor<Path> pathMappingVisitor =
         new FileVisitor<Path>() {

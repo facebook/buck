@@ -72,8 +72,6 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   private final AbsPath projectRoot;
 
-  private final Path edenMagicPathElement;
-
   private final BuckPaths buckPaths;
   /** Supplier that returns an absolute path that is guaranteed to exist. */
   private final Supplier<Path> tmpDir;
@@ -186,7 +184,6 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
               }
               return relativeTmpDir;
             });
-    this.edenMagicPathElement = getPath(".eden");
   }
 
   static Path getCacheDir(Path root, Optional<String> value, BuckPaths buckPaths) {
@@ -378,12 +375,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     DirectoryStream.Filter<? super Path> ignoreFilter =
         ProjectFilesystemUtils.getIgnoreFilter(projectRoot, skipIgnored, getIgnoredPaths());
     ProjectFilesystemUtils.walkRelativeFileTree(
-        projectRoot,
-        edenMagicPathElement,
-        pathRelativeToProjectRoot,
-        visitOptions,
-        fileVisitor,
-        ignoreFilter);
+        projectRoot, pathRelativeToProjectRoot, visitOptions, fileVisitor, ignoreFilter);
   }
 
   void walkFileTreeWithPathMapping(
@@ -393,6 +385,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       DirectoryStream.Filter<? super Path> ignoreFilter,
       Function<Path, Path> pathMapper)
       throws IOException {
+    Path edenMagicPathElement = ProjectFilesystemUtils.getDefaultEdenMagicPathElement(projectRoot);
     FileVisitor<Path> pathMappingVisitor =
         new FileVisitor<Path>() {
           @Override
