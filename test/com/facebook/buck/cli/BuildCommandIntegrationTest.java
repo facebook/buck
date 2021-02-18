@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
@@ -129,6 +130,21 @@ public class BuildCommandIntegrationTest {
 
     ZipInspector zipInspector = new ZipInspector(output);
     zipInspector.assertFileExists("com/example/Example.class");
+  }
+
+  @Test
+  public void buckBuildAndCopyOutputFileWithNamedOutput() throws IOException {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
+    workspace.setUp();
+
+    AbsPath externalOutputs = tmp.newFolder("into-output");
+    AbsPath output = externalOutputs.resolve("out2.txt");
+    assertFalse(output.toFile().exists());
+    workspace
+        .runBuckBuild("//:rule_with_multiple_outputs[output2]", "--out", output.toString())
+        .assertSuccess();
+    assertTrue(output.toFile().exists());
+    assertTrue(new String(Files.readAllBytes(output.getPath()), UTF_8).contains("another"));
   }
 
   @Test

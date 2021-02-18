@@ -510,9 +510,13 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
     }
     if (outputPathForSingleBuildTarget != null) {
-      BuildTarget loneTarget = Iterables.getOnlyElement(graphs.getTargetGraph().getBuildTargets());
+      BuildTargetWithOutputs loneTarget =
+          Iterables.getOnlyElement(graphsAndBuildTargets.getBuildTargetWithOutputs());
       BuildRule rule =
-          graphs.getActionGraphAndBuilder().getActionGraphBuilder().getRule(loneTarget);
+          graphs
+              .getActionGraphAndBuilder()
+              .getActionGraphBuilder()
+              .getRule(loneTarget.getBuildTarget());
       if (!rule.outputFileCanBeCopied()) {
         params
             .getConsole()
@@ -522,13 +526,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
                     loneTarget));
         return ExitCode.BUILD_ERROR;
       } else {
-        SourcePath output =
-            Preconditions.checkNotNull(
-                rule.getSourcePathToOutput(),
-                "%s specified a build target that does not have an output file: %s",
-                OUT_LONG_ARG,
-                loneTarget);
-
+        SourcePath output = getSourcePath(rule, loneTarget);
         ProjectFilesystem projectFilesystem = params.getCells().getRootCell().getFilesystem();
         SourcePathResolverAdapter pathResolver =
             graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathResolver();
@@ -558,6 +556,23 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       }
     }
     return ExitCode.SUCCESS;
+  }
+
+  private SourcePath getSourcePath(BuildRule rule, BuildTargetWithOutputs targetWithOutputs) {
+    if (rule instanceof HasMultipleOutputs) {
+      return Preconditions.checkNotNull(
+          Iterables.getOnlyElement(
+              ((HasMultipleOutputs) rule)
+                  .getSourcePathToOutput(targetWithOutputs.getOutputLabel())),
+          "%s specified a build target that does not have an output file: %s",
+          OUT_LONG_ARG,
+          targetWithOutputs);
+    }
+    return Preconditions.checkNotNull(
+        rule.getSourcePathToOutput(),
+        "%s specified a build target that does not have an output file: %s",
+        OUT_LONG_ARG,
+        targetWithOutputs);
   }
 
   private void linkBuildResultsToHashedBuckOut(
