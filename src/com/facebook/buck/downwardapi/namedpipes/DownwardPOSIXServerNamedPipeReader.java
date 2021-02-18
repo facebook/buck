@@ -24,14 +24,17 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.posix.POSIXServerNamedPipeReader;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /** {@link POSIXServerNamedPipeReader} specific to Downward API. */
@@ -41,7 +44,7 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
   private static final long SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
-  @Nullable private DownwardProtocol protocol;
+  private final AtomicReference<DownwardProtocol> protocolReference = new AtomicReference<>();
 
   protected DownwardPOSIXServerNamedPipeReader(Path path) throws IOException {
     super(path);
@@ -49,17 +52,21 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
 
   @Override
   public void setProtocol(DownwardProtocol protocol) {
-    if (this.protocol != null) {
-      throw new IllegalStateException(
-          "Cannot set downward protocol again once it has been established!");
+    boolean updated = protocolReference.compareAndSet(null, protocol);
+    if (!updated) {
+      DownwardProtocol existingProtocol = Objects.requireNonNull(getProtocol());
+      Preconditions.checkState(
+          existingProtocol.equals(protocol),
+          "Cannot set a downward protocol to `%s` once it has been established to `%s`",
+          protocol.getProtocolName(),
+          existingProtocol.getProtocolName());
     }
-    this.protocol = protocol;
   }
 
   @Nullable
   @Override
   public DownwardProtocol getProtocol() {
-    return protocol;
+    return protocolReference.get();
   }
 
   /**
