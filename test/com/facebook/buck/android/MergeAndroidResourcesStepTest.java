@@ -34,7 +34,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -42,6 +41,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.collect.ImmutableList;
@@ -64,6 +64,7 @@ import java.util.stream.Collectors;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.StringContains;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,13 +72,20 @@ import org.junit.rules.ExpectedException;
 public class MergeAndroidResourcesStepTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  private FakeProjectFilesystem filesystem;
+
   private List<RDotTxtEntry> createTestingFakesWithIds(List<RDotTxtEntry> ls) {
     return ls.stream().map(RDotTxtEntryUtil::matchId).collect(Collectors.toList());
   }
 
+  @Before
+  public void setUp() throws NoSuchBuildTargetException {
+    filesystem = new FakeProjectFilesystem();
+  }
+
   @Test
   public void testGenerateRDotJavaForMultipleSymbolsFiles() throws DuplicateResourceException {
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
 
     // Merge everything into the same package space.
     String sharedPackageName = "com.facebook.abc";
@@ -109,7 +117,7 @@ public class MergeAndroidResourcesStepTest {
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             ImmutableSet.of(),
-            entriesBuilder.getProjectFilesystem());
+            filesystem);
 
     assertEquals(1, packageNameToResources.keySet().size());
     SortedSet<RDotTxtEntry> resources = packageNameToResources.get(sharedPackageName);
@@ -132,7 +140,7 @@ public class MergeAndroidResourcesStepTest {
 
   @Test
   public void testGenerateRDotJavaForWithStyleables() throws DuplicateResourceException {
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
 
     // Merge everything into the same package space.
     String sharedPackageName = "com.facebook.abc";
@@ -179,7 +187,7 @@ public class MergeAndroidResourcesStepTest {
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             ImmutableSet.of(),
-            entriesBuilder.getProjectFilesystem());
+            filesystem);
 
     assertEquals(23, packageNameToResources.size());
 
@@ -253,7 +261,7 @@ public class MergeAndroidResourcesStepTest {
   @Test
   public void testGenerateRDotJavaForMultipleSymbolsFilesWithDuplicates()
       throws DuplicateResourceException {
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
 
     // Merge everything into the same package space.
     String sharedPackageName = "com.facebook.abc";
@@ -290,21 +298,21 @@ public class MergeAndroidResourcesStepTest {
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
         ImmutableMap.of(
-            entriesBuilder.getProjectFilesystem().getPath("a-R.txt"),
+            filesystem.getPath("a-R.txt"),
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(FakeSourcePath.of("a/res"))
                 .setRDotJavaPackage("com.res.a")
                 .build(),
-            entriesBuilder.getProjectFilesystem().getPath("b-R.txt"),
+            filesystem.getPath("b-R.txt"),
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
                 .setRes(FakeSourcePath.of("b/res"))
                 .setRDotJavaPackage("com.res.b")
                 .build(),
-            entriesBuilder.getProjectFilesystem().getPath("c-R.txt"),
+            filesystem.getPath("c-R.txt"),
             AndroidResourceRuleBuilder.newBuilder()
                 .setRuleFinder(ruleFinder)
                 .setBuildTarget(resTarget)
@@ -314,24 +322,14 @@ public class MergeAndroidResourcesStepTest {
         Optional.empty(),
         /* bannedDuplicateResourceTypes */ EnumSet.of(RType.STRING),
         ImmutableSet.of(),
-        entriesBuilder.getProjectFilesystem());
+        filesystem);
   }
 
   @Test
   public void testGenerateRDotJavaForLibrary() throws Exception {
     BuildTarget resTarget = BuildTargetFactory.newInstance("//:res1");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    resTarget,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id1 0x7f020000")));
 
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -343,6 +341,16 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("com.res1")
             .build();
     graphBuilder.addToIndex(res);
+
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res.getPathToTextSymbolsFile())
+                .getPath()
+                .toString(),
+            ImmutableList.of("int id id1 0x7f020000")));
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
@@ -368,13 +376,23 @@ public class MergeAndroidResourcesStepTest {
   @Test
   public void testGenerateRDotJavaForOneSymbolsFile() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    String symbolsFile =
-        BuildTargetPaths.getGenPath(
-                entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                target,
-                "__%s_text_symbols__/R.txt")
-            .toString();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+
+    AndroidResource resource =
+        AndroidResourceRuleBuilder.newBuilder()
+            .setRuleFinder(graphBuilder)
+            .setBuildTarget(target)
+            .setRes(FakeSourcePath.of("res"))
+            .setRDotJavaPackage("com.facebook")
+            .build();
+    graphBuilder.addToIndex(resource);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    Path symbolsFile =
+        graphBuilder
+            .getSourcePathResolver()
+            .getRelativePath(filesystem, resource.getPathToTextSymbolsFile())
+            .getPath();
     String rDotJavaPackage = "com.facebook";
     ImmutableList<String> outputTextSymbols =
         ImmutableList.<String>builder()
@@ -392,21 +410,8 @@ public class MergeAndroidResourcesStepTest {
             .build();
     entriesBuilder.add(new RDotTxtFile(rDotJavaPackage, symbolsFile, outputTextSymbols));
 
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
-
     AbsPath uberRDotTxt = filesystem.resolve("R.txt");
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-
-    AndroidResource resource =
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(graphBuilder)
-            .setBuildTarget(target)
-            .setRes(FakeSourcePath.of("res"))
-            .setRDotJavaPackage("com.facebook")
-            .build();
-    graphBuilder.addToIndex(resource);
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
@@ -461,25 +466,6 @@ public class MergeAndroidResourcesStepTest {
   @Test
   public void testGenerateRDotJavaForCustomDrawables() throws Exception {
     BuildTarget target = BuildTargetFactory.newInstance("//android_res/com/facebook/http:res");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    String symbolsFile =
-        BuildTargetPaths.getGenPath(
-                entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                target,
-                "__%s_text_symbols__/R.txt")
-            .toString();
-    String rDotJavaPackage = "com.facebook";
-    ImmutableList<String> outputTextSymbols =
-        ImmutableList.<String>builder()
-            .add("int drawable android_drawable 0x7f010000")
-            .add("int drawable fb_drawable 0x7f010001 #")
-            .build();
-    entriesBuilder.add(new RDotTxtFile(rDotJavaPackage, symbolsFile, outputTextSymbols));
-
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
-
-    AbsPath uberRDotTxt = filesystem.resolve("R.txt");
-    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -491,6 +477,23 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("com.facebook")
             .build();
     graphBuilder.addToIndex(resource);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    Path symbolsFile =
+        graphBuilder
+            .getSourcePathResolver()
+            .getRelativePath(filesystem, resource.getPathToTextSymbolsFile())
+            .getPath();
+    String rDotJavaPackage = "com.facebook";
+    ImmutableList<String> outputTextSymbols =
+        ImmutableList.<String>builder()
+            .add("int drawable android_drawable 0x7f010000")
+            .add("int drawable fb_drawable 0x7f010001 #")
+            .build();
+    entriesBuilder.add(new RDotTxtFile(rDotJavaPackage, symbolsFile, outputTextSymbols));
+
+    AbsPath uberRDotTxt = filesystem.resolve("R.txt");
+    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
@@ -534,9 +537,6 @@ public class MergeAndroidResourcesStepTest {
   public void testGetRDotJavaFilesWithSkipPrebuiltRDotJava() {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
-
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
 
@@ -584,9 +584,6 @@ public class MergeAndroidResourcesStepTest {
   public void testGetRDotJavaFilesWithoutSkipPrebuiltRDotJava() {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
-
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
 
@@ -637,30 +634,8 @@ public class MergeAndroidResourcesStepTest {
       throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    res1Target,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id1 0x7f020000")));
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res2",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    res2Target,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id2 0x7f020000")));
-
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(graphBuilder)
@@ -678,6 +653,24 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("res2")
             .build();
     graphBuilder.addToIndex(res2);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of("int id id1 0x7f020000")));
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res2",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res2.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of("int id id2 0x7f020000")));
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
@@ -708,27 +701,6 @@ public class MergeAndroidResourcesStepTest {
   public void testGenerateRDotJavaWithResourceUnionPackage() throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    res1Target,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id1 0x7f020000")));
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res2",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    res2Target,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id2 0x7f020000")));
-
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -749,6 +721,24 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("res2")
             .build();
     graphBuilder.addToIndex(res2);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of("int id id1 0x7f020000")));
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res2",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res2.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of("int id id2 0x7f020000")));
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
@@ -776,17 +766,6 @@ public class MergeAndroidResourcesStepTest {
   @Test
   public void testGenerateRDotJavaWithPreviouslyEmptyResourceUnionPackage() throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    res1Target,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id1 0x7f020000")));
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     AndroidResource res1 =
@@ -797,6 +776,16 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("res1")
             .build();
     graphBuilder.addToIndex(res1);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of("int id id1 0x7f020000")));
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
@@ -822,18 +811,6 @@ public class MergeAndroidResourcesStepTest {
   @Test
   public void testGenerateRDotJavaWithRName() throws Exception {
     BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder();
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            BuildTargetPaths.getGenPath(
-                    entriesBuilder.getProjectFilesystem().getBuckPaths(),
-                    res1Target,
-                    "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of("int id id1 0x7f020000", "int id id2 0x7f020002")));
-
-    FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -845,6 +822,16 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("res1")
             .build();
     graphBuilder.addToIndex(res1);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "com.res1",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of("int id id1 0x7f020000", "int id id2 0x7f020002")));
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
@@ -872,26 +859,6 @@ public class MergeAndroidResourcesStepTest {
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "package",
-            BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), res1Target, "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of(
-                "int string app_name 0x7f020000", "int drawable android_drawable 0x7f010000")));
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "package",
-            BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), res2Target, "__%s_text_symbols__/R.txt")
-                .toString(),
-            ImmutableList.of(
-                "int string app_name 0x7f020000", "int drawable android_drawable 0x7f010000")));
-
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
             .setRuleFinder(graphBuilder)
@@ -909,6 +876,26 @@ public class MergeAndroidResourcesStepTest {
             .setRDotJavaPackage("package")
             .build();
     graphBuilder.addToIndex(res2);
+
+    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "package",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of(
+                "int string app_name 0x7f020000", "int drawable android_drawable 0x7f010000")));
+    entriesBuilder.add(
+        new RDotTxtFile(
+            "package",
+            graphBuilder
+                .getSourcePathResolver()
+                .getRelativePath(filesystem, res2.getPathToTextSymbolsFile())
+                .getPath(),
+            ImmutableList.of(
+                "int string app_name 0x7f020000", "int drawable android_drawable 0x7f010000")));
 
     ImmutableList<HasAndroidResourceDeps> resourceDeps = ImmutableList.of(res1, res2);
 
@@ -1003,10 +990,6 @@ public class MergeAndroidResourcesStepTest {
     private final FakeProjectFilesystem filesystem;
     private final ImmutableMap.Builder<Path, String> filePathToPackageName = ImmutableMap.builder();
 
-    RDotTxtEntryBuilder() {
-      this(new FakeProjectFilesystem());
-    }
-
     RDotTxtEntryBuilder(FakeProjectFilesystem filesystem) {
       this.filesystem = filesystem;
     }
@@ -1032,8 +1015,12 @@ public class MergeAndroidResourcesStepTest {
     final Path filePath;
 
     RDotTxtFile(String packageName, String filePath, ImmutableList<String> contents) {
+      this(packageName, Paths.get(filePath), contents);
+    }
+
+    RDotTxtFile(String packageName, Path filePath, ImmutableList<String> contents) {
       this.packageName = packageName;
-      this.filePath = Paths.get(filePath);
+      this.filePath = filePath;
       this.contents = contents;
     }
   }
