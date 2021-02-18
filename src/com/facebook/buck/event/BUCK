@@ -5,6 +5,7 @@ EVENT_INTERFACES = [
     "EventKey.java",
     "BuckEvent.java",
     "BuckEventListener.java",
+    "HasCustomBuckEventBusRegistration.java",
     "BuckEventBus.java",
     "ConsoleEvent.java",
     "EventDispatcher.java",

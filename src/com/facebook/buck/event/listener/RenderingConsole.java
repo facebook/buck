@@ -229,14 +229,13 @@ public class RenderingConsole {
   }
 
   /**
-   * Shuts down rendering. If rendering, will print at least one final frame.
+   * Shuts down rendering and prints a final frame.
    *
    * <p>Logging after calling close() will not be queued.
    */
   public void close() {
-    boolean shouldRender = isRendering;
     stopRenderScheduler();
-    if (shouldRender) {
+    if (delegate != null) {
       render(); // Ensure final frame is rendered.
     }
   }
@@ -261,6 +260,7 @@ public class RenderingConsole {
         timeUnit);
   }
 
+  @VisibleForTesting
   void setIsRendering(boolean value) {
     isRendering = value;
   }

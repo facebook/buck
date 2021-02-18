@@ -18,10 +18,18 @@ package com.facebook.buck.event.utils;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.HasCustomBuckEventBusRegistration;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.Duration;
+import java.io.PrintStream;
 import java.time.Instant;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -56,5 +64,68 @@ public class EventBusUtils {
         adjustedToEpochNanos + TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
 
     event.configure(eventTimeInMillis, eventNanos, threadUserNanoTime, threadId, buildId);
+  }
+
+  /** Registers {@link BuckEventListener}s in the given {@link BuckEventBus}. */
+  public static void registerListeners(
+      Iterable<BuckEventListener> eventListeners, BuckEventBus buckEventBus) {
+    for (BuckEventListener eventListener : eventListeners) {
+      if (eventListener instanceof HasCustomBuckEventBusRegistration) {
+        HasCustomBuckEventBusRegistration customListener =
+            (HasCustomBuckEventBusRegistration) eventListener;
+        customListener.register(buckEventBus);
+      } else {
+        buckEventBus.register(eventListener);
+      }
+    }
+  }
+
+  /** Closes and unregisters {@link BuckEventListener}s in the given {@link BuckEventBus}. */
+  public static void closeAndUnregisterListeners(
+      Console console, ImmutableList<BuckEventListener> eventListeners, BuckEventBus buckEventBus)
+      throws Exception {
+    for (BuckEventListener eventListener : eventListeners) {
+      closeListener(console, eventListener);
+      unregisterListener(console, buckEventBus, eventListener);
+    }
+  }
+
+  private static void closeListener(Console console, BuckEventListener eventListener)
+      throws Exception {
+    runWithIgnoringRuntimeExceptions(
+        console,
+        () -> {
+          eventListener.close();
+          return Unit.UNIT;
+        });
+  }
+
+  private static void unregisterListener(
+      Console console, BuckEventBus buckEventBus, BuckEventListener eventListener)
+      throws Exception {
+    runWithIgnoringRuntimeExceptions(
+        console,
+        () -> {
+          if (eventListener instanceof HasCustomBuckEventBusRegistration) {
+            HasCustomBuckEventBusRegistration customListener =
+                (HasCustomBuckEventBusRegistration) eventListener;
+            customListener.unregister(buckEventBus);
+          } else {
+            buckEventBus.unregister(eventListener);
+          }
+
+          return Unit.UNIT;
+        });
+  }
+
+  private static void runWithIgnoringRuntimeExceptions(Console console, Callable<Unit> callable)
+      throws Exception {
+    try {
+      callable.call();
+    } catch (RuntimeException e) {
+      PrintStream stdErr = console.getStdErr();
+      stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
+      e.printStackTrace(stdErr);
+    }
   }
 }

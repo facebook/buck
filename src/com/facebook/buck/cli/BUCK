@@ -222,6 +222,7 @@ java_immutables_library(
         "//third-party/java/asm:asm",
         "//third-party/java/bazel:bazel",
         "//third-party/java/dd-plist:dd-plist",
+        "//src/com/facebook/buck/event/utils:utils",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",

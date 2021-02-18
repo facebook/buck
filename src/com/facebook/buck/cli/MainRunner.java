@@ -108,6 +108,7 @@ import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.event.listener.TopSlowTargetsEventListener;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
+import com.facebook.buck.event.utils.EventBusUtils;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
@@ -308,6 +309,7 @@ public final class MainRunner {
 
   private static final int EXECUTOR_SERVICES_TIMEOUT_SECONDS = 60;
   private static final int EVENT_BUS_TIMEOUT_SECONDS = 15;
+  private static final int FINISH_EVENT_TIMEOUT_MS = 100;
   private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
 
   private static final int COMMAND_PATH_MAX_LENGTH = 150;
@@ -1019,6 +1021,49 @@ public final class MainRunner {
                 printConsole.getAnsi());
         printConsole.setDuplicatingConsole(Optional.of(simpleLogConsole));
         Path testLogPath = filesystem.getBuckPaths().getLogDir().resolve("test.log");
+
+        AbstractConsoleEventBusListener consoleListener =
+            createConsoleEventListener(
+                clock,
+                superConsoleConfig,
+                printConsole,
+                testConfig.getResultSummaryVerbosity(),
+                executionEnvironment,
+                locale,
+                testLogPath,
+                logBuckConfig.isLogBuildIdToConsoleEnabled(),
+                logBuckConfig.getBuildDetailsTemplate(),
+                logBuckConfig.getBuildDetailsCommands(),
+                createAdditionalConsoleLinesProviders(
+                    remoteExecutionListener, remoteExecutionConfig, metadataProvider),
+                isRemoteExecutionBuild ? Optional.of(remoteExecutionConfig) : Optional.empty(),
+                metadataProvider);
+        AbstractConsoleEventBusListener fileLoggerConsoleListener =
+            new SimpleConsoleEventBusListener(
+                new RenderingConsole(clock, simpleLogConsole),
+                clock,
+                testConfig.getResultSummaryVerbosity(),
+                superConsoleConfig.getHideSucceededRulesInLogMode(),
+                superConsoleConfig.getNumberOfSlowRulesToShow(),
+                true, // Always show slow rules in File Logger Console
+                locale,
+                testLogPath,
+                executionEnvironment,
+                buildId,
+                logBuckConfig.isLogBuildIdToConsoleEnabled(),
+                logBuckConfig.getBuildDetailsTemplate(),
+                logBuckConfig.getBuildDetailsCommands(),
+                isRemoteExecutionBuild
+                    ? Optional.of(
+                        remoteExecutionConfig.getDebugURLString(
+                            metadataProvider.get().getReSessionId()))
+                    : Optional.empty(),
+                createAdditionalConsoleLinesProviders(
+                    remoteExecutionListener, remoteExecutionConfig, metadataProvider));
+
+        ImmutableList<BuckEventListener> consoleListeners =
+            ImmutableList.of(consoleListener, fileLoggerConsoleListener);
+
         try (ThrowingCloseableWrapper<ExecutorService, InterruptedException> diskIoExecutorService =
                 getExecutorWrapper(
                     MostExecutors.newSingleThreadExecutor("Disk I/O"),
@@ -1095,44 +1140,6 @@ public final class MainRunner {
                     buckConfig.getView(BuildBuckConfig.class).getBuildInfoCacheEnabled()
                         ? Optional.of(buckGlobalState.getBuildInfoCache())
                         : Optional.empty());
-            AbstractConsoleEventBusListener fileLoggerConsoleListener =
-                new SimpleConsoleEventBusListener(
-                    new RenderingConsole(clock, simpleLogConsole),
-                    clock,
-                    testConfig.getResultSummaryVerbosity(),
-                    superConsoleConfig.getHideSucceededRulesInLogMode(),
-                    superConsoleConfig.getNumberOfSlowRulesToShow(),
-                    true, // Always show slow rules in File Logger Console
-                    locale,
-                    testLogPath,
-                    executionEnvironment,
-                    buildId,
-                    logBuckConfig.isLogBuildIdToConsoleEnabled(),
-                    logBuckConfig.getBuildDetailsTemplate(),
-                    logBuckConfig.getBuildDetailsCommands(),
-                    isRemoteExecutionBuild
-                        ? Optional.of(
-                            remoteExecutionConfig.getDebugURLString(
-                                metadataProvider.get().getReSessionId()))
-                        : Optional.empty(),
-                    createAdditionalConsoleLinesProviders(
-                        remoteExecutionListener, remoteExecutionConfig, metadataProvider));
-            AbstractConsoleEventBusListener consoleListener =
-                createConsoleEventListener(
-                    clock,
-                    superConsoleConfig,
-                    printConsole,
-                    testConfig.getResultSummaryVerbosity(),
-                    executionEnvironment,
-                    locale,
-                    testLogPath,
-                    logBuckConfig.isLogBuildIdToConsoleEnabled(),
-                    logBuckConfig.getBuildDetailsTemplate(),
-                    logBuckConfig.getBuildDetailsCommands(),
-                    createAdditionalConsoleLinesProviders(
-                        remoteExecutionListener, remoteExecutionConfig, metadataProvider),
-                    isRemoteExecutionBuild ? Optional.of(remoteExecutionConfig) : Optional.empty(),
-                    metadataProvider);
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -1183,9 +1190,7 @@ public final class MainRunner {
             CloseableWrapper<Optional<CloseableWrapper<Unit>>> semaphoreCloser =
                 CloseableWrapper.of(
                     Optional.ofNullable(semaphore),
-                    s -> {
-                      s.ifPresent(AbstractCloseableWrapper::close);
-                    });
+                    s -> s.ifPresent(AbstractCloseableWrapper::close));
             CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
                 depsAwareExecutorSupplier =
                     getDepsAwareExecutorSupplier(buckConfig, buildEventBus)) {
@@ -1258,8 +1263,8 @@ public final class MainRunner {
                       : Optional.empty(),
                   managerScope,
                   logStreamFactory);
-          consoleListener.register(buildEventBus);
-          fileLoggerConsoleListener.register(buildEventBus);
+
+          EventBusUtils.registerListeners(consoleListeners, buildEventBus);
 
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
               && !printConsole.getVerbosity().isSilent()) {
@@ -1512,7 +1517,13 @@ public final class MainRunner {
             } else {
               buildEventBus.post(CommandEvent.finished(startedEvent.get(), exitCode));
             }
+            // Wait for finish (or interrupted) event to be processed before closing console
+            // listeners
+            buildEventBus.waitEvents(FINISH_EVENT_TIMEOUT_MS);
           }
+
+          // close console event listeners before disconnects from the nailgun
+          EventBusUtils.closeAndUnregisterListeners(printConsole, consoleListeners, buildEventBus);
 
           commandManager.handleCommandFinished(exitCode);
 
@@ -1532,7 +1543,7 @@ public final class MainRunner {
           }
 
           // TODO(buck_team): refactor eventListeners for RAII
-          flushAndCloseEventListeners(printConsole, eventListeners);
+          EventBusUtils.closeAndUnregisterListeners(printConsole, eventListeners, buildEventBus);
         }
       }
     }
@@ -1626,7 +1637,7 @@ public final class MainRunner {
               activeCommandLine.substring(0, COMMAND_PATH_MAX_LENGTH - ending.length()) + ending;
         }
 
-        System.err.println(String.format("Buck Daemon is busy executing '%s'.", activeCommandLine));
+        System.err.printf("Buck Daemon is busy executing '%s'.%n", activeCommandLine);
         LOG.info(
             "Buck server was busy executing '%s'. Maybe retrying later will help.",
             activeCommandLine);
@@ -1789,11 +1800,7 @@ public final class MainRunner {
             cellNameResolver);
     Optional<TargetConfiguration> hostPlatform =
         hostConfigurationDetector.detectHostConfiguration(Platform.detect());
-    if (hostPlatform.isPresent()) {
-      return hostPlatform;
-    }
-
-    return Optional.empty();
+    return hostPlatform;
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {
@@ -2064,19 +2071,6 @@ public final class MainRunner {
             printConsole.getStdOut().getRawStream(),
             printConsole.getStdErr().getRawStream(),
             buckConfig.getView(CliConfig.class).createAnsi(color)));
-  }
-
-  private void flushAndCloseEventListeners(
-      Console console, ImmutableList<BuckEventListener> eventListeners) throws IOException {
-    for (BuckEventListener eventListener : eventListeners) {
-      try {
-        eventListener.close();
-      } catch (RuntimeException e) {
-        PrintStream stdErr = console.getStdErr();
-        stdErr.println("Ignoring non-fatal error!  The stack trace is below:");
-        e.printStackTrace(stdErr);
-      }
-    }
   }
 
   private String previousBuckCoreKey(
@@ -2408,15 +2402,13 @@ public final class MainRunner {
     }
 
     eventListenersBuilder.add(new ParserProfilerLoggerListener(invocationInfo, projectFilesystem));
-
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
     eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 
     ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
-    eventListeners.forEach(buckEventBus::register);
-
+    EventBusUtils.registerListeners(eventListeners, buckEventBus);
     return eventListeners;
   }
 
@@ -2496,9 +2488,11 @@ public final class MainRunner {
           buildDetailsTemplate,
           buildDetailsCommands,
           additionalConsoleLineProviders,
-          remoteExecutionConfig.isPresent()
-              ? remoteExecutionConfig.get().getStrategyConfig().getMaxConcurrentExecutions()
-              : 0);
+          remoteExecutionConfig
+              .map(
+                  executionConfig ->
+                      executionConfig.getStrategyConfig().getMaxConcurrentExecutions())
+              .orElse(0));
     }
     if (renderingConsole.getVerbosity().isSilent()) {
       return new SilentConsoleEventBusListener(
@@ -2518,12 +2512,9 @@ public final class MainRunner {
         printBuildId,
         buildDetailsTemplate,
         buildDetailsCommands,
-        remoteExecutionConfig.isPresent()
-            ? Optional.of(
-                remoteExecutionConfig
-                    .get()
-                    .getDebugURLString(metadataProvider.get().getReSessionId()))
-            : Optional.empty(),
+        remoteExecutionConfig.map(
+            executionConfig ->
+                executionConfig.getDebugURLString(metadataProvider.get().getReSessionId())),
         additionalConsoleLineProviders);
   }
 

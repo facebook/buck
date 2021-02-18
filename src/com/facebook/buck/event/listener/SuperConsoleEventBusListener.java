@@ -131,10 +131,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // way the user can know that their changes, if they made any, were not picked up from Watchman.
   private boolean isZeroFileChanges = false;
 
-  private long minimumDurationMillisecondsToShowParse;
-  private long minimumDurationMillisecondsToShowActionGraph;
-  private long minimumDurationMillisecondsToShowWatchman;
-  private boolean hideEmptyDownload;
+  private final long minimumDurationMillisecondsToShowParse;
+  private final long minimumDurationMillisecondsToShowActionGraph;
+  private final long minimumDurationMillisecondsToShowWatchman;
+  private final boolean hideEmptyDownload;
 
   private final Set<String> actionGraphCacheMessage = new HashSet<>();
 
@@ -280,9 +280,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
-    if (buildIdLine.isPresent()) {
-      lines.add(buildIdLine.get());
-    }
+    buildIdLine.ifPresent(lines::add);
 
     if (gcTimeSpentWarning != null) {
       lines.add(ansi.asWarningText(gcTimeSpentWarning.getDurationLine()));
@@ -332,7 +330,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     // If parsing has not finished, then there is no build rule information to print yet.
     if (buildStarted == null || !parseFinished || !actionGraphFinished) {
-      return lines.build();
+      return buildLinesToRender(lines);
     }
 
     int maxThreadLines = defaultThreadLineLimit;
@@ -449,8 +447,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     logHttpCacheUploads(lines);
 
-    maybePrintBuildDetails(lines);
+    return buildLinesToRender(lines);
+  }
 
+  private ImmutableList<String> buildLinesToRender(Builder<String> lines) {
+    maybePrintBuildDetails(lines);
     return lines.build();
   }
 

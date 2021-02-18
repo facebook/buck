@@ -29,6 +29,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.HasCustomBuckEventBusRegistration;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
@@ -84,7 +85,8 @@ import org.stringtemplate.v4.ST;
  * Base class for {@link BuckEventListener}s responsible for outputting information about the
  * running build to {@code stderr}.
  */
-public abstract class AbstractConsoleEventBusListener implements BuckEventListener {
+public abstract class AbstractConsoleEventBusListener
+    implements HasCustomBuckEventBusRegistration, BuckEventListener {
 
   private static final Logger LOG = Logger.get(AbstractConsoleEventBusListener.class);
 
@@ -190,10 +192,18 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.buildDetailsCommands = buildDetailsCommands;
   }
 
+  @Override
   public void register(BuckEventBus buildEventBus) {
     buildEventBus.register(this);
     buildEventBus.register(parseStats);
     buildEventBus.register(networkStatsTracker);
+  }
+
+  @Override
+  public void unregister(BuckEventBus buildEventBus) {
+    buildEventBus.unregister(this);
+    buildEventBus.unregister(parseStats);
+    buildEventBus.unregister(networkStatsTracker);
   }
 
   public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
