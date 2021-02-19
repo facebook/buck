@@ -104,9 +104,25 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
         doUltralightChecking);
   }
 
+  /** Returns whether the given {@link UnusedDependenciesAction} requires to perform an action. */
+  public static boolean isActionableUnusedDependenciesAction(
+      UnusedDependenciesAction unusedDependenciesAction) {
+    switch (unusedDependenciesAction) {
+      case FAIL:
+      case WARN:
+        return true;
+
+      case IGNORE:
+      case UNKNOWN:
+      case UNRECOGNIZED:
+      default:
+        return false;
+    }
+  }
+
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
-    Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
+    Preconditions.checkState(isActionableUnusedDependenciesAction(getUnusedDependenciesAction()));
 
     AbsPath ruleCellRoot = context.getRuleCellRoot();
     CellPathExtractor cellPathExtractor =

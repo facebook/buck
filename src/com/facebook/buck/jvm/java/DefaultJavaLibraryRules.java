@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
+
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -520,7 +522,7 @@ public abstract class DefaultJavaLibraryRules {
       ActionGraphBuilder actionGraphBuilder,
       JavaLibraryDeps javaLibraryDeps,
       ConfiguredCompilerFactory configuredCompilerFactory) {
-    if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
+    if (isActionableUnusedDependenciesAction(unusedDependenciesAction)
         && configuredCompilerFactory.trackClassUsage(getJavacOptions())) {
       JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
       return Optional.of(

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
+
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -291,7 +293,12 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   public boolean useDependencyFileRuleKeys() {
-    return jarBuildStepsFactory.useDependencyFileRuleKeys();
+    return jarBuildStepsFactory.useDependencyFileRuleKeys() && !unusedDependenciesFinderEnabled();
+  }
+
+  private boolean unusedDependenciesFinderEnabled() {
+    return unusedDependenciesFinderFactory.isPresent()
+        && isActionableUnusedDependenciesAction(unusedDependenciesAction);
   }
 
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathRuleFinder ruleFinder) {
