@@ -122,7 +122,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   public void testBootclasspathIsPassedCorrectly() throws IOException {
     setUpProjectWorkspaceForScenario("bootclasspath");
     workspace.addBuckConfigLocalOption(
-        JavaBuckConfig.SECTION,
+        "java",
         "bootclasspath-8",
         Joiner.on(":").join("boot.jar", "other.jar", Bootclasspath.getJdk8StubJarPath()));
     ProcessResult processResult =

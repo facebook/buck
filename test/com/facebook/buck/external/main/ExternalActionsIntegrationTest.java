@@ -36,7 +36,6 @@ import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.external.parser.ExternalArgsParser;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -305,10 +304,7 @@ public class ExternalActionsIntegrationTest {
 
   private ImmutableList<String> createCmd() {
     return ImmutableList.of(
-        JavaBuckConfig.getJavaBinCommand(),
-        "-jar",
-        testBinary.toString(),
-        buildableCommandFile.getAbsolutePath());
+        "java", "-jar", testBinary.toString(), buildableCommandFile.getAbsolutePath());
   }
 
   private ProcessExecutorParams createProcessExecutorParams(ImmutableList<String> command) {

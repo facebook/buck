@@ -30,7 +30,6 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -51,22 +50,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
-  private static final String JAVA_HOME_SYSTEM_PROPERTY_NAME = "java.home";
   public static final CommandTool DEFAULT_JAVA_TOOL =
-      new CommandTool.Builder().addArg(getJavaBinCommand()).build();
-
-  /** Returns a path for java binary */
-  @VisibleForTesting
-  public static String getJavaBinCommand() {
-    // if `java.home` is set then use it
-    String javaHome = System.getProperty(JAVA_HOME_SYSTEM_PROPERTY_NAME);
-    if (javaHome != null) {
-      String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
-      return Paths.get(javaHome, "bin", "java" + binaryExtension).toString();
-    }
-    return "java";
-  }
-
+      new CommandTool.Builder().addArg("java").build();
   static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaOptions.of(DEFAULT_JAVA_TOOL);
 
   private final BuckConfig delegate;
@@ -300,7 +285,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public Optional<String> getJavaTempDir() {
-    return delegate.getValue(SECTION, "test_temp_dir");
+    return delegate.getValue("java", "test_temp_dir");
   }
 
   public Level getDuplicatesLogLevel() {
