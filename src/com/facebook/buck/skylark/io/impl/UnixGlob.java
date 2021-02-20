@@ -32,8 +32,6 @@ package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Joiner;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -90,14 +88,10 @@ final class UnixGlob {
   }
 
   private static List<AbsPath> globInternalUninterruptible(
-      AbsPath base,
-      Collection<String> patterns,
-      boolean excludeDirectories,
-      Predicate<AbsPath> dirPred,
-      Executor executor)
+      AbsPath base, Collection<String> patterns, boolean excludeDirectories, Executor executor)
       throws IOException {
     GlobVisitor visitor = new GlobVisitor(executor);
-    return visitor.globUninterruptible(base, patterns, excludeDirectories, dirPred);
+    return visitor.globUninterruptible(base, patterns, excludeDirectories);
   }
 
   /**
@@ -252,7 +246,6 @@ final class UnixGlob {
     private AbsPath base;
     private List<String> patterns;
     private boolean excludeDirectories;
-    private Predicate<AbsPath> pathFilter;
     private Executor executor;
 
     /** Creates a glob builder with the given base path. */
@@ -260,7 +253,6 @@ final class UnixGlob {
       this.base = base;
       this.patterns = Lists.newArrayList();
       this.excludeDirectories = false;
-      this.pathFilter = Predicates.alwaysTrue();
     }
 
     /**
@@ -290,8 +282,7 @@ final class UnixGlob {
 
     /** Executes the glob. */
     public List<AbsPath> glob() throws IOException {
-      return globInternalUninterruptible(base, patterns, excludeDirectories, pathFilter, executor)
-          .stream()
+      return globInternalUninterruptible(base, patterns, excludeDirectories, executor).stream()
           .map(p -> AbsPath.of(base.getFileSystem().getPath(p.toString())))
           .collect(ImmutableList.toImmutableList());
     }
@@ -355,14 +346,9 @@ final class UnixGlob {
     }
 
     List<AbsPath> globUninterruptible(
-        AbsPath base,
-        Collection<String> patterns,
-        boolean excludeDirectories,
-        Predicate<AbsPath> dirPred)
-        throws IOException {
+        AbsPath base, Collection<String> patterns, boolean excludeDirectories) throws IOException {
       try {
-        return Uninterruptibles.getUninterruptibly(
-            globAsync(base, patterns, excludeDirectories, dirPred));
+        return Uninterruptibles.getUninterruptibly(globAsync(base, patterns, excludeDirectories));
       } catch (ExecutionException e) {
         Throwable cause = e.getCause();
         Throwables.propagateIfPossible(cause, IOException.class);
@@ -375,10 +361,7 @@ final class UnixGlob {
     }
 
     Future<List<AbsPath>> globAsync(
-        AbsPath base,
-        Collection<String> patterns,
-        boolean excludeDirectories,
-        Predicate<AbsPath> dirPred) {
+        AbsPath base, Collection<String> patterns, boolean excludeDirectories) {
 
       BasicFileAttributes baseStat;
       try {
@@ -407,8 +390,8 @@ final class UnixGlob {
           }
           GlobTaskContext context =
               numRecursivePatterns > 1
-                  ? new RecursiveGlobTaskContext(splitPattern, excludeDirectories, dirPred)
-                  : new GlobTaskContext(splitPattern, excludeDirectories, dirPred);
+                  ? new RecursiveGlobTaskContext(splitPattern, excludeDirectories)
+                  : new GlobTaskContext(splitPattern, excludeDirectories);
           context.queueGlob(base, baseStat.isDirectory(), 0);
         }
       } finally {
@@ -512,13 +495,10 @@ final class UnixGlob {
     private class GlobTaskContext {
       private final String[] patternParts;
       private final boolean excludeDirectories;
-      private final Predicate<AbsPath> dirPred;
 
-      GlobTaskContext(
-          String[] patternParts, boolean excludeDirectories, Predicate<AbsPath> dirPred) {
+      GlobTaskContext(String[] patternParts, boolean excludeDirectories) {
         this.patternParts = patternParts;
         this.excludeDirectories = excludeDirectories;
-        this.dirPred = dirPred;
       }
 
       protected void queueGlob(AbsPath base, boolean baseIsDir, int patternIdx) {
@@ -563,9 +543,8 @@ final class UnixGlob {
 
       private final Set<GlobTask> visitedGlobSubTasks = Sets.newConcurrentHashSet();
 
-      private RecursiveGlobTaskContext(
-          String[] patternParts, boolean excludeDirectories, Predicate<AbsPath> dirPred) {
-        super(patternParts, excludeDirectories, dirPred);
+      private RecursiveGlobTaskContext(String[] patternParts, boolean excludeDirectories) {
+        super(patternParts, excludeDirectories);
       }
 
       @Override
@@ -594,9 +573,6 @@ final class UnixGlob {
      */
     private void reallyGlob(AbsPath base, boolean baseIsDir, int idx, GlobTaskContext context)
         throws IOException {
-      if (baseIsDir && !context.dirPred.apply(base)) {
-        return;
-      }
 
       if (idx == context.patternParts.length) { // Base case.
         if (!(context.excludeDirectories && baseIsDir)) {
