@@ -9,7 +9,10 @@ java_library(
         exclude = TEST_SRCS,
     ),
     required_for_source_only_abi = True,
-    resources = glob(["testdata/**"]),
+    resources = glob([
+        "testdata/**",
+        "testdata/**/.*",
+    ]),
     visibility = [
         "//test/...",
     ],

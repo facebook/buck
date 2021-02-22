@@ -150,6 +150,11 @@ final class UnixGlob {
       return false;
     }
 
+    // If a filename starts with '.', this char must be matched explicitly.
+    if (str.charAt(0) == '.' && pattern.charAt(0) != '.') {
+      return false;
+    }
+
     // Common case: **
     if (pattern.equals("**")) {
       return true;
@@ -158,11 +163,6 @@ final class UnixGlob {
     // Common case: *
     if (pattern.equals("*")) {
       return true;
-    }
-
-    // If a filename starts with '.', this char must be matched explicitly.
-    if (str.charAt(0) == '.' && pattern.charAt(0) != '.') {
-      return false;
     }
 
     // Common case: *.xyz

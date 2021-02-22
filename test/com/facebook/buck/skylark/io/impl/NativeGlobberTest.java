@@ -84,6 +84,44 @@ public class NativeGlobberTest {
   }
 
   @Test
+  public void starPatternDoesNotIncludeDot() throws Exception {
+    Files.write(root.resolve("a.txt").getPath(), new byte[0]);
+    Files.write(root.resolve(".a.txt").getPath(), new byte[0]);
+    assertThat(
+        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("a.txt")));
+    assertThat(
+        globber.run(Collections.singleton("*"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("a.txt")));
+  }
+
+  @Test
+  public void starStarDoesNotIncludeDotDirectories() throws Exception {
+    Files.createDirectory(root.resolve("dir").getPath());
+    Files.write(root.resolve("dir").resolve("foo.txt").getPath(), new byte[0]);
+    Files.write(root.resolve("dir").resolve("bar.job").getPath(), new byte[0]);
+    Files.createDirectory(root.resolve(".xx").getPath());
+    Files.write(root.resolve(".xx").resolve("baz.txt").getPath(), new byte[0]);
+    Files.write(root.resolve(".xx").resolve("qux.job").getPath(), new byte[0]);
+    assertThat(
+        globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("dir/foo.txt")));
+  }
+
+  @Test
+  public void starDoesNotCrashOnNonMachingBrokenDotLinks() throws Exception {
+    Files.createDirectory(root.resolve("dir").getPath());
+    Files.write(root.resolve("dir").resolve("foo.txt").getPath(), new byte[0]);
+    Files.write(root.resolve("dir").resolve("bar.job").getPath(), new byte[0]);
+    Files.createSymbolicLink(
+        root.resolve(".xx").getPath(), root.resolve("non-existent-target").getPath());
+    assertThat(
+        globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
+        // .xx is broken, but it ** does not match it.
+        equalTo(ImmutableSet.of("dir/foo.txt")));
+  }
+
+  @Test
   public void testGlobFindsIncludes() throws Exception {
     Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
     Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
