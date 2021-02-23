@@ -54,6 +54,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -143,6 +144,26 @@ public class TargetsCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(TargetsCommand.class);
 
+  private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
+  private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
+  private static final String SHOW_ALL_OUTPUTS_LONG_ARG = "--show-all-outputs";
+  private static final String SHOW_ALL_OUTPUTS_FORMAT_LONG_ARG = "--show-all-outputs-format";
+
+  /** Enum with values for `--show-all-outputs` CLI parameter */
+  protected enum ShowAllOutputsFormat {
+    /* Format output as list with path relative to buck-out */
+    LIST,
+
+    /* Format output as JSON with path relative to buck-out */
+    JSON,
+
+    /* Format output as list with absolute paths */
+    FULL_LIST,
+
+    /* Format output as JSON with absolute paths */
+    FULL_JSON,
+  }
+
   // TODO(mbolin): Use org.kohsuke.args4j.spi.PathOptionHandler. Currently, we resolve paths
   // manually, which is likely the path to madness.
   @Option(
@@ -195,7 +216,7 @@ public class TargetsCommand extends AbstractCommand {
   private boolean isShowCellPath;
 
   @Option(
-      name = "--show-output",
+      name = SHOW_OUTPUT_LONG_ARG,
       aliases = {"--show_output"},
       usage =
           "Print the path to the output, relative to the cell path, for each rule after the "
@@ -203,7 +224,7 @@ public class TargetsCommand extends AbstractCommand {
   private boolean isShowOutput;
 
   @Option(
-      name = "--show-full-output",
+      name = SHOW_FULL_OUTPUT_LONG_ARG,
       aliases = {"--show_full_output"},
       usage = "Print the absolute path to the output, for each rule after the rule name.")
   private boolean isShowFullOutput;
@@ -290,6 +311,26 @@ public class TargetsCommand extends AbstractCommand {
       usage = "If set, log a binary representation of rulekeys to this file.")
   private String ruleKeyLogPath = null;
 
+  @Option(
+      name = SHOW_ALL_OUTPUTS_FORMAT_LONG_ARG,
+      usage =
+          "Indicates the output format that should be used when using the show all outputs functionality (default: list).\n"
+              + " list -  output paths are printed relative to the cell.\n"
+              + " full_list - output paths are printed as absolute paths.\n"
+              + " json - JSON format with relative paths\n"
+              + " full_json - JSON format with absolute paths.\n",
+      forbids = {SHOW_OUTPUT_LONG_ARG, SHOW_FULL_OUTPUT_LONG_ARG, "--json"})
+  private ShowAllOutputsFormat showAllOutputsFormat = ShowAllOutputsFormat.LIST;
+
+  @Option(
+      name = SHOW_ALL_OUTPUTS_LONG_ARG,
+      usage = "Print the paths to all the outputs for each of the built rules.",
+      forbids = {
+        SHOW_OUTPUT_LONG_ARG,
+        SHOW_FULL_OUTPUT_LONG_ARG,
+      })
+  private boolean isShowAllOutputs = false;
+
   @Argument private List<String> arguments = new ArrayList<>();
 
   public ImmutableSet<String> getTypes() {
@@ -298,6 +339,15 @@ public class TargetsCommand extends AbstractCommand {
 
   public PathArguments.ReferencedFiles getReferencedFiles(AbsPath projectRoot) throws IOException {
     return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
+  }
+
+  private boolean isShowAllOutputsFormatAnyOf(ShowAllOutputsFormat... matches) {
+    for (ShowAllOutputsFormat match : matches) {
+      if (showAllOutputsFormat.equals(match)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -310,7 +360,11 @@ public class TargetsCommand extends AbstractCommand {
    * consistent with the query command.
    */
   public boolean shouldUseJsonFormat() {
-    return json || !outputAttributes.get().isEmpty();
+    return json
+        || !outputAttributes.get().isEmpty()
+        || (isShowAllOutputs()
+            && isShowAllOutputsFormatAnyOf(
+                ShowAllOutputsFormat.FULL_JSON, ShowAllOutputsFormat.JSON));
   }
 
   /**
@@ -319,6 +373,13 @@ public class TargetsCommand extends AbstractCommand {
    */
   private boolean shouldUseDotFormat() {
     return dot && isShowRuleKey && isShowTransitiveRuleKeys;
+  }
+
+  private boolean shouldUseFullFormat() {
+    return (isShowAllOutputs()
+            && isShowAllOutputsFormatAnyOf(
+                ShowAllOutputsFormat.FULL_LIST, ShowAllOutputsFormat.FULL_JSON))
+        || isShowFullOutput;
   }
 
   /**
@@ -490,9 +551,10 @@ public class TargetsCommand extends AbstractCommand {
     // shortcut to old plain simple format
     if (!(isShowCellPath
         || isShowOutput
-        || isShowFullOutput
+        || shouldUseFullFormat()
         || isShowRuleKey
-        || isShowTargetHash)) {
+        || isShowTargetHash
+        || isShowAllOutputs())) {
       printResults(
           params,
           executor,
@@ -515,7 +577,7 @@ public class TargetsCommand extends AbstractCommand {
         buildTargetGraphAndTargetsForShowRules(
             params, targetNodeSpecs, executor, descriptionClasses);
     boolean useVersioning =
-        isShowRuleKey || isShowOutput || isShowFullOutput
+        isShowRuleKey || isShowOutput || shouldUseFullFormat() || isShowAllOutputs()
             ? params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
             : params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions();
     targetGraphAndBuildTargetsForShowRules =
@@ -557,6 +619,10 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     return ExitCode.SUCCESS;
+  }
+
+  private boolean isShowAllOutputs() {
+    return isShowAllOutputs;
   }
 
   /**
@@ -1128,7 +1194,7 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
-      if (isShowRuleKey || isShowOutput || isShowFullOutput) {
+      if (isShowRuleKey || isShowOutput || shouldUseFullFormat() || isShowAllOutputs()) {
         ActionGraphAndBuilder result =
             params
                 .getActionGraphProvider()
@@ -1207,22 +1273,30 @@ public class TargetsCommand extends AbstractCommand {
           }
         }
       }
-
       ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
           matchBuildTargetsWithLabelsFromSpecs(targetNodeSpecs, targetResultBuilders.map.keySet());
+
+      ImmutableSet<BuildTargetWithOutputs> processedBuildTargetsWithOutputs;
+      if (isShowAllOutputs() && graphBuilder.isPresent()) {
+        processedBuildTargetsWithOutputs =
+            processShowAllOutputs(buildTargetsWithOutputs, graphBuilder.get());
+      } else {
+        processedBuildTargetsWithOutputs = buildTargetsWithOutputs;
+      }
+
       TargetGraph targetGraph = targetGraphAndTargetNodes.getFirst();
       graphBuilder.ifPresent(
           actionGraphBuilder ->
               processBuildRules(
                   targetResultBuilders.map,
                   targetGraph,
-                  buildTargetsWithOutputs,
+                  processedBuildTargetsWithOutputs,
                   actionGraphBuilder,
                   params));
 
       ImmutableSortedMap.Builder<BuildTargetWithOutputs, TargetResult> builder =
           ImmutableSortedMap.naturalOrder();
-      buildTargetsWithOutputs.forEach(
+      processedBuildTargetsWithOutputs.forEach(
           targetWithOutputs ->
               builder.put(
                   targetWithOutputs,
@@ -1231,6 +1305,28 @@ public class TargetsCommand extends AbstractCommand {
                       .build()));
       return builder.build();
     }
+  }
+
+  private ImmutableSet<BuildTargetWithOutputs> processShowAllOutputs(
+      ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs,
+      ActionGraphBuilder actionGraphBuilder) {
+    ImmutableSet.Builder<BuildTargetWithOutputs> processedBuildTargetsWithOutputsBuilder =
+        ImmutableSet.builder();
+    for (BuildTargetWithOutputs targetWithOutputs : buildTargetsWithOutputs) {
+      BuildTarget buildTarget = targetWithOutputs.getBuildTarget();
+      BuildRule buildRule = actionGraphBuilder.requireRule(buildTarget);
+      if (buildRule instanceof HasMultipleOutputs
+          && targetWithOutputs.getOutputLabel().isDefault()) {
+        HasMultipleOutputs multipleOutputsRule = (HasMultipleOutputs) buildRule;
+        for (OutputLabel label : multipleOutputsRule.getOutputLabels()) {
+          processedBuildTargetsWithOutputsBuilder.add(
+              BuildTargetWithOutputs.of(buildTarget, label));
+        }
+      } else {
+        processedBuildTargetsWithOutputsBuilder.add(targetWithOutputs);
+      }
+    }
+    return processedBuildTargetsWithOutputsBuilder.build();
   }
 
   private void processBuildRules(
@@ -1248,7 +1344,7 @@ public class TargetsCommand extends AbstractCommand {
           Objects.requireNonNull(buildTargetToTargetBuilderMap.get(target));
       BuildRule rule = graphBuilder.requireRule(target);
       builder.setRuleType(rule.getType());
-      if (isShowOutput || isShowFullOutput) {
+      if (isShowOutput || shouldUseFullFormat() || isShowAllOutputs()) {
         SourcePathResolverAdapter sourcePathResolverAdapter = graphBuilder.getSourcePathResolver();
         PathUtils.getUserFacingOutputPath(
                 sourcePathResolverAdapter,
@@ -1282,7 +1378,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private String pathToString(Path path, CommandRunnerParams params) {
     Path formattedPath =
-        isShowFullOutput
+        shouldUseFullFormat()
             ? path
             : params.getCells().getRootCell().getFilesystem().relativize(path).getPath();
     return formattedPath.toString();
