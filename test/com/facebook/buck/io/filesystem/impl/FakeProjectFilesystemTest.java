@@ -375,17 +375,6 @@ public class FakeProjectFilesystemTest {
   }
 
   @Test
-  public void testGetFilesUnderPath() throws IOException {
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path bar = Paths.get("foo/bar.txt");
-    Path baz = Paths.get("foo/baz/blech.txt");
-    filesystem.touch(bar);
-    filesystem.touch(baz);
-
-    assertEquals(ImmutableSet.of(bar, baz), filesystem.getFilesUnderPath(Paths.get("foo")));
-  }
-
-  @Test
   public void testDirectoryContentsAreInSortedOrder() throws IOException {
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(clock);

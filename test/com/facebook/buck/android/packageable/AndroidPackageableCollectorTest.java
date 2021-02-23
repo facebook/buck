@@ -58,12 +58,14 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -71,9 +73,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidPackageableCollectorTest {
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   /**
    * This is a regression test to ensure that an additional 1 second startup cost is not
@@ -81,7 +85,8 @@ public class AndroidPackageableCollectorTest {
    */
   @Test
   public void testFindTransitiveDependencies() throws Exception {
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     Path prebuiltNativeLibraryPath = Paths.get("java/com/facebook/prebuilt_native_library/libs");
     projectFilesystem.mkdirs(prebuiltNativeLibraryPath);
 

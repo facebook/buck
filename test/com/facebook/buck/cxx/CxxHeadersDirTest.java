@@ -23,11 +23,12 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -36,9 +37,11 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CxxHeadersDirTest {
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   private RuleKey getRuleKey(ProjectFilesystem filesystem, CxxHeaders cxxHeaders) {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
@@ -56,7 +59,8 @@ public class CxxHeadersDirTest {
 
   @Test
   public void dirContentsAffectsRuleKey() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     Path headerDir = filesystem.getPath("foo");
     filesystem.mkdirs(headerDir);
     CxxHeadersDir cxxHeaders =
@@ -71,7 +75,8 @@ public class CxxHeadersDirTest {
 
   @Test
   public void typeAffectsRuleKey() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     Path headerDir = filesystem.getPath("foo");
     filesystem.mkdirs(headerDir);
     RuleKey ruleKey1 =

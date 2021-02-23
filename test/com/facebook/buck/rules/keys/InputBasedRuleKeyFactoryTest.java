@@ -42,12 +42,14 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.file.RemoteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
@@ -58,6 +60,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
@@ -73,6 +76,7 @@ import org.junit.rules.ExpectedException;
 
 public class InputBasedRuleKeyFactoryTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   @Test
   public void ruleKeyDoesNotChangeWhenOnlyDependencyRuleKeyChanges() throws Exception {
@@ -426,11 +430,12 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void nestedSizeLimitExceptionHandled() {
+  public void nestedSizeLimitExceptionHandled() throws IOException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
@@ -455,11 +460,12 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHit() {
+  public void ruleKeyNotCalculatedIfSizeLimitHit() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
@@ -483,11 +489,12 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHitWithMultipleInputs() {
+  public void ruleKeyNotCalculatedIfSizeLimitHitWithMultipleInputs() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
@@ -515,11 +522,12 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHitWithDirectory() {
+  public void ruleKeyNotCalculatedIfSizeLimitHitWithDirectory() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
@@ -545,11 +553,12 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeysForOversizedRules() {
+  public void ruleKeysForOversizedRules() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(
@@ -574,11 +583,12 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeysForUndersizedRules() {
+  public void ruleKeysForUndersizedRules() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
     FileHashLoader hashCache =
         new StackedFileHashCache(
             ImmutableList.of(

@@ -51,7 +51,6 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
@@ -485,21 +484,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       Predicate<Path> predicate,
       EnumSet<FileVisitOption> visitOptions)
       throws IOException {
-    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
-    walkRelativeFileTree(
-        pathRelativeToProjectRoot,
-        visitOptions,
-        new SimpleFileVisitor<Path>() {
-          @Override
-          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-            if (predicate.test(path)) {
-              paths.add(path);
-            }
-            return FileVisitResult.CONTINUE;
-          }
-        },
-        true);
-    return paths.build();
+    DirectoryStream.Filter<? super Path> ignoreFilter =
+        ProjectFilesystemUtils.getIgnoreFilter(projectRoot, true, getIgnoredPaths());
+    return ProjectFilesystemUtils.getFilesUnderPath(
+        projectRoot, pathRelativeToProjectRoot, predicate, visitOptions, ignoreFilter);
   }
 
   @Override

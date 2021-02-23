@@ -35,9 +35,11 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.testutil.CloseableResource;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -59,6 +61,8 @@ public class AuditInputCommandTest {
   private AuditInputCommand auditInputCommand;
   private CommandRunnerParams params;
 
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
+
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Rule
@@ -68,7 +72,9 @@ public class AuditInputCommandTest {
   @Before
   public void setUp() throws IOException {
     console = new TestConsole();
-    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
+    projectFilesystem.createParentDirs(Paths.get("src/com/facebook/AndroidLibraryTwo.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/AndroidLibraryTwo.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestAndroidLibrary.java"));
     projectFilesystem.touch(Paths.get("src/com/facebook/TestJavaLibrary.java"));

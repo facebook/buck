@@ -23,27 +23,25 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Set;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class GetStringsFilesStepTest {
-  private ProjectFilesystem filesystem;
-  private StepExecutionContext context;
-
-  private void setUpFakeFilesystem(Set<Path> files) {
-    filesystem = new FakeProjectFilesystem(files);
-    context = TestExecutionContext.newInstance();
-  }
+  @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
 
   @Test
   public void testStringFileOrderIsMaintained() throws Exception {
-    setUpFakeFilesystem(
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryPaths.getRoot());
+    StepExecutionContext context = TestExecutionContext.newInstance();
+    ImmutableSet<Path> paths =
         ImmutableSet.of(
             Paths.get("test/res/values/strings.xml"),
             Paths.get("test/res/values-es/strings.xml"),
@@ -54,7 +52,12 @@ public class GetStringsFilesStepTest {
             Paths.get("test3/res/values/strings.xml"),
             Paths.get("test3/res/values-es/strings.xml"),
             Paths.get("test3/res/values-es-rES/strings.xml"),
-            Paths.get("test3/res/values/dimens.xml")));
+            Paths.get("test3/res/values/dimens.xml"));
+
+    for (Path path : paths) {
+      filesystem.createParentDirs(path);
+      filesystem.createNewFile(path);
+    }
 
     ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
     GetStringsFilesStep step =

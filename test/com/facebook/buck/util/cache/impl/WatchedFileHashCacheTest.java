@@ -209,7 +209,7 @@ public class WatchedFileHashCacheTest {
   @Test
   public void whenDirectoryIsPutThenInvalidatedCacheDoesNotContainPathOrChildren()
       throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     WatchedFileHashCache cache =
         new WatchedFileHashCache(
             filesystem, fileHashCacheMode, false

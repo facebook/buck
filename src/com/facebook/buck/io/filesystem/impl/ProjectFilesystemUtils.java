@@ -53,6 +53,7 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -69,6 +70,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javax.annotation.Nullable;
@@ -786,6 +788,44 @@ public class ProjectFilesystemUtils {
       throws IOException {
     new FileTreeWalker(getPathForRelativePath(root, path), options, fileVisitor, ignoreFilter)
         .walk();
+  }
+
+  /** Returns relative paths for all files under the given path */
+  public static ImmutableSet<Path> getFilesUnderPath(
+      AbsPath root,
+      Path pathRelativeToProjectRoot,
+      EnumSet<FileVisitOption> visitOptions,
+      DirectoryStream.Filter<? super Path> ignoresFilter)
+      throws IOException {
+    return getFilesUnderPath(
+        root, pathRelativeToProjectRoot, x -> true, visitOptions, ignoresFilter);
+  }
+
+  /** Returns relative paths for all files under the given path */
+  public static ImmutableSet<Path> getFilesUnderPath(
+      AbsPath root,
+      Path pathRelativeToProjectRoot,
+      Predicate<Path> predicate,
+      EnumSet<FileVisitOption> visitOptions,
+      DirectoryStream.Filter<? super Path> ignoresFilter)
+      throws IOException {
+    ImmutableSet.Builder<Path> paths = ImmutableSet.builder();
+    walkRelativeFileTree(
+        root,
+        pathRelativeToProjectRoot,
+        visitOptions,
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
+            if (predicate.test(path)) {
+              paths.add(path);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        },
+        ignoresFilter);
+
+    return paths.build();
   }
 
   /**

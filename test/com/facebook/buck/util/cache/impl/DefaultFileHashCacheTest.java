@@ -163,7 +163,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenDirectoryIsPutThenInvalidatedCacheDoesNotContainPathOrChildren()
       throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
@@ -288,7 +288,7 @@ public class DefaultFileHashCacheTest {
 
   @Test
   public void getSizeOfFile() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache =
@@ -298,7 +298,7 @@ public class DefaultFileHashCacheTest {
 
   @Test
   public void getSizeOfDirectory() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path input = filesystem.getPath("input");
     filesystem.mkdirs(input);
     filesystem.writeBytesToPath(new byte[123], input.resolve("file1"));
@@ -310,7 +310,7 @@ public class DefaultFileHashCacheTest {
 
   @Test
   public void getFileSizeInvalidation() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     Path input = filesystem.getPath("input");
     filesystem.writeBytesToPath(new byte[123], input);
     DefaultFileHashCache cache =
