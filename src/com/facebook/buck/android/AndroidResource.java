@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -47,6 +46,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
+import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
 import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;

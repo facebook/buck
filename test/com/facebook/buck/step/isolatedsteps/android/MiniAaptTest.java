@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android.aapt;
+package com.facebook.buck.step.isolatedsteps.android;
 
 import static com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -23,14 +23,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.step.isolatedsteps.android.MiniAapt.ResourceParseException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android.aapt;
+package com.facebook.buck.step.isolatedsteps.android;
 
 import com.facebook.buck.android.AaptStep;
+import com.facebook.buck.android.aapt.FakeRDotTxtEntry;
+import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.facebook.buck.util.xml.XmlDomParserWithLineNumbers;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,11 +47,16 @@ import java.io.InputStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -66,7 +73,7 @@ import org.xml.sax.SAXException;
  *
  * <p>
  */
-public class MiniAapt implements Step {
+public class MiniAapt extends IsolatedStep {
 
   private static final String GRAYSCALE_SUFFIX = "_g.png";
 
@@ -163,11 +170,12 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
     try {
-      collectResources(context.getRuleCellRoot(), context.getBuckEventBus());
+      collectResources(context.getRuleCellRoot(), context.getIsolatedEventBus());
       processXmlFilesForIds(context.getRuleCellRoot(), references);
     } catch (XPathExpressionException | ResourceParseException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
@@ -177,7 +185,7 @@ public class MiniAapt implements Step {
     Set<RDotTxtEntry> missing = verifyReferences(context.getRuleCellRoot(), references.build());
     if (!missing.isEmpty()) {
       context
-          .getBuckEventBus()
+          .getIsolatedEventBus()
           .post(
               ConsoleEvent.severe(
                   "The following resources were not found when processing %s: \n%s\n",
@@ -229,7 +237,7 @@ public class MiniAapt implements Step {
    * <p>For files under the {@code values*} directories, see {@link #processValuesFile(AbsPath,
    * Path)}
    */
-  private void collectResources(AbsPath root, BuckEventBus eventBus)
+  private void collectResources(AbsPath root, IsolatedEventBus eventBus)
       throws IOException, ResourceParseException {
     Collection<Path> contents =
         ProjectFilesystemUtils.getDirectoryContents(
@@ -321,7 +329,7 @@ public class MiniAapt implements Step {
     }
   }
 
-  void processValues(AbsPath root, BuckEventBus eventBus, Path valuesDir)
+  void processValues(AbsPath root, IsolatedEventBus eventBus, Path valuesDir)
       throws IOException, ResourceParseException {
     for (Path path :
         ProjectFilesystemUtils.getFilesUnderPath(
@@ -647,7 +655,7 @@ public class MiniAapt implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return getShortName() + " " + resDirectory;
   }
 
@@ -656,6 +664,93 @@ public class MiniAapt implements Step {
 
     ResourceParseException(String messageFormat, Object... args) {
       super(String.format(messageFormat, args));
+    }
+  }
+
+  /**
+   * Responsible for collecting resources parsed by {@link MiniAapt} and assigning unique integer
+   * ids to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx}
+   * represents the resource type, and {@code yyyy} represents the id within that resource type.
+   */
+  static class RDotTxtResourceCollector {
+
+    private int currentTypeId;
+    private final Map<RType, ResourceIdEnumerator> enumerators;
+    private final Set<RDotTxtEntry> resources;
+
+    public RDotTxtResourceCollector() {
+      this.enumerators = new HashMap<>();
+      this.resources = new HashSet<>();
+      this.currentTypeId = 1;
+    }
+
+    public void addIntResourceIfNotPresent(RType rType, String name) {
+      RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
+      if (!resources.contains(entry)) {
+        addResource(rType, IdType.INT, name, getNextIdValue(rType), null);
+      }
+    }
+
+    public void addCustomDrawableResourceIfNotPresent(
+        RType rType, String name, CustomDrawableType drawableType) {
+      RDotTxtEntry entry = new FakeRDotTxtEntry(IdType.INT, rType, name);
+      if (!resources.contains(entry)) {
+        String idValue = getNextCustomIdValue(rType, drawableType);
+        resources.add(new RDotTxtEntry(IdType.INT, rType, name, idValue, drawableType));
+      }
+    }
+
+    public void addIntArrayResourceIfNotPresent(RType rType, String name, int numValues) {
+      addResource(rType, IdType.INT_ARRAY, name, getNextArrayIdValue(rType, numValues), null);
+    }
+
+    public void addResource(
+        RType rType, IdType idType, String name, String idValue, @Nullable String parent) {
+      resources.add(new RDotTxtEntry(idType, rType, name, idValue, parent));
+    }
+
+    public Set<RDotTxtEntry> getResources() {
+      return Collections.unmodifiableSet(resources);
+    }
+
+    ResourceIdEnumerator getEnumerator(RType rType) {
+      if (!enumerators.containsKey(rType)) {
+        enumerators.put(rType, new ResourceIdEnumerator(currentTypeId++));
+      }
+      return Objects.requireNonNull(enumerators.get(rType));
+    }
+
+    String getNextIdValue(RType rType) {
+      return String.format("0x%08x", getEnumerator(rType).next());
+    }
+
+    String getNextCustomIdValue(RType rType, CustomDrawableType drawableType) {
+      return String.format("0x%08x %s", getEnumerator(rType).next(), drawableType.getIdentifier());
+    }
+
+    String getNextArrayIdValue(RType rType, int numValues) {
+      // Robolectric expects the array to be populated with the right number of values, irrespective
+      // of what the values are.
+      ImmutableList.Builder<String> values = ImmutableList.builder();
+      for (int id = 0; id < numValues; id++) {
+        values.add(String.format("0x%x", getEnumerator(rType).next()));
+      }
+
+      return String.format(
+          "{ %s }", Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR).join(values.build()));
+    }
+
+    private static class ResourceIdEnumerator {
+
+      private int currentId;
+
+      ResourceIdEnumerator(int typeId) {
+        this.currentId = 0x7f000000 + 0x10000 * typeId + 1;
+      }
+
+      int next() {
+        return currentId++;
+      }
     }
   }
 }
