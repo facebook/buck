@@ -46,6 +46,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -320,10 +321,8 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                 + "null. This should already be enforced by the constructor.");
         steps.add(
             new ExtractFromAndroidManifestStep(
-                context.getSourcePathResolver().getAbsolutePath(manifestFile).getPath(),
-                filesystem,
-                Objects.requireNonNull(
-                    outputPathResolver.resolvePath(pathToRDotJavaPackageFile).getPath())));
+                context.getSourcePathResolver().getRelativePath(filesystem, manifestFile),
+                outputPathResolver.resolvePath(pathToRDotJavaPackageFile)));
       } else {
         steps.add(
             WriteFileStep.of(

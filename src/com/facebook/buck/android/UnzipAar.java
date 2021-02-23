@@ -45,6 +45,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +64,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final RelPath uberClassesJar;
   private final RelPath pathToTextSymbolsDir;
   private final Path pathToTextSymbolsFile;
-  private final Path pathToRDotJavaPackageFile;
+  private final RelPath pathToRDotJavaPackageFile;
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
 
   UnzipAar(
@@ -82,7 +83,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildTargetPaths.getGenPath(
             getProjectFilesystem().getBuckPaths(), buildTarget, "__%s_text_symbols__");
     pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
-    pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
+    pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolveRel("RDotJavaPackage.txt");
     this.outputInitializer = new BuildOutputInitializer<>(buildTarget, this);
   }
 
@@ -185,22 +186,20 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), pathToTextSymbolsDir)));
-    steps.add(
-        new ExtractFromAndroidManifestStep(
-            getAndroidManifest(), getProjectFilesystem(), pathToRDotJavaPackageFile));
+    steps.add(new ExtractFromAndroidManifestStep(getAndroidManifest(), pathToRDotJavaPackageFile));
     steps.add(CopyStep.forFile(getTextSymbolsFile(), pathToTextSymbolsFile));
 
     buildableContext.recordArtifact(unpackDirectory.getPath());
     buildableContext.recordArtifact(uberClassesJar.getPath());
     buildableContext.recordArtifact(pathToTextSymbolsFile);
-    buildableContext.recordArtifact(pathToRDotJavaPackageFile);
+    buildableContext.recordArtifact(pathToRDotJavaPackageFile.getPath());
     return steps.build();
   }
 
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) {
     String rDotJavaPackageFromFile =
-        getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
+        getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile.getPath()).get();
     return new BuildOutput(rDotJavaPackageFromFile);
   }
 
@@ -210,7 +209,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public Path getPathToRDotJavaPackageFile() {
-    return pathToRDotJavaPackageFile;
+    return pathToRDotJavaPackageFile.getPath();
   }
 
   public static String getAarUnzipPathFormat() {
@@ -250,8 +249,8 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory.resolve("assets"));
   }
 
-  Path getAndroidManifest() {
-    return unpackDirectory.resolve("AndroidManifest.xml");
+  RelPath getAndroidManifest() {
+    return unpackDirectory.resolveRel("AndroidManifest.xml");
   }
 
   Path getProguardConfig() {
