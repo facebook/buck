@@ -27,14 +27,11 @@ import com.facebook.buck.android.aapt.MiniAapt.ResourceParseException;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.event.DefaultBuckEventBus;
-import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -46,6 +43,7 @@ import java.util.stream.Collectors;
 import javax.xml.xpath.XPathExpressionException;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.junit.ExpectedException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -68,9 +66,9 @@ public class MiniAaptTest {
               "</LinearLayout>")
           .build();
 
-  private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final SourcePathResolverAdapter resolver =
-      new TestActionGraphBuilder().getSourcePathResolver();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
+
+  private FakeProjectFilesystem filesystem;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -92,22 +90,21 @@ public class MiniAaptTest {
     return createTestingFakes(entries, RDotTxtEntryUtil::matchCustomDrawables);
   }
 
+  @Before
+  public void setUp() {
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpFolder.getRoot());
+  }
+
   @Test
   public void testFindingResourceIdsInXml()
       throws IOException, XPathExpressionException, ResourceParseException {
-    filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), RESOURCES, Paths.get("resource.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of(),
-            true);
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(), true);
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
+    aapt.processXmlFile(filesystem.getRootPath(), Paths.get("resource.xml"), references);
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -162,16 +159,11 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -222,16 +214,11 @@ public class MiniAaptTest {
                     + "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -262,16 +249,11 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -289,16 +271,11 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -320,16 +297,11 @@ public class MiniAaptTest {
                 "</bitmap>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("android_drawable.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("android_drawable.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processDrawables(filesystem, Paths.get("android_drawable.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processDrawables(filesystem.getRootPath(), Paths.get("android_drawable.xml"));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -355,16 +327,11 @@ public class MiniAaptTest {
                 "</app-network>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("custom_drawable.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("custom_drawable.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processDrawables(filesystem, Paths.get("custom_drawable.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processDrawables(filesystem.getRootPath(), Paths.get("custom_drawable.xml"));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -378,17 +345,16 @@ public class MiniAaptTest {
   private void testParsingGrayscaleImageImpl(String normalFilename, String grayscaleFilename)
       throws IOException, ResourceParseException {
     ImmutableList<String> lines = ImmutableList.<String>builder().add("").build();
-    filesystem.writeLinesToPath(lines, Paths.get(normalFilename));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get(normalFilename));
 
     MiniAapt aapt =
         new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
+            RelPath.get("res"),
+            RelPath.get("R.txt"),
             ImmutableSet.of(),
             /* isVerifyingXmlAttrsEnabled */ false);
-    aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
+    aapt.processDrawables(filesystem.getRootPath(), Paths.get(grayscaleFilename));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
 
@@ -420,16 +386,11 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
   }
 
   @Test(expected = ResourceParseException.class)
@@ -443,16 +404,11 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
   }
 
   @Test
@@ -469,17 +425,11 @@ public class MiniAaptTest {
             .build();
 
     Path resource = Paths.get("resource.xml");
-    filesystem.writeLinesToPath(lines, resource);
+    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
     try {
-      aapt.processXmlFile(filesystem, resource, ImmutableSet.builder());
+      aapt.processXmlFile(filesystem.getRootPath(), resource, ImmutableSet.builder());
       fail("MiniAapt should throw parsing '@+string/button1'");
     } catch (ResourceParseException e) {
       assertThat(e.getMessage(), containsString("Invalid definition of a resource"));
@@ -500,17 +450,11 @@ public class MiniAaptTest {
             .build();
 
     Path resource = Paths.get("resource.xml");
-    filesystem.writeLinesToPath(lines, resource);
+    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
     try {
-      aapt.processXmlFile(filesystem, resource, ImmutableSet.builder());
+      aapt.processXmlFile(filesystem.getRootPath(), resource, ImmutableSet.builder());
       fail("MiniAapt should throw parsing '@someresource/button2'");
     } catch (ResourceParseException e) {
       assertThat(e.getMessage(), containsString("Invalid reference '@someresource/button2'"));
@@ -531,22 +475,18 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("values.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processValuesFile(filesystem, Paths.get("values.xml"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("values.xml"));
   }
 
   @Test
   public void testVerifyReferences()
       throws IOException, XPathExpressionException, ResourceParseException {
-    filesystem.writeLinesToPath(RESOURCES, Paths.get("resource.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), RESOURCES, Paths.get("resource.xml"));
 
     ImmutableList<String> rDotTxt =
         ImmutableList.of(
@@ -555,21 +495,16 @@ public class MiniAaptTest {
             "int id button2 0x07030001",
             "int attr attribute 0x07040001");
 
-    Path depRTxt = Paths.get("dep/R.txt");
-    filesystem.writeLinesToPath(rDotTxt, depRTxt);
+    RelPath depRTxt = RelPath.get("dep/R.txt");
+    ProjectFilesystemUtils.createParentDirs(filesystem.getRootPath(), depRTxt.getPath());
+    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), rDotTxt, depRTxt.getPath());
 
     MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of(depRTxt),
-            true);
+        new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(depRTxt), true);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
+    aapt.processXmlFile(filesystem.getRootPath(), Paths.get("resource.xml"), references);
 
-    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem, references.build());
+    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem.getRootPath(), references.build());
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
@@ -594,26 +529,22 @@ public class MiniAaptTest {
                 "  </style>",
                 "</resources>")
             .build();
-    filesystem.writeLinesToPath(styles, Paths.get("styles.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), styles, Paths.get("styles.xml"));
 
     ImmutableList<String> rDotTxt =
         ImmutableList.of("int attr item_name1 0x07020001", "int attr some_attr2 0x07030001");
 
-    Path depRTxt = Paths.get("dep/R.txt");
-    filesystem.writeLinesToPath(rDotTxt, depRTxt);
+    RelPath depRTxt = RelPath.get("dep/R.txt");
+    ProjectFilesystemUtils.createParentDirs(filesystem.getRootPath(), depRTxt.getPath());
+    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), rDotTxt, depRTxt.getPath());
 
     MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of(depRTxt),
-            true);
+        new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(depRTxt), true);
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processStyleFile(filesystem, Paths.get("styles.xml"), references);
+    aapt.processStyleFile(filesystem.getRootPath(), Paths.get("styles.xml"), references);
 
-    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem, references.build());
+    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem.getRootPath(), references.build());
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
@@ -640,27 +571,33 @@ public class MiniAaptTest {
             .build();
 
     Path resource = Paths.get("resource.xml");
-    filesystem.writeLinesToPath(lines, resource);
+    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processXmlFile(filesystem, resource, ImmutableSet.builder());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    aapt.processXmlFile(filesystem.getRootPath(), resource, ImmutableSet.builder());
   }
 
   @Test
   public void testProcessFileNamesInDirectory() throws IOException, ResourceParseException {
-    ProjectFilesystemView filesystemView = filesystem.asView();
-
-    filesystem.touch(Paths.get("res/drawable/icon.png"));
-    filesystem.touch(Paths.get("res/drawable/another_icon.png.orig"));
-    filesystem.touch(Paths.get("res/drawable-ldpi/nine_patch.9.png"));
-    filesystem.touch(Paths.get("res/drawable-ldpi/.DS_Store"));
-    filesystem.touch(Paths.get("res/transition-v19/some_transition.xml"));
+    ProjectFilesystemUtils.createParentDirs(
+        filesystem.getRootPath(), Paths.get("res/drawable/icon.png"));
+    ProjectFilesystemUtils.touch(filesystem.getRootPath(), Paths.get("res/drawable/icon.png"));
+    ProjectFilesystemUtils.createParentDirs(
+        filesystem.getRootPath(), Paths.get("res/drawable/another_icon.png.orig"));
+    ProjectFilesystemUtils.touch(
+        filesystem.getRootPath(), Paths.get("res/drawable/another_icon.png.orig"));
+    ProjectFilesystemUtils.createParentDirs(
+        filesystem.getRootPath(), Paths.get("res/drawable-ldpi/nine_patch.9.png"));
+    ProjectFilesystemUtils.touch(
+        filesystem.getRootPath(), Paths.get("res/drawable-ldpi/nine_patch.9.png"));
+    ProjectFilesystemUtils.createParentDirs(
+        filesystem.getRootPath(), Paths.get("res/drawable-ldpi/.DS_Store"));
+    ProjectFilesystemUtils.touch(
+        filesystem.getRootPath(), Paths.get("res/drawable-ldpi/.DS_Store"));
+    ProjectFilesystemUtils.createParentDirs(
+        filesystem.getRootPath(), Paths.get("res/transition-v19/some_transition.xml"));
+    ProjectFilesystemUtils.touch(
+        filesystem.getRootPath(), Paths.get("res/transition-v19/some_transition.xml"));
     filesystem.writeContentsToPath(
         "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
             + "<resources>"
@@ -668,20 +605,11 @@ public class MiniAaptTest {
             + "</resources>",
         Paths.get("res/values/value.xml~"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
-    aapt.processFileNamesInDirectory(filesystemView, Paths.get("res/drawable"));
-    aapt.processFileNamesInDirectory(filesystemView, Paths.get("res/drawable-ldpi"));
-    aapt.processFileNamesInDirectory(filesystemView, Paths.get("res/transition-v19"));
-    aapt.processValues(
-        filesystemView,
-        new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("")),
-        Paths.get("res/values"));
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+
+    aapt.processFileNamesInDirectory(filesystem.getRootPath(), Paths.get("res/drawable"));
+    aapt.processFileNamesInDirectory(filesystem.getRootPath(), Paths.get("res/drawable-ldpi"));
+    aapt.processFileNamesInDirectory(filesystem.getRootPath(), Paths.get("res/transition-v19"));
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
@@ -705,18 +633,12 @@ public class MiniAaptTest {
             .build();
 
     Path resource = Paths.get("resource.xml");
-    filesystem.writeLinesToPath(lines, resource);
+    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processXmlFile(filesystem, Paths.get("resource.xml"), references);
+    aapt.processXmlFile(filesystem.getRootPath(), Paths.get("resource.xml"), references);
 
     assertEquals(
         createTestingFakes(references.build()),
@@ -735,17 +657,12 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("public.xml"));
   }
 
   @Test
@@ -763,17 +680,12 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("public.xml"));
   }
 
   @Test
@@ -791,17 +703,12 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("public.xml"));
   }
 
   @Test
@@ -819,17 +726,12 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("public.xml"));
   }
 
   @Test
@@ -847,17 +749,12 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("public.xml"));
   }
 
   @Test
@@ -875,17 +772,12 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("public.xml"));
   }
 
   @Test
@@ -903,16 +795,11 @@ public class MiniAaptTest {
                 "</resources>")
             .build();
 
-    filesystem.writeLinesToPath(lines, Paths.get("non-public.xml"));
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), lines, Paths.get("non-public.xml"));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            resolver,
-            filesystem,
-            FakeSourcePath.of(filesystem, "res"),
-            Paths.get("R.txt"),
-            ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
-    aapt.processValuesFile(filesystem, Paths.get("non-public.xml"));
+    aapt.processValuesFile(filesystem.getRootPath(), Paths.get("non-public.xml"));
   }
 }

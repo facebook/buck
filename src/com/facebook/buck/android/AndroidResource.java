@@ -22,6 +22,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -332,19 +333,17 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                 false /* executable */));
       }
 
-      ImmutableSet<Path> pathsToSymbolsOfDeps =
+      ImmutableSet<RelPath> pathsToSymbolsOfDeps =
           symbolsOfDeps.get().stream()
               .map(
                   sourcePath ->
-                      context.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
+                      context.getSourcePathResolver().getRelativePath(filesystem, sourcePath))
               .collect(ImmutableSet.toImmutableSet());
       steps.add(
           new MiniAapt(
-              context.getSourcePathResolver(),
-              filesystem,
-              Objects.requireNonNull(res),
               Objects.requireNonNull(
-                  outputPathResolver.resolvePath(pathToTextSymbolsFile).getPath()),
+                  context.getSourcePathResolver().getRelativePath(filesystem, res)),
+              Objects.requireNonNull(outputPathResolver.resolvePath(pathToTextSymbolsFile)),
               pathsToSymbolsOfDeps,
               isVerifyingXmlAttrsEnabled));
       return steps.build();

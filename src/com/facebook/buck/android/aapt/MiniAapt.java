@@ -23,12 +23,9 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -112,23 +109,17 @@ public class MiniAapt implements Step {
   private static final ImmutableSet<String> IGNORED_TAGS =
       ImmutableSet.of("eat-comment", "skip", PUBLIC_TAG);
 
-  private final SourcePathResolverAdapter resolver;
-  private final ProjectFilesystem filesystem;
-  private final SourcePath resDirectory;
-  private final Path pathToOutputFile;
-  private final ImmutableSet<Path> pathsToSymbolsOfDeps;
+  private final RelPath resDirectory;
+  private final RelPath pathToOutputFile;
+  private final ImmutableSet<RelPath> pathsToSymbolsOfDeps;
   private final RDotTxtResourceCollector resourceCollector;
   private final boolean isVerifyingXmlAttrsEnabled;
 
   public MiniAapt(
-      SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem,
-      SourcePath resDirectory,
-      Path pathToTextSymbolsFile,
-      ImmutableSet<Path> pathsToSymbolsOfDeps) {
+      RelPath resDirectory,
+      RelPath pathToTextSymbolsFile,
+      ImmutableSet<RelPath> pathsToSymbolsOfDeps) {
     this(
-        resolver,
-        filesystem,
         resDirectory,
         pathToTextSymbolsFile,
         pathsToSymbolsOfDeps,
@@ -136,14 +127,10 @@ public class MiniAapt implements Step {
   }
 
   public MiniAapt(
-      SourcePathResolverAdapter resolver,
-      ProjectFilesystem filesystem,
-      SourcePath resDirectory,
-      Path pathToOutputFile,
-      ImmutableSet<Path> pathsToSymbolsOfDeps,
+      RelPath resDirectory,
+      RelPath pathToOutputFile,
+      ImmutableSet<RelPath> pathsToSymbolsOfDeps,
       boolean isVerifyingXmlAttrsEnabled) {
-    this.resolver = resolver;
-    this.filesystem = filesystem;
     this.resDirectory = resDirectory;
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
@@ -179,16 +166,15 @@ public class MiniAapt implements Step {
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
 
-    ProjectFilesystemView filesystemViewWithoutIgnores = filesystem.asView();
     try {
-      collectResources(filesystemViewWithoutIgnores, context.getBuckEventBus());
-      processXmlFilesForIds(filesystemViewWithoutIgnores, references);
+      collectResources(context.getRuleCellRoot(), context.getBuckEventBus());
+      processXmlFilesForIds(context.getRuleCellRoot(), references);
     } catch (XPathExpressionException | ResourceParseException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
       return StepExecutionResults.ERROR;
     }
 
-    Set<RDotTxtEntry> missing = verifyReferences(filesystem, references.build());
+    Set<RDotTxtEntry> missing = verifyReferences(context.getRuleCellRoot(), references.build());
     if (!missing.isEmpty()) {
       context
           .getBuckEventBus()
@@ -200,7 +186,9 @@ public class MiniAapt implements Step {
     }
 
     try (ThrowingPrintWriter writer =
-        new ThrowingPrintWriter(filesystem.newFileOutputStream(pathToOutputFile))) {
+        new ThrowingPrintWriter(
+            ProjectFilesystemUtils.newFileOutputStream(
+                context.getRuleCellRoot(), pathToOutputFile.getPath()))) {
       Set<RDotTxtEntry> sortedResources =
           ImmutableSortedSet.copyOf(Ordering.natural(), resourceCollector.getResources());
       for (RDotTxtEntry entry : sortedResources) {
@@ -238,16 +226,17 @@ public class MiniAapt implements Step {
    *   <li>R.layout.another_view
    * </ul>
    *
-   * <p>For files under the {@code values*} directories, see {@link
-   * #processValuesFile(ProjectFilesystem, Path)}
+   * <p>For files under the {@code values*} directories, see {@link #processValuesFile(AbsPath,
+   * Path)}
    */
-  private void collectResources(ProjectFilesystemView filesystemView, BuckEventBus eventBus)
+  private void collectResources(AbsPath root, BuckEventBus eventBus)
       throws IOException, ResourceParseException {
     Collection<Path> contents =
-        filesystemView.getDirectoryContents(resolver.getCellUnsafeRelPath(resDirectory).getPath());
+        ProjectFilesystemUtils.getDirectoryContents(
+            root, ImmutableSet.of(), resDirectory.getPath());
     for (Path dir : contents) {
-      if (!filesystem.isDirectory(dir) && !filesystem.isIgnored(RelPath.of(dir))) {
-        if (!shouldIgnoreFile(dir, filesystem)) {
+      if (!ProjectFilesystemUtils.isDirectory(root, dir)) {
+        if (!shouldIgnoreFile(root, dir)) {
           eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
         }
         continue;
@@ -258,14 +247,14 @@ public class MiniAapt implements Step {
         if (!isAValuesDir(dirname)) {
           throw new ResourceParseException("'%s' is not a valid values directory.", dir);
         }
-        processValues(filesystemView, eventBus, dir);
+        processValues(root, eventBus, dir);
       } else {
-        processFileNamesInDirectory(filesystemView, dir);
+        processFileNamesInDirectory(root, dir);
       }
     }
   }
 
-  void processFileNamesInDirectory(ProjectFilesystemView filesystemView, Path dir)
+  void processFileNamesInDirectory(AbsPath root, Path dir)
       throws IOException, ResourceParseException {
     String dirname = dir.getFileName().toString();
     int dashIndex = dirname.indexOf('-');
@@ -277,8 +266,9 @@ public class MiniAapt implements Step {
       throw new ResourceParseException("'%s' is not a valid resource sub-directory.", dir);
     }
 
-    for (Path resourceFile : filesystemView.getDirectoryContents(dir)) {
-      if (shouldIgnoreFile(resourceFile, filesystem)) {
+    for (Path resourceFile :
+        ProjectFilesystemUtils.getDirectoryContents(root, ImmutableSet.of(), dir)) {
+      if (shouldIgnoreFile(root, resourceFile)) {
         continue;
       }
 
@@ -288,14 +278,14 @@ public class MiniAapt implements Step {
 
       RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(dirname));
       if (rType == RType.DRAWABLE) {
-        processDrawables(filesystem, resourceFile);
+        processDrawables(root, resourceFile);
       } else {
         resourceCollector.addIntResourceIfNotPresent(rType, resourceName);
       }
     }
   }
 
-  void processDrawables(ProjectFilesystem filesystem, Path resourceFile)
+  void processDrawables(AbsPath projectRoot, Path resourceFile)
       throws IOException, ResourceParseException {
     String filename = resourceFile.getFileName().toString();
     int dotIndex = filename.indexOf('.');
@@ -305,7 +295,8 @@ public class MiniAapt implements Step {
     boolean isGrayscaleImage = false;
     boolean isCustomDrawable = false;
     if (filename.endsWith(".xml")) {
-      try (InputStream stream = filesystem.newFileInputStream(resourceFile)) {
+      try (InputStream stream =
+          ProjectFilesystemUtils.newFileInputStream(projectRoot, resourceFile)) {
         Document dom = parseXml(resourceFile, stream);
         Element root = dom.getDocumentElement();
         isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
@@ -330,18 +321,22 @@ public class MiniAapt implements Step {
     }
   }
 
-  void processValues(ProjectFilesystemView filesystemView, BuckEventBus eventBus, Path valuesDir)
+  void processValues(AbsPath root, BuckEventBus eventBus, Path valuesDir)
       throws IOException, ResourceParseException {
     for (Path path :
-        filesystemView.getFilesUnderPath(valuesDir, EnumSet.of(FileVisitOption.FOLLOW_LINKS))) {
-      if (shouldIgnoreFile(path, filesystem)) {
+        ProjectFilesystemUtils.getFilesUnderPath(
+            root,
+            valuesDir,
+            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))) {
+      if (shouldIgnoreFile(root, path)) {
         continue;
       }
-      if (!filesystem.isFile(path) && !filesystem.isIgnored(RelPath.of(path))) {
+      if (!ProjectFilesystemUtils.isFile(root, path)) {
         eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring non-file '%s'.", path));
         continue;
       }
-      processValuesFile(filesystem, path);
+      processValuesFile(root, path);
     }
   }
 
@@ -372,9 +367,9 @@ public class MiniAapt implements Step {
    * </ul>
    */
   @VisibleForTesting
-  void processValuesFile(ProjectFilesystem filesystem, Path valuesFile)
+  void processValuesFile(AbsPath projectRoot, Path valuesFile)
       throws IOException, ResourceParseException {
-    try (InputStream stream = filesystem.newFileInputStream(valuesFile)) {
+    try (InputStream stream = ProjectFilesystemUtils.newFileInputStream(projectRoot, valuesFile)) {
       Document dom = parseXml(valuesFile, stream);
       Element root = dom.getDocumentElement();
 
@@ -475,31 +470,30 @@ public class MiniAapt implements Step {
     }
   }
 
-  void processXmlFilesForIds(
-      ProjectFilesystemView filesystemView, ImmutableSet.Builder<RDotTxtEntry> references)
+  void processXmlFilesForIds(AbsPath root, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    AbsPath absoluteResDir = resolver.getAbsolutePath(resDirectory);
-    RelPath relativeResDir = resolver.getCellUnsafeRelPath(resDirectory);
     for (Path path :
-        filesystemView.getFilesUnderPath(
-            absoluteResDir.getPath(),
+        ProjectFilesystemUtils.getFilesUnderPath(
+            root,
+            resDirectory.getPath(),
             input -> input.toString().endsWith(".xml"),
-            EnumSet.of(FileVisitOption.FOLLOW_LINKS))) {
-      String dirname = relativeResDir.relativize(path).getName(0).toString();
+            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))) {
+      String dirname = resDirectory.relativize(path).getName(0).toString();
       if (path.endsWith("styles.xml")) {
-        processStyleFile(filesystem, path, references);
+        processStyleFile(root, path, references);
       } else if (!isAValuesDir(dirname)) {
         // Ignore files under values* directories.
-        processXmlFile(this.filesystem, path, references);
+        processXmlFile(root, path, references);
       }
     }
   }
 
   @VisibleForTesting
   void processStyleFile(
-      ProjectFilesystem filesystem, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
+      AbsPath projectRoot, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    try (InputStream stream = filesystem.newFileInputStream(xmlFile)) {
+    try (InputStream stream = ProjectFilesystemUtils.newFileInputStream(projectRoot, xmlFile)) {
       Document dom = parseXml(xmlFile, stream);
 
       XPathExpression expression = ANDROID_ATTR_USAGE_FOR_STYLES;
@@ -521,9 +515,9 @@ public class MiniAapt implements Step {
 
   @VisibleForTesting
   void processXmlFile(
-      ProjectFilesystem filesystem, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
+      AbsPath projectRoot, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    try (InputStream stream = filesystem.newFileInputStream(xmlFile)) {
+    try (InputStream stream = ProjectFilesystemUtils.newFileInputStream(projectRoot, xmlFile)) {
       Document dom = parseXml(xmlFile, stream);
       NodeList nodesWithIds =
           (NodeList) ANDROID_ID_DEFINITION.evaluate(dom, XPathConstants.NODESET);
@@ -613,23 +607,22 @@ public class MiniAapt implements Step {
     return dirname.equals("values") || dirname.startsWith("values-");
   }
 
-  private static boolean shouldIgnoreFile(Path path, ProjectFilesystem filesystem)
-      throws IOException {
-    return filesystem.isHidden(path)
+  private static boolean shouldIgnoreFile(AbsPath root, Path path) throws IOException {
+    return ProjectFilesystemUtils.isHidden(root, path)
         || IGNORED_FILE_EXTENSIONS.contains(
             com.google.common.io.Files.getFileExtension(path.getFileName().toString()))
         || AaptStep.isSilentlyIgnored(path);
   }
 
   @VisibleForTesting
-  ImmutableSet<RDotTxtEntry> verifyReferences(
-      ProjectFilesystem filesystem, ImmutableSet<RDotTxtEntry> references) throws IOException {
+  ImmutableSet<RDotTxtEntry> verifyReferences(AbsPath root, ImmutableSet<RDotTxtEntry> references)
+      throws IOException {
     ImmutableSet.Builder<RDotTxtEntry> unresolved = ImmutableSet.builder();
     ImmutableSet.Builder<RDotTxtEntry> definitionsBuilder = ImmutableSet.builder();
     definitionsBuilder.addAll(resourceCollector.getResources());
-    for (Path depRTxt : pathsToSymbolsOfDeps) {
+    for (RelPath depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
-          filesystem.readLines(depRTxt).stream()
+          ProjectFilesystemUtils.readLines(root, depRTxt.getPath()).stream()
               .filter(input -> !Strings.isNullOrEmpty(input))
               .collect(Collectors.toList());
       for (String line : lines) {
