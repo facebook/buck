@@ -944,8 +944,6 @@ public class AndroidBinaryGraphEnhancerTest {
             new AndroidResource(
                 resourceTarget,
                 new FakeProjectFilesystem(),
-                TestBuildRuleParams.create()
-                    .copyAppendingExtraDeps(ImmutableSortedSet.of(resourcesDep)),
                 graphBuilder,
                 ImmutableSortedSet.of(),
                 resourcesDep.getSourcePathToOutput(),

@@ -183,19 +183,10 @@ public class AndroidAarDescription
             resDirectories);
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleResourceDirectories));
 
-    /* android_resource */
-    BuildRuleParams androidResourceParams =
-        originalBuildRuleParams
-            .withDeclaredDeps(
-                ImmutableSortedSet.of(
-                    manifest, assembleAssetsDirectories, assembleResourceDirectories))
-            .withoutExtraDeps();
-
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget.withAppendedFlavors(AAR_ANDROID_RESOURCE_FLAVOR),
             projectFilesystem,
-            androidResourceParams,
             graphBuilder,
             /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
                 .add(assembleAssetsDirectories)

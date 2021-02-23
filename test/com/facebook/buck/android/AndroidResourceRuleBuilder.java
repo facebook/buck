@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -55,7 +54,6 @@ public class AndroidResourceRuleBuilder {
       return new AndroidResource(
           buildTarget,
           projectFilesystem,
-          TestBuildRuleParams.create(),
           ruleFinder,
           deps,
           res,

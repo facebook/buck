@@ -81,6 +81,8 @@ public class UnsortedAndroidResourceDeps {
             Set<BuildRule> depsToVisit;
             if (rule instanceof JavaLibrary) {
               depsToVisit = ((JavaLibrary) rule).getDepsForTransitiveClasspathEntries();
+            } else if (rule instanceof AndroidResource) {
+              depsToVisit = ((AndroidResource) rule).getDeps();
             } else {
               depsToVisit =
                   TRAVERSABLE_TYPES.contains(rule.getClass())

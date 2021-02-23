@@ -339,8 +339,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
           BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget).resolve("res"));
     } else {
       return Optional.of(
-          BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), buildTarget, "__%s_text_symbols__")
-              .getPath());
+          BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget)
+              .resolve(String.format("__%s_text_symbols__", buildTarget.getShortName())));
     }
   }
 

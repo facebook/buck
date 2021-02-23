@@ -50,7 +50,7 @@ public class AndroidTransitiveDependencyGraph {
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }
-          deps = androidRule.getDeclaredDeps();
+          deps = androidRule.getDepsForTransitiveClasspathEntries();
         } else if (rule instanceof AndroidLibrary) {
           AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
           Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);

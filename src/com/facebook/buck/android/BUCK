@@ -83,7 +83,6 @@ RULES_SRCS = [
     "AndroidPrebuiltAarDescription.java",
     "AndroidResource.java",
     "AndroidResourceDescription.java",
-    "AndroidResourceHelper.java",
     "AndroidTransitiveDependencyGraph.java",
     "ApkGenrule.java",
     "ApkGenruleDescription.java",

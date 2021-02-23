@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -171,26 +170,9 @@ public class AndroidResourceDescription
           downwardApiConfig.isEnabledForAndroid());
     }
 
-    params =
-        params.copyAppendingExtraDeps(
-            Iterables.concat(
-                resInputs
-                    .getSecond()
-                    .map(graphBuilder::filterBuildRuleInputs)
-                    .orElse(ImmutableSet.of()),
-                assetsInputs
-                    .getSecond()
-                    .map(graphBuilder::filterBuildRuleInputs)
-                    .orElse(ImmutableSet.of())));
-
     return new AndroidResource(
         buildTarget,
         projectFilesystem,
-        // We only propagate other AndroidResource rule dependencies, as these are
-        // the only deps which should control whether we need to re-run the aapt_package
-        // step.
-        params.withDeclaredDeps(
-            AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
         graphBuilder,
         graphBuilder.getAllRules(args.getDeps()),
         resInputs.getSecond().orElse(null),

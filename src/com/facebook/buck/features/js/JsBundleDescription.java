@@ -315,16 +315,11 @@ public class JsBundleDescription
           downwardApiConfig.isEnabledForJs());
     }
 
-    BuildRuleParams params =
-        new BuildRuleParams(
-            ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle), ImmutableSortedSet.of());
-
     return new AndroidResource(
         buildTarget,
         projectFilesystem,
-        params,
         graphBuilder,
-        ImmutableSortedSet.of(), // deps
+        ImmutableSortedSet.of(jsBundle), // deps
         jsBundle.getSourcePathToResources(),
         ImmutableSortedMap.of(), // resSrcs
         rDotJavaPackage,

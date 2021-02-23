@@ -28,9 +28,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -107,14 +104,12 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
-    BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    ActionGraphBuilder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
             projectFilesystem,
-            params,
             ruleFinder,
             /* deps */ ImmutableSortedSet.of(),
             FakeSourcePath.of("foo/res"),
@@ -125,9 +120,11 @@ public class AndroidResourceTest {
             /* assetsSrcs */ ImmutableSortedMap.of(),
             /* manifestFile */ null,
             /* hasWhitelistedStrings */ false);
+    ruleFinder.addToIndex(androidResource);
     projectFilesystem.writeContentsToPath(
         "com.example.android" + System.lineSeparator(),
-        resolver.getCellUnsafeRelPath(androidResource.getPathToRDotJavaPackageFile()));
+        resolver.getRelativePath(
+            projectFilesystem, androidResource.getPathToRDotJavaPackageFile()));
     androidResource.initializeFromDisk(resolver);
     assertEquals("com.example.android", androidResource.getRDotJavaPackage());
   }
@@ -136,14 +133,12 @@ public class AndroidResourceTest {
   public void testGetRDotJavaPackageWhenPackageIsNotSpecified() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/src/com/facebook/base:res");
-    BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    ActionGraphBuilder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     AndroidResource androidResource =
         new AndroidResource(
             buildTarget,
             projectFilesystem,
-            params,
             ruleFinder,
             /* deps */ ImmutableSortedSet.of(),
             FakeSourcePath.of("foo/res"),
@@ -154,6 +149,7 @@ public class AndroidResourceTest {
             /* assetsSrcs */ ImmutableSortedMap.of(),
             /* manifestFile */ FakeSourcePath.of(projectFilesystem, "foo/AndroidManifest.xml"),
             /* hasWhitelistedStrings */ false);
+    ruleFinder.addToIndex(androidResource);
     projectFilesystem.writeContentsToPath(
         "com.ex.pkg" + System.lineSeparator(),
         resolver.getCellUnsafeRelPath(androidResource.getPathToRDotJavaPackageFile()));
