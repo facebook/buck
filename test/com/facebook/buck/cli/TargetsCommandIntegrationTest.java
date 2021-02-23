@@ -1778,6 +1778,373 @@ public class TargetsCommandIntegrationTest {
         not(containsString(warningMessage)));
   }
 
+  @Test
+  public void showAllOutputsForRulesWithMultipleOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "baz");
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets", "--show-all-outputs", "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertFalse(
+        runBuckResult
+            .getStdout()
+            .contains(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+
+    runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets", "--show-all-outputs", "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+  }
+
+  @Test
+  public void showAllOutputsForRulesWithMultipleOutputsAndBuildDefaultOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "baz");
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckCommand("targets", "--show-all-outputs", "//:bar_with_multiple_outputs")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+  }
+
+  @Test
+  public void showAllOutputsForRulesWithMultipleOutputsAndBuildUsingColon() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "show_all_outputs", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:foo_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:foo_with_multiple_outputs", "baz");
+    RelPath expectedPath3 = expectedPath2;
+    RelPath expectedPath4 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath5 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "baz");
+    RelPath expectedPath6 = expectedPath5;
+
+    ProcessResult runBuckResult =
+        workspace.runBuckCommand("targets", "--show-all-outputs", "//:").assertSuccess();
+
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:foo_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:foo_with_multiple_outputs[output2] %s", expectedPath2)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:foo_with_multiple_outputs %s", expectedPath3)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath4)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath5)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs %s", expectedPath6)));
+  }
+
+  @Test
+  public void showAllOutputsForRulesWithMultipleOutputsAndBuildUsingEllipsis() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "show_all_outputs", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:foo_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:foo_with_multiple_outputs", "baz");
+    RelPath expectedPath3 = expectedPath2;
+    RelPath expectedPath4 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath5 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "baz");
+    RelPath expectedPath6 = expectedPath5;
+    RelPath expectedPath7 =
+        getExpectedOutputPathRelativeToProjectRoot(workspace, "//subdir1/subdir2:bar", "bar");
+    RelPath expectedPath8 =
+        getExpectedOutputPathRelativeToProjectRoot(workspace, "//subdir1/subdir2:foo", "foo");
+    RelPath expectedPath9 =
+        getExpectedOutputPathRelativeToProjectRoot(workspace, "//subfolder:foo", "foo");
+
+    ProcessResult runBuckResult =
+        workspace.runBuckCommand("targets", "--show-all-outputs", "//...").assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:foo_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:foo_with_multiple_outputs[output2] %s", expectedPath2)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:foo_with_multiple_outputs %s", expectedPath3)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath4)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath5)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs %s", expectedPath6)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//subdir1/subdir2:bar %s", expectedPath7)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//subdir1/subdir2:foo %s", expectedPath8)));
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//subfolder:foo %s", expectedPath9)));
+  }
+
+  @Test
+  public void showAllOutputsFullListForRulesWithMultipleOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        tmp.getRoot()
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot(
+                    workspace, "//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        tmp.getRoot()
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot(
+                    workspace, "//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--show-all-outputs",
+                "--show-all-outputs-format=full_list",
+                "//:bar_with_multiple_outputs[output1]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output1] %s", expectedPath1)));
+    assertFalse(
+        runBuckResult
+            .getStdout()
+            .contains(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+
+    runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--show-all-outputs",
+                "--show-all-outputs-format=full_list",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    assertThat(
+        runBuckResult.getStdout(),
+        containsString(String.format("//:bar_with_multiple_outputs[output2] %s", expectedPath2)));
+  }
+
+  @Test
+  public void showAllOutputsJsonForRulesWithMultipleOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    RelPath expectedPath1 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "bar");
+    RelPath expectedPath2 =
+        getExpectedOutputPathRelativeToProjectRoot(
+            workspace, "//:bar_with_multiple_outputs", "baz");
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--show-all-outputs",
+                "--show-all-outputs-format=json",
+                "//:bar_with_multiple_outputs[output1]",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    assertTrue(observed.isArray());
+    assertEquals(1, observed.size());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode outputPaths = targetNode.get("buck.outputPaths");
+    assertNotNull(outputPaths);
+    JsonNode outputPathArray = outputPaths.get("output1");
+    JsonNode outputPathArray2 = outputPaths.get("output2");
+    assertTrue(outputPathArray.isArray());
+    assertTrue(outputPathArray2.isArray());
+    assertEquals(1, outputPathArray.size());
+    assertEquals(1, outputPathArray2.size());
+    JsonNode outputPath = outputPathArray.get(0);
+    JsonNode outputPath2 = outputPathArray2.get(0);
+    assertEquals(expectedPath1.toString(), outputPath.asText());
+    assertEquals(expectedPath2.toString(), outputPath2.asText());
+  }
+
+  @Test
+  public void showAllOutputsFullJsonForRulesWithMultipleOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        tmp.getRoot()
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot(
+                    workspace, "//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        tmp.getRoot()
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot(
+                    workspace, "//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--show-all-outputs",
+                "--show-all-outputs-format=full_json",
+                "//:bar_with_multiple_outputs[output1]",
+                "//:bar_with_multiple_outputs[output2]")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    assertTrue(observed.isArray());
+    assertEquals(1, observed.size());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode outputPaths = targetNode.get("buck.outputPaths");
+    assertNotNull(outputPaths);
+    JsonNode outputPathArray = outputPaths.get("output1");
+    JsonNode outputPathArray2 = outputPaths.get("output2");
+    assertTrue(outputPathArray.isArray());
+    assertTrue(outputPathArray2.isArray());
+    assertEquals(1, outputPathArray.size());
+    assertEquals(1, outputPathArray2.size());
+    JsonNode outputPath = outputPathArray.get(0);
+    JsonNode outputPath2 = outputPathArray2.get(0);
+    assertEquals(expectedPath1.toString(), outputPath.asText());
+    assertEquals(expectedPath2.toString(), outputPath2.asText());
+  }
+
+  @Test
+  public void showAllOutputsFullJsonOnlyDefaultForRulesWithMultipleOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    AbsPath expectedPath1 =
+        tmp.getRoot()
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot(
+                    workspace, "//:bar_with_multiple_outputs", "bar"));
+    AbsPath expectedPath2 =
+        tmp.getRoot()
+            .resolve(
+                getExpectedOutputPathRelativeToProjectRoot(
+                    workspace, "//:bar_with_multiple_outputs", "baz"));
+
+    ProcessResult runBuckResult =
+        workspace
+            .runBuckCommand(
+                "targets",
+                "--show-all-outputs",
+                "--show-all-outputs-format=full_json",
+                "//:bar_with_multiple_outputs")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(runBuckResult.getStdout()));
+
+    assertTrue(observed.isArray());
+    assertEquals(1, observed.size());
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode outputPaths = targetNode.get("buck.outputPaths");
+    assertNotNull(outputPaths);
+    JsonNode outputPathArray = outputPaths.get("output1");
+    JsonNode outputPathArray2 = outputPaths.get("output2");
+    assertTrue(outputPathArray.isArray());
+    assertTrue(outputPathArray2.isArray());
+    assertEquals(1, outputPathArray.size());
+    assertEquals(1, outputPathArray2.size());
+    JsonNode outputPath = outputPathArray.get(0);
+    JsonNode outputPath2 = outputPathArray2.get(0);
+    assertEquals(expectedPath1.toString(), outputPath.asText());
+    assertEquals(expectedPath2.toString(), outputPath2.asText());
+  }
+
+  @Test
+  public void showRuleKeyForMutipleOutputsUsingShowAllOutputsAreDifferent() {
+    // TODO(subashch6): We really need to implement this test after fixing RuleKey issues
+  }
+
+  @Test
+  public void showOutputAndShowAllOutputsIncompatible() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+    String[] args = new String[] {"targets", "--show-all-outputs", "--show-output", "//:bar"};
+    ProcessResult runBuckResult = workspace.runBuckCommand(args);
+    runBuckResult.assertExitCode(ExitCode.COMMANDLINE_ERROR);
+    assertThat(
+        runBuckResult.getStderr(),
+        containsString(
+            "BAD ARGUMENTS: option \"--show-all-outputs\" cannot be used with the option(s) [--show-output, --show-full-output]\nFor help see 'buck --help'."));
+  }
+
+  private RelPath getExpectedOutputPathRelativeToProjectRoot(
+      ProjectWorkspace workspace, String targetName, String pathName) throws IOException {
+    return workspace
+        .getProjectFileSystem()
+        .getRootPath()
+        .relativize(
+            workspace
+                .getGenPath(BuildTargetFactory.newInstance(targetName), "%s")
+                .resolve(pathName));
+  }
+
   private static String replaceHashInPath(String toReplace) {
     return toReplace.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER);
   }
