@@ -39,7 +39,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -186,14 +186,14 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     if (getGoSources(groupedSrcs).isEmpty()) {
-      steps.add(new TouchStep(getProjectFilesystem(), output.getPath()));
+      steps.add(new TouchStep(output.getPath()));
     } else {
       Optional<Path> asmSymabisPath = Optional.empty();
 
       if (gensymabis && !getAsmSources(groupedSrcs).isEmpty()) {
         asmSymabisPath = Optional.of(asmOutputDir.resolve("symabis"));
 
-        steps.add(new TouchStep(getProjectFilesystem(), asmHeaderPath.get()));
+        steps.add(new TouchStep(asmHeaderPath.get()));
         steps.add(
             new GoAssembleStep(
                 getProjectFilesystem().getRootPath(),

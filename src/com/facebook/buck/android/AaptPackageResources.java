@@ -37,7 +37,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.annotations.VisibleForTesting;
@@ -225,7 +225,7 @@ public class AaptPackageResources extends AbstractBuildRule {
 
     // If we had an empty res directory, we won't generate an R.txt file.  This ensures that it
     // always exists.
-    steps.add(new TouchStep(getProjectFilesystem(), getPathToRDotTxtFile()));
+    steps.add(new TouchStep(getPathToRDotTxtFile()));
 
     buildableContext.recordArtifact(rDotTxtDir.getPath());
     buildableContext.recordArtifact(getAndroidManifestXml().getPath());

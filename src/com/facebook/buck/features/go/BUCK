@@ -44,6 +44,7 @@ buck_module(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step:test_step",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/config:config",

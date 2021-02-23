@@ -44,9 +44,9 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -302,7 +302,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                   outputPathResolver.resolvePath(pathToTextSymbolsDir).getPath())));
       if (res == null) {
         return steps
-            .add(new TouchStep(filesystem, outputPathResolver.resolvePath(pathToTextSymbolsFile)))
+            .add(new TouchStep(outputPathResolver.resolvePath(pathToTextSymbolsFile)))
             .add(
                 WriteFileStep.of(
                     filesystem.getRootPath(),

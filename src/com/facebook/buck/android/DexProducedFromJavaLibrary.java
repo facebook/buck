@@ -50,7 +50,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -244,7 +244,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         dx = null;
         weightEstimate = Suppliers.ofInstance(0);
         // Create an empty file so the dex output can be used in input rulekeys
-        steps.add(new TouchStep(filesystem, pathToDex));
+        steps.add(new TouchStep(pathToDex));
       }
 
       // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was

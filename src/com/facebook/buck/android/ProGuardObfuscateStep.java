@@ -31,7 +31,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
@@ -119,8 +119,7 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
             pathToProGuardCommandLineArgsFile);
 
     if (skipProguard) {
-      steps.add(
-          commandLineHelperStep, new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()));
+      steps.add(commandLineHelperStep, new TouchStep(commandLineHelperStep.getMappingTxt()));
     } else {
       ProGuardObfuscateStep proGuardStep =
           new ProGuardObfuscateStep(
@@ -149,8 +148,8 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
           // Some proguard configs can propagate the "-dontobfuscate" flag which disables
           // obfuscation and prevents the mapping.txt & usage.txt file from being generated.
           // So touch it here to guarantee it's around when we go to cache this rule.
-          new TouchStep(filesystem, commandLineHelperStep.getMappingTxt()),
-          new TouchStep(filesystem, commandLineHelperStep.getUsageTxt()));
+          new TouchStep(commandLineHelperStep.getMappingTxt()),
+          new TouchStep(commandLineHelperStep.getUsageTxt()));
     }
   }
 

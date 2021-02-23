@@ -47,7 +47,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -196,7 +196,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     buildContext.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     getPathToTestOutputDirectory())))
-        .add(new TouchStep(getProjectFilesystem(), getPathToTestResults()))
+        .add(new TouchStep(getPathToTestResults()))
         .add(
             new CxxTestStep(
                 getProjectFilesystem(),

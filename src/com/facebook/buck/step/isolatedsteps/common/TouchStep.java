@@ -14,30 +14,27 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.fs;
+package com.facebook.buck.step.isolatedsteps.common;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/** {@link com.facebook.buck.step.Step} that runs {@code touch <filename>} in the shell. */
-public class TouchStep implements Step {
-
-  private final ProjectFilesystem filesystem;
+/** {@link IsolatedStep} that runs {@code touch <filename>} in the shell. */
+public class TouchStep extends IsolatedStep {
   private final Path fileToTouch;
 
-  public TouchStep(ProjectFilesystem filesystem, Path fileToTouch) {
-    this.filesystem = filesystem;
+  public TouchStep(Path fileToTouch) {
     this.fileToTouch = fileToTouch;
   }
 
-  public TouchStep(ProjectFilesystem filesystem, RelPath fileToTouch) {
-    this(filesystem, fileToTouch.getPath());
+  public TouchStep(RelPath fileToTouch) {
+    this(fileToTouch.getPath());
   }
 
   @Override
@@ -46,14 +43,16 @@ public class TouchStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    filesystem.touch(fileToTouch);
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException, InterruptedException {
+    ProjectFilesystemUtils.touch(context.getRuleCellRoot(), fileToTouch);
     return StepExecutionResults.SUCCESS;
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
-    return "touch " + filesystem.resolve(fileToTouch);
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+    return "touch "
+        + ProjectFilesystemUtils.getPathForRelativePath(context.getRuleCellRoot(), fileToTouch);
   }
 
   @Override

@@ -44,8 +44,8 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.collect.ImmutableList;
@@ -103,7 +103,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             unpackDirectory.getPath(),
             Optional.empty()));
 
-    steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
+    steps.add(new TouchStep(getProguardConfig()));
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -120,7 +120,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), getNativeLibsDirectory())));
-    steps.add(new TouchStep(getProjectFilesystem(), getTextSymbolsFile()));
+    steps.add(new TouchStep(getTextSymbolsFile()));
 
     // We take the classes.jar file that is required to exist in an .aar and merge it with any
     // .jar files under libs/ into an "uber" jar. We do this for simplicity because we do not know

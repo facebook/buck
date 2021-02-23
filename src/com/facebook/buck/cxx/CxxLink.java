@@ -54,7 +54,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -386,8 +386,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         // In some case (when there are no `dll_export`s eg) an import library is not produced by
         // link.exe. An empty file is produced in this case (since an import library was already
         // promised to `buildableContext`).
-        stepsBuilder.add(
-            new TouchStep(filesystem, outputPathResolver.resolvePath(linkerMapPath.get())));
+        stepsBuilder.add(new TouchStep(outputPathResolver.resolvePath(linkerMapPath.get())));
       }
       return stepsBuilder.build();
     }

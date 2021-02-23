@@ -48,8 +48,8 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -188,7 +188,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
           filesystem.getRootPath().equals(getProjectFilesystem().getRootPath()));
       Preconditions.checkState(target.equals(getBuildTarget().toString()));
       Preconditions.checkState(type.equals(getType()));
-      return ImmutableList.of(new TouchStep(filesystem, outputPathResolver.resolvePath(output)));
+      return ImmutableList.of(new TouchStep(outputPathResolver.resolvePath(output)));
     }
   }
 
@@ -556,7 +556,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      return ImmutableList.of(new TouchStep(filesystem, outputPathResolver.resolvePath(output)));
+      return ImmutableList.of(new TouchStep(outputPathResolver.resolvePath(output)));
     }
   }
 
