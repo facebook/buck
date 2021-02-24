@@ -42,7 +42,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.collect.ImmutableList;
@@ -162,8 +162,7 @@ public class CGoGenSource extends AbstractBuildRule {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), genDir)));
     steps.add(
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(),
+        WriteFileIsolatedStep.of(
             new ImmutableList.Builder<String>()
                 .addAll(getPreprocessorFlags(context.getSourcePathResolver()))
                     .addAll(

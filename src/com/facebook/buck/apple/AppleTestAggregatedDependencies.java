@@ -37,7 +37,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -127,9 +127,7 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRule {
           staticLibDeps.stream()
               .map(t -> context.getSourcePathResolver().getAbsolutePath(t).toString())
               .collect(Collectors.joining("\n"));
-      stepsBuilder.add(
-          WriteFileStep.of(
-              getProjectFilesystem().getRootPath(), output, argsFile.getPath(), false));
+      stepsBuilder.add(WriteFileIsolatedStep.of(output, argsFile.getPath(), false));
       stepsBuilder.add(
           new LibtoolStep(
               getProjectFilesystem(),

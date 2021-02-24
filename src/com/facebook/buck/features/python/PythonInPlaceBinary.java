@@ -38,7 +38,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
@@ -191,8 +191,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())),
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(), script, binPath, /* executable */ true));
+        WriteFileIsolatedStep.of(script, binPath, /* executable */ true));
   }
 
   @Override

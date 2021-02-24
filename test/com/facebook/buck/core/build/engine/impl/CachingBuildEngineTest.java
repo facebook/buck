@@ -140,7 +140,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -345,8 +345,7 @@ public class CachingBuildEngineTest {
                 BuildContext context, BuildableContext buildableContext) {
               buildableContext.recordArtifact(output);
               return ImmutableList.of(
-                  WriteFileStep.of(
-                      filesystem.getRootPath(), "12345", output, /* executable */ false));
+                  WriteFileIsolatedStep.of("12345", output, /* executable */ false));
             }
 
             @Override
@@ -2034,8 +2033,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -2088,8 +2086,7 @@ public class CachingBuildEngineTest {
                 BuildContext context, BuildableContext buildableContext) {
               buildableContext.recordArtifact(output);
               return ImmutableList.of(
-                  WriteFileStep.of(
-                      filesystem.getRootPath(), "12345", output, /* executable */ false));
+                  WriteFileIsolatedStep.of("12345", output, /* executable */ false));
             }
 
             @Override
@@ -2155,8 +2152,7 @@ public class CachingBuildEngineTest {
                 BuildContext context, BuildableContext buildableContext) {
               buildableContext.recordArtifact(output);
               return ImmutableList.of(
-                  WriteFileStep.of(
-                      filesystem.getRootPath(), "12345", output, /* executable */ false));
+                  WriteFileIsolatedStep.of("12345", output, /* executable */ false));
             }
 
             @Override
@@ -2631,8 +2627,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -2755,8 +2750,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -2930,8 +2924,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3009,8 +3002,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3101,8 +3093,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3191,8 +3182,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3324,8 +3314,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3431,8 +3420,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3555,8 +3543,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3666,8 +3653,7 @@ public class CachingBuildEngineTest {
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
               buildableContext.recordArtifact(output.getPath());
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override
@@ -3816,8 +3802,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              return ImmutableList.of(
-                  WriteFileStep.of(filesystem.getRootPath(), "", output, /* executable */ false));
+              return ImmutableList.of(WriteFileIsolatedStep.of("", output, /* executable */ false));
             }
 
             @Override

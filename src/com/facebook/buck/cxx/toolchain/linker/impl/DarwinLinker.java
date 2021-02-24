@@ -46,7 +46,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -426,8 +426,7 @@ public class DarwinLinker extends DelegatingTool
                   context.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   linkerScript.getParent())),
-          WriteFileStep.of(
-              getProjectFilesystem().getRootPath(),
+          WriteFileIsolatedStep.of(
               () -> {
                 Set<String> symbols = new LinkedHashSet<>();
                 for (SourcePath path : symbolFiles) {

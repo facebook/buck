@@ -67,7 +67,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
@@ -258,8 +258,7 @@ public class PythonTestDescription
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())),
-          WriteFileStep.of(
-              getProjectFilesystem().getRootPath(),
+          WriteFileIsolatedStep.of(
               Resources.asByteSource(
                   Resources.getResource(PythonTestDescription.class, DEFAULT_TEST_MAIN_NAME)),
               output.getPath(),

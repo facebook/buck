@@ -30,7 +30,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -133,7 +133,7 @@ public class ModernBuildRuleIntegrationTest {
         BuildCellRelativePathFactory buildCellPathFactory) {
       Path tmp = outputPathResolver.getTempPath("temporary_writing_rule_temp");
       return ImmutableList.of(
-          WriteFileStep.of(filesystem.getRootPath(), "", tmp, false),
+          WriteFileIsolatedStep.of("", tmp, false),
           CopyStep.forFile(tmp, outputPathResolver.resolvePath(output).getPath()));
     }
   }

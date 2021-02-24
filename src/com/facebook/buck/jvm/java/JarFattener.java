@@ -46,9 +46,9 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.ZipStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Preconditions;
@@ -261,17 +261,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
           }
         };
 
-    return WriteFileStep.of(
-        getProjectFilesystem().getRootPath(), source, destination, /* executable */ false);
+    return WriteFileIsolatedStep.of(source, destination, /* executable */ false);
   }
 
   /** @return a {@link Step} that writes the final from the resource named {@code name}. */
   private Step writeFromResource(RelPath destination, String name) {
-    return WriteFileStep.of(
-        getProjectFilesystem().getRootPath(),
-        Resources.asByteSource(Resources.getResource(name)),
-        destination,
-        /* executable */ false);
+    return WriteFileIsolatedStep.of(
+        Resources.asByteSource(Resources.getResource(name)), destination, /* executable */ false);
   }
 
   private RelPath getOutputDirectory() {

@@ -41,8 +41,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.ZipStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -130,8 +130,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
                 context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
     // Write an @-file with all the source files in
     steps.add(
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(),
+        WriteFileIsolatedStep.of(
             Joiner.on("\n")
                 .join(
                     sources.stream()
@@ -153,12 +152,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
                 .map(context.getSourcePathResolver()::getAbsolutePath)
                 .map(Object::toString)
                 .iterator());
-    steps.add(
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(),
-            argsBuilder.toString(),
-            atArgs, /* can execute */
-            false));
+    steps.add(WriteFileIsolatedStep.of(argsBuilder.toString(), atArgs, /* can execute */ false));
 
     Path uncompressedOutputDir = scratchDir.resolve("docs");
 

@@ -45,7 +45,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -151,8 +151,7 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 buildContext.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 classPathOutput.getResolvedPath().getParent())),
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(),
+        WriteFileIsolatedStep.of(
             () ->
                 String.join(
                     System.lineSeparator(),
@@ -161,8 +160,7 @@ public class JavaTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         .getClassNamesForSources()),
             classPathOutput.getResolvedPath(),
             false),
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(),
+        WriteFileIsolatedStep.of(
             () ->
                 String.join(
                     System.lineSeparator(), getJvmArgs(buildContext.getSourcePathResolver())),

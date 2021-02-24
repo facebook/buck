@@ -30,7 +30,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
@@ -68,7 +68,6 @@ public class ApplePkgInfo extends ModernBuildRule<ApplePkgInfo> implements Build
       BuildCellRelativePathFactory buildCellPathFactory) {
     Path outputPath = outputPathResolver.resolvePath(output).getPath();
     boolean isExecutable = false;
-    return ImmutableList.of(
-        WriteFileStep.of(filesystem.getRootPath(), "APPLWRUN", outputPath, isExecutable));
+    return ImmutableList.of(WriteFileIsolatedStep.of("APPLWRUN", outputPath, isExecutable));
   }
 }

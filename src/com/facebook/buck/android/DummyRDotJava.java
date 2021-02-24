@@ -55,8 +55,8 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -199,8 +199,7 @@ public class DummyRDotJava extends AbstractBuildRule
               BuildCellRelativePath.fromCellRelativePath(
                   buildCellRootPath, filesystem, emptyRDotJava.getParent())));
       steps.add(
-          WriteFileStep.of(
-              filesystem.getRootPath(),
+          WriteFileIsolatedStep.of(
               "package com.facebook;\n public class R {}\n",
               emptyRDotJava,
               /* executable */ false));

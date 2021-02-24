@@ -46,7 +46,7 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -168,8 +168,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), makefile.getParent())));
-    steps.add(
-        WriteFileStep.of(getProjectFilesystem().getRootPath(), makefileContents, makefile, false));
+    steps.add(WriteFileIsolatedStep.of(makefileContents, makefile, false));
     steps.add(
         new NdkBuildStep(
             getProjectFilesystem(),

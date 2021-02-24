@@ -261,18 +261,12 @@ public class HaskellIdeRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     }
 
     Path script = scriptPath();
-    steps.add(
-        new StringTemplateStep(
-            scriptTemplate, getProjectFilesystem(), script, templateArgs.build()));
+    steps.add(new StringTemplateStep(scriptTemplate, script, templateArgs.build()));
     for (SourcePath s : extraScriptTemplates) {
       AbsPath templateAbsPath = resolver.getAbsolutePath(s);
       Path extraScript = dir.resolve(templateAbsPath.getFileName());
       steps.add(
-          new StringTemplateStep(
-              templateAbsPath.getPath(),
-              getProjectFilesystem(),
-              extraScript,
-              templateArgs.build()));
+          new StringTemplateStep(templateAbsPath.getPath(), extraScript, templateArgs.build()));
     }
     return steps.build();
   }

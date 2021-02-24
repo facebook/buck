@@ -35,8 +35,8 @@ import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.ZipStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -170,8 +170,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                   BuildCellRelativePath.fromCellRelativePath(
                       context.getBuildCellRootPath(), getProjectFilesystem(), watchKitSupportDir)));
           commands.add(
-              WriteFileStep.of(
-                  getProjectFilesystem().getRootPath(),
+              WriteFileIsolatedStep.of(
                   ByteSource.wrap(((WriteFile) binary).getFileContents()),
                   watchKitSupportDir.resolve("WK"),
                   true /* executable */));
@@ -186,8 +185,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                         getProjectFilesystem(),
                         watchKitSupportDir)));
             commands.add(
-                WriteFileStep.of(
-                    getProjectFilesystem().getRootPath(),
+                WriteFileIsolatedStep.of(
                     ByteSource.wrap(legacyWatchStub.get().getFileContents()),
                     watchKitSupportDir.resolve("WK"),
                     true /* executable */));

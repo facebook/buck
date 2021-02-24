@@ -30,8 +30,8 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -492,9 +492,7 @@ public class SmartDexingStep implements Step {
           useDexBuckedId,
           minSdkVersion,
           withDownwardApi);
-      steps.add(
-          WriteFileStep.of(
-              filesystem.getRootPath(), newInputsHash, outputHashPath, /* executable */ false));
+      steps.add(WriteFileIsolatedStep.of(newInputsHash, outputHashPath, /* executable */ false));
     }
   }
 

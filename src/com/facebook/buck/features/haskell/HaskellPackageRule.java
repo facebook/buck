@@ -40,7 +40,7 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
@@ -149,7 +149,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s");
   }
 
-  private WriteFileStep getWriteRegistrationFileStep(
+  private WriteFileIsolatedStep getWriteRegistrationFileStep(
       SourcePathResolverAdapter resolver, Path registrationFile, RelPath packageDb) {
     Map<String, String> entries = new LinkedHashMap<>();
 
@@ -205,8 +205,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     entries.put("depends", Joiner.on(", ").join(depPackages.keySet()));
 
-    return WriteFileStep.of(
-        getProjectFilesystem().getRootPath(),
+    return WriteFileIsolatedStep.of(
         entries.entrySet().stream()
             .map(input -> input.getKey() + ": " + input.getValue())
             .collect(Collectors.joining(System.lineSeparator())),

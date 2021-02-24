@@ -48,8 +48,8 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.isolatedsteps.common.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -637,11 +637,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       FunnyStringBuilder builder = new FunnyStringBuilder();
       dynamic.append(builder);
       return ImmutableList.of(
-          WriteFileStep.of(
-              filesystem.getRootPath(),
-              builder.build(),
-              outputPathResolver.resolvePath(output),
-              false));
+          WriteFileIsolatedStep.of(builder.build(), outputPathResolver.resolvePath(output), false));
     }
   }
 

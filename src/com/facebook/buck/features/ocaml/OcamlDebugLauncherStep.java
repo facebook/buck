@@ -21,11 +21,10 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.Shell;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -39,13 +38,10 @@ import java.util.List;
 /** Creates a debug launcher script for an ocaml binary */
 public class OcamlDebugLauncherStep implements Step {
 
-  private final ProjectFilesystem filesystem;
   private final SourcePathResolverAdapter resolver;
   private final Args args;
 
-  public OcamlDebugLauncherStep(
-      ProjectFilesystem filesystem, SourcePathResolverAdapter resolver, Args args) {
-    this.filesystem = filesystem;
+  public OcamlDebugLauncherStep(SourcePathResolverAdapter resolver, Args args) {
     this.resolver = resolver;
     this.args = args;
   }
@@ -56,10 +52,9 @@ public class OcamlDebugLauncherStep implements Step {
     String debugCmdStr = getDebugCmd();
     String debugLauncherScript = getDebugLauncherScript(debugCmdStr);
 
-    WriteFileStep writeFile =
-        WriteFileStep.of(
-            filesystem.getRootPath(), debugLauncherScript, args.getOutput(), /* executable */ true);
-    return writeFile.createDelegate(context).executeIsolatedStep(context);
+    WriteFileIsolatedStep writeFile =
+        WriteFileIsolatedStep.of(debugLauncherScript, args.getOutput(), /* executable */ true);
+    return writeFile.executeIsolatedStep(context);
   }
 
   private String getDebugLauncherScript(String debugCmdStr) {

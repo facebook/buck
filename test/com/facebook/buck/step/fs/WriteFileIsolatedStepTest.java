@@ -22,24 +22,25 @@ import static org.hamcrest.Matchers.equalTo;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.testutil.TemporaryPaths;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class WriteFileStepTest {
+public class WriteFileIsolatedStepTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testFileIsWrittenWithNewline() throws Exception {
 
-    WriteFileStep writeFileStep =
-        WriteFileStep.of(
-            temporaryFolder.getRoot(), "Hello world", Paths.get("foo.txt"), /* executable */ false);
-    StepExecutionContext executionContext = TestExecutionContext.newInstance();
-    writeFileStep.createDelegate(executionContext).executeIsolatedStep(executionContext);
+    WriteFileIsolatedStep writeFileIsolatedStep =
+        WriteFileIsolatedStep.of("Hello world", Paths.get("foo.txt"), /* executable */ false);
+    StepExecutionContext executionContext =
+        TestExecutionContext.newInstance(temporaryFolder.getRoot());
+    writeFileIsolatedStep.executeIsolatedStep(executionContext);
     assertThat(
         ProjectFilesystemUtils.readFileIfItExists(temporaryFolder.getRoot(), Paths.get("foo.txt")),
         equalTo(Optional.of("Hello world\n")));

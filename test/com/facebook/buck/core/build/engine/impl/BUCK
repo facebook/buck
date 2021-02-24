@@ -17,6 +17,7 @@ java_test(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//src/com/facebook/buck/util/cache/impl:impl",
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/util/stream:stream",

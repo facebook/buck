@@ -183,7 +183,6 @@ public class OcamlBuildStep implements Step {
     if (!ocamlContext.isLibrary()) {
       Step debugLauncher =
           new OcamlDebugLauncherStep(
-              filesystem,
               getResolver(),
               new OcamlDebugLauncherStep.Args(
                   ocamlContext.getOcamlDebug().get(),

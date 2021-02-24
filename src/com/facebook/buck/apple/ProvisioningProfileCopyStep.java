@@ -28,7 +28,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -132,12 +132,10 @@ class ProvisioningProfileCopyStep implements Step {
       entitlementsPlist.putAll(selectedProfile.get().getMergeableEntitlements());
       entitlementsPlist.put(APPLICATION_IDENTIFIER, appID);
       entitlementsPlist.put(KEYCHAIN_ACCESS_GROUPS, new String[] {appID});
-      return (WriteFileStep.of(
-              filesystem.getRootPath(),
+      return (WriteFileIsolatedStep.of(
               entitlementsPlist.toXMLPropertyList(),
               signingEntitlementsTempPath,
               /* executable */ false))
-          .createDelegate(context)
           .executeIsolatedStep(context);
     }
   }

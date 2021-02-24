@@ -57,7 +57,7 @@ public class OcamlDebugLauncher extends AbstractBuildRuleWithDeclaredAndExtraDep
                 context.getBuildCellRootPath(),
                 getProjectFilesystem(),
                 args.getOutput().getParent())),
-        new OcamlDebugLauncherStep(getProjectFilesystem(), context.getSourcePathResolver(), args));
+        new OcamlDebugLauncherStep(context.getSourcePathResolver(), args));
   }
 
   @Override

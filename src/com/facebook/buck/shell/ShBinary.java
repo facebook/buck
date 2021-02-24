@@ -245,7 +245,6 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .add(
             new StringTemplateStep(
                 TEMPLATE,
-                getProjectFilesystem(),
                 output.getPath(),
                 valuesBuilder.build(),
                 expanded -> {

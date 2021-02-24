@@ -44,10 +44,10 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
 import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
 import com.facebook.buck.step.isolatedsteps.common.TouchStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -305,8 +305,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         return steps
             .add(new TouchStep(outputPathResolver.resolvePath(pathToTextSymbolsFile)))
             .add(
-                WriteFileStep.of(
-                    filesystem.getRootPath(),
+                WriteFileIsolatedStep.of(
                     rDotJavaPackageArgument == null ? "" : rDotJavaPackageArgument,
                     outputPathResolver.resolvePath(pathToRDotJavaPackageFile),
                     false /* executable */))
@@ -326,8 +325,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                 outputPathResolver.resolvePath(pathToRDotJavaPackageFile)));
       } else {
         steps.add(
-            WriteFileStep.of(
-                filesystem.getRootPath(),
+            WriteFileIsolatedStep.of(
                 rDotJavaPackageArgument,
                 outputPathResolver.resolvePath(pathToRDotJavaPackageFile),
                 false /* executable */));

@@ -44,7 +44,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -319,11 +319,8 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       ImmutableList<String> argsBuilder =
           buildArgs(filesystem, inferOutPath, sourcePathResolverAdapter);
       steps.add(
-          WriteFileStep.of(
-              filesystem.getRootPath(),
-              Joiner.on(System.lineSeparator()).join(argsBuilder),
-              argFilePath.getPath(),
-              false));
+          WriteFileIsolatedStep.of(
+              Joiner.on(System.lineSeparator()).join(argsBuilder), argFilePath.getPath(), false));
 
       // Prepare and invoke cmd with appropriate environment
       ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolverAdapter);

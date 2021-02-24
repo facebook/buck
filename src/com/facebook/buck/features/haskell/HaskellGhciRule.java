@@ -50,7 +50,7 @@ import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.SymlinkMapsPaths;
 import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -436,12 +436,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               if (enableProfiling) {
                 actualIserv = dir.resolve("iserv-prof");
               }
-              return WriteFileStep.of(
-                      getProjectFilesystem().getRootPath(),
-                      Objects.requireNonNull(st.render()),
-                      actualIserv, /* executable */
-                      true)
-                  .createDelegate(context)
+              return WriteFileIsolatedStep.of(
+                      Objects.requireNonNull(st.render()), actualIserv, /* executable */ true)
                   .executeIsolatedStep(context);
             }
           });
@@ -477,11 +473,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path startGhci = dir.resolve("start.ghci");
     steps.add(
-        WriteFileStep.of(
-            getProjectFilesystem().getRootPath(),
-            startGhciContents.toString(),
-            startGhci,
-            /* executable */ false));
+        WriteFileIsolatedStep.of(startGhciContents.toString(), startGhci, /* executable */ false));
 
     // ghciBinDep
     ImmutableList.Builder<String> srcpaths = ImmutableList.builder();
@@ -557,20 +549,14 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     Path script = scriptPath();
-    steps.add(
-        new StringTemplateStep(
-            ghciScriptTemplate, getProjectFilesystem(), script, templateArgs.build()));
+    steps.add(new StringTemplateStep(ghciScriptTemplate, script, templateArgs.build()));
     steps.add(new MakeExecutableStep(getProjectFilesystem(), script));
 
     for (SourcePath s : extraScriptTemplates) {
       AbsPath templateAbsPath = resolver.getAbsolutePath(s);
       Path extraScript = dir.resolve(templateAbsPath.getFileName());
       steps.add(
-          new StringTemplateStep(
-              templateAbsPath.getPath(),
-              getProjectFilesystem(),
-              extraScript,
-              templateArgs.build()));
+          new StringTemplateStep(templateAbsPath.getPath(), extraScript, templateArgs.build()));
       steps.add(new MakeExecutableStep(getProjectFilesystem(), extraScript));
     }
 

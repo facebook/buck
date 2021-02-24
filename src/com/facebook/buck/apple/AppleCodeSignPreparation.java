@@ -37,7 +37,7 @@ import com.facebook.buck.step.BuildStepResultHolder;
 import com.facebook.buck.step.ConditionalStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -242,8 +242,7 @@ public class AppleCodeSignPreparation extends ModernBuildRule<AppleCodeSignPrepa
             () ->
                 codeSignIdentitySupplier.get().getFingerprint().map(HashCode::toString).orElse("");
         Path outputPath = outputPathResolver.resolvePath(output).getPath();
-        stepsBuilder.add(
-            WriteFileStep.of(filesystem.getRootPath(), fingerprintSupplier, outputPath, false));
+        stepsBuilder.add(WriteFileIsolatedStep.of(fingerprintSupplier, outputPath, false));
       }
 
       return stepsBuilder.build();

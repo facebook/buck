@@ -17,9 +17,9 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -39,29 +39,22 @@ import org.stringtemplate.v4.STGroup;
 public class StringTemplateStep implements Step {
 
   private final Path templatePath;
-  private final ProjectFilesystem filesystem;
   private final Path outputPath;
   private final ImmutableMap<String, ?> values;
   private final Consumer<String> verifier;
 
-  public StringTemplateStep(
-      Path templatePath,
-      ProjectFilesystem filesystem,
-      Path outputPath,
-      ImmutableMap<String, ?> values) {
-    this(templatePath, filesystem, outputPath, values, noop -> {});
+  public StringTemplateStep(Path templatePath, Path outputPath, ImmutableMap<String, ?> values) {
+    this(templatePath, outputPath, values, noop -> {});
   }
 
   public StringTemplateStep(
       Path templatePath,
-      ProjectFilesystem filesystem,
       Path outputPath,
       ImmutableMap<String, ?> values,
       Consumer<String> verifier) {
     Preconditions.checkArgument(
         !outputPath.isAbsolute(), "Output must be specified as a relative path: %s", outputPath);
     this.templatePath = templatePath;
-    this.filesystem = filesystem;
     this.outputPath = outputPath;
     this.values = values;
     this.verifier = verifier;
@@ -82,8 +75,7 @@ public class StringTemplateStep implements Step {
     String content = Objects.requireNonNull(st.render());
     verifier.accept(content);
 
-    return WriteFileStep.of(filesystem.getRootPath(), content, outputPath, /* executable */ false)
-        .createDelegate(context)
+    return WriteFileIsolatedStep.of(content, outputPath, /* executable */ false)
         .executeIsolatedStep(context);
   }
 
