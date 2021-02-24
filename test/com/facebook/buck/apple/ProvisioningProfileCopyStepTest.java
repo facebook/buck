@@ -75,7 +75,7 @@ public class ProvisioningProfileCopyStepTest {
   @Before
   public void setUp() throws IOException {
     testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("provisioning_profiles");
-    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), testdataDir);
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     Files.walkFileTree(
         testdataDir,
         new SimpleFileVisitor<Path>() {
@@ -90,7 +90,7 @@ public class ProvisioningProfileCopyStepTest {
     AbsPath tempOutputDir = tmp.getRoot();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = Paths.get("test.xcent");
-    executionContext = TestExecutionContext.newInstance();
+    executionContext = TestExecutionContext.newInstance(projectFilesystem.getRootPath());
     entitlementsFile = testdataDir.resolve("Entitlements.plist");
     selectedProfileSupplier =
         () -> {
