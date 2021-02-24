@@ -28,6 +28,7 @@ import java.io.PrintWriter; // NOPMD can't depend on Guava
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -82,7 +83,7 @@ public abstract class BaseRunner {
    * The test result file is written as XML to avoid introducing a dependency on JSON (see class
    * overview).
    */
-  protected void writeResult(String testClassName, List<TestResult> results)
+  protected void writeResult(String testClassName, Collection<TestResult> results)
       throws IOException, ParserConfigurationException, TransformerException {
     // XML writer logic taken from:
     // http://www.genedavis.com/library/xml/java_dom_xml_creation.jsp
