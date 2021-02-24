@@ -16,9 +16,18 @@
 
 package com.facebook.buck.apple;
 
+import com.dd.plist.NSArray;
+import com.dd.plist.NSDictionary;
+import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
+import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
+import com.facebook.buck.apple.simulator.AppleSimulatorProfileParsing;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.model.FlavorSet;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -59,15 +68,24 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.BufferedInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements CxxPreprocessorDep, LegacyNativeLinkableGroup, HasOutputName {
+
+  private static final Logger LOG = Logger.get(AppleSimulatorProfileParsing.class);
 
   @AddToRuleKey(stringify = true)
   private final Path out;
@@ -80,6 +98,8 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   private final ImmutableSet<FrameworkPath> frameworks;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final FlavorDomain<UnresolvedAppleCxxPlatform> applePlatformFlavorDomain;
+  private final Boolean isXCFramework;
+  private CxxPlatform cxxPlatform = null;
 
   private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       CacheBuilder.newBuilder().build(CacheLoader.from(this::getNativeLinkableInputUncached));
@@ -116,8 +136,12 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
             .getFileName()
             .toString();
     this.out =
-        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
-            .resolve(frameworkName);
+      BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
+        .resolve(frameworkName);
+
+    Pattern checkIfXcFrameworkPattern = Pattern.compile(".xcframework$");
+    Matcher frameworkPathMatcher = checkIfXcFrameworkPattern.matcher(frameworkPath.toString());
+    this.isXCFramework = frameworkPathMatcher.find();
     this.applePlatformFlavorDomain = applePlatformFlavorDomain;
   }
 
@@ -164,6 +188,9 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
   @Override
   public SourcePath getSourcePathToOutput() {
+    if(this.isXCFramework) {
+      return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFrameworkPathFromXCFramework());
+    }
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), out);
   }
 
@@ -201,6 +228,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    this.cxxPlatform = cxxPlatform;
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
   }
 
@@ -222,6 +250,60 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
     return ImmutableList.of();
+  }
+
+  private Path getFrameworkPathFromXCFramework() {
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+      .resolve(frameworkName + "/" + frameworkLocationInXCFramework());
+  }
+
+  private String frameworkLocationInXCFramework() {
+    Path xcFrameworkPlistPath = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
+      .resolve(frameworkPath.toString() + "/Info.plist");
+
+    try (InputStream inputStream = Files.newInputStream(xcFrameworkPlistPath)) {
+      NSDictionary xcframeworkInfos;
+      try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
+        try {
+          xcframeworkInfos = (NSDictionary) PropertyListParser.parse(bufferedInputStream);
+        } catch (Exception e) {
+          throw new IOException(e);
+        }
+      }
+
+      NSArray availableLibraries = (NSArray) xcframeworkInfos.get("AvailableLibraries");
+      if(availableLibraries != null) {
+        for (NSObject libraryObjc: availableLibraries.getArray()) {
+          if (libraryObjc instanceof NSDictionary) {
+            ApplePlatform applePlatform = ApplePlatform.fromFlavor(cxxPlatform.getFlavor());
+
+            NSDictionary library = (NSDictionary) libraryObjc;
+            NSObject libraryIdentifier = library.get("LibraryIdentifier");
+            NSObject libraryPath = library.get("LibraryPath");
+            NSObject supportedArchitectures = library.get("SupportedArchitectures");
+
+            if (library.containsValue(applePlatform.getSwiftName().get())
+              && supportedArchitectures != null) {
+
+              for (String arch: applePlatform.getArchitectures()) {
+                if(((NSArray)supportedArchitectures).containsObject(arch)) {
+                  if(library.containsValue("simulator") == ApplePlatform.isSimulator(applePlatform.getName())) {
+                    return libraryIdentifier.toString() + "/" + libraryPath;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+    } catch (FileNotFoundException | NoSuchFileException e) {
+      LOG.warn(String.valueOf(e), "Could not open XCFramework's Info.plist file %s, ignoring", xcFrameworkPlistPath);
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return "";
   }
 
   private NativeLinkableInput getNativeLinkableInputUncached(NativeLinkableCacheKey key) {
