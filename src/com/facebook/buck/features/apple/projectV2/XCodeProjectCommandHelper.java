@@ -749,7 +749,6 @@ public class XCodeProjectCommandHelper {
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
-              targetConfiguration,
               buckEventBus,
               cells);
     }

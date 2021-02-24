@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -30,7 +29,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class VersionedTargetGraphCache {
@@ -126,7 +124,6 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      Optional<TargetConfiguration> targetConfiguration,
       CacheStatsTracker statsTracker,
       BuckEventBus eventBus,
       Cells cells)
@@ -134,7 +131,7 @@ public class VersionedTargetGraphCache {
 
     VersionBuckConfig versionBuckConfig = new VersionBuckConfig(buckConfig);
     ImmutableMap<String, VersionUniverse> versionUniverses =
-        versionBuckConfig.getVersionUniverses(targetConfiguration);
+        versionBuckConfig.getVersionUniverses();
 
     VersionedTargetGraphEvent.Started started = VersionedTargetGraphEvent.started();
     eventBus.post(started);

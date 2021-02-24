@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.event.BuckEventBus;
@@ -28,7 +27,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 
 /**
  * Wrapper class around VersionedTargetGraphCache containing a command specific stats tracker to
@@ -77,7 +75,6 @@ public class InstrumentedVersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      Optional<TargetConfiguration> targetConfiguration,
       BuckEventBus eventBus,
       Cells cells)
       throws VersionException, InterruptedException {
@@ -88,7 +85,6 @@ public class InstrumentedVersionedTargetGraphCache {
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
             targetGraphCreationResult,
-            targetConfiguration,
             statsTracker,
             eventBus,
             cells)

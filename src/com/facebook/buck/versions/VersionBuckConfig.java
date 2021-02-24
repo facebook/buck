@@ -18,14 +18,11 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
-import java.util.Optional;
 
 public class VersionBuckConfig {
 
@@ -37,8 +34,7 @@ public class VersionBuckConfig {
     this.delegate = delegate;
   }
 
-  private VersionUniverse getVersionUniverse(
-      String name, Optional<TargetConfiguration> targetConfiguration) {
+  private VersionUniverse getVersionUniverse(String name) {
     VersionUniverse.Builder universe = VersionUniverse.builder();
     ImmutableList<String> vals = delegate.getListWithoutComments(UNIVERSES_SECTION, name);
     for (String val : vals) {
@@ -51,20 +47,18 @@ public class VersionBuckConfig {
       }
       // TODO(nga): ignores default_target_platform and configuration detector
       universe.putVersions(
-          delegate.getBuildTargetForFullyQualifiedTarget(
-              parts.get(0), targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE)),
+          delegate.getUnconfiguredBuildTargetForFullyQualifiedTarget(parts.get(0)),
           Version.of(parts.get(1)));
     }
     return universe.build();
   }
 
-  public ImmutableMap<String, VersionUniverse> getVersionUniverses(
-      Optional<TargetConfiguration> targetConfiguration) {
+  public ImmutableMap<String, VersionUniverse> getVersionUniverses() {
     ImmutableSet<String> entries = delegate.getEntriesForSection(UNIVERSES_SECTION).keySet();
     ImmutableMap.Builder<String, VersionUniverse> universes =
         ImmutableMap.builderWithExpectedSize(entries.size());
     for (String name : entries) {
-      universes.put(name, getVersionUniverse(name, targetConfiguration));
+      universes.put(name, getVersionUniverse(name));
     }
     return universes.build();
   }

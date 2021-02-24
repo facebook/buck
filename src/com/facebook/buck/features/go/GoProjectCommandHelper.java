@@ -405,7 +405,6 @@ public class GoProjectCommandHelper {
                   params.getTypeCoercerFactory(),
                   params.getUnconfiguredBuildTargetFactory(),
                   targetGraphCreationResult,
-                  targetConfiguration,
                   buckEventBus,
                   cells);
     }

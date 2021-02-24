@@ -67,6 +67,7 @@ import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.CloseableResource;
+import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
@@ -460,9 +461,13 @@ public class CxxBinaryDescriptionTest {
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());
 
     VersionUniverse universe1 =
-        VersionUniverse.of(ImmutableMap.of(depBuilder.getTarget(), Version.of("1.0")));
+        VersionUniverse.of(
+            ImmutableMap.of(
+                depBuilder.getTarget().getUnconfiguredBuildTarget(), Version.of("1.0")));
     VersionUniverse universe2 =
-        VersionUniverse.of(ImmutableMap.of(depBuilder.getTarget(), Version.of("2.0")));
+        VersionUniverse.of(
+            ImmutableMap.of(
+                depBuilder.getTarget().getUnconfiguredBuildTarget(), Version.of("2.0")));
 
     TargetGraph versionedTargetGraph =
         AsyncVersionedTargetGraphBuilder.transform(
@@ -477,7 +482,10 @@ public class CxxBinaryDescriptionTest {
             .getTargetGraph();
 
     assertThat(
-        versionedTargetGraph.get(builder.getTarget()).getSelectedVersions(),
+        versionedTargetGraph
+            .get(builder.getTarget())
+            .getSelectedVersions()
+            .map(v -> MoreMaps.transformKeys(v, BuildTarget::getUnconfiguredBuildTarget)),
         equalTo(Optional.of(universe1.getVersions())));
   }
 

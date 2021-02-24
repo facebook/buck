@@ -43,8 +43,8 @@ public class VersionUniverseVersionSelectorTest {
             ImmutableMap.of(
                 "universe",
                 VersionUniverse.builder()
-                    .putVersions(versioned1, ONE)
-                    .putVersions(versioned2, ONE)
+                    .putVersions(versioned1.getUnconfiguredBuildTarget(), ONE)
+                    .putVersions(versioned2.getUnconfiguredBuildTarget(), ONE)
                     .build()));
     ImmutableMap<BuildTarget, Version> versions =
         selector.resolve(
@@ -66,8 +66,8 @@ public class VersionUniverseVersionSelectorTest {
             ImmutableMap.of(
                 "universe",
                 VersionUniverse.builder()
-                    .putVersions(versioned1, ONE)
-                    .putVersions(versioned2, ONE)
+                    .putVersions(versioned1.getUnconfiguredBuildTarget(), ONE)
+                    .putVersions(versioned2.getUnconfiguredBuildTarget(), ONE)
                     .build()));
     ImmutableMap<BuildTarget, Version> versions =
         selector.resolve(

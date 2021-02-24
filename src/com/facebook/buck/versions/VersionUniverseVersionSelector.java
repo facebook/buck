@@ -87,7 +87,13 @@ public class VersionUniverseVersionSelector implements VersionSelector {
     for (Map.Entry<BuildTarget, ImmutableSet<Version>> ent : domain.entrySet()) {
       Version version;
       if (universe.isPresent()
-          && ((version = universe.get().getValue().getVersions().get(ent.getKey())) != null)) {
+          && ((version =
+                  universe
+                      .get()
+                      .getValue()
+                      .getVersions()
+                      .get(ent.getKey().getUnconfiguredBuildTarget()))
+              != null)) {
         if (!ent.getValue().contains(version)) {
           throw new VersionException(
               root,

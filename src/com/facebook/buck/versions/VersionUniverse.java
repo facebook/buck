@@ -16,7 +16,7 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -26,13 +26,14 @@ import org.immutables.value.Value;
 public abstract class VersionUniverse {
 
   @Value.Parameter
-  public abstract ImmutableMap<BuildTarget, Version> getVersions();
+  public abstract ImmutableMap<UnconfiguredBuildTarget, Version> getVersions();
 
   public static Builder builder() {
     return new Builder();
   }
 
-  public static VersionUniverse of(Map<? extends BuildTarget, ? extends Version> versions) {
+  public static VersionUniverse of(
+      Map<? extends UnconfiguredBuildTarget, ? extends Version> versions) {
     return ImmutableVersionUniverse.ofImpl(versions);
   }
 

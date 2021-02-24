@@ -370,7 +370,6 @@ public class IjProjectCommandHelper {
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
-              targetConfiguration,
               buckEventBus,
               cells);
     }

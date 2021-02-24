@@ -199,7 +199,10 @@ public class VersionedTargetGraphCacheTest {
             new TestCellBuilder().build());
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
-        ImmutableMap.of("foo", VersionUniverse.of(ImmutableMap.of(versionedAlias, version2)));
+        ImmutableMap.of(
+            "foo",
+            VersionUniverse.of(
+                ImmutableMap.of(versionedAlias.getUnconfiguredBuildTarget(), version2)));
     VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),

@@ -416,7 +416,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             params.getTypeCoercerFactory(),
             params.getUnconfiguredBuildTargetFactory(),
             targetGraphCreationResult,
-            params.getTargetConfiguration(),
             params.getBuckEventBus(),
             params.getCells());
   }

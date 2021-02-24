@@ -370,9 +370,11 @@ public class IncrementalActionGraphScenarioTest {
             .setDeps(ImmutableSortedSet.of(versionedAliasTarget));
 
     VersionUniverse universe1 =
-        VersionUniverse.of(ImmutableMap.of(versionedAliasTarget, Version.of("1.0")));
+        VersionUniverse.of(
+            ImmutableMap.of(versionedAliasTarget.getUnconfiguredBuildTarget(), Version.of("1.0")));
     VersionUniverse universe2 =
-        VersionUniverse.of(ImmutableMap.of(versionedAliasTarget, Version.of("2.0")));
+        VersionUniverse.of(
+            ImmutableMap.of(versionedAliasTarget.getUnconfiguredBuildTarget(), Version.of("2.0")));
 
     TargetGraph unversionedTargetGraph =
         TargetGraphFactory.newInstance(
@@ -546,9 +548,11 @@ public class IncrementalActionGraphScenarioTest {
                     SourceWithFlags.of(FakeSourcePath.of("bin.cpp"), ImmutableList.of())));
 
     VersionUniverse universe1 =
-        VersionUniverse.of(ImmutableMap.of(versionedAliasTarget, Version.of("1.0")));
+        VersionUniverse.of(
+            ImmutableMap.of(versionedAliasTarget.getUnconfiguredBuildTarget(), Version.of("1.0")));
     VersionUniverse universe2 =
-        VersionUniverse.of(ImmutableMap.of(versionedAliasTarget, Version.of("2.0")));
+        VersionUniverse.of(
+            ImmutableMap.of(versionedAliasTarget.getUnconfiguredBuildTarget(), Version.of("2.0")));
 
     TargetGraph unversionedTargetGraph =
         TargetGraphFactory.newInstance(
