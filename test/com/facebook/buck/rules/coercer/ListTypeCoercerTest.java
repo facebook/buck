@@ -20,6 +20,8 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -43,7 +45,7 @@ public class ListTypeCoercerTest {
             new FakeProjectFilesystem(),
             ForwardRelativePath.EMPTY,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             list);
 
     assertSame(list, result);
@@ -106,7 +108,7 @@ public class ListTypeCoercerTest {
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
-        TargetConfiguration hostConfiguration,
+        HostTargetConfigurationResolver hostConfigurationResolver,
         String object) {
       return object;
     }
@@ -130,7 +132,7 @@ public class ListTypeCoercerTest {
             new FakeProjectFilesystem(),
             ForwardRelativePath.EMPTY,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             list);
 
     assertSame(coerced, list);

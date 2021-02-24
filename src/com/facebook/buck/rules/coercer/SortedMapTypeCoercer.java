@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -111,7 +112,7 @@ public class SortedMapTypeCoercer<KU extends Comparable<KU>, VU, K extends Compa
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableSortedMap<KU, VU> object)
       throws CoerceFailedException {
     ImmutableSortedMap.Builder<K, V> builder = ImmutableSortedMap.naturalOrder();
@@ -123,7 +124,7 @@ public class SortedMapTypeCoercer<KU extends Comparable<KU>, VU, K extends Compa
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               entry.getKey());
       V value =
           valueTypeCoercer.coerce(
@@ -131,7 +132,7 @@ public class SortedMapTypeCoercer<KU extends Comparable<KU>, VU, K extends Compa
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               entry.getValue());
       builder.put(key, value);
     }

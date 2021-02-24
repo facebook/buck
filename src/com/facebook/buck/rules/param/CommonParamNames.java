@@ -26,6 +26,8 @@ public class CommonParamNames {
   public static final ParamName COMPATIBLE_WITH = ParamName.bySnakeCase("compatible_with");
   public static final ParamName DEFAULT_TARGET_PLATFORM =
       ParamName.bySnakeCase("default_target_platform");
+  public static final ParamName DEFAULT_HOST_PLATFORM =
+      ParamName.bySnakeCase("default_host_platform");
 
   public static final ParamName LICENSES = ParamName.bySnakeCase("licenses");
   public static final ParamName LABELS = ParamName.bySnakeCase("labels");

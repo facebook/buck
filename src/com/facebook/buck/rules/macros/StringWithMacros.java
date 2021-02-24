@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.StringMatcher;
@@ -183,7 +184,8 @@ public abstract class StringWithMacros
 
     @Override
     public StringWithMacros configure(
-        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+        TargetConfiguration targetConfiguration,
+        HostTargetConfigurationResolver hostConfigurationResolver) {
       return this;
     }
 

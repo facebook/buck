@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,7 +46,8 @@ public class UriTypeCoercerTest {
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -61,7 +63,8 @@ public class UriTypeCoercerTest {
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -77,7 +80,8 @@ public class UriTypeCoercerTest {
                 filesystem,
                 pathFromRoot,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 expected.toString());
 
     assertEquals(expected, uri);
@@ -91,7 +95,7 @@ public class UriTypeCoercerTest {
             filesystem,
             pathFromRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "not a valid URI");
     fail("Expected coercion failure");
   }

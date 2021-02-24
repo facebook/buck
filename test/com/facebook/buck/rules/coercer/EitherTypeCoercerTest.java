@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -50,7 +51,7 @@ public class EitherTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             Arrays.asList("abc", "de"));
 
     assertEquals(Either.ofLeft(new Pair<>("abc", "de")), seen);
@@ -71,7 +72,8 @@ public class EitherTypeCoercerTest {
                   filesystem,
                   basePath,
                   UnconfiguredTargetConfiguration.INSTANCE,
-                  UnconfiguredTargetConfiguration.INSTANCE,
+                  new ConstantHostTargetConfigurationResolver(
+                      UnconfiguredTargetConfiguration.INSTANCE),
                   input);
       assertSame(input, coerced);
     }
@@ -88,7 +90,8 @@ public class EitherTypeCoercerTest {
                   filesystem,
                   basePath,
                   UnconfiguredTargetConfiguration.INSTANCE,
-                  UnconfiguredTargetConfiguration.INSTANCE,
+                  new ConstantHostTargetConfigurationResolver(
+                      UnconfiguredTargetConfiguration.INSTANCE),
                   input);
       assertSame(input, coerced);
     }

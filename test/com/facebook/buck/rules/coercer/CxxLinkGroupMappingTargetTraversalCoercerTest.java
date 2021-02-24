@@ -20,6 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -50,7 +51,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "tree");
     assertEquals(traversal, CxxLinkGroupMappingTarget.Traversal.TREE);
   }
@@ -63,7 +64,7 @@ public class CxxLinkGroupMappingTargetTraversalCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "node");
     assertEquals(traversal, CxxLinkGroupMappingTarget.Traversal.NODE);
   }

@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -120,7 +121,7 @@ public class ConstructorArgMarshallerImmutableTest {
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingPlatformResolver(),
             TARGET,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             DependencyStack.root(),
             builder(constructorClass),
             declaredDeps,
@@ -533,7 +534,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             targetPlatformResolver,
             TARGET,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             DependencyStack.root(),
             builder(DtoWithString.class),
             declaredDeps,
@@ -567,7 +568,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             new ThrowingPlatformResolver(),
             TARGET,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             DependencyStack.root(),
             builder(DtoWithString.class),
             declaredDeps,
@@ -596,7 +597,7 @@ public class ConstructorArgMarshallerImmutableTest {
         targetConfigurationTransformer,
         new ThrowingPlatformResolver(),
         TARGET,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         DependencyStack.root(),
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
@@ -626,7 +627,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             new ThrowingPlatformResolver(),
             TARGET,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             DependencyStack.root(),
             builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
@@ -675,7 +676,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             targetPlatformResolver,
             TARGET,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             DependencyStack.root(),
             builder(DtoWithSplit.class),
             ImmutableSet.builder(),
@@ -716,7 +717,7 @@ public class ConstructorArgMarshallerImmutableTest {
             targetConfigurationTransformer,
             new ThrowingPlatformResolver(),
             TARGET,
-            execConfiguration,
+            new ConstantHostTargetConfigurationResolver(execConfiguration),
             DependencyStack.root(),
             builder(DtoWithExec.class),
             ImmutableSet.builder(),

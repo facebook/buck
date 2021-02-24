@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -72,7 +73,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             path);
 
     assertEquals(PathSourcePath.of(projectFilesystem, Paths.get(path)), sourcePath);
@@ -88,7 +89,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             ForwardRelativePath.of("foo/bar"),
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "hello.a");
 
     assertEquals(PathSourcePath.of(projectFilesystem, Paths.get("foo/bar/hello.a")), sourcePath);
@@ -102,7 +103,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//:hello");
 
     assertEquals(
@@ -117,7 +118,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//:hello[label]");
 
     assertEquals(
@@ -135,7 +136,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ":hello");
 
     assertEquals(
@@ -150,7 +151,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ":hello[label]");
 
     assertEquals(
@@ -174,7 +175,7 @@ public class SourcePathTypeCoercerTest {
             projectFilesystem,
             pathRelativeToProjectRoot,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "hello//:hello");
 
     // Note that the important thing is that the root of the target has been set to `helloRoot` so
@@ -198,7 +199,7 @@ public class SourcePathTypeCoercerTest {
         projectFilesystem,
         pathRelativeToProjectRoot,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         path.toString());
   }
 }

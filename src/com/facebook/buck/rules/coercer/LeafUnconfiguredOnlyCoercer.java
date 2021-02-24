@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,7 +42,7 @@ public abstract class LeafUnconfiguredOnlyCoercer<T> extends LeafTypeNewCoercer<
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       T object) {
     return object;
   }

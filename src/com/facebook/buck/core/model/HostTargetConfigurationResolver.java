@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.macros;
+package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+public interface HostTargetConfigurationResolver {
 
-/** Unconfigured version of {@link Macro} */
-public interface UnconfiguredMacro {
-
-  Class<? extends UnconfiguredMacro> getUnconfiguredMacroClass();
-
-  Macro configure(
-      TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver);
+  TargetConfiguration getTargetConfiguration(UnconfiguredBuildTarget target);
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetPatternMatcher;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -72,7 +73,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
@@ -88,7 +89,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.NODE);
@@ -106,7 +107,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
@@ -132,7 +133,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
@@ -158,7 +159,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         input);
   }
 }

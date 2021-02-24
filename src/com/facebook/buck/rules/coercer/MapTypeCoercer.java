@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -132,7 +133,7 @@ public class MapTypeCoercer<KU, VU, K, V>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableMap<KU, VU> object)
       throws CoerceFailedException {
     if (unconfiguredToConfiguredCoercionIsIdentity()) {
@@ -150,7 +151,7 @@ public class MapTypeCoercer<KU, VU, K, V>
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               entry.getKey());
       V value =
           valueTypeCoercer.coerce(
@@ -158,7 +159,7 @@ public class MapTypeCoercer<KU, VU, K, V>
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               entry.getValue());
       builder.put(key, value);
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -89,7 +90,7 @@ public abstract class CollectionTypeCoercer<
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableCollection.Builder<T> builder,
       D object)
       throws CoerceFailedException {
@@ -102,7 +103,7 @@ public abstract class CollectionTypeCoercer<
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               element);
       identity &= coercedElement == element;
       builder.add(coercedElement);

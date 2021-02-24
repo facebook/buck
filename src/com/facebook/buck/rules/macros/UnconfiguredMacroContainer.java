@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
@@ -32,8 +33,9 @@ public abstract class UnconfiguredMacroContainer {
   }
 
   public MacroContainer configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      TargetConfiguration targetConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver) {
     return MacroContainer.of(
-        getMacro().configure(targetConfiguration, hostConfiguration), isOutputToFile());
+        getMacro().configure(targetConfiguration, hostConfigurationResolver), isOutputToFile());
   }
 }

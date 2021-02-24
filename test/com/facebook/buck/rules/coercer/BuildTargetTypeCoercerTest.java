@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -57,7 +58,8 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 "//foo:bar");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
@@ -73,7 +75,7 @@ public class BuildTargetTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//foo::bar");
   }
 
@@ -86,7 +88,8 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 ":bar");
 
     assertEquals(BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar"), seen);
@@ -101,7 +104,8 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 "//foo:bar#baz");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz"), seen);
@@ -116,7 +120,8 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 "//foo:bar#baz,qux");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz,qux"), seen);
@@ -131,7 +136,8 @@ public class BuildTargetTypeCoercerTest {
                 filesystem,
                 basePath,
                 UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 ":bar#baz");
 
     BuildTarget expected =

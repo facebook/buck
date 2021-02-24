@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -72,7 +73,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfigurationTransformer targetConfigurationTransformer,
       TargetPlatformResolver platformResolver,
       BuildTarget buildTarget,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       DependencyStack dependencyStack,
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
@@ -117,7 +118,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         Object attributeValue;
 
         TargetConfiguration paramTargetConfiguration =
-            info.execConfiguration() ? hostConfiguration : buildTarget.getTargetConfiguration();
+            info.execConfiguration()
+                ? hostConfigurationResolver.getTargetConfiguration(
+                    buildTarget.getUnconfiguredBuildTarget())
+                : buildTarget.getTargetConfiguration();
 
         if (info.splitConfiguration()
             && targetConfigurationTransformer.needsTransformation(
@@ -134,7 +138,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                   configurationContext,
                   platformResolver,
                   buildTarget,
-                  hostConfiguration,
+                  hostConfigurationResolver,
                   dependencyStack,
                   paramTargetConfiguration,
                   configurationDeps,
@@ -153,7 +157,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                   buildTarget,
                   dependencyStack,
                   paramTargetConfiguration,
-                  hostConfiguration,
+                  hostConfigurationResolver,
                   configurationDeps,
                   (ParamInfo<Object>) info,
                   (TypeCoercer<Object, Object>) info.getTypeCoercer(),
@@ -184,7 +188,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       TargetPlatformResolver platformResolver,
       BuildTarget buildTarget,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
@@ -208,7 +212,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
               buildTarget.getUnconfiguredBuildTarget().configure(nestedTargetConfiguration),
               dependencyStack,
               nestedTargetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               configurationDeps,
               info,
               coercer,
@@ -232,7 +236,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo<T> info,
       TypeCoercer<U, T> coercer,
@@ -266,7 +270,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                           filesystem,
                           buildTarget,
                           targetConfiguration,
-                          hostConfiguration,
+                          hostConfigurationResolver,
                           info,
                           coercer,
                           v));
@@ -285,7 +289,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           filesystem,
           buildTarget,
           targetConfiguration,
-          hostConfiguration,
+          hostConfigurationResolver,
           info,
           coercer,
           (U) attribute);
@@ -297,7 +301,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ParamInfo<T> paramInfo,
       TypeCoercer<U, T> coercer,
       U attribute)
@@ -308,7 +312,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           filesystem,
           buildTarget.getCellRelativeBasePath().getPath(),
           targetConfiguration,
-          hostConfiguration,
+          hostConfigurationResolver,
           attribute);
     } catch (ClassCastException e) {
       // diagnostics for tests, this should not happen in production

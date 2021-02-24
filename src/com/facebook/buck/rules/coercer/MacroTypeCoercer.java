@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -51,11 +52,11 @@ interface MacroTypeCoercer<U extends UnconfiguredMacro, T extends Macro> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableList<String> args)
       throws CoerceFailedException {
     U unconfigured =
         coerceToUnconfigured(cellNameResolver, filesystem, pathRelativeToProjectRoot, args);
-    return (T) unconfigured.configure(targetConfiguration, hostConfiguration);
+    return (T) unconfigured.configure(targetConfiguration, hostConfigurationResolver);
   }
 }

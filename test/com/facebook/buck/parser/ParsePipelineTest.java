@@ -33,6 +33,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
@@ -677,7 +678,7 @@ public class ParsePipelineTest {
               new ThrowingSelectorListResolver(),
               new ThrowingPlatformResolver(),
               new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
-              UnconfiguredTargetConfiguration.INSTANCE,
+              new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
               cells.getRootCell().getBuckConfig(),
               Optional.empty());
       this.targetNodeParsePipeline =

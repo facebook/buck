@@ -24,6 +24,7 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -56,7 +57,7 @@ public class OptionalTypeCoercerTest {
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             null);
     assertThat(result, Matchers.equalTo(Optional.empty()));
   }
@@ -71,7 +72,7 @@ public class OptionalTypeCoercerTest {
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             Optional.empty());
     assertThat(result, Matchers.equalTo(Optional.empty()));
   }
@@ -86,7 +87,7 @@ public class OptionalTypeCoercerTest {
             FILESYSTEM,
             PATH_RELATIVE_TO_PROJECT_ROOT,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "something");
     assertThat(result, Matchers.equalTo(Optional.of("something")));
   }
@@ -148,7 +149,7 @@ public class OptionalTypeCoercerTest {
             new FakeProjectFilesystem(),
             ForwardRelativePath.EMPTY,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
     assertSame(input, coerced);
   }

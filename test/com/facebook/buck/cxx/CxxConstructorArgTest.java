@@ -212,6 +212,11 @@ public class CxxConstructorArgTest {
     }
 
     @Override
+    public Optional<UnflavoredBuildTarget> getDefaultHostPlatform() {
+      return Optional.empty();
+    }
+
+    @Override
     public ImmutableSortedSet<BuildTarget> getTests() {
       return ImmutableSortedSet.of();
     }

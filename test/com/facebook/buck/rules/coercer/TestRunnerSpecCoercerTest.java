@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
@@ -60,7 +61,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableMap.of("$(test arg)", "foo"));
 
     assertEquals(
@@ -80,7 +81,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("$(test arg)", "foo"));
 
     assertEquals(
@@ -102,7 +103,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableMap.of("a", ImmutableList.of("foo", "some $(test arg2)")));
 
     assertEquals(
@@ -128,7 +129,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableMap.of("a", 1.0, "b", 2));
 
     assertEquals(
@@ -149,7 +150,7 @@ public class TestRunnerSpecCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableMap.of("bb", true, "bby", false));
 
     assertEquals(
@@ -171,7 +172,7 @@ public class TestRunnerSpecCoercerTest {
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         ImmutableMap.of(ImmutableList.of(), "foo"));
   }
 
@@ -184,7 +185,7 @@ public class TestRunnerSpecCoercerTest {
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         ImmutableMap.of(1, "foo"));
   }
 }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
@@ -55,7 +56,8 @@ public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
 
   @Override
   public Macro configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      TargetConfiguration targetConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver) {
     return this;
   }
 }

@@ -33,6 +33,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
@@ -335,7 +336,7 @@ public class TargetNodeTest {
           new ThrowingTargetConfigurationTransformer(),
           new ThrowingPlatformResolver(),
           buildTarget,
-          UnconfiguredTargetConfiguration.INSTANCE,
+          new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           DependencyStack.root(),
           builder,
           ImmutableSet.builder(),

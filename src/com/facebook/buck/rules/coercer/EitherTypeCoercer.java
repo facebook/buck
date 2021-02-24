@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -181,7 +182,7 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       Either<LU, RU> object)
       throws CoerceFailedException {
     if (object.isLeft()) {
@@ -191,7 +192,7 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               object.getLeft());
 
       // avoid allocation even if coercer is effectively no-op
@@ -207,7 +208,7 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               object.getRight());
 
       // avoid allocation even if coercer is effectively no-op

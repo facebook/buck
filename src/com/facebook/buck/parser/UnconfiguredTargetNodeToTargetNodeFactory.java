@@ -23,8 +23,9 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -65,8 +66,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
   private final TargetPlatformResolver targetPlatformResolver;
   private final TargetConfigurationTransformer targetConfigurationTransformer;
-  private final TargetConfiguration hostConfiguration;
   private final boolean hostConfigurationSwitchEnabled;
+  private final HostTargetConfigurationResolver hostTargetConfigurationResolver;
   private final BuckConfig buckConfig;
   private final Optional<ConfigurationRuleRegistry> configurationRuleRegistry;
 
@@ -81,7 +82,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       SelectorListResolver selectorListResolver,
       TargetPlatformResolver targetPlatformResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostTargetConfigurationResolver,
       BuckConfig buckConfig,
       Optional<ConfigurationRuleRegistry> configurationRuleRegistry) {
     this.typeCoercerFactory = typeCoercerFactory;
@@ -94,9 +95,9 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     this.selectorListResolver = selectorListResolver;
     this.targetPlatformResolver = targetPlatformResolver;
     this.targetConfigurationTransformer = targetConfigurationTransformer;
-    this.hostConfiguration = hostConfiguration;
     this.hostConfigurationSwitchEnabled =
         buckConfig.getView(ParserConfig.class).getHostConfigurationSwitchEnabled();
+    this.hostTargetConfigurationResolver = hostTargetConfigurationResolver;
     this.buckConfig = buckConfig;
     this.configurationRuleRegistry = configurationRuleRegistry;
   }
@@ -163,7 +164,9 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
               targetConfigurationTransformer,
               targetPlatformResolver,
               target,
-              hostConfigurationSwitchEnabled ? hostConfiguration : target.getTargetConfiguration(),
+              hostConfigurationSwitchEnabled
+                  ? hostTargetConfigurationResolver
+                  : new ConstantHostTargetConfigurationResolver(target.getTargetConfiguration()),
               dependencyStack,
               builder,
               declaredDeps,

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
@@ -88,7 +89,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//foo:bar");
 
     assertEquals(expected.apply("//foo:bar", OutputLabel.defaultLabel()), seen);
@@ -102,7 +103,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//foo:bar[whee]");
 
     assertEquals(expected.apply("//foo:bar", OutputLabel.of("whee")), seen);
@@ -118,7 +119,7 @@ public class TargetWithOutputsTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         "//foo:bar[]");
   }
 
@@ -132,7 +133,7 @@ public class TargetWithOutputsTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         "//foo:bar[whee");
   }
 
@@ -144,7 +145,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//foo:bar#src[whee]");
 
     assertEquals(expected.apply("//foo:bar#src", OutputLabel.of("whee")), seen);
@@ -158,7 +159,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//foo:bar#flavor1,flavor2[whee]");
 
     assertEquals(expected.apply("//foo:bar#flavor1,flavor2", OutputLabel.of("whee")), seen);
@@ -174,7 +175,7 @@ public class TargetWithOutputsTypeCoercerTest {
         FILESYSTEM,
         BASE_PATH,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         "//foo:bar[whee]#src");
   }
 
@@ -186,7 +187,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "//foo:bar#flavor1,flavor2");
 
     assertEquals(expected.apply("//foo:bar#flavor1,flavor2", OutputLabel.defaultLabel()), seen);
@@ -200,7 +201,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ":hangry");
 
     assertEquals(
@@ -216,7 +217,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ":bar[whee]");
 
     assertEquals(
@@ -231,7 +232,7 @@ public class TargetWithOutputsTypeCoercerTest {
             FILESYSTEM,
             BASE_PATH,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ":bar#yum[whee]");
 
     assertEquals(

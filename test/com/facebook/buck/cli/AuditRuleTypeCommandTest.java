@@ -75,6 +75,7 @@ public class AuditRuleTypeCommandTest {
                 + "    name,\n"
                 + "    compatible_with = None,\n"
                 + "    contacts = None,\n"
+                + "    default_host_platform = None,\n"
                 + "    default_target_platform = None,\n"
                 + "    labels = None,\n"
                 + "    licenses = None,\n"

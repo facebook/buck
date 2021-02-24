@@ -54,6 +54,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             Optional.empty(),
+            Optional.empty(),
             ImmutableList.of());
 
     ImmutableMap<String, Object> rawAttributes2 = ImmutableMap.of("name", "target2");
@@ -68,6 +69,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             rawAttributes2,
             ImmutableSet.of(),
             ImmutableSet.of(),
+            Optional.empty(),
             Optional.empty(),
             ImmutableList.of());
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -127,7 +128,7 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredSourceSortedSet object)
       throws CoerceFailedException {
     return object.match(
@@ -142,7 +143,7 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
                     filesystem,
                     pathRelativeToProjectRoot,
                     targetConfiguration,
-                    hostConfiguration,
+                    hostConfigurationResolver,
                     named));
           }
 
@@ -155,7 +156,7 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
                     filesystem,
                     pathRelativeToProjectRoot,
                     targetConfiguration,
-                    hostConfiguration,
+                    hostConfigurationResolver,
                     unnamed.asList()));
           }
         });

@@ -145,6 +145,11 @@ public class SkylarkDescriptionArg
   }
 
   @Override
+  public Optional<UnflavoredBuildTarget> getDefaultHostPlatform() {
+    return Optional.empty();
+  }
+
+  @Override
   public ParamsInfo getAllParamInfo() {
     return rule.getParamsInfo();
   }

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
@@ -106,7 +107,7 @@ public class TestRunnerSpecCoercer
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredTestRunnerSpec object)
       throws CoerceFailedException {
     return object.match(
@@ -121,7 +122,7 @@ public class TestRunnerSpecCoercer
                     filesystem,
                     pathRelativeToProjectRoot,
                     targetConfiguration,
-                    hostConfiguration,
+                    hostConfigurationResolver,
                     map));
           }
 
@@ -134,7 +135,7 @@ public class TestRunnerSpecCoercer
                     filesystem,
                     pathRelativeToProjectRoot,
                     targetConfiguration,
-                    hostConfiguration,
+                    hostConfigurationResolver,
                     list));
           }
 
@@ -147,7 +148,7 @@ public class TestRunnerSpecCoercer
                     filesystem,
                     pathRelativeToProjectRoot,
                     targetConfiguration,
-                    hostConfiguration,
+                    hostConfigurationResolver,
                     stringWithMacros));
           }
 

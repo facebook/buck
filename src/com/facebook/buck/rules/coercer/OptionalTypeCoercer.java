@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -102,7 +103,7 @@ public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optio
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       Optional<U> object)
       throws CoerceFailedException {
     if (object.isPresent()) {
@@ -112,7 +113,7 @@ public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optio
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              hostConfigurationResolver,
               object.get());
       if (coerced == object.get()) {
         return (Optional<T>) object;

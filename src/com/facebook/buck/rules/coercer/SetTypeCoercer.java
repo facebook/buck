@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,7 +63,7 @@ public class SetTypeCoercer<U, T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableSet<U> object)
       throws CoerceFailedException {
     if (unconfiguredToConfiguredCoercionIsIdentity()) {
@@ -75,7 +76,7 @@ public class SetTypeCoercer<U, T>
         filesystem,
         pathRelativeToProjectRoot,
         targetConfiguration,
-        hostConfiguration,
+        hostConfigurationResolver,
         builder,
         object);
     return builder.build();

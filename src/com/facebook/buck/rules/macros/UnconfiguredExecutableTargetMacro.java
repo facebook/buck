@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -32,7 +33,8 @@ public abstract class UnconfiguredExecutableTargetMacro
 
   @Override
   public ExecutableTargetMacro configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      TargetConfiguration targetConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver) {
     return ExecutableTargetMacro.of(getTargetWithOutputs().configure(targetConfiguration));
   }
 

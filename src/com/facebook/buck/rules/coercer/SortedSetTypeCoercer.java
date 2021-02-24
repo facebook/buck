@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -92,7 +93,7 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableList<U> object)
       throws CoerceFailedException {
     ImmutableSortedSet.Builder<T> builder = ImmutableSortedSet.naturalOrder();
@@ -101,7 +102,7 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
         filesystem,
         pathRelativeToProjectRoot,
         targetConfiguration,
-        hostConfiguration,
+        hostConfigurationResolver,
         builder,
         object);
     return builder.build();

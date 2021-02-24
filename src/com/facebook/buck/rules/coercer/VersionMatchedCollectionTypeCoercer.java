@@ -18,7 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
@@ -92,7 +95,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {
@@ -113,7 +116,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
               pair.next());
       T value =
           valueTypeCoercer.coerceBoth(
@@ -121,7 +124,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
               pair.next());
       builder.add(versionsSelector, value);
     }

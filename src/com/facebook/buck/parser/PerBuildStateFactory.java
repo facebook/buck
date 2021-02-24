@@ -22,6 +22,9 @@ import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildFileTree;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ConfigurationPlatformResolver;
@@ -29,6 +32,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.PathsChecker;
 import com.facebook.buck.core.model.targetgraph.impl.PathsCheckerFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
@@ -53,6 +57,8 @@ import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.cache.LoadingCache;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -238,6 +244,21 @@ public class PerBuildStateFactory {
             ? new ThrowingCellBoundaryChecker(cells)
             : new NoopCellBoundaryChecker();
 
+    HostTargetConfigurationResolver hostTargetConfigurationResolver =
+        target -> {
+          // First, see if the rule sets an explicit host platform to use.
+          ListenableFuture<UnconfiguredTargetNode> nodeJob =
+              unconfiguredTargetNodePipeline.getNodeJob(
+                  cellManager.getCell(target.getCell()), target, DependencyStack.root());
+          UnconfiguredTargetNode node = Futures.getUnchecked(nodeJob);
+          if (node.getDefaultHostPlatform().isPresent()) {
+            return RuleBasedTargetConfiguration.of(
+                ConfigurationBuildTargets.convert(node.getDefaultHostPlatform().get()));
+          }
+
+          return hostConfiguration;
+        };
+
     ParserTargetNodeFromUnconfiguredTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
@@ -250,7 +271,7 @@ public class PerBuildStateFactory {
             new ThrowingSelectorListResolver(),
             new ConfigurationPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(new ConfigurationPlatformResolver()),
-            hostConfiguration,
+            hostTargetConfigurationResolver,
             parsingContext.getCells().getBuckConfig(),
             Optional.empty());
 
@@ -297,7 +318,7 @@ public class PerBuildStateFactory {
             configurationRuleRegistry.getTargetPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(
                 configurationRuleRegistry.getTargetPlatformResolver()),
-            hostConfiguration,
+            hostTargetConfigurationResolver,
             parsingContext.getCells().getBuckConfig(),
             (parsingContext.enableTargetCompatibilityChecks())
                 ? Optional.of(configurationRuleRegistry)

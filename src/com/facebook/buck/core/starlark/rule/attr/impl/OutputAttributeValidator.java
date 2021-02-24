@@ -35,10 +35,11 @@ class OutputAttributeValidator {
    *
    * @param coercedValue the value that came from {@link
    *     OutputAttribute#getValue(com.facebook.buck.core.cell.nameresolver.CellNameResolver,
-   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
-   *     or {@link
+   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration,
+   *     com.facebook.buck.core.model.HostTargetConfigurationResolver, Object)} or {@link
    *     OutputListAttribute#getValue(com.facebook.buck.core.cell.nameresolver.CellNameResolver,
-   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)}
+   *     ProjectFilesystem, ForwardRelativePath, TargetConfiguration,
+   *     com.facebook.buck.core.model.HostTargetConfigurationResolver, Object)}
    * @param registry the registry to declare artifacts against
    * @return the declared artifact
    * @throws IllegalArgumentException if {@code coercedValue} is not a {@link String}

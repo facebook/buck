@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -39,7 +40,7 @@ public class SetTypeCoercerTest {
             new FakeProjectFilesystem(),
             ForwardRelativePath.EMPTY,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             list);
 
     assertSame(list, result);

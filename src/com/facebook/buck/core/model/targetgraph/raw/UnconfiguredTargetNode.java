@@ -65,6 +65,12 @@ public interface UnconfiguredTargetNode extends Comparable<UnconfiguredTargetNod
   Optional<UnflavoredBuildTarget> getDefaultTargetPlatform();
 
   /**
+   * Value of {@code default_host_platform} attribute. Note this attribute only exists for build
+   * targets.
+   */
+  Optional<UnflavoredBuildTarget> getDefaultHostPlatform();
+
+  /**
    * List of targets from <code>compatible_with</code> attribute. Note method exists for all rules,
    * while {@code compatible_with} can be defined only for build rules.
    */

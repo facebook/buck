@@ -57,3 +57,22 @@ genrule(
     out = "out.txt",
     cmd = "$(exe :b)> $OUT",
 )
+
+python_binary(
+    name = "m",
+    default_host_platform = ":h",
+    main = select({
+        ":c-h": "b-host.py",
+        ":c-t": "b-target.py",
+    }),
+    compatible_with = [
+        ":c-h",
+        ":c-t",
+    ],
+)
+
+genrule(
+    name = "n",
+    out = "out.txt",
+    cmd = "$(exe :m)> $OUT",
+)

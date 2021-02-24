@@ -21,6 +21,7 @@ import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -117,7 +118,7 @@ public class CxxLinkGroupMappingCoercer
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredCxxLinkGroupMapping object)
       throws CoerceFailedException {
     return CxxLinkGroupMapping.of(
@@ -127,7 +128,7 @@ public class CxxLinkGroupMappingCoercer
             filesystem,
             pathRelativeToProjectRoot,
             targetConfiguration,
-            hostConfiguration,
+            hostConfigurationResolver,
             object.getMappingTargets()));
   }
 }

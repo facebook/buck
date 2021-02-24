@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -122,6 +123,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             ImmutableSet.of(),
             ImmutableSet.of(),
             Optional.empty(),
+            Optional.empty(),
             ImmutableList.of());
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
@@ -144,7 +146,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                             TestSelectables.constraintValue("//:linux", "//:os"))))),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             cell.getRootCell().getBuckConfig(),
             Optional.empty());
 

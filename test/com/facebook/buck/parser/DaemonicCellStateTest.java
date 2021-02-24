@@ -120,6 +120,7 @@ public class DaemonicCellStateTest {
         ImmutableSet.of(),
         ImmutableSet.of(),
         Optional.empty(),
+        Optional.empty(),
         ImmutableList.of());
   }
 

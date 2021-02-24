@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -25,7 +26,8 @@ public interface UnconfiguredStringWithMacros {
   ImmutableList<Either<String, UnconfiguredMacroContainer>> getUnconfiguredParts();
 
   StringWithMacros configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration);
+      TargetConfiguration targetConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver);
 
   /** Default implementation */
   class WithMacros implements UnconfiguredStringWithMacros {
@@ -42,10 +44,12 @@ public interface UnconfiguredStringWithMacros {
 
     @Override
     public StringWithMacros configure(
-        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+        TargetConfiguration targetConfiguration,
+        HostTargetConfigurationResolver hostConfigurationResolver) {
       return StringWithMacros.of(
           parts.stream()
-              .map(e -> e.mapRight(m -> m.configure(targetConfiguration, hostConfiguration)))
+              .map(
+                  e -> e.mapRight(m -> m.configure(targetConfiguration, hostConfigurationResolver)))
               .collect(ImmutableList.toImmutableList()));
     }
   }

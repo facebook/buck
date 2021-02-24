@@ -624,6 +624,7 @@ public class SkylarkUserDefinedRulesParserTest {
                     .put("labels", ImmutableSortedSet.of())
                     .put("contacts", ImmutableSortedSet.of())
                     .put("default_target_platform", Optional.empty())
+                    .put("default_host_platform", Optional.empty())
                     .put("compatible_with", ImmutableList.of())
                     .build()));
 
@@ -658,6 +659,7 @@ public class SkylarkUserDefinedRulesParserTest {
                     .put("labels", ImmutableSortedSet.of())
                     .put("contacts", ImmutableSortedSet.of())
                     .put("default_target_platform", Optional.empty())
+                    .put("default_host_platform", Optional.empty())
                     .put("compatible_with", ImmutableList.of())
                     .build()),
             "target2",
@@ -674,6 +676,7 @@ public class SkylarkUserDefinedRulesParserTest {
                     .put("labels", ImmutableSortedSet.of())
                     .put("contacts", ImmutableSortedSet.of())
                     .put("default_target_platform", Optional.empty())
+                    .put("default_host_platform", Optional.empty())
                     .put("compatible_with", ImmutableList.of())
                     .build()));
 

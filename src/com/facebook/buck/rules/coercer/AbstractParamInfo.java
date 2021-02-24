@@ -18,7 +18,10 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.param.ParamName;
@@ -141,7 +144,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       Object dto,
       @Nullable Object value)
       throws ParamInfoException {
@@ -156,7 +159,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
               filesystem,
               pathRelativeToProjectRoot,
               targetConfiguration,
-              hostConfiguration,
+              new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
               value));
     } catch (CoerceFailedException e) {
       throw new ParamInfoException(name.getSnakeCase(), e.getMessage(), e);

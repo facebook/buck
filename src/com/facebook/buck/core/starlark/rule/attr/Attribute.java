@@ -18,7 +18,10 @@ package com.facebook.buck.core.starlark.rule.attr;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.Provider;
@@ -124,7 +127,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @param projectFilesystem The project file system
    * @param pathRelativeToProjectRoot The path relative to the project root
    * @param targetConfiguration The configuration for this target
-   * @param hostConfiguration
+   * @param hostConfigurationResolver
    * @param value The object that is to be coerced. This generally comes directly from the parser.
    * @throws CoerceFailedException if the value could not be coerced
    */
@@ -134,7 +137,7 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
       ProjectFilesystem projectFilesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver,
       Object value)
       throws CoerceFailedException {
     CoercedType coercedValue =
@@ -144,7 +147,8 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
                 projectFilesystem,
                 pathRelativeToProjectRoot,
                 targetConfiguration,
-                hostConfiguration,
+                new ConstantHostTargetConfigurationResolver(
+                    UnconfiguredTargetConfiguration.INSTANCE),
                 value);
     validateCoercedValue(coercedValue);
     return coercedValue;

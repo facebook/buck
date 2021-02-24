@@ -29,6 +29,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -256,7 +257,7 @@ public class TargetCompatibilityCheckerTest {
         new ThrowingTargetConfigurationTransformer(),
         configurationRuleRegistry.getTargetPlatformResolver(),
         buildTarget,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         DependencyStack.root(),
         builder,
         ImmutableSet.builder(),

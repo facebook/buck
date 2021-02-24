@@ -20,10 +20,13 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -79,7 +82,8 @@ public class BuildTargetMacroTypeCoercerTest {
 
     @Override
     public MyBuildTargetMacro configure(
-        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+        TargetConfiguration targetConfiguration,
+        HostTargetConfigurationResolver hostConfigurationResolver) {
       return new MyBuildTargetMacro(getTargetWithOutputs().configure(targetConfiguration));
     }
   }
@@ -110,7 +114,7 @@ public class BuildTargetMacroTypeCoercerTest {
             new FakeProjectFilesystem(),
             ForwardRelativePath.of(""),
             targetConfiguration,
-            hostConfiguration,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//:rrr[label]"));
     Assert.assertEquals(
         BuildTargetFactory.newInstance("//:rrr").getFullyQualifiedName(),

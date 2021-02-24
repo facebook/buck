@@ -19,6 +19,8 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -45,7 +47,7 @@ public class ZeroArgMacroTypeCoercerTest {
             filesystem,
             basePath,
             UnconfiguredTargetConfiguration.INSTANCE,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of());
     assertThat(result, Matchers.is(macro));
   }
@@ -61,7 +63,7 @@ public class ZeroArgMacroTypeCoercerTest {
         filesystem,
         basePath,
         UnconfiguredTargetConfiguration.INSTANCE,
-        UnconfiguredTargetConfiguration.INSTANCE,
+        new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         ImmutableList.of("arg"));
   }
 
@@ -79,7 +81,8 @@ public class ZeroArgMacroTypeCoercerTest {
 
     @Override
     public Macro configure(
-        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+        TargetConfiguration targetConfiguration,
+        HostTargetConfigurationResolver hostConfigurationResolver) {
       return this;
     }
   }

@@ -662,6 +662,31 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
+  public void defaultHostPlatform() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "exe_switches_to_host", tmp);
+    workspace.setUp();
+
+    // Test that the `default_host_platform` attribute preempts a globally configured host platform.
+    Path outTxt =
+        workspace.buildAndReturnOutput("--target-platforms=//:t", "--host-platform=//:t", "//:n");
+    List<String> lines = Files.readAllLines(outTxt);
+    assertEquals(ImmutableList.of("hhhost"), lines);
+
+    // Test that the `default_host_platform` attribute preempts the host platform detector spec.
+    outTxt =
+        workspace.buildAndReturnOutput(
+            "--target-platforms=//:t",
+            "-c",
+            "parser.host_configuration_switch_enabled=true",
+            "-c",
+            "parser.host_platform_detector_spec=host_os:linux->//:t host_os:windows->//:t host_os:darwin->//:t",
+            "//:n");
+    lines = Files.readAllLines(outTxt);
+    assertEquals(ImmutableList.of("hhhost"), lines);
+  }
+
+  @Test
   public void selectKeysSupersetCompatibleWith() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

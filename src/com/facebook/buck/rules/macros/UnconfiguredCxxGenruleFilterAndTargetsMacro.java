@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,8 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
   /** Apply the configuration. */
   @Override
   public CxxGenruleFilterAndTargetsMacro configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      TargetConfiguration targetConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver) {
     ImmutableList<BuildTarget> configuredTargets =
         getTargets().stream()
             .map(t -> t.configure(targetConfiguration))

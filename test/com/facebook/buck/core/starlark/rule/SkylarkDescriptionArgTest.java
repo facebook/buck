@@ -24,6 +24,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -166,7 +167,7 @@ public class SkylarkDescriptionArgTest {
             targetConfigurationTransformer,
             platformResolver,
             target,
-            hostConfiguration,
+            new ConstantHostTargetConfigurationResolver(hostConfiguration),
             dependencyStack,
             constructorArgDescriptor,
             ImmutableSet.builder(),
@@ -183,7 +184,7 @@ public class SkylarkDescriptionArgTest {
             targetConfigurationTransformer,
             platformResolver,
             target,
-            hostConfiguration,
+            new ConstantHostTargetConfigurationResolver(hostConfiguration),
             dependencyStack,
             constructorArgDescriptor,
             ImmutableSet.builder(),

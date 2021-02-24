@@ -230,6 +230,30 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       }
     }
 
+    Optional<UnflavoredBuildTarget> defaultHostPlatform = Optional.empty();
+    Object rawDefaultHostPlatform = rawAttributes.get(CommonParamNames.DEFAULT_HOST_PLATFORM);
+    // TODO(nga): old rules vs UDR rules mess
+    if (rawDefaultHostPlatform != null
+        && !rawDefaultHostPlatform.equals("")
+        && !rawDefaultHostPlatform.equals(Optional.empty())
+        && !rawDefaultHostPlatform.equals(Optional.of(""))) {
+      if (rawDefaultHostPlatform instanceof Optional<?>) {
+        rawDefaultHostPlatform = ((Optional<?>) rawDefaultHostPlatform).get();
+      }
+      try {
+        defaultHostPlatform =
+            Optional.of(
+                defaultTargetPlatformCoercer.coerceToUnconfigured(
+                    cell.getCellNameResolver(),
+                    cell.getFilesystem(),
+                    target.getCellRelativeBasePath().getPath(),
+                    rawDefaultHostPlatform));
+      } catch (CoerceFailedException e) {
+        throw e.withAttrResolutionContext(
+            CommonParamNames.DEFAULT_HOST_PLATFORM, target.toString(), dependencyStack);
+      }
+    }
+
     ImmutableList<UnflavoredBuildTarget> compatibleWith = ImmutableList.of();
 
     Object rawCompatibleWith = rawAttributes.getAttrs().get(CommonParamNames.COMPATIBLE_WITH);
@@ -254,6 +278,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         visibilityPatterns,
         withinViewPatterns,
         defaultTargetPlatform,
+        defaultHostPlatform,
         compatibleWith);
   }
 

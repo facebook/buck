@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -43,7 +44,8 @@ public abstract class UnconfiguredLocationPlatformMacro extends UnconfiguredBase
 
   @Override
   public LocationPlatformMacro configure(
-      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      TargetConfiguration targetConfiguration,
+      HostTargetConfigurationResolver hostConfigurationResolver) {
     return LocationPlatformMacro.of(
         getTargetWithOutputs().configure(targetConfiguration), getFlavors());
   }

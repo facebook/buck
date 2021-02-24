@@ -28,7 +28,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
  *
  * <p>This is not done by the type coercer and {@link
  * Attribute#getValue(com.facebook.buck.core.cell.nameresolver.CellNameResolver, ProjectFilesystem,
- * ForwardRelativePath, TargetConfiguration, TargetConfiguration, Object)} for two reasons. The
+ * ForwardRelativePath, TargetConfiguration,
+ * com.facebook.buck.core.model.HostTargetConfigurationResolver, Object)} for two reasons. The
  * ProjectFilesystem, ForwardRelativePath, TargetConfiguration, Object)} for two reasons. The first
  * is that some information (like {@link ProviderInfoCollection} for dependencies) is not available
  * until the analysis phase, rather than the parsing / coercion / configuration phases. Secondly is

@@ -29,6 +29,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputsFactoryForTests;
@@ -156,7 +157,7 @@ public class GenruleDescriptionTest {
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingPlatformResolver(),
             buildTarget,
-            UnconfiguredTargetConfiguration.INSTANCE,
+            new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             DependencyStack.root(),
             builder,
             declaredDeps,

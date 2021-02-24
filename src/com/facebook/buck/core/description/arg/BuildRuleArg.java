@@ -45,6 +45,9 @@ public interface BuildRuleArg extends ConstructorArg, HasContacts {
   @Hint(isDep = false, isConfigurable = false)
   Optional<UnflavoredBuildTarget> getDefaultTargetPlatform();
 
+  @Hint(isDep = false, isConfigurable = false)
+  Optional<UnflavoredBuildTarget> getDefaultHostPlatform();
+
   /** A list of {@code config_setting} a target is compatible with. */
   @Hint(isDep = false, isConfigurable = false)
   ImmutableList<UnflavoredBuildTarget> getCompatibleWith();

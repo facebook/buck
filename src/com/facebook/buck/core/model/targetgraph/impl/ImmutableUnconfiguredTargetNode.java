@@ -63,6 +63,10 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   public abstract Optional<UnflavoredBuildTarget> getDefaultTargetPlatform();
 
   @Override
+  @JsonProperty("defaultHostPlatform")
+  public abstract Optional<UnflavoredBuildTarget> getDefaultHostPlatform();
+
+  @Override
   @JsonProperty("compatibleWith")
   public abstract ImmutableList<UnflavoredBuildTarget> getCompatibleWith();
 
@@ -73,6 +77,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<UnflavoredBuildTarget> defaultTargetPlatform,
+      Optional<UnflavoredBuildTarget> defaultHostPlatform,
       ImmutableList<UnflavoredBuildTarget> compatibleWith) {
     return ImmutableImmutableUnconfiguredTargetNode.ofImpl(
         buildTarget,
@@ -81,6 +86,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
         visibilityPatterns,
         withinViewPatterns,
         defaultTargetPlatform,
+        defaultHostPlatform,
         compatibleWith);
   }
 
@@ -93,6 +99,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<UnflavoredBuildTarget> defaultTargetPlatform,
+      Optional<UnflavoredBuildTarget> defaultHostPlatform,
       ImmutableList<UnflavoredBuildTarget> compatibleWith) {
     return of(
         buildTarget,
@@ -104,6 +111,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
         visibilityPatterns,
         withinViewPatterns,
         defaultTargetPlatform,
+        defaultHostPlatform,
         compatibleWith);
   }
 }
