@@ -18,12 +18,14 @@ package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -70,12 +72,15 @@ public class PrebuiltRustLibraryDescription
           RustPlatform rustPlatform,
           Linker.LinkableDepType depType,
           Optional<String> alias) {
+        SourcePathResolverAdapter pathResolver =
+            context.getActionGraphBuilder().getSourcePathResolver();
+        AbsPath rlibAbsolutePath = pathResolver.getAbsolutePath(args.getRlib());
         return RustLibraryArg.of(
             buildTarget,
             alias.orElse(args.getCrate()),
             args.getRlib(),
             directDependent,
-            dependentFilesystem,
+            dependentFilesystem.relativize(rlibAbsolutePath).toString(),
             rustBuckConfig.getExternLocations());
       }
 

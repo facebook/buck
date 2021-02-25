@@ -16,16 +16,14 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -62,9 +60,9 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   @AddToRuleKey
   public abstract Optional<BuildTarget> getDirectDependent();
 
-  /// Project filesystem of the target by which the dependency is specified,
-  /// direct or transitive.
-  public abstract ProjectFilesystem getDependentFilesystem();
+  /// Relative path from project root to .rlib target
+  @AddToRuleKey
+  public abstract String getRlibRelativePath();
 
   /// True if the `extern_locations` option is set.
   @AddToRuleKey
@@ -75,10 +73,10 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
       String crate,
       SourcePath rlib,
       Optional<BuildTarget> directDependent,
-      ProjectFilesystem dependentFilesystem,
+      String rlibRelativePath,
       boolean extern_loc) {
     return ImmutableRustLibraryArg.ofImpl(
-        target, crate, rlib, directDependent, dependentFilesystem, extern_loc);
+        target, crate, rlib, directDependent, rlibRelativePath, extern_loc);
   }
 
   @Override
@@ -89,15 +87,12 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   @Override
   public void appendToCommandLine(
       Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
-    // Relativize absolute path to project root to make sure cross-cell references work.
-    AbsPath absPath = pathResolver.getAbsolutePath(getRlib());
-    RelPath path = getDependentFilesystem().relativize(absPath);
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
     Optional<BuildTarget> directDep = getDirectDependent();
     if (directDep.isPresent()) {
       String crate = getCrate();
-      consumer.accept(String.format("--extern=%s=%s", crate, path));
+      consumer.accept(String.format("--extern=%s=%s", crate, getRlibRelativePath()));
       if (getExternLoc()) {
         // assume targets never need json string quoting
         consumer.accept(
@@ -108,7 +103,8 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
                 getTarget().getFullyQualifiedName()));
       }
     } else {
-      consumer.accept(String.format("-Ldependency=%s", path.getParent()));
+      consumer.accept(
+          String.format("-Ldependency=%s", Paths.get(getRlibRelativePath()).getParent()));
     }
   }
 

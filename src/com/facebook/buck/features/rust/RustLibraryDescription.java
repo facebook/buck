@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -34,6 +35,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -323,12 +325,14 @@ public class RustLibraryDescription
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                   args.getNamedDeps());
           SourcePath rlib = rule.getSourcePathToOutput();
+          SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
+          AbsPath rlibAbsolutePath = pathResolver.getAbsolutePath(rlib);
           return RustLibraryArg.of(
               buildTarget,
               alias.orElse(crate),
               rlib,
               directDependent,
-              dependentFilesystem,
+              dependentFilesystem.relativize(rlibAbsolutePath).toString(),
               rustBuckConfig.getExternLocations());
         }
 
