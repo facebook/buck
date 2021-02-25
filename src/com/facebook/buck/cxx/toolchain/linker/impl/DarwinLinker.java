@@ -71,9 +71,9 @@ import java.util.function.Consumer;
 public class DarwinLinker extends DelegatingTool
     implements Linker, HasLinkerMap, HasIncrementalThinLTO, HasLTO {
 
-  private final boolean cacheLinks;
-  private final boolean scrubConcurrently;
-  private final boolean hasFocusedTargets;
+  @AddToRuleKey private final boolean cacheLinks;
+  @AddToRuleKey private final boolean scrubConcurrently;
+  @AddToRuleKey private final boolean hasFocusedTargets;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
