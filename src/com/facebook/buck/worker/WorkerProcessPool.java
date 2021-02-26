@@ -19,7 +19,6 @@ package com.facebook.buck.worker;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.function.ThrowingSupplier;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
 import java.io.Closeable;
@@ -74,8 +73,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
     return new BorrowedWorkerProcess<>(availableWorkers.take());
   }
 
-  @VisibleForTesting
-  Optional<BorrowedWorkerProcess<T>> borrowWorkerProcess(int timeout, TimeUnit unit)
+  public Optional<BorrowedWorkerProcess<T>> borrowWorkerProcess(int timeout, TimeUnit unit)
       throws InterruptedException {
     return Optional.ofNullable(availableWorkers.poll(timeout, unit))
         .map(BorrowedWorkerProcess::new);

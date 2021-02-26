@@ -33,10 +33,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /** JavaCD worker tool isolated step. */
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
+
+  // TODO : msemko : make javacd borrow timeout configurable. Introduce configuration properties
+  private static final int BORROW_INSTANCE_FROM_POOL_TIMEOUT_SECONDS = 30 * 60;
 
   // TODO : msemko : make pool size configurable. Introduce configuration properties
   private static final int POOL_CAPACITY =
@@ -83,10 +87,24 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
             POOL_CAPACITY);
 
     try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
-        workerToolPool.borrowWorkerProcess()) {
+        borrowWorkerToolWithTimeout(workerToolPool)) {
       WorkerToolExecutor workerToolExecutor = borrowedWorkerTool.get();
       return executeBuildJavaCommand(context, workerToolExecutor);
     }
+  }
+
+  private BorrowedWorkerProcess<WorkerToolExecutor> borrowWorkerToolWithTimeout(
+      WorkerProcessPool<WorkerToolExecutor> workerToolPool) throws InterruptedException {
+    return workerToolPool
+        .borrowWorkerProcess(BORROW_INSTANCE_FROM_POOL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Cannot get a worker tool from a pool of the size: "
+                        + workerToolPool.getCapacity()
+                        + ". Time out of "
+                        + BORROW_INSTANCE_FROM_POOL_TIMEOUT_SECONDS
+                        + " seconds passed."));
   }
 
   private StepExecutionResult executeBuildJavaCommand(
