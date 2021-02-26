@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import java.util.List;
-import java.util.Map;
 
 public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
     implements TypeCoercer<UnconfiguredSourceSortedSet, SourceSortedSet> {
@@ -117,18 +116,9 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
               unnamedHeadersTypeCoercer.coerceToUnconfigured(
                   cellRoots, filesystem, pathRelativeToProjectRoot, object)));
     } else {
-      ImmutableSortedMap<String, UnconfiguredSourcePath> map =
+      return UnconfiguredSourceSortedSet.ofNamedSources(
           namedHeadersTypeCoercer.coerceToUnconfigured(
-              cellRoots, filesystem, pathRelativeToProjectRoot, object);
-      for (Map.Entry<String, UnconfiguredSourcePath> entry : map.entrySet()) {
-        if (entry.getKey().isEmpty()) {
-          throw new CoerceFailedException(
-              String.format(
-                  "source set dict key must not be an empty string (maps to '%s')",
-                  entry.getValue()));
-        }
-      }
-      return UnconfiguredSourceSortedSet.ofNamedSources(map);
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
   }
 
