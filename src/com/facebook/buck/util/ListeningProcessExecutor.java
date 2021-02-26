@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -251,9 +252,16 @@ public class ListeningProcessExecutor {
       processBuilder.setCwd(params.getDirectory().get());
     }
 
-    NuProcess process = BgProcessKiller.startProcess(processBuilder);
+    Supplier<String> errorMessage =
+        () -> String.format("Could not start process with params %s", params);
+    NuProcess process;
+    try {
+      process = BgProcessKiller.startProcess(processBuilder);
+    } catch (Exception e) {
+      throw new IOException(errorMessage.get(), e);
+    }
     if (process == null) {
-      throw new IOException(String.format("Could not start process with params %s", params));
+      throw new IOException(errorMessage.get());
     }
     LOG.debug("Successfully launched process %s", process);
 
