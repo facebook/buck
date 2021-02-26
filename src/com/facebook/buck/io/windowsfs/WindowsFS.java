@@ -160,6 +160,8 @@ public class WindowsFS {
               + targetPathString
               + " (winapi error: "
               + nativeResult.getErrorCode()
+              + ", API used: "
+              + windowsPrivilegedApiStatus
               + ")";
 
       if (failureDueToDevModeNotEnabled) {
