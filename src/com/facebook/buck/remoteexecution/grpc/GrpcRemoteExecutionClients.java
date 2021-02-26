@@ -162,7 +162,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         .read(
             ReadRequest.newBuilder().setResourceName(name).setReadLimit(0).setReadOffset(0).build(),
             new StreamObserver<ReadResponse>() {
-              int size = 0;
+              long size = 0;
               MessageDigest messageDigest = PROTOCOL.getMessageDigest();
 
               @Override
