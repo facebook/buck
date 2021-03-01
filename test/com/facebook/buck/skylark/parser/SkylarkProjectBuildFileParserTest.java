@@ -1695,4 +1695,16 @@ public class SkylarkProjectBuildFileParserTest {
       throws BuildFileParseException, InterruptedException, IOException {
     return SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
   }
+
+  @Test
+  public void parseErrorOnIncorrectImportLabel() throws Exception {
+    AbsPath buildFile = AbsPath.of(projectFilesystem.resolve(Paths.get("BUCK")));
+
+    Files.write(buildFile.getPath(), Collections.singletonList("load('bad///label', 'x')\n"));
+
+    thrown.expect(BuildFileParseException.class);
+    thrown.expectMessage("BUCK:1:6:");
+
+    getSingleRule(buildFile);
+  }
 }

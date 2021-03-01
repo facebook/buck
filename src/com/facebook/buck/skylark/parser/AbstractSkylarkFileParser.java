@@ -901,7 +901,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       try {
         return getContainingLabel().getRelativeWithRemapping(getImport(), ImmutableMap.of());
       } catch (LabelSyntaxException e) {
-        throw new RuntimeException(e);
+        throw BuildFileParseException.createForUnknownParseError(
+            "Incorrect load location in %s: %s", getImportLocation(), e.getMessage());
       }
     }
   }
