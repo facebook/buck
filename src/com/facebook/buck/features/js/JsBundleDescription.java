@@ -27,6 +27,7 @@ import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -55,6 +56,7 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
@@ -92,14 +94,20 @@ public class JsBundleDescription
   private final ToolchainProvider toolchainProvider;
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final BuildBuckConfig buildBuckConfig;
+  private final JavaBuckConfig javaBuckConfig;
 
   public JsBundleDescription(
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
-      DownwardApiConfig downwardApiConfig) {
+      DownwardApiConfig downwardApiConfig,
+      BuildBuckConfig buildBuckConfig,
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.buildBuckConfig = buildBuckConfig;
+    this.javaBuckConfig = javaBuckConfig;
   }
 
   @Override
@@ -326,7 +334,9 @@ public class JsBundleDescription
         null,
         ImmutableSortedMap.of(),
         null,
-        false);
+        false,
+        buildBuckConfig.areExternalActionsEnabled(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   /**

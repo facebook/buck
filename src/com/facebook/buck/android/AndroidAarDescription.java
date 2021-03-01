@@ -90,6 +90,7 @@ public class AndroidAarDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final BuildBuckConfig buildBuckConfig;
   private final ToolchainProvider toolchainProvider;
   private final JavacFactory javacFactory;
 
@@ -98,11 +99,13 @@ public class AndroidAarDescription
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       JavaBuckConfig javaBuckConfig,
+      BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider) {
     this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.buildBuckConfig = buildBuckConfig;
     this.toolchainProvider = toolchainProvider;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
@@ -199,7 +202,9 @@ public class AndroidAarDescription
             assembleAssetsDirectories.getSourcePathToOutput(),
             /* assetsSrcs */ ImmutableSortedMap.of(),
             manifest.getSourcePathToOutput(),
-            /* hasWhitelistedStrings */ false);
+            /* hasWhitelistedStrings */ false,
+            buildBuckConfig.areExternalActionsEnabled(),
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(androidResource));
 
     ImmutableSortedSet.Builder<SourcePath> classpathToIncludeInAar =

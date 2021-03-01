@@ -21,7 +21,6 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -33,30 +32,26 @@ import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.externalactions.android.AndroidResourceExternalAction;
+import com.facebook.buck.externalactions.android.AndroidResourceExternalActionArgs;
+import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
-import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
-import com.facebook.buck.step.isolatedsteps.common.TouchStep;
-import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
+import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -100,7 +95,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean isVerifyingXmlAttrsEnabled) {
+      boolean isVerifyingXmlAttrsEnabled,
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -115,7 +112,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
             symbolFilesFromDeps,
             hasWhitelistedStrings,
             isVerifyingXmlAttrsEnabled,
-            rDotJavaPackageArgument));
+            rDotJavaPackageArgument,
+            shouldExecuteInSeparateProcess,
+            javaRuntimeLauncher));
 
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -139,7 +138,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       @Nullable SourcePath assets,
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
-      boolean hasWhitelistedStrings) {
+      boolean hasWhitelistedStrings,
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher) {
     this(
         buildTarget,
         projectFilesystem,
@@ -152,7 +153,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         assetsSrcs,
         manifestFile,
         hasWhitelistedStrings,
-        /* isVerifyingXmlAttrsEnabled */ false);
+        /* isVerifyingXmlAttrsEnabled */ false,
+        shouldExecuteInSeparateProcess,
+        javaRuntimeLauncher);
   }
 
   public AndroidResource(
@@ -167,7 +170,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean isVerifyingXmlAttrsEnabled) {
+      boolean isVerifyingXmlAttrsEnabled,
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher) {
     this(
         buildTarget,
         projectFilesystem,
@@ -185,7 +190,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                 .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        isVerifyingXmlAttrsEnabled);
+        isVerifyingXmlAttrsEnabled,
+        shouldExecuteInSeparateProcess,
+        javaRuntimeLauncher);
   }
 
   @Override
@@ -205,7 +212,10 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
     return getBuildable().manifestFile;
   }
 
-  static class Impl implements Buildable {
+  static class Impl extends BuildableWithExternalAction {
+    private static final String TEMP_FILE_PREFIX = "android_resource_";
+    private static final String TEMP_FILE_SUFFIX = "";
+
     @AddToRuleKey @Nullable private final SourcePath res;
 
     @SuppressWarnings("PMD.UnusedPrivateField")
@@ -260,7 +270,10 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         Supplier<ImmutableSortedSet<? extends SourcePath>> symbolsOfDeps,
         boolean hasWhitelistedStrings,
         boolean isVerifyingXmlAttrsEnabled,
-        @Nullable String rDotJavaPackageArgument) {
+        @Nullable String rDotJavaPackageArgument,
+        boolean shouldExecuteInSeparateProcess,
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.res = res;
       this.resSrcs = resSrcs;
       this.assets = assets;
@@ -291,60 +304,47 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
     }
 
     @Override
-    public ImmutableList<Step> getBuildSteps(
-        BuildContext context,
+    public BuildableCommand getBuildableCommand(
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
-        BuildCellRelativePathFactory buildCellPathFactory) {
-      ImmutableList.Builder<Step> steps = ImmutableList.builder();
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.of(
-                  outputPathResolver.resolvePath(pathToTextSymbolsDir).getPath())));
-      if (res == null) {
-        return steps
-            .add(new TouchStep(outputPathResolver.resolvePath(pathToTextSymbolsFile)))
-            .add(
-                WriteFileIsolatedStep.of(
-                    rDotJavaPackageArgument == null ? "" : rDotJavaPackageArgument,
-                    outputPathResolver.resolvePath(pathToRDotJavaPackageFile),
-                    false /* executable */))
-            .build();
-      }
+        BuildContext buildContext) {
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
+      Path jsonFilePath = createTempFile(filesystem);
+      AndroidResourceExternalActionArgs jsonArgs =
+          AndroidResourceExternalActionArgs.of(
+              res == null
+                  ? null
+                  : sourcePathResolverAdapter.getRelativePath(filesystem, res).toString(),
+              outputPathResolver.resolvePath(pathToTextSymbolsDir).toString(),
+              outputPathResolver.resolvePath(pathToTextSymbolsFile).toString(),
+              outputPathResolver.resolvePath(pathToRDotJavaPackageFile).toString(),
+              manifestFile == null
+                  ? null
+                  : sourcePathResolverAdapter.getRelativePath(filesystem, manifestFile).toString(),
+              symbolsOfDeps.get().stream()
+                  .map(
+                      sourcePath ->
+                          sourcePathResolverAdapter
+                              .getRelativePath(filesystem, sourcePath)
+                              .toString())
+                  .collect(ImmutableSet.toImmutableSet()),
+              isVerifyingXmlAttrsEnabled,
+              rDotJavaPackageArgument);
+      ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
 
-      // If the 'package' was not specified for this android_resource(), then attempt to parse it
-      // from the AndroidManifest.xml.
-      if (rDotJavaPackageArgument == null) {
-        Objects.requireNonNull(
-            manifestFile,
-            "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is "
-                + "null. This should already be enforced by the constructor.");
-        steps.add(
-            new ExtractFromAndroidManifestStep(
-                context.getSourcePathResolver().getRelativePath(filesystem, manifestFile),
-                outputPathResolver.resolvePath(pathToRDotJavaPackageFile)));
-      } else {
-        steps.add(
-            WriteFileIsolatedStep.of(
-                rDotJavaPackageArgument,
-                outputPathResolver.resolvePath(pathToRDotJavaPackageFile),
-                false /* executable */));
-      }
+      return BuildableCommand.newBuilder()
+          .addExtraFiles(jsonFilePath.toString())
+          .setExternalActionClass(AndroidResourceExternalAction.class.getName())
+          .build();
+    }
 
-      ImmutableSet<RelPath> pathsToSymbolsOfDeps =
-          symbolsOfDeps.get().stream()
-              .map(
-                  sourcePath ->
-                      context.getSourcePathResolver().getRelativePath(filesystem, sourcePath))
-              .collect(ImmutableSet.toImmutableSet());
-      steps.add(
-          new MiniAapt(
-              Objects.requireNonNull(
-                  context.getSourcePathResolver().getRelativePath(filesystem, res)),
-              Objects.requireNonNull(outputPathResolver.resolvePath(pathToTextSymbolsFile)),
-              pathsToSymbolsOfDeps,
-              isVerifyingXmlAttrsEnabled));
-      return steps.build();
+    private Path createTempFile(ProjectFilesystem filesystem) {
+      try {
+        return filesystem.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
+      } catch (IOException e) {
+        throw new IllegalStateException(
+            "Failed to create temp file when creating android manifest buildable command");
+      }
     }
   }
 

@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.FakeTool;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -62,7 +63,9 @@ public class AndroidResourceRuleBuilder {
           assets,
           assetsSrcs,
           manifest,
-          hasWhitelistedStrings);
+          hasWhitelistedStrings,
+          /* areExternalActionsEnabled */ false,
+          new FakeTool());
     }
 
     public Builder setRuleFinder(SourcePathRuleFinder ruleFinder) {

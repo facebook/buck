@@ -952,7 +952,9 @@ public class AndroidBinaryGraphEnhancerTest {
                 null,
                 ImmutableSortedMap.of(),
                 FakeSourcePath.of("manifest"),
-                false));
+                false,
+                /* areExternalActionsEnabled */ false,
+                new FakeTool()));
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");

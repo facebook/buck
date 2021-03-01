@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -43,6 +44,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -108,7 +110,9 @@ public class AndroidResourceDescriptionTest {
         new AndroidResourceDescription(
             createToolchainProviderForAndroidResource(),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
-            DownwardApiConfig.of(buckConfig));
+            DownwardApiConfig.of(buckConfig),
+            BuildBuckConfig.of(buckConfig),
+            JavaBuckConfig.of(buckConfig));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));

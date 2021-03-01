@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.FlavorDomainException;
@@ -28,6 +29,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -50,13 +52,17 @@ public class JsFlavorValidationCommonTest {
     BuckConfig buckConfig = FakeBuckConfig.empty();
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
     JsConfig jsConfig = JsConfig.of(buckConfig);
+    BuildBuckConfig buildBuckConfig = BuildBuckConfig.of(buckConfig);
+    JavaBuckConfig javaBuckConfig = JavaBuckConfig.of(buckConfig);
     return ImmutableMap.of(
         JsLibraryDescription.class, new JsLibraryDescription(downwardApiConfig, jsConfig),
         JsBundleDescription.class,
             new JsBundleDescription(
                 new ToolchainProviderBuilder().build(),
                 new AndroidBuckConfig(buckConfig, Platform.detect()),
-                downwardApiConfig));
+                downwardApiConfig,
+                buildBuckConfig,
+                javaBuckConfig));
   }
 
   @Parameterized.Parameter public Class<?> description;

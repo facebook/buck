@@ -57,14 +57,14 @@ public abstract class AndroidResourceExternalActionArgs implements JsonArgs {
 
   /** Returns an instance of {@link AndroidResourceExternalActionArgs}. */
   public static AndroidResourceExternalActionArgs of(
-      String resPath,
+      @Nullable String resPath,
       String pathToTextSymbolsDir,
       String pathToTextSymbolsFile,
       String pathToRDotJavaPackageFile,
-      String manifestFilePath,
+      @Nullable String manifestFilePath,
       Collection<String> pathsToSymbolsOfDeps,
       boolean isVerifyingXmlAttrsEnabled,
-      String rDotJavaPackageArgument) {
+      @Nullable String rDotJavaPackageArgument) {
     return ImmutableAndroidResourceExternalActionArgs.ofImpl(
         resPath,
         pathToTextSymbolsDir,

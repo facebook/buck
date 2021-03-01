@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
@@ -44,6 +45,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -78,6 +80,8 @@ public class AndroidResourceDescription
 
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final BuildBuckConfig buildBuckConfig;
+  private final JavaBuckConfig javaBuckConfig;
 
   public static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("resources-symlink-tree");
@@ -92,10 +96,14 @@ public class AndroidResourceDescription
   public AndroidResourceDescription(
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
-      DownwardApiConfig downwardApiConfig) {
+      DownwardApiConfig downwardApiConfig,
+      BuildBuckConfig buildBuckConfig,
+      JavaBuckConfig javaBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.buildBuckConfig = buildBuckConfig;
+    this.javaBuckConfig = javaBuckConfig;
   }
 
   @Override
@@ -182,7 +190,9 @@ public class AndroidResourceDescription
         assetsInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
-        androidBuckConfig.isVerifyingXmlAttrsEnabled());
+        androidBuckConfig.isVerifyingXmlAttrsEnabled(),
+        buildBuckConfig.areExternalActionsEnabled(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   private MappedSymlinkTree createSymlinkTree(

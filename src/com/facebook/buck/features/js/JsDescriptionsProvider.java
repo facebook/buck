@@ -17,12 +17,14 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.support.cli.config.CliConfig;
@@ -45,6 +47,8 @@ public class JsDescriptionsProvider implements DescriptionProvider {
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
     JsConfig jsConfig = buckConfig.getView(JsConfig.class);
+    BuildBuckConfig buildBuckConfig = buckConfig.getView(BuildBuckConfig.class);
+    JavaBuckConfig javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
 
     return Arrays.asList(
         new JsLibraryDescription(downwardApiConfig, jsConfig),
@@ -55,6 +59,11 @@ public class JsDescriptionsProvider implements DescriptionProvider {
             downwardApiConfig,
             cliConfig,
             context.getSandboxExecutionStrategy()),
-        new JsBundleDescription(toolchainProvider, androidBuckConfig, downwardApiConfig));
+        new JsBundleDescription(
+            toolchainProvider,
+            androidBuckConfig,
+            downwardApiConfig,
+            buildBuckConfig,
+            javaBuckConfig));
   }
 }

@@ -76,6 +76,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             downwardApiConfig,
             javaConfig,
+            buildBuckConfig,
             toolchainProvider),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
@@ -120,7 +121,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaConfig, downwardApiConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(
             toolchainProvider, androidBuckConfig, downwardApiConfig, javaConfig),
-        new AndroidResourceDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
+        new AndroidResourceDescription(
+            toolchainProvider, androidBuckConfig, downwardApiConfig, buildBuckConfig, javaConfig),
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, downwardApiConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
