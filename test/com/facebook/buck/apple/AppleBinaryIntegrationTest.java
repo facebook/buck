@@ -1348,10 +1348,12 @@ public class AppleBinaryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    // TODO(T85818840): OsoContentsScrubber is deprecated and breaks for #iphonesimulator-arm64
+    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", "true");
     workspace.setUp();
     BuildTarget target =
         BuildTargetFactory.newInstance(
-            "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
+            "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,iphonesimulator-arm64,no-linkermap");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     Path output =
@@ -1363,7 +1365,7 @@ public class AppleBinaryIntegrationTest {
         workspace.runCommand("file", output.toString()).getStdout().get(),
         containsString("executable"));
     ProcessExecutor.Result lipoVerifyResult =
-        workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64");
+        workspace.runCommand("lipo", output.toString(), "-verify_arch", "i386", "x86_64", "arm64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
   }
 

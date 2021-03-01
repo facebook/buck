@@ -43,7 +43,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
       ImmutableApplePlatform.builder()
           .setName("iphonesimulator")
           .setSwiftName("ios")
-          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setArchitectures(ImmutableList.of("arm64", "i386", "x86_64"))
           .setMinVersionFlagPrefix("-mios-simulator-version-min=")
           // only used for legacy watch apps
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
@@ -59,7 +59,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static final ApplePlatform WATCHSIMULATOR =
       ImmutableApplePlatform.builder()
           .setName("watchsimulator")
-          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setArchitectures(ImmutableList.of("arm64", "i386", "x86_64"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .setSwiftName("watchos")
@@ -74,7 +74,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static final ApplePlatform APPLETVSIMULATOR =
       ImmutableApplePlatform.builder()
           .setName("appletvsimulator")
-          .setArchitectures(ImmutableList.of("x86_64"))
+          .setArchitectures(ImmutableList.of("arm64", "x86_64"))
           .setMinVersionFlagPrefix("-mtvos-simulator-version-min=")
           .setSwiftName("tvos")
           .build();

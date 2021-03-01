@@ -356,7 +356,7 @@ public class AppleSdkDiscoveryTest {
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
             .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphonesimulator80Paths =
@@ -390,7 +390,7 @@ public class AppleSdkDiscoveryTest {
             .setName("watchsimulator2.0")
             .setVersion("2.0")
             .setApplePlatform(ApplePlatform.WATCHSIMULATOR)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths watchsimulator20Paths =
@@ -423,7 +423,7 @@ public class AppleSdkDiscoveryTest {
             .setName("appletvsimulator9.1")
             .setVersion("9.1")
             .setApplePlatform(ApplePlatform.APPLETVSIMULATOR)
-            .addArchitectures("x86_64")
+            .addArchitectures("arm64", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths appletvsimulator91Paths =
@@ -531,7 +531,7 @@ public class AppleSdkDiscoveryTest {
             .setName("iphonesimulator8.0")
             .setVersion("8.0")
             .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphonesimulator80Paths =
@@ -565,7 +565,7 @@ public class AppleSdkDiscoveryTest {
             .setName("iphonesimulator8.1")
             .setVersion("8.1")
             .setApplePlatform(ApplePlatform.IPHONESIMULATOR)
-            .addArchitectures("i386", "x86_64")
+            .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
     AppleSdkPaths iphonesimulator81Paths =
