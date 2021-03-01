@@ -38,6 +38,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -280,15 +281,15 @@ public class RobolectricTestDescription
             graphBuilder,
             ImmutableMap.of(
                 "android_resource_apk",
-                graphBuilder
-                    .getSourcePathResolver()
-                    .getCellUnsafeRelPath(binaryResources.getSourcePathToOutput())
-                    .toString(),
+                MorePaths.pathWithPlatformSeparators(
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getCellUnsafeRelPath(binaryResources.getSourcePathToOutput())),
                 "android_merged_manifest",
-                graphBuilder
-                    .getSourcePathResolver()
-                    .getCellUnsafeRelPath(args.getRobolectricManifest())
-                    .toString()));
+                MorePaths.pathWithPlatformSeparators(
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getCellUnsafeRelPath(args.getRobolectricManifest()))));
     graphBuilder.addToIndex(unitTestOptions);
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(unitTestOptions));
 

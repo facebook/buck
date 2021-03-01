@@ -28,7 +28,6 @@ import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
@@ -202,7 +201,6 @@ public class RobolectricTestRuleIntegrationTest {
 
   @Test
   public void robolectricTestBuildsWithBinaryResources() throws IOException {
-    Assume.assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
