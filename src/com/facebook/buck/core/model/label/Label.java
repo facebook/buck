@@ -31,7 +31,6 @@ package com.facebook.buck.core.model.label;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -92,13 +91,9 @@ public final class Label
    * {@code repo_mapping} attribute when declaring this repository.
    *
    * @param absName label-like string to be parsed
-   * @param repositoryMapping map of repository names from the local name found in the current
-   *     repository to the global name declared in the main repository
    */
-  public static Label parseAbsolute(
-      String absName, ImmutableMap<RepositoryName, RepositoryName> repositoryMapping)
-      throws LabelSyntaxException {
-    return parseAbsolute(absName, /* defaultToMain= */ true, repositoryMapping);
+  public static Label parseAbsolute(String absName) throws LabelSyntaxException {
+    return parseAbsolute(absName, /* defaultToMain= */ true);
   }
 
   /**
@@ -119,15 +114,9 @@ public final class Label
    *
    * @param absName label-like string to be parsed
    * @param defaultToMain Treat labels in the default repository as being in the main one instead.
-   * @param repositoryMapping map of repository names from the local name found in the current
-   *     repository to the global name declared in the main repository
    */
-  public static Label parseAbsolute(
-      String absName,
-      boolean defaultToMain,
-      ImmutableMap<RepositoryName, RepositoryName> repositoryMapping)
+  public static Label parseAbsolute(String absName, boolean defaultToMain)
       throws LabelSyntaxException {
-    Preconditions.checkNotNull(repositoryMapping);
     String repo = defaultToMain ? "@" : RepositoryName.DEFAULT_REPOSITORY;
     int packageStartPos = absName.indexOf("//");
     if (packageStartPos > 0) {
@@ -144,25 +133,15 @@ public final class Label
     try {
       LabelValidator.PackageAndTarget labelParts = LabelValidator.parseAbsoluteLabel(absName);
       PackageIdentifier pkgId =
-          validatePackageName(
-              labelParts.getPackageName(), labelParts.getTargetName(), repo, repositoryMapping);
+          validatePackageName(labelParts.getPackageName(), labelParts.getTargetName(), repo);
       PathFragment packageFragment = pkgId.getPackageFragment();
       if (repo.isEmpty() && ABSOLUTE_PACKAGE_NAMES.contains(packageFragment)) {
-        pkgId =
-            PackageIdentifier.create(getGlobalRepoName("@", repositoryMapping), packageFragment);
+        pkgId = PackageIdentifier.create(RepositoryName.create("@"), packageFragment);
       }
       return create(pkgId, labelParts.getTargetName());
     } catch (LabelValidator.BadLabelException e) {
       throw new LabelSyntaxException(e.getMessage());
     }
-  }
-
-  private static RepositoryName getGlobalRepoName(
-      String repo, ImmutableMap<RepositoryName, RepositoryName> repositoryMapping)
-      throws LabelSyntaxException {
-    Preconditions.checkNotNull(repositoryMapping);
-    RepositoryName repoName = RepositoryName.create(repo);
-    return repositoryMapping.getOrDefault(repoName, repoName);
   }
 
   /**
@@ -176,7 +155,7 @@ public final class Label
   // TODO(b/110698008): create parseAbsoluteUnchecked that passes repositoryMapping
   public static Label parseAbsoluteUnchecked(String absName, boolean defaultToMain) {
     try {
-      return parseAbsolute(absName, defaultToMain, /* repositoryMapping= */ ImmutableMap.of());
+      return parseAbsolute(absName, defaultToMain/* repositoryMapping= */ );
     } catch (LabelSyntaxException e) {
       throw new IllegalArgumentException(e);
     }
@@ -232,14 +211,10 @@ public final class Label
    * it is valid. Otherwise it throws a SyntaxException.
    */
   private static PackageIdentifier validatePackageName(
-      String packageIdentifier,
-      String name,
-      String repo,
-      ImmutableMap<RepositoryName, RepositoryName> repositoryMapping)
-      throws LabelSyntaxException {
+      String packageIdentifier, String name, String repo) throws LabelSyntaxException {
     String error;
     try {
-      return PackageIdentifier.parse(packageIdentifier, repo, repositoryMapping);
+      return PackageIdentifier.parse(packageIdentifier, repo);
     } catch (LabelSyntaxException e) {
       error = e.getMessage();
       error = "invalid package name '" + packageIdentifier + "': " + error;
@@ -447,18 +422,7 @@ public final class Label
       },
       useStarlarkThread = true)
   public Label getRelative(String relName, StarlarkThread thread) throws LabelSyntaxException {
-    HasRepoMapping hrm = thread.getThreadLocal(HasRepoMapping.class);
-    return getRelativeWithRemapping(relName, hrm.getRepoMapping());
-  }
-
-  /**
-   * An interface for retrieving a repository mapping.
-   *
-   * <p>This has only a single implementation, {@code BazelStarlarkContext}, but we can't mention
-   * that type here because logically it belongs in Bazel, above this package.
-   */
-  public interface HasRepoMapping {
-    ImmutableMap<RepositoryName, RepositoryName> getRepoMapping();
+    return getRelativeWithRemapping(relName);
   }
 
   /**
@@ -472,19 +436,14 @@ public final class Label
    * {@code @repo -> @other_repo} in {@code repositoryMapping}
    *
    * @param relName the relative label name; must be non-empty
-   * @param repositoryMapping the map of local repository names in external repository to global
-   *     repository names in main repo; can be empty, but not null
    */
-  public Label getRelativeWithRemapping(
-      String relName, ImmutableMap<RepositoryName, RepositoryName> repositoryMapping)
-      throws LabelSyntaxException {
-    Preconditions.checkNotNull(repositoryMapping);
+  public Label getRelativeWithRemapping(String relName) throws LabelSyntaxException {
     if (relName.length() == 0) {
       throw new LabelSyntaxException("empty package-relative label");
     }
 
     if (LabelValidator.isAbsolute(relName)) {
-      return resolveRepositoryRelative(parseAbsolute(relName, false, repositoryMapping));
+      return resolveRepositoryRelative(parseAbsolute(relName, false));
     } else if (relName.equals(":")) {
       throw new LabelSyntaxException("':' is not a valid package-relative label");
     } else if (relName.charAt(0) == ':') {

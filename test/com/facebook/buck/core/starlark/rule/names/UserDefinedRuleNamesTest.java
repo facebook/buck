@@ -25,20 +25,17 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 public class UserDefinedRuleNamesTest {
   @Test
   public void returnsCorrectIdentifiers() throws LabelSyntaxException {
     String identifier =
-        UserDefinedRuleNames.getIdentifier(
-            Label.parseAbsolute("@foo//bar:baz.bzl", ImmutableMap.of()), "some_rule");
+        UserDefinedRuleNames.getIdentifier(Label.parseAbsolute("@foo//bar:baz.bzl"), "some_rule");
     assertEquals("@foo//bar:baz.bzl:some_rule", identifier);
 
     identifier =
-        UserDefinedRuleNames.getIdentifier(
-            Label.parseAbsolute("//bar:baz.bzl", ImmutableMap.of()), "some_rule");
+        UserDefinedRuleNames.getIdentifier(Label.parseAbsolute("//bar:baz.bzl"), "some_rule");
     assertEquals("//bar:baz.bzl:some_rule", identifier);
   }
 
@@ -59,9 +56,9 @@ public class UserDefinedRuleNamesTest {
   @Test
   public void returnsLabelAndNameIfParseable() throws LabelSyntaxException {
     Pair<Label, String> expectedWithCell =
-        new Pair<>(Label.parseAbsolute("@foo//bar:baz.bzl", ImmutableMap.of()), "some_rule");
+        new Pair<>(Label.parseAbsolute("@foo//bar:baz.bzl"), "some_rule");
     Pair<Label, String> expectedWithoutCell =
-        new Pair<>(Label.parseAbsolute("//bar:baz.bzl", ImmutableMap.of()), "some_rule");
+        new Pair<>(Label.parseAbsolute("//bar:baz.bzl"), "some_rule");
 
     assertEquals(
         expectedWithCell, UserDefinedRuleNames.fromIdentifier("@foo//bar:baz.bzl:some_rule"));

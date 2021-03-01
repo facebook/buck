@@ -32,7 +32,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import net.starlark.java.eval.EvalException;
@@ -75,7 +74,7 @@ public class CommandLineArgsFactoryTest {
             ImmutableList.of(
                 1,
                 "foo",
-                Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
+                Label.parseAbsolute("//foo:bar"),
                 SourceArtifactImpl.of(PathSourcePath.of(filesystem, source))));
 
     assertTrue(args instanceof ListCommandLineArgs);
@@ -103,7 +102,7 @@ public class CommandLineArgsFactoryTest {
             ImmutableList.of(
                 1,
                 "foo",
-                Label.parseAbsolute("//foo:bar", ImmutableMap.of()),
+                Label.parseAbsolute("//foo:bar"),
                 SourceArtifactImpl.of(PathSourcePath.of(filesystem, source)),
                 CommandLineArgsFactory.from(ImmutableList.of(2, "bar"))));
 

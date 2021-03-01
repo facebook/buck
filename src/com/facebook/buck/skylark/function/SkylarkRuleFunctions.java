@@ -80,10 +80,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       // Label parentLabel = (Label) env.getGlobals().getLabel();
       Label parentLabel = BuckStarlarkModule.ofInnermostEnclosingStarlarkFunction(env);
       LabelValidator.parseAbsoluteLabel(labelString);
-      labelString =
-          parentLabel
-              .getRelativeWithRemapping(labelString, ImmutableMap.of())
-              .getUnambiguousCanonicalForm();
+      labelString = parentLabel.getRelativeWithRemapping(labelString).getUnambiguousCanonicalForm();
       return labelCache.get(labelString);
     } catch (LabelValidator.BadLabelException | LabelSyntaxException | ExecutionException e) {
       throw new EvalException("Illegal absolute label syntax: " + labelString);

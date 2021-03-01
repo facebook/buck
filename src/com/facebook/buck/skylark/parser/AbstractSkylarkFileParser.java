@@ -41,7 +41,6 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.function.LoadSymbolsContext;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.parser.context.BuckHasRepoMapping;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.annotations.VisibleForTesting;
@@ -243,7 +242,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     parseContext.setup(env);
     readConfigContext.setup(env);
-    BuckHasRepoMapping.HAS_REPO_MAPPING.setup(env);
 
     return ImmutableEnvironmentData.ofImpl(
         env, toLoadedPaths(buildFilePath, dependencies.values(), implicitLoadExtensionData));
@@ -696,7 +694,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       extensionEnv.setLoader(Maps.transformValues(dependencies, ExtensionData::getExtension)::get);
 
       readConfigContext.setup(extensionEnv);
-      BuckHasRepoMapping.HAS_REPO_MAPPING.setup(extensionEnv);
 
       LoadSymbolsContext loadSymbolsContext = new LoadSymbolsContext();
 
@@ -899,7 +896,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     @Value.Derived
     Label getLabel() {
       try {
-        return getContainingLabel().getRelativeWithRemapping(getImport(), ImmutableMap.of());
+        return getContainingLabel().getRelativeWithRemapping(getImport());
       } catch (LabelSyntaxException e) {
         throw BuildFileParseException.createForUnknownParseError(
             "Incorrect load location in %s: %s", getImportLocation(), e.getMessage());

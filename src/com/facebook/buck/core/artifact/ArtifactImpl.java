@@ -27,7 +27,6 @@ import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -215,7 +214,7 @@ class ArtifactImpl extends AbstractArtifact
   @Override
   public Optional<Label> getOwnerTyped() {
     try {
-      return Optional.of(Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of()));
+      return Optional.of(Label.parseAbsolute(target.getFullyQualifiedName()));
     } catch (LabelSyntaxException e) {
       return Optional.empty();
     }

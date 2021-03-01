@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import net.starlark.java.eval.EvalException;
@@ -181,7 +180,7 @@ public class ArtifactImplTest {
 
     assertEquals("baz.cpp", artifact.getBasename());
     assertEquals("cpp", artifact.getExtension());
-    assertEquals(Label.parseAbsolute("//my:foo", ImmutableMap.of()), artifact.getOwner());
+    assertEquals(Label.parseAbsolute("//my:foo"), artifact.getOwner());
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertFalse(artifact.isSource());
     assertEquals(

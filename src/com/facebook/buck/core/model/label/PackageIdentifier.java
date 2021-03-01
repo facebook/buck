@@ -32,7 +32,6 @@ package com.facebook.buck.core.model.label;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.io.Serializable;
@@ -80,9 +79,7 @@ public final class PackageIdentifier implements Comparable<PackageIdentifier>, S
     this.hashCode = Objects.hash(repository, pkgName);
   }
 
-  static PackageIdentifier parse(
-      String input, String repo, ImmutableMap<RepositoryName, RepositoryName> repositoryMapping)
-      throws LabelSyntaxException {
+  static PackageIdentifier parse(String input, String repo) throws LabelSyntaxException {
     String packageName;
     int packageStartPos = input.indexOf("//");
     if (repo != null) {
@@ -110,13 +107,8 @@ public final class PackageIdentifier implements Comparable<PackageIdentifier>, S
       throw new LabelSyntaxException(error);
     }
 
-    if (repositoryMapping != null) {
-      RepositoryName repositoryName = RepositoryName.create(repo);
-      repositoryName = repositoryMapping.getOrDefault(repositoryName, repositoryName);
-      return create(repositoryName, PathFragment.create(packageName));
-    } else {
-      return create(repo, PathFragment.create(packageName));
-    }
+    RepositoryName repositoryName = RepositoryName.create(repo);
+    return create(repositoryName, PathFragment.create(packageName));
   }
 
   public RepositoryName getRepository() {

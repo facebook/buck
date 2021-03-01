@@ -148,7 +148,7 @@ public class UserDefinedProviderInfoTest {
             "",
             StarlarkList.immutableCopyOf(ImmutableList.of("value", "immutable", "mutable")),
             TestStarlarkThread.dummyStarlarkThread());
-    userInfo.export(Label.parseAbsolute("//:foo.bzl", ImmutableMap.of()), "UserInfo");
+    userInfo.export(Label.parseAbsolute("//:foo.bzl"), "UserInfo");
     StarlarkList<StarlarkInt> immutableList =
         StarlarkList.immutableCopyOf(
             ImmutableList.of(StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(3)));

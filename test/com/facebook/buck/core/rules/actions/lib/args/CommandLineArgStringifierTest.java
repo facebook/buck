@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.lib.WriteAction;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,7 +60,7 @@ public class CommandLineArgStringifierTest {
         CommandLineArgStringifier.asString(
             new ArtifactFilesystem(new FakeProjectFilesystem()),
             false,
-            Label.parseAbsolute("//foo:bar", ImmutableMap.of())));
+            Label.parseAbsolute("//foo:bar")));
   }
 
   @Test

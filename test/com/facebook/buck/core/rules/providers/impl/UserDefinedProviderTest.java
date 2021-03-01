@@ -44,7 +44,7 @@ public class UserDefinedProviderTest {
   public void reprIsReasonable() throws LabelSyntaxException, EvalException {
     UserDefinedProvider provider =
         new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+    provider.export(Label.parseAbsolute("//package:file.bzl"), "FooInfo");
     String expectedRepr = "FooInfo(foo, bar, baz) defined at package/file.bzl:5:6";
 
     assertEquals(expectedRepr, new Printer().repr(provider).toString());
@@ -54,7 +54,7 @@ public class UserDefinedProviderTest {
   public void nameIsCorrect() throws LabelSyntaxException, EvalException {
     UserDefinedProvider provider =
         new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+    provider.export(Label.parseAbsolute("//package:file.bzl"), "FooInfo");
 
     assertEquals("FooInfo", provider.toString());
     assertEquals("FooInfo", provider.getName());
@@ -68,7 +68,7 @@ public class UserDefinedProviderTest {
     assertFalse(provider.isImmutable());
     assertFalse(provider.isExported());
 
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+    provider.export(Label.parseAbsolute("//package:file.bzl"), "FooInfo");
 
     assertTrue(provider.isImmutable());
     assertTrue(provider.isExported());
@@ -79,7 +79,7 @@ public class UserDefinedProviderTest {
       throws InterruptedException, EvalException, LabelSyntaxException {
     UserDefinedProvider provider =
         new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+    provider.export(Label.parseAbsolute("//package:file.bzl"), "FooInfo");
 
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
@@ -120,7 +120,7 @@ public class UserDefinedProviderTest {
       throws InterruptedException, EvalException, LabelSyntaxException {
     UserDefinedProvider provider =
         new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+    provider.export(Label.parseAbsolute("//package:file.bzl"), "FooInfo");
 
     try (TestMutableEnv env = new TestMutableEnv()) {
       Object rawInfo =
@@ -144,7 +144,7 @@ public class UserDefinedProviderTest {
       throws LabelSyntaxException, InterruptedException, EvalException {
     UserDefinedProvider provider =
         new UserDefinedProvider(location, new String[] {"foo", "bar", "baz"});
-    provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
+    provider.export(Label.parseAbsolute("//package:file.bzl"), "FooInfo");
 
     try (TestMutableEnv env = new TestMutableEnv()) {
       Object rawInfo =

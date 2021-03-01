@@ -38,7 +38,7 @@ public abstract class ImplicitInclude {
   @Value.Check
   protected void check() {
     try {
-      Label.parseAbsolute(getRawImportLabel(), ImmutableMap.of());
+      Label.parseAbsolute(getRawImportLabel());
     } catch (LabelSyntaxException e) {
       throw new HumanReadableException("Invalid implicit label provided: " + e.getMessage());
     }

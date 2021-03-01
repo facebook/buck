@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
 import net.starlark.java.syntax.Location;
 import org.junit.Rule;
@@ -52,9 +51,7 @@ public class ArgFactoryTest {
 
   @Test
   public void convertsArtifactToArg() throws LabelSyntaxException {
-    assertEquals(
-        StringArg.of("//foo:bar"),
-        ArgFactory.from(Label.parseAbsolute("//foo:bar", ImmutableMap.of())));
+    assertEquals(StringArg.of("//foo:bar"), ArgFactory.from(Label.parseAbsolute("//foo:bar")));
   }
 
   @Test

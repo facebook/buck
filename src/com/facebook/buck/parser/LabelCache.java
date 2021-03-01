@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Create caches for {@link com.facebook.buck.core.model.label.Label} objects in the Skylark Parser
@@ -37,7 +36,7 @@ public class LabelCache {
             CacheLoader.from(
                 (labelString) -> {
                   try {
-                    return Label.parseAbsolute(labelString, false, ImmutableMap.of());
+                    return Label.parseAbsolute(labelString, false);
                   } catch (LabelSyntaxException e) {
                     throw new HumanReadableException(e, "%s is not a valid label", labelString);
                   }

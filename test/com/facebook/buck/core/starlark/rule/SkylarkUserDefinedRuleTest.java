@@ -153,11 +153,10 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     assertEquals("@foo//bar:extension.bzl:baz_rule", rule.getName());
-    assertEquals(
-        Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), rule.getLabel());
+    assertEquals(Label.parseAbsolute("@foo//bar:extension.bzl"), rule.getLabel());
     assertEquals("baz_rule", rule.getExportedName());
   }
 
@@ -187,7 +186,7 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     assertEquals(expectedOrder, rule.signature.getParameterNames());
     assertEquals(expectedRawArgs, ImmutableList.copyOf(rule.getAttrs().keySet()));
@@ -224,7 +223,7 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     assertEquals(expectedOrder, rule.signature.getParameterNames());
   }
@@ -303,7 +302,7 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
@@ -352,7 +351,7 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
@@ -398,7 +397,7 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
@@ -443,7 +442,7 @@ public class SkylarkUserDefinedRuleTest {
             params,
             false,
             false);
-    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
+    rule.export(Label.parseAbsolute("@foo//bar:extension.bzl"), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
 

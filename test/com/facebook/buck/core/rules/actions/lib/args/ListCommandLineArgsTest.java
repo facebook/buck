@@ -231,7 +231,7 @@ public class ListCommandLineArgsTest {
     assertTrue(args.isImmutable());
 
     UserDefinedProvider provider = new UserDefinedProvider(Location.BUILTIN, new String[] {"foo"});
-    provider.export(Label.parseAbsolute("//:foo.bzl", ImmutableMap.of()), "provider");
+    provider.export(Label.parseAbsolute("//:foo.bzl"), "provider");
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)

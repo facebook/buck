@@ -120,7 +120,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
                         e -> ParamName.bySnakeCase(e.getKey()), Map.Entry::getValue)),
             false,
             false);
-    ret.export(Label.parseAbsolute(label, ImmutableMap.of()), exportedName);
+    ret.export(Label.parseAbsolute(label), exportedName);
 
     return ret;
   }

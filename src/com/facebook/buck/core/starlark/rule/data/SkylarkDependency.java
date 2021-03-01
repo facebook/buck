@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.google.common.collect.ImmutableMap;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
@@ -41,7 +40,7 @@ public class SkylarkDependency implements StarlarkValue, StarlarkIndexable {
   public SkylarkDependency(BuildTarget target, ProviderInfoCollection providerInfos) {
     try {
       // TODO(T47757916): We may make BuildTarget just work properly in skylark in the future
-      this.label = Label.parseAbsolute(target.getFullyQualifiedName(), ImmutableMap.of());
+      this.label = Label.parseAbsolute(target.getFullyQualifiedName());
     } catch (LabelSyntaxException e) {
       throw new IllegalStateException(
           String.format(

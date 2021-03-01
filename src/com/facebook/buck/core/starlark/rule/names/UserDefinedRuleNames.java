@@ -19,7 +19,6 @@ package com.facebook.buck.core.starlark.rule.names;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.collect.ImmutableMap;
 import javax.annotation.Nullable;
 
 /**
@@ -65,8 +64,7 @@ public class UserDefinedRuleNames {
     }
     try {
       return new Pair<>(
-          Label.parseAbsolute(identifier.substring(0, idx), ImmutableMap.of()),
-          identifier.substring(idx + 1));
+          Label.parseAbsolute(identifier.substring(0, idx)), identifier.substring(idx + 1));
     } catch (LabelSyntaxException e) {
       return null;
     }
