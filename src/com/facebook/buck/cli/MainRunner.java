@@ -2068,8 +2068,8 @@ public final class MainRunner {
     return new DuplicatingConsole(
         new Console(
             verbosity,
-            printConsole.getStdOut().getRawStream(),
-            printConsole.getStdErr().getRawStream(),
+            printConsole.getStdOut(),
+            printConsole.getStdErr(),
             buckConfig.getView(CliConfig.class).createAnsi(color)));
   }
 

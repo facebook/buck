@@ -42,8 +42,14 @@ public class Console {
 
   public Console(Verbosity verbosity, PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
     this.verbosity = verbosity;
-    this.stdOut = new DirtyPrintStreamDecorator(stdOut);
-    this.stdErr = new DirtyPrintStreamDecorator(stdErr);
+    this.stdOut =
+        stdOut instanceof DirtyPrintStreamDecorator
+            ? (DirtyPrintStreamDecorator) stdOut
+            : new DirtyPrintStreamDecorator(stdOut);
+    this.stdErr =
+        stdErr instanceof DirtyPrintStreamDecorator
+            ? (DirtyPrintStreamDecorator) stdErr
+            : new DirtyPrintStreamDecorator(stdErr);
     this.ansi = ansi;
   }
 
