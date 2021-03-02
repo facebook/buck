@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.Message;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -68,7 +67,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
   protected final Type type;
   private final boolean isJavaCDEnabled;
   private final ImmutableList<String> javaRuntimeLauncherCommand;
-  private final Supplier<Path> javacdBinaryPathSupplier;
+  private final Supplier<AbsPath> javacdBinaryPathSupplier;
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
@@ -77,7 +76,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
       Type type,
       boolean isJavaCDEnabled,
       ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<AbsPath> javacdBinaryPathSupplier) {
     this.type = type;
     this.isJavaCDEnabled = isJavaCDEnabled;
     this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;

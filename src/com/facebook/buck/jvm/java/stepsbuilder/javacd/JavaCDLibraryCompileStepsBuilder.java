@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
@@ -28,7 +29,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 /** JavaCD implementation of {@link LibraryStepsBuilderBase} interface. */
@@ -45,7 +45,7 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
       MessageOrBuilder commandBuilder,
       boolean isJavaCDEnabled,
       ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<AbsPath> javacdBinaryPathSupplier) {
     super(
         hasAnnotationProcessing,
         spoolMode,

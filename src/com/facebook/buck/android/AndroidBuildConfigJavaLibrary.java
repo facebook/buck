@@ -21,6 +21,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
@@ -38,7 +39,6 @@ import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -62,7 +62,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -103,7 +103,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         false,
         isJavaCDEnabled,
         javaRuntimeLauncher,
-        javacdBinaryPathSupplier);
+        javacdBinaryPathSourcePathSupplier);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }

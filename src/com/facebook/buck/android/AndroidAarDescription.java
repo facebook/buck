@@ -247,7 +247,7 @@ public class AndroidAarDescription
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-              DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
+              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget));
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

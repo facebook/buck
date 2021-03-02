@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.step.StepExecutionResult;
@@ -31,7 +32,6 @@ import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -52,7 +52,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   public JavaCDWorkerToolStep(
       BuildJavaCommand buildJavaCommand,
       ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<AbsPath> javacdBinaryPathSupplier) {
     super("javacd_wt");
     this.buildJavaCommand = buildJavaCommand;
     this.launchJavaCDCommand =
@@ -60,7 +60,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   }
 
   private static ImmutableList<String> getLaunchJavaCDCommand(
-      ImmutableList<String> javaRuntimeLauncherCommand, Supplier<Path> javacdBinaryPathSupplier) {
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      Supplier<AbsPath> javacdBinaryPathSupplier) {
     int runArgumentsCount = 3;
     return ImmutableList.<String>builderWithExpectedSize(
             javaRuntimeLauncherCommand.size() + runArgumentsCount)

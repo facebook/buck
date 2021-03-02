@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
@@ -26,7 +27,6 @@ import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.function.Supplier;
 
 /**
@@ -41,14 +41,14 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
   private final boolean isJavaCDEnabled;
   private final ImmutableList<String> javaRuntimeLauncherCommand;
-  private final Supplier<Path> javacdBinaryPathSupplier;
+  private final Supplier<AbsPath> javacdBinaryPathSupplier;
 
   public JavaCDStepsBuilderFactory(
       BaseJavacToJarStepFactory configuredCompiler,
       DefaultJavaCompileStepsBuilderFactory<?> delegate,
       boolean isJavaCDEnabled,
       ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<AbsPath> javacdBinaryPathSupplier) {
     this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
     this.spoolMode = configuredCompiler.getSpoolMode();
     this.withDownwardApi = configuredCompiler.isWithDownwardApi();

@@ -76,7 +76,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
@@ -483,7 +482,7 @@ public class AndroidBinaryGraphEnhancer {
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-              DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
+              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(originalBuildTarget));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -738,7 +737,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -784,7 +783,7 @@ public class AndroidBinaryGraphEnhancer {
               isJavaCDEnabled,
               shouldExecuteInSeparateProcess,
               javaRuntimeLauncher,
-              javacdBinaryPathSupplier);
+              javacdBinaryPathSourcePathSupplier);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(

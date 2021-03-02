@@ -45,7 +45,6 @@ import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -111,7 +110,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean neverMarkAsUnusedDependency,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -136,7 +135,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         neverMarkAsUnusedDependency,
         isJavaCDEnabled,
         javaRuntimeLauncher,
-        javacdBinaryPathSupplier);
+        javacdBinaryPathSourcePathSupplier);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.isPresent() ? evalType(jvmLanguage.get()) : super.getType();
   }
@@ -229,7 +228,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               neverMarkAsUnusedDependency,
               isJavaCDEnabled,
               javaRuntimeLauncher,
-              javacdBinaryPathSupplier) ->
+              javacdBinaryPathSourcePathSupplier) ->
               new AndroidLibrary(
                   target,
                   filesystem,
@@ -256,7 +255,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   neverMarkAsUnusedDependency,
                   isJavaCDEnabled,
                   javaRuntimeLauncher,
-                  javacdBinaryPathSupplier));
+                  javacdBinaryPathSourcePathSupplier));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 

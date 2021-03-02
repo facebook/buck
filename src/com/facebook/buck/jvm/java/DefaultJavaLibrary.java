@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -182,7 +181,7 @@ public class DefaultJavaLibrary
       boolean neverMarkAsUnusedDependency,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -196,7 +195,7 @@ public class DefaultJavaLibrary
             sourceAbi,
             isJavaCDEnabled,
             javaRuntimeLauncher,
-            javacdBinaryPathSupplier));
+            javacdBinaryPathSourcePathSupplier));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(

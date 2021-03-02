@@ -51,7 +51,6 @@ import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -77,7 +76,7 @@ public class CalculateSourceAbi
       SourcePathRuleFinder ruleFinder,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -88,7 +87,7 @@ public class CalculateSourceAbi
             jarBuildStepsFactory,
             isJavaCDEnabled,
             javaRuntimeLauncher,
-            javacdBinaryPathSupplier));
+            javacdBinaryPathSourcePathSupplier));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -117,7 +116,7 @@ public class CalculateSourceAbi
         reason = "path to javacd binary is not a part of a rule key",
         serialization = DefaultFieldSerialization.class,
         inputs = IgnoredFieldInputs.class)
-    private final Supplier<Path> javacdBinaryPathSupplier;
+    private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
 
     public SourceAbiBuildable(
         BuildTarget buildTarget,
@@ -125,7 +124,7 @@ public class CalculateSourceAbi
         JarBuildStepsFactory<?> jarBuildStepsFactory,
         boolean isJavaCDEnabled,
         Tool javaRuntimeLauncher,
-        Supplier<Path> javacdBinaryPathSupplier) {
+        Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
       this.isJavaCDEnabled = isJavaCDEnabled;
@@ -135,7 +134,7 @@ public class CalculateSourceAbi
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
       this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
-      this.javacdBinaryPathSupplier = javacdBinaryPathSupplier;
+      this.javacdBinaryPathSourcePathSupplier = javacdBinaryPathSourcePathSupplier;
     }
 
     @Override
@@ -150,7 +149,8 @@ public class CalculateSourceAbi
                   jarBuildStepsFactory.getConfiguredCompiler(),
                   isJavaCDEnabled,
                   javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-                  javacdBinaryPathSupplier)
+                  () ->
+                      sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()))
               .getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
@@ -175,7 +175,8 @@ public class CalculateSourceAbi
                   jarBuildStepsFactory.getConfiguredCompiler(),
                   isJavaCDEnabled,
                   javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-                  javacdBinaryPathSupplier)
+                  () ->
+                      sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()))
               .getPipelineAbiJarBuilder();
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,

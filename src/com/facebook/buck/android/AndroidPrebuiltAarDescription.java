@@ -255,7 +255,7 @@ public class AndroidPrebuiltAarDescription
         withDownwardApi,
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
+        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget));
   }
 
   @Override

@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -41,7 +42,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
-import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -60,9 +60,10 @@ public abstract class DefaultJavaLibraryRules {
 
   private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
 
-  /** Returns java cd binary path supplier */
-  public static Supplier<Path> getJavacdBinaryPathSupplier() {
-    return MoreSuppliers.memoize(DefaultJavaLibraryRules::getJavaCDPath);
+  /** Returns java cd binary source path supplier */
+  public static Supplier<SourcePath> getJavacdBinarySourcePathSupplier(BuildTarget buildTarget) {
+    return () ->
+        ExplicitBuildTargetSourcePath.of(buildTarget, DefaultJavaLibraryRules.getJavaCDPath());
   }
 
   private static Path getJavaCDPath() {
@@ -100,7 +101,7 @@ public abstract class DefaultJavaLibraryRules {
         boolean neverMarkAsUnusedDependency,
         boolean isJavaCDEnabled,
         Tool javaRuntimeLauncher,
-        Supplier<Path> javacdBinaryPathSupplier);
+        Supplier<SourcePath> javacdBinaryPathSourcePathSupplier);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -464,7 +465,7 @@ public abstract class DefaultJavaLibraryRules {
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinaryPathSupplier());
+            getJavacdBinarySourcePathSupplier(buildTarget));
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -511,7 +512,7 @@ public abstract class DefaultJavaLibraryRules {
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
                 javaBuckConfig.isJavaCDEnabled(),
                 javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-                getJavacdBinaryPathSupplier());
+                getJavacdBinarySourcePathSupplier(buildTarget));
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -553,18 +554,18 @@ public abstract class DefaultJavaLibraryRules {
     JarBuildStepsFactory<?> jarBuildStepsFactory = getJarBuildStepsFactoryForSourceOnlyAbi();
 
     BuildTarget libraryTarget = getLibraryTarget();
-    BuildTarget sourceAbiTarget = JavaAbis.getSourceOnlyAbiJar(libraryTarget);
+    BuildTarget sourceOnlyAbiTarget = JavaAbis.getSourceOnlyAbiJar(libraryTarget);
     JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
     ActionGraphBuilder graphBuilder = getActionGraphBuilder();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
-            sourceAbiTarget,
+            sourceOnlyAbiTarget,
             getProjectFilesystem(),
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinaryPathSupplier()));
+            getJavacdBinarySourcePathSupplier(sourceOnlyAbiTarget)));
   }
 
   @Nullable
@@ -587,7 +588,7 @@ public abstract class DefaultJavaLibraryRules {
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinaryPathSupplier()));
+            getJavacdBinarySourcePathSupplier(sourceAbiTarget)));
   }
 
   @Nullable

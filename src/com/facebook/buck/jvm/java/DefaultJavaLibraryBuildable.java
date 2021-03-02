@@ -57,7 +57,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -90,7 +89,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       reason = "path to javacd binary is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
-  private final Supplier<Path> javacdBinaryPathSupplier;
+  private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
 
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
@@ -101,7 +100,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -123,7 +122,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
-    this.javacdBinaryPathSupplier = javacdBinaryPathSupplier;
+    this.javacdBinaryPathSourcePathSupplier = javacdBinaryPathSourcePathSupplier;
   }
 
   RelPath getPathToClassHashes(ProjectFilesystem filesystem) {
@@ -159,7 +158,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                 jarBuildStepsFactory.getConfiguredCompiler(),
                 isJavaCDEnabled,
                 javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-                javacdBinaryPathSupplier)
+                () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()))
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -190,7 +189,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                 jarBuildStepsFactory.getConfiguredCompiler(),
                 isJavaCDEnabled,
                 javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-                javacdBinaryPathSupplier)
+                () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()))
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(

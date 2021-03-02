@@ -61,6 +61,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -790,12 +791,12 @@ public class AndroidBinaryGraphEnhancerTest {
   @Test
   public void testAllBuildablesExceptPreDexRule() {
     // Create an android_build_config() as a dependency of the android_binary().
-    BuildTarget buildConfigBuildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:cfg");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
         AndroidBuildConfigDescription.createBuildRule(
-            buildConfigBuildTarget,
+            buildTarget,
             projectFilesystem,
             "com.example.buck",
             /* values */ BuildConfigFields.of(),
@@ -808,7 +809,7 @@ public class AndroidBinaryGraphEnhancerTest {
             false,
             false,
             new FakeTool(),
-            () -> Paths.get("test/javacd_test.jar"));
+            () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =

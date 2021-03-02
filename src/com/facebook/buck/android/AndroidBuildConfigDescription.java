@@ -45,7 +45,6 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -113,7 +112,7 @@ public class AndroidBuildConfigDescription
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinaryPathSupplier());
+        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget));
   }
 
   /**
@@ -138,7 +137,7 @@ public class AndroidBuildConfigDescription
       boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
-      Supplier<Path> javacdBinaryPathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -193,7 +192,7 @@ public class AndroidBuildConfigDescription
         withDownwardApi,
         isJavaCDEnabled,
         javaRuntimeLauncher,
-        javacdBinaryPathSupplier);
+        javacdBinaryPathSourcePathSupplier);
   }
 
   @Override
