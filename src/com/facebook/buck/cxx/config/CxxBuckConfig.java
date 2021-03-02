@@ -42,6 +42,7 @@ import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.CxxToolTypeInferer;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.HeadersAsRawHeadersMode;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.ProviderBasedUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
@@ -660,6 +661,11 @@ public class CxxBuckConfig {
   /** @return whether short names for intermediate files should be used */
   public Boolean getFilepathLengthLimited() {
     return delegate.getBooleanValue(cxxSection, FILEPATH_LENGTH_LIMITED, false);
+  }
+
+  public Optional<HeadersAsRawHeadersMode> getHeadersAsRawHeadersMode() {
+    return delegate.getEnum(
+        cxxSection, "headers_as_raw_headers_mode", HeadersAsRawHeadersMode.class);
   }
 
   public BuckConfig getDelegate() {

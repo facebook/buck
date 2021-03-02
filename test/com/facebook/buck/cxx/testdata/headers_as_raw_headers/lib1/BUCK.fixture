@@ -1,0 +1,5 @@
+cxx_library(
+    name = "lib1",
+    srcs = ["lib1.c"],
+    exported_headers = ["lib1.h"],
+)

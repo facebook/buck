@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.cxx.toolchain.HeadersAsRawHeadersMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -234,6 +235,11 @@ public class CxxConstructorArgTest {
     @Override
     public ImmutableSortedSet<String> getContacts() {
       return ImmutableSortedSet.of();
+    }
+
+    @Override
+    public Optional<HeadersAsRawHeadersMode> getHeadersAsRawHeadersMode() {
+      return Optional.empty();
     }
   }
 }

@@ -309,6 +309,29 @@ public class MorePaths {
     return nameWithoutExtension.substring(prefix.length());
   }
 
+  /**
+   * @return strip {@code suffix} from the end of {@code p} and return the result, or {@code
+   *     Optional.empty()} if {@code p} does not end with {@code suffix}.
+   */
+  public static Optional<Path> stripSuffix(Path p, Path suffix) {
+    if (suffix.getNameCount() > p.getNameCount()) {
+      return Optional.empty();
+    }
+    for (int i = 1; i <= suffix.getNameCount(); ++i) {
+      if (!suffix.getName(suffix.getNameCount() - i).equals(p.getName(p.getNameCount() - i))) {
+        return Optional.empty();
+      }
+    }
+    if (p.getNameCount() == suffix.getNameCount()) {
+      return Optional.of(p.getFileSystem().getPath(""));
+    }
+    return Optional.of(p.subpath(0, p.getNameCount() - suffix.getNameCount()));
+  }
+
+  public static Optional<RelPath> stripSuffix(RelPath p, RelPath suffix) {
+    return stripSuffix(p.getPath(), suffix.getPath()).map(RelPath::of);
+  }
+
   public static Optional<Path> stripPrefix(Path p, Path prefix) {
     if (prefix.getNameCount() > p.getNameCount()) {
       return Optional.empty();

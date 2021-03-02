@@ -160,6 +160,8 @@ public interface CxxPlatform extends FlavorConvertible {
   /** @return the explicit header mode to use for this platform. */
   Optional<HeaderMode> getHeaderMode();
 
+  Optional<HeadersAsRawHeadersMode> getHeadersAsRawHeadersMode();
+
   /** @return whether shorter names for intermediate files should be used */
   @Value.Default
   default boolean getFilepathLengthLimited() {

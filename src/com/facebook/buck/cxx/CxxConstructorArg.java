@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.cxx.toolchain.HeadersAsRawHeadersMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -109,6 +110,8 @@ public interface CxxConstructorArg
   default ImmutableSortedSet<SourcePath> getRawHeaders() {
     return ImmutableSortedSet.of();
   }
+
+  Optional<HeadersAsRawHeadersMode> getHeadersAsRawHeadersMode();
 
   /**
    * A list of include directories to be added to the compile command for compiling this cxx target.

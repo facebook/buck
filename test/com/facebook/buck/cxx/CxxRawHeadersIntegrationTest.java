@@ -57,16 +57,20 @@ public class CxxRawHeadersIntegrationTest {
   private BuildTarget target2;
 
   @Parameterized.Parameter(value = 0)
+  public String scenario;
+
+  @Parameterized.Parameter(value = 1)
   public boolean useBuckd;
 
-  @Parameterized.Parameters(name = "useBuckd={0}")
+  @Parameterized.Parameters(name = "{0},useBuckd={1}")
   public static Collection<Object[]> data() {
-    return ParameterizedTests.getPermutations(ImmutableList.of(false, true));
+    return ParameterizedTests.getPermutations(
+        ImmutableList.of("raw_headers", "headers_as_raw_headers"), ImmutableList.of(false, true));
   }
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "raw_headers", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
     String posix_config = "<file:./posix.buckconfig>\n";
     String windows_config = "<file:./windows.buckconfig>\n";

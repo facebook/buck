@@ -443,4 +443,21 @@ public class MorePathsTest {
       assertEquals(relativePath, RelPath.of(targetOfSymbolicLink));
     }
   }
+
+  @Test
+  public void stripSuffix() {
+    assertThat(
+        MorePaths.stripSuffix(Paths.get("a/b/c"), Paths.get("c")),
+        equalTo(Optional.of(Paths.get("a/b"))));
+    assertThat(
+        MorePaths.stripSuffix(Paths.get("a/b/c"), Paths.get("b/c")),
+        equalTo(Optional.of(Paths.get("a"))));
+    assertThat(
+        MorePaths.stripSuffix(Paths.get("a/b/c"), Paths.get("a/b/c")),
+        equalTo(Optional.of(Paths.get(""))));
+    assertThat(
+        MorePaths.stripSuffix(Paths.get("a/b/c"), Paths.get("d")), equalTo(Optional.empty()));
+    assertThat(
+        MorePaths.stripSuffix(Paths.get("a/b/c"), Paths.get("z/a/b/c")), equalTo(Optional.empty()));
+  }
 }

@@ -1,0 +1,6 @@
+cxx_library(
+    name = "lib6",
+    srcs = ["lib6.c"],
+    headers = ["headers"],
+    visibility = ["PUBLIC"],
+)

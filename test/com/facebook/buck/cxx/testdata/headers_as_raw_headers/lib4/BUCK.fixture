@@ -1,0 +1,9 @@
+cxx_library(
+    name = "lib4",
+    srcs = ["lib4.c"],
+    compiler_flags = [
+        "-Ilib3",
+    ],
+    visibility = ["PUBLIC"],
+    deps = ["//lib3:lib3"],
+)

@@ -146,6 +146,11 @@ public abstract class Either<LEFT, RIGHT> {
       // Hash a bit denoting that this is a Left value.
       return Objects.hash(false, value);
     }
+
+    @Override
+    public String toString() {
+      return "Left{" + value + '}';
+    }
   }
 
   private static final class Right<LEFT, RIGHT> extends Either<LEFT, RIGHT> {
@@ -218,6 +223,11 @@ public abstract class Either<LEFT, RIGHT> {
     @Override
     public int hashCode() {
       return Objects.hash(true, value);
+    }
+
+    @Override
+    public String toString() {
+      return "Right{" + value + '}';
     }
   }
 

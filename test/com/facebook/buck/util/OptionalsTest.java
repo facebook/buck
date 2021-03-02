@@ -59,4 +59,14 @@ public class OptionalsTest {
     assertThat(Optionals.compare(Optional.of(1), Optional.of(2)), lessThan(0));
     assertThat(Optionals.compare(Optional.of(2), Optional.of(1)), greaterThan(0));
   }
+
+  @Test
+  public void firstOf() {
+    assertThat(Optionals.firstOf(Optional.of(5), Optional.of(4)), equalTo(Optional.of(5)));
+    assertThat(
+        Optionals.firstOf(Optional.empty(), Optional.of(4), Optional.of(3)),
+        equalTo(Optional.of(4)));
+    assertThat(Optionals.firstOf(Optional.empty(), Optional.empty()), equalTo(Optional.empty()));
+    assertThat(Optionals.firstOf(), equalTo(Optional.empty()));
+  }
 }

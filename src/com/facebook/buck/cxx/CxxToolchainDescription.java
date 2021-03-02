@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.HeadersAsRawHeadersMode;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -367,6 +368,8 @@ public class CxxToolchainDescription
 
     cxxPlatform.setFilepathLengthLimited(args.getFilepathLengthLimited());
 
+    cxxPlatform.setHeadersAsRawHeadersMode(args.getHeadersAsRawHeadersMode());
+
     return new CxxToolchainBuildRule(buildTarget, context, cxxPlatform);
   }
 
@@ -614,5 +617,7 @@ public class CxxToolchainDescription
 
     /** Format to use for debug prefix map path sanitization. */
     Optional<String> getDebugPathPrefixMapSanitizerFormat();
+
+    Optional<HeadersAsRawHeadersMode> getHeadersAsRawHeadersMode();
   }
 }

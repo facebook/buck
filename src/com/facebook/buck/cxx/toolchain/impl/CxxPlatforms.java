@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
@@ -33,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.HeadersAsRawHeadersMode;
 import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
@@ -149,7 +151,8 @@ public class CxxPlatforms {
       Optional<Boolean> linkWithArchives,
       Optional<ImmutableList<Arg>> stripDebugFlags,
       Optional<ImmutableList<Arg>> stripNonGlobalFlags,
-      Optional<ImmutableList<Arg>> stripAllFlags) {
+      Optional<ImmutableList<Arg>> stripAllFlags,
+      Optional<HeadersAsRawHeadersMode> autoRawHeaderMode) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -202,7 +205,9 @@ public class CxxPlatforms {
             cxxBuckConfig.getConflictingHeaderBasenameWhitelist())
         .setHeaderMode(cxxBuckConfig.getHeaderMode())
         .setUseArgFile(cxxBuckConfig.getUseArgFile())
-        .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited());
+        .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited())
+        .setHeadersAsRawHeadersMode(
+            Optionals.firstOf(cxxBuckConfig.getHeadersAsRawHeadersMode(), autoRawHeaderMode));
 
     stripDebugFlags.ifPresent(builder::setStripDebugFlags);
     stripNonGlobalFlags.ifPresent(builder::setStripNonGlobalFlags);
@@ -288,7 +293,8 @@ public class CxxPlatforms {
         Optional.of(defaultPlatform.getRequiresArchives()),
         Optional.of(defaultPlatform.getStripDebugFlags()),
         Optional.of(defaultPlatform.getStripNonGlobalFlags()),
-        Optional.of(defaultPlatform.getStripAllFlags()));
+        Optional.of(defaultPlatform.getStripAllFlags()),
+        defaultPlatform.getHeadersAsRawHeadersMode());
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {

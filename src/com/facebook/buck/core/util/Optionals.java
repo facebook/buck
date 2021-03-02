@@ -66,6 +66,17 @@ public class Optionals {
     return optional.get();
   }
 
+  /** @return the first non-empty item, or {@code Optional.empty()}. */
+  @SafeVarargs
+  public static <T> Optional<T> firstOf(Optional<T>... items) {
+    for (Optional<T> item : items) {
+      if (item.isPresent()) {
+        return item;
+      }
+    }
+    return Optional.empty();
+  }
+
   private static final Optional<Boolean> OPTIONAL_TRUE = Optional.of(true);
   private static final Optional<Boolean> OPTIONAL_FALSE = Optional.of(false);
 

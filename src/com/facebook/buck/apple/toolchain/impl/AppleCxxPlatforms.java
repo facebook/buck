@@ -490,7 +490,8 @@ public class AppleCxxPlatforms {
             Optional.empty(),
             Optional.of(AppleStripFlags.getStripArgs(StripStyle.DEBUGGING_SYMBOLS, stripSwift)),
             Optional.of(AppleStripFlags.getStripArgs(StripStyle.NON_GLOBAL_SYMBOLS, stripSwift)),
-            Optional.of(AppleStripFlags.getStripArgs(StripStyle.ALL_SYMBOLS, stripSwift)));
+            Optional.of(AppleStripFlags.getStripArgs(StripStyle.ALL_SYMBOLS, stripSwift)),
+            Optional.empty());
 
     ImmutableList.Builder<Path> swiftOverrideSearchPathBuilder = ImmutableList.builder();
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);

@@ -317,6 +317,7 @@ public class DefaultCxxPlatforms {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 

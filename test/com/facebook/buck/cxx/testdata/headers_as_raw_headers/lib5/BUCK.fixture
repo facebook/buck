@@ -1,0 +1,6 @@
+cxx_library(
+    name = "lib5",
+    srcs = ["lib5.c"],
+    headers = ["lib5.h"],
+    raw_headers = ["lib5.h"],
+)
