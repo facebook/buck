@@ -47,6 +47,7 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
@@ -197,8 +198,26 @@ public class JavaCDWorkerToolMain {
     }
 
     int exitCode = stepExecutionResult.getExitCode();
-    ResultEvent resultEvent =
-        ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode).build();
+    ResultEvent.Builder resultEventBuilder =
+        ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode);
+    if (!stepExecutionResult.isSuccess()) {
+      StringBuilder errorMessage = new StringBuilder();
+      stepExecutionResult
+          .getStderr()
+          .ifPresent(
+              stdErr ->
+                  errorMessage.append("Std err: ").append(stdErr).append(System.lineSeparator()));
+      stepExecutionResult
+          .getCause()
+          .ifPresent(
+              cause ->
+                  errorMessage.append("Cause: ").append(Throwables.getStackTraceAsString(cause)));
+      if (errorMessage.length() > 0) {
+        resultEventBuilder.setMessage(errorMessage.toString());
+      }
+    }
+
+    ResultEvent resultEvent = resultEventBuilder.build();
     DOWNWARD_PROTOCOL.write(
         EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.RESULT_EVENT).build(),
         resultEvent,
