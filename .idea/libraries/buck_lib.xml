@@ -5,8 +5,6 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ini4j/ini4j-0.5.5-SNAPSHOT.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.5.1.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.5.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/stringtemplate/ST-4.0.8.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/ObjCBridge/java-objc-bridge-1.1-SNAPSHOT.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.12.0.jar!/" />
@@ -22,12 +20,15 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.9.7.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.9.7.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-module-mrbean-2.9.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-5.6.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.6.0.jar!/" />
     </CLASSES>
-    <JAVADOC />
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-5.6.0-javadoc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.6.0-javadoc.jar!/" />
+    </JAVADOC>
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-4.5.1-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-4.5.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-5.2.5-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.12.0-sources.jar!/" />
@@ -43,6 +44,8 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-guava-2.9.7-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-datatype-jdk8-2.9.7-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-module-mrbean-2.9.7-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-5.6.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jna/jna-platform-5.6.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
