@@ -67,8 +67,8 @@ public class AppleCxxDebugSymbolLinkStrategy implements CxxDebugSymbolLinkStrate
   }
 
   @Override
-  public ImmutableSet<AbsPath> getFocusedBuildOutputPaths() {
-    return focusedBuildOutputPaths;
+  public Optional<ImmutableSet<AbsPath>> getFocusedBuildOutputPaths() {
+    return Optional.of(focusedBuildOutputPaths);
   }
 
   private ImmutableSet<AbsPath> createFocusedBuildOutputPaths(

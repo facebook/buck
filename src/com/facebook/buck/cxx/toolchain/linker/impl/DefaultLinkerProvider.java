@@ -35,7 +35,6 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private final boolean cacheLinks;
   private final boolean scrubConcurrently;
   private final boolean usePathNormalizationArgs;
-  private final boolean hasFocusedTargets;
 
   private final LoadingCache<BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>
       cache =
@@ -56,13 +55,12 @@ public class DefaultLinkerProvider implements LinkerProvider {
                                   tool,
                                   cacheLinks,
                                   scrubConcurrently,
-                                  usePathNormalizationArgs,
-                                  hasFocusedTargets));
+                                  usePathNormalizationArgs));
                     }
                   });
 
   public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
-    this(type, toolProvider, cacheLinks, false, false, false);
+    this(type, toolProvider, cacheLinks, false, false);
   }
 
   public DefaultLinkerProvider(
@@ -70,14 +68,12 @@ public class DefaultLinkerProvider implements LinkerProvider {
       ToolProvider toolProvider,
       boolean cacheLinks,
       boolean scrubConcurrently,
-      boolean usePathNormalizationArgs,
-      boolean hasFocusedTargets) {
+      boolean usePathNormalizationArgs) {
     this.type = type;
     this.toolProvider = toolProvider;
     this.cacheLinks = cacheLinks;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
-    this.hasFocusedTargets = hasFocusedTargets;
   }
 
   private static Linker build(
@@ -85,12 +81,10 @@ public class DefaultLinkerProvider implements LinkerProvider {
       Tool tool,
       boolean cacheLinks,
       boolean scrubConcurrently,
-      boolean usePathNormalizationArgs,
-      boolean hasFocusedTargets) {
+      boolean usePathNormalizationArgs) {
     switch (type) {
       case DARWIN:
-        return new DarwinLinker(
-            tool, cacheLinks, scrubConcurrently, usePathNormalizationArgs, hasFocusedTargets);
+        return new DarwinLinker(tool, cacheLinks, scrubConcurrently, usePathNormalizationArgs);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:

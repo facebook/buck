@@ -130,7 +130,8 @@ public class RustCompileTest {
     return new Linker() {
       @Override
       public ImmutableList<FileScrubber> getScrubbers(
-          ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths) {
+          ImmutableMap<Path, Path> cellRootMap,
+          Optional<ImmutableSet<AbsPath>> focusedTargetsPaths) {
         return null;
       }
 

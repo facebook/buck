@@ -79,7 +79,7 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
-      ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths) {
+      ImmutableMap<Path, Path> cellRootMap, Optional<ImmutableSet<AbsPath>> focusedTargetsPaths) {
     return ImmutableList.of();
   }
 

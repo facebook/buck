@@ -327,7 +327,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                 commandPrefix);
       }
 
-      ImmutableSet<AbsPath> focusedBuildOutputPaths = debugStrategy.getFocusedBuildOutputPaths();
+      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths =
+          debugStrategy.getFocusedBuildOutputPaths();
       Supplier<Boolean> skipScrubbingCheck =
           () -> {
             // Skip scrubbing if the executable was not modified, as there's no need to re-scrub

@@ -50,11 +50,11 @@ public interface Linker extends Tool {
    * @return The scrubbers for scrubbing the linked binaries.
    */
   ImmutableList<FileScrubber> getScrubbers(
-      ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths);
+      ImmutableMap<Path, Path> cellRootMap, Optional<ImmutableSet<AbsPath>> focusedTargetsPaths);
 
   /**
    * Provides a way to pass normalization arguments to the linker. If the linker does not support
-   * such arguments, then {@link #getScrubbers(ImmutableMap, ImmutableSet)} can be used to perform
+   * such arguments, then {@link #getScrubbers(ImmutableMap, Optional)} can be used to perform
    * post-processing instead.
    *
    * @param cellRootMap Replacement map for cell roots found in paths.

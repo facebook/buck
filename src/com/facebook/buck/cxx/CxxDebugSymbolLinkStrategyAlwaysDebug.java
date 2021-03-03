@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
 
 /**
  * This strategy behaves as a nop / default: all debug symbols will be loaded, as if there's no
@@ -31,7 +32,7 @@ public class CxxDebugSymbolLinkStrategyAlwaysDebug implements CxxDebugSymbolLink
   @AddToRuleKey private final String debugStrategyType = "cxx-always-debug-strategy";
 
   @Override
-  public ImmutableSet<AbsPath> getFocusedBuildOutputPaths() {
-    return ImmutableSet.of();
+  public Optional<ImmutableSet<AbsPath>> getFocusedBuildOutputPaths() {
+    return Optional.empty();
   }
 }

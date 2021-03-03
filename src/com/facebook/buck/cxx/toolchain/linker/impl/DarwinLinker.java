@@ -73,26 +73,20 @@ public class DarwinLinker extends DelegatingTool
 
   @AddToRuleKey private final boolean cacheLinks;
   @AddToRuleKey private final boolean scrubConcurrently;
-  @AddToRuleKey private final boolean hasFocusedTargets;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
   public DarwinLinker(
-      Tool tool,
-      boolean cacheLinks,
-      boolean scrubConcurrently,
-      boolean usePathNormalizationArgs,
-      boolean hasFocusedTargets) {
+      Tool tool, boolean cacheLinks, boolean scrubConcurrently, boolean usePathNormalizationArgs) {
     super(tool);
     this.cacheLinks = cacheLinks;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
-    this.hasFocusedTargets = hasFocusedTargets;
   }
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
-      ImmutableMap<Path, Path> cellRootMap, ImmutableSet<AbsPath> focusedTargetsPaths) {
+      ImmutableMap<Path, Path> cellRootMap, Optional<ImmutableSet<AbsPath>> focusedTargetsPaths) {
     if (cacheLinks) {
       FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
       if (usePathNormalizationArgs) {
@@ -100,8 +94,8 @@ public class DarwinLinker extends DelegatingTool
         return ImmutableList.of(uuidScrubber);
       }
       return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
-    } else if (hasFocusedTargets) {
-      return getFocusedDebugSymbolScrubbers(focusedTargetsPaths);
+    } else if (focusedTargetsPaths.isPresent()) {
+      return getFocusedDebugSymbolScrubbers(focusedTargetsPaths.get());
     } else {
       return ImmutableList.of();
     }
