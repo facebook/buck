@@ -82,6 +82,23 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
   private final BuildOutputInitializer<String> buildOutputInitializer;
   private final ImmutableSortedSet<BuildRule> deps;
 
+  /**
+   * Supplier that returns the package for the Java class generated for the resources in {@link
+   * Impl#res}, if any. The value for this supplier is determined, as follows:
+   *
+   * <ul>
+   *   <li>If the user specified a {@code package} argument, the supplier will return that value.
+   *   <li>Failing that, when the rule is built, it will parse the package from the file specified
+   *       by the {@code manifest} so that it can be returned by this supplier. (Note this also
+   *       needs to work correctly if the rule is initialized from disk.)
+   *   <li>In all other cases (e.g., both {@code package} and {@code manifest} are unspecified), the
+   *       behavior is undefined.
+   * </ul>
+   */
+  private final Supplier<String> rDotJavaPackageSupplier;
+
+  private final AtomicReference<String> rDotJavaPackage;
+
   public AndroidResource(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -125,6 +142,18 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
 
     this.deps = deps;
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+
+    this.rDotJavaPackage = new AtomicReference<>(rDotJavaPackageArgument);
+    this.rDotJavaPackageSupplier =
+        () -> {
+          String rDotJavaPackage1 = this.rDotJavaPackage.get();
+          if (rDotJavaPackage1 != null) {
+            return rDotJavaPackage1;
+          } else {
+            throw new RuntimeException(
+                "rDotJavaPackage was requested before it was made available.");
+          }
+        };
   }
 
   public AndroidResource(
@@ -228,9 +257,9 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
     @AddToRuleKey
     private final ImmutableSortedMap<String, SourcePath> assetsSrcs;
 
-    private final OutputPath pathToTextSymbolsDir;
-    private final OutputPath pathToTextSymbolsFile;
-    private final OutputPath pathToRDotJavaPackageFile;
+    @AddToRuleKey private final OutputPath pathToTextSymbolsDir;
+    @AddToRuleKey private final OutputPath pathToTextSymbolsFile;
+    @AddToRuleKey private final OutputPath pathToRDotJavaPackageFile;
 
     @AddToRuleKey @Nullable private final SourcePath manifestFile;
 
@@ -242,23 +271,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
 
     /** This is the original {@code package} argument passed to this rule. */
     @AddToRuleKey @Nullable private final String rDotJavaPackageArgument;
-
-    /**
-     * Supplier that returns the package for the Java class generated for the resources in {@link
-     * #res}, if any. The value for this supplier is determined, as follows:
-     *
-     * <ul>
-     *   <li>If the user specified a {@code package} argument, the supplier will return that value.
-     *   <li>Failing that, when the rule is built, it will parse the package from the file specified
-     *       by the {@code manifest} so that it can be returned by this supplier. (Note this also
-     *       needs to work correctly if the rule is initialized from disk.)
-     *   <li>In all other cases (e.g., both {@code package} and {@code manifest} are unspecified),
-     *       the behavior is undefined.
-     * </ul>
-     */
-    private final Supplier<String> rDotJavaPackageSupplier;
-
-    private final AtomicReference<String> rDotJavaPackage;
 
     Impl(
         BuildTarget buildTarget,
@@ -289,18 +301,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       this.pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
 
       this.rDotJavaPackageArgument = rDotJavaPackageArgument;
-      this.rDotJavaPackage = new AtomicReference<>(rDotJavaPackageArgument);
-
-      this.rDotJavaPackageSupplier =
-          () -> {
-            String rDotJavaPackage1 = AndroidResource.Impl.this.rDotJavaPackage.get();
-            if (rDotJavaPackage1 != null) {
-              return rDotJavaPackage1;
-            } else {
-              throw new RuntimeException(
-                  "rDotJavaPackage was requested before it was made available.");
-            }
-          };
     }
 
     @Override
@@ -366,7 +366,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
 
   @Override
   public String getRDotJavaPackage() {
-    String rDotJavaPackage = getBuildable().rDotJavaPackageSupplier.get();
+    String rDotJavaPackage = rDotJavaPackageSupplier.get();
     if (rDotJavaPackage == null) {
       throw new RuntimeException("No package for " + getBuildTarget());
     }
@@ -393,7 +393,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
               rDotJavaPackageFromFile,
               getBuildable().rDotJavaPackageArgument));
     }
-    getBuildable().rDotJavaPackage.set(rDotJavaPackageFromFile);
+    rDotJavaPackage.set(rDotJavaPackageFromFile);
     return rDotJavaPackageFromFile;
   }
 
