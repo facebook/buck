@@ -179,6 +179,10 @@ message ExecutedActionInfo {
 
   // reflects if the action was ran on elastic capacity
   bool executed_on_elastic_capacity = 9;
+
+  // Reflects if the action was deduplicated (= observed execution time can
+  // significantly differ from a real one).
+  bool deduplicated = 10;
 }
 
 message DebugInfo {
