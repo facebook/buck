@@ -45,13 +45,13 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return armeabiArchFlags;
         case CLANG:
           return ImmutableList.<String>builder()
-              .add("-target", "armv5te-none-linux-androideabi")
+              .add("-target", "armv5te-none-linux-androideabi" + String.valueOf(androidPlatformLevel))
               .addAll(armeabiArchFlags)
               .build();
       }
@@ -59,13 +59,13 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.<String>builder().add("-Os").addAll(armeabiArchFlags).build();
         case CLANG:
           return ImmutableList.<String>builder()
-              .add("-target", "armv5te-none-linux-androideabi", "-Os")
+              .add("-target", "armv5te-none-linux-androideabi" + String.valueOf(androidPlatformLevel), "-Os")
               .addAll(armeabiArchFlags)
               .build();
       }
@@ -73,13 +73,13 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of("-march=armv5te", "-Wl,--fix-cortex-a8");
         case CLANG:
           return ImmutableList.of(
-              "-target", "armv5te-none-linux-androideabi", "-march=armv5te", "-Wl,--fix-cortex-a8");
+              "-target", "armv5te-none-linux-androideabi" + String.valueOf(androidPlatformLevel), "-march=armv5te", "-Wl,--fix-cortex-a8");
       }
       throw new AssertionError();
     }
@@ -109,13 +109,13 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return armeabiv7ArchFlags;
         case CLANG:
           return ImmutableList.<String>builder()
-              .add("-target", "armv7-none-linux-androideabi")
+              .add("-target", "armv7-none-linux-androideabi" + String.valueOf(androidPlatformLevel))
               .addAll(armeabiv7ArchFlags)
               .build();
       }
@@ -123,7 +123,7 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.<String>builder()
@@ -132,7 +132,7 @@ public enum TargetCpuType {
               .build();
         case CLANG:
           return ImmutableList.<String>builder()
-              .add("-target", "armv7-none-linux-androideabi", "-Os")
+              .add("-target", "armv7-none-linux-androideabi" + String.valueOf(androidPlatformLevel), "-Os")
               .addAll(armeabiv7ArchFlags)
               .build();
       }
@@ -140,12 +140,12 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of("-target", "armv7-none-linux-androideabi");
+          return ImmutableList.of("-target", "armv7-none-linux-androideabi" + String.valueOf(androidPlatformLevel));
       }
       throw new AssertionError();
     }
@@ -174,13 +174,13 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return arm64ArchFlags;
         case CLANG:
           return ImmutableList.<String>builder()
-              .add("-target", "aarch64-none-linux-android")
+              .add("-target", "aarch64-none-linux-android" + String.valueOf(androidPlatformLevel))
               .addAll(arm64ArchFlags)
               .build();
       }
@@ -188,7 +188,7 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.<String>builder()
@@ -201,7 +201,7 @@ public enum TargetCpuType {
               .build();
         case CLANG:
           return ImmutableList.<String>builder()
-              .add("-target", "aarch64-none-linux-android")
+              .add("-target", "aarch64-none-linux-android" + String.valueOf(androidPlatformLevel))
               .add("-O2")
               .add("-fomit-frame-pointer")
               .add("-fstrict-aliasing")
@@ -212,12 +212,12 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of("-target", "aarch64-none-linux-android");
+          return ImmutableList.of("-target", "aarch64-none-linux-android" + String.valueOf(androidPlatformLevel));
       }
       throw new AssertionError();
     }
@@ -244,34 +244,34 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of("-target", "i686-none-linux-android");
+          return ImmutableList.of("-target", "i686-none-linux-android" + String.valueOf(androidPlatformLevel));
       }
       throw new AssertionError();
     }
 
     @Override
-    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of("-funswitch-loops", "-finline-limit=300", "-O2");
         case CLANG:
-          return ImmutableList.of("-target", "i686-none-linux-android", "-O2");
+          return ImmutableList.of("-target", "i686-none-linux-android" + String.valueOf(androidPlatformLevel), "-O2");
       }
       throw new AssertionError();
     }
 
     @Override
-    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of("-target", "i686-none-linux-android");
+          return ImmutableList.of("-target", "i686-none-linux-android" + String.valueOf(androidPlatformLevel));
       }
       throw new AssertionError();
     }
@@ -298,34 +298,34 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of("-target", "x86_64-none-linux-android");
+          return ImmutableList.of("-target", "x86_64-none-linux-android" + String.valueOf(androidPlatformLevel));
       }
       throw new AssertionError();
     }
 
     @Override
-    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of("-funswitch-loops", "-finline-limit=300", "-O2");
         case CLANG:
-          return ImmutableList.of("-target", "x86_64-none-linux-android", "-O2");
+          return ImmutableList.of("-target", "x86_64-none-linux-android" + String.valueOf(androidPlatformLevel), "-O2");
       }
       throw new AssertionError();
     }
 
     @Override
-    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       switch (compiler) {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of("-target", "x86_64-none-linux-android");
+          return ImmutableList.of("-target", "x86_64-none-linux-android" + String.valueOf(androidPlatformLevel));
       }
       throw new AssertionError();
     }
@@ -352,17 +352,17 @@ public enum TargetCpuType {
     }
 
     @Override
-    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       throw new AssertionError();
     }
 
     @Override
-    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       throw new AssertionError();
     }
 
     @Override
-    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler) {
+    public ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel) {
       throw new AssertionError();
     }
   };
@@ -375,9 +375,9 @@ public enum TargetCpuType {
 
   public abstract NdkToolchainTarget getToolchainTarget();
 
-  public abstract ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler);
+  public abstract ImmutableList<String> getAssemblerFlags(NdkCompilerType compiler, int androidPlatformLevel);
 
-  public abstract ImmutableList<String> getCompilerFlags(NdkCompilerType compiler);
+  public abstract ImmutableList<String> getCompilerFlags(NdkCompilerType compiler, int androidPlatformLevel);
 
-  public abstract ImmutableList<String> getLinkerFlags(NdkCompilerType compiler);
+  public abstract ImmutableList<String> getLinkerFlags(NdkCompilerType compiler, int androidPlatformLevel);
 }
