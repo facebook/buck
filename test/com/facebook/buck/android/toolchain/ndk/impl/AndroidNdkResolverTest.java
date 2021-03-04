@@ -440,12 +440,12 @@ public class AndroidNdkResolverTest {
     Path expectedPath =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
-            "ndk-dir-r20",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 20.0.5594570",
             "ndk-dir-r21",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 21.0.6113669",
-            "ndk-dir-r22-xxx",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 22.0.5000000")[1];
+            "Pkg.Desc = Android NDK\nPkg.Revision = 21.4.7075529", // r21e
+            "ndk-dir-r22",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 22.0.7026061",
+            "ndk-dir-r23-xxx",
+            "Pkg.Desc = Android NDK\nPkg.Revision = 23.0.5000000")[1];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
