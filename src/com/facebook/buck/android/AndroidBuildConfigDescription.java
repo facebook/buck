@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -45,6 +46,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -59,14 +61,17 @@ public class AndroidBuildConfigDescription
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
 
   public AndroidBuildConfigDescription(
       ToolchainProvider toolchainProvider,
       DownwardApiConfig downwardApiConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig) {
     javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
   }
 
   @Override
@@ -112,7 +117,10 @@ public class AndroidBuildConfigDescription
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget));
+        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget),
+        javaCDBuckConfig.getJvmFlags(),
+        javaCDBuckConfig.getWorkerToolSize(),
+        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
   }
 
   /**
@@ -137,7 +145,10 @@ public class AndroidBuildConfigDescription
       boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      ImmutableList<String> startCommandOptions,
+      int workerToolPoolSize,
+      int borrowFromPoolTimeoutInSeconds) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -192,7 +203,10 @@ public class AndroidBuildConfigDescription
         withDownwardApi,
         isJavaCDEnabled,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier);
+        javacdBinaryPathSourcePathSupplier,
+        startCommandOptions,
+        workerToolPoolSize,
+        borrowFromPoolTimeoutInSeconds);
   }
 
   @Override

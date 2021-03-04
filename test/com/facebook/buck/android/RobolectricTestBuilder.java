@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
@@ -58,6 +59,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
+            DEFAULT_JAVACD_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target);
@@ -68,6 +70,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             DEFAULT_JAVA_CONFIG,
+            DEFAULT_JAVACD_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,
@@ -80,6 +83,7 @@ public class RobolectricTestBuilder
         new RobolectricTestDescription(
             createToolchainProviderForRobolectricTest(),
             javaBuckConfig,
+            DEFAULT_JAVACD_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_ANDROID_COMPILER_FACTORY),
         target,

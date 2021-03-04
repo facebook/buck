@@ -44,6 +44,7 @@ public class JavaTestRunnerDescription
         ImplicitDepsInferringDescription<JavaTestRunnerDescriptionArg> {
 
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavacFactory javacFactory;
   private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
@@ -53,8 +54,10 @@ public class JavaTestRunnerDescription
   public JavaTestRunnerDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.defaultJavaCompilerFactory =
@@ -98,6 +101,7 @@ public class JavaTestRunnerDescription
                 graphBuilder,
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
+                javaCDBuckConfig,
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

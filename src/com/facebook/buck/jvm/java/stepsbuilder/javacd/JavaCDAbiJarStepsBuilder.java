@@ -31,11 +31,11 @@ import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Default implementation of {@link AbiJarStepsBuilder} */
@@ -48,17 +48,8 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
       boolean hasAnnotationProcessing,
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier) {
-    super(
-        hasAnnotationProcessing,
-        spoolMode,
-        withDownwardApi,
-        Type.ABI_JAR,
-        isJavaCDEnabled,
-        javaRuntimeLauncherCommand,
-        javacdBinaryPathSupplier);
+      JavaCDParams javaCDParams) {
+    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, javaCDParams);
   }
 
   @Override

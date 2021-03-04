@@ -48,6 +48,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
@@ -135,6 +136,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final Javac javac;
   private final JavacFactory javacFactory;
@@ -195,6 +197,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean noAutoAddOverlayResources,
       boolean noResourceRemoval,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig,
       JavacFactory javacFactory,
@@ -253,6 +256,7 @@ public class AndroidBinaryGraphEnhancer {
     this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
     this.nativeLinkablesAssetsToExcludeGroup = nativeLinkableGroupAssetsToExclude;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.javacOptions = javacOptions;
     this.exopackageModes = exopackageModes;
     this.buildConfigValues = buildConfigValues;
@@ -428,6 +432,7 @@ public class AndroidBinaryGraphEnhancer {
                   new JavaConfiguredCompilerFactory(
                       javaBuckConfig, downwardApiConfig, javacFactory),
                   javaBuckConfig,
+                  javaCDBuckConfig,
                   downwardApiConfig,
                   null,
                   cellPathResolver)
@@ -482,7 +487,10 @@ public class AndroidBinaryGraphEnhancer {
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(originalBuildTarget));
+              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(originalBuildTarget),
+              javaCDBuckConfig.getJvmFlags(),
+              javaCDBuckConfig.getWorkerToolSize(),
+              javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -604,6 +612,7 @@ public class AndroidBinaryGraphEnhancer {
                 graphBuilder,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
+                javaCDBuckConfig,
                 downwardApiConfig,
                 null,
                 cellPathResolver)
@@ -737,7 +746,10 @@ public class AndroidBinaryGraphEnhancer {
       boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      ImmutableList<String> startCommandOptions,
+      int workerToolPoolSize,
+      int borrowFromPoolTimeoutInSeconds) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -783,7 +795,10 @@ public class AndroidBinaryGraphEnhancer {
               isJavaCDEnabled,
               shouldExecuteInSeparateProcess,
               javaRuntimeLauncher,
-              javacdBinaryPathSourcePathSupplier);
+              javacdBinaryPathSourcePathSupplier,
+              startCommandOptions,
+              workerToolPoolSize,
+              borrowFromPoolTimeoutInSeconds);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(
@@ -1117,11 +1132,9 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private static Flavor getDexFlavor(String dexTool) {
-    switch (dexTool) {
-      case DxStep.D8:
-        return D8_FLAVOR;
-      default:
-        return DEX_FLAVOR;
+    if (DxStep.D8.equals(dexTool)) {
+      return D8_FLAVOR;
     }
+    return DEX_FLAVOR;
   }
 }

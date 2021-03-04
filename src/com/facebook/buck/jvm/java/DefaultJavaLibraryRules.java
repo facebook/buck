@@ -101,7 +101,10 @@ public abstract class DefaultJavaLibraryRules {
         boolean neverMarkAsUnusedDependency,
         boolean isJavaCDEnabled,
         Tool javaRuntimeLauncher,
-        Supplier<SourcePath> javacdBinaryPathSourcePathSupplier);
+        Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+        ImmutableList<String> startCommandOptions,
+        int workerToolPoolSize,
+        int borrowFromPoolTimeoutInSeconds);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -141,6 +144,9 @@ public abstract class DefaultJavaLibraryRules {
   @org.immutables.builder.Builder.Parameter
   @Nullable
   abstract JavaBuckConfig getJavaBuckConfig();
+
+  @org.immutables.builder.Builder.Parameter
+  abstract JavaCDBuckConfig getJavaCDBuckConfig();
 
   @org.immutables.builder.Builder.Parameter
   abstract CellPathResolver getCellPathResolver();
@@ -439,7 +445,8 @@ public abstract class DefaultJavaLibraryRules {
 
     CoreArg args = getArgs();
 
-    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+    JavaCDBuckConfig javaCDBuckConfig = getJavaCDBuckConfig();
     return getConstructor()
         .newInstance(
             buildTarget,
@@ -465,7 +472,10 @@ public abstract class DefaultJavaLibraryRules {
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(buildTarget));
+            getJavacdBinarySourcePathSupplier(buildTarget),
+            javaCDBuckConfig.getJvmFlags(),
+            javaCDBuckConfig.getWorkerToolSize(),
+            javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -485,7 +495,8 @@ public abstract class DefaultJavaLibraryRules {
             configuredCompilerFactory);
 
     CoreArg args = getArgs();
-    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+    JavaCDBuckConfig javaCDBuckConfig = getJavaCDBuckConfig();
     DefaultJavaLibrary libraryRule =
         getConstructor()
             .newInstance(
@@ -512,7 +523,10 @@ public abstract class DefaultJavaLibraryRules {
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
                 javaBuckConfig.isJavaCDEnabled(),
                 javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-                getJavacdBinarySourcePathSupplier(buildTarget));
+                getJavacdBinarySourcePathSupplier(buildTarget),
+                javaCDBuckConfig.getJvmFlags(),
+                javaCDBuckConfig.getWorkerToolSize(),
+                javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -555,7 +569,8 @@ public abstract class DefaultJavaLibraryRules {
 
     BuildTarget libraryTarget = getLibraryTarget();
     BuildTarget sourceOnlyAbiTarget = JavaAbis.getSourceOnlyAbiJar(libraryTarget);
-    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+    JavaCDBuckConfig javaCDBuckConfig = getJavaCDBuckConfig();
     ActionGraphBuilder graphBuilder = getActionGraphBuilder();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
@@ -565,7 +580,10 @@ public abstract class DefaultJavaLibraryRules {
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(sourceOnlyAbiTarget)));
+            getJavacdBinarySourcePathSupplier(sourceOnlyAbiTarget),
+            javaCDBuckConfig.getJvmFlags(),
+            javaCDBuckConfig.getWorkerToolSize(),
+            javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds()));
   }
 
   @Nullable
@@ -578,7 +596,9 @@ public abstract class DefaultJavaLibraryRules {
 
     BuildTarget libraryTarget = getLibraryTarget();
     BuildTarget sourceAbiTarget = JavaAbis.getSourceAbiJar(libraryTarget);
-    JavaBuckConfig javaBuckConfig = getJavaBuckConfig();
+    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+    JavaCDBuckConfig javaCDBuckConfig = getJavaCDBuckConfig();
+
     ActionGraphBuilder graphBuilder = getActionGraphBuilder();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
@@ -588,7 +608,10 @@ public abstract class DefaultJavaLibraryRules {
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(sourceAbiTarget)));
+            getJavacdBinarySourcePathSupplier(sourceAbiTarget),
+            javaCDBuckConfig.getJvmFlags(),
+            javaCDBuckConfig.getWorkerToolSize(),
+            javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds()));
   }
 
   @Nullable
@@ -784,6 +807,7 @@ public abstract class DefaultJavaLibraryRules {
         ActionGraphBuilder graphBuilder,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
+        JavaCDBuckConfig javaCDBuckConfig,
         DownwardApiConfig downwardApiConfig,
         @Nullable JavaLibraryDescription.CoreArg args,
         CellPathResolver cellPathResolver) {
@@ -796,6 +820,7 @@ public abstract class DefaultJavaLibraryRules {
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,
+          javaCDBuckConfig,
           cellPathResolver,
           downwardApiConfig,
           args);

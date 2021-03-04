@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
@@ -31,7 +32,6 @@ import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -39,37 +39,30 @@ import java.util.function.Supplier;
 /** JavaCD worker tool isolated step. */
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
-  // TODO : msemko : make javacd borrow timeout configurable. Introduce configuration properties
-  private static final int BORROW_INSTANCE_FROM_POOL_TIMEOUT_SECONDS = 30 * 60;
-
-  // TODO : msemko : make pool size configurable. Introduce configuration properties
-  private static final int POOL_CAPACITY =
-      (int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.75);
-
   private final BuildJavaCommand buildJavaCommand;
   private final ImmutableList<String> launchJavaCDCommand;
+  private final int poolCapacity;
+  private final int borrowInstanceFromPoolTimeoutSeconds;
 
-  public JavaCDWorkerToolStep(
-      BuildJavaCommand buildJavaCommand,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier) {
+  public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
     super("javacd_wt");
     this.buildJavaCommand = buildJavaCommand;
-    this.launchJavaCDCommand =
-        getLaunchJavaCDCommand(javaRuntimeLauncherCommand, javacdBinaryPathSupplier);
+    this.launchJavaCDCommand = getLaunchJavaCDCommand(javaCDParams);
+    this.poolCapacity = javaCDParams.getWorkerToolPoolSize();
+    this.borrowInstanceFromPoolTimeoutSeconds = javaCDParams.getBorrowFromPoolTimeoutInSeconds();
   }
 
-  private static ImmutableList<String> getLaunchJavaCDCommand(
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier) {
-    int runArgumentsCount = 3;
+  private static ImmutableList<String> getLaunchJavaCDCommand(JavaCDParams javaCDParams) {
+    ImmutableList<String> javaRuntimeLauncherCommand = javaCDParams.getJavaRuntimeLauncherCommand();
+    Supplier<AbsPath> javacdBinaryPathSupplier = javaCDParams.getJavacdBinaryPathSupplier();
+    ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
+
     return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size() + runArgumentsCount)
+            javaRuntimeLauncherCommand.size() + 2 + startCommandOptions.size())
         .addAll(javaRuntimeLauncherCommand)
         .add("-jar")
         .add(javacdBinaryPathSupplier.get().toString())
-        // TODO : msemko : make javacd JVM args configurable. Introduce configuration properties
-        .add("-Dfile.encoding=" + StandardCharsets.UTF_8.name())
+        .addAll(startCommandOptions)
         .build();
   }
 
@@ -85,7 +78,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
               WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
               return workerToolLauncher.launchWorker(launchJavaCDCommand);
             },
-            POOL_CAPACITY);
+            poolCapacity);
 
     try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
         borrowWorkerToolWithTimeout(workerToolPool)) {
@@ -97,14 +90,14 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private BorrowedWorkerProcess<WorkerToolExecutor> borrowWorkerToolWithTimeout(
       WorkerProcessPool<WorkerToolExecutor> workerToolPool) throws InterruptedException {
     return workerToolPool
-        .borrowWorkerProcess(BORROW_INSTANCE_FROM_POOL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .borrowWorkerProcess(borrowInstanceFromPoolTimeoutSeconds, TimeUnit.SECONDS)
         .orElseThrow(
             () ->
                 new IllegalStateException(
                     "Cannot get a worker tool from a pool of the size: "
                         + workerToolPool.getCapacity()
                         + ". Time out of "
-                        + BORROW_INSTANCE_FROM_POOL_TIMEOUT_SECONDS
+                        + borrowInstanceFromPoolTimeoutSeconds
                         + " seconds passed."));
   }
 

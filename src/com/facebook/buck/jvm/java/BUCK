@@ -21,10 +21,11 @@ java_library(
     ],
 )
 
-java_library(
+java_immutables_library(
     name = "config",
     srcs = [
         "JavaBuckConfig.java",
+        "JavaCDBuckConfig.java",
     ],
     visibility = [
         "PUBLIC",

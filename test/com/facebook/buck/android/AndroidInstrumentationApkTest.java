@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_EXTERNAL_ACTIONS_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.junit.Assert.assertEquals;
 
@@ -124,6 +125,7 @@ public class AndroidInstrumentationApkTest {
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
                     DEFAULT_JAVA_CONFIG,
+                    DEFAULT_JAVACD_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.empty()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.empty()),

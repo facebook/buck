@@ -45,6 +45,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -90,6 +91,7 @@ public class AndroidAarDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final BuildBuckConfig buildBuckConfig;
   private final ToolchainProvider toolchainProvider;
   private final JavacFactory javacFactory;
@@ -99,12 +101,14 @@ public class AndroidAarDescription
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider) {
     this.androidManifestFactory = androidManifestFactory;
     this.cxxBuckConfig = cxxBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.buildBuckConfig = buildBuckConfig;
     this.toolchainProvider = toolchainProvider;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
@@ -247,7 +251,10 @@ public class AndroidAarDescription
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget));
+              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget),
+              javaCDBuckConfig.getJvmFlags(),
+              javaCDBuckConfig.getWorkerToolSize(),
+              javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(
@@ -290,9 +297,9 @@ public class AndroidAarDescription
               return copyNativeLibraries;
             });
     Optional<SourcePath> assembledNativeLibsDir =
-        rootModuleCopyNativeLibraries.map(cnl -> cnl.getSourcePathToNativeLibsDir());
+        rootModuleCopyNativeLibraries.map(CopyNativeLibraries::getSourcePathToNativeLibsDir);
     Optional<SourcePath> assembledNativeLibsAssetsDir =
-        rootModuleCopyNativeLibraries.map(cnl -> cnl.getSourcePathToNativeLibsAssetsDir());
+        rootModuleCopyNativeLibraries.map(CopyNativeLibraries::getSourcePathToNativeLibsAssetsDir);
     BuildRuleParams androidAarParams =
         originalBuildRuleParams.withExtraDeps(aarExtraDepsBuilder.build());
     return new AndroidAar(
@@ -321,6 +328,7 @@ public class AndroidAarDescription
 
   @RuleArg
   interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
+
     SourcePath getManifestSkeleton();
 
     @Value.Default

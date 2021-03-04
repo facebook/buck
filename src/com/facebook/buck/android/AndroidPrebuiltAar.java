@@ -69,7 +69,10 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      ImmutableList<String> startCommandOptions,
+      int workerToolPoolSize,
+      int borrowFromPoolTimeoutInSeconds) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -117,7 +120,10 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         false,
         isJavaCDEnabled,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier);
+        javacdBinaryPathSourcePathSupplier,
+        startCommandOptions,
+        workerToolPoolSize,
+        borrowFromPoolTimeoutInSeconds);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

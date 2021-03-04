@@ -34,6 +34,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -62,6 +63,7 @@ public class GroovyTestDescription
   private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavacFactory javacFactory;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
@@ -71,10 +73,12 @@ public class GroovyTestDescription
       ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.groovyBuckConfig = groovyBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.java11OptionsForTests =
@@ -122,6 +126,7 @@ public class GroovyTestDescription
                 new GroovyConfiguredCompilerFactory(
                     groovyBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
+                javaCDBuckConfig,
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

@@ -18,6 +18,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/creator:params",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/impl:impl",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/serialization:serialization",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",

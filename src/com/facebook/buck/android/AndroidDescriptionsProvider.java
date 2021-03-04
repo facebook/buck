@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
@@ -49,6 +50,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     BuckConfig buckConfig = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
+    JavaCDBuckConfig javaCDBuckConfig = buckConfig.getView(JavaCDBuckConfig.class);
     ResourcesConfig resourcesConfig = buckConfig.getView(ResourcesConfig.class);
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
@@ -76,12 +78,14 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             downwardApiConfig,
             javaConfig,
+            javaCDBuckConfig,
             buildBuckConfig,
             toolchainProvider),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
             javaConfig,
+            javaCDBuckConfig,
             proGuardConfig,
             androidBuckConfig,
             androidInstallConfig,
@@ -93,9 +97,11 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
-        new AndroidBuildConfigDescription(toolchainProvider, downwardApiConfig, javaConfig),
+        new AndroidBuildConfigDescription(
+            toolchainProvider, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidBundleDescription(
             javaConfig,
+            javaCDBuckConfig,
             proGuardConfig,
             androidBuckConfig,
             buckConfig,
@@ -108,6 +114,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             new AndroidBundleFactory(androidBuckConfig, downwardApiConfig)),
         new AndroidInstrumentationApkDescription(
             javaConfig,
+            javaCDBuckConfig,
             proGuardConfig,
             cxxBuckConfig,
             dxConfig,
@@ -118,13 +125,21 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidInstrumentationTestDescription(
             testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(
-            javaConfig, downwardApiConfig, defaultAndroidCompilerFactory, toolchainProvider),
+            javaConfig,
+            javaCDBuckConfig,
+            downwardApiConfig,
+            defaultAndroidCompilerFactory,
+            toolchainProvider),
         new AndroidPrebuiltAarDescription(
-            toolchainProvider, androidBuckConfig, downwardApiConfig, javaConfig),
+            toolchainProvider, androidBuckConfig, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidResourceDescription(
             toolchainProvider, androidBuckConfig, downwardApiConfig, buildBuckConfig, javaConfig),
         new RobolectricTestDescription(
-            toolchainProvider, javaConfig, downwardApiConfig, defaultAndroidCompilerFactory),
+            toolchainProvider,
+            javaConfig,
+            javaCDBuckConfig,
+            downwardApiConfig,
+            defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
         new NdkLibraryDescription(
             toolchainProvider, resourcesConfig.getConcurrencyLimit(), downwardApiConfig),

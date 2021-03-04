@@ -35,6 +35,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
@@ -57,6 +58,7 @@ public class AndroidBinaryGraphEnhancerFactory {
   public AndroidBinaryGraphEnhancer create(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       AndroidBuckConfig androidBuckConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
@@ -189,6 +191,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isNoAutoAddOverlayResources(),
         androidBuckConfig.getAaptNoResourceRemoval(),
         javaBuckConfig,
+        javaCDBuckConfig,
         downwardApiConfig,
         buildBuckConfig,
         javacFactory,

@@ -29,6 +29,7 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import java.nio.file.Path;
 
@@ -55,6 +56,7 @@ public class GroovyLibraryBuilder
             .build(),
         new GroovyBuckConfig(buckConfig),
         null,
+        JavaCDBuckConfig.of(buckConfig),
         DownwardApiConfig.of(buckConfig));
   }
 

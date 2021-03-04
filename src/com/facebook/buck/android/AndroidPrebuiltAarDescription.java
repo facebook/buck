@@ -45,6 +45,7 @@ import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -94,17 +95,20 @@ public class AndroidPrebuiltAarDescription
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
 
   public AndroidPrebuiltAarDescription(
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
   }
 
   @Override
@@ -255,7 +259,10 @@ public class AndroidPrebuiltAarDescription
         withDownwardApi,
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget));
+        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget),
+        javaCDBuckConfig.getJvmFlags(),
+        javaCDBuckConfig.getWorkerToolSize(),
+        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
   }
 
   @Override

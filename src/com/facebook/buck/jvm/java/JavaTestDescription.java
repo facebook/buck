@@ -87,6 +87,7 @@ public class JavaTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
   private final Function<TargetConfiguration, JavaOptions> java11OptionsForTests;
@@ -95,9 +96,11 @@ public class JavaTestDescription
   public JavaTestDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.java11OptionsForTests =
@@ -174,6 +177,7 @@ public class JavaTestDescription
                 graphBuilder,
                 new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
+                javaCDBuckConfig,
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())

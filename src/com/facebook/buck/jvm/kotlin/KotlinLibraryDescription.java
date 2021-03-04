@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaSourceJar;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -59,12 +60,14 @@ public class KotlinLibraryDescription
     implements DescriptionWithTargetGraph<KotlinLibraryDescriptionArg>,
         ImplicitDepsInferringDescription<KotlinLibraryDescriptionArg>,
         Flavored {
+
   public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(JavaLibrary.SRC_JAR, JavaLibrary.MAVEN_JAR);
 
   private final ToolchainProvider toolchainProvider;
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final JavacFactory javacFactory;
   private final DownwardApiConfig downwardApiConfig;
 
@@ -72,11 +75,13 @@ public class KotlinLibraryDescription
       ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
   }
 
@@ -153,6 +158,7 @@ public class KotlinLibraryDescription
                 graphBuilder,
                 kotlinBuckConfig,
                 javaBuckConfig,
+                javaCDBuckConfig,
                 downwardApiConfig,
                 args,
                 javacFactory,
@@ -208,6 +214,7 @@ public class KotlinLibraryDescription
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
+
     ImmutableList<String> getExtraKotlincArguments();
 
     Optional<AnnotationProcessingTool> getAnnotationProcessingTool();

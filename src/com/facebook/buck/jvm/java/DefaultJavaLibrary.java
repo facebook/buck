@@ -136,6 +136,7 @@ public class DefaultJavaLibrary
       ActionGraphBuilder graphBuilder,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       @Nullable JavaLibraryDescription.CoreArg args,
       CellPathResolver cellPathResolver) {
@@ -147,6 +148,7 @@ public class DefaultJavaLibrary
         graphBuilder,
         compilerFactory,
         javaBuckConfig,
+        javaCDBuckConfig,
         downwardApiConfig,
         args,
         cellPathResolver);
@@ -181,7 +183,10 @@ public class DefaultJavaLibrary
       boolean neverMarkAsUnusedDependency,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      ImmutableList<String> startCommandOptions,
+      int workerToolPoolSize,
+      int borrowFromPoolTimeoutInSeconds) {
     super(
         buildTarget,
         projectFilesystem,
@@ -195,7 +200,10 @@ public class DefaultJavaLibrary
             sourceAbi,
             isJavaCDEnabled,
             javaRuntimeLauncher,
-            javacdBinaryPathSourcePathSupplier));
+            javacdBinaryPathSourcePathSupplier,
+            startCommandOptions,
+            workerToolPoolSize,
+            borrowFromPoolTimeoutInSeconds));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =
         Optional.ofNullable(

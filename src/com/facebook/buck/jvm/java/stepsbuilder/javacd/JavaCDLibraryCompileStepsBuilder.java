@@ -17,19 +17,17 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Message;
 import com.google.protobuf.MessageOrBuilder;
-import java.util.function.Supplier;
 
 /** JavaCD implementation of {@link LibraryStepsBuilderBase} interface. */
 abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaCDStepsBuilderBase<T>
@@ -43,17 +41,8 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
       boolean withDownwardApi,
       Type type,
       MessageOrBuilder commandBuilder,
-      boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier) {
-    super(
-        hasAnnotationProcessing,
-        spoolMode,
-        withDownwardApi,
-        type,
-        isJavaCDEnabled,
-        javaRuntimeLauncherCommand,
-        javacdBinaryPathSupplier);
+      JavaCDParams javaCDParams) {
+    super(hasAnnotationProcessing, spoolMode, withDownwardApi, type, javaCDParams);
     this.commandBuilder = commandBuilder;
   }
 

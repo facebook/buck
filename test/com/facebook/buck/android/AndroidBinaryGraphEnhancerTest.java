@@ -21,6 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWA
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_EXTERNAL_ACTIONS_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA8_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -809,7 +810,10 @@ public class AndroidBinaryGraphEnhancerTest {
             false,
             false,
             new FakeTool(),
-            () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")));
+            () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
+            ImmutableList.of(),
+            1,
+            1);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =
@@ -1070,6 +1074,7 @@ public class AndroidBinaryGraphEnhancerTest {
         /* noAutoAddOverlayResources */ false,
         /* noResourceRemoval */ false,
         DEFAULT_JAVA_CONFIG,
+        DEFAULT_JAVACD_CONFIG,
         DEFAULT_DOWNWARD_API_CONFIG,
         DEFAULT_EXTERNAL_ACTIONS_CONFIG,
         JavacFactoryHelper.createJavacFactory(DEFAULT_JAVA_CONFIG),

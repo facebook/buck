@@ -35,6 +35,7 @@ import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.AbsPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
@@ -49,7 +50,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.Message;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Creates a worker tool step that would communicate with JavaCD process. */
@@ -65,22 +65,16 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
   private final BuildJavaCommand.Builder commandBuilder = BuildJavaCommand.newBuilder();
   protected final Type type;
-  private final boolean isJavaCDEnabled;
-  private final ImmutableList<String> javaRuntimeLauncherCommand;
-  private final Supplier<AbsPath> javacdBinaryPathSupplier;
+  private final JavaCDParams javaCDParams;
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
       Type type,
-      boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier) {
+      JavaCDParams javaCDParams) {
     this.type = type;
-    this.isJavaCDEnabled = isJavaCDEnabled;
-    this.javaRuntimeLauncherCommand = javaRuntimeLauncherCommand;
-    this.javacdBinaryPathSupplier = javacdBinaryPathSupplier;
+    this.javaCDParams = javaCDParams;
     commandBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
     commandBuilder.setWithDownwardApi(withDownwardApi);
     commandBuilder.setSpoolMode(spoolMode);
@@ -104,10 +98,8 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     }
 
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
-    if (isJavaCDEnabled) {
-      return ImmutableList.of(
-          new JavaCDWorkerToolStep(
-              buildJavaCommand, javaRuntimeLauncherCommand, javacdBinaryPathSupplier));
+    if (javaCDParams.hasJavaCDEnabled()) {
+      return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, javaCDParams));
     }
     return new JavaCDWorkerToolStepsBuilder(buildJavaCommand).getSteps();
   }

@@ -45,6 +45,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
@@ -88,6 +89,7 @@ public class RobolectricTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
@@ -98,10 +100,12 @@ public class RobolectricTestDescription
   public RobolectricTestDescription(
       ToolchainProvider toolchainProvider,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
       AndroidLibraryCompilerFactory compilerFactory) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.compilerFactory = compilerFactory;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
@@ -112,8 +116,7 @@ public class RobolectricTestDescription
             .build(
                 new CacheLoader<TargetConfiguration, JavacOptions>() {
                   @Override
-                  public JavacOptions load(TargetConfiguration toolchainTargetConfiguration)
-                      throws Exception {
+                  public JavacOptions load(TargetConfiguration toolchainTargetConfiguration) {
                     return toolchainProvider
                         .getByName(
                             JavacOptionsProvider.DEFAULT_NAME,
@@ -323,6 +326,7 @@ public class RobolectricTestDescription
                       javacFactory,
                       buildTarget.getTargetConfiguration()),
                   javaBuckConfig,
+                  javaCDBuckConfig,
                   downwardApiConfig,
                   null,
                   cellPathResolver)
@@ -373,6 +377,7 @@ public class RobolectricTestDescription
                         javacFactory,
                         buildTarget.getTargetConfiguration()),
                     javaBuckConfig,
+                    javaCDBuckConfig,
                     downwardApiConfig,
                     testLibraryArgs,
                     cellPathResolver)

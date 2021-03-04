@@ -50,6 +50,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -82,6 +83,7 @@ public class AndroidBundleDescription
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
 
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BuildBuckConfig buildBuckConfig;
@@ -98,6 +100,7 @@ public class AndroidBundleDescription
 
   public AndroidBundleDescription(
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       ProGuardConfig proGuardConfig,
       AndroidBuckConfig androidBuckConfig,
       BuckConfig buckConfig,
@@ -109,6 +112,7 @@ public class AndroidBundleDescription
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBundleFactory androidBundleFactory) {
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.buildBuckConfig = buildBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
@@ -180,6 +184,7 @@ public class AndroidBundleDescription
         androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
             javaBuckConfig,
+            javaCDBuckConfig,
             androidBuckConfig,
             cxxBuckConfig,
             dxConfig,

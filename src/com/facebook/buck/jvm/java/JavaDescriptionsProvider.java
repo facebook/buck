@@ -37,6 +37,7 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig buckConfig = context.getBuckConfig();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
+    JavaCDBuckConfig javaCDBuckConfig = buckConfig.getView(JavaCDBuckConfig.class);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
@@ -53,9 +54,11 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
         new JavaBinaryDescription(toolchainProvider, javaConfig, downwardApiConfig),
         new JavaAnnotationProcessorDescription(),
         new JavaPluginDescription(),
-        new JavaLibraryDescription(toolchainProvider, javaConfig, downwardApiConfig),
-        new JavaTestRunnerDescription(toolchainProvider, javaConfig, downwardApiConfig),
-        new JavaTestDescription(toolchainProvider, javaConfig, downwardApiConfig),
+        new JavaLibraryDescription(
+            toolchainProvider, javaConfig, javaCDBuckConfig, downwardApiConfig),
+        new JavaTestRunnerDescription(
+            toolchainProvider, javaConfig, javaCDBuckConfig, downwardApiConfig),
+        new JavaTestDescription(toolchainProvider, javaConfig, javaCDBuckConfig, downwardApiConfig),
         new KeystoreDescription());
   }
 }

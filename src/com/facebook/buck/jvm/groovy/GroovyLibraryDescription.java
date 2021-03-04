@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -48,6 +49,7 @@ public class GroovyLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final GroovyConfiguredCompilerFactory compilerFactory;
 
@@ -55,9 +57,11 @@ public class GroovyLibraryDescription
       ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.compilerFactory =
         new GroovyConfiguredCompilerFactory(
@@ -98,6 +102,7 @@ public class GroovyLibraryDescription
                 graphBuilder,
                 compilerFactory,
                 javaBuckConfig,
+                javaCDBuckConfig,
                 downwardApiConfig,
                 args,
                 context.getCellPathResolver())
@@ -121,6 +126,7 @@ public class GroovyLibraryDescription
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {
+
     // Groovyc may not play nice with source ABIs, so turning it off
     @Override
     default Optional<AbiGenerationMode> getAbiGenerationMode() {

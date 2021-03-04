@@ -45,6 +45,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -86,6 +87,24 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   @ExcludeFromRuleKey(
+      reason = "start javacd jvm options is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private final ImmutableList<String> startJavacdCommandOptions;
+
+  @ExcludeFromRuleKey(
+      reason = "javacd worker tool pool size is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private final int javacdWorkerToolPoolSize;
+
+  @ExcludeFromRuleKey(
+      reason = "javacd borrow from the pool is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  private final int javacdBorrowFromPoolTimeoutInSeconds;
+
+  @ExcludeFromRuleKey(
       reason = "path to javacd binary is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
@@ -100,7 +119,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      ImmutableList<String> startJavacdCommandOptions,
+      int javacdWorkerToolPoolSize,
+      int javacdBorrowFromPoolTimeoutInSeconds) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -113,6 +135,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                         Objects.requireNonNull(rule.getSourcePathToOutput())));
     this.isJavaCDEnabled = isJavaCDEnabled;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.startJavacdCommandOptions = startJavacdCommandOptions;
+    this.javacdWorkerToolPoolSize = javacdWorkerToolPoolSize;
+    this.javacdBorrowFromPoolTimeoutInSeconds = javacdBorrowFromPoolTimeoutInSeconds;
 
     CompilerOutputPaths outputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -156,9 +181,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     LibraryJarStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(),
-                isJavaCDEnabled,
-                javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-                () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()))
+                createJavaCDParams(sourcePathResolver))
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -187,9 +210,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     LibraryJarPipelineStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(),
-                isJavaCDEnabled,
-                javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-                () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()))
+                createJavaCDParams(sourcePathResolver))
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
@@ -204,6 +225,16 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         buildContext, filesystem, outputPathResolver, stepsBuilder);
 
     return stepsBuilder.build();
+  }
+
+  private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
+    return JavaCDParams.of(
+        isJavaCDEnabled,
+        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
+        () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()),
+        startJavacdCommandOptions,
+        javacdWorkerToolPoolSize,
+        javacdBorrowFromPoolTimeoutInSeconds);
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

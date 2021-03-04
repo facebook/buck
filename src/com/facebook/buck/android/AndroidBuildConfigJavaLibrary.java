@@ -62,7 +62,10 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       boolean withDownwardApi,
       boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier) {
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      ImmutableList<String> startCommandOptions,
+      int workerToolPoolSize,
+      int borrowFromPoolTimeoutInSeconds) {
     super(
         buildTarget,
         projectFilesystem,
@@ -103,7 +106,10 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         false,
         isJavaCDEnabled,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier);
+        javacdBinaryPathSourcePathSupplier,
+        startCommandOptions,
+        workerToolPoolSize,
+        borrowFromPoolTimeoutInSeconds);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }

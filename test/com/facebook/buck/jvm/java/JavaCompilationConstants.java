@@ -28,6 +28,9 @@ public class JavaCompilationConstants {
   public static final JavaBuckConfig DEFAULT_JAVA_CONFIG =
       JavaBuckConfig.of(FakeBuckConfig.empty());
 
+  public static final JavaCDBuckConfig DEFAULT_JAVACD_CONFIG =
+      JavaCDBuckConfig.of(FakeBuckConfig.empty());
+
   public static final DownwardApiConfig DEFAULT_DOWNWARD_API_CONFIG =
       DownwardApiConfig.of(FakeBuckConfig.empty());
 

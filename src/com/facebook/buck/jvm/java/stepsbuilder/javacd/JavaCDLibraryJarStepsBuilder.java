@@ -31,12 +31,12 @@ import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Default implementation of {@link LibraryJarStepsBuilder} */
@@ -47,18 +47,14 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
       boolean hasAnnotationProcessing,
       BuildJavaCommand.SpoolMode spoolMode,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier) {
+      JavaCDParams javaCDParams) {
     super(
         hasAnnotationProcessing,
         spoolMode,
         withDownwardApi,
         Type.LIBRARY_JAR,
         LibraryJarCommand.newBuilder(),
-        isJavaCDEnabled,
-        javaRuntimeLauncherCommand,
-        javacdBinaryPathSupplier);
+        javaCDParams);
   }
 
   @Override

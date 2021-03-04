@@ -52,6 +52,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -86,6 +87,7 @@ public class AndroidBinaryDescription
           AndroidBinaryFactory.EXO_SYMLINK_TREE);
 
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
@@ -102,6 +104,7 @@ public class AndroidBinaryDescription
 
   public AndroidBinaryDescription(
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       ProGuardConfig proGuardConfig,
       AndroidBuckConfig androidBuckConfig,
       AndroidInstallConfig androidInstallConfig,
@@ -114,6 +117,7 @@ public class AndroidBinaryDescription
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBinaryFactory androidBinaryFactory) {
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
     this.androidBuckConfig = androidBuckConfig;
@@ -184,6 +188,7 @@ public class AndroidBinaryDescription
         androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
             javaBuckConfig,
+            javaCDBuckConfig,
             androidBuckConfig,
             cxxBuckConfig,
             dxConfig,
@@ -305,6 +310,7 @@ public class AndroidBinaryDescription
           HasExopackageArgs,
           HasTests,
           AndroidGraphEnhancerArgs {
+
     abstract BuildTarget getKeystore();
 
     @Value.Default

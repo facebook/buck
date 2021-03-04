@@ -163,7 +163,10 @@ public class NullsafeTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
     JavaLibraryDescription javaLibraryDescription =
         new JavaLibraryDescription(
-            toolchainProvider, JavaBuckConfig.of(buckConfig), DownwardApiConfig.of(buckConfig));
+            toolchainProvider,
+            JavaBuckConfig.of(buckConfig),
+            JavaCDBuckConfig.of(buckConfig),
+            DownwardApiConfig.of(buckConfig));
 
     // Check: nullsafe plugin should be added as a parse time dep
     ImmutableList.Builder<BuildTarget> parseTimeDepsBuilder = ImmutableList.builder();

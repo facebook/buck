@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
@@ -89,7 +90,6 @@ import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -572,7 +572,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             new FakeBuildableContext());
 
     ImmutableList<JavacStep> javacSteps =
-        FluentIterable.from(steps).filter(JavacStep.class).toList();
+        steps.stream()
+            .filter(JavacStep.class::isInstance)
+            .map(JavacStep.class::cast)
+            .collect(ImmutableList.toImmutableList());
     assertEquals("There should be only one javac step.", 1, javacSteps.size());
     JavacStep javacStep = javacSteps.get(0);
     BuildRule expectedRule;
@@ -1394,10 +1397,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<SourcePath> srcsAsPaths =
-        FluentIterable.from(srcs)
-            .transform(Paths::get)
-            .transform(p -> (SourcePath) PathSourcePath.of(projectFilesystem, p))
-            .toSortedSet(Ordering.natural());
+        srcs.stream()
+            .map(Paths::get)
+            .map(p -> (SourcePath) PathSourcePath.of(projectFilesystem, p))
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     BuildRuleParams buildRuleParams =
         TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.copyOf(deps));
@@ -1428,6 +1431,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                     DEFAULT_DOWNWARD_API_CONFIG,
                     JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
+                DEFAULT_JAVACD_CONFIG,
                 DEFAULT_DOWNWARD_API_CONFIG,
                 null,
                 cellPathResolver)
@@ -1774,6 +1778,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                       DEFAULT_DOWNWARD_API_CONFIG,
                       JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                   testJavaBuckConfig,
+                  DEFAULT_JAVACD_CONFIG,
                   DEFAULT_DOWNWARD_API_CONFIG,
                   null,
                   cellPathResolver)

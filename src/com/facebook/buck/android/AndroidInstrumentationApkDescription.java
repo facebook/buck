@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -67,6 +68,7 @@ public class AndroidInstrumentationApkDescription
         ImplicitDepsInferringDescription<AndroidInstrumentationApkDescriptionArg> {
 
   private final JavaBuckConfig javaBuckConfig;
+  private final JavaCDBuckConfig javaCDBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -78,6 +80,7 @@ public class AndroidInstrumentationApkDescription
 
   public AndroidInstrumentationApkDescription(
       JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
@@ -86,6 +89,7 @@ public class AndroidInstrumentationApkDescription
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
+    this.javaCDBuckConfig = javaCDBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
@@ -218,14 +222,14 @@ public class AndroidInstrumentationApkDescription
             Optional.empty(),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
-            /* localizedStringFileName */ null,
+            /* localizedStringFileName */ Optional.empty(),
             args.getManifest(),
             args.getManifestSkeleton(),
             /* moduleManifestSkeleton */ Optional.empty(),
             PackageType.INSTRUMENTED,
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ dexTool == DxStep.D8,
+            /* shouldPreDex */ DxStep.D8.equals(dexTool),
             DexSplitMode.NO_SPLIT,
             buildTargetsToExclude.build(),
             resourcesToExclude,
@@ -240,6 +244,7 @@ public class AndroidInstrumentationApkDescription
             /* noAutoAddOverlayResources */ false,
             androidBuckConfig.getAaptNoResourceRemoval(),
             javaBuckConfig,
+            javaCDBuckConfig,
             downwardApiConfig,
             buildBuckConfig,
             javacFactory,
