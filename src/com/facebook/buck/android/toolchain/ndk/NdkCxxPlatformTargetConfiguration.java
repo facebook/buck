@@ -62,14 +62,14 @@ public abstract class NdkCxxPlatformTargetConfiguration {
   }
 
   public ImmutableList<String> getAssemblerFlags(NdkCompilerType type) {
-    return getTargetCpuType().getAssemblerFlags(type);
+    return getTargetCpuType().getAssemblerFlags(type, getTargetAppPlatformLevel());
   }
 
   public ImmutableList<String> getCompilerFlags(NdkCompilerType type) {
-    return getTargetCpuType().getCompilerFlags(type);
+    return getTargetCpuType().getCompilerFlags(type, getTargetAppPlatformLevel());
   }
 
   public ImmutableList<String> getLinkerFlags(NdkCompilerType type) {
-    return getTargetCpuType().getLinkerFlags(type);
+    return getTargetCpuType().getLinkerFlags(type, getTargetAppPlatformLevel());
   }
 }
