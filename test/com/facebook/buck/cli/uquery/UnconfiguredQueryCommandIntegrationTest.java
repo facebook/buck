@@ -26,19 +26,36 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class UnconfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  private final Syntax syntax;
+
+  public UnconfiguredQueryCommandIntegrationTest(Syntax syntax) {
+    this.syntax = syntax;
+  }
+
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Syntax> syntaxes() {
+    return ImmutableList.copyOf(Syntax.values());
+  }
 
   /**
    * =============================================================================================
@@ -47,18 +64,23 @@ public class UnconfiguredQueryCommandIntegrationTest {
    */
   @Test
   public void basicTargetPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "//lib:foo");
     assertOutputMatches("//lib:foo", result);
   }
 
+  private ProjectWorkspace createProjectWorkspaceForScenario(String scenario) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", syntax.name());
+    return workspace;
+  }
+
   @Test
   public void basicJsonPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "//lib:", "--output-format", "json");
@@ -67,8 +89,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicJsonAttributePrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -80,8 +101,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -91,8 +111,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotAttributePrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -108,8 +127,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotCompactPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     // `dot_compact` poses a unique problem for testing because it assigns nodes an integer id in
@@ -125,8 +143,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotCompactAttributePrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -143,8 +160,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotBfsPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -154,8 +170,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotBfsAttributePrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -172,8 +187,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotBfsCompactPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -185,8 +199,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicDotBfsCompactAttributePrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -203,8 +216,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicThriftPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -224,8 +236,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicMultiQueryPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "%s", "//bin:", "//config/platform:");
@@ -234,8 +245,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicMultiQueryJsonPrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -247,8 +257,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void basicMultiQueryJsonAttributePrinting() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -272,8 +281,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
    */
   @Test
   public void includesComputedTypeAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -290,8 +298,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void includesComputedBasePathAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -308,8 +315,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void includesComputedDirectDependenciesAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -326,8 +332,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void doesntConfigureDependenciesOfTargetForPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     // Since `foo-bin` is set up for java8 running this on a configured graph would give no results,
@@ -339,8 +344,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void targetPlatformsArgDoesntChangeOutput() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     String query = "inputs(//lib:devtools)";
@@ -357,8 +361,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void doesntTreatTestAttributeAsParseDependencies() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("large_project");
     workspace.setUp();
 
     ProcessResult result =
@@ -368,8 +371,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void treatsPlatformRulesAsUnionOfAllPossibilities() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "platform_rules", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("platform_rules");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo)");
@@ -378,8 +380,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void considersRawPathsAsInputs() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "path_traversal", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("path_traversal");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo)");
@@ -388,8 +389,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void printsErrorMessageFromParseFailure() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "parse_failure", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("parse_failure");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "//...");
@@ -404,8 +404,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
    */
   @Test
   public void attrfilterFunctionOnlyReturnsTargetsWithMatchingValue() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("large_project");
     workspace.setUp();
     ProcessResult result =
         workspace.runBuckCommand(
@@ -417,8 +416,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void attrregexfilterFunctionAppliesRegexMatchingToAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("large_project");
     workspace.setUp();
     ProcessResult result =
         workspace.runBuckCommand(
@@ -430,8 +428,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void buildfileFunctionGivesPathToBUCKFile() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("large_project");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "buildfile(appletv-app-prod)");
@@ -440,8 +437,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void depsFunctionPrintsDependenciesOfTargetInAnyConfiguration() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "deps(//bin:foo-bin)");
@@ -453,8 +449,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void inputsFunctionPrintsAllFilesUsedByATarget() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(deps(//bin:bar-bin))");
@@ -464,8 +459,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void inputsFunctionPrintsImplicitInputs() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implicit_inputs", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("implicit_inputs");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo.txt)");
@@ -474,8 +468,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void kindFunctionOnlyPrintsTargetsOfSpecificType() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "kind(keystore, //bin:)");
@@ -484,8 +477,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void labelsFunctionPrintsTargetsFromSpecificAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "labels(keystore, //bin:foo-bin)");
@@ -495,8 +487,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void labelsFunctionCanPrintFiles() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result =
@@ -506,8 +497,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void ownerFunctionPrintsTargetsWithGivenFileInSrcs() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "owner(lib/DevtoolsEight.java)");
@@ -516,8 +506,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void ownerFunctionPrintsTargetsThatOwnFileViaImplicitInputs() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implicit_inputs", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("implicit_inputs");
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "owner(foo.txt)");
@@ -526,8 +515,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void testsofFunctionPrintsValueOfTestsAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("large_project");
     workspace.setUp();
 
     // We're being a bit tricky here. On a configured graph this intersection would return nothing,
@@ -540,8 +528,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
   @Test
   public void rdepsFunctionPrintsNodesWithIncomingEdgesToTarget() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_android", tmp);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("sample_android");
     workspace.setUp();
 
     // We're being a bit tricky here. On a configured graph this intersection would return nothing,
