@@ -23,6 +23,7 @@ import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -51,6 +52,7 @@ class DsymStep extends IsolatedShellStep {
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       List<String> command,
+      List<String> extraFlags,
       Path input,
       Path output,
       RelPath cellPath,
@@ -59,7 +61,7 @@ class DsymStep extends IsolatedShellStep {
 
     this.filesystem = filesystem;
     this.environment = environment;
-    this.command = ImmutableList.copyOf(command);
+    this.command = ImmutableList.copyOf(Iterables.concat(command, extraFlags));
     this.input = input;
     this.output = output;
   }

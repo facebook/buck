@@ -218,6 +218,7 @@ public class AppleBundleDescription
         args.getDeps(),
         args.getTests(),
         maybeProvidedDebugFormat.get(),
+        appleConfig.getDsymutilExtraFlags(),
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),

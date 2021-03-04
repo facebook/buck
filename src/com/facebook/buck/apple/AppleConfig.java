@@ -79,6 +79,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String CONDITIONAL_RELINKING_ENABLED = "conditional_relinking_enabled";
   private static final String CONDITIONAL_RELINKING_FALLBACK = "conditional_relinking_fallback";
 
+  private static final String DSYMUTIL_EXTRA_FLAGS = "dsymutil_extra_flags";
+
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
   private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
@@ -635,6 +637,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getStripSwiftSymbolsEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, STRIP_SWIFT_SYMBOLS, false);
+  }
+
+  public ImmutableList<String> getDsymutilExtraFlags() {
+    return delegate
+        .getOptionalFlags(APPLE_SECTION, DSYMUTIL_EXTRA_FLAGS)
+        .orElse(ImmutableList.of());
   }
 
   @BuckStyleValue

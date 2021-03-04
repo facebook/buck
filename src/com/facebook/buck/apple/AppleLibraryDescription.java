@@ -526,6 +526,7 @@ public class AppleLibraryDescription
         args.getDeps(),
         args.getTests(),
         debugFormat,
+        appleConfig.getDsymutilExtraFlags(),
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
@@ -630,6 +631,7 @@ public class AppleLibraryDescription
         AppleDebugFormat.FLAVOR_DOMAIN
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
+        appleConfig.getDsymutilExtraFlags(),
         cxxPlatformsProvider,
         AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
             toolchainProvider, buildTarget.getTargetConfiguration()),

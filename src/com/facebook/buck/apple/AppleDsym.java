@@ -60,6 +60,7 @@ public class AppleDsym extends AbstractBuildRule
   @AddToRuleKey private final Tool lldb;
 
   @AddToRuleKey private final Tool dsymutil;
+  @AddToRuleKey private final ImmutableList<String> dsymutilExtraFlags;
 
   @AddToRuleKey private final SourcePath unstrippedBinarySourcePath;
 
@@ -79,6 +80,7 @@ public class AppleDsym extends AbstractBuildRule
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder sourcePathRuleFinder,
       Tool dsymutil,
+      ImmutableList<String> dsymutilExtraFlags,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
       ImmutableSortedSet<SourcePath> additionalSymbolDeps,
@@ -87,6 +89,7 @@ public class AppleDsym extends AbstractBuildRule
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.dsymutil = dsymutil;
+    this.dsymutilExtraFlags = dsymutilExtraFlags;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.additionalSymbolDeps = additionalSymbolDeps;
@@ -155,6 +158,7 @@ public class AppleDsym extends AbstractBuildRule
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
+            dsymutilExtraFlags,
             unstrippedBinaryPath.getPath(),
             dsymOutputPath,
             ProjectFilesystemUtils.relativize(

@@ -640,6 +640,7 @@ public class AppleDescriptions {
       BuildRule strippedBinaryRule,
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
       AppleDebugFormat debugFormat,
+      ImmutableList<String> dsymutilExtraFlags,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
       boolean shouldCacheStrips,
@@ -674,6 +675,7 @@ public class AppleDescriptions {
                           unstrippedBinaryRule,
                           cxxPlatformsProvider,
                           appleCxxPlatforms,
+                          dsymutilExtraFlags,
                           shouldCacheStrips,
                           withDownwardApi);
                   return AppleDebuggableBinary.createWithDsym(
@@ -693,6 +695,7 @@ public class AppleDescriptions {
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
+      ImmutableList<String> dsymutilExtraFlags,
       boolean isCacheable,
       boolean withDownwardApi) {
     return (AppleDsym)
@@ -718,6 +721,7 @@ public class AppleDescriptions {
                   projectFilesystem,
                   graphBuilder,
                   appleCxxPlatform.getDsymutil(),
+                  dsymutilExtraFlags,
                   appleCxxPlatform.getLldb(),
                   unstrippedBinaryRule.getSourcePathToOutput(),
                   unstrippedBinaryRule
@@ -751,6 +755,7 @@ public class AppleDescriptions {
       ImmutableSortedSet<BuildTarget> deps,
       ImmutableSortedSet<BuildTarget> tests,
       AppleDebugFormat debugFormat,
+      ImmutableList<String> dsymutilExtraFlags,
       boolean dryRunCodeSigning,
       boolean cacheable,
       boolean verifyResources,
@@ -928,6 +933,7 @@ public class AppleDescriptions {
               getBinaryFromBuildRuleWithBinary(flavoredBinaryRule),
               (HasAppleDebugSymbolDeps) unstrippedBinaryRule,
               debugFormat,
+              dsymutilExtraFlags,
               cxxPlatformsProvider,
               appleCxxPlatforms,
               cacheStrips,
