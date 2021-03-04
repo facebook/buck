@@ -23,6 +23,9 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -71,7 +74,12 @@ import java.util.function.Consumer;
 public class DarwinLinker extends DelegatingTool
     implements Linker, HasLinkerMap, HasIncrementalThinLTO, HasLTO {
 
-  @AddToRuleKey private final boolean cacheLinks;
+  @ExcludeFromRuleKey(
+      reason = "We do want the get cache hits with normalised paths even when we would not build normalised paths locally.",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final boolean cacheLinks;
+
   @AddToRuleKey private final boolean scrubConcurrently;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
