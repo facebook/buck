@@ -33,6 +33,7 @@ import java.util.SortedSet;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
+import net.starlark.java.eval.StarlarkList;
 
 /** Utility class to convert parser-created objects to equivalent POJO-typed objects */
 public class BuildFileManifestPojoizer {
@@ -146,6 +147,9 @@ public class BuildFileManifestPojoizer {
   private static Class<?> convertClassToPojo(Class<?> clazz) {
     if (StarlarkInt.class.isAssignableFrom(clazz)) {
       return Integer.class;
+    } else if (StarlarkList.class.isAssignableFrom(clazz)) {
+      // we convert all starlark lists to immutable lists
+      return ImmutableList.class;
     } else {
       return clazz;
     }
