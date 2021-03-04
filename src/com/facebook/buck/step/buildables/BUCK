@@ -4,6 +4,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
         "//src/com/facebook/buck/external/constants:constants",
         "//src/com/facebook/buck/external/model:model",
