@@ -191,6 +191,15 @@ public class BuckConfig {
     return config.getOptionalListWithoutComments(section, field, splitChar);
   }
 
+  /** @return An option list of flags, where the flags are separated by spaces (i.e., ' '). */
+  public Optional<ImmutableList<String>> getOptionalFlags(String section, String field) {
+    Optional<String> value = getValue(section, field);
+    if (!value.isPresent()) {
+      return Optional.empty();
+    }
+    return Optional.of(getListWithoutComments(section, field, ' '));
+  }
+
   public Optional<ImmutableList<Path>> getOptionalPathList(
       String section, String field, boolean resolve) {
     Optional<ImmutableList<String>> rawPaths =

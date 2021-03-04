@@ -231,11 +231,7 @@ public class CxxBuckConfig {
   }
 
   private Optional<ImmutableList<String>> getFlags(String field) {
-    Optional<String> value = delegate.getValue(cxxSection, field);
-    if (!value.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(delegate.getListWithoutComments(cxxSection, field, ' '));
+    return delegate.getOptionalFlags(cxxSection, field);
   }
 
   public Optional<ImmutableList<String>> getAsflags() {
