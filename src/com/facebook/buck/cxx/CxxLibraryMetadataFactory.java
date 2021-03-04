@@ -218,6 +218,62 @@ public class CxxLibraryMetadataFactory {
     return Either.ofRight(new AsRawHeadersResult(rawHeaders.build(), includeRoots.build()));
   }
 
+  private void addHeaders(
+      CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder,
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      CxxLibraryDescriptionArg args) {
+
+    HeadersAsRawHeadersMode mode =
+        cxxPlatform
+            .getHeadersAsRawHeadersMode()
+            .map(args.getHeadersAsRawHeadersMode()::orElse)
+            .orElse(HeadersAsRawHeadersMode.DISABLED);
+    switch (mode) {
+      case REQUIRED:
+      case PREFERRED:
+        {
+          Either<AsRawHeadersError, AsRawHeadersResult> result =
+              asRawHeaders(
+                  projectFilesystem,
+                  graphBuilder,
+                  CxxDescriptionEnhancer.parseHeaders(
+                      target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args));
+          if (result.isRight()) {
+            cxxPreprocessorInputBuilder.addIncludes(CxxRawHeaders.of(result.getRight().headers));
+            result
+                .getRight()
+                .includeRoots
+                .forEach(
+                    includeRoot ->
+                        cxxPreprocessorInputBuilder.addIncludes(
+                            ImmutableCxxIncludes.ofImpl(IncludeType.LOCAL, includeRoot)));
+            break;
+          } else if (mode == HeadersAsRawHeadersMode.REQUIRED) {
+            throw new HumanReadableException(
+                "%s: cannot convert %s (mapped to %s) to raw header",
+                target, result.getLeft().path, result.getLeft().header);
+          }
+        }
+        // $FALL-THROUGH$
+      case DISABLED:
+        {
+          if (!args.getHeaders().isEmpty()) {
+            HeaderSymlinkTree symlinkTree =
+                (HeaderSymlinkTree)
+                    graphBuilder.requireRule(
+                        target.withAppendedFlavors(
+                            cxxPlatform.getFlavor(),
+                            CxxLibraryDescription.Type.HEADERS.getFlavor()));
+            cxxPreprocessorInputBuilder.addIncludes(
+                CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+          }
+          break;
+        }
+    }
+  }
+
   private void addExportedHeaders(
       CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder,
       BuildTarget target,
@@ -368,16 +424,9 @@ public class CxxLibraryMetadataFactory {
                   ::convert);
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE) {
-            if (!args.getHeaders().isEmpty()) {
-              HeaderSymlinkTree symlinkTree =
-                  (HeaderSymlinkTree)
-                      graphBuilder.requireRule(
-                          baseTarget.withAppendedFlavors(
-                              cxxPlatform.getFlavor(),
-                              CxxLibraryDescription.Type.HEADERS.getFlavor()));
-              cxxPreprocessorInputBuilder.addIncludes(
-                  CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
-            }
+
+            // Add headers from the headers parameter.
+            addHeaders(cxxPreprocessorInputBuilder, baseTarget, graphBuilder, cxxPlatform, args);
 
             for (String privateInclude : args.getIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
