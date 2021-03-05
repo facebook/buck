@@ -75,7 +75,8 @@ public class DarwinLinker extends DelegatingTool
     implements Linker, HasLinkerMap, HasIncrementalThinLTO, HasLTO {
 
   @ExcludeFromRuleKey(
-      reason = "We do want the get cache hits with normalised paths even when we would not build normalised paths locally.",
+      reason =
+          "We do want the get cache hits with normalised paths even when we would not build normalised paths locally.",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
   private final boolean cacheLinks;
