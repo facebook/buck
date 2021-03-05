@@ -1311,7 +1311,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             // out the caused
             // exception!
             "When running <javac>.",
-            "When building rule //:main."));
+            "When building rule //:main ("));
   }
 
   @Test

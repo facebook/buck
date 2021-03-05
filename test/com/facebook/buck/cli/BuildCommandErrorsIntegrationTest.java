@@ -115,7 +115,7 @@ public class BuildCommandErrorsIntegrationTest {
             "Buck encountered an internal error",
             "java.lang.RuntimeException:  <- failure message -> ",
             "Caused by: java.lang.RuntimeException: failure message",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -133,7 +133,7 @@ public class BuildCommandErrorsIntegrationTest {
             "java.lang.RuntimeException:  <- failure message -> ",
             "Caused by: java.lang.RuntimeException: failure message",
             "When running <failing_step>.",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -147,7 +147,7 @@ public class BuildCommandErrorsIntegrationTest {
         Matchers.stringContainsInOrder(
             "Buck encountered an internal error",
             "java.lang.RuntimeException: failure message",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -162,7 +162,7 @@ public class BuildCommandErrorsIntegrationTest {
             "Buck encountered an internal error",
             "java.lang.RuntimeException: failure message",
             "When running <failing_step>.",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -177,7 +177,7 @@ public class BuildCommandErrorsIntegrationTest {
             "Buck encountered an internal error",
             "java.io.IOException: failure message",
             "When running <failing_step>.",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -190,7 +190,7 @@ public class BuildCommandErrorsIntegrationTest {
         Matchers.stringContainsInOrder(
             "Buck encountered an internal error",
             "java.io.IOException: failure message",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -204,7 +204,7 @@ public class BuildCommandErrorsIntegrationTest {
         Matchers.stringContainsInOrder(
             "Buck encountered an internal error",
             "java.io.IOException: failure message //:target_name",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -218,7 +218,7 @@ public class BuildCommandErrorsIntegrationTest {
         Matchers.stringContainsInOrder(
             "failure message",
             "When running <failing_step>.",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -229,7 +229,9 @@ public class BuildCommandErrorsIntegrationTest {
     result.assertFailure();
     assertThat(
         result.getStderr(),
-        Matchers.stringContainsInOrder("failure message", "When building rule //:target_name."));
+        Matchers.stringContainsInOrder(
+            "failure message",
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -243,7 +245,7 @@ public class BuildCommandErrorsIntegrationTest {
             "Command failed with exit code 1.",
             "stderr: failure message",
             "When running <step_with_exit_code_1>.",
-            "When building rule //:target_name."));
+            "When building rule //:target_name (builtin//platform:unconfigured)."));
   }
 
   @Test
@@ -274,7 +276,7 @@ public class BuildCommandErrorsIntegrationTest {
             " ** Summary of failures encountered during the build **",
             "Rule //:target_name FAILED because",
             "java.lang.RuntimeException: failure message",
-            "When building rule //:target_name.",
+            "When building rule //:target_name (builtin//platform:unconfigured).",
             "Not all rules succeeded."));
   }
 
@@ -291,7 +293,7 @@ public class BuildCommandErrorsIntegrationTest {
             "Rule //:target_name FAILED because",
             "java.lang.RuntimeException: failure message",
             "When running <failing_step>.",
-            "When building rule //:target_name.",
+            "When building rule //:target_name (builtin//platform:unconfigured).",
             "Not all rules succeeded."));
   }
 
@@ -308,7 +310,7 @@ public class BuildCommandErrorsIntegrationTest {
             "Rule //:target_name FAILED because",
             "java.io.IOException: failure message",
             "When running <failing_step>.",
-            "When building rule //:target_name.",
+            "When building rule //:target_name (builtin//platform:unconfigured).",
             "Not all rules succeeded."));
   }
 
@@ -323,7 +325,7 @@ public class BuildCommandErrorsIntegrationTest {
             " ** Summary of failures encountered during the build **",
             "Rule //:target_name FAILED because",
             "java.io.IOException: failure message",
-            "When building rule //:target_name.",
+            "When building rule //:target_name (builtin//platform:unconfigured).",
             "Not all rules succeeded."));
   }
 

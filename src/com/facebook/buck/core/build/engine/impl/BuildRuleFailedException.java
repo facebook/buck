@@ -33,6 +33,7 @@ public class BuildRuleFailedException extends RuntimeException
 
   @Override
   public Optional<String> getContext() {
-    return Optional.of(String.format("When building rule %s.", buildTarget.toString()));
+    return Optional.of(
+        String.format("When building rule %s.", buildTarget.toStringWithConfiguration()));
   }
 }

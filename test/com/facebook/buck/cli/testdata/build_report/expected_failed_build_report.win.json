@@ -13,7 +13,7 @@
     }
   },
   "failures" : {
-    "//:failing_rule" : "Command failed with exit code 2.\r\n\r\ncommand: [%s]\r\n\r\nstderr: \r\n    When running <genrule>.\r\n    When building rule //:failing_rule."
+    "//:failing_rule" : "Command failed with exit code 2.\r\n\r\ncommand: [%s]\r\n\r\nstderr: \r\n    When running <genrule>.\r\n    When building rule //:failing_rule (builtin//platform:unconfigured)."
   },
   "truncated" : false
 }

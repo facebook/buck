@@ -76,6 +76,7 @@ class TestUtils {
                         + extension)
                     .replace("/", File.separator)
                     .replace(File.separator, fileSeparator))
+            .replace("\r\n", "\n")
             .trim();
 
     buildReportContents =
@@ -83,6 +84,9 @@ class TestUtils {
             ? buildReportContentsToReplaceWithOutputPrefix
             : buildReportContentsToReplaceWithOutputPrefix
                 + buildReportContentsToReplaceWithRandomNumber;
+
+    buildReportContents = buildReportContents.replace("\r\n", "\n").trim();
+
     assertEquals(expectedResult, buildReportContents);
   }
 }
