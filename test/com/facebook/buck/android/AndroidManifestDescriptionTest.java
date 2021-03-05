@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -32,6 +34,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -60,8 +63,12 @@ public class AndroidManifestDescriptionTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
     BuildRuleParams params =
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     BuildRule androidManifest =
-        new AndroidManifestDescription(new AndroidManifestFactory(FakeBuckConfig.empty()))
+        new AndroidManifestDescription(
+                new AndroidManifestFactory(
+                    buckConfig.getView(BuildBuckConfig.class),
+                    buckConfig.getView(JavaBuckConfig.class)))
             .createBuildRule(
                 TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                 buildTarget,

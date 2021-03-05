@@ -259,7 +259,7 @@ public class AndroidPrebuiltAarDescription
         withDownwardApi,
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget),
+        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
         javaCDBuckConfig.getJvmFlags(),
         javaCDBuckConfig.getWorkerToolSize(),
         javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());

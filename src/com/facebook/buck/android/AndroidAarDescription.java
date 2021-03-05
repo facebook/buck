@@ -251,7 +251,8 @@ public class AndroidAarDescription
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget),
+              DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
+              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
               javaCDBuckConfig.getJvmFlags(),
               javaCDBuckConfig.getWorkerToolSize(),
               javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());

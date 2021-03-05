@@ -27,6 +27,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
@@ -107,7 +108,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @ExcludeFromRuleKey(
       reason = "path to javacd binary is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
+      inputs = DefaultFieldInputs.class)
   private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
 
   DefaultJavaLibraryBuildable(
@@ -181,7 +182,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     LibraryJarStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(),
-                createJavaCDParams(sourcePathResolver))
+                createJavaCDParams(filesystem, sourcePathResolver))
             .getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -210,7 +211,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     LibraryJarPipelineStepsBuilder stepsBuilder =
         JavaCompileStepsBuilderFactoryCreator.createFactory(
                 jarBuildStepsFactory.getConfiguredCompiler(),
-                createJavaCDParams(sourcePathResolver))
+                createJavaCDParams(filesystem, sourcePathResolver))
             .getPipelineLibraryJarBuilder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
@@ -227,11 +228,14 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return stepsBuilder.build();
   }
 
-  private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
+  private JavaCDParams createJavaCDParams(
+      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
     return JavaCDParams.of(
         isJavaCDEnabled,
         javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-        () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()),
+        () ->
+            sourcePathResolver.getRelativePath(
+                filesystem, javacdBinaryPathSourcePathSupplier.get()),
         startJavacdCommandOptions,
         javacdWorkerToolPoolSize,
         javacdBorrowFromPoolTimeoutInSeconds);

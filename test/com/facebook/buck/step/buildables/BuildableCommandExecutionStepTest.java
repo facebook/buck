@@ -63,18 +63,14 @@ public class BuildableCommandExecutionStepTest {
       stream.write(Resources.toByteArray(binary));
     }
 
+    FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildableCommandExecutionStep testStep =
         new BuildableCommandExecutionStep(
-            "com.facebook.buck.step.buildables.FakeExternalActionsMain",
             BuildableCommand.getDefaultInstance(),
-            new FakeProjectFilesystem(),
-            ImmutableList.of("java")) {
-          @Override
-          protected AbsPath getJarPath() {
-            return testBinary;
-          }
-        };
-    StepExecutionResult result = testStep.execute(createExecutionContext(projectFilesystem));
+            projectFilesystem,
+            ImmutableList.of("java"),
+            () -> projectFilesystem.relativize(testBinary)) {};
+    StepExecutionResult result = testStep.execute(createExecutionContext(this.projectFilesystem));
     assertThat(result.getExitCode(), equalTo(0));
     assertThat(
         result.getStderr().orElseThrow(IllegalStateException::new),

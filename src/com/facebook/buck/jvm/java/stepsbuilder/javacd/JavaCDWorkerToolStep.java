@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
@@ -32,6 +33,7 @@ import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -40,35 +42,20 @@ import java.util.function.Supplier;
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
   private final BuildJavaCommand buildJavaCommand;
-  private final ImmutableList<String> launchJavaCDCommand;
-  private final int poolCapacity;
-  private final int borrowInstanceFromPoolTimeoutSeconds;
+  private JavaCDParams javaCDParams;
 
   public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
     super("javacd_wt");
     this.buildJavaCommand = buildJavaCommand;
-    this.launchJavaCDCommand = getLaunchJavaCDCommand(javaCDParams);
-    this.poolCapacity = javaCDParams.getWorkerToolPoolSize();
-    this.borrowInstanceFromPoolTimeoutSeconds = javaCDParams.getBorrowFromPoolTimeoutInSeconds();
-  }
-
-  private static ImmutableList<String> getLaunchJavaCDCommand(JavaCDParams javaCDParams) {
-    ImmutableList<String> javaRuntimeLauncherCommand = javaCDParams.getJavaRuntimeLauncherCommand();
-    Supplier<AbsPath> javacdBinaryPathSupplier = javaCDParams.getJavacdBinaryPathSupplier();
-    ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
-
-    return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size() + 2 + startCommandOptions.size())
-        .addAll(javaRuntimeLauncherCommand)
-        .add("-jar")
-        .add(javacdBinaryPathSupplier.get().toString())
-        .addAll(startCommandOptions)
-        .build();
+    this.javaCDParams = javaCDParams;
   }
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
+
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+    ImmutableList<String> launchJavaCDCommand = getLaunchJavaCDCommand(ruleCellRoot, javaCDParams);
 
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
         WorkerToolPoolFactory.getPool(
@@ -78,31 +65,52 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
               WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
               return workerToolLauncher.launchWorker(launchJavaCDCommand);
             },
-            poolCapacity);
+            javaCDParams.getWorkerToolPoolSize());
 
     try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
         borrowWorkerToolWithTimeout(workerToolPool)) {
       WorkerToolExecutor workerToolExecutor = borrowedWorkerTool.get();
-      return executeBuildJavaCommand(context, workerToolExecutor);
+      return executeBuildJavaCommand(context, workerToolExecutor, launchJavaCDCommand);
     }
+  }
+
+  private ImmutableList<String> getLaunchJavaCDCommand(
+      AbsPath ruleCellRoot, JavaCDParams javaCDParams) throws IOException {
+    ImmutableList<String> javaRuntimeLauncherCommand = javaCDParams.getJavaRuntimeLauncherCommand();
+    Supplier<RelPath> javacdBinaryPathSupplier = javaCDParams.getJavacdBinaryPathSupplier();
+    ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
+    AbsPath jarPath = ruleCellRoot.resolve(javacdBinaryPathSupplier.get());
+    if (!Files.exists(jarPath.getPath())) {
+      throw new IOException("jar " + jarPath.toString() + " is not exist on env");
+    }
+
+    return ImmutableList.<String>builderWithExpectedSize(
+            javaRuntimeLauncherCommand.size() + 2 + startCommandOptions.size())
+        .addAll(javaRuntimeLauncherCommand)
+        .add("-jar")
+        .add(jarPath.toString())
+        .addAll(startCommandOptions)
+        .build();
   }
 
   private BorrowedWorkerProcess<WorkerToolExecutor> borrowWorkerToolWithTimeout(
       WorkerProcessPool<WorkerToolExecutor> workerToolPool) throws InterruptedException {
     return workerToolPool
-        .borrowWorkerProcess(borrowInstanceFromPoolTimeoutSeconds, TimeUnit.SECONDS)
+        .borrowWorkerProcess(javaCDParams.getBorrowFromPoolTimeoutInSeconds(), TimeUnit.SECONDS)
         .orElseThrow(
             () ->
                 new IllegalStateException(
                     "Cannot get a worker tool from a pool of the size: "
                         + workerToolPool.getCapacity()
                         + ". Time out of "
-                        + borrowInstanceFromPoolTimeoutSeconds
+                        + javaCDParams.getBorrowFromPoolTimeoutInSeconds()
                         + " seconds passed."));
   }
 
   private StepExecutionResult executeBuildJavaCommand(
-      IsolatedExecutionContext context, WorkerToolExecutor workerToolExecutor)
+      IsolatedExecutionContext context,
+      WorkerToolExecutor workerToolExecutor,
+      ImmutableList<String> launchJavaCDCommand)
       throws IOException, InterruptedException {
     try {
       ResultEvent resultEvent =

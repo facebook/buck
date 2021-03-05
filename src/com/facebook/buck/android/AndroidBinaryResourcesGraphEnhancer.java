@@ -35,6 +35,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ExportFile;
@@ -52,6 +53,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 class AndroidBinaryResourcesGraphEnhancer {
   static final Flavor MANIFEST_MERGE_FLAVOR = InternalFlavor.of("manifest_merge");
@@ -108,6 +110,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean withDownwardApi;
   private final boolean shouldExecuteInSeparateProcess;
   private final Tool javaRuntimeLauncher;
+  private final Supplier<SourcePath> externalActionsSourcePathSupplier;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -184,6 +187,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.withDownwardApi = withDownwardApi;
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.externalActionsSourcePathSupplier =
+        DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem);
   }
 
   @BuckStyleValueWithBuilder
@@ -285,7 +290,8 @@ class AndroidBinaryResourcesGraphEnhancer {
                 module,
                 packageableCollection.getAndroidManifestPieces().get(module),
                 shouldExecuteInSeparateProcess,
-                javaRuntimeLauncher);
+                javaRuntimeLauncher,
+                externalActionsSourcePathSupplier);
         graphBuilder.addToIndex(moduleManifestMergeRule);
         manifestPath = moduleManifestMergeRule.getSourcePathToOutput();
       }
@@ -513,7 +519,8 @@ class AndroidBinaryResourcesGraphEnhancer {
               module,
               packageableCollection.getAndroidManifestPieces().values(),
               shouldExecuteInSeparateProcess,
-              javaRuntimeLauncher);
+              javaRuntimeLauncher,
+              externalActionsSourcePathSupplier);
       graphBuilder.addToIndex(manifestMergeRule);
       realManifest = manifestMergeRule.getSourcePathToOutput();
     } else {
@@ -564,7 +571,8 @@ class AndroidBinaryResourcesGraphEnhancer {
             .resolve(graphBuilder, target.getTargetConfiguration()),
         withDownwardApi,
         shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        javaRuntimeLauncher,
+        externalActionsSourcePathSupplier);
   }
 
   private Aapt2Link createAapt2Link(
@@ -756,7 +764,8 @@ class AndroidBinaryResourcesGraphEnhancer {
             baseApk,
             ImmutableSortedSet.copyOf(assetsDirectories),
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher);
+            javaRuntimeLauncher,
+            externalActionsSourcePathSupplier);
     graphBuilder.addToIndex(mergeAssets);
     return mergeAssets;
   }

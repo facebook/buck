@@ -62,6 +62,9 @@ public class AndroidBuildConfigJavaLibraryTest {
             false,
             false,
             new FakeTool(),
+            () ->
+                ExplicitBuildTargetSourcePath.of(
+                    buildTarget, Paths.get("test/external_actions.jar")),
             () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
             ImmutableList.of(),
             1,
@@ -100,6 +103,9 @@ public class AndroidBuildConfigJavaLibraryTest {
             false,
             false,
             new FakeTool(),
+            () ->
+                ExplicitBuildTargetSourcePath.of(
+                    buildTarget, Paths.get("test/external_actions.jar")),
             () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
             ImmutableList.of(),
             1,

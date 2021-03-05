@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
@@ -140,7 +141,7 @@ public class CalculateSourceAbi
     @ExcludeFromRuleKey(
         reason = "path to javacd binary is not a part of a rule key",
         serialization = DefaultFieldSerialization.class,
-        inputs = IgnoredFieldInputs.class)
+        inputs = DefaultFieldInputs.class)
     private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
 
     public SourceAbiBuildable(
@@ -178,7 +179,7 @@ public class CalculateSourceAbi
       AbiJarStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
                   jarBuildStepsFactory.getConfiguredCompiler(),
-                  createJavaCDParams(sourcePathResolver))
+                  createJavaCDParams(filesystem, sourcePathResolver))
               .getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
@@ -201,7 +202,7 @@ public class CalculateSourceAbi
       AbiJarPipelineStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
                   jarBuildStepsFactory.getConfiguredCompiler(),
-                  createJavaCDParams(sourcePathResolver))
+                  createJavaCDParams(filesystem, sourcePathResolver))
               .getPipelineAbiJarBuilder();
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,
@@ -213,11 +214,14 @@ public class CalculateSourceAbi
       return stepsBuilder.build();
     }
 
-    private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
+    private JavaCDParams createJavaCDParams(
+        ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
       return JavaCDParams.of(
           isJavaCDEnabled,
           javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-          () -> sourcePathResolver.getAbsolutePath(javacdBinaryPathSourcePathSupplier.get()),
+          () ->
+              sourcePathResolver.getRelativePath(
+                  filesystem, javacdBinaryPathSourcePathSupplier.get()),
           startJavacdCommandOptions,
           javacdWorkerToolPoolSize,
           javacdBorrowFromPoolTimeoutInSeconds);

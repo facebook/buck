@@ -21,9 +21,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -47,6 +50,7 @@ import org.junit.Test;
 public class BuildableWithExternalActionTest {
 
   private BuildContext buildContext;
+  private BuildTarget buildTarget;
   private ProjectFilesystem projectFilesystem;
   private OutputPathResolver outputPathResolver;
   private BuildCellRelativePathFactory buildCellRelativePathFactory;
@@ -57,9 +61,8 @@ public class BuildableWithExternalActionTest {
     buildContext =
         FakeBuildContext.withSourcePathResolver(actionGraphBuilder.getSourcePathResolver());
     projectFilesystem = new FakeProjectFilesystem();
-    outputPathResolver =
-        new DefaultOutputPathResolver(
-            projectFilesystem, BuildTargetFactory.newInstance("//some:target"));
+    buildTarget = BuildTargetFactory.newInstance("//some:target");
+    outputPathResolver = new DefaultOutputPathResolver(projectFilesystem, buildTarget);
     buildCellRelativePathFactory =
         new DefaultBuildCellRelativePathFactory(
             buildContext.getBuildCellRootPath(),
@@ -69,7 +72,7 @@ public class BuildableWithExternalActionTest {
 
   @Test
   public void canGetStepsWithoutBuildableCommandExecutionStep() {
-    Buildable buildable = new FakeBuildable(false, "test_arg");
+    Buildable buildable = new FakeBuildable(false, "test_arg", buildTarget);
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
             buildContext, projectFilesystem, outputPathResolver, buildCellRelativePathFactory);
@@ -78,7 +81,7 @@ public class BuildableWithExternalActionTest {
 
   @Test
   public void canGetStepsWithBuildableCommandExecutionStep() {
-    Buildable buildable = new FakeBuildable(true, "test_arg");
+    Buildable buildable = new FakeBuildable(true, "test_arg", buildTarget);
 
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
@@ -96,8 +99,13 @@ public class BuildableWithExternalActionTest {
 
     private final String arg;
 
-    private FakeBuildable(boolean shouldUseExternalActions, String arg) {
-      super(shouldUseExternalActions, new FakeTool());
+    private FakeBuildable(boolean shouldUseExternalActions, String arg, BuildTarget buildTarget) {
+      super(
+          shouldUseExternalActions,
+          new FakeTool(),
+          () ->
+              ExplicitBuildTargetSourcePath.of(
+                  buildTarget, RelPath.get("test_external_actions.jar")));
       this.arg = arg;
     }
 

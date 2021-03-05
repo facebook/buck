@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.function.Supplier;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
@@ -78,7 +79,8 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
       APKModule module,
       Collection<SourcePath> manifestFiles,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<SourcePath> externalActionsSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -92,7 +94,8 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
                     "AndroidManifest__%s__.xml", buildTarget.getShortNameAndFlavorPostfix())),
             new OutputPath("merge-report.txt"),
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            javaRuntimeLauncher,
+            externalActionsSourcePathSupplier));
   }
 
   @Override
@@ -119,8 +122,9 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         OutputPath outputPath,
         OutputPath mergeReportOutputPath,
         boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        Tool javaRuntimeLauncher,
+        Supplier<SourcePath> externalActionsSourcePathSupplier) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher, externalActionsSourcePathSupplier);
       this.skeletonFile = skeletonFile;
       this.manifestFiles = manifestFiles;
       this.moduleName = module.getName();

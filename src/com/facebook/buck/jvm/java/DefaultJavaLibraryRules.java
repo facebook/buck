@@ -20,12 +20,13 @@ import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -58,19 +59,32 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
 
-  private static final String JAVACD_ENV_VARIABLE = "buck.javacd";
+  private static final String JAVACD_PROPERTY_NAME = "buck.javacd";
+  private static final String EXTERNAL_ACTIONS_PROPERTY_NAME = "buck.external_actions";
 
-  /** Returns java cd binary source path supplier */
-  public static Supplier<SourcePath> getJavacdBinarySourcePathSupplier(BuildTarget buildTarget) {
+  /** Returns java cd binary's JAR source path supplier. */
+  public static Supplier<SourcePath> getJavacdBinarySourcePathSupplier(
+      ProjectFilesystem projectFilesystem) {
     return () ->
-        ExplicitBuildTargetSourcePath.of(buildTarget, DefaultJavaLibraryRules.getJavaCDPath());
+        PathSourcePath.of(
+            projectFilesystem, getPathFromSystemProperty(projectFilesystem, JAVACD_PROPERTY_NAME));
   }
 
-  private static Path getJavaCDPath() {
-    return Paths.get(
-        Objects.requireNonNull(
-            System.getProperty(JAVACD_ENV_VARIABLE),
-            JAVACD_ENV_VARIABLE + " env variable is not set"));
+  /** Returns the external action binary's JAR source path. */
+  public static Supplier<SourcePath> getExternalActionsSourcePathSupplier(
+      ProjectFilesystem projectFilesystem) {
+    return () ->
+        PathSourcePath.of(
+            projectFilesystem,
+            getPathFromSystemProperty(projectFilesystem, EXTERNAL_ACTIONS_PROPERTY_NAME));
+  }
+
+  private static RelPath getPathFromSystemProperty(
+      ProjectFilesystem projectFilesystem, String propertyName) {
+    return projectFilesystem.relativize(
+        Paths.get(
+            Objects.requireNonNull(
+                System.getProperty(propertyName), propertyName + " system property is not set")));
   }
 
   /** Default java library constructor interface */
@@ -472,7 +486,7 @@ public abstract class DefaultJavaLibraryRules {
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(buildTarget),
+            getJavacdBinarySourcePathSupplier(projectFilesystem),
             javaCDBuckConfig.getJvmFlags(),
             javaCDBuckConfig.getWorkerToolSize(),
             javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
@@ -523,7 +537,7 @@ public abstract class DefaultJavaLibraryRules {
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
                 javaBuckConfig.isJavaCDEnabled(),
                 javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-                getJavacdBinarySourcePathSupplier(buildTarget),
+                getJavacdBinarySourcePathSupplier(projectFilesystem),
                 javaCDBuckConfig.getJvmFlags(),
                 javaCDBuckConfig.getWorkerToolSize(),
                 javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
@@ -572,15 +586,16 @@ public abstract class DefaultJavaLibraryRules {
     JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
     JavaCDBuckConfig javaCDBuckConfig = getJavaCDBuckConfig();
     ActionGraphBuilder graphBuilder = getActionGraphBuilder();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
             sourceOnlyAbiTarget,
-            getProjectFilesystem(),
+            projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(sourceOnlyAbiTarget),
+            getJavacdBinarySourcePathSupplier(projectFilesystem),
             javaCDBuckConfig.getJvmFlags(),
             javaCDBuckConfig.getWorkerToolSize(),
             javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds()));
@@ -600,15 +615,16 @@ public abstract class DefaultJavaLibraryRules {
     JavaCDBuckConfig javaCDBuckConfig = getJavaCDBuckConfig();
 
     ActionGraphBuilder graphBuilder = getActionGraphBuilder();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return graphBuilder.addToIndex(
         new CalculateSourceAbi(
             sourceAbiTarget,
-            getProjectFilesystem(),
+            projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(sourceAbiTarget),
+            getJavacdBinarySourcePathSupplier(projectFilesystem),
             javaCDBuckConfig.getJvmFlags(),
             javaCDBuckConfig.getWorkerToolSize(),
             javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds()));

@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * MergeAssets adds the assets for an APK into the output of aapt.
@@ -55,12 +56,18 @@ public class MergeAssets extends ModernBuildRule<MergeAssets.Impl> {
       Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<SourcePath> externalActionsSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(assetsDirectories, baseApk, shouldExecuteInSeparateProcess, javaRuntimeLauncher));
+        new Impl(
+            assetsDirectories,
+            baseApk,
+            shouldExecuteInSeparateProcess,
+            javaRuntimeLauncher,
+            externalActionsSourcePathSupplier));
   }
 
   @Override
@@ -85,8 +92,9 @@ public class MergeAssets extends ModernBuildRule<MergeAssets.Impl> {
         ImmutableSet<SourcePath> assetsDirectories,
         Optional<SourcePath> baseApk,
         boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        Tool javaRuntimeLauncher,
+        Supplier<SourcePath> externalActionsSourcePathSupplier) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher, externalActionsSourcePathSupplier);
       this.assetsDirectories = assetsDirectories;
       this.baseApk = baseApk;
       this.outputPath = new OutputPath("merged.assets.ap_");

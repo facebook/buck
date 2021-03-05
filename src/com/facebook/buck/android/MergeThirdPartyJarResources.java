@@ -27,6 +27,7 @@ import com.facebook.buck.externalactions.android.MergeJarResourcesExternalAction
 import com.facebook.buck.externalactions.android.MergeJarResourcesExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /** Merges resources from third party jars for exo-for-resources. */
@@ -56,7 +58,8 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
             ImmutableSortedSet.copyOf(pathsToThirdPartyJars),
             new OutputPath("java.resources"),
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            javaRuntimeLauncher,
+            DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem)));
   }
 
   @Override
@@ -75,8 +78,9 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
         ImmutableSortedSet<SourcePath> pathsToThirdPartyJars,
         OutputPath mergedPath,
         boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        Tool javaRuntimeLauncher,
+        Supplier<SourcePath> externalActionsSourcePathSupplier) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher, externalActionsSourcePathSupplier);
       this.pathsToThirdPartyJars = pathsToThirdPartyJars;
       this.mergedPath = mergedPath;
     }

@@ -70,7 +70,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new DefaultAndroidLibraryCompilerFactory(
             javaConfig, scalaConfig, kotlinBuckConfig, downwardApiConfig);
     AndroidInstallConfig androidInstallConfig = new AndroidInstallConfig(buckConfig);
-    AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory(buckConfig);
+    AndroidManifestFactory androidManifestFactory =
+        new AndroidManifestFactory(buildBuckConfig, javaConfig);
 
     return Arrays.asList(
         new AndroidAarDescription(

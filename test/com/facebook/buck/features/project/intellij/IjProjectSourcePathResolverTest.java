@@ -29,6 +29,7 @@ import com.facebook.buck.android.AndroidManifestFactory;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -60,6 +61,7 @@ import com.facebook.buck.jvm.java.JarGenruleDescription;
 import com.facebook.buck.jvm.java.JarGenruleDescriptionArg;
 import com.facebook.buck.jvm.java.JavaBinaryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -277,6 +279,7 @@ public class IjProjectSourcePathResolverTest {
 
   @Test
   public void testAndroidManifest() {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AbstractNodeBuilder<
             AndroidManifestDescriptionArg.Builder,
             AndroidManifestDescriptionArg,
@@ -288,7 +291,10 @@ public class IjProjectSourcePathResolverTest {
                 AndroidManifestDescriptionArg,
                 AndroidManifestDescription,
                 AndroidManifest>(
-                new AndroidManifestDescription(new AndroidManifestFactory(FakeBuckConfig.empty())),
+                new AndroidManifestDescription(
+                    new AndroidManifestFactory(
+                        buckConfig.getView(BuildBuckConfig.class),
+                        buckConfig.getView(JavaBuckConfig.class))),
                 BuildTargetFactory.newInstance("//app:manifest")) {};
     builder
         .getArgForPopulating()

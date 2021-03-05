@@ -19,25 +19,24 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidManifestFactory {
+
   private final boolean shouldExecuteInSeparateProcess;
   private final Tool javaRuntimeLauncher;
 
-  public AndroidManifestFactory(BuckConfig buckConfig) {
-    this.shouldExecuteInSeparateProcess =
-        buckConfig.getView(BuildBuckConfig.class).areExternalActionsEnabled();
-    this.javaRuntimeLauncher =
-        buckConfig.getView(JavaBuckConfig.class).getDefaultJavaOptions().getJavaRuntime();
+  public AndroidManifestFactory(BuildBuckConfig buildBuckConfig, JavaBuckConfig javaBuckConfig) {
+    this.shouldExecuteInSeparateProcess = buildBuckConfig.areExternalActionsEnabled();
+    this.javaRuntimeLauncher = javaBuckConfig.getDefaultJavaOptions().getJavaRuntime();
   }
 
   public AndroidManifest createBuildRule(
@@ -58,6 +57,7 @@ public class AndroidManifestFactory {
         APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
         manifestFiles,
         shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        javaRuntimeLauncher,
+        DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem));
   }
 }

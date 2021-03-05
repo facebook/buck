@@ -487,7 +487,8 @@ public class AndroidBinaryGraphEnhancer {
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(originalBuildTarget),
+              DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
+              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
               javaCDBuckConfig.getJvmFlags(),
               javaCDBuckConfig.getWorkerToolSize(),
               javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
@@ -746,6 +747,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
+      Supplier<SourcePath> externalActionsSourcePathSupplier,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       ImmutableList<String> startCommandOptions,
       int workerToolPoolSize,
@@ -795,6 +797,7 @@ public class AndroidBinaryGraphEnhancer {
               isJavaCDEnabled,
               shouldExecuteInSeparateProcess,
               javaRuntimeLauncher,
+              externalActionsSourcePathSupplier,
               javacdBinaryPathSourcePathSupplier,
               startCommandOptions,
               workerToolPoolSize,

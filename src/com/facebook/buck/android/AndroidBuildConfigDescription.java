@@ -117,7 +117,8 @@ public class AndroidBuildConfigDescription
         javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(buildTarget),
+        DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
+        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
         javaCDBuckConfig.getJvmFlags(),
         javaCDBuckConfig.getWorkerToolSize(),
         javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
@@ -145,6 +146,7 @@ public class AndroidBuildConfigDescription
       boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
+      Supplier<SourcePath> externalActionsSourcePathSupplier,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       ImmutableList<String> startCommandOptions,
       int workerToolPoolSize,
@@ -189,7 +191,8 @@ public class AndroidBuildConfigDescription
             valuesFile,
             useConstantExpressions,
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher);
+            javaRuntimeLauncher,
+            externalActionsSourcePathSupplier);
     graphBuilder.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.

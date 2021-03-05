@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.creator;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Supplier;
@@ -29,7 +29,7 @@ public abstract class JavaCDParams {
 
   public abstract ImmutableList<String> getJavaRuntimeLauncherCommand();
 
-  public abstract Supplier<AbsPath> getJavacdBinaryPathSupplier();
+  public abstract Supplier<RelPath> getJavacdBinaryPathSupplier();
 
   public abstract ImmutableList<String> getStartCommandOptions();
 
@@ -41,7 +41,7 @@ public abstract class JavaCDParams {
   public static JavaCDParams of(
       boolean hasJavaCDEnabled,
       ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<AbsPath> javacdBinaryPathSupplier,
+      Supplier<RelPath> javacdBinaryPathSupplier,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,
       int borrowFromPoolTimeoutInSeconds) {

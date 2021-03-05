@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * {@link BuildRule} that can generate a {@code BuildConfig.java} file and compile it so it can be
@@ -140,7 +141,8 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      Supplier<SourcePath> externalActionsSourcePathSupplier) {
     super(
         buildTarget,
         projectFilesystem,
@@ -153,7 +155,8 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
             useConstantExpressions,
             new OutputPath("BuildConfig.java"),
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            javaRuntimeLauncher,
+            externalActionsSourcePathSupplier));
   }
 
   @Override
@@ -195,8 +198,9 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
         boolean useConstantExpressions,
         OutputPath outputPath,
         boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        Tool javaRuntimeLauncher,
+        Supplier<SourcePath> externalActionsSourcePathSupplier) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher, externalActionsSourcePathSupplier);
       this.buildTarget = buildTarget;
       this.javaPackage = javaPackage;
       this.defaultValues = defaultValues;

@@ -810,6 +810,9 @@ public class AndroidBinaryGraphEnhancerTest {
             false,
             false,
             new FakeTool(),
+            () ->
+                ExplicitBuildTargetSourcePath.of(
+                    buildTarget, Paths.get("test/external_actions.jar")),
             () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
             ImmutableList.of(),
             1,

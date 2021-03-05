@@ -18,6 +18,11 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.external.model.ParsedArgs;
@@ -28,6 +33,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.buildables.BuildableCommandExecutionStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
+import java.util.function.Supplier;
 
 /**
  * Buildable with an external action that is decoupled from buck's core and can be executed in a
@@ -38,10 +44,19 @@ public abstract class BuildableWithExternalAction implements Buildable {
   @AddToRuleKey private final boolean shouldExecuteInSeparateProcess;
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
+  @ExcludeFromRuleKey(
+      reason = "path to external actions binary is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final Supplier<SourcePath> externalActionsSourcePathSupplier;
+
   public BuildableWithExternalAction(
-      boolean shouldExecuteInSeparateProcess, Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess,
+      Tool javaRuntimeLauncher,
+      Supplier<SourcePath> externalActionsSourcePathSupplier) {
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.externalActionsSourcePathSupplier = externalActionsSourcePathSupplier;
   }
 
   @Override
@@ -54,11 +69,15 @@ public abstract class BuildableWithExternalAction implements Buildable {
     BuildableCommand buildableCommand =
         getBuildableCommand(filesystem, outputPathResolver, buildContext);
     if (shouldExecuteInSeparateProcess) {
+      SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
       return ImmutableList.of(
           new BuildableCommandExecutionStep(
               getBuildableCommand(filesystem, outputPathResolver, buildContext),
               filesystem,
-              javaRuntimeLauncher.getCommandPrefix(buildContext.getSourcePathResolver())));
+              javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
+              () ->
+                  sourcePathResolver.getRelativePath(
+                      filesystem, externalActionsSourcePathSupplier.get())));
     }
     String externalActionClassName = buildableCommand.getExternalActionClass();
     try {
