@@ -23,11 +23,13 @@ import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.ass
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesPaths;
 import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertParseErrorWithMessageSubstring;
+import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
+import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -356,7 +358,13 @@ public class UnconfiguredQueryCommandIntegrationTest {
     ProcessResult resultForSpecificPlatform =
         workspace.runBuckCommand(
             "uquery", query, "--target-platforms", "//config/platform:java11-dev");
-    assertOutputMatches(expected, resultForSpecificPlatform);
+    resultForSpecificPlatform.assertSuccess();
+
+    assertEquals(
+        expected,
+        OutputHelper.normalizeOutputLines(normalizeNewlines(resultForSpecificPlatform.getStdout()))
+            .trim()
+            .replace('\\', '/'));
   }
 
   @Test
@@ -453,8 +461,15 @@ public class UnconfiguredQueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(deps(//bin:bar-bin))");
-    assertOutputMatchesFileContents(
-        "stdout-inputs-function-prints-all-files-used-by-a-target", result, workspace);
+    result.assertSuccess();
+
+    String expected =
+        normalizeNewlines(
+            workspace.getFileContents("stdout-inputs-function-prints-all-files-used-by-a-target"));
+    assertEquals(
+        expected,
+        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout()))
+            .replace('\\', '/'));
   }
 
   @Test
@@ -492,7 +507,11 @@ public class UnconfiguredQueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("uquery", "labels(properties, //bin:keystore-prod)");
-    assertOutputMatchesExactly("bin/prod.keystore.properties\n", result);
+    result.assertSuccess();
+
+    assertEquals(
+        normalizeNewlines("bin/prod.keystore.properties\n"),
+        normalizeNewlines(result.getStdout()).replace('\\', '/'));
   }
 
   @Test
