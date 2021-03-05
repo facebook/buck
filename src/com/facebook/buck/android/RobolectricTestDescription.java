@@ -219,15 +219,17 @@ public class RobolectricTestDescription
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
 
     ImmutableList<Aapt2Compile> compileables =
-        AndroidBinaryResourcesGraphEnhancer.createAapt2CompileablesForResourceProvider(
-            projectFilesystem,
-            graphBuilder,
-            aapt2ToolProvider,
-            resourcesProvider,
-            buildTarget,
-            true,
-            false,
-            downwardApiConfig.isEnabledForAndroid());
+        androidResourceDeps.stream()
+            .filter(resource -> resource.getRes() != null)
+            .map(
+                resource ->
+                    (Aapt2Compile)
+                        graphBuilder.requireRule(
+                            resource
+                                .getBuildTarget()
+                                .withAppendedFlavors(
+                                    AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)))
+            .collect(ImmutableList.toImmutableList());
 
     BuildTarget aapt2LinkBuildTarget =
         buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_link"));
