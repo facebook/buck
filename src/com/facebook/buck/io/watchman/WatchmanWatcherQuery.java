@@ -20,8 +20,9 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+/** Partial query used in {@link com.facebook.buck.io.watchman.WatchmanWatcher}. */
 @BuckStyleValue
-abstract class WatchmanQuery {
+abstract class WatchmanWatcherQuery {
 
   abstract String getQueryPath();
 

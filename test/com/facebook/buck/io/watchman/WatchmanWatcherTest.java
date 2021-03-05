@@ -61,15 +61,15 @@ import org.junit.Test;
 public class WatchmanWatcherTest {
 
   private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
-  private static final WatchmanQuery FAKE_QUERY =
-      ImmutableWatchmanQuery.ofImpl("/fake/root", ImmutableMap.of());
+  private static final WatchmanWatcherQuery FAKE_QUERY =
+      ImmutableWatchmanWatcherQuery.ofImpl("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
   private static final AbsPath FAKE_SECONDARY_ROOT =
       AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
-  private static final WatchmanQuery FAKE_SECONDARY_QUERY =
-      ImmutableWatchmanQuery.ofImpl("/fake/SECONDARY", ImmutableMap.of());
+  private static final WatchmanWatcherQuery FAKE_SECONDARY_QUERY =
+      ImmutableWatchmanWatcherQuery.ofImpl("/fake/SECONDARY", ImmutableMap.of());
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -365,7 +365,7 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithRepoRelativePrefix() {
-    WatchmanQuery query =
+    WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
             ProjectWatch.of("path/to/repo", Optional.of("project")),
             ImmutableSet.of(),
@@ -376,7 +376,7 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
-    WatchmanQuery query =
+    WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
@@ -384,7 +384,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        ImmutableWatchmanQuery.ofImpl(
+        ImmutableWatchmanWatcherQuery.ofImpl(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -405,7 +405,7 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
-    WatchmanQuery query =
+    WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
@@ -413,7 +413,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
-        ImmutableWatchmanQuery.ofImpl(
+        ImmutableWatchmanWatcherQuery.ofImpl(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -437,7 +437,7 @@ public class WatchmanWatcherTest {
   @Test
   public void watchmanQueryRelativizesExcludePaths() {
     String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
-    WatchmanQuery query =
+    WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
             ProjectWatch.of(watchRoot, Optional.empty()),
             ImmutableSet.of(
@@ -445,7 +445,7 @@ public class WatchmanWatcherTest {
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        ImmutableWatchmanQuery.ofImpl(
+        ImmutableWatchmanWatcherQuery.ofImpl(
             watchRoot,
             ImmutableMap.of(
                 "expression",
@@ -466,13 +466,13 @@ public class WatchmanWatcherTest {
 
   @Test
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
-    WatchmanQuery query =
+    WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(GlobPatternMatcher.of("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        ImmutableWatchmanQuery.ofImpl(
+        ImmutableWatchmanWatcherQuery.ofImpl(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",

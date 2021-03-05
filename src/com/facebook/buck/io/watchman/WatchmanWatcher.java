@@ -86,7 +86,7 @@ public class WatchmanWatcher {
 
   private final EventBus fileChangeEventBus;
   private final WatchmanClientFactory watchmanClientFactory;
-  private final ImmutableMap<AbsPath, WatchmanQuery> queries;
+  private final ImmutableMap<AbsPath, WatchmanWatcherQuery> queries;
   private final Map<AbsPath, WatchmanCursor> cursors;
   private final int numThreads;
 
@@ -118,7 +118,7 @@ public class WatchmanWatcher {
       EventBus fileChangeEventBus,
       WatchmanClientFactory watchmanClientFactory,
       long timeoutMillis,
-      ImmutableMap<AbsPath, WatchmanQuery> queries,
+      ImmutableMap<AbsPath, WatchmanWatcherQuery> queries,
       Map<AbsPath, WatchmanCursor> cursors,
       int numThreads) {
     this.fileChangeEventBus = fileChangeEventBus;
@@ -130,11 +130,12 @@ public class WatchmanWatcher {
   }
 
   @VisibleForTesting
-  static ImmutableMap<AbsPath, WatchmanQuery> createQueries(
+  static ImmutableMap<AbsPath, WatchmanWatcherQuery> createQueries(
       ImmutableMap<AbsPath, ProjectWatch> projectWatches,
       ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
-    ImmutableMap.Builder<AbsPath, WatchmanQuery> watchmanQueryBuilder = ImmutableMap.builder();
+    ImmutableMap.Builder<AbsPath, WatchmanWatcherQuery> watchmanQueryBuilder =
+        ImmutableMap.builder();
     for (Map.Entry<AbsPath, ProjectWatch> entry : projectWatches.entrySet()) {
       watchmanQueryBuilder.put(
           entry.getKey(), createQuery(entry.getValue(), ignorePaths, watchmanCapabilities));
@@ -143,7 +144,7 @@ public class WatchmanWatcher {
   }
 
   @VisibleForTesting
-  static WatchmanQuery createQuery(
+  static WatchmanWatcherQuery createQuery(
       ProjectWatch projectWatch,
       ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
@@ -175,7 +176,7 @@ public class WatchmanWatcher {
     if (watchPrefix.isPresent()) {
       sinceParams.put("relative_root", watchPrefix.get());
     }
-    return ImmutableWatchmanQuery.ofImpl(watchRoot, sinceParams);
+    return ImmutableWatchmanWatcherQuery.ofImpl(watchRoot, sinceParams);
   }
 
   @VisibleForTesting
@@ -208,7 +209,7 @@ public class WatchmanWatcher {
       for (AbsPath cellPath : queries.keySet()) {
         watchmanQueries.add(
             () -> {
-              WatchmanQuery query = queries.get(cellPath);
+              WatchmanWatcherQuery query = queries.get(cellPath);
               WatchmanCursor cursor = cursors.get(cellPath);
               if (query != null && cursor != null) {
                 try (SimplePerfEvent.Scope perfEvent =
@@ -268,7 +269,7 @@ public class WatchmanWatcher {
       FreshInstanceAction freshInstanceAction,
       AbsPath cellPath,
       WatchmanClient client,
-      WatchmanQuery query,
+      WatchmanWatcherQuery query,
       WatchmanCursor cursor,
       AtomicBoolean filesHaveChanged,
       SimplePerfEvent.Scope perfEvent)
