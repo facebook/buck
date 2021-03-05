@@ -30,6 +30,8 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
 
   private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
 
+  private static final boolean IS_ENABLED_BY_DEFAULT = true;
+
   @Override
   public abstract BuckConfig getDelegate();
 
@@ -146,11 +148,11 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
     if (IS_WINDOWS && !isEnabledForWindows()) {
       return false;
     }
-    return getDelegate().getBooleanValue(SECTION, configKey, false);
+    return getDelegate().getBooleanValue(SECTION, configKey, IS_ENABLED_BY_DEFAULT);
   }
 
   @Value.Lazy
   public boolean isEnabledForWindows() {
-    return getDelegate().getBooleanValue(SECTION, "windows_enabled", false);
+    return getDelegate().getBooleanValue(SECTION, "windows_enabled", IS_ENABLED_BY_DEFAULT);
   }
 }
