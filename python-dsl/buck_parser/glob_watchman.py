@@ -148,6 +148,9 @@ def glob_watchman(
         watchman_client.close()
         # Watchman timeouts are not fatal.  Fall back on the normal glob flow.
         return None
+    # TODO(nga): `res` cannot have `error` property because pywatchman throws
+    #   `CommandError` when it encounters `error` property: https://fburl.com/diffusion/p7qc080x.
+    #   This explains how we add error to diagnostics here but "return" files below.
     error_message = res.get("error")
     if error_message is not None:
         diagnostics.append(
