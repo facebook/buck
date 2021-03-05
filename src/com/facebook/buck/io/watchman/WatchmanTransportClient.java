@@ -47,7 +47,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
-  private boolean disabledWarningShown = false;
+  private boolean timeoutWarningShown = false;
 
   public WatchmanTransportClient(Console console, Clock clock, Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
@@ -103,19 +103,19 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     listeningExecutorService.shutdown();
   }
 
-  private synchronized void showDisabledWarning(long timeoutNanos) {
-    if (disabledWarningShown || console.getVerbosity().isSilent()) {
+  private synchronized void showTimeoutWarning(long timeoutNanos) {
+    if (timeoutWarningShown || console.getVerbosity().isSilent()) {
       return;
     }
     if (timeoutNanos < 0) {
       timeoutNanos = 0;
     }
-    disabledWarningShown = true;
+    timeoutWarningShown = true;
     console
         .getStdErr()
         .getRawStream()
         .format(
-            "Timed out after %d sec waiting for watchman query. Disabling watchman.\n",
+            "Timed out after %d sec waiting for watchman query.\n",
             TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
   }
 
@@ -142,9 +142,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
         }
       }
       LOG.warn(
-          "Watchman did not respond within %d ms, disabling.",
-          TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
-      showDisabledWarning(timeoutNanos);
+          "Watchman did not respond within %d ms.", TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
+      showTimeoutWarning(timeoutNanos);
       return Optional.empty();
     }
   }
