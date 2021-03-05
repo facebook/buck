@@ -35,7 +35,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
@@ -59,21 +58,12 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
   }
 
-  private final AtomicBoolean running = new AtomicBoolean();
-
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeoutNanos, Object... query)
       throws IOException, InterruptedException {
-    if (!running.compareAndSet(false, true)) {
-      throw new IllegalStateException("WatchmanTransportClient is single-threaded");
-    }
-    try {
-      return queryListWithTimeoutAndPolling(
-          timeoutNanos, warnTimeoutNanos, ImmutableList.copyOf(query));
-    } finally {
-      running.set(false);
-    }
+    return queryListWithTimeoutAndPolling(
+        timeoutNanos, warnTimeoutNanos, ImmutableList.copyOf(query));
   }
 
   private Either<Map<String, Object>, Timeout> queryListWithTimeoutAndPolling(
