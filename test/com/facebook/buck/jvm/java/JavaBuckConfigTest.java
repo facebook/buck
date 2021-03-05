@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
@@ -58,8 +59,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -82,17 +83,20 @@ public class JavaBuckConfigTest {
   public void whenJavaIsNotSetThenJavaFromPathIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
     JavaOptions javaOptions = config.getDefaultJavaOptions();
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
+    String javaPath =
+        Paths.get(System.getProperty("java.home"), "bin", "java" + binaryExtension).toString();
     assertEquals(
-        ImmutableList.of("java"), javaOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
+        ImmutableList.of(javaPath), javaOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
-        ImmutableList.of("java"),
+        ImmutableList.of(javaPath),
         javaForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions java11ForTestsOptions = config.getDefaultJava11OptionsForTests();
     assertEquals(
-        ImmutableList.of("java"),
+        ImmutableList.of(javaPath),
         java11ForTestsOptions.getJavaRuntime().getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -470,7 +474,7 @@ public class JavaBuckConfigTest {
   @Test
   public void testCompileFullJarsByDefault() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertThat(config.getAbiGenerationMode(), Matchers.equalTo(AbiGenerationMode.CLASS));
+    assertThat(config.getAbiGenerationMode(), equalTo(AbiGenerationMode.CLASS));
   }
 
   private void assertOptionKeyAbsent(JavacOptions options, String key) {

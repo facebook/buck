@@ -90,7 +90,7 @@ public interface Arg extends AddsToRuleKey {
     return builder.build();
   }
 
-  /** Converts an Arg to a String by concatting all the command-line appended strings. */
+  /** Converts an Arg to a String by concatenating all the command-line appended strings. */
   static String stringify(Arg arg, SourcePathResolverAdapter pathResolver) {
     StringBuilder builder = new StringBuilder();
     arg.appendToCommandLine(builder::append, pathResolver);

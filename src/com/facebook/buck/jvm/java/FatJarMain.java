@@ -74,7 +74,7 @@ public class FatJarMain {
     // Look for the Java binary given in an alternate location if given,
     // otherwise use the Java binary that started us
     String javaHome = System.getProperty("buck.fatjar.java.home", System.getProperty("java.home"));
-    cmd.add(Paths.get(javaHome).resolve("bin").resolve("java").toString());
+    cmd.add(Paths.get(javaHome, "bin", "java").toString());
     // Pass through any VM arguments to the child process
     cmd.addAll(getJVMArguments());
     cmd.add("-jar");

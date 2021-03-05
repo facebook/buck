@@ -1,0 +1,11 @@
+java_library(
+    name = "cmd",
+    srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/util/cmd:cmd"],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+    ],
+)

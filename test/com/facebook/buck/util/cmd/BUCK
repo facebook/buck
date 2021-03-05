@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "cmd",
+    deps = [
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/cmd:cmd",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/junit:junit",
+    ],
+)
