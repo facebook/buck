@@ -94,27 +94,3 @@
   default_build_file_syntax=skylark
   python_interpreter = python3
 
-[downward_api]
-  cxx_enabled = true
-  genrule_enabled = true
-  android_enabled = true
-  apple_enabled = true
-  java_enabled = true
-  groovy_enabled = true
-  kotlin_enabled = true
-  scala_enabled = true
-  infer_enabled = true
-  d_enabled = true
-  csharp_enabled = true
-  go_enabled = true
-  halide_enabled = true
-  haskell_enabled = true
-  lua_enabled = true
-  ocaml_enabled = true
-  rust_enabled = true
-  python_enabled = true
-  js_enabled = true
-  tests_enabled = true
-  rule_analysis_enabled = true
-  windows_enabled = true
-
