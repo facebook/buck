@@ -464,6 +464,7 @@ func (testDeps) ImportPath() string {
 	return {{.ImportPath | printf "%q"}}
 }
 
+func (testDeps) SetPanicOnExit0(_ bool) {}
 
 func (testDeps) StartTestLog(w io.Writer) {}
 

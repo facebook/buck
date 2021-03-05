@@ -334,7 +334,8 @@ public class GoBinaryIntegrationTest {
 
     assertTrue(output.toFile().exists());
     assertThat(
-        Files.readAllLines(output), hasItem(Matchers.containsString("libsrc_mixed_with_c_lib.so")));
+        Files.readAllLines(output),
+        hasItem(Matchers.matchesRegex(".*libsrc_mixed_with_c_lib\\.(so|dylib).*")));
   }
 
   @Test
