@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "main_lib",
     srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main"],
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:downward-model",

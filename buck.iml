@@ -110,6 +110,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/zip/collect/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/cmd/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/jvm/java/stepsbuilder/javacd/main/testdata" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />

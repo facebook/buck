@@ -55,6 +55,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
+  public static final String PROPERTY_JAVACD_ENABLED = "javacd_enabled";
+
   private static final String JAVA_HOME_SYSTEM_PROPERTY_NAME = "java.home";
   private static final String DEFAULT_EXECUTABLE_NAME = "java";
 
@@ -339,7 +341,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean isJavaCDEnabled() {
-    return getDelegate().getBooleanValue(SECTION, "javacd_enabled", false);
+    return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_ENABLED, false);
   }
 
   public enum SourceAbiVerificationMode {

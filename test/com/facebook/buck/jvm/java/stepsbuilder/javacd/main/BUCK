@@ -1,0 +1,35 @@
+java_binary(
+    name = "javacd_bin_for_tests",
+    main_class = "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain",
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main_lib",
+    ],
+)
+
+java_test(
+    name = "main",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    resources = [":javacd_bin_for_tests"],
+    deps = [
+        "//src-gen:downward-model",
+        "//src-gen:javacd-model",
+        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/io/namedpipes:namedpipes",
+        "//src/com/facebook/buck/jvm/java:config",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/workertool/impl:impl",
+        "//test/com/facebook/buck/downwardapi/testutil:testutil",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
