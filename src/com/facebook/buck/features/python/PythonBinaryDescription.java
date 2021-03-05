@@ -42,7 +42,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -84,8 +83,6 @@ public class PythonBinaryDescription
             PythonBinaryDescription.AbstractPythonBinaryDescriptionArg>,
         VersionRoot<PythonBinaryDescriptionArg>,
         Flavored {
-
-  private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
   private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
@@ -343,8 +340,6 @@ public class PythonBinaryDescription
     String mainModule;
     Optional<PythonMappedComponents> modules;
     if (args.getMain().isPresent()) {
-      LOG.info(
-          "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
       String mainName =
           graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
