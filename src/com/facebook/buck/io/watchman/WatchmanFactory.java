@@ -29,6 +29,7 @@ import com.facebook.buck.util.bser.BserDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -227,7 +228,7 @@ public class WatchmanFactory {
       int syncTimeoutMillis)
       throws IOException, InterruptedException {
     long versionQueryStartTimeNanos = clock.nanoTime();
-    Optional<? extends Map<String, ?>> result =
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
         client.queryWithTimeout(
             endTimeNanos - versionQueryStartTimeNanos,
             WARN_TIMEOUT_NANOS,
@@ -240,18 +241,18 @@ public class WatchmanFactory {
         TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - versionQueryStartTimeNanos),
         ALL_CAPABILITIES);
 
-    if (!result.isPresent()) {
+    if (!result.isLeft()) {
       LOG.warn("Could not get version response from Watchman, disabling Watchman");
       return NULL_WATCHMAN;
     }
-    Object versionRaw = result.get().get("version");
+    Object versionRaw = result.getLeft().get("version");
     if (!(versionRaw instanceof String)) {
       LOG.warn("Unexpected version format, disabling Watchman");
       return NULL_WATCHMAN;
     }
     String version = (String) versionRaw;
     ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
-    if (!extractCapabilities(result.get(), capabilitiesBuilder)) {
+    if (!extractCapabilities(result.getLeft(), capabilitiesBuilder)) {
       LOG.warn("Could not extract capabilities, disabling Watchman");
       return NULL_WATCHMAN;
     }
@@ -377,7 +378,7 @@ public class WatchmanFactory {
     // before the crawl is finished which causes the next
     // interaction to block. Calling watch-project a second time
     // properly attributes where we are spending time.
-    Optional<? extends Map<String, ?>> result =
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos - (clock.nanoTime() - projectWatchTimeNanos),
             WARN_TIMEOUT_NANOS,
@@ -387,11 +388,11 @@ public class WatchmanFactory {
         "Took %d ms to add root %s",
         TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - projectWatchTimeNanos), absoluteRootPath);
 
-    if (!result.isPresent()) {
+    if (!result.isLeft()) {
       return Optional.empty();
     }
 
-    Map<String, ?> map = result.get();
+    Map<String, ?> map = result.getLeft();
     if (map.containsKey("error")) {
       LOG.warn("Error in watchman output: %s", map.get("error"));
       return Optional.empty();
@@ -436,14 +437,14 @@ public class WatchmanFactory {
             ? ImmutableMap.of("sync_timeout", syncTimeoutMilis)
             : ImmutableMap.of();
 
-    Optional<? extends Map<String, ?>> result =
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(timeoutNanos, WARN_TIMEOUT_NANOS, "clock", watchRoot, args);
-    if (result.isPresent()) {
-      Map<String, ?> clockResult = result.get();
+    if (result.isLeft()) {
+      Map<String, ?> clockResult = result.getLeft();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));
     }
     if (clockId.isPresent()) {
-      Map<String, ?> map = result.get();
+      Map<String, ?> map = result.getLeft();
       clockId = Optional.ofNullable((String) map.get("clock"));
       LOG.info(
           "Took %d ms to query for initial clock id %s",

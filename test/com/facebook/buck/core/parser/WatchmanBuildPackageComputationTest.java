@@ -39,6 +39,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -150,7 +151,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   public void throwsIfWatchmanTimesOut() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
         createMockWatchmanFactory(
-            (long timeoutNanos, long warnTimeoutNanos, Object... query) -> Optional.empty());
+            (long timeoutNanos, long warnTimeoutNanos, Object... query) ->
+                Either.ofRight(WatchmanClient.Timeout.INSTANCE));
 
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(WatchmanQueryTimedOutException.class));
@@ -166,7 +168,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
             (long timeoutNanos, long warnTimeoutNanos, Object... query) -> {
               LOG.info("Processing query: %s", query);
               if (query.length >= 2 && query[0].equals("query")) {
-                return Optional.of(
+                return Either.ofLeft(
                     ImmutableMap.of(
                         "version",
                         "4.9.4",
@@ -241,7 +243,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
           public void close() {}
 
           @Override
-          public Optional<? extends Map<String, ?>> queryWithTimeout(
+          public Either<Map<String, Object>, Timeout> queryWithTimeout(
               long timeoutNanos, long warnTimeoutNanos, Object... query) {
             return mockQueryWithTimeout.apply(timeoutNanos, warnTimeoutNanos, query);
           }
@@ -264,7 +266,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @FunctionalInterface
   interface QueryWithTimeoutFunction {
-    Optional<? extends Map<String, ?>> apply(
+    Either<Map<String, Object>, WatchmanClient.Timeout> apply(
         long timeoutNanos, long warnTimeoutNanos, Object... query);
   }
 }

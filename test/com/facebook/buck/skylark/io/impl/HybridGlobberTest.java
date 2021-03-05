@@ -26,14 +26,17 @@ import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -69,14 +72,14 @@ public class HybridGlobberTest {
   @Test
   public void watchmanResultsAreReturnedIfTheyExist() throws Exception {
     WatchmanGlobber watchmanGlobber =
-        newGlobber(Optional.of(ImmutableMap.of("files", ImmutableList.of("bar.txt", "foo.txt"))));
+        newGlobber(Either.ofLeft(ImmutableMap.of("files", ImmutableList.of("bar.txt", "foo.txt"))));
     globber = new HybridGlobber(nativeGlobber, watchmanGlobber);
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
   }
 
-  private WatchmanGlobber newGlobber(Optional<ImmutableMap<String, ImmutableList<String>>> result) {
+  private WatchmanGlobber newGlobber(Either<Map<String, Object>, WatchmanClient.Timeout> result) {
     return WatchmanGlobber.create(
         new StubWatchmanClient(result), new SyncCookieState(), "", root.toString());
   }
@@ -84,7 +87,7 @@ public class HybridGlobberTest {
   @Test
   public void simpleGlobberResultsAreReturnedIfWatchmanDoesNotProduceAnything() throws Exception {
     tmp.newFile("some.txt");
-    WatchmanGlobber watchmanGlobber = newGlobber(Optional.empty());
+    WatchmanGlobber watchmanGlobber = newGlobber(Either.ofRight(WatchmanClient.Timeout.INSTANCE));
     globber = new HybridGlobber(nativeGlobber, watchmanGlobber);
     assertEquals(
         ImmutableSet.of("some.txt"),
@@ -94,7 +97,7 @@ public class HybridGlobberTest {
   @Test
   public void testWatchmanGlobFailsOnBrokenPattern() throws Exception {
     tmp.newFile("some.txt");
-    WatchmanGlobber watchmanGlobber = newGlobber(Optional.empty());
+    WatchmanGlobber watchmanGlobber = newGlobber(Either.ofRight(WatchmanClient.Timeout.INSTANCE));
     globber = new HybridGlobber(nativeGlobber, watchmanGlobber);
     Exception capturedException = null;
     try {

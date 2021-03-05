@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProcessListeners;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import java.io.Closeable;
 import java.io.IOException;
@@ -36,7 +37,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -145,8 +146,9 @@ public class WatchmanTestDaemon implements Closeable {
       try (WatchmanClient client =
           WatchmanFactory.createWatchmanClient(
               watchmanSockFile, new TestConsole(), new DefaultClock())) {
-        Optional<?> response = client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, "get-pid");
-        return response.isPresent();
+        Either<Map<String, Object>, WatchmanClient.Timeout> response =
+            client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, "get-pid");
+        return response.isLeft();
       }
     } catch (IOException e) {
       LOG.warn(e, "Watchman is not ready");

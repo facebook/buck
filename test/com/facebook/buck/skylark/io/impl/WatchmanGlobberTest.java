@@ -35,6 +35,7 @@ import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -282,7 +283,10 @@ public class WatchmanGlobberTest {
   public void noResultsAreReturnedIfWatchmanDoesNotProduceAnything() throws Exception {
     globber =
         WatchmanGlobber.create(
-            new StubWatchmanClient(Optional.empty()), new SyncCookieState(), "", root.toString());
+            new StubWatchmanClient(Either.ofRight(WatchmanClient.Timeout.INSTANCE)),
+            new SyncCookieState(),
+            "",
+            root.toString());
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
   }
 
@@ -310,11 +314,11 @@ public class WatchmanGlobberTest {
     WatchmanClient client =
         new WatchmanClient() {
           @Override
-          public Optional<? extends Map<String, ?>> queryWithTimeout(
+          public Either<Map<String, Object>, Timeout> queryWithTimeout(
               long timeoutNanos, long warnTimeoutNanos, Object... query) {
             LOG.info("Processing query: %s", query);
             if (query.length >= 2 && query[0].equals("query")) {
-              return Optional.of(
+              return Either.ofLeft(
                   ImmutableMap.of(
                       "version",
                       "4.9.4",
@@ -438,10 +442,10 @@ public class WatchmanGlobberTest {
     private ImmutableList<Object> query;
 
     @Override
-    public Optional<? extends Map<String, ?>> queryWithTimeout(
+    public Either<Map<String, Object>, Timeout> queryWithTimeout(
         long timeoutNanos, long warnTimeoutNanos, Object... query) {
       this.query = ImmutableList.copyOf(query);
-      return Optional.empty();
+      return Either.ofRight(Timeout.INSTANCE);
     }
 
     @Override

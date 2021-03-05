@@ -16,26 +16,26 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.util.types.Either;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /** Fake implementation of {@link com.facebook.buck.io.watchman.WatchmanClient} for tests. */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
-  private final Map<? extends List<?>, ? extends Map<String, ?>> queryResults;
+  private final Map<? extends List<?>, ? extends Map<String, Object>> queryResults;
   private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
-      long queryElapsedTimeNanos, Map<? extends List<?>, ? extends Map<String, ?>> queryResults) {
+      long queryElapsedTimeNanos, Map<? extends List<?>, Map<String, Object>> queryResults) {
     this(queryElapsedTimeNanos, queryResults, null);
   }
 
   public FakeWatchmanClient(
       long queryElapsedTimeNanos,
-      Map<? extends List<?>, ? extends Map<String, ?>> queryResults,
+      Map<? extends List<?>, ? extends Map<String, Object>> queryResults,
       Exception exceptionToThrow) {
     this.queryElapsedTimeNanos = queryElapsedTimeNanos;
     this.queryResults = queryResults;
@@ -43,10 +43,10 @@ public class FakeWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public Optional<? extends Map<String, ?>> queryWithTimeout(
+  public Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeoutNanos, Object... query)
       throws InterruptedException, IOException {
-    Map<String, ?> result = queryResults.get(Arrays.asList(query));
+    Map<String, Object> result = queryResults.get(Arrays.asList(query));
     if (result == null) {
       throw new RuntimeException(
           String.format(
@@ -54,7 +54,7 @@ public class FakeWatchmanClient implements WatchmanClient {
               Arrays.asList(query), queryResults.keySet()));
     }
     if (queryElapsedTimeNanos > timeoutNanos) {
-      return Optional.empty();
+      return Either.ofRight(Timeout.INSTANCE);
     }
     if (exceptionToThrow != null) {
       if (exceptionToThrow instanceof IOException) {
@@ -65,7 +65,7 @@ public class FakeWatchmanClient implements WatchmanClient {
         throw new RuntimeException("Invalid exception");
       }
     }
-    return Optional.of(result);
+    return Either.ofLeft(result);
   }
 
   @Override

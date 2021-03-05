@@ -16,8 +16,8 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.util.types.Either;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * A {@link com.facebook.buck.io.watchman.WatchmanClient} that simply returns a value passed in a
@@ -25,14 +25,14 @@ import java.util.Optional;
  */
 public class StubWatchmanClient implements WatchmanClient {
 
-  private final Optional<? extends Map<String, ?>> result;
+  private final Either<Map<String, Object>, WatchmanClient.Timeout> result;
 
-  public StubWatchmanClient(Optional<? extends Map<String, ?>> result) {
+  public StubWatchmanClient(Either<Map<String, Object>, WatchmanClient.Timeout> result) {
     this.result = result;
   }
 
   @Override
-  public Optional<? extends Map<String, ?>> queryWithTimeout(
+  public Either<Map<String, Object>, WatchmanClient.Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeoutNanos, Object... query) {
     return result;
   }

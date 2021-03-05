@@ -16,13 +16,19 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.util.types.Either;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 
 /** Testable interface for a Watchman client. */
 public interface WatchmanClient extends AutoCloseable {
-  Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
+  /** Marker for query timeout. */
+  enum Timeout {
+    INSTANCE,
+  }
+
+  /** Perform the query. */
+  Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long pollingTimeNanos, Object... query)
       throws IOException, InterruptedException;
 

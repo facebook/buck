@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -199,19 +200,19 @@ public class WatchmanGlobber {
       throws IOException, InterruptedException {
     ImmutableMap<String, ?> watchmanQuery = createNameOnlyWatchmanQuery(include, exclude, options);
 
-    Optional<? extends Map<String, ?>> result =
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
-    if (!result.isPresent()) {
+    if (!result.isLeft()) {
       return Optional.empty();
     }
 
-    @Nullable Object error = result.get().get("error");
+    @Nullable Object error = result.getLeft().get("error");
     if (error != null) {
       throw new WatchmanQueryFailedException(error.toString());
     }
     @SuppressWarnings("unchecked")
-    List<String> files = (List<String>) result.get().get("files");
+    List<String> files = (List<String>) result.getLeft().get("files");
     return Optional.of(ImmutableSet.copyOf(files));
   }
 
@@ -265,19 +266,19 @@ public class WatchmanGlobber {
       }
     }
 
-    Optional<? extends Map<String, ?>> result =
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
-    if (!result.isPresent()) {
+    if (!result.isLeft()) {
       return Optional.empty();
     }
 
-    @Nullable Object error = result.get().get("error");
+    @Nullable Object error = result.getLeft().get("error");
     if (error != null) {
       throw new WatchmanQueryFailedException(error.toString());
     }
     @SuppressWarnings("unchecked")
-    List<Map<String, ?>> resultEntries = (List<Map<String, ?>>) result.get().get("files");
+    List<Map<String, ?>> resultEntries = (List<Map<String, ?>>) result.getLeft().get("files");
     ImmutableMap<String, WatchmanFileAttributes> resultMap =
         resultEntries.stream()
             .filter(

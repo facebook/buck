@@ -718,7 +718,7 @@ public class WatchmanWatcherTest {
                         && c.getPath().equals(Paths.get("foo/bar/newdir"))));
   }
 
-  private WatchmanWatcher createWatcher(EventBus eventBus, ImmutableMap<String, ?> response) {
+  private WatchmanWatcher createWatcher(EventBus eventBus, ImmutableMap<String, Object> response) {
     return createWatcher(
         eventBus,
         new FakeWatchmanClient(

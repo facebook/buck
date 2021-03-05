@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.watchman.WatchmanEvent.Type;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
@@ -273,7 +274,7 @@ public class WatchmanWatcher {
       SimplePerfEvent.Scope perfEvent)
       throws IOException, InterruptedException {
     try {
-      Optional<? extends Map<String, ? extends Object>> queryResponse;
+      Either<Map<String, Object>, WatchmanClient.Timeout> queryResponse;
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(buckEventBus.isolated(), "query")) {
         queryResponse =
@@ -285,7 +286,7 @@ public class WatchmanWatcher {
 
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(buckEventBus.isolated(), "process_response")) {
-        if (!queryResponse.isPresent()) {
+        if (!queryResponse.isLeft()) {
           LOG.warn(
               "Could not get response from Watchman for query %s within %d ms",
               query, timeoutMillis);
@@ -300,7 +301,7 @@ public class WatchmanWatcher {
           return;
         }
 
-        Map<String, ? extends Object> response = queryResponse.get();
+        Map<String, ? extends Object> response = queryResponse.getLeft();
         String error = (String) response.get("error");
         if (error != null) {
           // This message is not de-duplicated via WatchmanDiagnostic.
