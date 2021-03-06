@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
@@ -30,7 +29,6 @@ import com.facebook.buck.skylark.function.SkylarkProviderFunction;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.facebook.buck.skylark.function.attr.AttrModule;
 import com.facebook.buck.skylark.function.packages.StructProvider;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -70,8 +68,6 @@ public abstract class BuckGlobals {
   /** @return A Skylark rule function factory. */
   abstract RuleFunctionFactory getRuleFunctionFactory();
 
-  abstract LoadingCache<String, Label> getLabelCache();
-
   abstract KnownUserDefinedRuleTypes getKnownUserDefinedRuleTypes();
 
   abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
@@ -84,7 +80,7 @@ public abstract class BuckGlobals {
     builder.put("native", getNativeModule());
     builder.put("struct", StructProvider.STRUCT);
     if (getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
-      Starlark.addMethods(builder, new SkylarkRuleFunctions(getLabelCache()));
+      Starlark.addMethods(builder, new SkylarkRuleFunctions());
       builder.put("attr", new AttrModule());
       builder.putAll(SkylarkBuiltInProviders.PROVIDERS);
       builder.putAll(getPerFeatureProvidersForBuildFile());
@@ -178,7 +174,6 @@ public abstract class BuckGlobals {
       UserDefinedRulesState userDefinedRulesState,
       ImplicitNativeRulesState implicitNativeRulesState,
       RuleFunctionFactory ruleFunctionFactory,
-      LoadingCache<String, Label> labelCache,
       KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
       ImmutableSet<BuiltInProvider<?>> perFeatureProviders) {
     return ImmutableBuckGlobals.ofImpl(
@@ -187,7 +182,6 @@ public abstract class BuckGlobals {
         implicitNativeRulesState,
         userDefinedRulesState,
         ruleFunctionFactory,
-        labelCache,
         knownUserDefinedRuleTypes,
         perFeatureProviders);
   }

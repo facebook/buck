@@ -45,7 +45,6 @@ import com.facebook.buck.core.starlark.eventhandler.PrintingEventHandler;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -1030,7 +1029,6 @@ public class SkylarkProjectBuildFileParserTest {
                 options.getUserDefinedRulesState(),
                 options.getImplicitNativeRulesState(),
                 new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
-                LabelCache.newLabelCache(),
                 knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell()),
                 options.getPerFeatureProviders()),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),

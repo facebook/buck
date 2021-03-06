@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkThread;
-import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -142,7 +141,7 @@ public class UserDefinedProviderInfoTest {
             + "ui2.mutable.append(8)\n"
             + "ui2";
 
-    SkylarkRuleFunctions functions = new SkylarkRuleFunctions(LabelCache.newLabelCache());
+    SkylarkRuleFunctions functions = new SkylarkRuleFunctions();
     UserDefinedProvider userInfo =
         functions.provider(
             "",

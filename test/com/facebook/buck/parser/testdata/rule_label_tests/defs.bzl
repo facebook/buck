@@ -3,7 +3,7 @@
 def _assert_equal(expected, actual):
     """ Assert things are equal """
     if expected != actual:
-        fail("Expected {}, got {}".format(expected, actual))
+        fail("Expected '{}', got '{}'".format(expected, actual))
 
 def test_from_root_cell():
     """ Tests to run from /BUCK """

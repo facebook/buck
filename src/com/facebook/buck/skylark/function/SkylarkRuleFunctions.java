@@ -27,14 +27,12 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Sequence;
@@ -44,8 +42,6 @@ import net.starlark.java.eval.StarlarkThread;
 
 /** Provides APIs for creating build rules. */
 public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
-
-  private final LoadingCache<String, Label> labelCache;
 
   /** The attributes that are applicable to all rules. This will expand over time. */
   // TODO: Once list attributes are added, ensure visibility exists
@@ -65,10 +61,6 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       Sets.filter(
           IMPLICIT_ATTRIBUTES.keySet(), attr -> !USER_VISIBLE_IMPLICIT_ATTRIBUTES.contains(attr));
 
-  public SkylarkRuleFunctions(LoadingCache<String, Label> labelCache) {
-    this.labelCache = labelCache;
-  }
-
   @Override
   public Label label(String labelString, StarlarkThread env) throws EvalException {
     // There is some extra implementation work in the Bazel version. At the moment we do not do
@@ -81,8 +73,8 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       Label parentLabel = BuckStarlarkModule.ofInnermostEnclosingStarlarkFunction(env);
       LabelValidator.parseAbsoluteLabel(labelString);
       labelString = parentLabel.getRelativeWithRemapping(labelString).getUnambiguousCanonicalForm();
-      return labelCache.get(labelString);
-    } catch (LabelValidator.BadLabelException | LabelSyntaxException | ExecutionException e) {
+      return Label.parseAbsolute(labelString, false);
+    } catch (LabelValidator.BadLabelException | LabelSyntaxException e) {
       throw new EvalException("Illegal absolute label syntax: " + labelString);
     }
   }

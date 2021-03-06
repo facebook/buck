@@ -308,7 +308,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             buildFileParserOptions.getUserDefinedRulesState(),
             buildFileParserOptions.getImplicitNativeRulesState(),
             new RuleFunctionFactory(typeCoercerFactory),
-            LabelCache.newLabelCache(),
             knownUserDefinedRuleTypes,
             buildFileParserOptions.getPerFeatureProviders());
 

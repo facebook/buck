@@ -26,7 +26,6 @@ import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
@@ -272,7 +271,6 @@ public class HostInfoTest {
             options.getUserDefinedRulesState(),
             options.getImplicitNativeRulesState(),
             ruleFunctionFactory,
-            LabelCache.newLabelCache(),
             new KnownUserDefinedRuleTypes(),
             options.getPerFeatureProviders()),
         eventHandler,
