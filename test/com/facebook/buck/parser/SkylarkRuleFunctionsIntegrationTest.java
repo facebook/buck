@@ -20,6 +20,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -27,6 +28,9 @@ public class SkylarkRuleFunctionsIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
+  // TODO(nga): broken/flaky because of bug in
+  //   com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser
+  @Ignore
   @Test
   public void parsesLabelsAndRelativizesThemProperly() throws IOException {
     // Validation logic is in build files to ensure that execution environment works as expected

@@ -21,8 +21,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.FileParser;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.api.Syntax;
-import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.util.concurrent.ResourcePool;
 import java.io.IOException;
 
@@ -71,10 +69,11 @@ class ProjectBuildFileParserPool extends FileParserPool<BuildFileManifest> {
    */
   @Override
   boolean shouldUsePoolForCell(Cell cell) {
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
-    // the only interpreter that benefits from pooling is Python DSL parser, which is used only in
-    // polyglot mode or if default syntax is set to Python DSL
-    return parserConfig.isPolyglotParsingEnabled()
-        || parserConfig.getDefaultBuildFileSyntax().canHaveSyntax(Syntax.PYTHON_DSL);
+    // TODO(nga): could be false when the parser is Starlark,
+    //   but at the moment of writing, watchman globber implementation is single-threaded.
+    //   Disabling pooling parser could make watchman `glob` a bottleneck.
+    //   Also, better keep hybrid and starlark-only parsers symmetrical
+    //   to spend less time debugging.
+    return true;
   }
 }
