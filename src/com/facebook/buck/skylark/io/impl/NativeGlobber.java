@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.io.impl;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.skylark.io.Globber;
+import com.facebook.buck.skylark.io.GlobberFactory;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -83,5 +84,18 @@ public class NativeGlobber implements Globber {
    */
   public static NativeGlobber create(AbsPath basePath) {
     return new NativeGlobber(basePath);
+  }
+
+  /** Factory for {@link com.facebook.buck.skylark.io.GlobberFactory}. */
+  public enum Factory implements GlobberFactory {
+    INSTANCE;
+
+    @Override
+    public Globber create(AbsPath basePath) {
+      return new NativeGlobber(basePath);
+    }
+
+    @Override
+    public void close() {}
   }
 }

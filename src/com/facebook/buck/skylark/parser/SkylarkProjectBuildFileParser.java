@@ -228,4 +228,13 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
       throw BuildFileParseException.createForUnknownParseError("Could not parse %s", buildFile);
     }
   }
+
+  @Override
+  public void close() {
+    try {
+      globberFactory.close();
+    } catch (Exception e) {
+      LOG.warn(e, "failed to close globber factory");
+    }
+  }
 }

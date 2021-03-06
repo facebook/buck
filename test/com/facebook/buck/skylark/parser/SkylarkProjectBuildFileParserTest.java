@@ -1034,7 +1034,7 @@ public class SkylarkProjectBuildFileParserTest {
                 knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell()),
                 options.getPerFeatureProviders()),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
-            NativeGlobber::create);
+            NativeGlobber.Factory.INSTANCE);
 
     Files.write(
         buildFile.getPath(),

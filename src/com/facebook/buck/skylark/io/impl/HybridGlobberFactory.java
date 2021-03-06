@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.watchman.ProjectWatch;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
@@ -121,11 +122,15 @@ public class HybridGlobberFactory implements GlobberFactory {
         WatchmanGlobber.create(watchmanClient, syncCookieState, relativeRoot, watchRoot));
   }
 
+  @Override
+  public void close() throws IOException {
+    watchmanClient.close();
+  }
+
   public static HybridGlobberFactory using(
-      WatchmanClient watchmanClient,
-      SyncCookieState syncCookieState,
-      java.nio.file.Path projectRoot,
-      ImmutableMap<AbsPath, ProjectWatch> projectWatches) {
-    return new HybridGlobberFactory(watchmanClient, syncCookieState, projectRoot, projectWatches);
+      Watchman watchman, SyncCookieState syncCookieState, java.nio.file.Path projectRoot)
+      throws IOException {
+    return new HybridGlobberFactory(
+        watchman.createClient(), syncCookieState, projectRoot, watchman.getProjectWatches());
   }
 }

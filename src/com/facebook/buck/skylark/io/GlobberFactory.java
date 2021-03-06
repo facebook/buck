@@ -17,10 +17,19 @@
 package com.facebook.buck.skylark.io;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import java.io.Closeable;
+import java.io.IOException;
 
 /** Creates {@link Globber} instances to save clients from implementation details. */
-@FunctionalInterface
-public interface GlobberFactory {
+public interface GlobberFactory extends Closeable {
 
+  /**
+   * Create a globber which performs a glob against given base path. This operation is pure and
+   * cheap.
+   */
   Globber create(AbsPath basePath);
+
+  /** Close the globber. */
+  @Override
+  void close() throws IOException;
 }

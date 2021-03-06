@@ -110,7 +110,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
             knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
             options.getPerFeatureProviders()),
         eventHandler,
-        NativeGlobber::create);
+        NativeGlobber.Factory.INSTANCE);
   }
 
   static RawTargetNode getSingleRule(SkylarkProjectBuildFileParser parser, AbsPath buildFile)

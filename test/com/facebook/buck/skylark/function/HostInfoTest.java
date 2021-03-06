@@ -276,6 +276,6 @@ public class HostInfoTest {
             new KnownUserDefinedRuleTypes(),
             options.getPerFeatureProviders()),
         eventHandler,
-        NativeGlobber::create);
+        NativeGlobber.Factory.INSTANCE);
   }
 }
