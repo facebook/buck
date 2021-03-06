@@ -201,8 +201,7 @@ public class WatchmanGlobber {
     ImmutableMap<String, ?> watchmanQuery = createNameOnlyWatchmanQuery(include, exclude, options);
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        watchmanClient.queryWithTimeout(
-            timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
+        performWatchmanQuery(timeoutNanos, pollingTimeNanos, watchmanQuery);
     if (!result.isLeft()) {
       return Optional.empty();
     }
@@ -214,6 +213,19 @@ public class WatchmanGlobber {
     @SuppressWarnings("unchecked")
     List<String> files = (List<String>) result.getLeft().get("files");
     return Optional.of(ImmutableSet.copyOf(files));
+  }
+
+  private Either<Map<String, Object>, WatchmanClient.Timeout> performWatchmanQuery(
+      long timeoutNanos, long pollingTimeNanos, ImmutableMap<String, ?> watchmanQuery)
+      throws IOException, InterruptedException {
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
+        watchmanClient.queryWithTimeout(
+            timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
+    if (result.isLeft()) {
+      // Disable sync cookies only on successful query.
+      this.syncCookieState.disableSyncCookies();
+    }
+    return result;
   }
 
   /**
@@ -267,8 +279,7 @@ public class WatchmanGlobber {
     }
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        watchmanClient.queryWithTimeout(
-            timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
+        performWatchmanQuery(timeoutNanos, pollingTimeNanos, watchmanQuery);
     if (!result.isLeft()) {
       return Optional.empty();
     }
@@ -323,9 +334,8 @@ public class WatchmanGlobber {
     // Sync cookies cause a massive overhead when issuing thousands of
     // glob queries.  Only enable them (by not setting sync_timeout to 0)
     // for the very first request issued by this process.
-    if (syncCookieState.shouldSyncCookies()) {
-      syncCookieState.disableSyncCookies();
-    } else {
+    if (!syncCookieState.shouldSyncCookies()) {
+      // TODO(nga): use the same timeout as in query
       builder.put("sync_timeout", 0);
     }
 

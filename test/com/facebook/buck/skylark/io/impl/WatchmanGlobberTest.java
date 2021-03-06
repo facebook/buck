@@ -445,7 +445,7 @@ public class WatchmanGlobberTest {
     public Either<Map<String, Object>, Timeout> queryWithTimeout(
         long timeoutNanos, long warnTimeoutNanos, Object... query) {
       this.query = ImmutableList.copyOf(query);
-      return Either.ofRight(Timeout.INSTANCE);
+      return Either.ofLeft(ImmutableMap.of("files", ImmutableList.of()));
     }
 
     @Override
