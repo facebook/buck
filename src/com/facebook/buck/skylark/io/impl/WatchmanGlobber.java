@@ -187,7 +187,7 @@ public class WatchmanGlobber {
    * @param exclude File patterns that should be excluded from the resulting set.
    * @param options Customizations for matching behavior.
    * @param timeoutNanos timeout in nanoseconds
-   * @param pollingTimeNanos time to polling results if query is slow
+   * @param warnTimeNanos time to polling results if query is slow
    * @return The set of paths resolved using include patterns minus paths excluded by exclude
    *     patterns.
    * @throws WatchmanQueryFailedException Watchman returned an error response.
@@ -197,13 +197,13 @@ public class WatchmanGlobber {
       Collection<String> exclude,
       EnumSet<Option> options,
       long timeoutNanos,
-      long pollingTimeNanos)
+      long warnTimeNanos)
       throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanQuery =
         createNameOnlyWatchmanQuery(include, exclude, options);
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        performWatchmanQuery(timeoutNanos, pollingTimeNanos, watchmanQuery);
+        performWatchmanQuery(timeoutNanos, warnTimeNanos, watchmanQuery);
     if (!result.isLeft()) {
       return Optional.empty();
     }
@@ -246,7 +246,7 @@ public class WatchmanGlobber {
    * @param excludePatterns File patterns that should be excluded from the resulting set.
    * @param options Customizations for matching behavior.
    * @param timeoutNanos timeout in nanoseconds
-   * @param pollingTimeNanos time to polling results if query is slow
+   * @param warnTimeNanos time to polling results if query is slow
    * @param fields Fields to query
    * @return a optional map of matching file names to their file properties.
    * @throws IOException
@@ -257,7 +257,7 @@ public class WatchmanGlobber {
       Collection<String> excludePatterns,
       EnumSet<Option> options,
       long timeoutNanos,
-      long pollingTimeNanos,
+      long warnTimeNanos,
       ImmutableList<String> fields)
       throws IOException, InterruptedException {
     ImmutableMap<String, Object> watchmanQuery =
@@ -266,7 +266,7 @@ public class WatchmanGlobber {
 
     if (fields.equals(NAME_ONLY_FIELD)) {
       Optional<ImmutableSet<String>> nameSet =
-          run(includePatterns, excludePatterns, options, timeoutNanos, pollingTimeNanos);
+          run(includePatterns, excludePatterns, options, timeoutNanos, warnTimeNanos);
       if (nameSet.isPresent()) {
         ImmutableMap<String, WatchmanFileAttributes> resultMap =
             nameSet.get().stream()
@@ -281,7 +281,7 @@ public class WatchmanGlobber {
     }
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        performWatchmanQuery(timeoutNanos, pollingTimeNanos, watchmanQuery);
+        performWatchmanQuery(timeoutNanos, warnTimeNanos, watchmanQuery);
     if (!result.isLeft()) {
       return Optional.empty();
     }
@@ -337,7 +337,6 @@ public class WatchmanGlobber {
     // glob queries.  Only enable them (by not setting sync_timeout to 0)
     // for the very first request issued by this process.
     if (!syncCookieState.shouldSyncCookies()) {
-      // TODO(nga): use the same timeout as in query
       builder.put("sync_timeout", 0);
     }
 

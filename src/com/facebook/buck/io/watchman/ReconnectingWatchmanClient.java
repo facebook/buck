@@ -43,13 +43,13 @@ class ReconnectingWatchmanClient implements WatchmanClient {
 
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long pollingTimeNanos, WatchmanQuery query)
+      long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
     if (!running.compareAndSet(false, true)) {
       throw new IllegalStateException("ReconnectingWatchmanClient is single-threaded");
     }
     try {
-      return queryWithTimeoutInner(timeoutNanos, pollingTimeNanos, query);
+      return queryWithTimeoutInner(timeoutNanos, warnTimeNanos, query);
     } finally {
       running.set(false);
     }

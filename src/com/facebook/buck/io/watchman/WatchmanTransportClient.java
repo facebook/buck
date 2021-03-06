@@ -59,12 +59,12 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
+      long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
-    return queryListWithTimeoutAndPolling(timeoutNanos, warnTimeoutNanos, query);
+    return queryListWithTimeoutAndWarning(timeoutNanos, warnTimeNanos, query);
   }
 
-  private Either<Map<String, Object>, Timeout> queryListWithTimeoutAndPolling(
+  private Either<Map<String, Object>, Timeout> queryListWithTimeoutAndWarning(
       long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
     ListenableFuture<Map<String, Object>> future =

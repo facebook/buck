@@ -248,8 +248,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
           @Override
           public Either<Map<String, Object>, Timeout> queryWithTimeout(
-              long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
-            return mockQueryWithTimeout.apply(timeoutNanos, warnTimeoutNanos, query);
+              long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
+            return mockQueryWithTimeout.apply(timeoutNanos, warnTimeNanos, query);
           }
         };
       }

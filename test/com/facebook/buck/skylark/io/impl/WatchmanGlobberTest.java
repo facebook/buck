@@ -316,7 +316,7 @@ public class WatchmanGlobberTest {
         new WatchmanClient() {
           @Override
           public Either<Map<String, Object>, Timeout> queryWithTimeout(
-              long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
+              long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
             LOG.info("Processing query: %s", query);
             if (query instanceof WatchmanQuery.Query) {
               return Either.ofLeft(
@@ -445,7 +445,7 @@ public class WatchmanGlobberTest {
 
     @Override
     public Either<Map<String, Object>, Timeout> queryWithTimeout(
-        long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
+        long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
       this.query = query;
       return Either.ofLeft(ImmutableMap.of("files", ImmutableList.of()));
     }
