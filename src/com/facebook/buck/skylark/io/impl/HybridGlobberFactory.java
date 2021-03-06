@@ -133,6 +133,9 @@ public class HybridGlobberFactory implements GlobberFactory {
       Watchman watchman, SyncCookieState syncCookieState, java.nio.file.Path projectRoot)
       throws IOException {
     return new HybridGlobberFactory(
-        watchman.createClient(), syncCookieState, projectRoot, watchman.getProjectWatches());
+        watchman.createReconnectingClient(),
+        syncCookieState,
+        projectRoot,
+        watchman.getProjectWatches());
   }
 }
