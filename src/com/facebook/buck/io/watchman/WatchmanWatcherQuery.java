@@ -17,7 +17,6 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** Partial query used in {@link com.facebook.buck.io.watchman.WatchmanWatcher}. */
@@ -28,9 +27,8 @@ abstract class WatchmanWatcherQuery {
 
   abstract ImmutableMap<String, Object> getQueryParams();
 
-  public ImmutableList<Object> toList(String sinceCursor) {
-    return ImmutableList.of(
-        "query",
+  public WatchmanQuery.Query toQuery(String sinceCursor) {
+    return WatchmanQuery.query(
         getQueryPath(),
         ImmutableMap.<String, Object>builder()
             .put("since", sinceCursor)

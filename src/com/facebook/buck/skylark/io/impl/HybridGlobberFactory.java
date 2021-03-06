@@ -20,6 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.util.environment.Platform;
@@ -74,7 +75,8 @@ public class HybridGlobberFactory implements GlobberFactory {
   public Either<WatchProjectResult, WatchmanClient.Timeout> getWatchmanRelativizedFinalPath(
       AbsPath filePath) throws IOException, InterruptedException {
     return watchmanClient
-        .queryWithTimeout(TIMEOUT_NANOS, WARN_TIMEOUT_NANOS, "watch-project", filePath.toString())
+        .queryWithTimeout(
+            TIMEOUT_NANOS, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(filePath.toString()))
         .mapLeft(
             result -> {
               String watchRoot = (String) result.get("watch");

@@ -30,6 +30,7 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanNotFoundException;
+import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.io.watchman.WatchmanQueryTimedOutException;
 import com.facebook.buck.io.watchman.WatchmanTestDaemon;
@@ -103,7 +104,9 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
       long watchTimeoutNanos = TimeUnit.SECONDS.toNanos(5);
       long warnTimeoutNanos = TimeUnit.SECONDS.toNanos(1);
       client.queryWithTimeout(
-          watchTimeoutNanos, warnTimeoutNanos, "watch", filesystem.getRootPath().toString());
+          watchTimeoutNanos,
+          warnTimeoutNanos,
+          WatchmanQuery.watch(filesystem.getRootPath().toString()));
     }
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
@@ -151,7 +154,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   public void throwsIfWatchmanTimesOut() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
         createMockWatchmanFactory(
-            (long timeoutNanos, long warnTimeoutNanos, Object... query) ->
+            (long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) ->
                 Either.ofRight(WatchmanClient.Timeout.INSTANCE));
 
     thrown.expect(ExecutionException.class);
@@ -165,9 +168,9 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   public void throwsIfWatchmanQueryFails() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
         createMockWatchmanFactory(
-            (long timeoutNanos, long warnTimeoutNanos, Object... query) -> {
+            (long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) -> {
               LOG.info("Processing query: %s", query);
-              if (query.length >= 2 && query[0].equals("query")) {
+              if (query instanceof WatchmanQuery.Query) {
                 return Either.ofLeft(
                     ImmutableMap.of(
                         "version",
@@ -175,7 +178,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
                         "error",
                         String.format(
                             "RootResolveError: unable to resolve root %s: directory %s not watched",
-                            query[1], query[1])));
+                            ((WatchmanQuery.Query) query).getPath(),
+                            ((WatchmanQuery.Query) query).getPath())));
 
               } else {
                 throw new RuntimeException("Watchman query not implemented");
@@ -244,7 +248,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
           @Override
           public Either<Map<String, Object>, Timeout> queryWithTimeout(
-              long timeoutNanos, long warnTimeoutNanos, Object... query) {
+              long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
             return mockQueryWithTimeout.apply(timeoutNanos, warnTimeoutNanos, query);
           }
         };
@@ -267,6 +271,6 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   @FunctionalInterface
   interface QueryWithTimeoutFunction {
     Either<Map<String, Object>, WatchmanClient.Timeout> apply(
-        long timeoutNanos, long warnTimeoutNanos, Object... query);
+        long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query);
   }
 }

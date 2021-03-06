@@ -30,7 +30,6 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -180,11 +179,11 @@ public class WatchmanWatcher {
   }
 
   @VisibleForTesting
-  ImmutableList<Object> getWatchmanQuery(AbsPath cellPath) {
+  Optional<WatchmanQuery.Query> getWatchmanQuery(AbsPath cellPath) {
     if (queries.containsKey(cellPath) && cursors.containsKey(cellPath)) {
-      return queries.get(cellPath).toList(cursors.get(cellPath).get());
+      return Optional.of(queries.get(cellPath).toQuery(cursors.get(cellPath).get()));
     }
-    return ImmutableList.of();
+    return Optional.empty();
   }
 
   /**
@@ -282,7 +281,7 @@ public class WatchmanWatcher {
             client.queryWithTimeout(
                 TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
                 DEFAULT_WARN_TIMEOUT_NANOS,
-                query.toList(cursor.get()).toArray());
+                query.toQuery(cursor.get()));
       }
 
       try (SimplePerfEvent.Scope ignored =

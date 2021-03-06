@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -198,7 +199,8 @@ public class WatchmanGlobber {
       long timeoutNanos,
       long pollingTimeNanos)
       throws IOException, InterruptedException {
-    ImmutableMap<String, ?> watchmanQuery = createNameOnlyWatchmanQuery(include, exclude, options);
+    ImmutableMap<String, Object> watchmanQuery =
+        createNameOnlyWatchmanQuery(include, exclude, options);
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         performWatchmanQuery(timeoutNanos, pollingTimeNanos, watchmanQuery);
@@ -216,11 +218,11 @@ public class WatchmanGlobber {
   }
 
   private Either<Map<String, Object>, WatchmanClient.Timeout> performWatchmanQuery(
-      long timeoutNanos, long pollingTimeNanos, ImmutableMap<String, ?> watchmanQuery)
+      long timeoutNanos, long pollingTimeNanos, ImmutableMap<String, Object> watchmanQuery)
       throws IOException, InterruptedException {
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
-            timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
+            timeoutNanos, pollingTimeNanos, WatchmanQuery.query(watchmanWatchRoot, watchmanQuery));
     if (result.isLeft()) {
       // Disable sync cookies only on successful query.
       this.syncCookieState.disableSyncCookies();
@@ -258,7 +260,7 @@ public class WatchmanGlobber {
       long pollingTimeNanos,
       ImmutableList<String> fields)
       throws IOException, InterruptedException {
-    ImmutableMap<String, ?> watchmanQuery =
+    ImmutableMap<String, Object> watchmanQuery =
         createWatchmanQuery(includePatterns, excludePatterns, options, fields);
     Preconditions.checkArgument(!fields.isEmpty());
 
@@ -301,7 +303,7 @@ public class WatchmanGlobber {
     return resultMap.isEmpty() ? Optional.empty() : Optional.of(resultMap);
   }
 
-  private ImmutableMap<String, ?> createNameOnlyWatchmanQuery(
+  private ImmutableMap<String, Object> createNameOnlyWatchmanQuery(
       Collection<String> include, Collection<String> exclude, EnumSet<Option> options) {
     return createWatchmanQuery(include, exclude, options, NAME_ONLY_FIELD);
   }
@@ -311,7 +313,7 @@ public class WatchmanGlobber {
    *
    * <p>The implementation should ideally match the one in glob_watchman.py.
    */
-  private ImmutableMap<String, ?> createWatchmanQuery(
+  private ImmutableMap<String, Object> createWatchmanQuery(
       Collection<String> include,
       Collection<String> exclude,
       EnumSet<Option> options,

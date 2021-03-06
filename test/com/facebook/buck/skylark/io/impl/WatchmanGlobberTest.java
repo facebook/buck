@@ -30,6 +30,7 @@ import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -315,9 +316,9 @@ public class WatchmanGlobberTest {
         new WatchmanClient() {
           @Override
           public Either<Map<String, Object>, Timeout> queryWithTimeout(
-              long timeoutNanos, long warnTimeoutNanos, Object... query) {
+              long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
             LOG.info("Processing query: %s", query);
-            if (query.length >= 2 && query[0].equals("query")) {
+            if (query instanceof WatchmanQuery.Query) {
               return Either.ofLeft(
                   ImmutableMap.of(
                       "version",
@@ -325,7 +326,8 @@ public class WatchmanGlobberTest {
                       "error",
                       String.format(
                           "RootResolveError: unable to resolve root %s: directory %s not watched",
-                          query[1], query[1])));
+                          ((WatchmanQuery.Query) query).getPath(),
+                          ((WatchmanQuery.Query) query).getPath())));
 
             } else {
               throw new RuntimeException("Watchman query not implemented");
@@ -439,12 +441,12 @@ public class WatchmanGlobberTest {
 
   private static class CapturingWatchmanClient implements WatchmanClient {
 
-    private ImmutableList<Object> query;
+    private WatchmanQuery query;
 
     @Override
     public Either<Map<String, Object>, Timeout> queryWithTimeout(
-        long timeoutNanos, long warnTimeoutNanos, Object... query) {
-      this.query = ImmutableList.copyOf(query);
+        long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
+      this.query = query;
       return Either.ofLeft(ImmutableMap.of("files", ImmutableList.of()));
     }
 
@@ -461,7 +463,7 @@ public class WatchmanGlobberTest {
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> getQueryExpression() {
-      return (Map<String, Object>) query.get(2);
+      return ((WatchmanQuery.Query) query).getArgs();
     }
   }
 }

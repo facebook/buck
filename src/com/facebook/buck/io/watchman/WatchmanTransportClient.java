@@ -26,7 +26,6 @@ import com.facebook.buck.util.bser.BserSerializer;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -60,17 +59,16 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeoutNanos, Object... query)
+      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
-    return queryListWithTimeoutAndPolling(
-        timeoutNanos, warnTimeoutNanos, ImmutableList.copyOf(query));
+    return queryListWithTimeoutAndPolling(timeoutNanos, warnTimeoutNanos, query);
   }
 
   private Either<Map<String, Object>, Timeout> queryListWithTimeoutAndPolling(
-      long timeoutNanos, long warnTimeoutNanos, List<Object> query)
+      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
     ListenableFuture<Map<String, Object>> future =
-        listeningExecutorService.submit(() -> sendWatchmanQuery(query));
+        listeningExecutorService.submit(() -> sendWatchmanQuery(query.toProtocolArgs()));
     try {
       long startTimeNanos = clock.nanoTime();
       Either<Map<String, Object>, Timeout> result =
@@ -114,7 +112,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       ListenableFuture<Map<String, Object>> future,
       long timeoutNanos,
       long warnTimeNanos,
-      List<Object> query)
+      WatchmanQuery query)
       throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
     try {

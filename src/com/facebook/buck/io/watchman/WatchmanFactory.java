@@ -232,9 +232,9 @@ public class WatchmanFactory {
         client.queryWithTimeout(
             endTimeNanos - versionQueryStartTimeNanos,
             WARN_TIMEOUT_NANOS,
-            "version",
-            ImmutableMap.of(
-                "required", REQUIRED_CAPABILITIES, "optional", ALL_CAPABILITIES.keySet()));
+            WatchmanQuery.version(
+                ImmutableMap.of(
+                    "required", REQUIRED_CAPABILITIES, "optional", ALL_CAPABILITIES.keySet())));
 
     LOG.info(
         "Took %d ms to query capabilities %s",
@@ -371,7 +371,7 @@ public class WatchmanFactory {
 
     long projectWatchTimeNanos = clock.nanoTime();
     watchmanClient.queryWithTimeout(
-        timeoutNanos, WARN_TIMEOUT_NANOS, "watch-project", absoluteRootPath.toString());
+        timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(absoluteRootPath.toString()));
 
     // TODO(mzlee): There is a bug in watchman (that will be fixed
     // in a later watchman release) where watch-project returns
@@ -382,8 +382,7 @@ public class WatchmanFactory {
         watchmanClient.queryWithTimeout(
             timeoutNanos - (clock.nanoTime() - projectWatchTimeNanos),
             WARN_TIMEOUT_NANOS,
-            "watch-project",
-            absoluteRootPath.toString());
+            WatchmanQuery.watchProject(absoluteRootPath.toString()));
     LOG.info(
         "Took %d ms to add root %s",
         TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - projectWatchTimeNanos), absoluteRootPath);
@@ -438,7 +437,8 @@ public class WatchmanFactory {
             : ImmutableMap.of();
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        watchmanClient.queryWithTimeout(timeoutNanos, WARN_TIMEOUT_NANOS, "clock", watchRoot, args);
+        watchmanClient.queryWithTimeout(
+            timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.clock(watchRoot, args));
     if (result.isLeft()) {
       Map<String, ?> clockResult = result.getLeft();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));

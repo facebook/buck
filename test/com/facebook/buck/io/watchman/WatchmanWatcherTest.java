@@ -63,8 +63,8 @@ public class WatchmanWatcherTest {
   private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_QUERY =
       ImmutableWatchmanWatcherQuery.ofImpl("/fake/root", ImmutableMap.of());
-  private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
-  private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
+  private static final WatchmanQuery.Query FAKE_UUID_QUERY = FAKE_QUERY.toQuery("n:buckduuid");
+  private static final WatchmanQuery.Query FAKE_CLOCK_QUERY = FAKE_QUERY.toQuery("c:0:0");
 
   private static final AbsPath FAKE_SECONDARY_ROOT =
       AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
@@ -371,7 +371,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(),
             ImmutableSet.of(Capability.DIRNAME));
 
-    assertThat(query.toList(""), hasItem(hasEntry("relative_root", "project")));
+    assertThat(query.toQuery("").getArgs(), hasEntry("relative_root", "project"));
   }
 
   @Test
@@ -550,13 +550,13 @@ public class WatchmanWatcherTest {
                 0 /* queryElapsedTimeNanos */, ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
             10000 /* timeout */,
             "c:0:0" /* sinceParam */);
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:0:0")));
+    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:0:0"));
 
     watcher.postEvents(
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:0:1")));
+    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:0:1"));
   }
 
   @Test
@@ -570,13 +570,13 @@ public class WatchmanWatcherTest {
                 0 /* queryElapsedTimeNanos */, ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
             10000 /* timeout */,
             "c:0:0" /* sinceParam */);
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:0:0")));
+    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:0:0"));
 
     watcher.postEvents(
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT), hasItem(hasEntry("since", "c:1:0")));
+    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:1:0"));
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
   }
 
@@ -619,7 +619,7 @@ public class WatchmanWatcherTest {
             ImmutableMap.of(
                 FAKE_CLOCK_QUERY,
                 watchmanRootOutput,
-                FAKE_SECONDARY_QUERY.toList("c:0:0"),
+                FAKE_SECONDARY_QUERY.toQuery("c:0:0"),
                 watchmanSecondaryOutput));
     WatchmanWatcher watcher =
         new WatchmanWatcher(

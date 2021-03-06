@@ -147,7 +147,7 @@ public class WatchmanTestDaemon implements Closeable {
           WatchmanFactory.createWatchmanClient(
               watchmanSockFile, new TestConsole(), new DefaultClock())) {
         Either<Map<String, Object>, WatchmanClient.Timeout> response =
-            client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, "get-pid");
+            client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, WatchmanQuery.getPid());
         return response.isLeft();
       }
     } catch (IOException e) {

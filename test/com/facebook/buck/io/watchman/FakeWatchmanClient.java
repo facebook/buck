@@ -18,24 +18,22 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.util.types.Either;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /** Fake implementation of {@link com.facebook.buck.io.watchman.WatchmanClient} for tests. */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
-  private final Map<? extends List<?>, ? extends Map<String, Object>> queryResults;
+  private final Map<WatchmanQuery, Map<String, Object>> queryResults;
   private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
-      long queryElapsedTimeNanos, Map<? extends List<?>, Map<String, Object>> queryResults) {
+      long queryElapsedTimeNanos, Map<WatchmanQuery, Map<String, Object>> queryResults) {
     this(queryElapsedTimeNanos, queryResults, null);
   }
 
   public FakeWatchmanClient(
       long queryElapsedTimeNanos,
-      Map<? extends List<?>, ? extends Map<String, Object>> queryResults,
+      Map<WatchmanQuery, Map<String, Object>> queryResults,
       Exception exceptionToThrow) {
     this.queryElapsedTimeNanos = queryElapsedTimeNanos;
     this.queryResults = queryResults;
@@ -44,14 +42,12 @@ public class FakeWatchmanClient implements WatchmanClient {
 
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeoutNanos, Object... query)
+      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
       throws InterruptedException, IOException {
-    Map<String, Object> result = queryResults.get(Arrays.asList(query));
+    Map<String, Object> result = queryResults.get(query);
     if (result == null) {
       throw new RuntimeException(
-          String.format(
-              "Could not find results for query %s in %s",
-              Arrays.asList(query), queryResults.keySet()));
+          String.format("Could not find results for query %s in %s", query, queryResults.keySet()));
     }
     if (queryElapsedTimeNanos > timeoutNanos) {
       return Either.ofRight(Timeout.INSTANCE);

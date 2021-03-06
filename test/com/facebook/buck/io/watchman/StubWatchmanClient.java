@@ -33,7 +33,7 @@ public class StubWatchmanClient implements WatchmanClient {
 
   @Override
   public Either<Map<String, Object>, WatchmanClient.Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeoutNanos, Object... query) {
+      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) {
     return result;
   }
 

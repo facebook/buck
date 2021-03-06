@@ -21,8 +21,7 @@ import java.io.IOException;
 /**
  * Watchman returned an error response.
  *
- * <p>{@link WatchmanClient#queryWithTimeout(long, long, Object...)} successfully returned a
- * response, but the <a
+ * <p>{@link WatchmanClient} successfully returned a response, but the <a
  * href="https://facebook.github.io/watchman/docs/socket-interface.html#reporting-errors-and-warnings">response
  * contained an error</a>.
  */

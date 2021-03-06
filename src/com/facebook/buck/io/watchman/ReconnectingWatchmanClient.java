@@ -43,7 +43,7 @@ class ReconnectingWatchmanClient implements WatchmanClient {
 
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long pollingTimeNanos, Object... query)
+      long timeoutNanos, long pollingTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
     if (!running.compareAndSet(false, true)) {
       throw new IllegalStateException("ReconnectingWatchmanClient is single-threaded");
@@ -56,7 +56,7 @@ class ReconnectingWatchmanClient implements WatchmanClient {
   }
 
   private Either<Map<String, Object>, Timeout> queryWithTimeoutInner(
-      long timeoutNanos, long pollingTimeNanos, Object[] query)
+      long timeoutNanos, long pollingTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException {
     if (underlying == null) {
       // TODO(nga): issue debug-status query on reconnect

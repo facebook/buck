@@ -90,19 +90,19 @@ public class WatchmanClientIntegrationTest {
         client.queryWithTimeout(
             timeoutNanos,
             pollingTimeNanos,
-            "version",
-            ImmutableMap.of(
-                "required",
-                WatchmanFactory.REQUIRED_CAPABILITIES,
-                "optional",
-                WatchmanFactory.ALL_CAPABILITIES.keySet()));
+            WatchmanQuery.version(
+                ImmutableMap.of(
+                    "required",
+                    WatchmanFactory.REQUIRED_CAPABILITIES,
+                    "optional",
+                    WatchmanFactory.ALL_CAPABILITIES.keySet())));
     assertTrue(versionResponse.isLeft());
 
     Path rootPath = workspace.getDestPath();
 
     Either<Map<String, Object>, WatchmanClient.Timeout> watch =
         client.queryWithTimeout(
-            timeoutNanos, pollingTimeNanos, "watch-project", rootPath.toString());
+            timeoutNanos, pollingTimeNanos, WatchmanQuery.watchProject(rootPath.toString()));
 
     assertTrue(watch.isLeft());
 
@@ -113,11 +113,11 @@ public class WatchmanClientIntegrationTest {
         client.queryWithTimeout(
             timeoutNanos,
             pollingTimeNanos,
-            "query",
-            watchRoot,
-            ImmutableMap.<String, Object>of(
-                "glob", ImmutableList.of("**/X"),
-                "fields", ImmutableList.of("name")));
+            WatchmanQuery.query(
+                watchRoot,
+                ImmutableMap.of(
+                    "glob", ImmutableList.of("**/X"),
+                    "fields", ImmutableList.of("name"))));
 
     assertTrue(queryResponse.isLeft());
 

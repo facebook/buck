@@ -37,9 +37,9 @@ public class ReconnectingWatchmanClientTest {
   @Test
   public void worksFineWhenNoErrors() throws Exception {
     WatchmanClient mock = EasyMock.createStrictMock(WatchmanClient.class);
-    EasyMock.expect(mock.queryWithTimeout(17, 19, "a"))
+    EasyMock.expect(mock.queryWithTimeout(17, 19, WatchmanQuery.getPid()))
         .andReturn(Either.ofLeft(ImmutableMap.of("a", "b")));
-    EasyMock.expect(mock.queryWithTimeout(23, 29, "a"))
+    EasyMock.expect(mock.queryWithTimeout(23, 29, WatchmanQuery.watchProject("/x")))
         .andReturn(Either.ofLeft(ImmutableMap.of("c", "d")));
     mock.close();
 
@@ -50,11 +50,11 @@ public class ReconnectingWatchmanClientTest {
 
     assertEquals(
         Either.ofLeft(ImmutableMap.of("a", "b")),
-        reconnectingWatchmanClient.queryWithTimeout(17, 19, "a"));
+        reconnectingWatchmanClient.queryWithTimeout(17, 19, WatchmanQuery.getPid()));
     assertNotNull(reconnectingWatchmanClient.getUnderlying());
     assertEquals(
         Either.ofLeft(ImmutableMap.of("c", "d")),
-        reconnectingWatchmanClient.queryWithTimeout(23, 29, "a"));
+        reconnectingWatchmanClient.queryWithTimeout(23, 29, WatchmanQuery.watchProject("/x")));
     assertNotNull(reconnectingWatchmanClient.getUnderlying());
     reconnectingWatchmanClient.close();
     assertNull(reconnectingWatchmanClient.getUnderlying());
@@ -66,7 +66,7 @@ public class ReconnectingWatchmanClientTest {
   @Test
   public void reconnectOnTimeout() throws Exception {
     WatchmanClient mock = EasyMock.createStrictMock(WatchmanClient.class);
-    EasyMock.expect(mock.queryWithTimeout(17, 19, "a"))
+    EasyMock.expect(mock.queryWithTimeout(17, 19, WatchmanQuery.getPid()))
         .andReturn(Either.ofRight(WatchmanClient.Timeout.INSTANCE));
     mock.close();
 
@@ -77,7 +77,7 @@ public class ReconnectingWatchmanClientTest {
 
     assertEquals(
         Either.ofRight(WatchmanClient.Timeout.INSTANCE),
-        reconnectingWatchmanClient.queryWithTimeout(17, 19, "a"));
+        reconnectingWatchmanClient.queryWithTimeout(17, 19, WatchmanQuery.getPid()));
     assertNull(reconnectingWatchmanClient.getUnderlying());
 
     EasyMock.verify(mock);
@@ -87,7 +87,8 @@ public class ReconnectingWatchmanClientTest {
   @Test
   public void reconnectOnError() throws Exception {
     WatchmanClient mock = EasyMock.createStrictMock(WatchmanClient.class);
-    EasyMock.expect(mock.queryWithTimeout(17, 19, "a")).andThrow(new RuntimeException("test"));
+    EasyMock.expect(mock.queryWithTimeout(17, 19, WatchmanQuery.getPid()))
+        .andThrow(new RuntimeException("test"));
     mock.close();
     EasyMock.expect(underlyingWatchmanOpenerMock.open()).andReturn(mock);
 
@@ -95,7 +96,7 @@ public class ReconnectingWatchmanClientTest {
     EasyMock.replay(underlyingWatchmanOpenerMock);
 
     try {
-      reconnectingWatchmanClient.queryWithTimeout(17, 19, "a");
+      reconnectingWatchmanClient.queryWithTimeout(17, 19, WatchmanQuery.getPid());
       fail();
     } catch (RuntimeException e) {
       // expected
