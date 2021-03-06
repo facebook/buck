@@ -353,7 +353,13 @@ public class UnconfiguredQueryCommandIntegrationTest {
     String expected = "lib/DevtoolsEight.java\nlib/DevtoolsEleven.java";
 
     ProcessResult resultForNoArg = workspace.runBuckCommand("uquery", query);
-    assertOutputMatches(expected, resultForNoArg);
+    resultForNoArg.assertSuccess();
+
+    assertEquals(
+        expected,
+        OutputHelper.normalizeOutputLines(normalizeNewlines(resultForNoArg.getStdout()))
+            .trim()
+            .replace('\\', '/'));
 
     ProcessResult resultForSpecificPlatform =
         workspace.runBuckCommand(
