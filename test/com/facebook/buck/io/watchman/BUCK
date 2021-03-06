@@ -155,6 +155,7 @@ standard_java_test(
         "//third-party/java/asm:asm",
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/dd-plist:dd-plist",
+        "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/hamcrest:java-hamcrest",

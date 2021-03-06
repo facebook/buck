@@ -104,4 +104,12 @@ public abstract class Watchman {
    * @return a new client that the caller is responsible for closing.
    */
   public abstract WatchmanClient createClient() throws IOException;
+
+  /**
+   * Create a watchman client which will drop the underlying connect on timeout or any error and
+   * reconnect on next query.
+   */
+  public WatchmanClient createReconnectingClient() throws IOException {
+    return new ReconnectingWatchmanClient(this::createClient);
+  }
 }
