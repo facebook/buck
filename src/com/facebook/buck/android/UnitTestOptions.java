@@ -88,7 +88,11 @@ public class UnitTestOptions extends ModernBuildRule<UnitTestOptions.Impl> {
 
       StringBuilder fileContents = new StringBuilder();
       for (ImmutableMap.Entry<String, String> entry : properties.entrySet()) {
-        fileContents.append(entry.getKey()).append("=").append(entry.getValue()).append('\n');
+        fileContents
+            .append(entry.getKey())
+            .append("=")
+            .append(entry.getValue())
+            .append(System.lineSeparator());
       }
 
       steps.add(WriteFileIsolatedStep.of(fileContents.toString(), outputPath, false));
