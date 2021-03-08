@@ -4,7 +4,7 @@ CLASSES
     com/facebook/sample/Sample2
     com/facebook/sample/Sample3
     com/sample/app/MyApplication
-  shared0
+  s_1018759649
     com/facebook/sample/Shared
   small_with_shared2_with_no_resource_deps
     com/facebook/sample/SmallWithShared2
@@ -18,7 +18,7 @@ TARGETS
     //res/com/sample/base:base
     //res/com/sample/title:title
     //res/com/sample/top:top
-  shared0
+  s_1018759649
     //java/com/sample/shared:shared_with_no_resource_deps
   small_with_shared2_with_no_resource_deps
     //java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps
@@ -26,11 +26,11 @@ TARGETS
     //java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps
 DEPS
   dex
-  shared0
+  s_1018759649
     dex
   small_with_shared2_with_no_resource_deps
     dex
-    shared0
+    s_1018759649
   small_with_shared_with_no_resource_deps
     dex
-    shared0
+    s_1018759649
