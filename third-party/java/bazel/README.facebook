@@ -1,2 +1,7 @@
 This version contains a copy of a net.starlark.java from bazel
 repository (revision fbbac6b295b9ef0ea1999dc3ae9df29eceffbe88).
+
+These is incomplete list of changes applied to upstream.  The list
+exists here to simplify sync with upstream if we ever do it.
+
+* D26898614 Override contains for Tuple and StarlarkList

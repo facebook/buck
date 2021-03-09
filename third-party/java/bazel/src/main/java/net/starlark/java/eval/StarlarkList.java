@@ -308,6 +308,20 @@ public final class StarlarkList<E> extends AbstractList<E>
   }
 
   @Override
+  public boolean contains(Object o) {
+    // StarlarkList cannot contain nulls
+    if (o == null) {
+      return false;
+    }
+    for (int i = 0; i < size; ++i) {
+      if (o.equals(elems[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @Override
   public StarlarkList<E> getSlice(Mutability mu, int start, int stop, int step) {
     RangeList indices = new RangeList(start, stop, step);
     int n = indices.size();
