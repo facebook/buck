@@ -5,3 +5,4 @@ These is incomplete list of changes applied to upstream.  The list
 exists here to simplify sync with upstream if we ever do it.
 
 * D26898614 Override contains for Tuple and StarlarkList
+* D26877120 Special case for checkHashable
