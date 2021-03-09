@@ -14,41 +14,13 @@
  * limitations under the License.
  */
 
-//
-//----------------------------------------------
-//  Check protobuf version
-//----------------------------------------------
-//
-//  Check what version of protobuf is installed (Ex. 3.7.0 on Mar 31, 2020)
-//  //third-party/java/protobuf
-//
-//  Install `protoc` of the same version as above (Ex. 3.7.0 )
-//  http://google.github.io/proto-lens/installing-protoc.html
-//
-//----------------------------------------------
-//  Install of protobuf version 3.7.0
-//----------------------------------------------
-//   PROTOC_ZIP=protoc-3.7.0-osx-x86_64.zip
-//   curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v3.7.0/$PROTOC_ZIP
-//   sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
-//   sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
-//   rm -f $PROTOC_ZIP
-//----------------------------------------------
-//
-//
 //----------------------------------------------
 //  Generate command
 //----------------------------------------------
-//        protoc \
-//        --java_out=src-gen/ \
-//        --java_opt=annotate_code \
-//        src/com/facebook/buck/rules/modern/resources/proto/buildable_command.proto \
-//        --plugin=protoc-gen-grpc-java=third-party/java/grpc/protoc-gen-grpc-java-1.10.1-osx-x86_64.exe \
-//        --grpc-java_out=src/ \
-//        && yes | rm src-gen/com/facebook/buck/rules/modern/model/*.meta
+//
+// third-party/java/protobuf/gen.sh
 //
 //-----------------------
-//
 
 syntax = "proto3";
 
