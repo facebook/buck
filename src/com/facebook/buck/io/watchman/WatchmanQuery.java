@@ -27,6 +27,10 @@ public abstract class WatchmanQuery {
 
   public abstract ImmutableList<Object> toProtocolArgs();
 
+  public String getQueryType() {
+    return (String) toProtocolArgs().get(0);
+  }
+
   /** {@code query} query. */
   @BuckStyleValue
   public abstract static class Query extends WatchmanQuery {

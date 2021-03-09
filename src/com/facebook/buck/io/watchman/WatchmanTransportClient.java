@@ -47,8 +47,6 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
-  private boolean timeoutWarningShown = false;
-
   public WatchmanTransportClient(Console console, Clock clock, Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
     this.console = console;
@@ -102,20 +100,23 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     listeningExecutorService.shutdown();
   }
 
-  private synchronized void showTimeoutWarning(long timeoutNanos) {
-    if (timeoutWarningShown || console.getVerbosity().isSilent()) {
+  private synchronized void showTimeoutWarning(long timeoutNanos, String whichQuery) {
+    LOG.warn(
+        "Watchman did not respond to '%s' within %dms.",
+        whichQuery, TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
+
+    if (console.getVerbosity().isSilent()) {
       return;
     }
     if (timeoutNanos < 0) {
       timeoutNanos = 0;
     }
-    timeoutWarningShown = true;
     console
         .getStdErr()
         .getRawStream()
         .format(
-            "Timed out after %d sec waiting for watchman query.\n",
-            TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
+            "Timed out after %ds waiting for watchman query '%s'.\n",
+            TimeUnit.NANOSECONDS.toSeconds(timeoutNanos), whichQuery);
   }
 
   private Either<Map<String, Object>, Timeout> waitForQueryNotifyingUserIfSlow(
@@ -132,17 +133,33 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       if (remainingNanos > 0) {
         LOG.debug("Waiting for Watchman query [%s]...", query);
         if (!console.getVerbosity().isSilent()) {
-          console.getStdErr().getRawStream().format("Waiting for watchman query...\n");
+          console
+              .getStdErr()
+              .getRawStream()
+              .format(
+                  "Waiting for watchman query '%s' for %ds...\n",
+                  query.getQueryType(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
         }
         try {
-          return Either.ofLeft(future.get(remainingNanos, TimeUnit.NANOSECONDS));
+          Map<String, Object> result = future.get(remainingNanos, TimeUnit.NANOSECONDS);
+          if (!console.getVerbosity().isSilent()) {
+            long queryDurationNanos = clock.nanoTime() - queryStartNanos;
+            LOG.debug(
+                "Watchman query [%s] finished in %dms",
+                query, TimeUnit.NANOSECONDS.toMillis(queryDurationNanos));
+            console
+                .getStdErr()
+                .getRawStream()
+                .format(
+                    "Watchman query '%s' finished in %ds...\n",
+                    query.getQueryType(), TimeUnit.NANOSECONDS.toSeconds(queryDurationNanos));
+          }
+          return Either.ofLeft(result);
         } catch (TimeoutException te) {
           LOG.debug("Timed out");
         }
       }
-      LOG.warn(
-          "Watchman did not respond within %d ms.", TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
-      showTimeoutWarning(timeoutNanos);
+      showTimeoutWarning(timeoutNanos, query.getQueryType());
       return Either.ofRight(Timeout.INSTANCE);
     }
   }
