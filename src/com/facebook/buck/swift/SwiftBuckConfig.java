@@ -40,6 +40,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String TRANSFORM_ERRORS_TO_ABSOLUTE_PATHS =
       "transform_errors_to_absolute_paths";
   public static final String USE_DEBUG_PREFIX_MAP = "use_debug_prefix_map";
+  public static final String PREFIX_SERIALIZED_DEBUG_INFO = "prefix_serialized_debug_info";
   private final BuckConfig delegate;
 
   @Override
@@ -170,5 +171,13 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getUseDebugPrefixMap() {
     return delegate.getBooleanValue(SECTION_NAME, USE_DEBUG_PREFIX_MAP, false);
+  }
+
+  /**
+   * If true, use the -prefix-serialized-debug-info flag to remap paths in the serialized Swift
+   * debug info. This makes it possible to cache Swift compiler output.
+   */
+  public boolean getPrefixSerializedDebugInfo() {
+    return delegate.getBooleanValue(SECTION_NAME, PREFIX_SERIALIZED_DEBUG_INFO, false);
   }
 }

@@ -379,6 +379,40 @@ public class SwiftLibraryIntegrationTest {
             "-debug-prefix-map", sdkPaths.getDeveloperPath().get() + "=/APPLE_DEVELOPER_DIR"));
   }
 
+  @Test
+  public void testPrefixSerializedDebugInfo() {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget swiftCompileTarget =
+        buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections("[swift]", "prefix_serialized_debug_info = True")
+            .build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftCompile buildRule =
+        (SwiftCompile)
+            swiftLibraryDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                swiftCompileTarget,
+                TestBuildRuleParams.create(),
+                createDummySwiftArg());
+
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    ImmutableList<Step> steps = buildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    SwiftCompileStep compileStep = (SwiftCompileStep) steps.get(1);
+    ImmutableList<String> compilerCommand =
+        ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
+
+    assertThat(compilerCommand, Matchers.hasItem("-prefix-serialized-debug-info"));
+  }
+
   private SwiftLibraryDescriptionArg createDummySwiftArg() {
     return SwiftLibraryDescriptionArg.builder().setName("dummy").build();
   }

@@ -129,9 +129,11 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean inputBasedEnabled;
 
-  @AddToRuleKey private final boolean useDebugPrefixMap;
+  @AddToRuleKey protected final boolean useDebugPrefixMap;
 
   @AddToRuleKey protected final boolean shouldEmitClangModuleBreadcrumbs;
+
+  @AddToRuleKey protected final boolean prefixSerializedDebugInfo;
 
   // The following fields do not have to be part of the rulekey, all the other must.
 
@@ -221,6 +223,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.debugPrefixMap = debugPrefixMap;
     this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
+    this.prefixSerializedDebugInfo = swiftBuckConfig.getPrefixSerializedDebugInfo();
     performChecks(buildTarget);
   }
 
@@ -237,10 +240,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         LinkerMapMode.FLAVOR_DOMAIN);
     Preconditions.checkArgument(
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
-  }
-
-  protected boolean shouldSerializeDebuggingOptions() {
-    return true;
   }
 
   /** Creates the list of arguments to pass to the Swift compiler */
@@ -289,7 +288,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
-        shouldSerializeDebuggingOptions() ? "-serialize-debugging-options" : "",
+        "-serialize-debugging-options",
         "-module-name",
         moduleName,
         "-emit-module",
@@ -342,6 +341,12 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
       // and are not shareable across machines.
       compilerArgs.add("-no-clang-module-breadcrumbs");
+    }
+
+    if (prefixSerializedDebugInfo) {
+      // Apply path prefixes to swiftmodule debug info to make compiler output cacheable.
+      // NOTE: not yet supported in upstream Swift
+      compilerArgs.add("-prefix-serialized-debug-info");
     }
 
     return compilerArgs.build();
