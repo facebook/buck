@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.impl.HashedBuckOutLinkMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.cache.FileHashCacheMode;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -32,6 +33,8 @@ import org.immutables.value.Value;
 /** Some configuration options that may affect the build in some way. */
 @BuckStyleValue
 public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
+
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = 1.0F;
 
@@ -258,7 +261,18 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
   /** Returns whether actions can be executed in a process separate from buck. */
   @Value.Lazy
   public boolean areExternalActionsEnabled() {
+    if (IS_WINDOWS) {
+      return areExternalActionsEnabledForWindows();
+    }
     return getDelegate().getBooleanValue(BUILD_SECTION, "are_external_actions_enabled", false);
+  }
+
+  @Value.Lazy
+  @VisibleForTesting
+  boolean areExternalActionsEnabledForWindows() {
+    // TODO: msemko: fix windows issues
+    return getDelegate()
+        .getBooleanValue(BUILD_SECTION, "are_external_actions_enabled_for_windows", false);
   }
 
   /** @return whether to enable filesystem map logging for hashes. */
