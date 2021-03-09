@@ -16,12 +16,8 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.core.model.label.Label;
-import com.facebook.buck.core.model.label.LabelSyntaxException;
-import com.facebook.buck.core.model.label.LabelValidator;
 import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
-import com.facebook.buck.core.starlark.compatible.BuckStarlarkModule;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
@@ -60,24 +56,6 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   public static final Set<ParamName> HIDDEN_IMPLICIT_ATTRIBUTES =
       Sets.filter(
           IMPLICIT_ATTRIBUTES.keySet(), attr -> !USER_VISIBLE_IMPLICIT_ATTRIBUTES.contains(attr));
-
-  @Override
-  public Label label(String labelString, StarlarkThread env) throws EvalException {
-    // There is some extra implementation work in the Bazel version. At the moment we do not do
-    // cell remapping, so we take a simpler approach of making sure that root-relative labels map
-    // to whatever cell we're currently executing within. This has the side effect of making any
-    // non-root cell labels become absolute.
-
-    try {
-      // Label parentLabel = (Label) env.getGlobals().getLabel();
-      Label parentLabel = BuckStarlarkModule.ofInnermostEnclosingStarlarkFunction(env);
-      LabelValidator.parseAbsoluteLabel(labelString);
-      labelString = parentLabel.getRelativeWithRemapping(labelString).getUnambiguousCanonicalForm();
-      return Label.parseAbsolute(labelString, false);
-    } catch (LabelValidator.BadLabelException | LabelSyntaxException e) {
-      throw new EvalException("Illegal absolute label syntax: " + labelString);
-    }
-  }
 
   @Override
   public SkylarkUserDefinedRule rule(

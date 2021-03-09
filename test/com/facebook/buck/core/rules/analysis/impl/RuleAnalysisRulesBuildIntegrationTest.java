@@ -23,9 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.testutil.ProcessResult;
@@ -33,14 +31,11 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -424,104 +419,6 @@ public class RuleAnalysisRulesBuildIntegrationTest {
     assertJsonEquals(output, resultPath);
   }
 
-  @Test
-  public void ruleAnalysisRulesReturningRunInfoCanBeRun() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "runnable_rules", tmp);
-
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
-    workspace.addBuckConfigLocalOption("parser", "user_defined_rules", "enabled");
-    workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
-
-    String successTarget =
-        Platform.detect().getType().isWindows()
-            ? "//:runnable_bat_success"
-            : "//:runnable_sh_success";
-    String failureTarget =
-        Platform.detect().getType().isWindows()
-            ? "//:runnable_bat_failure"
-            : "//:runnable_sh_failure";
-
-    String rootString = workspace.getProjectFileSystem().getRootPath().toString();
-    String expected =
-        Joiner.on(System.lineSeparator())
-            .join(
-                ImmutableList.of(
-                    "pwd: " + rootString,
-                    "ENV: some-string",
-                    "EXIT_CODE: %s",
-                    "arg[foo]",
-                    "arg[1]",
-                    "arg[//foo:bar]"))
-            .trim();
-
-    workspace.setUp();
-    ProcessResult successRun = workspace.runBuckCommand("run", successTarget).assertSuccess();
-    // Note we don't look at more specific exit codes because the integration framework makes this
-    // harder to do.
-    ProcessResult failureRun = workspace.runBuckCommand("run", failureTarget).assertFailure();
-
-    assertEquals(String.format(expected, "0"), successRun.getStdout().trim());
-    assertEquals(String.format(expected, "100"), failureRun.getStdout().trim());
-  }
-
-  @Test
-  public void ruleAnalysisRulesReturningTestInfoRunWithInternalRunner() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
-
-    String successTarget =
-        Platform.detect().getType().isWindows()
-            ? "//:testable_bat_success"
-            : "//:testable_sh_success";
-    String failureTarget =
-        Platform.detect().getType().isWindows()
-            ? "//:testable_bat_failure"
-            : "//:testable_sh_failure";
-
-    workspace.setUp();
-
-    Path successJson =
-        workspace
-            .getProjectFileSystem()
-            .createTempFile("", "test-results-success.json")
-            .toAbsolutePath();
-    Path failureJson =
-        workspace
-            .getProjectFileSystem()
-            .createTempFile("", "test-results-failure.json")
-            .toAbsolutePath();
-
-    workspace
-        .runBuckCommand("test", successTarget, "--output-test-events-to-file=" + successJson)
-        .assertSuccess();
-
-    workspace
-        .runBuckCommand("test", failureTarget, "--output-test-events-to-file=" + failureJson)
-        .assertTestFailure();
-
-    validateTestResults(
-        workspace,
-        successJson,
-        successTarget,
-        true,
-        ImmutableList.of("foo", "bar"),
-        ImmutableList.of("foo@example.com", "bar@example.com"),
-        "testable_rule_test",
-        BuildTargetFactory.newInstance(successTarget).getShortName(),
-        0);
-    validateTestResults(
-        workspace,
-        failureJson,
-        failureTarget,
-        false,
-        ImmutableList.of("foo", "bar"),
-        ImmutableList.of("foo@example.com", "bar@example.com"),
-        "testable_rule_test",
-        BuildTargetFactory.newInstance(failureTarget).getShortName(),
-        100);
-  }
-
   private void validateTestResults(
       ProjectWorkspace workspace,
       Path eventJsonPath,
@@ -600,64 +497,6 @@ public class RuleAnalysisRulesBuildIntegrationTest {
             })
         .filter(node -> node.get("type").asText().equals("ResultsAvailable"))
         .collect(ImmutableList.toImmutableList());
-  }
-
-  @Test
-  public void ruleAnalysisRulesReturningTestInfoRunWithExternalRunner() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
-    String testRunner =
-        workspace
-            .resolve(Platform.detect().getType().isWindows() ? "runner.bat" : "runner.sh")
-            .toAbsolutePath()
-            .toString();
-    workspace.addBuckConfigLocalOption("test", "external_runner", testRunner);
-
-    workspace.setUp();
-
-    BuildTarget target = BuildTargetFactory.newInstance("//:testable_sh_success");
-
-    ProcessResult successRun =
-        workspace.runBuckCommand("test", target.getFullyQualifiedName()).assertSuccess();
-
-    ExternalTestRunnerTestSpec spec =
-        ExternalTestRunnerTestSpec.builder()
-            .setTarget(target)
-            .setType("json")
-            .setCwd(tmp.getRoot().getPath())
-            .setEnv(ImmutableMap.of("CUSTOM_ENV", "some-string", "EXIT_CODE", "0"))
-            .setCommand(
-                ImmutableList.of(
-                    tmp.getRoot()
-                        .resolve(
-                            BuildPaths.getGenDir(
-                                    workspace.getProjectFileSystem().getBuckPaths(), target)
-                                .resolve("testable.sh"))
-                        .toString(),
-                    "foo",
-                    "1",
-                    "//foo:bar"))
-            .setLabels(ImmutableList.of("foo", "bar"))
-            .setContacts(ImmutableList.of("foo@example.com", "bar@example.com"))
-            .build();
-    JsonNode expected =
-        ObjectMappers.READER.readTree(ObjectMappers.WRITER.writeValueAsString(spec));
-
-    JsonNode allTests = ObjectMappers.READER.readTree(successRun.getStdout());
-
-    assertTrue(allTests.isArray());
-    assertEquals(1, allTests.size());
-    assertEquals(expected, allTests.get(0));
-  }
-
-  @Test
-  public void ruleAnalysisRulesReturningTestInfoWithoutRunInfoAreErrors() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "testable_rules", tmp);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckTest("//:without_run").assertFailure();
-    assertThat(result.getStderr(), Matchers.containsString("did not return a RunInfo object"));
   }
 
   @Test

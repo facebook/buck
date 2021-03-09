@@ -1,3 +1,0 @@
-load("@root_cell//:defs.bzl", "test_loaded_from_root_including_cell")
-
-test_loaded_from_root_including_cell()

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
@@ -33,22 +32,6 @@ import net.starlark.java.eval.StarlarkThread;
  * Interface for a global Skylark library containing rule-related helper and registration functions.
  */
 public interface SkylarkRuleFunctionsApi {
-  @StarlarkMethod(
-      name = "Label",
-      doc =
-          "Creates a Label referring to a BUILD target. Use "
-              + "this function only when you want to give a default value for the label "
-              + "attributes. The argument must refer to an absolute label. "
-              + "Example: <br><pre class=language-python>Label(\"//tools:default\")</pre>",
-      parameters = {
-        @Param(
-            name = "label_string",
-            allowedTypes = @ParamType(type = String.class),
-            doc = "the label string."),
-      },
-      useStarlarkThread = true)
-  Label label(String labelString, StarlarkThread env) throws EvalException;
-
   @StarlarkMethod(
       name = "rule",
       doc =

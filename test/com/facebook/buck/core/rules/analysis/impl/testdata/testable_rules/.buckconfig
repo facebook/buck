@@ -1,6 +1,0 @@
-[parser]
-default_build_file_syntax = skylark
-user_defined_rules =  enabled
-
-[rule_analysis]
-mode = PROVIDER_COMPATIBLE

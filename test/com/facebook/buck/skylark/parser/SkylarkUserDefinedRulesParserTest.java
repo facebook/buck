@@ -110,16 +110,6 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
-  public void enablesLabelObjectIfConfigured() throws IOException, InterruptedException {
-    setupWorkspace("label_exported");
-    AbsPath buildFile = projectFilesystem.resolve("BUCK");
-
-    parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
-
-    assertEquals("echo target > $OUT", getSingleRule(buildFile).getBySnakeCase("cmd"));
-  }
-
-  @Test
   public void enablesAttrsModuleIfConfigured() throws IOException, InterruptedException {
     setupWorkspace("attr");
     AbsPath buildFile = projectFilesystem.resolve("exported").resolve("BUCK");
