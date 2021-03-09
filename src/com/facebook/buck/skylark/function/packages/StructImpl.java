@@ -335,8 +335,28 @@ public abstract class StructImpl implements Info, Structure, StructApi {
 
   private static void appendJSONStringLiteral(StringBuilder out, String s) {
     out.append('"');
-    out.append(
-        escapeDoubleQuotesAndBackslashesAndNewlines(s).replace("\r", "\\r").replace("\t", "\\t"));
+    for (int i = 0; i < s.length(); ++i) {
+      char c = s.charAt(i);
+      switch (c) {
+        case '\r':
+          out.append("\\r");
+          break;
+        case '\t':
+          out.append("\\t");
+          break;
+        case '\n':
+          out.append("\\n");
+          break;
+        case '"':
+          out.append("\\\"");
+          break;
+        case '\\':
+          out.append("\\\\");
+          break;
+        default:
+          out.append(c);
+      }
+    }
     out.append('"');
   }
 
