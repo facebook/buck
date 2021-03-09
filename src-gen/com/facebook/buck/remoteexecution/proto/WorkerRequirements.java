@@ -142,6 +142,10 @@ private static final long serialVersionUID = 0L;
      * <code>LINUX_GPU = 2;</code>
      */
     LINUX_GPU(2),
+    /**
+     * <code>BROWSER_CHROME = 3;</code>
+     */
+    BROWSER_CHROME(3),
     UNRECOGNIZED(-1),
     ;
 
@@ -157,6 +161,10 @@ private static final long serialVersionUID = 0L;
      * <code>LINUX_GPU = 2;</code>
      */
     public static final int LINUX_GPU_VALUE = 2;
+    /**
+     * <code>BROWSER_CHROME = 3;</code>
+     */
+    public static final int BROWSER_CHROME_VALUE = 3;
 
 
     public final int getNumber() {
@@ -180,6 +188,7 @@ private static final long serialVersionUID = 0L;
         case 0: return LINUX;
         case 1: return ANDROID_EMULATOR;
         case 2: return LINUX_GPU;
+        case 3: return BROWSER_CHROME;
         default: return null;
       }
     }

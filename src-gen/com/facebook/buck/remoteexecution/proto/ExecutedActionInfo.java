@@ -101,6 +101,11 @@ private static final long serialVersionUID = 0L;
             executedOnElasticCapacity_ = input.readBool();
             break;
           }
+          case 80: {
+
+            deduplicated_ = input.readBool();
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -257,6 +262,20 @@ private static final long serialVersionUID = 0L;
     return executedOnElasticCapacity_;
   }
 
+  public static final int DEDUPLICATED_FIELD_NUMBER = 10;
+  private boolean deduplicated_;
+  /**
+   * <pre>
+   * Reflects if the action was deduplicated (= observed execution time can
+   * significantly differ from a real one).
+   * </pre>
+   *
+   * <code>bool deduplicated = 10;</code>
+   */
+  public boolean getDeduplicated() {
+    return deduplicated_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -297,6 +316,9 @@ private static final long serialVersionUID = 0L;
     }
     if (executedOnElasticCapacity_ != false) {
       output.writeBool(9, executedOnElasticCapacity_);
+    }
+    if (deduplicated_ != false) {
+      output.writeBool(10, deduplicated_);
     }
     unknownFields.writeTo(output);
   }
@@ -343,6 +365,10 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(9, executedOnElasticCapacity_);
     }
+    if (deduplicated_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(10, deduplicated_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -379,6 +405,8 @@ private static final long serialVersionUID = 0L;
         != other.getTaskTotalMem()) return false;
     if (getExecutedOnElasticCapacity()
         != other.getExecutedOnElasticCapacity()) return false;
+    if (getDeduplicated()
+        != other.getDeduplicated()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -418,6 +446,9 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + EXECUTED_ON_ELASTIC_CAPACITY_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getExecutedOnElasticCapacity());
+    hash = (37 * hash) + DEDUPLICATED_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getDeduplicated());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -577,6 +608,8 @@ private static final long serialVersionUID = 0L;
 
       executedOnElasticCapacity_ = false;
 
+      deduplicated_ = false;
+
       return this;
     }
 
@@ -616,6 +649,7 @@ private static final long serialVersionUID = 0L;
       result.hostTotalMem_ = hostTotalMem_;
       result.taskTotalMem_ = taskTotalMem_;
       result.executedOnElasticCapacity_ = executedOnElasticCapacity_;
+      result.deduplicated_ = deduplicated_;
       onBuilt();
       return result;
     }
@@ -690,6 +724,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.getExecutedOnElasticCapacity() != false) {
         setExecutedOnElasticCapacity(other.getExecutedOnElasticCapacity());
+      }
+      if (other.getDeduplicated() != false) {
+        setDeduplicated(other.getDeduplicated());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1134,6 +1171,47 @@ private static final long serialVersionUID = 0L;
     public Builder clearExecutedOnElasticCapacity() {
       
       executedOnElasticCapacity_ = false;
+      onChanged();
+      return this;
+    }
+
+    private boolean deduplicated_ ;
+    /**
+     * <pre>
+     * Reflects if the action was deduplicated (= observed execution time can
+     * significantly differ from a real one).
+     * </pre>
+     *
+     * <code>bool deduplicated = 10;</code>
+     */
+    public boolean getDeduplicated() {
+      return deduplicated_;
+    }
+    /**
+     * <pre>
+     * Reflects if the action was deduplicated (= observed execution time can
+     * significantly differ from a real one).
+     * </pre>
+     *
+     * <code>bool deduplicated = 10;</code>
+     */
+    public Builder setDeduplicated(boolean value) {
+      
+      deduplicated_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Reflects if the action was deduplicated (= observed execution time can
+     * significantly differ from a real one).
+     * </pre>
+     *
+     * <code>bool deduplicated = 10;</code>
+     */
+    public Builder clearDeduplicated() {
+      
+      deduplicated_ = false;
       onChanged();
       return this;
     }

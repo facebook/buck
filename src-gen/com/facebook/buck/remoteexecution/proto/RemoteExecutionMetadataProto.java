@@ -138,7 +138,7 @@ public final class RemoteExecutionMetadataProto {
       "ent_side_tenant\030\004 \001(\t\"j\n\020ClientActionInf" +
       "o\022\022\n\nrepository\030\001 \001(\t\022\025\n\rschedule_type\030\002" +
       " \001(\t\022\030\n\020re_session_label\030\003 \001(\t\022\021\n\ttenant" +
-      "_id\030\004 \001(\t\"\305\002\n\022ExecutedActionInfo\022\033\n\023cpu_" +
+      "_id\030\004 \001(\t\"\333\002\n\022ExecutedActionInfo\022\033\n\023cpu_" +
       "stat_usage_usec\030\001 \001(\003\022\032\n\022cpu_stat_user_u" +
       "sec\030\002 \001(\003\022\034\n\024cpu_stat_system_usec\030\003 \001(\003\022" +
       "L\n(is_fallback_enabled_for_completed_act" +
@@ -146,31 +146,31 @@ public final class RemoteExecutionMetadataProto {
       "\026engine_scheduled_count\030\005 \001(\003\022\024\n\014max_use" +
       "d_mem\030\006 \001(\003\022\026\n\016host_total_mem\030\007 \001(\003\022\026\n\016t" +
       "ask_total_mem\030\010 \001(\003\022$\n\034executed_on_elast" +
-      "ic_capacity\030\t \001(\010\"/\n\tDebugInfo\022\"\n\032pause_" +
-      "before_clean_timeout\030\001 \001(\r\"\253\006\n\027RemoteExe" +
-      "cutionMetadata\022=\n\rre_session_id\030\001 \001(\0132&." +
-      "facebook.remote_execution.RESessionID\0226\n" +
-      "\tbuck_info\030\002 \001(\0132#.facebook.remote_execu" +
-      "tion.BuckInfo\0228\n\ntrace_info\030\003 \001(\0132$.face" +
-      "book.remote_execution.TraceInfo\022<\n\014creat" +
-      "or_info\030\004 \001(\0132&.facebook.remote_executio" +
-      "n.CreatorInfo\022C\n\013engine_info\030\005 \001(\0132..fac" +
-      "ebook.remote_execution.ExecutionEngineIn" +
-      "fo\022:\n\013worker_info\030\006 \001(\0132%.facebook.remot" +
-      "e_execution.WorkerInfo\022A\n\017cas_client_inf" +
-      "o\030\007 \001(\0132(.facebook.remote_execution.CasC" +
-      "lientInfo\022J\n\023worker_requirements\030\010 \001(\0132-" +
-      ".facebook.remote_execution.WorkerRequire" +
-      "ments\022G\n\022client_action_info\030\n \001(\0132+.face" +
-      "book.remote_execution.ClientActionInfo\022K" +
-      "\n\024executed_action_info\030\013 \001(\0132-.facebook." +
-      "remote_execution.ExecutedActionInfo\0228\n\nd" +
-      "ebug_info\030\014 \001(\0132$.facebook.remote_execut" +
-      "ion.DebugInfo\022A\n\017client_job_info\030\r \001(\0132(" +
-      ".facebook.remote_execution.ClientJobInfo" +
-      "BI\n\'com.facebook.buck.remoteexecution.pr" +
-      "otoB\034RemoteExecutionMetadataProtoP\001b\006pro" +
-      "to3"
+      "ic_capacity\030\t \001(\010\022\024\n\014deduplicated\030\n \001(\010\"" +
+      "/\n\tDebugInfo\022\"\n\032pause_before_clean_timeo" +
+      "ut\030\001 \001(\r\"\253\006\n\027RemoteExecutionMetadata\022=\n\r" +
+      "re_session_id\030\001 \001(\0132&.facebook.remote_ex" +
+      "ecution.RESessionID\0226\n\tbuck_info\030\002 \001(\0132#" +
+      ".facebook.remote_execution.BuckInfo\0228\n\nt" +
+      "race_info\030\003 \001(\0132$.facebook.remote_execut" +
+      "ion.TraceInfo\022<\n\014creator_info\030\004 \001(\0132&.fa" +
+      "cebook.remote_execution.CreatorInfo\022C\n\013e" +
+      "ngine_info\030\005 \001(\0132..facebook.remote_execu" +
+      "tion.ExecutionEngineInfo\022:\n\013worker_info\030" +
+      "\006 \001(\0132%.facebook.remote_execution.Worker" +
+      "Info\022A\n\017cas_client_info\030\007 \001(\0132(.facebook" +
+      ".remote_execution.CasClientInfo\022J\n\023worke" +
+      "r_requirements\030\010 \001(\0132-.facebook.remote_e" +
+      "xecution.WorkerRequirements\022G\n\022client_ac" +
+      "tion_info\030\n \001(\0132+.facebook.remote_execut" +
+      "ion.ClientActionInfo\022K\n\024executed_action_" +
+      "info\030\013 \001(\0132-.facebook.remote_execution.E" +
+      "xecutedActionInfo\0228\n\ndebug_info\030\014 \001(\0132$." +
+      "facebook.remote_execution.DebugInfo\022A\n\017c" +
+      "lient_job_info\030\r \001(\0132(.facebook.remote_e" +
+      "xecution.ClientJobInfoBI\n\'com.facebook.b" +
+      "uck.remoteexecution.protoB\034RemoteExecuti" +
+      "onMetadataProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -262,7 +262,7 @@ public final class RemoteExecutionMetadataProto {
     internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor,
-        new java.lang.String[] { "CpuStatUsageUsec", "CpuStatUserUsec", "CpuStatSystemUsec", "IsFallbackEnabledForCompletedAction", "EngineScheduledCount", "MaxUsedMem", "HostTotalMem", "TaskTotalMem", "ExecutedOnElasticCapacity", });
+        new java.lang.String[] { "CpuStatUsageUsec", "CpuStatUserUsec", "CpuStatSystemUsec", "IsFallbackEnabledForCompletedAction", "EngineScheduledCount", "MaxUsedMem", "HostTotalMem", "TaskTotalMem", "ExecutedOnElasticCapacity", "Deduplicated", });
     internal_static_facebook_remote_execution_DebugInfo_descriptor =
       getDescriptor().getMessageTypes().get(13);
     internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable = new

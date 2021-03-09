@@ -92,4 +92,14 @@ public interface ExecutedActionInfoOrBuilder extends
    * <code>bool executed_on_elastic_capacity = 9;</code>
    */
   boolean getExecutedOnElasticCapacity();
+
+  /**
+   * <pre>
+   * Reflects if the action was deduplicated (= observed execution time can
+   * significantly differ from a real one).
+   * </pre>
+   *
+   * <code>bool deduplicated = 10;</code>
+   */
+  boolean getDeduplicated();
 }
