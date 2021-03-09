@@ -8,3 +8,4 @@ exists here to simplify sync with upstream if we ever do it.
 * D26877120 Special case for checkHashable
 * D26877124 Faster kwargs population in StarlarkFunction
 * D26877119 Faster stmt/expr switch in the interpreter
+* D26877122 Make universe indexed
