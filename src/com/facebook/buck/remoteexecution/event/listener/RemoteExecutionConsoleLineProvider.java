@@ -52,10 +52,10 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     if (!hasFirstRemoteActionStarted(actionsPerState)) {
       return lines.build();
     }
-    if (isDebug) {
-      String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
-      lines.add(metadataLine);
+    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
+    lines.add(metadataLine);
 
+    if (isDebug) {
       String actionsLine =
           String.format(
               "[RE] Actions: Local=%d Remote=[%s]",
@@ -81,27 +81,29 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               TimeUnit.MILLISECONDS.toSeconds(remoteCpuMs)
                   - TimeUnit.MINUTES.toSeconds(minutesCpu));
       lines.add(metricsLine);
-    }
-    if (statsProvider.getTotalRemoteTimeMs() > 0) {
-      long remoteTotalMs = statsProvider.getTotalRemoteTimeMs();
-      long minutesTotal = TimeUnit.MILLISECONDS.toMinutes(remoteTotalMs);
-      lines.add(
-          String.format(
-              "Building with Remote Execution [RE]. Used %d:%02d minutes of total time.",
-              minutesTotal,
-              TimeUnit.MILLISECONDS.toSeconds(remoteTotalMs)
-                  - TimeUnit.MINUTES.toSeconds(minutesTotal)));
-      int waitingActions = 0;
-      for (State state : RemoteExecutionActionEvent.State.values()) {
-        if (!RemoteExecutionActionEvent.isTerminalState(state)) {
-          waitingActions += actionsPerState.getOrDefault(state, 0);
-        }
+
+      if (statsProvider.getTotalRemoteTimeMs() > 0) {
+        long remoteTotalMs = statsProvider.getTotalRemoteTimeMs();
+        long minutesTotal = TimeUnit.MILLISECONDS.toMinutes(remoteTotalMs);
+        lines.add(
+            String.format(
+                "[RE] Metrics: Used %d:%02d minutes of total time.",
+                minutesTotal,
+                TimeUnit.MILLISECONDS.toSeconds(remoteTotalMs)
+                    - TimeUnit.MINUTES.toSeconds(minutesTotal)));
       }
-      lines.add(
-          String.format(
-              "[RE] Waiting on %d remote actions. Completed %d actions remotely.",
-              waitingActions, actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0)));
     }
+    int waitingActions = 0;
+    for (State state : RemoteExecutionActionEvent.State.values()) {
+      if (!RemoteExecutionActionEvent.isTerminalState(state)) {
+        waitingActions += actionsPerState.getOrDefault(state, 0);
+      }
+    }
+    lines.add(
+        String.format(
+            "[RE] Waiting on %d remote actions. Completed %d actions remotely.",
+            waitingActions, actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0)));
+
     LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
     if (localFallbackStats.getLocallyExecutedRules() > 0) {
       float percentageRetry =

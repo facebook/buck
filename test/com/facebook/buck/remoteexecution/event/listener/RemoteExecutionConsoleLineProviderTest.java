@@ -67,7 +67,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(2, lines.size());
     Assert.assertEquals(
-        lines.get(0), "Building with Remote Execution [RE]. Used 3:20 minutes of total time.");
+        "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
         lines.get(1), "[RE] Waiting on 0 remote actions. Completed 84 actions remotely.");
 
@@ -87,13 +87,13 @@ public class RemoteExecutionConsoleLineProviderTest {
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(7, lines.size());
     Assert.assertEquals(
-        "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
-    Assert.assertEquals(
         "[RE] Actions: Local=0 Remote=[wait=0 comp=0 upl_in=0 upl_act=0 exec=0 del=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
     Assert.assertEquals("[RE] Metrics: CPU 1:05 minutes", lines.get(3));
+    Assert.assertEquals("[RE] Metrics: Used 3:20 minutes of total time.", lines.get(4));
+
     Assert.assertEquals(
         "[RE] Some actions failed remotely, retrying locally. LocalFallback: [fallback_rate=50.00% remote=42 local=21]",
         lines.get(6));
