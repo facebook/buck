@@ -1612,7 +1612,10 @@ public class StubJarTest {
             "",
             "  // access flags 0x0",
             "  <init>(Lkotlin/jvm/functions/Function0;)V",
-            "}")
+            "",
+            "  // access flags 0x1011",
+            "  public final synthetic run()V",
+          "}")
         .createAndCheckStubJar();
   }
 
