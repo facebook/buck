@@ -107,8 +107,8 @@ public class NdkCxxPlatformIntegrationTest {
   @Parameterized.Parameter(value = 2)
   public TargetCpuType targetCpuType;
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths("ndk-test", true);
-  @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("ndk-test-long-pwd", true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths("ndk-test");
+  @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("ndk-test-long-pwd");
 
   private String architectures;
 

@@ -56,7 +56,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class BuiltinApplePackageIntegrationTest {
-  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 

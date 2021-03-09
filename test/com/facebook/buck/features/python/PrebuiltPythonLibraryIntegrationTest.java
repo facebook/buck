@@ -57,7 +57,7 @@ import org.junit.Test;
 
 public class PrebuiltPythonLibraryIntegrationTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before

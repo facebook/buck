@@ -45,7 +45,7 @@ import org.junit.Test;
 
 public class ModernBuildRuleIntegrationTest {
 
-  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths(true);
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
