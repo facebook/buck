@@ -1,3 +1,4 @@
+// @generated
 package com.facebook.buck.logd.proto;
 
 import static io.grpc.MethodDescriptor.generateFullMethodName;
