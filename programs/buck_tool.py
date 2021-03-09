@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import contextlib
 import datetime
 import errno
@@ -30,7 +28,6 @@ import tempfile
 import textwrap
 import time
 import traceback
-import uuid
 from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
@@ -1183,19 +1180,18 @@ class BuckTool(object):
             # simplify the transition while we need to support multiple versions of the JVM.
             # TODO: Remove once Java 11 upgrade is done.
             if self.get_buck_compiled_java_version() >= 9:
-                unsupported_args = set(
-                    [
-                        # `-verbose:gc` and `-XX:+PrintGCDetails` are technically supported, but log
-                        # to stdout, which is problematic when Buck's output needs to be
-                        # programmatically parsed. So we disallow them. `-Xlog:gc:/path/to/gc.log`
-                        # should be used in Java 11 instead.
-                        "-verbose:gc",
-                        "-XX:+PrintGCDetails",
-                        "-XX:+PrintGCDateStamps",
-                        "-XX:+PrintGCTimeStamps",
-                        "-XX:+UseParNewGC",
-                    ]
-                )
+                unsupported_args = {
+                    # `-verbose:gc` and `-XX:+PrintGCDetails` are technically supported, but log
+                    # to stdout, which is problematic when Buck's output needs to be
+                    # programmatically parsed. So we disallow them. `-Xlog:gc:/path/to/gc.log`
+                    # should be used in Java 11 instead.
+                    "-verbose:gc",
+                    "-XX:+PrintGCDetails",
+                    "-XX:+PrintGCDateStamps",
+                    "-XX:+PrintGCTimeStamps",
+                    "-XX:+UseParNewGC",
+                }
+
                 stripped_args = []
                 for arg in java_args:
                     if arg in unsupported_args:
@@ -1224,7 +1220,7 @@ class BuckTool(object):
                 stripped_args = []
                 illegal_prev_arg = None
                 for arg in java_args:
-                    if illegal_prev_arg != None:
+                    if illegal_prev_arg is not None:
                         logging.debug(
                             "Debug: Removing JVM arg `%s %s`, which is not supported in Java %d.",
                             illegal_prev_arg,
