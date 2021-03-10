@@ -5,6 +5,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java/net/starlark/java/annot/processor/testsources" type="java-test-resource" relativeOutputPath="net/starlark/java/annot/processor/testsources" />
       <excludeFolder url="file://$MODULE_DIR$/src/test/java/net/starlark/java/annot/processor/testsources" />
     </content>
     <orderEntry type="inheritedJdk" />
