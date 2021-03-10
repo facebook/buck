@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.trace.uploader;
 
+import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
@@ -94,6 +95,7 @@ public final class Main {
 
   private int upload() {
     Stopwatch timer = Stopwatch.createStarted();
+    NamedTemporaryFile tempFile = null;
     try {
       OkHttpClient client = new OkHttpClient();
       HttpUrl url =
@@ -134,9 +136,9 @@ public final class Main {
       if (traceFileKind.equals("build_log")) {
         // Copy the log to a temp file in case buck is still writing to it.
         // TODO launch uploader from buck *after* logs are flushed
-        Path tempFile = File.createTempFile(uuid, ".log").toPath();
-        Files.copy(fileToUpload, tempFile, StandardCopyOption.REPLACE_EXISTING);
-        fileToUpload = tempFile;
+        tempFile = new NamedTemporaryFile(uuid, ".log");
+        Files.copy(fileToUpload, tempFile.get(), StandardCopyOption.REPLACE_EXISTING);
+        fileToUpload = tempFile.get();
       }
 
       Request request =
@@ -172,6 +174,14 @@ public final class Main {
       e.printStackTrace(log);
       return 1;
     } finally {
+      if (tempFile != null) {
+        try {
+          tempFile.close();
+        } catch (IOException e) {
+          log.format("Failed to clean up temp file: %s\n", e.getMessage());
+          e.printStackTrace(log);
+        }
+      }
       log.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
     }
   }
