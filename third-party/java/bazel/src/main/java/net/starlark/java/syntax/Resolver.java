@@ -80,11 +80,13 @@ public final class Resolver extends NodeVisitor {
     private Scope scope;
     private final int index; // index within frame (LOCAL/CELL), freevars (FREE), or module (GLOBAL)
     @Nullable private final Identifier first; // first binding use, if syntactic
+    private final boolean firstReassignable; // can be reassigned?
 
-    private Binding(Scope scope, int index, @Nullable Identifier first) {
+    private Binding(Scope scope, int index, @Nullable Identifier first, boolean firstReassignable) {
       this.scope = scope;
       this.index = index;
       this.first = first;
+      this.firstReassignable = firstReassignable;
     }
 
     /** Returns the name of this binding's identifier. */
@@ -104,6 +106,11 @@ public final class Resolver extends NodeVisitor {
      */
     public int getIndex() {
       return index;
+    }
+
+    /** After variable assigned, can be be reassigned? */
+    public boolean isFirstReassignable() {
+      return firstReassignable;
     }
 
     @Override
@@ -526,15 +533,15 @@ public final class Resolver extends NodeVisitor {
     }
     switch (resolvedName.scope) {
       case GLOBAL:
-        bind = new Binding(Scope.GLOBAL, globals.size(), id);
+        bind = new Binding(Scope.GLOBAL, globals.size(), id, options.allowToplevelRebinding());
         // Accumulate globals in module.
         globals.add(name);
         break;
       case PREDECLARED:
-        bind = new Binding(resolvedName.scope, 0, id); // index not used
+        bind = new Binding(resolvedName.scope, 0, id, false); // index not used
         break;
       case UNIVERSAL:
-        bind = new Binding(resolvedName.scope, resolvedName.nameIndex, id);
+        bind = new Binding(resolvedName.scope, resolvedName.nameIndex, id, false);
         break;
       default:
         throw new IllegalStateException("unreachable");
@@ -576,7 +583,7 @@ public final class Resolver extends NodeVisitor {
           }
           int index = b.freevars.size();
           b.freevars.add(bind);
-          bind = new Binding(Scope.FREE, index, bind.first);
+          bind = new Binding(Scope.FREE, index, bind.first, bind.firstReassignable);
         }
       }
 
@@ -902,7 +909,7 @@ public final class Resolver extends NodeVisitor {
       if (bind == null) {
         // New global binding: add to module and to toplevel cache.
         isNew = true;
-        bind = new Binding(Scope.GLOBAL, globals.size(), id);
+        bind = new Binding(Scope.GLOBAL, globals.size(), id, options.allowToplevelRebinding());
         globals.add(name);
         toplevel.put(name, bind);
 
@@ -922,7 +929,7 @@ public final class Resolver extends NodeVisitor {
       if (bind == null) {
         // New local binding: add to enclosing function's frame and bindings map.
         isNew = true;
-        bind = new Binding(Scope.LOCAL, locals.frame.size(), id);
+        bind = new Binding(Scope.LOCAL, locals.frame.size(), id, !isLoad || options.allowToplevelRebinding());
         locals.bindings.put(name, bind);
         locals.frame.add(bind);
       }
@@ -948,10 +955,14 @@ public final class Resolver extends NodeVisitor {
   // Report conflicting top-level bindings of same scope, unless options.allowToplevelRebinding.
   private void toplevelRebinding(Identifier id, Binding prev) {
     if (!options.allowToplevelRebinding()) {
+      Preconditions.checkState(!prev.firstReassignable);
+
       errorf(id, "'%s' redeclared at top level", id.getName());
       if (prev.first != null) {
         errorf(prev.first, "'%s' previously declared here", id.getName());
       }
+    } else {
+      Preconditions.checkState(prev.firstReassignable);
     }
   }
 
