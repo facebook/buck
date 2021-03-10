@@ -70,6 +70,7 @@ final class MethodDescriptor {
       boolean extraKeywords,
       boolean selfCall,
       boolean allowReturnNones,
+      boolean trustReturnsValid,
       boolean useStarlarkThread,
       boolean useStarlarkSemantics) {
     this.method = method;
@@ -94,7 +95,8 @@ final class MethodDescriptor {
       howToHandleReturn = HowToHandleReturn.NULL_TO_NONE;
     } else if (StarlarkValue.class.isAssignableFrom(ret)
         || String.class == ret
-        || Boolean.class == ret) {
+        || Boolean.class == ret
+        || trustReturnsValid) {
       howToHandleReturn =
           allowReturnNones ? HowToHandleReturn.NULL_TO_NONE : HowToHandleReturn.ERROR_ON_NULL;
     } else if (ret == int.class) {
@@ -145,6 +147,7 @@ final class MethodDescriptor {
         !annotation.extraKeywords().name().isEmpty(),
         annotation.selfCall(),
         annotation.allowReturnNones(),
+        annotation.trustReturnsValid(),
         annotation.useStarlarkThread(),
         annotation.useStarlarkSemantics());
   }
