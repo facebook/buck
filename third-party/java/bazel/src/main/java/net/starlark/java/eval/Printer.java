@@ -43,7 +43,9 @@ public class Printer {
 
   /** Creates a printer that uses a fresh buffer. */
   public Printer() {
-    this(new StringBuilder());
+    // Default 16 is not enough for typical formatting output,
+    // and grow, although amortized constant, is not free.
+    this(new StringBuilder(100));
   }
 
   /** Appends a char to the printer's buffer */

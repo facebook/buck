@@ -17,3 +17,4 @@ exists here to simplify sync with upstream if we ever do it.
 * D26877129 Faster dict.keys
 * D26877121 Intern identifiers
 * D26877118 @StarlarkMethod.trustReturnsValid
+* D26898616 Increase Printer default capacity
