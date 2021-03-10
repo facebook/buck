@@ -60,6 +60,9 @@ public final class StarlarkThread {
   @Nullable private CpuProfiler profiler;
   StarlarkThread savedThread; // saved StarlarkThread, when profiling reentrant evaluation
 
+  // When true, current process has or had at least one profiler or debugger attached.
+  private boolean hasAnyProfileDebug = false;
+
   private final Map<Class<?>, Object> threadLocals = new HashMap<>();
 
   private boolean interruptible = true;
@@ -131,6 +134,7 @@ public final class StarlarkThread {
 
     // Current PC location. Initially fn.getLocation(); for Starlark functions,
     // it is updated at key points when it may be observed: calls, breakpoints, errors.
+    @Nullable
     private Location loc;
 
     // Indicates that setErrorLocation has been called already and the error
@@ -175,7 +179,7 @@ public final class StarlarkThread {
 
     @Override
     public Location getLocation() {
-      return loc;
+      return loc != null ? loc : fn.getLocation();
     }
 
     @Override
@@ -198,7 +202,7 @@ public final class StarlarkThread {
 
     @Override
     public String toString() {
-      return fn.getName() + "@" + loc;
+      return fn.getName() + "@" + getLocation();
     }
   }
 
@@ -222,30 +226,32 @@ public final class StarlarkThread {
 
   /** Pushes a function onto the call stack. */
   void push(StarlarkCallable fn) {
+    this.hasAnyProfileDebug |= DebugProfile.hasAny();
+
     Frame fr = new Frame(this, fn);
     callstack.add(fr);
 
-    // Notify debug tools of the thread's first push.
-    if (callstack.size() == 1 && Debug.threadHook != null) {
-      Debug.threadHook.onPushFirst(this);
-    }
+    if (hasAnyProfileDebug) {
+      // Notify debug tools of the thread's first push.
+      if (callstack.size() == 1 && Debug.threadHook != null) {
+        Debug.threadHook.onPushFirst(this);
+      }
 
-    fr.loc = fn.getLocation();
+      // Start wall-time call profile span.
+      CallProfiler callProfiler = StarlarkThread.callProfiler;
+      if (callProfiler != null) {
+        fr.profileSpan = callProfiler.start(fn);
+      }
 
-    // Start wall-time call profile span.
-    CallProfiler callProfiler = StarlarkThread.callProfiler;
-    if (callProfiler != null) {
-      fr.profileSpan = callProfiler.start(fn);
-    }
-
-    // Poll for newly installed CPU profiler.
-    if (profiler == null) {
-      this.profiler = CpuProfiler.get();
-      if (profiler != null) {
-        cpuTicks.set(0);
-        // Associated current Java thread with this StarlarkThread.
-        // (Save the previous association so we can restore it later.)
-        this.savedThread = CpuProfiler.setStarlarkThread(this);
+      // Poll for newly installed CPU profiler.
+      if (profiler == null) {
+        this.profiler = CpuProfiler.get();
+        if (profiler != null) {
+          cpuTicks.set(0);
+          // Associated current Java thread with this StarlarkThread.
+          // (Save the previous association so we can restore it later.)
+          this.savedThread = CpuProfiler.setStarlarkThread(this);
+        }
       }
     }
   }
@@ -255,33 +261,37 @@ public final class StarlarkThread {
     int last = callstack.size() - 1;
     Frame fr = callstack.get(last);
 
-    if (profiler != null) {
-      int ticks = cpuTicks.getAndSet(0);
-      if (ticks > 0) {
-        profiler.addEvent(ticks, getDebugCallStack());
-      }
+    if (hasAnyProfileDebug) {
+      if (profiler != null) {
+        int ticks = cpuTicks.getAndSet(0);
+        if (ticks > 0) {
+          profiler.addEvent(ticks, getDebugCallStack());
+        }
 
-      // If this is the final pop in this thread,
-      // unregister it from the profiler.
-      if (last == 0) {
-        // Restore the previous association (in case of reentrant evaluation).
-        CpuProfiler.setStarlarkThread(this.savedThread);
-        this.savedThread = null;
-        this.profiler = null;
+        // If this is the final pop in this thread,
+        // unregister it from the profiler.
+        if (last == 0) {
+          // Restore the previous association (in case of reentrant evaluation).
+          CpuProfiler.setStarlarkThread(this.savedThread);
+          this.savedThread = null;
+          this.profiler = null;
+        }
       }
     }
 
     callstack.remove(last); // pop
 
-    // End wall-time profile span.
-    CallProfiler callProfiler = StarlarkThread.callProfiler;
-    if (callProfiler != null && fr.profileSpan != null) {
-      callProfiler.end(fr.profileSpan);
-    }
+    if (hasAnyProfileDebug) {
+      // End wall-time profile span.
+      CallProfiler callProfiler = StarlarkThread.callProfiler;
+      if (callProfiler != null && fr.profileSpan != null) {
+        callProfiler.end(fr.profileSpan);
+      }
 
-    // Notify debug tools of the thread's last pop.
-    if (last == 0 && Debug.threadHook != null) {
-      Debug.threadHook.onPopLast(this);
+      // Notify debug tools of the thread's last pop.
+      if (last == 0 && Debug.threadHook != null) {
+        Debug.threadHook.onPopLast(this);
+      }
     }
   }
 
@@ -354,7 +364,7 @@ public final class StarlarkThread {
    * returns BUILTIN if called with fewer than two frames (such as within a test).
    */
   public Location getCallerLocation() {
-    return toplevel() ? Location.BUILTIN : frame(1).loc;
+    return toplevel() ? Location.BUILTIN : frame(1).getLocation();
   }
 
   /**
@@ -453,7 +463,7 @@ public final class StarlarkThread {
   public ImmutableList<CallStackEntry> getCallStack() {
     ImmutableList.Builder<CallStackEntry> stack = ImmutableList.builder();
     for (Frame fr : callstack) {
-      stack.add(new CallStackEntry(fr.fn.getName(), fr.loc));
+      stack.add(new CallStackEntry(fr.fn.getName(), fr.getLocation()));
     }
     return stack.build();
   }
@@ -481,8 +491,10 @@ public final class StarlarkThread {
   }
 
   /** Installs a global hook that will be notified of function calls. */
-  public static void setCallProfiler(@Nullable CallProfiler p) {
+  public static synchronized void setCallProfiler(@Nullable CallProfiler p) {
+    CallProfiler oldProfiler = callProfiler;
     callProfiler = p;
+    DebugProfile.add((p != null ? 1 : 0) - (oldProfiler != null ? 1 : 0));
   }
 
   @Nullable private static CallProfiler callProfiler = null;
