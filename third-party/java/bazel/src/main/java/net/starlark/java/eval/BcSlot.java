@@ -20,6 +20,26 @@ class BcSlot {
   /** Marker for any register, used in the compiler. */
   static final int ANY_FLAG = 0x60_00_00_00;
 
+  static int local(int index) {
+    return index | LOCAL_FLAG;
+  }
+
+  static int global(int index) {
+    return index | GLOBAL_FLAG;
+  }
+
+  static int cell(int index) {
+    return index | CELL_FLAG;
+  }
+
+  static int free(int index) {
+    return index | FREE_FLAG;
+  }
+
+  static int constValue(int index) {
+    return index | CONST_FLAG;
+  }
+
   static boolean isValidSourceSlot(int slot) {
     switch (slot & MASK) {
       case LOCAL_FLAG:

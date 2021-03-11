@@ -247,4 +247,15 @@ class BcInstr {
       this.operands = operands;
     }
   }
+
+  /** Partially-decoded instruction. Used in tests. */
+  static class Decoded {
+    final Opcode opcode;
+    final int[] args;
+
+    Decoded(Opcode opcode, int[] args) {
+      this.opcode = opcode;
+      this.args = args;
+    }
+  }
 }

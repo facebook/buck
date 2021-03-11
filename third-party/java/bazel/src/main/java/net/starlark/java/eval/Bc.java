@@ -2,6 +2,7 @@ package net.starlark.java.eval;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import java.math.BigInteger;
@@ -166,6 +167,19 @@ class Bc {
                   Arrays.asList(strings),
                   Arrays.asList(constSlots),
                   ip + BcInstr.INSTR_HEADER_LEN);
+    }
+
+    public ImmutableList<BcInstr.Decoded> instructions() {
+      ImmutableList.Builder<BcInstr.Decoded> instructions = ImmutableList.builder();
+      int ip = 0;
+      while (ip != text.length) {
+        BcInstr.Opcode opcode = instrOpcodeAt(ip);
+        int len = instrLenAt(ip);
+        instructions.add(new BcInstr.Decoded(
+            opcode, Arrays.copyOfRange(text, ip + BcInstr.INSTR_HEADER_LEN, ip + len)));
+        ip += len;
+      }
+      return instructions.build();
     }
 
     public Location locationAt(int ip) {
@@ -936,16 +950,26 @@ class Bc {
         case LOCAL:
           return new CompileExpressionResult(binding.getIndex() | BcSlot.LOCAL_FLAG, null);
         case GLOBAL:
-          return new CompileExpressionResult(
-              binding.getIndex() | BcSlot.GLOBAL_FLAG, null);
+          if (!binding.isFirstReassignable()) {
+            Object globalValue = module.getGlobalByIndex(globalIndex[binding.getIndex()]);
+            if (globalValue != null) {
+              return compileConstant(globalValue);
+            }
+          }
+          return new CompileExpressionResult(binding.getIndex() | BcSlot.GLOBAL_FLAG, null);
         case FREE:
+          if (!binding.isFirstReassignable()) {
+            StarlarkFunction.Cell cell = (StarlarkFunction.Cell) freevars.get(binding.getIndex());
+            if (cell.x != null) {
+              return compileConstant(cell.x);
+            }
+          }
           return new CompileExpressionResult(
               binding.getIndex() | BcSlot.FREE_FLAG,
               null);
         case CELL:
           return new CompileExpressionResult(
               binding.getIndex() | BcSlot.CELL_FLAG,
-              // TODO: read cell if this is top-level
               null
           );
         case UNIVERSAL:

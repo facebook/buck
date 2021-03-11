@@ -13,6 +13,7 @@
 // limitations under the License.
 package net.starlark.java.eval;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -53,7 +54,8 @@ public final class StarlarkFunction implements StarlarkCallable {
   // Indexed by Resolver.Binding(FREE).index values.
   private final Tuple freevars;
 
-  private final Bc.Compiled compiled;
+  @VisibleForTesting
+  final Bc.Compiled compiled;
 
   StarlarkFunction(
       Resolver.Function rfn,
