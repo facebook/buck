@@ -53,6 +53,8 @@ public final class StarlarkFunction implements StarlarkCallable {
   // Indexed by Resolver.Binding(FREE).index values.
   private final Tuple freevars;
 
+  private final Bc.Compiled compiled;
+
   StarlarkFunction(
       Resolver.Function rfn,
       Module module,
@@ -64,6 +66,8 @@ public final class StarlarkFunction implements StarlarkCallable {
     this.globalIndex = globalIndex;
     this.defaultValues = defaultValues;
     this.freevars = freevars;
+
+    this.compiled = Bc.compileFunction(rfn, module, globalIndex, freevars);
   }
 
   // Sets a global variable, given its index in this function's compiled Program.
@@ -177,7 +181,7 @@ public final class StarlarkFunction implements StarlarkCallable {
     }
 
     StarlarkThread.Frame fr = thread.frame(0);
-    fr.locals = new Object[rfn.getLocals().size()];
+    fr.locals = new Object[compiled.slotCount];
 
     // Compute the effective parameter values
     // and update the corresponding variables.
@@ -188,7 +192,8 @@ public final class StarlarkFunction implements StarlarkCallable {
       fr.locals[index] = new Cell(fr.locals[index]);
     }
 
-    return Eval.execFunctionBody(fr, rfn.getBody());
+//    return Eval.execFunctionBody(fr, rfn.getBody());
+    return BcEval.eval(fr, rfn, compiled);
   }
 
   Cell getFreeVar(int index) {

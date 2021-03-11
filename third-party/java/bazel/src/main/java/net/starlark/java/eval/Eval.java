@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.starlark.java.spelling.SpellChecker;
@@ -149,7 +150,7 @@ final class Eval {
     return TokenKind.PASS;
   }
 
-  private static StarlarkFunction newFunction(StarlarkThread.Frame fr, Resolver.Function rfn)
+  static StarlarkFunction newFunction(StarlarkThread.Frame fr, Resolver.Function rfn)
       throws EvalException, InterruptedException {
     // Evaluate default value expressions of optional parameters.
     // We use MANDATORY to indicate a required parameter
@@ -252,7 +253,7 @@ final class Eval {
     return TokenKind.RETURN;
   }
 
-  private static TokenKind exec(StarlarkThread.Frame fr, Statement st)
+  static TokenKind exec(StarlarkThread.Frame fr, Statement st)
       throws EvalException, InterruptedException {
     if (fr.dbg != null) {
       Location loc = st.getStartLocation(); // not very precise
@@ -451,7 +452,7 @@ final class Eval {
     }
   }
 
-  private static Object inplaceBinaryOp(StarlarkThread.Frame fr, TokenKind op, Object x, Object y)
+  static Object inplaceBinaryOp(StarlarkThread.Frame fr, TokenKind op, Object x, Object y)
       throws EvalException {
     // list += iterable  behaves like  list.extend(iterable)
     // TODO(b/141263526): following Python, allow list+=iterable (but not list+iterable).

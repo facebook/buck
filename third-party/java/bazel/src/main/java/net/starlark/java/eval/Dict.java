@@ -610,6 +610,10 @@ public final class Dict<K, V>
     return Collections.unmodifiableMap(contents).entrySet();
   }
 
+  public LinkedHashMap<K, V> contentsUnsafe() {
+    return contents;
+  }
+
   @Override
   public V get(Object key) {
     return contents.get(key);
