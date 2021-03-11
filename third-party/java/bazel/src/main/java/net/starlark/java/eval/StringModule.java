@@ -16,7 +16,6 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Ascii;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Joiner;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
@@ -146,6 +145,7 @@ final class StringModule implements StarlarkValue {
               + "</pre>",
       parameters = {@Param(name = "self"), @Param(name = "elements", doc = "The objects to join.")})
   public String join(String self, Object elements) throws EvalException {
+    StringBuilder sb = new StringBuilder();
     Iterable<?> items = Starlark.toIterable(elements);
     int i = 0;
     for (Object item : items) {
@@ -153,9 +153,13 @@ final class StringModule implements StarlarkValue {
         throw Starlark.errorf(
             "expected string for sequence element %d, got '%s'", i, Starlark.type(item));
       }
+      if (i != 0) {
+        sb.append(self);
+      }
+      sb.append((String) item);
       i++;
     }
-    return Joiner.on(self).join(items);
+    return sb.toString();
   }
 
   @StarlarkMethod(
