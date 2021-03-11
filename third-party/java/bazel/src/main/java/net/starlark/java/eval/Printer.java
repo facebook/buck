@@ -232,25 +232,34 @@ public class Printer {
     return this.append('\\').append(c);
   }
 
-  private Printer escapeCharacter(char c) {
-    if (c == '"') {
-      return backslashChar(c);
-    }
-    switch (c) {
-      case '\\':
-        return backslashChar('\\');
-      case '\r':
-        return backslashChar('r');
-      case '\n':
-        return backslashChar('n');
-      case '\t':
-        return backslashChar('t');
-      default:
-        if (c < 32) {
+  private void escapeCharacter(char c) {
+    // 32 is space
+    if (c >= 32) {
+      switch (c) {
+        case '"':
+          backslashChar(c);
+          return;
+        case '\\':
+          backslashChar('\\');
+          return;
+        default:
+          this.append(c); // no need to support UTF-8
+      }
+    } else {
+      switch (c) {
+        case '\r':
+          backslashChar('r');
+          return;
+        case '\n':
+          backslashChar('n');
+          return;
+        case '\t':
+          backslashChar('t');
+          return;
+        default:
           // TODO(bazel-team): support \x escapes
-          return this.append(String.format("\\x%02x", (int) c));
-        }
-        return this.append(c); // no need to support UTF-8
+          this.append(String.format("\\x%02x", (int) c));
+      }
     }
   }
 
