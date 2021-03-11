@@ -148,7 +148,7 @@ public final class RemoteExecutionMetadataProto {
       "ask_total_mem\030\010 \001(\003\022$\n\034executed_on_elast" +
       "ic_capacity\030\t \001(\010\022\024\n\014deduplicated\030\n \001(\010\"" +
       "/\n\tDebugInfo\022\"\n\032pause_before_clean_timeo" +
-      "ut\030\001 \001(\r\"\253\006\n\027RemoteExecutionMetadata\022=\n\r" +
+      "ut\030\001 \001(\r\"\300\006\n\027RemoteExecutionMetadata\022=\n\r" +
       "re_session_id\030\001 \001(\0132&.facebook.remote_ex" +
       "ecution.RESessionID\0226\n\tbuck_info\030\002 \001(\0132#" +
       ".facebook.remote_execution.BuckInfo\0228\n\nt" +
@@ -168,9 +168,10 @@ public final class RemoteExecutionMetadataProto {
       "xecutedActionInfo\0228\n\ndebug_info\030\014 \001(\0132$." +
       "facebook.remote_execution.DebugInfo\022A\n\017c" +
       "lient_job_info\030\r \001(\0132(.facebook.remote_e" +
-      "xecution.ClientJobInfoBI\n\'com.facebook.b" +
-      "uck.remoteexecution.protoB\034RemoteExecuti" +
-      "onMetadataProtoP\001b\006proto3"
+      "xecution.ClientJobInfo\022\023\n\013use_case_id\030\022 " +
+      "\001(\tBI\n\'com.facebook.buck.remoteexecution" +
+      ".protoB\034RemoteExecutionMetadataProtoP\001b\006" +
+      "proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -274,7 +275,7 @@ public final class RemoteExecutionMetadataProto {
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor,
-        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", "ExecutedActionInfo", "DebugInfo", "ClientJobInfo", });
+        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", "ExecutedActionInfo", "DebugInfo", "ClientJobInfo", "UseCaseId", });
     com.google.protobuf.WrappersProto.getDescriptor();
   }
 

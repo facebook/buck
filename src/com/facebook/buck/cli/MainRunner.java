@@ -962,6 +962,7 @@ public final class MainRunner {
               cacheBuckConfig.getScheduleType(),
               remoteExecutionConfig.getReSessionLabel(),
               remoteExecutionConfig.getTenantId(),
+              remoteExecutionConfig.getUseCaseId(),
               remoteExecutionConfig.getAuxiliaryBuildTag(),
               projectPrefix.orElse(""),
               executionEnvironment);

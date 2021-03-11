@@ -213,5 +213,9 @@ message RemoteExecutionMetadata {
   DebugInfo debug_info = 12;
   ClientJobInfo client_job_info = 13;
 
+  // use case (and related configuration) to use to execute this action.
+  string use_case_id = 18;
+
+
   // 1000-2000 reserved for RE internal protobufs.
 }

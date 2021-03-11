@@ -176,4 +176,22 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
    */
   com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder getClientJobInfoOrBuilder();
+
+  /**
+   * <pre>
+   * use case (and related configuration) to use to execute this action.
+   * </pre>
+   *
+   * <code>string use_case_id = 18;</code>
+   */
+  java.lang.String getUseCaseId();
+  /**
+   * <pre>
+   * use case (and related configuration) to use to execute this action.
+   * </pre>
+   *
+   * <code>string use_case_id = 18;</code>
+   */
+  com.google.protobuf.ByteString
+      getUseCaseIdBytes();
 }

@@ -22,6 +22,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private RemoteExecutionMetadata() {
+    useCaseId_ = "";
   }
 
   @java.lang.Override
@@ -202,6 +203,12 @@ private static final long serialVersionUID = 0L;
               clientJobInfo_ = subBuilder.buildPartial();
             }
 
+            break;
+          }
+          case 146: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            useCaseId_ = s;
             break;
           }
           default: {
@@ -500,6 +507,48 @@ private static final long serialVersionUID = 0L;
     return getClientJobInfo();
   }
 
+  public static final int USE_CASE_ID_FIELD_NUMBER = 18;
+  private volatile java.lang.Object useCaseId_;
+  /**
+   * <pre>
+   * use case (and related configuration) to use to execute this action.
+   * </pre>
+   *
+   * <code>string use_case_id = 18;</code>
+   */
+  public java.lang.String getUseCaseId() {
+    java.lang.Object ref = useCaseId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      useCaseId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * use case (and related configuration) to use to execute this action.
+   * </pre>
+   *
+   * <code>string use_case_id = 18;</code>
+   */
+  public com.google.protobuf.ByteString
+      getUseCaseIdBytes() {
+    java.lang.Object ref = useCaseId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      useCaseId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -549,6 +598,9 @@ private static final long serialVersionUID = 0L;
     }
     if (clientJobInfo_ != null) {
       output.writeMessage(13, getClientJobInfo());
+    }
+    if (!getUseCaseIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 18, useCaseId_);
     }
     unknownFields.writeTo(output);
   }
@@ -606,6 +658,9 @@ private static final long serialVersionUID = 0L;
     if (clientJobInfo_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(13, getClientJobInfo());
+    }
+    if (!getUseCaseIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(18, useCaseId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -682,6 +737,8 @@ private static final long serialVersionUID = 0L;
       if (!getClientJobInfo()
           .equals(other.getClientJobInfo())) return false;
     }
+    if (!getUseCaseId()
+        .equals(other.getUseCaseId())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -741,6 +798,8 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + CLIENT_JOB_INFO_FIELD_NUMBER;
       hash = (53 * hash) + getClientJobInfo().hashCode();
     }
+    hash = (37 * hash) + USE_CASE_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getUseCaseId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -950,6 +1009,8 @@ private static final long serialVersionUID = 0L;
         clientJobInfo_ = null;
         clientJobInfoBuilder_ = null;
       }
+      useCaseId_ = "";
+
       return this;
     }
 
@@ -1036,6 +1097,7 @@ private static final long serialVersionUID = 0L;
       } else {
         result.clientJobInfo_ = clientJobInfoBuilder_.build();
       }
+      result.useCaseId_ = useCaseId_;
       onBuilt();
       return result;
     }
@@ -1119,6 +1181,10 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasClientJobInfo()) {
         mergeClientJobInfo(other.getClientJobInfo());
+      }
+      if (!other.getUseCaseId().isEmpty()) {
+        useCaseId_ = other.useCaseId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -2587,6 +2653,95 @@ private static final long serialVersionUID = 0L;
         clientJobInfo_ = null;
       }
       return clientJobInfoBuilder_;
+    }
+
+    private java.lang.Object useCaseId_ = "";
+    /**
+     * <pre>
+     * use case (and related configuration) to use to execute this action.
+     * </pre>
+     *
+     * <code>string use_case_id = 18;</code>
+     */
+    public java.lang.String getUseCaseId() {
+      java.lang.Object ref = useCaseId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        useCaseId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * use case (and related configuration) to use to execute this action.
+     * </pre>
+     *
+     * <code>string use_case_id = 18;</code>
+     */
+    public com.google.protobuf.ByteString
+        getUseCaseIdBytes() {
+      java.lang.Object ref = useCaseId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        useCaseId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * use case (and related configuration) to use to execute this action.
+     * </pre>
+     *
+     * <code>string use_case_id = 18;</code>
+     */
+    public Builder setUseCaseId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      useCaseId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * use case (and related configuration) to use to execute this action.
+     * </pre>
+     *
+     * <code>string use_case_id = 18;</code>
+     */
+    public Builder clearUseCaseId() {
+      
+      useCaseId_ = getDefaultInstance().getUseCaseId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * use case (and related configuration) to use to execute this action.
+     * </pre>
+     *
+     * <code>string use_case_id = 18;</code>
+     */
+    public Builder setUseCaseIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      useCaseId_ = value;
+      onChanged();
+      return this;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

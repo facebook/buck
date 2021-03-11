@@ -71,6 +71,9 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   /** Tenant ID that will be attached to each action * */
   public static final String TENANT_ID_KEY = "tenant_id";
 
+  /** UseCase ID that will be attached to each action * */
+  public static final String USECASE_ID_KEY = "usecase_id";
+
   /**
    * Limit on the number of outstanding execution requests. This is probably the value that's most
    * likely to be non-default.
@@ -298,6 +301,10 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public String getTenantId() {
     return getValue(TENANT_ID_KEY).orElse("");
+  }
+
+  public String getUseCaseId() {
+    return getValue(USECASE_ID_KEY).orElse("");
   }
 
   public String getDebugURLString(RESessionID reSessionID) {

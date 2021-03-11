@@ -77,6 +77,7 @@ public class MetadataProviderFactory {
       String scheduleType,
       String reSessionLabel,
       String tenantId,
+      String useCaseId,
       String auxiliaryBuildTag,
       String projectPrefix,
       ExecutionEnvironment executionEnvironment) {
@@ -116,6 +117,7 @@ public class MetadataProviderFactory {
                 .setCasClientInfo(casClientInfo)
                 .setClientActionInfo(clientActionInfo)
                 .setClientJobInfo(buildClientJobInfo(executionEnvironment))
+                .setUseCaseId(useCaseId)
                 .build();
       }
 
