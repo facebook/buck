@@ -802,6 +802,16 @@ class Bc {
       return new CompileExpressionResult(slot, constant);
     }
 
+    private CompileExpressionResult compileConstantTo(Node node, Object constant, int result) {
+      CompileExpressionResult constResult = compileConstant(constant);
+      if (result == BcSlot.ANY_FLAG) {
+        return constResult;
+      } else {
+        cp(node, constResult.slot, result);
+        return new CompileExpressionResult(result, constant);
+      }
+    }
+
     /** Compile an expression, store result in provided register. */
     private CompileExpressionResult compileExpressionTo(Expression expression, int result) {
       if (expression instanceof SliceExpression) {
@@ -914,10 +924,30 @@ class Bc {
     }
 
     private CompileExpressionResult compileDot(DotExpression dotExpression, int result) {
+      SavedState saved = save();
+
+      CompileExpressionResult object = compileExpression(dotExpression.getObject());
+
+      if (object.value instanceof Structure) {
+        try {
+          // TODO(nga): this invocation is generally incorrect, but
+          //    * all structs in Buck are pure
+          //    * in Buck we only use default semantics
+          Object attrValue = Starlark
+              .getattr(Mutability.IMMUTABLE, StarlarkSemantics.DEFAULT, object.value,
+                  dotExpression.getField().getName(), null);
+          if (attrValue != null) {
+            saved.reset();
+            return compileConstantTo(dotExpression, attrValue, result);
+          }
+        } catch (EvalException | InterruptedException e) {
+          // ignore
+        }
+      }
+
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
       }
-      CompileExpressionResult object = compileExpression(dotExpression.getObject());
       write(
           BcInstr.Opcode.DOT,
           dotExpression,
