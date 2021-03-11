@@ -214,9 +214,8 @@ public final class Dict<K, V>
             named = true,
             doc = "a default value if the key is absent."),
       },
-      trustReturnsValid = true,
-      useStarlarkThread = true)
-  public Object pop(Object key, Object defaultValue, StarlarkThread thread) throws EvalException {
+      trustReturnsValid = true)
+  public Object pop(Object key, Object defaultValue) throws EvalException {
     Starlark.checkMutable(this);
     Object value = contents.remove(key);
     if (value != null) {
@@ -295,9 +294,8 @@ public final class Dict<K, V>
                 "Either a dictionary or a list of entries. Entries must be tuples or lists with "
                     + "exactly two elements: key, value."),
       },
-      extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."),
-      useStarlarkThread = true)
-  public void update(Object pairs, Dict<String, Object> kwargs, StarlarkThread thread)
+      extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."))
+  public void update(Object pairs, Dict<String, Object> kwargs)
       throws EvalException {
     Starlark.checkMutable(this);
     @SuppressWarnings("unchecked")

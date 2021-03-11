@@ -191,7 +191,7 @@ public class RunInfoTest {
 
       // Make sure we're freezing properly
       args.addElement("arg3");
-      env.pop("foo", "", environment);
+      env.pop("foo", "");
 
       new WriteAction(
           registry,

@@ -143,7 +143,7 @@ public abstract class AbstractSkylarkFunctions {
           throws EvalException, InterruptedException {
         // Sadly, neither Dict.plus() nor MethodLibrary.dict() are accessible.
         Dict<String, Object> merged_args = Dict.copyOf(thread.mutability(), kwargs);
-        merged_args.update(inner_kwargs, Dict.empty(), thread);
+        merged_args.update(inner_kwargs, Dict.empty());
         return Starlark.call(thread, func, Tuple.concat(args, inner_args), merged_args);
       }
 

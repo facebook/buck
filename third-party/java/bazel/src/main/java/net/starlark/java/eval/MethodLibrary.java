@@ -271,9 +271,8 @@ class MethodLibrary {
       doc =
           "Returns the length of a string, sequence (such as a list or tuple), dict, or other"
               + " iterable.",
-      parameters = {@Param(name = "x", doc = "The value whose length to report.")},
-      useStarlarkThread = true)
-  public int len(Object x, StarlarkThread thread) throws EvalException {
+      parameters = {@Param(name = "x", doc = "The value whose length to report.")})
+  public int len(Object x) throws EvalException {
     int len = Starlark.len(x);
     if (len < 0) {
       throw Starlark.errorf("%s is not iterable", Starlark.type(x));
@@ -571,10 +570,9 @@ class MethodLibrary {
             name = "step",
             defaultValue = "1",
             doc = "The increment (default is 1). It may be negative.")
-      },
-      useStarlarkThread = true)
+      })
   public Sequence<StarlarkInt> range(
-      StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI, StarlarkThread thread)
+      StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI)
       throws EvalException {
     int start;
     int stop;
