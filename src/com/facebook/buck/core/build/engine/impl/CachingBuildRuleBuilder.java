@@ -898,7 +898,7 @@ class CachingBuildRuleBuilder {
 
     onRuleAboutToBeBuilt();
 
-    BuildRuleSteps<RulePipelineState> buildRuleSteps = new BuildRuleSteps<>(cacheResult, null);
+    BuildRuleSteps<RulePipelineState> buildRuleSteps = new BuildRuleSteps<>(cacheResult);
     BuildStrategyContext strategyContext =
         new BuildStrategyContext() {
           @Override
@@ -1155,9 +1155,10 @@ class CachingBuildRuleBuilder {
       SupportsPipelining<T> rule, CacheResult cacheResult) {
     pipelinesRunner.addRule(
         rule,
-        pipeline ->
+        pipelineState ->
             new RunnableWithFuture<Optional<BuildResult>>() {
-              final BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, pipeline);
+              final BuildRuleSteps<T> steps =
+                  new BuildRuleSteps<>(cacheResult, Optional.of(pipelineState));
 
               @Override
               public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -1445,9 +1446,13 @@ class CachingBuildRuleBuilder {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     private final StepExecutionContext ruleExecutionContext;
-    @Nullable private final T pipelineState;
+    private final Optional<T> pipelineState;
 
-    public BuildRuleSteps(CacheResult cacheResult, @Nullable T pipelineState) {
+    public BuildRuleSteps(CacheResult cacheResult) {
+      this(cacheResult, Optional.empty());
+    }
+
+    public BuildRuleSteps(CacheResult cacheResult, Optional<T> pipelineState) {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
       this.pipelineState = pipelineState;
@@ -1507,13 +1512,13 @@ class CachingBuildRuleBuilder {
     private List<? extends Step> getSteps(
         BuildContext buildRuleBuildContext, BuildableContext buildableContext) {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
-        if (pipelineState == null) {
-          return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
-        } else {
+        if (pipelineState.isPresent()) {
           @SuppressWarnings("unchecked")
           SupportsPipelining<T> pipelinedRule = (SupportsPipelining<T>) rule;
           return pipelinedRule.getPipelinedBuildSteps(
-              buildRuleBuildContext, buildableContext, pipelineState);
+              buildRuleBuildContext, buildableContext, pipelineState.get());
+        } else {
+          return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
         }
       }
     }
