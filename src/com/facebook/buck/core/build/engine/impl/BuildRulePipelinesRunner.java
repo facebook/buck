@@ -25,8 +25,10 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +44,7 @@ import javax.annotation.Nullable;
 
 /** Constructs build rule pipelines for a single build. */
 public class BuildRulePipelinesRunner {
+
   private final ConcurrentHashMap<
           SupportsPipelining<? extends RulePipelineState>,
           BuildRulePipelineStage<? extends RulePipelineState>>
@@ -151,6 +154,7 @@ public class BuildRulePipelinesRunner {
    * state.
    */
   private static class BuildRulePipeline<T extends RulePipelineState> implements Runnable {
+
     @Nullable private T state;
     private final List<BuildRulePipelineStage<T>> rules = new ArrayList<>();
 
@@ -207,16 +211,26 @@ public class BuildRulePipelinesRunner {
    */
   private static class BuildRulePipelineStage<T extends RulePipelineState>
       implements RunnableWithFuture<Optional<BuildResult>> {
+
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     @Nullable private BuildRulePipelineStage<T> nextStage;
     @Nullable private Throwable error = null;
     @Nullable private Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
     @Nullable private BuildRulePipeline<T> pipeline;
-    @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
 
-    @SuppressWarnings("CheckReturnValue")
     private BuildRulePipelineStage() {
-      Futures.catching(future, Throwable.class, throwable -> error = throwable);
+      Futures.addCallback(
+          future,
+          new FutureCallback<Optional<BuildResult>>() {
+            @Override
+            public void onSuccess(Optional<BuildResult> result) {}
+
+            @Override
+            public void onFailure(Throwable t) {
+              error = t;
+            }
+          },
+          MoreExecutors.directExecutor());
     }
 
     public void setRuleStepRunnerFactory(
@@ -270,7 +284,8 @@ public class BuildRulePipelinesRunner {
       Objects.requireNonNull(pipeline);
       Objects.requireNonNull(ruleStepRunnerFactory);
 
-      runner = ruleStepRunnerFactory.apply(pipeline.getState());
+      RunnableWithFuture<Optional<BuildResult>> runner =
+          ruleStepRunnerFactory.apply(pipeline.getState());
       future.setFuture(runner.getFuture());
       runner.run();
     }
