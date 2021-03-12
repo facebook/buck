@@ -47,9 +47,7 @@ public class PluginFactory implements AutoCloseable {
     // there is only one instance running in the process at a time (or at all), and such plugin
     // would break running inside of Buck. So we default to creating a new ClassLoader
     // if any plugins meets those requirements.
-    if (pluginGroups.stream()
-        .map(group -> group.getCanReuseClassLoader())
-        .reduce(Boolean.TRUE, (bool1, bool2) -> Boolean.logicalAnd(bool1, bool2))) {
+    if (pluginGroups.stream().allMatch(JavacPluginJsr199Fields::getCanReuseClassLoader)) {
       cache = globalClassLoaderCache;
     } else {
       cache = localClassLoaderCache;

@@ -86,12 +86,7 @@ public final class PluginLoader implements PluginClassLoader {
   }
 
   public static PluginClassLoaderFactory newFactory(ClassLoaderCache cache) {
-    return new PluginClassLoaderFactory() {
-      @Override
-      public PluginClassLoader getPluginClassLoader(JavaCompiler.CompilationTask task) {
-        return PluginLoader.newInstance(cache, task);
-      }
-    };
+    return task -> PluginLoader.newInstance(cache, task);
   }
 
   private PluginLoader(ClassLoader classLoader) {

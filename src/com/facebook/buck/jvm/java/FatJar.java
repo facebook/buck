@@ -51,7 +51,7 @@ public class FatJar implements Serializable {
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
 
   /** The resource name for the real JAR. */
-  @Nullable private String innerJar;
+  @Nullable private final String innerJar;
 
   /**
    * The map of system-specific shared library names to their corresponding resource names. Note: We
@@ -60,7 +60,7 @@ public class FatJar implements Serializable {
    */
   @SuppressWarnings("PMD.LooseCoupling")
   @Nullable
-  private HashMap<String, String> nativeLibraries;
+  private final HashMap<String, String> nativeLibraries;
 
   public FatJar(String innerJar, Map<String, String> nativeLibraries) {
     this.innerJar = innerJar;

@@ -510,7 +510,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           perfEvent.getCategory(),
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getTitle().getValue().intern()),
           phase,
-          ImmutableMap.copyOf(perfEvent.getEventInfo()),
+          perfEvent.getEventInfo(),
           perfEvent);
     } catch (ExecutionException e) {
       LOG.warn("Unable to log perf event " + perfEvent, e);

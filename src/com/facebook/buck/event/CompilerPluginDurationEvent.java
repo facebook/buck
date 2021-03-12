@@ -17,7 +17,6 @@
 package com.facebook.buck.event;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 
 /** Base class for events being reported by plugins to in-process compilers such as JSR199 javac. */
 public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
@@ -69,8 +68,7 @@ public abstract class CompilerPluginDurationEvent extends SimplePerfEvent
 
   @Override
   public ImmutableMap<String, Object> getEventInfo() {
-    return getArgs().entrySet().stream()
-        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> (Object) e.getValue()));
+    return ImmutableMap.copyOf(getArgs()); // upcast values from String to Object
   }
 
   @Override

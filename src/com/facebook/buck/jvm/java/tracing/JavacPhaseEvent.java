@@ -20,7 +20,6 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 
 /** Base class for events about the phases of compilation within javac. */
 public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdvanceEvent {
@@ -144,8 +143,7 @@ public abstract class JavacPhaseEvent extends SimplePerfEvent implements WorkAdv
 
   @Override
   public ImmutableMap<String, Object> getEventInfo() {
-    return getArgs().entrySet().stream()
-        .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue()));
+    return ImmutableMap.copyOf(getArgs()); // upcast values from String to Object
   }
 
   public static Started started(

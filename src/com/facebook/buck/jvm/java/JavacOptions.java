@@ -313,17 +313,15 @@ public abstract class JavacOptions implements AddsToRuleKey {
   @Nullable
   private static String getBootclasspathString(
       Optional<String> bootclasspathOptional, Optional<List<RelPath>> bootclasspathList) {
-    if (bootclasspathOptional.isPresent()) {
-      return bootclasspathOptional.get();
-    }
-
-    return bootclasspathList
-        .map(
-            relPaths ->
-                relPaths.stream()
-                    .map(RelPath::toString)
-                    .collect(Collectors.joining(File.pathSeparator)))
-        .orElse(null);
+    return bootclasspathOptional.orElseGet(
+        () ->
+            bootclasspathList
+                .map(
+                    relPaths ->
+                        relPaths.stream()
+                            .map(RelPath::toString)
+                            .collect(Collectors.joining(File.pathSeparator)))
+                .orElse(null));
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

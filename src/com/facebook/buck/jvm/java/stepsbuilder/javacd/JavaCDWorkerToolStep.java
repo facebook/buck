@@ -42,7 +42,7 @@ import java.util.function.Supplier;
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
   private final BuildJavaCommand buildJavaCommand;
-  private JavaCDParams javaCDParams;
+  private final JavaCDParams javaCDParams;
 
   public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
     super("javacd_wt");
