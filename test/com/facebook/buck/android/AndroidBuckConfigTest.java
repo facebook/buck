@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -88,11 +89,17 @@ public class AndroidBuckConfigTest {
     AndroidBuckConfig buckConfig =
         new AndroidBuckConfig(
             FakeBuckConfig.builder()
-                .setSections(ImmutableMap.of("android", ImmutableMap.of("target", "android-23")))
+                .setSections(
+                    ImmutableMap.of(
+                        "android",
+                        ImmutableMap.of(
+                            "target", AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET)))
                 .build(),
             Platform.detect());
 
-    assertEquals("android-23", buckConfig.getAndroidCompileSdkVersion().get());
+    assertEquals(
+        AndroidPlatformTarget.DEFAULT_ANDROID_PLATFORM_TARGET,
+        buckConfig.getAndroidCompileSdkVersion().get());
   }
 
   @Test

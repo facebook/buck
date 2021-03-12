@@ -39,7 +39,7 @@ import org.immutables.value.Value;
 public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey {
   public static final String DEFAULT_NAME = "android-platform-target";
 
-  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-23";
+  public static final String DEFAULT_ANDROID_PLATFORM_TARGET = "android-26";
 
   @Override
   public String getName() {
