@@ -14,13 +14,13 @@
 
 package net.starlark.java.eval;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.starlark.java.spelling.SpellChecker;
@@ -46,6 +46,7 @@ import net.starlark.java.syntax.LambdaExpression;
 import net.starlark.java.syntax.ListExpression;
 import net.starlark.java.syntax.LoadStatement;
 import net.starlark.java.syntax.Location;
+import net.starlark.java.syntax.Parameter;
 import net.starlark.java.syntax.Resolver;
 import net.starlark.java.syntax.ReturnStatement;
 import net.starlark.java.syntax.SliceExpression;
@@ -150,30 +151,9 @@ final class Eval {
     return TokenKind.PASS;
   }
 
-  static StarlarkFunction newFunction(StarlarkThread.Frame fr, Resolver.Function rfn)
+  static StarlarkFunction newFunction(StarlarkThread.Frame fr, Resolver.Function rfn,
+      Tuple defaults)
       throws EvalException, InterruptedException {
-    // Evaluate default value expressions of optional parameters.
-    // We use MANDATORY to indicate a required parameter
-    // (not null, because defaults must be a legal tuple value, as
-    // it will be constructed by the code emitted by the compiler).
-    // As an optimization, we omit the prefix of MANDATORY parameters.
-    Object[] defaults = null;
-    int nparams =
-        rfn.getParameters().size() - (rfn.hasKwargs() ? 1 : 0) - (rfn.hasVarargs() ? 1 : 0);
-    for (int i = 0; i < nparams; i++) {
-      Expression expr = rfn.getParameters().get(i).getDefaultValue();
-      if (expr == null && defaults == null) {
-        continue; // skip prefix of required parameters
-      }
-      if (defaults == null) {
-        defaults = new Object[nparams - i];
-      }
-      defaults[i - (nparams - defaults.length)] =
-          expr == null ? StarlarkFunction.MANDATORY : eval(fr, expr);
-    }
-    if (defaults == null) {
-      defaults = EMPTY;
-    }
 
     // Capture the cells of the function's
     // free variables from the lexical environment.
@@ -197,7 +177,7 @@ final class Eval {
     // since both were compiled from the same Program.
     StarlarkFunction fn = fn(fr);
     return new StarlarkFunction(
-        rfn, fn.getModule(), fn.globalIndex, Tuple.wrap(defaults), Tuple.wrap(freevars));
+        rfn, fn.getModule(), fn.globalIndex, defaults, Tuple.wrap(freevars));
   }
 
   private static TokenKind execIf(StarlarkThread.Frame fr, IfStatement node)
@@ -278,7 +258,7 @@ final class Eval {
         return execFor(fr, (ForStatement) st);
       case DEF:
         DefStatement def = (DefStatement) st;
-        StarlarkFunction fn = newFunction(fr, def.getResolvedFunction());
+        StarlarkFunction fn = newFunction(fr, def.getResolvedFunction(), null);
         assignIdentifier(fr, def.getIdentifier(), fn);
         return TokenKind.PASS;
       case IF:
@@ -468,6 +448,11 @@ final class Eval {
 
   private static Object eval(StarlarkThread.Frame fr, Expression expr)
       throws EvalException, InterruptedException {
+    if (true) {
+      // We only interpret bytecode.
+      throw new AssertionError("dead code");
+    }
+
     if (++fr.thread.steps >= fr.thread.stepLimit) {
       throw new EvalException("Starlark computation cancelled: too many steps");
     }
@@ -508,7 +493,7 @@ final class Eval {
       case FLOAT_LITERAL:
         return StarlarkFloat.of(((FloatLiteral) expr).getValue());
       case LAMBDA:
-        return newFunction(fr, ((LambdaExpression) expr).getResolvedFunction());
+        return newFunction(fr, ((LambdaExpression) expr).getResolvedFunction(), null);
       case LIST_EXPR:
         return evalList(fr, (ListExpression) expr);
       case SLICE:

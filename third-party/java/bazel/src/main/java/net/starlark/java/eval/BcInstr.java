@@ -147,6 +147,8 @@ class BcInstr {
         BcInstr.NEW_FUNCTION,
         // Resolver.Function
         BcInstrOperand.OBJECT,
+        // Function default values
+        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
         // Where to store result
         BcInstrOperand.OUT_SLOT),
     /**

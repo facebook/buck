@@ -36,6 +36,7 @@ import net.starlark.java.syntax.ListExpression;
 import net.starlark.java.syntax.LoadStatement;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.Node;
+import net.starlark.java.syntax.Parameter;
 import net.starlark.java.syntax.Resolver;
 import net.starlark.java.syntax.ReturnStatement;
 import net.starlark.java.syntax.SliceExpression;
@@ -554,9 +555,49 @@ class Bc {
 
     private void compileDefStatement(DefStatement def) {
       int result = allocSlot();
-      int object = allocObject(def.getResolvedFunction());
-      write(BcInstr.Opcode.NEW_FUNCTION, def, object, result);
+      compileNewFunction(def.getResolvedFunction(), def, result);
       compileSet(result, def.getIdentifier(), true);
+    }
+
+    /** Common code to compile def and lambda. */
+    private void compileNewFunction(Resolver.Function rfn, Node node, int result) {
+      // Evaluate default value expressions of optional parameters.
+      // We use MANDATORY to indicate a required parameter
+      // (not null, because defaults must be a legal tuple value, as
+      // it will be constructed by the code emitted by the compiler).
+      // As an optimization, we omit the prefix of MANDATORY parameters.
+
+      int nparams =
+          rfn.getParameters().size() - (rfn.hasKwargs() ? 1 : 0) - (rfn.hasVarargs() ? 1 : 0);
+
+      int ndefaults = 0;
+      ImmutableList<Parameter> parameters = rfn.getParameters();
+      for (int p = 0; p < parameters.size(); p++) {
+        Parameter parameter = parameters.get(p);
+        if (parameter.getDefaultValue() != null) {
+          ndefaults = nparams - p;
+          break;
+        }
+      }
+
+      int[] args = new int[3 + ndefaults];
+      int i = 0;
+      args[i++] = allocObject(rfn);
+      args[i++] = ndefaults;
+
+      for (int p = 0; p < ndefaults; ++p) {
+        Parameter parameter = parameters.get(nparams - ndefaults + p);
+        if (parameter.getDefaultValue() != null) {
+          args[i++] = compileExpression(parameter.getDefaultValue()).slot;
+        } else {
+          args[i++] = compileConstant(StarlarkFunction.MANDATORY).slot;
+        }
+      }
+
+      args[i++] = result;
+      Preconditions.checkState(i == args.length);
+
+      write(BcInstr.Opcode.NEW_FUNCTION, node, args);
     }
 
     private void compileIfStatement(IfStatement ifStatement) {
@@ -862,8 +903,7 @@ class Bc {
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
       }
-      int object = allocObject(lambda.getResolvedFunction());
-      write(BcInstr.Opcode.NEW_FUNCTION, lambda, object, result);
+      compileNewFunction(lambda.getResolvedFunction(), lambda, result);
       return new CompileExpressionResult(result, null);
     }
 

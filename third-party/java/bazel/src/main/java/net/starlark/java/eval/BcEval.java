@@ -327,8 +327,9 @@ class BcEval {
 
   private void newFunction() throws EvalException, InterruptedException {
     Resolver.Function fn = (Resolver.Function) compiled.objects[nextOperand()];
+    Tuple parameterDefaults = Tuple.wrap(nextNSlots());
     int result = nextOperand();
-    StarlarkFunction starlarkFunction = Eval.newFunction(fr, fn);
+    StarlarkFunction starlarkFunction = Eval.newFunction(fr, fn, parameterDefaults);
     setSlot(result, starlarkFunction);
   }
 
@@ -671,5 +672,4 @@ class BcEval {
           ip - currentIp);
     }
   }
-
 }
