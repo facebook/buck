@@ -123,15 +123,23 @@ class Bc {
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
 
+    ImmutableList<String> toStringInstructions() {
+      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn),
+          Arrays.asList(strings), Arrays.asList(constSlots));
+    }
+
     @VisibleForTesting
     static String toStringImpl(int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
         List<String> strings, List<Object> constants) {
-      StringBuilder sb = new StringBuilder();
+      return String.join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants));
+    }
+
+    private static ImmutableList<String> toStringInstructionsImpl(int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
+        List<String> strings, List<Object> constants) {
+      ImmutableList.Builder<String> ret = ImmutableList.builder();
       int ip = 0;
       while (ip != text.length) {
-        if (sb.length() != 0) {
-          sb.append("; ");
-        }
+        StringBuilder sb = new StringBuilder();
         sb.append(ip).append(": ");
         int opcode1 = text[ip++];
         BcInstr.Opcode opcode = BcInstr.Opcode.values()[opcode1];
@@ -142,13 +150,11 @@ class Bc {
                 updateIp, text, strings, constants, fnCtx);
         ip = updateIp[0];
         sb.append(" ").append(argsString);
-      }
-      if (sb.length() != 0) {
-        sb.append("; ");
+        ret.add(sb.toString());
       }
       // It's useful to know the final address in case someone wants to jump to that address
-      sb.append(ip).append(": EOF");
-      return sb.toString();
+      ret.add(ip + ": EOF");
+      return ret.build();
     }
 
     /** Instruction opcode at IP. */

@@ -796,6 +796,28 @@ class MethodLibrary {
     return result;
   }
 
+  /**
+   * Print some internal debugging information to stderr.
+   * This function is intentionally unspecified.
+   * It can be changed or removed any time without notice.
+   */
+  @StarlarkMethod(name = "starlark_debug_frame", useStarlarkThread = true)
+  public void starlarkDebugFrame(StarlarkThread thread) {
+    StarlarkThread.Frame caller = thread.frame(1);
+    thread.getPrintHandler().print(thread, "Debug for frame " + caller.getFunction());
+    if (caller.fn instanceof StarlarkFunction) {
+      thread.getPrintHandler().print(thread, "Instructions:");
+      for (String instr :
+          ((StarlarkFunction) caller.fn).compiled.toStringInstructions()) {
+        thread.getPrintHandler().print(thread, instr);
+      }
+    } else {
+      thread.getPrintHandler().print(thread, "Not StarlarkFunction");
+    }
+    thread.getPrintHandler().print(thread, ".");
+  }
+
+
   /** Starlark bool type. */
   @StarlarkBuiltin(
       name = "bool",

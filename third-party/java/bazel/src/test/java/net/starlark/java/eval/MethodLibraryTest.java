@@ -761,4 +761,10 @@ public final class MethodLibraryTest {
         .testIfErrorContains(
             "expected string for sequence element 1, got 'int'", "', '.join(['foo', 2])");
   }
+
+  @Test
+  public void starlarkDebugFrame() throws Exception {
+    ev.new Scenario()
+        .testExpression("starlark_debug_frame()", Starlark.NONE);
+  }
 }
