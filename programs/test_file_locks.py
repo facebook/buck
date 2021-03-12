@@ -64,10 +64,6 @@ def check_test_labels(string, labels):
     return False
 
 
-# All functions used by other_process must be defined before this call
-other_process = Pool(processes=1)
-
-
 @unittest.skipIf(os.name != "posix", "Only works on posix")
 class TestFileLocks(unittest.TestCase):
     def setUp(self):
@@ -81,7 +77,7 @@ class TestFileLocks(unittest.TestCase):
         lockfile = os.path.join(self.tmpdir, "l")
         labels_list_str = ",".join(process_map.keys())
 
-        # allow retries becaue of the stochastic nature of some expected results
+        # allow retries because of the stochastic nature of some expected results
         while attempts > 0:
             queue = Queue()
             labels = list(process_map.keys())
@@ -128,6 +124,7 @@ class TestFileLocks(unittest.TestCase):
     def test_acquire_shared_twice_multi_process(self):
         lock = os.path.join(self.tmpdir, "lock")
         self.assertTrue(acquire_shared_lock(lock))
+        other_process = Pool(processes=1)
         self.assertTrue(other_process.apply(acquire_shared_lock, [lock]))
 
     def test_acquire_shared_exclusive_same_process(self):
@@ -138,11 +135,13 @@ class TestFileLocks(unittest.TestCase):
     def test_acquire_shared_exclusive_multi_process(self):
         lock = os.path.join(self.tmpdir, "lock")
         self.assertTrue(acquire_shared_lock(lock))
+        other_process = Pool(processes=1)
         self.assertFalse(other_process.apply(acquire_exclusive_lock, [lock]))
 
     def test_acquire_exclusive_shared_multi_process(self):
         lock = os.path.join(self.tmpdir, "lock")
         self.assertTrue(acquire_exclusive_lock(lock))
+        other_process = Pool(processes=1)
         self.assertFalse(other_process.apply(acquire_shared_lock, [lock]))
 
     def test_acquire_exclusive_exclusive_wait_multi_process(self):
@@ -176,6 +175,7 @@ class TestFileLocks(unittest.TestCase):
         ]:
             open(resolve(f), "a+").close()
         acquire_exclusive_lock(resolve(lock_file))
+        other_process = Pool(processes=1)
         other_process.apply(file_locks.rmtree_if_can_lock, [resolve("top")])
         self.assertTrue(os.path.exists(resolve(keep_file)))
         self.assertFalse(os.path.exists(resolve(unlocked_delete_file)))
