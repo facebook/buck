@@ -23,28 +23,18 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.SortedSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /** Constructs build rule pipelines for a single build. */
 public class BuildRulePipelinesRunner {
-
   private final ConcurrentHashMap<
           SupportsPipelining<? extends RulePipelineState>,
           BuildRulePipelineStage<? extends RulePipelineState>>
@@ -61,14 +51,14 @@ public class BuildRulePipelinesRunner {
       Preconditions.checkState(
           previousRuleInPipeline.getPipelineStateFactory() == rule.getPipelineStateFactory(),
           "To help ensure that rules have pipeline-compatible rule keys, all rules in a pipeline must share a PipelineStateFactory instance.");
-      SortedSet<BuildRule> currentDeps = rule.getBuildDeps();
-      SortedSet<BuildRule> previousDeps = previousRuleInPipeline.getBuildDeps();
+      Set<BuildRule> currentDeps = rule.getBuildDeps();
+      Set<BuildRule> previousDeps = previousRuleInPipeline.getBuildDeps();
       Preconditions.checkState(
           currentDeps.contains(previousRuleInPipeline),
           "Each rule in a pipeline must depend on the previous rule in the pipeline.");
       SetView<BuildRule> extraDeps =
           Sets.difference(
-              currentDeps, Sets.union(previousDeps, Collections.singleton(previousRuleInPipeline)));
+              currentDeps, Sets.union(previousDeps, ImmutableSet.of(previousRuleInPipeline)));
       Preconditions.checkState(
           extraDeps.isEmpty(),
           "Each rule in a pipeline cannot depend on rules which are not also dependencies of the previous rule in the pipeline. "
@@ -147,151 +137,5 @@ public class BuildRulePipelinesRunner {
             rules.computeIfAbsent(rule, key -> new BuildRulePipelineStage<T>());
 
     return result;
-  }
-
-  /**
-   * Runs a list of rules one after another on the same thread, allowing each to access shared
-   * state.
-   */
-  private static class BuildRulePipeline<T extends RulePipelineState> implements Runnable {
-
-    @Nullable private T state;
-    private final List<BuildRulePipelineStage<T>> rules = new ArrayList<>();
-
-    public BuildRulePipeline(BuildRulePipelineStage<T> rootRule, T state) {
-      this.state = state;
-
-      buildPipeline(rootRule);
-    }
-
-    private void buildPipeline(BuildRulePipelineStage<T> firstStage) {
-      BuildRulePipelineStage<T> walker = firstStage;
-
-      while (walker != null) {
-        rules.add(walker);
-        walker.setPipeline(this);
-        walker = walker.getNextStage();
-      }
-    }
-
-    public T getState() {
-      return Objects.requireNonNull(state);
-    }
-
-    @Override
-    public void run() {
-      try {
-        Throwable error = null;
-        for (BuildRulePipelineStage<T> rule : rules) {
-          if (error == null) {
-            rule.run();
-            error = rule.getError();
-          } else {
-            // It doesn't really matter what error we use here -- we just want the future to
-            // complete so that Buck doesn't hang. We use the real error in case it ever is shown
-            // to the user (which does not happen as of the time of this comment, but for safety).
-            rule.abort(error);
-          }
-          // If everything is working correctly, each rule in the pipeline should show itself
-          // complete before we start the next one. Just a sanity check against weird behavior
-          // creeping in.
-          Preconditions.checkState(rule.getFuture().isDone() || rule.getFuture().isCancelled());
-        }
-      } finally {
-        Objects.requireNonNull(state).close();
-        state = null;
-        rules.clear();
-      }
-    }
-  }
-
-  /**
-   * Creates and runs the steps for a single build rule within a pipeline, cascading any failures to
-   * rules later in the pipeline.
-   */
-  private static class BuildRulePipelineStage<T extends RulePipelineState>
-      implements RunnableWithFuture<Optional<BuildResult>> {
-
-    private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
-    @Nullable private BuildRulePipelineStage<T> nextStage;
-    @Nullable private Throwable error = null;
-    @Nullable private Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
-    @Nullable private BuildRulePipeline<T> pipeline;
-
-    private BuildRulePipelineStage() {
-      Futures.addCallback(
-          future,
-          new FutureCallback<Optional<BuildResult>>() {
-            @Override
-            public void onSuccess(Optional<BuildResult> result) {}
-
-            @Override
-            public void onFailure(Throwable t) {
-              error = t;
-            }
-          },
-          MoreExecutors.directExecutor());
-    }
-
-    public void setRuleStepRunnerFactory(
-        Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
-      Preconditions.checkState(this.ruleStepRunnerFactory == null);
-      this.ruleStepRunnerFactory = ruleStepsFactory;
-    }
-
-    public void setPipeline(BuildRulePipeline<T> pipeline) {
-      Preconditions.checkState(this.pipeline == null);
-      this.pipeline = pipeline;
-    }
-
-    public void setNextStage(BuildRulePipelineStage<T> nextStage) {
-      Preconditions.checkState(this.nextStage == null);
-      this.nextStage = nextStage;
-    }
-
-    @Nullable
-    public BuildRulePipelineStage<T> getNextStage() {
-      return nextStage;
-    }
-
-    public boolean pipelineBuilt() {
-      return pipeline != null;
-    }
-
-    public void cancelAndWait() {
-      // For now there's no cancel (cuz it's not hooked up at all), but we can at least wait
-      try {
-        getFuture().get();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      } catch (ExecutionException e) { // NOPMD
-        // Ignore; the future is hooked up elsewhere and that location will handle the exceptions
-      }
-    }
-
-    @Nullable
-    public Throwable getError() {
-      return error;
-    }
-
-    @Override
-    public SettableFuture<Optional<BuildResult>> getFuture() {
-      return future;
-    }
-
-    @Override
-    public void run() {
-      Objects.requireNonNull(pipeline);
-      Objects.requireNonNull(ruleStepRunnerFactory);
-
-      RunnableWithFuture<Optional<BuildResult>> runner =
-          ruleStepRunnerFactory.apply(pipeline.getState());
-      future.setFuture(runner.getFuture());
-      runner.run();
-    }
-
-    public void abort(Throwable error) {
-      future.setException(error);
-    }
   }
 }

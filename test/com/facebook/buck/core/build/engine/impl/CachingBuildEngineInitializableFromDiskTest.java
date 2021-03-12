@@ -60,7 +60,6 @@ import java.nio.file.Files;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.Assume;
 import org.junit.AssumptionViolatedException;
@@ -95,13 +94,12 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     MIDDLE
   }
 
-  @Parameterized.Parameters(name = "{0}-{1}")
+  @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
-    return Stream.of(
-            new Object[] {PipelineType.NONE},
-            new Object[] {PipelineType.BEGINNING},
-            new Object[] {PipelineType.MIDDLE})
-        .collect(ImmutableList.toImmutableList());
+    return ImmutableList.of(
+        new Object[] {PipelineType.NONE},
+        new Object[] {PipelineType.BEGINNING},
+        new Object[] {PipelineType.MIDDLE});
   }
 
   public CachingBuildEngineInitializableFromDiskTest(PipelineType pipelineType) {
