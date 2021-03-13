@@ -94,6 +94,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
+  // TODO(nga):
+  //   * this `readConfig` context is used for `read_config` in bzl files.
+  //       And read configs (top-level) are not tracked: recorded, but not fetched.
+  //   * this class is supposed to be thread-safe, but this object is not.
   private final ReadConfigContext readConfigContext;
 
   AbstractSkylarkFileParser(
