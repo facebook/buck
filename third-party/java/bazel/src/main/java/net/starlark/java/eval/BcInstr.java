@@ -37,11 +37,11 @@ class BcInstr {
   public static final int LIST = BREAK + 1;
   public static final int TUPLE = LIST + 1;
   public static final int DICT = TUPLE + 1;
-  public static final int STMT = DICT + 1;
-  public static final int LIST_APPEND = STMT + 1;
+  public static final int LIST_APPEND = DICT + 1;
   public static final int SET_INDEX = LIST_APPEND + 1;
-  public static final int EVAL_EXCEPTION = SET_INDEX + 1;
-  public static final int UNPACK = EVAL_EXCEPTION + 1;
+  public static final int UNPACK = SET_INDEX + 1;
+  public static final int LOAD_STMT = UNPACK + 1;
+  public static final int EVAL_EXCEPTION = LOAD_STMT + 1;
 
   /**
    * Opcodes as enum. We use enums in the compiler, but we use only raw integers in the interpreter.
@@ -210,27 +210,22 @@ class BcInstr {
         BcInstrOperand.lengthDelimited(
             BcInstrOperand.fixed(BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT)),
         BcInstrOperand.OUT_SLOT),
-    /**
-     * Invoke a statement using old AST interpreter.
-     *
-     * <p>This is used only to implement def and load statements since they don't interfere with the
-     * rest of the bytecode interpreter. Statements like if or for must not be encoded using this
-     * opcode.
-     */
-    // TODO: implement opcodes for def and load
-    STMT(BcInstr.STMT, BcInstrOperand.OBJECT),
     /** {@code a0.append(a1)}. */
     LIST_APPEND(BcInstr.LIST_APPEND, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT),
     /** {@code a0[a1] = a2}. */
     SET_INDEX(
         BcInstr.SET_INDEX, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT),
-    /** Throw an {@code EvalException} on execution of this instruction. */
-    EVAL_EXCEPTION(BcInstr.EVAL_EXCEPTION, BcInstrOperand.STRING),
     /** {@code (a1[0], a1[1], a1[2], ...) = a0}. */
     UNPACK(
         BcInstr.UNPACK,
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.lengthDelimited(BcInstrOperand.OUT_SLOT)),
+    /** Load statement. */
+    LOAD_STMT(BcInstr.LOAD_STMT,
+        // LoadStatement object.
+        BcInstrOperand.OBJECT),
+    /** Throw an {@code EvalException} on execution of this instruction. */
+    EVAL_EXCEPTION(BcInstr.EVAL_EXCEPTION, BcInstrOperand.STRING),
     ;
 
     /** Type of opcode operands. */

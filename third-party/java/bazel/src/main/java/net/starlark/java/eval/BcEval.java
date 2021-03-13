@@ -133,9 +133,6 @@ class BcEval {
           case BcInstr.SET_CELL:
             setCell();
             break;
-          case BcInstr.STMT:
-            stmt();
-            break;
           case BcInstr.FOR_INIT:
             forInit();
             continue;
@@ -150,6 +147,9 @@ class BcEval {
             break;
           case BcInstr.SET_INDEX:
             setIndex();
+            break;
+          case BcInstr.LOAD_STMT:
+            loadStmt();
             break;
           case BcInstr.EVAL_EXCEPTION:
             evalException();
@@ -299,8 +299,8 @@ class BcEval {
     ((StarlarkFunction.Cell) fr.locals[cellIndex]).x = value;
   }
 
-  private void stmt() throws EvalException, InterruptedException {
-    Statement statement = (Statement) compiled.objects[nextOperand()];
+  private void loadStmt() throws EvalException, InterruptedException {
+    LoadStatement statement = (LoadStatement) compiled.objects[nextOperand()];
     TokenKind token = Eval.exec(fr, statement);
     Preconditions.checkState(token == TokenKind.PASS);
   }

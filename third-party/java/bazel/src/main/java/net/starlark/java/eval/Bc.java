@@ -543,14 +543,8 @@ class Bc {
       }
     }
 
-    private void compileGenericStatement(Statement statement) {
-      Preconditions.checkState(
-          statement instanceof DefStatement || statement instanceof LoadStatement);
-      write(BcInstr.Opcode.STMT, statement, allocObject(statement));
-    }
-
     private void compileLoadStatement(LoadStatement loadStatement) {
-      compileGenericStatement(loadStatement);
+      write(BcInstr.Opcode.LOAD_STMT, loadStatement, allocObject(loadStatement));
     }
 
     private void compileDefStatement(DefStatement def) {
