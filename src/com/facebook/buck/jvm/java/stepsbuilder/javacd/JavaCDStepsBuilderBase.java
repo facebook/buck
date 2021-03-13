@@ -101,7 +101,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     if (javaCDParams.hasJavaCDEnabled()) {
       return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, javaCDParams));
     }
-    return new JavaCDWorkerToolStepsBuilder(buildJavaCommand).getSteps();
+    return new JavaStepsBuilder(buildJavaCommand).getSteps();
   }
 
   protected abstract T buildCommand();

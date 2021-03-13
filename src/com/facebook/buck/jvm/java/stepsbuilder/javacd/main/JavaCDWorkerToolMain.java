@@ -31,7 +31,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaCDWorkerToolStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaStepsBuilder;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
@@ -186,10 +186,9 @@ public class JavaCDWorkerToolMain {
       Clock clock)
       throws IOException {
 
-    JavaCDWorkerToolStepsBuilder javaCDWorkerToolStepsBuilder =
-        new JavaCDWorkerToolStepsBuilder(buildJavaCommand);
-    AbsPath ruleCellRoot = javaCDWorkerToolStepsBuilder.getRuleCellRoot();
-    ImmutableList<IsolatedStep> isolatedSteps = javaCDWorkerToolStepsBuilder.getSteps();
+    JavaStepsBuilder javaStepsBuilder = new JavaStepsBuilder(buildJavaCommand);
+    AbsPath ruleCellRoot = javaStepsBuilder.getRuleCellRoot();
+    ImmutableList<IsolatedStep> isolatedSteps = javaStepsBuilder.getSteps();
     StepExecutionResult stepExecutionResult;
     try (IsolatedExecutionContext executionContext =
         IsolatedExecutionContext.of(

@@ -52,13 +52,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/** JavaCD Worker Tool steps builder */
-public class JavaCDWorkerToolStepsBuilder {
+/** Java steps builder */
+public class JavaStepsBuilder {
 
   private final ImmutableList<IsolatedStep> steps;
   private final AbsPath ruleCellRoot;
 
-  public JavaCDWorkerToolStepsBuilder(BuildJavaCommand buildJavaCommand) {
+  public JavaStepsBuilder(BuildJavaCommand buildJavaCommand) {
     Pair<AbsPath, ImmutableList<IsolatedStep>> pair = buildSteps(buildJavaCommand);
     this.ruleCellRoot = pair.getFirst();
     this.steps = pair.getSecond();
