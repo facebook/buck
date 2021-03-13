@@ -18,6 +18,8 @@ package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -35,13 +37,17 @@ import javax.annotation.Nullable;
 class BuildRulePipelineStage<T extends RulePipelineState>
     implements RunnableWithFuture<Optional<BuildResult>> {
 
-  private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+  private final SupportsPipelining<T> rule;
+  private final SettableFuture<Optional<BuildResult>> future;
+
   @Nullable private BuildRulePipelineStage<T> nextStage;
   @Nullable private Throwable error = null;
   @Nullable private Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
   @Nullable private BuildRulePipeline<T> pipeline;
 
-  BuildRulePipelineStage() {
+  BuildRulePipelineStage(SupportsPipelining<T> rule) {
+    this.rule = rule;
+    this.future = SettableFuture.create();
     Futures.addCallback(
         future,
         new FutureCallback<Optional<BuildResult>>() {
@@ -115,5 +121,10 @@ class BuildRulePipelineStage<T extends RulePipelineState>
 
   public void abort(Throwable error) {
     future.setException(error);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("rule", rule).toString();
   }
 }
