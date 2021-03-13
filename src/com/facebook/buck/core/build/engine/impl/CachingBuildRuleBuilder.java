@@ -146,7 +146,7 @@ class CachingBuildRuleBuilder {
   private final OnDiskBuildInfo onDiskBuildInfo;
   private final Discardable<BuildInfoRecorder> buildInfoRecorder;
   private final BuildableContext buildableContext;
-  private final BuildRulePipelinesRunner pipelinesRunner;
+  private final BuildRulePipelinesRunner<? extends RulePipelineState> pipelinesRunner;
   private final BuckEventBus eventBus;
   private final BuildContext buildRuleBuildContext;
   private final ArtifactCache artifactCache;
@@ -221,7 +221,7 @@ class CachingBuildRuleBuilder {
       OnDiskBuildInfo onDiskBuildInfo,
       BuildInfoRecorder buildInfoRecorder,
       BuildableContext buildableContext,
-      BuildRulePipelinesRunner pipelinesRunner,
+      BuildRulePipelinesRunner<? extends RulePipelineState> pipelinesRunner,
       Optional<BuildRuleStrategy> customBuildRuleStrategy) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
     this.defaultOutputHashSizeLimit = defaultOutputHashSizeLimit;
@@ -903,14 +903,14 @@ class CachingBuildRuleBuilder {
         new BuildStrategyContext() {
           @Override
           public ListenableFuture<Optional<BuildResult>> runWithDefaultBehavior() {
-            if (SupportsPipelining.isSupported(rule)
-                && ((SupportsPipelining<?>) rule).useRulePipelining()) {
+
+            if (SupportsPipelining.isSupported(rule)) {
               return pipelinesRunner.runPipelineStartingAt(
                   buildRuleBuildContext, (SupportsPipelining<?>) rule, service);
-            } else {
-              service.submit(buildRuleSteps::runWithDefaultExecutor);
-              return buildRuleSteps.future;
             }
+
+            service.submit(buildRuleSteps::runWithDefaultExecutor);
+            return buildRuleSteps.future;
           }
 
           @Override
@@ -1153,12 +1153,15 @@ class CachingBuildRuleBuilder {
 
   private <T extends RulePipelineState> void addToPipelinesRunner(
       SupportsPipelining<T> rule, CacheResult cacheResult) {
+
+    @SuppressWarnings("unchecked")
+    BuildRulePipelinesRunner<T> pipelinesRunner =
+        (BuildRulePipelinesRunner<T>) this.pipelinesRunner;
     pipelinesRunner.addRule(
         rule,
         pipelineState ->
             new RunnableWithFuture<Optional<BuildResult>>() {
-              final BuildRuleSteps<T> steps =
-                  new BuildRuleSteps<>(cacheResult, Optional.of(pipelineState));
+              final BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, pipelineState);
 
               @Override
               public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -1452,7 +1455,11 @@ class CachingBuildRuleBuilder {
       this(cacheResult, Optional.empty());
     }
 
-    public BuildRuleSteps(CacheResult cacheResult, Optional<T> pipelineState) {
+    public BuildRuleSteps(CacheResult cacheResult, T pipelineState) {
+      this(cacheResult, Optional.of(pipelineState));
+    }
+
+    private BuildRuleSteps(CacheResult cacheResult, Optional<T> pipelineState) {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
       this.pipelineState = pipelineState;

@@ -37,15 +37,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /** Constructs build rule pipelines for a single build. */
-public class BuildRulePipelinesRunner {
+public class BuildRulePipelinesRunner<T extends RulePipelineState> {
 
-  private final Map<
-          SupportsPipelining<? extends RulePipelineState>,
-          BuildRulePipelineStage<? extends RulePipelineState>>
-      rules = new ConcurrentHashMap<>();
+  private final Map<SupportsPipelining<T>, BuildRulePipelineStage<T>> rules =
+      new ConcurrentHashMap<>();
 
   /** Gives the factory a way to construct a {@link RunnableWithFuture} to build the given rule. */
-  public <T extends RulePipelineState> void addRule(
+  public void addRule(
       SupportsPipelining<T> rule,
       Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory) {
     BuildRulePipelineStage<T> pipelineStage = getOrCreateStage(rule);
@@ -104,15 +102,16 @@ public class BuildRulePipelinesRunner {
   }
 
   /** Start execution pipelining rule from a given {@code rootRule} */
-  public <T extends RulePipelineState>
-      ListenableFuture<Optional<BuildResult>> runPipelineStartingAt(
-          BuildContext context, SupportsPipelining<T> rootRule, ExecutorService executor) {
-    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(context, rootRule);
+  public ListenableFuture<Optional<BuildResult>> runPipelineStartingAt(
+      BuildContext context, SupportsPipelining<?> rootRule, ExecutorService executor) {
+    @SuppressWarnings("unchecked")
+    SupportsPipelining<T> rule = (SupportsPipelining<T>) rootRule;
+    RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(context, rule);
     executor.execute(runner);
     return runner.getFuture();
   }
 
-  private <T extends RulePipelineState> RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
+  private RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
       BuildContext context, SupportsPipelining<T> rootRule) {
     BuildRulePipelineStage<T> rootPipelineStage = getOrCreateStage(rootRule);
 
@@ -143,9 +142,7 @@ public class BuildRulePipelinesRunner {
     return Optional.ofNullable(rules.get(rule)).orElseThrow(IllegalStateException::new);
   }
 
-  @SuppressWarnings("unchecked")
-  private <T extends RulePipelineState> BuildRulePipelineStage<T> getOrCreateStage(
-      SupportsPipelining<T> rule) {
-    return (BuildRulePipelineStage<T>) rules.computeIfAbsent(rule, BuildRulePipelineStage::new);
+  private BuildRulePipelineStage<T> getOrCreateStage(SupportsPipelining<T> rule) {
+    return rules.computeIfAbsent(rule, BuildRulePipelineStage::new);
   }
 }

@@ -47,6 +47,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
+import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.LeafEvents;
@@ -148,7 +149,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final Optional<UnskippedBuildEngineActionTracker> unskippedRulesTracker;
   private final BuildRuleDurationTracker buildRuleDurationTracker = new BuildRuleDurationTracker();
   private final RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics;
-  private final BuildRulePipelinesRunner pipelinesRunner = new BuildRulePipelinesRunner();
+  private final BuildRulePipelinesRunner<? extends RulePipelineState> pipelinesRunner =
+      new BuildRulePipelinesRunner<>();
   private final ParallelRuleKeyCalculator<RuleKey> ruleKeyCalculator;
 
   private final BuildInfoStoreManager buildInfoStoreManager;

@@ -193,7 +193,7 @@ public class BuildRulePipelinesRunnerTest {
 
   @Test
   public void testDoesntDependOnPrevious() {
-    BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
+    BuildRulePipelinesRunner<TestPipelineState> runner = new BuildRulePipelinesRunner<>();
 
     TestPipelineRule first = new TestPipelineRule("//pipeline:1", null);
     runner.addRule(first, first::newRunner);
@@ -206,7 +206,7 @@ public class BuildRulePipelinesRunnerTest {
 
   @Test
   public void testIncludesExtraDeps() {
-    BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
+    BuildRulePipelinesRunner<TestPipelineState> runner = new BuildRulePipelinesRunner<>();
 
     TestPipelineRule first = new TestPipelineRule("//pipeline:1", null);
     runner.addRule(first, first::newRunner);
@@ -221,7 +221,8 @@ public class BuildRulePipelinesRunnerTest {
   }
 
   private static class PipelineTester extends ExternalResource {
-    private final BuildRulePipelinesRunner runner = new BuildRulePipelinesRunner();
+    private final BuildRulePipelinesRunner<TestPipelineState> runner =
+        new BuildRulePipelinesRunner<>();
     private final List<TestPipelineRule> rules = new ArrayList<>();
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
