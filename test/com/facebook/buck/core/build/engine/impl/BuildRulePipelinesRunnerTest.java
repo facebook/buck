@@ -289,7 +289,7 @@ public class BuildRulePipelinesRunnerTest {
     }
 
     public boolean isRuleRunning(int ruleNum) {
-      return runner.runningPipelinesContainRule(rules.get(ruleNum));
+      return runner.isPipelineReady(rules.get(ruleNum));
     }
 
     public TestPipelineState getPipelineStateForRule(int ruleNum) {

@@ -83,14 +83,14 @@ class BuildRulePipelineStage<T extends RulePipelineState>
     return nextStage;
   }
 
-  public boolean pipelineBuilt() {
+  public boolean pipelineIsReady() {
     return pipeline != null;
   }
 
-  public void cancelAndWait() {
+  public void waitForResult() {
     // For now there's no cancel (cuz it's not hooked up at all), but we can at least wait
     try {
-      getFuture().get();
+      future.get();
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (ExecutionException e) { // NOPMD

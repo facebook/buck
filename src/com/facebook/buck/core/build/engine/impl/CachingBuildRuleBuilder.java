@@ -1081,7 +1081,7 @@ class CachingBuildRuleBuilder {
               buildResultFuture,
               () -> {
                 SupportsPipelining<?> pipelinedRule = (SupportsPipelining<?>) rule;
-                return pipelinesRunner.runningPipelinesContainRule(pipelinedRule)
+                return pipelinesRunner.isPipelineReady(pipelinedRule)
                     ? pipelinesRunner.getFuture(pipelinedRule)
                     : Futures.immediateFuture(Optional.empty());
               });

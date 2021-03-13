@@ -85,19 +85,19 @@ public class BuildRulePipelinesRunner<T extends RulePipelineState> {
    */
   public void removeRule(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<? extends RulePipelineState> pipelineStage = rules.remove(rule);
-    if (pipelineStage != null && pipelineStage.pipelineBuilt()) {
-      pipelineStage.cancelAndWait();
+    if (pipelineStage != null && pipelineStage.pipelineIsReady()) {
+      pipelineStage.waitForResult();
     }
   }
 
-  public boolean runningPipelinesContainRule(SupportsPipelining<?> rule) {
+  public boolean isPipelineReady(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<?> pipelineStage = getExistingStage(rule);
-    return pipelineStage.pipelineBuilt();
+    return pipelineStage.pipelineIsReady();
   }
 
   public ListenableFuture<Optional<BuildResult>> getFuture(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<?> pipelineStage = getExistingStage(rule);
-    Preconditions.checkState(pipelineStage.pipelineBuilt());
+    Preconditions.checkState(pipelineStage.pipelineIsReady());
     return pipelineStage.getFuture();
   }
 
