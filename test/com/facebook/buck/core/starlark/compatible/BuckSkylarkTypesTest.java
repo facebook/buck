@@ -18,12 +18,9 @@ package com.facebook.buck.core.starlark.compatible;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.skylark.function.packages.StarlarkInfo;
-import com.facebook.buck.skylark.function.packages.StructProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -95,148 +92,6 @@ public class BuckSkylarkTypesTest {
     ImmutableList<Integer> list = BuckSkylarkTypes.toJavaList(skylarkList, Integer.class, null);
 
     assertEquals(ImmutableList.of(1, 2, 3), list);
-  }
-
-  @Test
-  public void asDeepImmutableReturnsPrimitives() {
-    StarlarkInt integer = StarlarkInt.of(1);
-    String string = "some string";
-
-    assertSame(integer, BuckSkylarkTypes.asDeepImmutable(integer));
-    assertSame(string, BuckSkylarkTypes.asDeepImmutable(string));
-    assertSame(true, BuckSkylarkTypes.asDeepImmutable(true));
-  }
-
-  @Test
-  public void asDeepImmutableReturnsIdentityForImmutableSkylarkValues() {
-    StarlarkList<String> list = StarlarkList.immutableCopyOf(ImmutableList.of("foo", "bar"));
-    Dict<String, String> dict = Dict.immutableCopyOf(ImmutableMap.of("foo", "bar"));
-    StarlarkInfo struct = StructProvider.STRUCT.create(ImmutableMap.of("foo", "bar"), "not found");
-
-    assertTrue(list.isImmutable());
-    assertTrue(dict.isImmutable());
-    assertTrue(struct.isImmutable());
-    assertSame(list, BuckSkylarkTypes.asDeepImmutable(list));
-    assertSame(dict, BuckSkylarkTypes.asDeepImmutable(dict));
-    assertSame(struct, BuckSkylarkTypes.asDeepImmutable(struct));
-  }
-
-  @Test
-  public void asDeepImmutableReturnsListOfImmutablesIfSubElementIsMutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      StarlarkList<String> subList = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
-      StarlarkList<StarlarkList<String>> list = StarlarkList.of(env.getEnv().mutability(), subList);
-
-      Object result = BuckSkylarkTypes.asDeepImmutable(list);
-
-      assertFalse(list.isImmutable());
-      assertTrue(((StarlarkList<?>) result).isImmutable());
-      assertEquals(list, result);
-      assertNotSame(list, result);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableReturnsListOfImmutablesIfAllElementsAreImmutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      StarlarkList<String> list = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
-
-      Object result = BuckSkylarkTypes.asDeepImmutable(list);
-
-      assertFalse(list.isImmutable());
-      assertTrue(((StarlarkList<?>) result).isImmutable());
-      assertEquals(list, result);
-      assertNotSame(list, result);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableFailsIfListHasMutableElementThatCannotBeMadeImmutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      FakeMutableSkylarkObject mutable = new FakeMutableSkylarkObject();
-      StarlarkList<FakeMutableSkylarkObject> list =
-          StarlarkList.of(env.getEnv().mutability(), mutable);
-
-      thrown.expect(MutableObjectException.class);
-      BuckSkylarkTypes.asDeepImmutable(list);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableReturnsDictOfImmutablesIfKeyIsMutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      StarlarkList<String> list = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
-      Dict<StarlarkList<String>, String> dict =
-          Dict.copyOf(env.getEnv().mutability(), ImmutableMap.of(list, "foo"));
-
-      Object result = BuckSkylarkTypes.asDeepImmutable(dict);
-
-      assertFalse(dict.isImmutable());
-      assertTrue(((Dict<?, ?>) result).isImmutable());
-      assertEquals(dict, result);
-      assertNotSame(dict, result);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableReturnsDictOfImmutablesIfValueIsMutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      StarlarkList<String> list = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
-      Dict<String, StarlarkList<String>> dict =
-          Dict.copyOf(env.getEnv().mutability(), ImmutableMap.of("foo", list));
-
-      Object result = BuckSkylarkTypes.asDeepImmutable(dict);
-
-      assertFalse(dict.isImmutable());
-      assertTrue(((Dict<?, ?>) result).isImmutable());
-      assertEquals(dict, result);
-      assertNotSame(dict, result);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableReturnsDictOfImmutablesIfAllKeysAndValuesAreImmutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      Dict<String, String> dict =
-          Dict.copyOf(env.getEnv().mutability(), ImmutableMap.of("foo", "bar"));
-
-      Object result = BuckSkylarkTypes.asDeepImmutable(dict);
-
-      assertFalse(dict.isImmutable());
-      assertTrue(((Dict<?, ?>) result).isImmutable());
-      assertEquals(dict, result);
-      assertNotSame(dict, result);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableFailsIfDictHasMutableKeyThatCannotBeMadeImmutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      Dict<FakeMutableSkylarkObject, String> dict =
-          Dict.copyOf(
-              env.getEnv().mutability(), ImmutableMap.of(new FakeMutableSkylarkObject(), "foo"));
-
-      thrown.expect(MutableObjectException.class);
-      BuckSkylarkTypes.asDeepImmutable(dict);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableFailsIfDictHasMutableValueThatCannotBeMadeImmutable() {
-    try (TestMutableEnv env = new TestMutableEnv()) {
-      Dict<String, FakeMutableSkylarkObject> dict =
-          Dict.copyOf(
-              env.getEnv().mutability(), ImmutableMap.of("foo", new FakeMutableSkylarkObject()));
-
-      thrown.expect(MutableObjectException.class);
-      BuckSkylarkTypes.asDeepImmutable(dict);
-    }
-  }
-
-  @Test
-  public void asDeepImmutableFailsIfMutableValueIsPassedThatCannotBeMadeImmutable() {
-    thrown.expect(MutableObjectException.class);
-    BuckSkylarkTypes.asDeepImmutable(new FakeMutableSkylarkObject());
   }
 
   @Test
