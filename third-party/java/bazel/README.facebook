@@ -22,4 +22,5 @@ exists here to simplify sync with upstream if we ever do it.
 * D26920116 Slightly faster str.join
 * D26934597 Slightly faster Printer.escapeCharacter
 * D26968994 Convert ScriptTest to junit parameterized test
+* D27032300 Faster Starlark.toIterable
 * D26911948 Bytecode interpreter

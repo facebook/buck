@@ -25,6 +25,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.time.Duration;
+import java.util.AbstractCollection;
+import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -232,7 +234,7 @@ public final class Starlark {
   }
 
   /**
-   * Returns an iterable view of {@code x} if it is an iterable Starlark value; throws EvalException
+   * Returns an iterable view of {@code x} if it is an iterable value; throws EvalException
    * otherwise.
    *
    * <p>Whereas the interpreter temporarily freezes the iterable value by bracketing {@code for}
@@ -240,7 +242,16 @@ public final class Starlark {
    * this method does not freeze the value. Callers should exercise care not to mutate the
    * underlying object during iteration.
    */
-  public static Iterable<?> toIterable(Object x) throws EvalException {
+  static Iterable<?> toIterable(Object x) throws EvalException {
+    // Instanceof class is much faster than instanceof interface,
+    // and practically all iterables in Starlark either
+    // implement AbstractList (list, tuple, range) or is dict.
+    if (x instanceof AbstractCollection<?>) {
+      return (AbstractCollection<?>) x;
+    }
+    if (x instanceof Dict<?, ?>) {
+      return (Dict<?, ?>) x;
+    }
     if (x instanceof StarlarkIterable) {
       return (Iterable<?>) x;
     }
