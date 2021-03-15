@@ -32,18 +32,18 @@ import time
 _FS_TIMEOUT_S = 10
 
 
+def _te(q, f, args):
+    try:
+        ret = f(*args)
+        q.put(ret)
+    except Exception as e:
+        q.put(e)
+
+
 def timed_exec(func, args=(), timeout_s=None):
     """
     Could raise TimeoutError in addition to ones func could raise
     """
-
-    def _te(q, f, args):
-        try:
-            ret = f(*args)
-            q.put(ret)
-        except Exception as e:
-            q.put(e)
-
     q = multiprocessing.Queue()
     p = multiprocessing.Process(target=_te, args=(q, func, args))
     p.start()
@@ -77,11 +77,12 @@ def fs_safe_path_exists(path):
     return ret
 
 
-def fs_safe_write(path, data):
-    def _fsw(path, data):
-        with open(path, "w") as f:
-            return f.write(data)
+def _fsw(path, data):
+    with open(path, "w") as f:
+        return f.write(data)
 
+
+def fs_safe_write(path, data):
     ret = -1
     try:
         ret = timed_exec(_fsw, (path, data), _FS_TIMEOUT_S)
