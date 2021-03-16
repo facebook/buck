@@ -46,7 +46,9 @@ public class RecordArtifactVerifier implements BuildableContext {
         return;
       }
     }
-    throw new RuntimeException(String.format("Recorded path %s is not allowed.", pathToArtifact));
+    throw new RuntimeException(
+        String.format(
+            "Recorded path %s is not allowed. Allowed paths: %s", pathToArtifact, allowedPaths));
   }
 
   public Iterable<Path> getPaths() {
