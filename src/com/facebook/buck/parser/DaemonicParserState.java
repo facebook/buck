@@ -285,10 +285,9 @@ public class DaemonicParserState {
   /** Add all the includes from the manifest and Buck defaults. */
   private static void addAllIncludes(
       ImmutableSet.Builder<AbsPath> dependents,
-      ImmutableSortedSet<String> manifestIncludes,
+      ImmutableSortedSet<AbsPath> manifestIncludes,
       Cell cell) {
-    manifestIncludes.forEach(
-        includedPath -> dependents.add(cell.getFilesystem().resolve(includedPath)));
+    manifestIncludes.forEach(dependents::add);
 
     // We also know that the all manifests depend on the default includes for the cell.
     // Note: This is a bad assumption. While both the project build file and package parsers set

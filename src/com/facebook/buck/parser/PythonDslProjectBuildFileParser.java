@@ -514,11 +514,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(
       ImmutableList<TwoArraysImmutableHashMap<String, Object>> values) {
+    FileSystem fileSystem = options.getProjectRoot().getFileSystem();
     return BuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
-        ImmutableSortedSet.copyOf(
-            Objects.requireNonNull(
-                (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
+        ((List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))
+            .stream()
+                .map(p -> AbsPath.of(fileSystem.getPath(p)))
+                .collect(ImmutableSortedSet.toImmutableSortedSet(AbsPath.comparator())),
         ImmutableMap.copyOf(
             Objects.requireNonNull(
                 (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS))),
@@ -891,7 +893,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException {
     return getManifest(buildFile).getIncludes();
   }

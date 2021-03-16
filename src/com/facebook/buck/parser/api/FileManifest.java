@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +27,7 @@ import java.util.Optional;
 public interface FileManifest {
 
   /** @return a set of extension files read during parsing. */
-  ImmutableSortedSet<String> getIncludes();
+  ImmutableSortedSet<AbsPath> getIncludes();
 
   /**
    * @return a map from configuration section to configuration key to the value returned during

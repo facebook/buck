@@ -87,7 +87,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile) {
+    public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile) {
       processCall("getIncludedFiles");
       return null;
     }
@@ -142,7 +142,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile) {
+    public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile) {
       waitLatch();
       return null;
     }

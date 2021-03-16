@@ -106,7 +106,7 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     try (CloseableWrapper<ProjectBuildFileParser> wrapper = getWrapper()) {
       return wrapper.get().getIncludedFiles(buildFile);

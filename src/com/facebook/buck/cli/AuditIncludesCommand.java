@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -82,7 +83,7 @@ public class AuditIncludesCommand extends AbstractCommand {
 
         AbsPath absPath = projectFilesystem.getRootPath().resolve(path);
 
-        Iterable<String> includes = parser.getIncludedFiles(absPath);
+        ImmutableSortedSet<AbsPath> includes = parser.getIncludedFiles(absPath);
         printIncludesToStdout(
             params, Objects.requireNonNull(includes, "__includes metadata entry is missing"));
       }
@@ -96,7 +97,7 @@ public class AuditIncludesCommand extends AbstractCommand {
     return true;
   }
 
-  private void printIncludesToStdout(CommandRunnerParams params, Iterable<String> includes)
+  private void printIncludesToStdout(CommandRunnerParams params, Iterable<AbsPath> includes)
       throws IOException {
 
     PrintStream stdOut = params.getConsole().getStdOut();
@@ -108,7 +109,7 @@ public class AuditIncludesCommand extends AbstractCommand {
         ObjectMappers.WRITER.writeValue(generator, includes);
       }
     } else {
-      for (String include : includes) {
+      for (AbsPath include : includes) {
         stdOut.println(include);
       }
     }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.manifest;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.event.FileHashCacheEvent;
@@ -27,7 +28,6 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -271,7 +271,7 @@ public class BuildFileManifestCache
 
     /** For invalidated manifests, update corresponding index */
     private void removeFromIndex(Path key, BuildFileManifest manifest) {
-      for (String include : manifest.getIncludes()) {
+      for (AbsPath include : manifest.getIncludes()) {
         Path dependent = relativizeIfNeeded(include);
 
         dependentIndex.compute(
@@ -288,7 +288,7 @@ public class BuildFileManifestCache
 
     /** Calculate dependency index for this manifest */
     private void addToIndex(Path key, BuildFileManifest manifest) {
-      for (String include : manifest.getIncludes()) {
+      for (AbsPath include : manifest.getIncludes()) {
         Path dependent = relativizeIfNeeded(include);
 
         if (dependent.endsWith(buildFileName)) {
@@ -309,8 +309,8 @@ public class BuildFileManifestCache
       }
     }
 
-    private Path relativizeIfNeeded(String include) {
-      Path dependent = Paths.get(include);
+    private Path relativizeIfNeeded(AbsPath include) {
+      Path dependent = include.getPath();
       // Support both absolute and relative paths. If relative, think of it relative to root
       // cell. At this point parser returns absolute path strings, but we want to switch it to
       // return relative Path objects one day

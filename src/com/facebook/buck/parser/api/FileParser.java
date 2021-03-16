@@ -38,7 +38,7 @@ public interface FileParser<T extends FileManifest> extends AutoCloseable {
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
    */
-  ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
+  ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException;
 
   @Override

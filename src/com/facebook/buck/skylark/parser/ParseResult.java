@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -49,7 +50,7 @@ public abstract class ParseResult {
    * Returns a set of extension paths that were loaded explicitly or transitively when parsing
    * current build or package file.
    */
-  public abstract ImmutableSet<String> getLoadedPaths();
+  public abstract ImmutableSet<AbsPath> getLoadedPaths();
 
   /**
    * Returns all configuration options accessed during parsing of the build or package file.
@@ -65,7 +66,7 @@ public abstract class ParseResult {
   static ParseResult of(
       PackageMetadata getPackage,
       TwoArraysImmutableHashMap<String, RecordedRule> rawRules,
-      Iterable<String> loadedPaths,
+      Iterable<AbsPath> loadedPaths,
       ImmutableMap<String, ImmutableMap<String, Optional<String>>> readConfigurationOptions,
       Iterable<? extends GlobSpecWithResult> globManifestWithResult) {
     return ImmutableParseResult.ofImpl(

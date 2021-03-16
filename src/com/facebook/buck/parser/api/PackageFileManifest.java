@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.exceptions.ParsingError;
@@ -43,7 +44,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
   public abstract PackageMetadata getPackage();
 
   @Override
-  public abstract ImmutableSortedSet<String> getIncludes();
+  public abstract ImmutableSortedSet<AbsPath> getIncludes();
 
   @Override
   public abstract ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
@@ -56,7 +57,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
 
   public static PackageFileManifest of(
       PackageMetadata getPackage,
-      ImmutableSortedSet<String> includes,
+      ImmutableSortedSet<AbsPath> includes,
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<ParsingError> errors) {

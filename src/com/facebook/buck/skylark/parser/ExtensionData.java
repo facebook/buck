@@ -41,5 +41,5 @@ abstract class ExtensionData {
    * @return the list of files loaded in order to parse this extension including the path of this
    *     extension, which is the first element of the list.
    */
-  public abstract ImmutableSet<String> getLoadTransitiveClosure();
+  public abstract ImmutableSet<AbsPath> getLoadTransitiveClosure();
 }

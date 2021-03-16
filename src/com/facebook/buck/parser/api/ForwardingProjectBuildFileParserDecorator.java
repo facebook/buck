@@ -50,7 +50,7 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return delegate.getIncludedFiles(buildFile);
   }

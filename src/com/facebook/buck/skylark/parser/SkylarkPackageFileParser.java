@@ -85,7 +85,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
       ParseContext context,
       ReadConfigContext readConfigContext,
       Globber globber,
-      ImmutableList<String> loadedPaths) {
+      ImmutableList<AbsPath> loadedPaths) {
     PackageMetadata pkg = context.getPackage();
     if (LOG.isVerboseEnabled()) {
       LOG.verbose("Got package: %s", pkg);
@@ -112,7 +112,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
 
       return PackageFileManifest.of(
           parseResult.getPackage(),
-          ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
+          ImmutableSortedSet.copyOf(AbsPath.comparator(), parseResult.getLoadedPaths()),
           (ImmutableMap<String, Object>)
               (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
           Optional.empty(),
