@@ -31,7 +31,8 @@ public interface FileManifest {
 
   /**
    * @return a map from configuration section to configuration key to the value returned during
-   *     parsing.
+   *     parsing. This is used only for testing, and currently only includes read_config calls from
+   *     BUCK file, but not from included bzl files.
    */
   ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
 

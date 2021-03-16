@@ -93,12 +93,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
-  // TODO(nga):
-  //   * this `readConfig` context is used for `read_config` in bzl files.
-  //       And read configs (top-level) are not tracked: recorded, but not fetched.
-  //   * this class is supposed to be thread-safe, but this object is not.
-  private final ReadConfigContext readConfigContext;
-
   AbstractSkylarkFileParser(
       ProjectBuildFileParserOptions options, BuckGlobals buckGlobals, EventHandler eventHandler) {
     this.options = options;
@@ -112,8 +106,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     this.packageImplicitIncludeFinder =
         PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
-
-    this.readConfigContext = new ReadConfigContext(options.getRawConfig());
   }
 
   abstract BuckOrPackage getBuckOrPackage();
@@ -697,6 +689,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       extensionEnv.setPrintHandler(new BuckStarlarkPrintHandler(eventHandler));
       extensionEnv.setLoader(Maps.transformValues(dependencies, ExtensionData::getExtension)::get);
 
+      // NOTE(nga): we do not collect accessed read_config calls from .bzl files
+      ReadConfigContext readConfigContext = new ReadConfigContext(options.getRawConfig());
       readConfigContext.setup(extensionEnv);
 
       LoadSymbolsContext loadSymbolsContext = new LoadSymbolsContext();

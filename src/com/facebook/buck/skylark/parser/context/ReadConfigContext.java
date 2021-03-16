@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.StarlarkThread;
@@ -35,7 +34,7 @@ public class ReadConfigContext {
 
   public ReadConfigContext(ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
     this.rawConfig = rawConfig;
-    this.readConfigOptions = new ConcurrentHashMap<>();
+    this.readConfigOptions = new HashMap<>();
   }
 
   /**
