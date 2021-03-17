@@ -47,11 +47,14 @@ public abstract class WatchmanQuery {
   /** {@code version} query. */
   @BuckStyleValue
   public abstract static class Version extends WatchmanQuery {
-    public abstract ImmutableMap<String, Object> getArgs();
+    public abstract ImmutableList<String> getRequired();
+
+    public abstract ImmutableList<String> getOptional();
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {
-      return ImmutableList.of("version", getArgs());
+      return ImmutableList.of(
+          "version", ImmutableMap.of("required", getRequired(), "optional", getOptional()));
     }
   }
 
@@ -120,8 +123,8 @@ public abstract class WatchmanQuery {
   }
 
   /** {@code version} query. */
-  public static Version version(ImmutableMap<String, Object> params) {
-    return ImmutableVersion.ofImpl(params);
+  public static Version version(ImmutableList<String> required, ImmutableList<String> optional) {
+    return ImmutableVersion.ofImpl(required, optional);
   }
 
   /** {@code get-pid} query. */

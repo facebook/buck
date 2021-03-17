@@ -27,6 +27,7 @@ import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.bser.BserSerializer;
 import com.facebook.buck.util.timing.SettableFakeClock;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -49,16 +50,14 @@ public class WatchmanFactoryTest {
   private final ImmutableMap<String, String> env = ImmutableMap.of();
   private static final WatchmanQuery.Version VERSION_QUERY =
       WatchmanQuery.version(
-          ImmutableMap.of(
-              "required", ImmutableSet.of("cmd-watch-project"),
-              "optional",
-                  ImmutableSet.of(
-                      "term-dirname",
-                      "cmd-watch-project",
-                      "wildmatch",
-                      "wildmatch_multislash",
-                      "glob_generator",
-                      "clock-sync-timeout")));
+          ImmutableList.of("cmd-watch-project"),
+          ImmutableList.of(
+              "term-dirname",
+              "cmd-watch-project",
+              "wildmatch",
+              "wildmatch_multislash",
+              "glob_generator",
+              "clock-sync-timeout"));
 
   private static WatchmanFactory createFakeWatchmanFactory(
       Path socketName,

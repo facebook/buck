@@ -91,11 +91,8 @@ public class WatchmanClientIntegrationTest {
             timeoutNanos,
             pollingTimeNanos,
             WatchmanQuery.version(
-                ImmutableMap.of(
-                    "required",
-                    WatchmanFactory.REQUIRED_CAPABILITIES,
-                    "optional",
-                    WatchmanFactory.ALL_CAPABILITIES.keySet())));
+                WatchmanFactory.REQUIRED_CAPABILITIES.asList(),
+                WatchmanFactory.ALL_CAPABILITIES.keySet().asList()));
     assertTrue(versionResponse.isLeft());
 
     Path rootPath = workspace.getDestPath();

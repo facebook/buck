@@ -233,8 +233,7 @@ public class WatchmanFactory {
             endTimeNanos - versionQueryStartTimeNanos,
             WARN_TIMEOUT_NANOS,
             WatchmanQuery.version(
-                ImmutableMap.of(
-                    "required", REQUIRED_CAPABILITIES, "optional", ALL_CAPABILITIES.keySet())));
+                REQUIRED_CAPABILITIES.asList(), ALL_CAPABILITIES.keySet().asList()));
 
     LOG.info(
         "Took %d ms to query capabilities %s",
