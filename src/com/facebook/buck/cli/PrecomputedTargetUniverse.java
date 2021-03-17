@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -124,9 +125,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
               .flatMap(ImmutableSet::stream)
               .collect(ImmutableSet.toImmutableSet());
     } catch (InterruptedException e) {
-      throw new QueryException(
-          e.getCause(),
-          "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e.getCause()));
+      throw new BuckUncheckedExecutionException(e, "interrupted");
     }
 
     SetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex =
