@@ -39,7 +39,6 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
@@ -155,7 +154,6 @@ public class DummyRDotJavaTest {
                         buildTargetValue,
                         buckPaths.getConfiguredBuckOut(),
                         CompilerOutputPathsValue.of(buckPaths, target),
-                        new ClasspathChecker(),
                         CompilerParameters.builder()
                             .setOutputPaths(
                                 CompilerOutputPaths.of(

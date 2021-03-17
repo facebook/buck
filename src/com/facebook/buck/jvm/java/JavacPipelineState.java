@@ -83,6 +83,25 @@ public class JavacPipelineState implements RulePipelineState {
     this.resolvedJavacOptions = resolvedJavacOptions;
   }
 
+  public JavacPipelineState(
+      ResolvedJavac resolvedJavac,
+      ResolvedJavacOptions resolvedJavacOptions,
+      BuildTargetValue invokingRule,
+      CompilerParameters compilerParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
+      boolean withDownwardApi) {
+    this(
+        resolvedJavac,
+        resolvedJavacOptions,
+        invokingRule,
+        new ClasspathChecker(),
+        compilerParameters,
+        abiJarParameters,
+        libraryJarParameters,
+        withDownwardApi);
+  }
+
   public boolean isRunning() {
     return invocation != null;
   }

@@ -48,7 +48,8 @@ public class JavacStep extends IsolatedStep {
   private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
   private final CompilerOutputPathsValue compilerOutputPathsValue;
 
-  public JavacStep(
+  @VisibleForTesting
+  JavacStep(
       ResolvedJavac resolvedJavac,
       ResolvedJavacOptions javacOptions,
       BuildTargetValue invokingRule,
@@ -66,6 +67,33 @@ public class JavacStep extends IsolatedStep {
             javacOptions,
             invokingRule,
             classpathChecker,
+            compilerParameters,
+            abiJarParameters,
+            libraryJarParameters,
+            withDownwardApi),
+        invokingRule,
+        configuredBuckOut,
+        true,
+        compilerOutputPathsValue,
+        cellToPathMappings);
+  }
+
+  public JavacStep(
+      ResolvedJavac resolvedJavac,
+      ResolvedJavacOptions javacOptions,
+      BuildTargetValue invokingRule,
+      RelPath configuredBuckOut,
+      CompilerOutputPathsValue compilerOutputPathsValue,
+      CompilerParameters compilerParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
+      boolean withDownwardApi,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
+    this(
+        new JavacPipelineState(
+            resolvedJavac,
+            javacOptions,
+            invokingRule,
             compilerParameters,
             abiJarParameters,
             libraryJarParameters,

@@ -108,9 +108,6 @@ public class JavacStepTest {
                     .setTargetLevel("8.0")
                     .build())
             .build();
-    ClasspathChecker classpathChecker =
-        new ClasspathChecker(
-            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
     JavacStep step =
         new JavacStep(
@@ -119,7 +116,6 @@ public class JavacStepTest {
             buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
-            classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
@@ -158,9 +154,6 @@ public class JavacStepTest {
                     .setTargetLevel("8.0")
                     .build())
             .build();
-    ClasspathChecker classpathChecker =
-        new ClasspathChecker(
-            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
     JavacStep step =
         new JavacStep(
@@ -169,7 +162,6 @@ public class JavacStepTest {
             buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
-            classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
@@ -235,6 +227,7 @@ public class JavacStepTest {
                     .build())
             .setBootclasspath("/this-totally-exists")
             .build();
+
     ClasspathChecker classpathChecker =
         new ClasspathChecker(
             "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
@@ -285,9 +278,6 @@ public class JavacStepTest {
                     .build())
             .setBootclasspath("/this-totally-exists:relative-path")
             .build();
-    ClasspathChecker classpathChecker =
-        new ClasspathChecker(
-            "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
 
     JavacStep step =
         new JavacStep(
@@ -296,7 +286,6 @@ public class JavacStepTest {
             buildTargetValue,
             buckPaths.getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(buckPaths, target),
-            classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, buckPaths))
                 .build(),
@@ -341,9 +330,6 @@ public class JavacStepTest {
                     .build())
             .setBootclasspath("/no-such-dir")
             .build();
-    ClasspathChecker classpathChecker =
-        new ClasspathChecker(
-            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
     JavacStep step =
         new JavacStep(
@@ -352,7 +338,6 @@ public class JavacStepTest {
             buildTargetValue,
             fakeFilesystem.getBuckPaths().getConfiguredBuckOut(),
             CompilerOutputPathsValue.of(fakeFilesystem.getBuckPaths(), target),
-            classpathChecker,
             CompilerParameters.builder()
                 .setOutputPaths(CompilerOutputPaths.of(target, fakeFilesystem.getBuckPaths()))
                 .build(),
