@@ -21,5 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
 public interface RulePipelineStateFactory<T extends RulePipelineState> {
-  T newInstance(BuildContext context, ProjectFilesystem filesystem, BuildTarget firstTarget);
+
+  T createPipelineState(
+      BuildContext context, ProjectFilesystem filesystem, BuildTarget firstTarget);
 }

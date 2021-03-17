@@ -22,8 +22,10 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -32,6 +34,7 @@ import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -55,18 +58,44 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
   /** Creates pipeline state for java compilation. */
   public JavacPipelineState createPipelineState(
-      BuildTargetValue invokingRule,
-      CompilerParameters compilerParameters,
+      BuildTargetValue buildTargetValue,
+      ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
+      ImmutableSortedSet<RelPath> javaSrcs,
+      ImmutableList<BaseJavaAbiInfo> fullJarInfos,
+      ImmutableList<BaseJavaAbiInfo> abiJarInfos,
+      boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
+      AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      boolean isRequiredForSourceOnlyAbi,
+      CompilerOutputPaths compilerOutputPaths,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       boolean withDownwardApi,
       ResolvedJavac resolvedJavac,
-      JavaExtraParams javaExtraParams) {
+      ResolvedJavacOptions resolvedJavacOptions) {
+
+    CompilerParameters compilerParameters =
+        CompilerParameters.builder()
+            .setClasspathEntries(compileTimeClasspathPaths)
+            .setSourceFilePaths(javaSrcs)
+            .setOutputPaths(compilerOutputPaths)
+            .setShouldTrackClassUsage(trackClassUsage)
+            .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)
+            .setAbiGenerationMode(abiGenerationMode)
+            .setAbiCompatibilityMode(abiCompatibilityMode)
+            .setSourceOnlyAbiRuleInfoFactory(
+                DefaultSourceOnlyAbiRuleInfoFactory.of(
+                    fullJarInfos,
+                    abiJarInfos,
+                    buildTargetValue.getFullyQualifiedName(),
+                    isRequiredForSourceOnlyAbi))
+            .build();
 
     return new JavacPipelineState(
         resolvedJavac,
-        javaExtraParams.getResolvedJavacOptions(),
-        invokingRule,
+        resolvedJavacOptions,
+        buildTargetValue,
         compilerParameters,
         abiJarParameters,
         libraryJarParameters,

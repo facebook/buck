@@ -50,7 +50,6 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
@@ -719,7 +718,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   @Override
-  public JavacPipelineState newInstance(
+  public JavacPipelineState createPipelineState(
       BuildContext context, ProjectFilesystem filesystem, BuildTarget buildTarget) {
     JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
 
@@ -751,30 +750,27 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     AbsPath rootPath = filesystem.getRootPath();
 
-    CompilerParameters compilerParameters =
-        JavaLibraryRules.getCompilerParameters(
-            compileTimeClasspathPaths,
-            javaSrcs,
-            fullJarInfos,
-            abiJarInfos,
-            buildTarget.getFullyQualifiedName(),
-            trackClassUsage,
-            trackJavacPhaseEvents,
-            abiGenerationMode,
-            abiCompatibilityMode,
-            isRequiredForSourceOnlyAbi,
-            compilerOutputPaths);
-
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
+    JavaExtraParams extraParams =
+        javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath);
 
     return javacToJarStepFactory.createPipelineState(
         buildTargetValue,
-        compilerParameters,
+        compileTimeClasspathPaths,
+        javaSrcs,
+        fullJarInfos,
+        abiJarInfos,
+        trackClassUsage,
+        trackJavacPhaseEvents,
+        abiGenerationMode,
+        abiCompatibilityMode,
+        isRequiredForSourceOnlyAbi,
+        compilerOutputPaths,
         abiJarParameters,
         libraryJarParameters,
         withDownwardApi,
         resolvedJavac,
-        javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath));
+        extraParams.getResolvedJavacOptions());
   }
 
   boolean hasAnnotationProcessing() {
