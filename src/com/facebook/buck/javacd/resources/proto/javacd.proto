@@ -120,6 +120,25 @@ message AbiJarCommand {
     JarParameters abiJarParameters = 2;
 }
 
+message PipelineState {
+    BuildTargetValue buildTargetValue = 1;
+    repeated RelPath compileTimeClasspathPaths = 2;
+    repeated RelPath javaSrcs = 3;
+    repeated JavaAbiInfo fullJarInfos = 4;
+    repeated JavaAbiInfo abiJarInfos = 5;
+    bool trackClassUsage = 6;
+    bool trackJavacPhaseEvents = 7;
+    BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;
+    BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;
+    bool isRequiredForSourceOnlyAbi = 10;
+    OutputPathsValue.OutputPaths outputPaths = 11;
+    JarParameters abiJarParameters = 12;
+    JarParameters libraryJarParameters = 13;
+    bool withDownwardApi = 14;
+    ResolvedJavac resolvedJavac = 15;
+    ResolvedJavacOptions resolvedJavacOptions = 16;
+}
+
 message FilesystemParams {
     AbsPath rootPath = 1;
     RelPath configuredBuckOut = 2;
