@@ -27,12 +27,12 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -112,9 +112,10 @@ public class WatchmanClientIntegrationTest {
             pollingTimeNanos,
             WatchmanQuery.query(
                 watchRoot,
-                ImmutableMap.of(
-                    "glob", ImmutableList.of("**/X"),
-                    "fields", ImmutableList.of("name"))));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(ImmutableList.of("**/X")),
+                ImmutableList.of("name")));
 
     assertTrue(queryResponse.isLeft());
 

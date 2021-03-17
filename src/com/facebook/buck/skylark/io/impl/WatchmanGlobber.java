@@ -199,11 +199,9 @@ public class WatchmanGlobber {
       long timeoutNanos,
       long warnTimeNanos)
       throws IOException, InterruptedException {
-    ImmutableMap<String, Object> watchmanQuery =
-        createNameOnlyWatchmanQuery(include, exclude, options);
-
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        performWatchmanQuery(timeoutNanos, warnTimeNanos, watchmanQuery);
+        performWatchmanQuery(
+            timeoutNanos, warnTimeNanos, include, exclude, options, NAME_ONLY_FIELD);
     if (!result.isLeft()) {
       return Optional.empty();
     }
@@ -218,11 +216,35 @@ public class WatchmanGlobber {
   }
 
   private Either<Map<String, Object>, WatchmanClient.Timeout> performWatchmanQuery(
-      long timeoutNanos, long pollingTimeNanos, ImmutableMap<String, Object> watchmanQuery)
+      long timeoutNanos,
+      long pollingTimeNanos,
+      Collection<String> include,
+      Collection<String> exclude,
+      EnumSet<Option> options,
+      ImmutableList<String> fields)
       throws IOException, InterruptedException {
+
+    WatchmanQuery.Query query =
+        WatchmanQuery.query(
+            watchmanWatchRoot,
+            Optional.of(basePath),
+            Optional.of(toMatchExpressions(exclude, options)),
+            Optional.of(ImmutableList.copyOf(include)),
+            fields);
+
+    if (options.contains(Option.FORCE_CASE_SENSITIVE)) {
+      query = query.withCaseSensitive(true);
+    }
+
+    // Sync cookies cause a massive overhead when issuing thousands of
+    // glob queries.  Only enable them (by not setting sync_timeout to 0)
+    // for the very first request issued by this process.
+    if (!syncCookieState.shouldSyncCookies()) {
+      query = query.withSyncTimeout(0);
+    }
+
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        watchmanClient.queryWithTimeout(
-            timeoutNanos, pollingTimeNanos, WatchmanQuery.query(watchmanWatchRoot, watchmanQuery));
+        watchmanClient.queryWithTimeout(timeoutNanos, pollingTimeNanos, query);
     if (result.isLeft()) {
       // Disable sync cookies only on successful query.
       this.syncCookieState.disableSyncCookies();
@@ -260,8 +282,6 @@ public class WatchmanGlobber {
       long warnTimeNanos,
       ImmutableList<String> fields)
       throws IOException, InterruptedException {
-    ImmutableMap<String, Object> watchmanQuery =
-        createWatchmanQuery(includePatterns, excludePatterns, options, fields);
     Preconditions.checkArgument(!fields.isEmpty());
 
     if (fields.equals(NAME_ONLY_FIELD)) {
@@ -281,7 +301,8 @@ public class WatchmanGlobber {
     }
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        performWatchmanQuery(timeoutNanos, warnTimeNanos, watchmanQuery);
+        performWatchmanQuery(
+            timeoutNanos, warnTimeNanos, includePatterns, excludePatterns, options, fields);
     if (!result.isLeft()) {
       return Optional.empty();
     }
@@ -301,46 +322,6 @@ public class WatchmanGlobber {
                 ImmutableMap.toImmutableMap(
                     entry -> (String) entry.get("name"), WatchmanFileAttributes::new));
     return resultMap.isEmpty() ? Optional.empty() : Optional.of(resultMap);
-  }
-
-  private ImmutableMap<String, Object> createNameOnlyWatchmanQuery(
-      Collection<String> include, Collection<String> exclude, EnumSet<Option> options) {
-    return createWatchmanQuery(include, exclude, options, NAME_ONLY_FIELD);
-  }
-
-  /**
-   * Creates a JSON-like Watchman query to get a list of matching files.
-   *
-   * <p>The implementation should ideally match the one in glob_watchman.py.
-   */
-  private ImmutableMap<String, Object> createWatchmanQuery(
-      Collection<String> include,
-      Collection<String> exclude,
-      EnumSet<Option> options,
-      ImmutableList<String> fileds) {
-    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-    builder.putAll(
-        ImmutableMap.of(
-            "relative_root",
-            basePath,
-            "expression",
-            toMatchExpressions(exclude, options),
-            "glob",
-            include,
-            "fields",
-            fileds));
-    if (options.contains(Option.FORCE_CASE_SENSITIVE)) {
-      builder.put("case_sensitive", true);
-    }
-
-    // Sync cookies cause a massive overhead when issuing thousands of
-    // glob queries.  Only enable them (by not setting sync_timeout to 0)
-    // for the very first request issued by this process.
-    if (!syncCookieState.shouldSyncCookies()) {
-      builder.put("sync_timeout", 0);
-    }
-
-    return builder.build();
   }
 
   /** Returns an expression for every matched include file should match in order to be returned. */

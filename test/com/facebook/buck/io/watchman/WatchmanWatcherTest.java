@@ -17,7 +17,6 @@
 package com.facebook.buck.io.watchman;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -373,7 +372,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(),
             ImmutableSet.of(Capability.DIRNAME));
 
-    assertThat(query.toQuery("").getArgs(), hasEntry("relative_root", "project"));
+    assertEquals(query.toQuery("").getRelativeRoot().get(), "project");
   }
 
   @Test
@@ -534,13 +533,13 @@ public class WatchmanWatcherTest {
                 0 /* queryElapsedTimeNanos */, ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
             10000 /* timeout */,
             "c:0:0" /* sinceParam */);
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:0:0"));
+    assertEquals(watcher.getWatchmanQuery(FAKE_ROOT).get().getSince(), Optional.of("c:0:0"));
 
     watcher.postEvents(
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:0:1"));
+    assertEquals(watcher.getWatchmanQuery(FAKE_ROOT).get().getSince(), Optional.of("c:0:1"));
   }
 
   @Test
@@ -554,13 +553,13 @@ public class WatchmanWatcherTest {
                 0 /* queryElapsedTimeNanos */, ImmutableMap.of(FAKE_CLOCK_QUERY, watchmanOutput)),
             10000 /* timeout */,
             "c:0:0" /* sinceParam */);
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:0:0"));
+    assertEquals(watcher.getWatchmanQuery(FAKE_ROOT).get().getSince(), Optional.of("c:0:0"));
 
     watcher.postEvents(
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
-    assertThat(watcher.getWatchmanQuery(FAKE_ROOT).get().getArgs(), hasEntry("since", "c:1:0"));
+    assertEquals(watcher.getWatchmanQuery(FAKE_ROOT).get().getSince(), Optional.of("c:1:0"));
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
   }
 

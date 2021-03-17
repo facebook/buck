@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Enumerate all watchman queries. */
 public abstract class WatchmanQuery {
@@ -34,14 +35,72 @@ public abstract class WatchmanQuery {
 
   /** {@code query} query. */
   @BuckStyleValue
+  @Value.Immutable(copy = true, builder = false, prehash = false, intern = false)
+  @SuppressWarnings("immutables:untype")
   public abstract static class Query extends WatchmanQuery {
     public abstract String getPath();
 
-    public abstract ImmutableMap<String, Object> getArgs();
+    public abstract Optional<String> getRelativeRoot();
+
+    public abstract Optional<Object> getExpression();
+
+    public abstract Optional<Object> getGlob();
+
+    public abstract ImmutableList<String> getFields();
+
+    @Value.Default
+    @Value.Parameter(false)
+    public Optional<String> getSince() {
+      return Optional.empty();
+    }
+
+    public Query withSince(String since) {
+      return ((ImmutableQuery) this).withSince(Optional.of(since));
+    }
+
+    @Value.Default
+    @Value.Parameter(false)
+    public Optional<Boolean> getCaseSensitive() {
+      return Optional.empty();
+    }
+
+    public Query withCaseSensitive(boolean caseSensitive) {
+      return ((ImmutableQuery) this).withCaseSensitive(Optional.of(caseSensitive));
+    }
+
+    /** Milliseconds. */
+    @Value.Default
+    @Value.Parameter(false)
+    public Optional<Integer> getSyncTimeout() {
+      return Optional.empty();
+    }
+
+    public Query withSyncTimeout(int syncTimeoutMillis) {
+      return ((ImmutableQuery) this).withSyncTimeout(Optional.of(syncTimeoutMillis));
+    }
+
+    @Value.Default
+    @Value.Parameter(false)
+    public Optional<Boolean> getEmptyOnFreshInstance() {
+      return Optional.empty();
+    }
+
+    public Query withEmptyOnFreshInstance(boolean emptyOnFreshInstance) {
+      return ((ImmutableQuery) this).withEmptyOnFreshInstance(Optional.of(emptyOnFreshInstance));
+    }
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {
-      return ImmutableList.of("query", getPath(), getArgs());
+      ImmutableMap.Builder<String, Object> args = ImmutableMap.builder();
+      getRelativeRoot().ifPresent(s -> args.put("relative_root", s));
+      getSince().ifPresent(s -> args.put("since", s));
+      getCaseSensitive().ifPresent(c -> args.put("case_sensitive", c));
+      getEmptyOnFreshInstance().ifPresent(e -> args.put("empty_on_fresh_instance", e));
+      getSyncTimeout().ifPresent(t -> args.put("sync_timeout", t));
+      getExpression().ifPresent(e -> args.put("expression", e));
+      getGlob().ifPresent(g -> args.put("glob", g));
+      args.put("fields", getFields());
+      return ImmutableList.of("query", getPath(), args.build());
     }
   }
 
@@ -108,8 +167,13 @@ public abstract class WatchmanQuery {
   }
 
   /** {@code query} query. */
-  public static Query query(String path, ImmutableMap<String, Object> params) {
-    return ImmutableQuery.ofImpl(path, params);
+  public static Query query(
+      String path,
+      Optional<String> relativeRoot,
+      Optional<Object> expression,
+      Optional<Object> glob,
+      ImmutableList<String> fields) {
+    return ImmutableQuery.ofImpl(path, relativeRoot, expression, glob, fields);
   }
 
   /** {@code clock} query. */

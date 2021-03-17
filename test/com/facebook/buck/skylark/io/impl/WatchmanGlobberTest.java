@@ -297,7 +297,7 @@ public class WatchmanGlobberTest {
     globber = WatchmanGlobber.create(watchmanClient, new SyncCookieState(), "", root.toString());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
 
-    assertTrue(watchmanClient.syncRequested());
+    assertFalse(watchmanClient.syncDisabled());
   }
 
   @Test
@@ -453,17 +453,12 @@ public class WatchmanGlobberTest {
     @Override
     public void close() {}
 
-    public boolean syncRequested() {
-      return !getQueryExpression().containsKey("sync_timeout");
-    }
-
     public boolean syncDisabled() {
-      return ((int) getQueryExpression().get("sync_timeout")) == 0;
+      return getQueryExpression().getSyncTimeout().equals(Optional.of(0));
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getQueryExpression() {
-      return ((WatchmanQuery.Query) query).getArgs();
+    private WatchmanQuery.Query getQueryExpression() {
+      return ((WatchmanQuery.Query) query);
     }
   }
 }
