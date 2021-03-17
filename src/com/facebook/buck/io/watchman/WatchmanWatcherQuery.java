@@ -17,7 +17,9 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /** Partial query used in {@link com.facebook.buck.io.watchman.WatchmanWatcher}. */
 @BuckStyleValue
@@ -25,14 +27,21 @@ abstract class WatchmanWatcherQuery {
 
   abstract String getQueryPath();
 
-  abstract ImmutableMap<String, Object> getQueryParams();
+  abstract Object getExpression();
+
+  abstract ImmutableList<String> getFields();
+
+  abstract Optional<String> getRelativeRoot();
 
   public WatchmanQuery.Query toQuery(String sinceCursor) {
-    return WatchmanQuery.query(
-        getQueryPath(),
-        ImmutableMap.<String, Object>builder()
-            .put("since", sinceCursor)
-            .putAll(getQueryParams())
-            .build());
+    ImmutableMap.Builder<String, Object> args = ImmutableMap.builder();
+    args.put("since", sinceCursor);
+    args.put("expression", getExpression());
+    args.put("empty_on_fresh_instance", true);
+    args.put("fields", getFields());
+    if (getRelativeRoot().isPresent()) {
+      args.put("relative_root", getRelativeRoot().get());
+    }
+    return WatchmanQuery.query(getQueryPath(), args.build());
   }
 }

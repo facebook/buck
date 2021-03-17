@@ -30,6 +30,7 @@ import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -37,7 +38,6 @@ import com.google.common.eventbus.EventBus;
 import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -166,16 +166,11 @@ public class WatchmanWatcher {
       excludeAnyOf.add(ignorePathOrGlob.toWatchmanMatchQuery(watchmanCapabilities));
     }
 
-    // Note that we use LinkedHashMap so insertion order is preserved. That
-    // helps us write tests that don't depend on the undefined order of HashMap.
-    Map<String, Object> sinceParams = new LinkedHashMap<>();
-    sinceParams.put("expression", Lists.newArrayList("not", excludeAnyOf));
-    sinceParams.put("empty_on_fresh_instance", true);
-    sinceParams.put("fields", Lists.newArrayList("name", "exists", "new", "type"));
-    if (watchPrefix.isPresent()) {
-      sinceParams.put("relative_root", watchPrefix.get());
-    }
-    return ImmutableWatchmanWatcherQuery.ofImpl(watchRoot, sinceParams);
+    return ImmutableWatchmanWatcherQuery.ofImpl(
+        watchRoot,
+        ImmutableList.of("not", excludeAnyOf),
+        ImmutableList.of("name", "exists", "new", "type"),
+        watchPrefix);
   }
 
   @VisibleForTesting

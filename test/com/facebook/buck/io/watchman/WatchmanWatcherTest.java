@@ -62,14 +62,16 @@ public class WatchmanWatcherTest {
 
   private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_QUERY =
-      ImmutableWatchmanWatcherQuery.ofImpl("/fake/root", ImmutableMap.of());
+      ImmutableWatchmanWatcherQuery.ofImpl(
+          "/fake/root", "fake-expr", ImmutableList.of(), Optional.empty());
   private static final WatchmanQuery.Query FAKE_UUID_QUERY = FAKE_QUERY.toQuery("n:buckduuid");
   private static final WatchmanQuery.Query FAKE_CLOCK_QUERY = FAKE_QUERY.toQuery("c:0:0");
 
   private static final AbsPath FAKE_SECONDARY_ROOT =
       AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_SECONDARY_QUERY =
-      ImmutableWatchmanWatcherQuery.ofImpl("/fake/SECONDARY", ImmutableMap.of());
+      ImmutableWatchmanWatcherQuery.ofImpl(
+          "/fake/SECONDARY", "fake-expr", ImmutableList.of(), Optional.empty());
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -386,20 +388,15 @@ public class WatchmanWatcherTest {
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
             "/path/to/repo",
-            ImmutableMap.of(
-                "expression",
+            ImmutableList.of(
+                "not",
                 ImmutableList.of(
-                    "not",
-                    ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
-                        ImmutableList.of("dirname", "foo"),
-                        ImmutableList.of(
-                            "dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
-                "empty_on_fresh_instance",
-                true,
-                "fields",
-                ImmutableList.of("name", "exists", "new", "type"))),
+                    "anyof",
+                    ImmutableList.of("type", "d"),
+                    ImmutableList.of("dirname", "foo"),
+                    ImmutableList.of("dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
+            ImmutableList.of("name", "exists", "new", "type"),
+            Optional.empty()),
         query);
   }
 
@@ -415,22 +412,18 @@ public class WatchmanWatcherTest {
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
             "/path/to/repo",
-            ImmutableMap.of(
-                "expression",
+            ImmutableList.of(
+                "not",
                 ImmutableList.of(
-                    "not",
+                    "anyof",
+                    ImmutableList.of("type", "d"),
+                    ImmutableList.of("match", "foo" + File.separator + "**", "wholename"),
                     ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
-                        ImmutableList.of("match", "foo" + File.separator + "**", "wholename"),
-                        ImmutableList.of(
-                            "match",
-                            "bar" + File.separator + "baz" + File.separator + "**",
-                            "wholename"))),
-                "empty_on_fresh_instance",
-                true,
-                "fields",
-                ImmutableList.of("name", "exists", "new", "type"))),
+                        "match",
+                        "bar" + File.separator + "baz" + File.separator + "**",
+                        "wholename"))),
+            ImmutableList.of("name", "exists", "new", "type"),
+            Optional.empty()),
         query);
   }
 
@@ -447,20 +440,15 @@ public class WatchmanWatcherTest {
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
             watchRoot,
-            ImmutableMap.of(
-                "expression",
+            ImmutableList.of(
+                "not",
                 ImmutableList.of(
-                    "not",
-                    ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
-                        ImmutableList.of("dirname", "foo"),
-                        ImmutableList.of(
-                            "dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
-                "empty_on_fresh_instance",
-                true,
-                "fields",
-                ImmutableList.of("name", "exists", "new", "type"))),
+                    "anyof",
+                    ImmutableList.of("type", "d"),
+                    ImmutableList.of("dirname", "foo"),
+                    ImmutableList.of("dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
+            ImmutableList.of("name", "exists", "new", "type"),
+            Optional.empty()),
         query);
   }
 
@@ -474,22 +462,18 @@ public class WatchmanWatcherTest {
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
             "/path/to/repo",
-            ImmutableMap.of(
-                "expression",
+            ImmutableList.of(
+                "not",
                 ImmutableList.of(
-                    "not",
+                    "anyof",
+                    ImmutableList.of("type", "d"),
                     ImmutableList.of(
-                        "anyof",
-                        ImmutableList.of("type", "d"),
-                        ImmutableList.of(
-                            "match",
-                            "*.pbxproj",
-                            "wholename",
-                            ImmutableMap.<String, Object>of("includedotfiles", true)))),
-                "empty_on_fresh_instance",
-                true,
-                "fields",
-                ImmutableList.of("name", "exists", "new", "type"))),
+                        "match",
+                        "*.pbxproj",
+                        "wholename",
+                        ImmutableMap.<String, Object>of("includedotfiles", true)))),
+            ImmutableList.of("name", "exists", "new", "type"),
+            Optional.empty()),
         query);
   }
 
