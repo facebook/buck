@@ -430,14 +430,14 @@ public class WatchmanFactory {
       throws IOException, InterruptedException {
     Optional<String> clockId = Optional.empty();
     long clockStartTimeNanos = clock.nanoTime();
-    ImmutableMap<String, Object> args =
+    Optional<Integer> syncTimeoutMillisArg =
         capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)
-            ? ImmutableMap.of("sync_timeout", syncTimeoutMilis)
-            : ImmutableMap.of();
+            ? Optional.of(syncTimeoutMilis)
+            : Optional.empty();
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
-            timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.clock(watchRoot, args));
+            timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.clock(watchRoot, syncTimeoutMillisArg));
     if (result.isLeft()) {
       Map<String, ?> clockResult = result.getLeft();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));

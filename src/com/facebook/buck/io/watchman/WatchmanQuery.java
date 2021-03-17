@@ -19,6 +19,7 @@ package com.facebook.buck.io.watchman;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /** Enumerate all watchman queries. */
 public abstract class WatchmanQuery {
@@ -85,11 +86,15 @@ public abstract class WatchmanQuery {
   public abstract static class Clock extends WatchmanQuery {
     public abstract String getPath();
 
-    public abstract ImmutableMap<String, Object> getArgs();
+    /** Milliseconds. */
+    public abstract Optional<Integer> getSyncTimeout();
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {
-      return ImmutableList.of("clock", getPath(), getArgs());
+      return ImmutableList.of(
+          "clock",
+          getPath(),
+          getSyncTimeout().map(t -> ImmutableMap.of("sync_timeout", t)).orElse(ImmutableMap.of()));
     }
   }
 
@@ -108,8 +113,8 @@ public abstract class WatchmanQuery {
   }
 
   /** {@code clock} query. */
-  public static Clock clock(String path, ImmutableMap<String, Object> args) {
-    return ImmutableClock.ofImpl(path, args);
+  public static Clock clock(String path, Optional<Integer> syncTimeoutMillis) {
+    return ImmutableClock.ofImpl(path, syncTimeoutMillis);
   }
 
   /** {@code watch-project} query. */

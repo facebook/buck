@@ -357,7 +357,7 @@ public class WatchmanFactoryTest {
                         .build()),
                 WatchmanQuery.watchProject(root),
                 ImmutableMap.of("version", "3.8.0", "watch", root),
-                WatchmanQuery.clock(root, ImmutableMap.of()),
+                WatchmanQuery.clock(root, Optional.empty()),
                 ImmutableMap.of("version", "3.8.0", "clock", "c:0:0:1")));
     Watchman watchman =
         watchmanFactory.build(
@@ -418,7 +418,7 @@ public class WatchmanFactoryTest {
                         .build()),
                 WatchmanQuery.watchProject(root),
                 ImmutableMap.of("version", "4.7.0", "watch", root),
-                WatchmanQuery.clock(root, ImmutableMap.of("sync_timeout", 60 * 1000)),
+                WatchmanQuery.clock(root, Optional.of(60 * 1000)),
                 ImmutableMap.of("version", "4.7.0", "clock", "c:0:0:1")));
     Watchman watchman =
         watchmanFactory.build(
@@ -481,7 +481,7 @@ public class WatchmanFactoryTest {
                         .build()),
                 WatchmanQuery.watchProject(root),
                 ImmutableMap.of("version", "4.7.0", "watch", root),
-                WatchmanQuery.clock(root, ImmutableMap.of("sync_timeout", 60 * 1000)),
+                WatchmanQuery.clock(root, Optional.of(60 * 1000)),
                 ImmutableMap.of()));
     Watchman watchman =
         watchmanFactory.build(
