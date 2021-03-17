@@ -261,7 +261,7 @@ public class Machos {
         that name, there is nothing to scrub.*/
         return;
       }
-      if (stringTableSize == 0) {
+      if (stringTableSize == 0 || symbolTableCount == 0) {
         return;
       }
 
