@@ -110,24 +110,24 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       FilesystemParams filesystemParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue,
-      JavacPipelineState pipeline,
+      JavacPipelineState state,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       ImmutableMap<RelPath, RelPath> resourcesMap) {
-    CompilerParameters compilerParameters = pipeline.getCompilerParameters();
+    CompilerParameters compilerParameters = state.getCompilerParameters();
 
     CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(buildTargetValue.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
-    if (!pipeline.isRunning()) {
+    if (!state.isRunning()) {
       steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
     }
 
     Optional<JarParameters> jarParameters =
         buildTargetValue.isLibraryJar()
-            ? pipeline.getLibraryJarParameters()
-            : pipeline.getAbiJarParameters();
+            ? state.getLibraryJarParameters()
+            : state.getAbiJarParameters();
 
     jarParameters.ifPresent(parameters -> addJarSetupSteps(parameters, steps));
 
@@ -142,7 +142,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
           getConfiguredBuckOut(filesystemParams),
           compilerOutputPathsValue,
           cellToPathMappings,
-          pipeline,
+          state,
           buildTargetValue,
           steps);
     }
@@ -238,10 +238,10 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       RelPath configuredBuckOut,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      JavacPipelineState pipeline,
+      JavacPipelineState state,
       BuildTargetValue invokingRule,
       ImmutableList.Builder<IsolatedStep> steps) {
-    if (hasAnnotationProcessing() && pipeline.isRunning()) {
+    if (hasAnnotationProcessing() && state.isRunning()) {
       CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(invokingRule.getType());
       steps.add(
           SymlinkIsolatedStep.of(
@@ -251,11 +251,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
     steps.add(
         new JavacStep(
-            pipeline,
-            invokingRule,
-            configuredBuckOut,
-            compilerOutputPathsValue,
-            cellToPathMappings));
+            state, invokingRule, configuredBuckOut, compilerOutputPathsValue, cellToPathMappings));
   }
 
   @Override

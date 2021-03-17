@@ -41,7 +41,7 @@ import javax.annotation.Nullable;
 /** Command used to compile java libraries with a variety of ways to handle dependencies. */
 public class JavacStep extends IsolatedStep {
 
-  private final JavacPipelineState pipeline;
+  private final JavacPipelineState state;
   private final BuildTargetValue invokingRule;
   private final RelPath configuredBuckOut;
   private final boolean ownsPipelineObject;
@@ -78,13 +78,13 @@ public class JavacStep extends IsolatedStep {
   }
 
   public JavacStep(
-      JavacPipelineState pipeline,
+      JavacPipelineState state,
       BuildTargetValue invokingRule,
       RelPath configuredBuckOut,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     this(
-        pipeline,
+        state,
         invokingRule,
         configuredBuckOut,
         false,
@@ -93,13 +93,13 @@ public class JavacStep extends IsolatedStep {
   }
 
   private JavacStep(
-      JavacPipelineState pipeline,
+      JavacPipelineState state,
       BuildTargetValue invokingRule,
       RelPath configuredBuckOut,
       boolean ownsPipelineObject,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
-    this.pipeline = pipeline;
+    this.state = state;
     this.invokingRule = invokingRule;
     this.configuredBuckOut = configuredBuckOut;
     this.ownsPipelineObject = ownsPipelineObject;
@@ -116,7 +116,7 @@ public class JavacStep extends IsolatedStep {
     Optional<String> returnedStderr;
     try {
       ResolvedJavac.Invocation invocation =
-          pipeline.getJavacInvocation(
+          state.getJavacInvocation(
               compilerOutputPathsValue, context, cellToPathMappings, configuredBuckOut);
       if (invokingRule.isSourceAbi()) {
         declaredDepsBuildResult = invocation.buildSourceAbiJar();
@@ -125,11 +125,11 @@ public class JavacStep extends IsolatedStep {
       } else {
         declaredDepsBuildResult = invocation.buildClasses();
       }
-      firstOrderStdout = pipeline.getStdoutContents();
-      firstOrderStderr = pipeline.getStderrContents();
+      firstOrderStdout = state.getStdoutContents();
+      firstOrderStderr = state.getStderrContents();
     } finally {
       if (ownsPipelineObject) {
-        pipeline.close();
+        state.close();
       }
     }
     if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
@@ -170,7 +170,7 @@ public class JavacStep extends IsolatedStep {
 
   @VisibleForTesting
   ResolvedJavac getResolvedJavac() {
-    return pipeline.getResolvedJavac();
+    return state.getResolvedJavac();
   }
 
   @Override
@@ -179,11 +179,11 @@ public class JavacStep extends IsolatedStep {
         getResolvedJavac()
             .getDescription(
                 getOptions(context, getClasspathEntries()),
-                pipeline.getCompilerParameters().getSourceFilePaths(),
-                pipeline.getCompilerParameters().getOutputPaths().getPathToSourcesList());
+                state.getCompilerParameters().getSourceFilePaths(),
+                state.getCompilerParameters().getOutputPaths().getPathToSourcesList());
 
-    if (invokingRule.isLibraryJar() && pipeline.getLibraryJarParameters().isPresent()) {
-      JarParameters jarParameters = pipeline.getLibraryJarParameters().get();
+    if (invokingRule.isLibraryJar() && state.getLibraryJarParameters().isPresent()) {
+      JarParameters jarParameters = state.getLibraryJarParameters().get();
       Optional<RelPath> manifestFile = jarParameters.getManifestFile();
       ImmutableSortedSet<RelPath> entriesToJar = jarParameters.getEntriesToJar();
       description =
@@ -207,7 +207,7 @@ public class JavacStep extends IsolatedStep {
       return "source_abi";
     } else if (invokingRule.isSourceOnlyAbi()) {
       return "source_only_abi";
-    } else if (pipeline.getLibraryJarParameters().isPresent()) {
+    } else if (state.getLibraryJarParameters().isPresent()) {
       name = "javac_jar";
     } else {
       name = getResolvedJavac().getShortName();
@@ -226,18 +226,18 @@ public class JavacStep extends IsolatedStep {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       IsolatedExecutionContext context, ImmutableSortedSet<RelPath> buildClasspathEntries) {
-    return pipeline.getOptions(context, buildClasspathEntries);
+    return state.getOptions(context, buildClasspathEntries);
   }
 
   /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
   ImmutableSortedSet<RelPath> getClasspathEntries() {
-    return pipeline.getCompilerParameters().getClasspathEntries();
+    return state.getCompilerParameters().getClasspathEntries();
   }
 
   @VisibleForTesting
   ImmutableSortedSet<RelPath> getSrcs() {
-    return pipeline.getCompilerParameters().getSourceFilePaths();
+    return state.getCompilerParameters().getSourceFilePaths();
   }
 
   @Override

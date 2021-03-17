@@ -448,16 +448,13 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
+      RelPath classesDir,
       JavacPipelineState state,
       AbiJarPipelineStepsBuilder stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
-            context,
-            filesystem,
-            state.getCompilerParameters().getOutputPaths().getClassesDir().getPath(),
-            resourcesParameters,
-            buildTarget);
+            context, filesystem, classesDir.getPath(), resourcesParameters, buildTarget);
 
     ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(
@@ -567,15 +564,12 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       JavacPipelineState state,
       RelPath pathToClassHashes,
+      RelPath classesDir,
       LibraryJarPipelineStepsBuilder stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
-            context,
-            filesystem,
-            state.getCompilerParameters().getOutputPaths().getClassesDir().getPath(),
-            resourcesParameters,
-            libraryTarget);
+            context, filesystem, classesDir.getPath(), resourcesParameters, libraryTarget);
 
     ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         CellPathResolverUtils.getCellToPathMappings(

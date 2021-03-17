@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -199,6 +200,10 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
 
+      CompilerOutputPaths compilerOutputPaths =
+          CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
+      RelPath classesDir = compilerOutputPaths.getClassesDir();
+
       AbiJarPipelineStepsBuilder stepsBuilder =
           JavaCompileStepsBuilderFactoryCreator.createFactory(
                   jarBuildStepsFactory.getConfiguredCompiler(),
@@ -209,6 +214,7 @@ public class CalculateSourceAbi
           buildContext,
           filesystem,
           ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
+          classesDir,
           state,
           stepsBuilder);
       return stepsBuilder.build();

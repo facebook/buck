@@ -213,6 +213,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                 jarBuildStepsFactory.getConfiguredCompiler(),
                 createJavaCDParams(filesystem, sourcePathResolver))
             .getPipelineLibraryJarBuilder();
+    CompilerOutputPaths compilerOutputPaths =
+        CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
+    RelPath classesDir = compilerOutputPaths.getClassesDir();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
         buildContext,
@@ -220,6 +223,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
         state,
         outputPathResolver.resolvePath(pathToClassHashesOutputPath),
+        classesDir,
         stepsBuilder);
 
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
