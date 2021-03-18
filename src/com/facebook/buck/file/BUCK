@@ -63,6 +63,7 @@ java_library_with_plugins(
 java_library(
     name = "rules",
     srcs = [
+        "CopyFile.java",
         "CopyTree.java",
         "WriteFile.java",
     ],
