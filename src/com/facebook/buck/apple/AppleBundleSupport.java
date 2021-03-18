@@ -18,7 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.file.CopyFile;
 
 /** Utility functions helpful when implementing AppleBundle build rule & friends */
 public class AppleBundleSupport {
@@ -36,6 +36,6 @@ public class AppleBundleSupport {
   public static boolean isWatchKitStubNeeded(
       String extension, BuildRule binary, ApplePlatform platform) {
     return (isLegacyWatchApp(extension, binary) || platform.getName().contains("watch"))
-        && binary instanceof WriteFile;
+        && binary instanceof CopyFile;
   }
 }

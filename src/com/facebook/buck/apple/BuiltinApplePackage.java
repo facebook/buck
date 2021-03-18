@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.file.CopyFile;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -36,11 +36,9 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.ZipStep;
-import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.ByteSource;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -157,7 +155,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
       if (rule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) rule;
         BuildRule binary = appleBundle.getBinaryBuildRule();
-        if (binary instanceof WriteFile && appleBundle.getPlatformName().startsWith("watch")) {
+        if (binary instanceof CopyFile && appleBundle.getPlatformName().startsWith("watch")) {
           commands.add(
               MkdirStep.of(
                   BuildCellRelativePath.fromCellRelativePath(
@@ -170,12 +168,14 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                   BuildCellRelativePath.fromCellRelativePath(
                       context.getBuildCellRootPath(), getProjectFilesystem(), watchKitSupportDir)));
           commands.add(
-              WriteFileIsolatedStep.of(
-                  ByteSource.wrap(((WriteFile) binary).getFileContents()),
-                  watchKitSupportDir.resolve("WK"),
-                  true /* executable */));
+              CopyStep.forFile(
+                  context
+                      .getSourcePathResolver()
+                      .getIdeallyRelativePath(
+                          Objects.requireNonNull(binary.getSourcePathToOutput())),
+                  watchKitSupportDir.resolve("WK")));
         } else {
-          Optional<WriteFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
+          Optional<CopyFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
           if (legacyWatchStub.isPresent()) {
             Path watchKitSupportDir = temp.resolve("WatchKitSupport");
             commands.add(
@@ -185,10 +185,12 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                         getProjectFilesystem(),
                         watchKitSupportDir)));
             commands.add(
-                WriteFileIsolatedStep.of(
-                    ByteSource.wrap(legacyWatchStub.get().getFileContents()),
-                    watchKitSupportDir.resolve("WK"),
-                    true /* executable */));
+                CopyStep.forFile(
+                    context
+                        .getSourcePathResolver()
+                        .getIdeallyRelativePath(
+                            Objects.requireNonNull(legacyWatchStub.get().getSourcePathToOutput())),
+                    watchKitSupportDir.resolve("WK")));
           }
         }
       }
@@ -201,7 +203,7 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
    * @return the WatchOS 1 stub binary if appleBundle represents a legacy Watch Extension.
    *     Otherwise, return absent.
    */
-  private Optional<WriteFile> getLegacyWatchStubFromDeps(AppleBundle appleBundle) {
+  private Optional<CopyFile> getLegacyWatchStubFromDeps(AppleBundle appleBundle) {
     for (BuildRule rule : appleBundle.getBuildDeps()) {
       if (rule instanceof AppleBundle
           && rule.getBuildTarget()
@@ -209,8 +211,8 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
               .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
         AppleBundle legacyWatchApp = (AppleBundle) rule;
         BuildRule legacyWatchStub = legacyWatchApp.getBinaryBuildRule();
-        if (legacyWatchStub instanceof WriteFile) {
-          return Optional.of((WriteFile) legacyWatchStub);
+        if (legacyWatchStub instanceof CopyFile) {
+          return Optional.of((CopyFile) legacyWatchStub);
         }
       }
     }

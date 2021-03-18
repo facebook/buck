@@ -180,8 +180,7 @@ public class AppleToolchainDescription
             .setXcodeBuildVersion(args.getXcodeBuildVersion())
             .setAppleSdkPaths(sdkPaths)
             .setAppleSdk(sdk)
-            .setStubBinary(
-                applePlatform.getStubBinaryPath().map(path -> sdkPath.resolve(path).getPath()))
+            .setStubBinary(args.getStubBinary())
             .build();
 
     return new AppleToolchainBuildRule(
@@ -327,5 +326,8 @@ public class AppleToolchainDescription
 
     /** If work around for dsymutil should be used. */
     Optional<Boolean> getWorkAroundDsymutilLtoStackOverflowBug();
+
+    /** WatchKit stub binary (WK) */
+    Optional<SourcePath> getStubBinary();
   }
 }

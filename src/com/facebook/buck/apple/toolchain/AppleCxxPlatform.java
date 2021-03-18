@@ -18,12 +18,12 @@ package com.facebook.buck.apple.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Adds Apple-specific tools to {@link CxxPlatform}. */
@@ -58,7 +58,7 @@ public abstract class AppleCxxPlatform implements FlavorConvertible {
 
   public abstract Tool getLipo();
 
-  public abstract Optional<Path> getStubBinary();
+  public abstract Optional<SourcePath> getStubBinary();
 
   public abstract Tool getLldb();
 

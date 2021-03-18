@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -62,9 +61,10 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.file.CopyFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.util.types.Either;
@@ -80,9 +80,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
@@ -534,21 +531,15 @@ public class AppleBinaryDescription
             extraCxxDeps = ImmutableSortedSet.of();
           }
 
-          Optional<Path> stubBinaryPath =
+          Optional<SourcePath> stubBinaryPath =
               getStubBinaryPath(buildTarget, appleCxxPlatformsFlavorDomain, args, graphBuilder);
           if (shouldUseStubBinary(buildTarget, args) && stubBinaryPath.isPresent()) {
-            try {
-              return new WriteFile(
-                  buildTarget,
-                  projectFilesystem,
-                  Files.readAllBytes(stubBinaryPath.get()),
-                  BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
-                      .getPath(),
-                  true);
-            } catch (IOException e) {
-              throw new HumanReadableException(
-                  "Could not read stub binary " + stubBinaryPath.get());
-            }
+            return new CopyFile(
+                buildTarget,
+                projectFilesystem,
+                graphBuilder,
+                new OutputPath("WK"),
+                stubBinaryPath.get());
           } else {
             CxxBinaryDescriptionArg.Builder delegateArg =
                 CxxBinaryDescriptionArg.builder().from(args);
@@ -621,12 +612,12 @@ public class AppleBinaryDescription
         || flavors.contains(LEGACY_WATCH_FLAVOR));
   }
 
-  private Optional<Path> getStubBinaryPath(
+  private Optional<SourcePath> getStubBinaryPath(
       BuildTarget buildTarget,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       AppleBinaryDescriptionArg args,
       ActionGraphBuilder graphBuilder) {
-    Optional<Path> stubBinaryPath = Optional.empty();
+    Optional<SourcePath> stubBinaryPath = Optional.empty();
     Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
         getAppleCxxPlatform(
             graphBuilder, appleCxxPlatformsFlavorDomain, buildTarget, args.getDefaultPlatform());

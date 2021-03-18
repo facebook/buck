@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
-import com.facebook.buck.file.WriteFile;
+import com.facebook.buck.file.CopyFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.base.Preconditions;
@@ -135,7 +135,7 @@ public class AppleDebuggableBinary extends AbstractBuildRule
 
   public static boolean isBuildRuleDebuggable(BuildRule buildRule) {
     // stub binary files cannot have dSYMs
-    if (buildRule instanceof WriteFile) {
+    if (buildRule instanceof CopyFile) {
       return false;
     }
 

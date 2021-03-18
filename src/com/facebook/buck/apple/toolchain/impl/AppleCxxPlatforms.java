@@ -35,6 +35,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
@@ -309,11 +310,11 @@ public class AppleCxxPlatforms {
     Tool lldb =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "lldb", version);
 
-    Optional<Path> stubBinaryPath =
+    Optional<SourcePath> stubBinaryPath =
         targetSdk
             .getApplePlatform()
             .getStubBinaryPath()
-            .map(input -> sdkPaths.getSdkPath().resolve(input));
+            .map(input -> PathSourcePath.of(filesystem, sdkPaths.getSdkPath().resolve(input)));
 
     UserFlavor targetFlavor =
         UserFlavor.of(
