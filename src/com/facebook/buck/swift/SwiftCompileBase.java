@@ -170,7 +170,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       PreprocessorFlags cxxDeps,
       ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean hasPrefixSerializedDebugInfo) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -223,7 +224,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.debugPrefixMap = debugPrefixMap;
     this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
-    this.prefixSerializedDebugInfo = swiftBuckConfig.getPrefixSerializedDebugInfo();
+    this.prefixSerializedDebugInfo =
+        hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
     performChecks(buildTarget);
   }
 

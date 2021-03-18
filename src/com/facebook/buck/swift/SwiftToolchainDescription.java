@@ -32,6 +32,7 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Defines an swift_toolchain rule which provides values to fill {@link SwiftPlatform}. */
 public class SwiftToolchainDescription
@@ -72,9 +73,8 @@ public class SwiftToolchainDescription
         args.getStaticRuntimePaths().stream()
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
-        args.getRuntimeRunPaths().stream()
-            .map(Paths::get)
-            .collect(ImmutableList.toImmutableList()));
+        args.getRuntimeRunPaths().stream().map(Paths::get).collect(ImmutableList.toImmutableList()),
+        args.getPrefixSerializedDebugInfo());
   }
 
   @Override
@@ -112,5 +112,11 @@ public class SwiftToolchainDescription
 
     /** Runtime run paths. */
     ImmutableList<String> getRuntimeRunPaths();
+
+    /** If the toolchain supports the -prefix-serialized-debug-info flag. */
+    @Value.Default
+    default boolean getPrefixSerializedDebugInfo() {
+      return false;
+    }
   }
 }

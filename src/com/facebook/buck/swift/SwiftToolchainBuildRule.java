@@ -39,6 +39,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final ImmutableList<Path> runtimePathsForLinking;
   private final ImmutableList<Path> staticRuntimePaths;
   private final ImmutableList<Path> runtimeRunPaths;
+  private final boolean prefixSerializedDebugInfo;
 
   public SwiftToolchainBuildRule(
       BuildTarget buildTarget,
@@ -48,7 +49,8 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
       ImmutableList<Path> staticRuntimePaths,
-      ImmutableList<Path> runtimeRunPaths) {
+      ImmutableList<Path> runtimeRunPaths,
+      boolean prefixSerializedDebugInfo) {
     super(buildTarget, projectFilesystem);
     this.swiftc = swiftc;
     this.swiftStdlibTool = swiftStdlibTool;
@@ -56,6 +58,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.runtimePathsForLinking = runtimePathsForLinking;
     this.staticRuntimePaths = staticRuntimePaths;
     this.runtimeRunPaths = runtimeRunPaths;
+    this.prefixSerializedDebugInfo = prefixSerializedDebugInfo;
   }
 
   /** Provides SwiftPlatform for given Swift target triple */
@@ -70,6 +73,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftStaticRuntimePaths(staticRuntimePaths)
         .setSwiftSharedLibraryRunPaths(runtimeRunPaths)
         .setDebugPrefixMap(debugPrefixMap)
+        .setPrefixSerializedDebugInfo(prefixSerializedDebugInfo)
         .build();
   }
 }

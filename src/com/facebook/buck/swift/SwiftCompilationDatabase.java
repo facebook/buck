@@ -71,7 +71,8 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
       PreprocessorFlags cxxDeps,
       ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean hasPrefixSerializedDebugInfo) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -94,7 +95,8 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
         cxxDeps,
         debugPrefixMap,
         importUnderlyingModule,
-        withDownwardApi);
+        withDownwardApi,
+        hasPrefixSerializedDebugInfo);
     this.outputCommandPath = RelPath.of(this.outputPath.resolve("swift_compile_commands.json"));
   }
 

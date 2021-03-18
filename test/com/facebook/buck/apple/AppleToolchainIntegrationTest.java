@@ -194,15 +194,18 @@ public class AppleToolchainIntegrationTest {
                 + swiftLibraryPath
                 + "/SwiftLibrary.o%n"
                 + "swift compile: swift code%n"
+                + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: input:%n"
                 + companionLibraryPath
                 + "/SwiftCompanionLibrary.o%n"
                 + "swift compile: swift source 1%n"
                 + "swift compile: swift source 2%n"
+                + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: input:%n"
                 + anotherSwiftLibraryPath
                 + "/AnotherSwiftLibrary.o%n"
                 + "swift compile: extra swift code%n"
+                + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation%n"
                 + "linker: lpath: /test/linking,@executable_path/linking,@loader_path/linking%n"

@@ -155,6 +155,7 @@ swift_toolchain(
         "@executable_path/runtime_run",
         "@loader_path/runtime_run",
     ],
+    prefix_serialized_debug_info = True,
 )
 
 cxx_toolchain(

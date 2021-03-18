@@ -70,7 +70,8 @@ public class SwiftCompile extends SwiftCompileBase {
       PreprocessorFlags cxxDeps,
       ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean hasPrefixSerializedDebugInfo) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -93,7 +94,8 @@ public class SwiftCompile extends SwiftCompileBase {
         cxxDeps,
         debugPrefixMap,
         importUnderlyingModule,
-        withDownwardApi);
+        withDownwardApi,
+        hasPrefixSerializedDebugInfo);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
   }

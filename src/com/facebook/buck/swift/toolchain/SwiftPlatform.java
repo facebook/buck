@@ -70,6 +70,10 @@ public interface SwiftPlatform {
   /** @return A map of debug paths to prefix during compilation. */
   ImmutableBiMap<Path, String> getDebugPrefixMap();
 
+  /** @return true if the platform supports the -prefix-serialized-debug-info flag. */
+  @Value.Default
+  default boolean getPrefixSerializedDebugInfo() { return false; };
+
   @Value.Default
   default ImmutableList<Path> getAdditionalSystemFrameworkSearchPaths() {
     return ImmutableList.of();

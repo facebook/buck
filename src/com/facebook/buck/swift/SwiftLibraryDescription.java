@@ -321,7 +321,8 @@ public class SwiftLibraryDescription
           cxxDeps,
           swiftPlatform.get().getDebugPrefixMap(),
           false,
-          downwardApiConfig.isEnabledForApple());
+          downwardApiConfig.isEnabledForApple(),
+          swiftPlatform.get().getPrefixSerializedDebugInfo());
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -491,7 +492,8 @@ public class SwiftLibraryDescription
         preprocessFlags,
         swiftPlatform.getDebugPrefixMap(),
         importUnderlyingModule,
-        downwardApiConfig.isEnabledForApple());
+        downwardApiConfig.isEnabledForApple(),
+        swiftPlatform.getPrefixSerializedDebugInfo());
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -559,7 +561,8 @@ public class SwiftLibraryDescription
         preprocessFlags,
         swiftPlatform.getDebugPrefixMap(),
         importUnderlyingModule,
-        downwardApiConfig.isEnabledForApple());
+        downwardApiConfig.isEnabledForApple(),
+        swiftPlatform.getPrefixSerializedDebugInfo());
   }
 
   public static String getModuleName(
