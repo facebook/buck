@@ -447,7 +447,7 @@ public class AppleBinaryDescription
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     if (fatBinaryInfo.isPresent()) {
-      if (shouldUseStubBinary(buildTarget, args)) {
+      if (shouldUseWatchKitStubBinary(buildTarget, args)) {
         BuildTarget thinTarget = Iterables.getFirst(fatBinaryInfo.get().getThinTargets(), null);
         return requireThinBinary(
             context,
@@ -531,15 +531,17 @@ public class AppleBinaryDescription
             extraCxxDeps = ImmutableSortedSet.of();
           }
 
-          Optional<SourcePath> stubBinaryPath =
-              getStubBinaryPath(buildTarget, appleCxxPlatformsFlavorDomain, args, graphBuilder);
-          if (shouldUseStubBinary(buildTarget, args) && stubBinaryPath.isPresent()) {
+          Optional<SourcePath> watchKitStubBinaryPath =
+              getWatchKitStubBinaryPath(
+                  buildTarget, appleCxxPlatformsFlavorDomain, args, graphBuilder);
+          if (shouldUseWatchKitStubBinary(buildTarget, args)
+              && watchKitStubBinaryPath.isPresent()) {
             return new CopyFile(
                 buildTarget,
                 projectFilesystem,
                 graphBuilder,
                 new OutputPath("WK"),
-                stubBinaryPath.get());
+                watchKitStubBinaryPath.get());
           } else {
             CxxBinaryDescriptionArg.Builder delegateArg =
                 CxxBinaryDescriptionArg.builder().from(args);
@@ -599,7 +601,8 @@ public class AppleBinaryDescription
         });
   }
 
-  private boolean shouldUseStubBinary(BuildTarget buildTarget, AppleBinaryDescriptionArg args) {
+  private boolean shouldUseWatchKitStubBinary(
+      BuildTarget buildTarget, AppleBinaryDescriptionArg args) {
     // If the target has sources, it's not a watch app, it might be a watch extension instead.
     // In this case, we don't need to add a watch kit stub.
     if (!args.getSrcs().isEmpty()) {
@@ -614,19 +617,19 @@ public class AppleBinaryDescription
         || flavors.contains(LEGACY_WATCH_FLAVOR));
   }
 
-  private Optional<SourcePath> getStubBinaryPath(
+  private Optional<SourcePath> getWatchKitStubBinaryPath(
       BuildTarget buildTarget,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain,
       AppleBinaryDescriptionArg args,
       ActionGraphBuilder graphBuilder) {
-    Optional<SourcePath> stubBinaryPath = Optional.empty();
+    Optional<SourcePath> watchKitStubBinaryPath = Optional.empty();
     Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
         getAppleCxxPlatform(
             graphBuilder, appleCxxPlatformsFlavorDomain, buildTarget, args.getDefaultPlatform());
     if (appleCxxPlatform.isPresent() && args.getSrcs().isEmpty()) {
-      stubBinaryPath = appleCxxPlatform.get().resolve(graphBuilder).getStubBinary();
+      watchKitStubBinaryPath = appleCxxPlatform.get().resolve(graphBuilder).getWatchKitStubBinary();
     }
-    return stubBinaryPath;
+    return watchKitStubBinaryPath;
   }
 
   private Optional<ApplePlatform> getApplePlatformForTarget(

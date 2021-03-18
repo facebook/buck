@@ -310,10 +310,10 @@ public class AppleCxxPlatforms {
     Tool lldb =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "lldb", version);
 
-    Optional<SourcePath> stubBinaryPath =
+    Optional<SourcePath> watchKitStubBinaryPath =
         targetSdk
             .getApplePlatform()
-            .getStubBinaryPath()
+            .getWatchKitStubBinaryPath()
             .map(input -> PathSourcePath.of(filesystem, sdkPaths.getSdkPath().resolve(input)));
 
     UserFlavor targetFlavor =
@@ -524,7 +524,7 @@ public class AppleCxxPlatforms {
         .setXctest(xctest)
         .setDsymutil(dsymutil)
         .setLipo(lipo)
-        .setStubBinary(stubBinaryPath)
+        .setWatchKitStubBinary(watchKitStubBinaryPath)
         .setLldb(lldb)
         .setCodesignAllocate(
             getOptionalTool(

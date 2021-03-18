@@ -180,7 +180,7 @@ public class AppleToolchainDescription
             .setXcodeBuildVersion(args.getXcodeBuildVersion())
             .setAppleSdkPaths(sdkPaths)
             .setAppleSdk(sdk)
-            .setStubBinary(args.getStubBinary())
+            .setWatchKitStubBinary(args.getWatchKitStubBinary())
             .build();
 
     return new AppleToolchainBuildRule(
@@ -328,6 +328,6 @@ public class AppleToolchainDescription
     Optional<Boolean> getWorkAroundDsymutilLtoStackOverflowBug();
 
     /** WatchKit stub binary (WK) */
-    Optional<SourcePath> getStubBinary();
+    Optional<SourcePath> getWatchKitStubBinary();
   }
 }

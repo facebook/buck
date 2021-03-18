@@ -58,7 +58,7 @@ public abstract class AppleCxxPlatform implements FlavorConvertible {
 
   public abstract Tool getLipo();
 
-  public abstract Optional<SourcePath> getStubBinary();
+  public abstract Optional<SourcePath> getWatchKitStubBinary();
 
   public abstract Tool getLldb();
 
