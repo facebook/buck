@@ -79,6 +79,10 @@ public class AppleBundleDescription
   public static final Flavor WATCH_OS_FLAVOR = InternalFlavor.of("watchos-armv7k");
   public static final Flavor WATCH_OS_64_32_FLAVOR = InternalFlavor.of("watchos-arm64_32");
   public static final Flavor WATCH_SIMULATOR_FLAVOR = InternalFlavor.of("watchsimulator-i386");
+  public static final Flavor WATCH_SIMULATOR_X86_64_FLAVOR =
+      InternalFlavor.of("watchsimulator-x86_64");
+  public static final Flavor WATCH_SIMULATOR_ARM64_FLAVOR =
+      InternalFlavor.of("watchsimulator-arm64");
 
   private static final Flavor WATCH = InternalFlavor.of("watch");
 
@@ -309,7 +313,10 @@ public class AppleBundleDescription
     String platformName = cxxPlatform.getFlavor().getName();
     Flavor[] actualWatchFlavors;
     if (ApplePlatform.isSimulator(platformName)) {
-      actualWatchFlavors = new Flavor[] {WATCH_SIMULATOR_FLAVOR};
+      actualWatchFlavors =
+          new Flavor[] {
+            WATCH_SIMULATOR_FLAVOR, WATCH_SIMULATOR_X86_64_FLAVOR, WATCH_SIMULATOR_ARM64_FLAVOR
+          };
     } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName())
         || platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
       actualWatchFlavors = new Flavor[] {WATCH_OS_FLAVOR, WATCH_OS_64_32_FLAVOR};
