@@ -59,8 +59,9 @@ public class DefaultLinkerProvider implements LinkerProvider {
                     }
                   });
 
-  public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
-    this(type, toolProvider, cacheLinks, false, false);
+  public DefaultLinkerProvider(
+      Type type, ToolProvider toolProvider, boolean cacheLinks, boolean usePathNormalization) {
+    this(type, toolProvider, cacheLinks, false, usePathNormalization);
   }
 
   public DefaultLinkerProvider(

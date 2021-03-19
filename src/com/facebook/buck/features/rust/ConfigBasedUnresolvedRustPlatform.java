@@ -26,6 +26,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -54,6 +55,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
   private static final Path RUSTDOC = Paths.get("rustdoc");
 
   private final RustBuckConfig rustBuckConfig;
+  private final CxxBuckConfig cxxBuckConfig;
   private final String platformName;
   private final ToolProvider rustCompiler;
   private final ToolProvider rustdoc;
@@ -72,6 +74,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
       RustPlatformFactory platformFactory,
       @Nullable ProcessExecutor processExecutor) {
     this.rustBuckConfig = new RustBuckConfig(buckConfig);
+    this.cxxBuckConfig = new CxxBuckConfig(buckConfig);
     this.platformName = platformName;
     this.unresolvedCxxPlatform =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms().getValue(InternalFlavor.of(platformName));
@@ -131,7 +134,8 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                                 .getLinkerPlatform(platformName)
                                 .orElse(cxxPlatform.getLd().getType()),
                             tp,
-                            true))
+                            true,
+                            cxxBuckConfig.getLinkPathNormalizationArgsEnabled()))
             .orElseGet(cxxPlatform::getLd);
 
     ImmutableRustPlatform.Builder builder =

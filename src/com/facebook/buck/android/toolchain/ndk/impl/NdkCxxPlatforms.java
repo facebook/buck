@@ -594,7 +594,8 @@ public class NdkCxxPlatforms {
                         version,
                         cxxRuntime,
                         executableFinder)),
-                config.shouldCacheLinks()))
+                config.shouldCacheLinks(),
+                config.getLinkPathNormalizationArgsEnabled()))
         .addAllLdflags(StringArg.from(getLdFlags(targetConfiguration, androidConfig)))
         .setStrip(
             new ConstantToolProvider(

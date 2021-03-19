@@ -18,6 +18,7 @@ buck_module(
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",
         "//src/com/facebook/buck/cxx:rules",
+        "//src/com/facebook/buck/cxx/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",

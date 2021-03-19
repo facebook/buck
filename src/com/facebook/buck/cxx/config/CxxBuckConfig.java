@@ -425,7 +425,10 @@ public class CxxBuckConfig {
         delegate.getEnum(cxxSection, LINKER_PLATFORM, LinkerProvider.Type.class);
     return Optional.of(
         new DefaultLinkerProvider(
-            type.orElse(defaultType), toolProvider.get(), shouldCacheLinks()));
+            type.orElse(defaultType),
+            toolProvider.get(),
+            shouldCacheLinks(),
+            getLinkPathNormalizationArgsEnabled()));
   }
 
   public HeaderVerification getHeaderVerificationOrIgnore() {
