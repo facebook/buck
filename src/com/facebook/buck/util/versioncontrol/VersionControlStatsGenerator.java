@@ -59,14 +59,11 @@ public class VersionControlStatsGenerator {
     }
   }
 
-  private static final String REMOTE_MASTER = "remote/master";
-  private static final ImmutableSet<String> TRACKED_BOOKMARKS =
-      ImmutableSet.of(
-          REMOTE_MASTER);
-
   private final VersionControlCmdLineInterface versionControlCmdLineInterface;
 
   private final Optional<FastVersionControlStats> pregeneratedVersionControlStats;
+
+  private final ImmutableSet<String> trackedBookmarks;
 
   @GuardedBy("this")
   @Nullable
@@ -83,8 +80,16 @@ public class VersionControlStatsGenerator {
   public VersionControlStatsGenerator(
       VersionControlCmdLineInterface versionControlCmdLineInterface,
       Optional<FastVersionControlStats> pregeneratedVersionControlStats) {
+    this(versionControlCmdLineInterface, pregeneratedVersionControlStats, ImmutableSet.of());
+  }
+
+  public VersionControlStatsGenerator(
+      VersionControlCmdLineInterface versionControlCmdLineInterface,
+      Optional<FastVersionControlStats> pregeneratedVersionControlStats,
+      ImmutableSet<String> trackedBookmarks) {
     this.versionControlCmdLineInterface = versionControlCmdLineInterface;
     this.pregeneratedVersionControlStats = pregeneratedVersionControlStats;
+    this.trackedBookmarks = trackedBookmarks;
     pregeneratedVersionControlStats.ifPresent(
         x -> {
           synchronized (this) {
@@ -181,7 +186,7 @@ public class VersionControlStatsGenerator {
         }
         versionControlStatsBuilder.setCurrentRevisionId(fastStats.getCurrentRevisionId());
         versionControlStatsBuilder.setBaseBookmarks(
-            Sets.intersection(fastStats.getBaseBookmarks(), TRACKED_BOOKMARKS));
+            Sets.intersection(fastStats.getBaseBookmarks(), trackedBookmarks));
         versionControlStatsBuilder.setBranchedFromMasterRevisionId(
             fastStats.getBranchedFromMasterRevisionId());
         versionControlStatsBuilder.setBranchedFromMasterTS(fastStats.getBranchedFromMasterTS());

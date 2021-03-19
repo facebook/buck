@@ -30,6 +30,8 @@ import org.junit.Test;
 
 public class VersionControlStatsGeneratorTest {
 
+  private static final ImmutableSet TRACKED_BOOKMARKS = ImmutableSet.of("remote/master");
+
   private final FullVersionControlStats expected =
       FullVersionControlStats.builder()
           .setCurrentRevisionId("f00")
@@ -54,7 +56,8 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void fastModeGeneratesBasicStats() throws Exception {
     Optional<FullVersionControlStats> actual =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.empty(), TRACKED_BOOKMARKS)
             .generateStats(VersionControlStatsGenerator.Mode.FAST);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(actual.get().getCurrentRevisionId(), is(equalTo(expected.getCurrentRevisionId())));
@@ -67,9 +70,19 @@ public class VersionControlStatsGeneratorTest {
   }
 
   @Test
+  public void doesNotListUntrackedBookmarks() throws Exception {
+    Optional<FullVersionControlStats> actual =
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.empty(), ImmutableSet.of())
+            .generateStats(VersionControlStatsGenerator.Mode.FAST);
+    assertThat(actual.get().getBaseBookmarks(), is(empty()));
+  }
+
+  @Test
   public void fastModeDoesNotGenerateChangedFilesAndDiff() throws Exception {
     Optional<FullVersionControlStats> actual =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.empty(), TRACKED_BOOKMARKS)
             .generateStats(VersionControlStatsGenerator.Mode.FAST);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(actual.get().getPathsChangedInWorkingDirectory(), is(empty()));
@@ -79,7 +92,8 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void fullModeGeneratesChangedFilesAndDiff() throws Exception {
     Optional<FullVersionControlStats> actual =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.empty(), TRACKED_BOOKMARKS)
             .generateStats(VersionControlStatsGenerator.Mode.FULL);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(
@@ -91,7 +105,8 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void fastModeDoesNotReturnChangedFilesAndDiffIfTheyAreGenerated() throws Exception {
     VersionControlStatsGenerator versionControlStatsGenerator =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty());
+        new VersionControlStatsGenerator(
+            versionControlCmdLineInterface, Optional.empty(), TRACKED_BOOKMARKS);
     versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FULL);
     Optional<FullVersionControlStats> actual =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FAST);
@@ -103,7 +118,8 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void pregeneratedModeDoesNotGenerateStats() throws Exception {
     Optional<FullVersionControlStats> actual =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty())
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.empty(), TRACKED_BOOKMARKS)
             .generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
     assertThat(actual.isPresent(), is(equalTo(false)));
   }
@@ -111,7 +127,8 @@ public class VersionControlStatsGeneratorTest {
   @Test
   public void pregeneratedDoesNotReturnStatsIfTheyAreGenerated() throws Exception {
     VersionControlStatsGenerator versionControlStatsGenerator =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.empty());
+        new VersionControlStatsGenerator(
+            versionControlCmdLineInterface, Optional.empty(), TRACKED_BOOKMARKS);
     versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.FAST);
     Optional<FullVersionControlStats> actual =
         versionControlStatsGenerator.generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
@@ -128,7 +145,8 @@ public class VersionControlStatsGeneratorTest {
             expected.getBranchedFromMasterTS());
 
     Optional<FullVersionControlStats> actual =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.of(pregenerated), TRACKED_BOOKMARKS)
             .generateStats(VersionControlStatsGenerator.Mode.PREGENERATED);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(actual.get().getCurrentRevisionId(), is(equalTo(expected.getCurrentRevisionId())));
@@ -146,7 +164,8 @@ public class VersionControlStatsGeneratorTest {
         ImmutableFastVersionControlStats.ofImpl(
             "cafe", ImmutableSet.of("remote/master"), "babe", 1L);
     Optional<FullVersionControlStats> actual =
-        new VersionControlStatsGenerator(versionControlCmdLineInterface, Optional.of(pregenerated))
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.of(pregenerated), TRACKED_BOOKMARKS)
             .generateStats(VersionControlStatsGenerator.Mode.FULL);
     assertThat(actual.isPresent(), is(equalTo(true)));
     assertThat(

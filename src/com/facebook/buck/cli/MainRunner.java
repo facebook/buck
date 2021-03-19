@@ -1317,7 +1317,8 @@ public final class MainRunner {
                       new PrintStreamProcessExecutorFactory(),
                       vcBuckConfig.getHgCmd(),
                       buckConfig.getEnvironment()),
-                  vcBuckConfig.getPregeneratedVersionControlStats());
+                  vcBuckConfig.getPregeneratedVersionControlStats(),
+                  vcBuckConfig.getTrackedBookmarks());
           if ((vcBuckConfig.shouldGenerateStatistics() || shouldUploadBuildReport)
               && command.subcommand instanceof AbstractCommand) {
             AbstractCommand subcommand = (AbstractCommand) command.subcommand;
