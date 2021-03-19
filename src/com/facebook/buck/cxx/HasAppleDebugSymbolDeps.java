@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.rules.BuildRule;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -29,4 +30,6 @@ import java.util.stream.Stream;
  */
 public interface HasAppleDebugSymbolDeps extends BuildRule {
   Stream<BuildRule> getAppleDebugSymbolDeps();
+
+  Optional<String> getPathNormalizationPrefix();
 }

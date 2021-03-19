@@ -867,9 +867,23 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsym() throws Exception {
+  public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgs()
+      throws Exception {
+    appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgsState(true);
+  }
+
+  @Test
+  public void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithoutLinkerNormArgs()
+      throws Exception {
+    appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgsState(false);
+  }
+
+  private void appleTestWithoutTestHostMultiarchShouldHaveMultiarchDsymWithLinkerNormArgsState(
+      boolean linkerNormArgs) throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx", "link_path_normalization_args_enabled", linkerNormArgs ? "true" : "false");
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(this).resolve("fbxctest"), Paths.get("fbxctest"));

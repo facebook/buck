@@ -694,13 +694,24 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleFrameworkWithDsym() throws Exception {
+  public void testAppleFrameworkWithDsymWithLinkerNormArgs() throws Exception {
+    appleFrameworkWithDsymWithLinkerNormArgs(true);
+  }
+
+  @Test
+  public void testAppleFrameworkWithDsymWithoutLinkerNormArgs() throws Exception {
+    appleFrameworkWithDsymWithLinkerNormArgs(false);
+  }
+
+  private void appleFrameworkWithDsymWithLinkerNormArgs(boolean linkerNormArgs) throws Exception {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx", "link_path_normalization_args_enabled", linkerNormArgs ? "true" : "false");
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -818,12 +829,24 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleDynamicLibraryWithDsym() throws Exception {
+  public void testAppleDynamicLibraryWithDsymWithLinkerNormArgs() throws Exception {
+    appleDynamicLibraryWithDsymWithLinkerNormArgsState(true);
+  }
+
+  @Test
+  public void testAppleDynamicLibraryWithDsymWithoutLinkerNormArgs() throws Exception {
+    appleDynamicLibraryWithDsymWithLinkerNormArgsState(false);
+  }
+
+  public void appleDynamicLibraryWithDsymWithLinkerNormArgsState(boolean linkerNormArgs)
+      throws Exception {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_shared", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx", "link_path_normalization_args_enabled", linkerNormArgs ? "true" : "false");
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());

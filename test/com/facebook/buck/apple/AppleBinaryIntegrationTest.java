@@ -1370,13 +1370,27 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testAppleBinaryBuildsFatBinariesWithDsym() throws Exception {
+  public void testAppleBinaryBuildsFatBinariesWithDsymWithLinkerNormalizationArgs()
+      throws Exception {
+    appleBinaryBuildsFatBinariesWithDsymWithLinkerNormalizationFlagsState(true);
+  }
+
+  @Test
+  public void testAppleBinaryBuildsFatBinariesWithDsymWithoutLinkerNormalizationArgs()
+      throws Exception {
+    appleBinaryBuildsFatBinariesWithDsymWithLinkerNormalizationFlagsState(false);
+  }
+
+  public void appleBinaryBuildsFatBinariesWithDsymWithLinkerNormalizationFlagsState(
+      boolean linkerNormArgs) throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_no_debug", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx", "link_path_normalization_args_enabled", linkerNormArgs ? "true" : "false");
     workspace.setUp();
 
     BuildTarget target =
@@ -1397,14 +1411,32 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
-  public void testFlavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStripped()
-      throws Exception {
+  public void
+      testFlavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStrippedWithLinkerNormFlags()
+          throws Exception {
+    flavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStrippedWithLinkerNormalizationFlagsState(
+        true);
+  }
+
+  @Test
+  public void
+      testFlavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStrippedWithoutLinkerNormFlags()
+          throws Exception {
+    flavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStrippedWithLinkerNormalizationFlagsState(
+        false);
+  }
+
+  private void
+      flavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStrippedWithLinkerNormalizationFlagsState(
+          boolean linkerNormFlags) throws Exception {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx", "link_path_normalization_args_enabled", linkerNormFlags ? "true" : "false");
     workspace.setUp();
     BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#dwarf-and-dsym");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();

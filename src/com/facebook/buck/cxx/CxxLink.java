@@ -25,6 +25,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
@@ -143,6 +146,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         projectFilesystem,
         ruleFinder,
         new Impl(
+            projectFilesystem,
             linker,
             output,
             extraOutputs,
@@ -200,6 +204,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         "CxxLink should not be created with CxxStrip flavors");
   }
 
+  @Override
+  public Optional<String> getPathNormalizationPrefix() {
+    return getBuildable().getPathNormalizationPrefix();
+  }
+
   /** Buildable implementation of CxxLink. */
   public static class Impl implements Buildable {
     @AddToRuleKey private final Linker linker;
@@ -208,6 +217,16 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final boolean thinLto;
     @AddToRuleKey private final boolean fatLto;
     @AddToRuleKey private final ImmutableSortedSet<String> relativeCellRoots;
+    // Path is not a rulekey-compatible type but that's fine, since `cellRootMap`
+    // is just a derivation of `relativeCellRoots` which is already part of
+    // the rulekey. We could just compute it on the fly but it's more convenient
+    // just to store it.
+    @ExcludeFromRuleKey(
+        reason = "`cellRootMap` is just a derived field `relativeCellRoots`",
+        serialization = DefaultFieldSerialization.class,
+        inputs = IgnoredFieldInputs.class)
+    private final ImmutableSortedMap<Path, Path> cellRootMap;
+
     @AddToRuleKey private final PublicOutputPath output;
     @AddToRuleKey private final Optional<PublicOutputPath> linkerMapPath;
     @AddToRuleKey private final Optional<PublicOutputPath> thinLTOPath;
@@ -218,6 +237,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final CxxDebugSymbolLinkStrategy debugStrategy;
 
     public Impl(
+        ProjectFilesystem filesystem,
         Linker linker,
         Path output,
         ImmutableMap<String, Path> extraOutputs,
@@ -260,6 +280,13 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
           relativeCellRoots.stream()
               .map(Object::toString)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      this.cellRootMap =
+          this.relativeCellRoots.stream()
+              .collect(
+                  ImmutableSortedMap.toImmutableSortedMap(
+                      Ordering.natural(),
+                      root -> MorePaths.normalize(filesystem.getRootPath().resolve(root).getPath()),
+                      root -> Paths.get(root)));
       this.buildTarget = buildTarget;
       this.linkStrategy = linkStrategy;
       this.debugStrategy = debugSymbolLinkStrategy;
@@ -267,6 +294,10 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
     public boolean isLinkerMapEnabled() {
       return this.linkerMapPath.isPresent();
+    }
+
+    private Optional<String> getPathNormalizationPrefix() {
+      return linker.pathNormalizationPrefix(cellRootMap);
     }
 
     @Override
@@ -286,15 +317,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
           requiresPostprocessing
               ? scratchDir.resolve("link-output").getPath()
               : outputPath.getPath();
-
-      ImmutableMap<Path, Path> cellRootMap =
-          this.relativeCellRoots.stream()
-              .collect(
-                  ImmutableSortedMap.toImmutableSortedMap(
-                      Ordering.natural(),
-                      root -> MorePaths.normalize(filesystem.getRootPath().resolve(root).getPath()),
-                      root -> Paths.get(root)));
-
       ImmutableMap<String, String> env = linker.getEnvironment(context.getSourcePathResolver());
       ImmutableList<String> commandPrefix =
           linker.getCommandPrefix(context.getSourcePathResolver());

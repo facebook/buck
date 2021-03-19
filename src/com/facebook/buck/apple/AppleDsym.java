@@ -48,6 +48,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.SortedSet;
 
 /** Creates dSYM bundle for the given _unstripped_ binary. */
@@ -74,6 +75,7 @@ public class AppleDsym extends AbstractBuildRule
   private final boolean isCacheable;
 
   @AddToRuleKey private final boolean withDownwardApi;
+  @AddToRuleKey private final Optional<String> osoPrefix;
 
   public AppleDsym(
       BuildTarget buildTarget,
@@ -85,6 +87,7 @@ public class AppleDsym extends AbstractBuildRule
       SourcePath unstrippedBinarySourcePath,
       ImmutableSortedSet<SourcePath> additionalSymbolDeps,
       Path dsymOutputPath,
+      Optional<String> osoPrefix,
       boolean isCacheable,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
@@ -94,6 +97,7 @@ public class AppleDsym extends AbstractBuildRule
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.additionalSymbolDeps = additionalSymbolDeps;
     this.dsymOutputPath = dsymOutputPath;
+    this.osoPrefix = osoPrefix;
     this.isCacheable = isCacheable;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, sourcePathRuleFinder);
     this.withDownwardApi = withDownwardApi;
@@ -163,6 +167,7 @@ public class AppleDsym extends AbstractBuildRule
             dsymOutputPath,
             ProjectFilesystemUtils.relativize(
                 getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+            osoPrefix,
             withDownwardApi),
         new MoveStep(
             getProjectFilesystem(),

@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Invokes {@code dsymutil} to generate a dsym file.
@@ -47,6 +48,7 @@ class DsymStep extends IsolatedShellStep {
   private final ImmutableList<String> command;
   private final Path input;
   private final Path output;
+  private final Optional<String> osoPrependPath;
 
   public DsymStep(
       ProjectFilesystem filesystem,
@@ -56,6 +58,7 @@ class DsymStep extends IsolatedShellStep {
       Path input,
       Path output,
       RelPath cellPath,
+      Optional<String> osoPrependPath,
       boolean withDownwardApi) {
     super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
@@ -64,6 +67,7 @@ class DsymStep extends IsolatedShellStep {
     this.command = ImmutableList.copyOf(Iterables.concat(command, extraFlags));
     this.input = input;
     this.output = output;
+    this.osoPrependPath = osoPrependPath;
   }
 
   @Override
@@ -73,6 +77,8 @@ class DsymStep extends IsolatedShellStep {
     commandBuilder.addAll(command);
     commandBuilder.add(
         "-o", filesystem.resolve(output).toString(), filesystem.resolve(input).toString());
+
+    osoPrependPath.ifPresent(path -> commandBuilder.add("--oso-prepend-path=" + path));
 
     return commandBuilder.build();
   }

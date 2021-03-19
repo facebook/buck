@@ -63,6 +63,16 @@ public interface Linker extends Tool {
     return ImmutableList.of();
   }
 
+  /**
+   * Returns the prefix stripped from the debugging paths in the linked executable. If no such
+   * stripping was performed, returns the empty optional.
+   *
+   * @param cellRootMap Replacement map for cell roots found in paths.
+   */
+  default Optional<String> pathNormalizationPrefix(ImmutableMap<Path, Path> cellRootMap) {
+    return Optional.empty();
+  }
+
   // TODO(cjhopman): We should only require SourcePathResolverAdapter at the action execution phase,
   // not
   // during action graph creation. This is only ever used to get filenames, and that should be safe.

@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -39,6 +40,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -157,6 +159,27 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
         // These rules may generate supplemental object files that are linked into the binary, and
         // must be materialized in order for dsymutil to find them.
         .concat(getBuildDeps().stream());
+  }
+
+  @Override
+  public Optional<String> getPathNormalizationPrefix() {
+    ImmutableSet<String> prefixes =
+        RichStream.from(getBuildDeps())
+            .filter(HasAppleDebugSymbolDeps.class)
+            .map(HasAppleDebugSymbolDeps::getPathNormalizationPrefix)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(ImmutableSet.toImmutableSet());
+
+    if (!prefixes.isEmpty()) {
+      if (prefixes.size() > 1) {
+        throw new HumanReadableException(
+            "Combining multiarch ('universal') files which have different OSO prefix, this case is impossible to hit");
+      }
+      return Optional.of(prefixes.iterator().next());
+    }
+
+    return Optional.empty();
   }
 
   @Override

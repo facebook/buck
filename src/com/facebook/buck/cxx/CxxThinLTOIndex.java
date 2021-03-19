@@ -176,6 +176,14 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
   }
 
   @Override
+  public Optional<String> getPathNormalizationPrefix() {
+    // CxxThinLTOIndex does not support linker normalization args at all (i.e., it passes
+    // an empty map for the cell roots to CxxPrepareForLinkStep), so there's no need to
+    // implement this method, either.
+    return Optional.empty();
+  }
+
+  @Override
   public SourcePath getSourcePathToOutput() {
     return getSourcePath(getBuildable().output);
   }

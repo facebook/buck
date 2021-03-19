@@ -729,6 +729,7 @@ public class AppleDescriptions {
                       .map(BuildRule::getSourcePathToOutput)
                       .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
                   AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem).getPath(),
+                  unstrippedBinaryRule.getPathNormalizationPrefix(),
                   isCacheable,
                   withDownwardApi);
             });

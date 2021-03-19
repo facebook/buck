@@ -793,10 +793,22 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
-  public void bundleBinaryHasDsymBundle() throws Exception {
+  public void testBundleBinaryHasDsymBundleWithLinkerNormArgs() throws Exception {
+    bundleBinaryHasDsymBundleWithLinkerNormArgsState(true);
+  }
+
+  @Test
+  public void testBundleBinaryHasDsymBundleWithoutLinkerNormArgs() throws Exception {
+    bundleBinaryHasDsymBundleWithLinkerNormArgsState(false);
+  }
+
+  public void bundleBinaryHasDsymBundleWithLinkerNormArgsState(boolean linkerNormArgs)
+      throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_application_bundle_dwarf_and_dsym", tmp);
+    workspace.addBuckConfigLocalOption(
+        "cxx", "link_path_normalization_args_enabled", linkerNormArgs ? "true" : "false");
     workspace.setUp();
 
     BuildTarget target =

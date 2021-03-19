@@ -172,6 +172,14 @@ public class DarwinLinker extends DelegatingTool
   }
 
   @Override
+  public Optional<String> pathNormalizationPrefix(ImmutableMap<Path, Path> cellRootMap) {
+    if (cacheLinks && usePathNormalizationArgs) {
+      return OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
+    }
+    return Optional.empty();
+  }
+
+  @Override
   public Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter resolver) {
     return ImmutableList.of(
         StringArg.of("-Xlinker"), StringArg.of("-force_load"), StringArg.of("-Xlinker"), input);

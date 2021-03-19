@@ -47,6 +47,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -180,6 +181,15 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       return ((HasAppleDebugSymbolDeps) linkRule).getAppleDebugSymbolDeps();
     } else {
       return Stream.empty();
+    }
+  }
+
+  @Override
+  public Optional<String> getPathNormalizationPrefix() {
+    if (linkRule instanceof HasAppleDebugSymbolDeps) {
+      return ((HasAppleDebugSymbolDeps) linkRule).getPathNormalizationPrefix();
+    } else {
+      return Optional.empty();
     }
   }
 
