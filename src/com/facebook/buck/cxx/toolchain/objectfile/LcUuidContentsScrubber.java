@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.FileContentsScrubber;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.types.Pair;
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LcUuidContentsScrubber implements FileContentsScrubber {
+
+  private static final Logger LOG = Logger.get(LcUuidContentsScrubber.class);
 
   private static final HashFunction HASH_FUNCTION = Hashing.murmur3_128();
 
@@ -85,14 +88,36 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
   }
 
   private HashCode computeFileHash(FileChannel file) throws IOException {
-    try (ByteBufferUnmapper unmapper =
-        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
-      ByteBuffer map = unmapper.getByteBuffer();
-
-      Hasher hasher = HASH_FUNCTION.newHasher();
-      addBytesToHasher(map, file.size(), hasher);
-      return hasher.hash();
+    long totalFileSize = file.size();
+    if (totalFileSize > MAX_MEMORY_MAP_FILE_SIZE) {
+      LOG.info(
+          "Scrubbing UUID contents of file (size: %d) larger than max memory map size (%d)",
+          totalFileSize, MAX_MEMORY_MAP_FILE_SIZE);
     }
+
+    // It does not really matter whether we process in chunks or in one go, as long as the result
+    // is deterministic.
+    long processedFileSize = 0;
+    Hasher hasher = HASH_FUNCTION.newHasher();
+    while (processedFileSize < totalFileSize) {
+      long remainingSize = (totalFileSize - processedFileSize);
+      long sizeToProcess = Math.min(remainingSize, MAX_MEMORY_MAP_FILE_SIZE);
+
+      // There's a 2GiB limit to the slices we can map in memory (due to usage of 32bit signed int
+      // in the function signatures of the underlying code), so instead of hashing the whole file
+      // in a single pass, we hash in 2GiB slices. Note that the underlying APIs support memory
+      // mapping offset that's not limited to a 32bit signed int, hence why this approach works.
+      try (ByteBufferUnmapper unmapper =
+          ByteBufferUnmapper.createUnsafe(
+              file.map(FileChannel.MapMode.READ_ONLY, processedFileSize, sizeToProcess))) {
+        ByteBuffer map = unmapper.getByteBuffer();
+        addBytesToHasher(map, sizeToProcess, hasher);
+      }
+
+      processedFileSize += sizeToProcess;
+    }
+
+    return hasher.hash();
   }
 
   private void resetFileUuid(FileChannel file) throws IOException, ScrubException {
