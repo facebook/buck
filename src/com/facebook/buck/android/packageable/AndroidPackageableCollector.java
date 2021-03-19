@@ -315,7 +315,7 @@ public class AndroidPackageableCollector {
       return this;
     }
     collectionBuilder.putAndroidManifestPieces(
-        apkModuleGraph.findResourceModuleForTarget(owner), manifest);
+        apkModuleGraph.findManifestModuleForTarget(owner), manifest);
     return this;
   }
 

@@ -117,6 +117,7 @@ public class AndroidBinaryGraphEnhancerFactory {
               args.getApplicationModuleDependencies(),
               APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()),
               args.getApplicationModulesWithResources(),
+              args.getUseDynamicFeature()? args.getApplicationModulesWithManifest(): args.getApplicationModulesWithResources(),
               targetGraph,
               buildTarget);
     }
