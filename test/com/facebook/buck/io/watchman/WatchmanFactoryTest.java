@@ -322,67 +322,6 @@ public class WatchmanFactoryTest {
   }
 
   @Test
-  public void capabilitiesDetectedForVersion38AndLater() throws InterruptedException, IOException {
-    SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
-    FakeListeningProcessExecutor executor =
-        new FakeListeningProcessExecutor(
-            ImmutableMultimap.<ProcessExecutorParams, FakeListeningProcessState>builder()
-                .putAll(
-                    ProcessExecutorParams.ofCommand(exe, "--output-encoding=bser", "get-sockname"),
-                    FakeListeningProcessState.ofStdoutBytes(
-                        bserSerialized(
-                            ImmutableMap.of(
-                                "version", "3.8.0",
-                                "sockname", "/path/to/sock"))),
-                    FakeListeningProcessState.ofExit(0))
-                .build(),
-            clock);
-    WatchmanFactory watchmanFactory =
-        createFakeWatchmanFactory(
-            Paths.get("/path/to/sock"),
-            0,
-            ImmutableMap.of(
-                VERSION_QUERY,
-                ImmutableMap.of(
-                    "version",
-                    "3.8.0",
-                    "capabilities",
-                    ImmutableMap.<String, Boolean>builder()
-                        .put("term-dirname", true)
-                        .put("cmd-watch-project", true)
-                        .put("wildmatch", true)
-                        .put("wildmatch_multislash", true)
-                        .put("glob_generator", false)
-                        .put("clock-sync-timeout", false)
-                        .build()),
-                WatchmanQuery.watchProject(root),
-                ImmutableMap.of("version", "3.8.0", "watch", root),
-                WatchmanQuery.clock(root, Optional.empty()),
-                ImmutableMap.of("version", "3.8.0", "clock", "c:0:0:1")));
-    Watchman watchman =
-        watchmanFactory.build(
-            executor,
-            rootPaths,
-            env,
-            finder,
-            new TestConsole(),
-            clock,
-            Optional.empty(),
-            Optional.empty());
-
-    assertEquals(
-        ImmutableSet.of(
-            Capability.DIRNAME,
-            Capability.SUPPORTS_PROJECT_WATCH,
-            Capability.WILDMATCH_GLOB,
-            Capability.WILDMATCH_MULTISLASH),
-        watchman.getCapabilities());
-
-    assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
-    assertEquals("3.8.0", watchman.getVersion());
-  }
-
-  @Test
   public void capabilitiesDetectedForVersion47AndLater() throws InterruptedException, IOException {
     SettableFakeClock clock = SettableFakeClock.DO_NOT_CARE;
     FakeListeningProcessExecutor executor =

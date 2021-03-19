@@ -32,6 +32,7 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
@@ -428,16 +429,19 @@ public class WatchmanFactory {
       long timeoutNanos,
       int syncTimeoutMilis)
       throws IOException, InterruptedException {
+    Preconditions.checkState(
+        capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT),
+        "watchman capabilities must include %s, which is available in watchman since 3.9",
+        Capability.CLOCK_SYNC_TIMEOUT);
+
     Optional<String> clockId = Optional.empty();
     long clockStartTimeNanos = clock.nanoTime();
-    Optional<Integer> syncTimeoutMillisArg =
-        capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT)
-            ? Optional.of(syncTimeoutMilis)
-            : Optional.empty();
 
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
-            timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.clock(watchRoot, syncTimeoutMillisArg));
+            timeoutNanos,
+            WARN_TIMEOUT_NANOS,
+            WatchmanQuery.clock(watchRoot, Optional.of(syncTimeoutMilis)));
     if (result.isLeft()) {
       Map<String, ?> clockResult = result.getLeft();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));
