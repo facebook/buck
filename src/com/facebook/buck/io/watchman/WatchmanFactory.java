@@ -226,8 +226,11 @@ public class WatchmanFactory {
       Console console,
       Clock clock,
       long endTimeNanos,
-      int syncTimeoutMillis)
+      int clockSyncTimeoutMillis)
       throws IOException, InterruptedException {
+    // Must be nonzero, otherwise no sync happens
+    Preconditions.checkArgument(clockSyncTimeoutMillis > 0, "Clock sync timeout must be positive");
+
     long versionQueryStartTimeNanos = clock.nanoTime();
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         client.queryWithTimeout(
@@ -284,7 +287,7 @@ public class WatchmanFactory {
               capabilities,
               clock,
               endTimeNanos - clock.nanoTime(),
-              syncTimeoutMillis);
+              clockSyncTimeoutMillis);
       if (clockId.isPresent()) {
         clockIdsBuilder.put(watchRoot, clockId.get());
       }
