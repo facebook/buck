@@ -23,17 +23,42 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /**
- * * Provides simplified access to settings from the version_control section of a .buckconfig file.
+ * Provides simplified access to settings from the version_control section of a .buckconfig file.
  *
  * <p>Available keys:
  *
- * <p>generate_statistics: - Enable or disable the generation of version control statistics -
- * Default value is false. - Currently only Mercurial is supported. hg_cmd: - Override the default
- * Mercurial command used when generating statistics. - Default value is hg
+ * <dl>
+ *   <dt>generate_statistics
+ *   <dd>
+ *       <ul>
+ *         <li>Enable or disable the generation of version control statistics.
+ *         <li>Default value is false.
+ *         <li>Currently only Mercurial is supported.
+ *       </ul>
+ *   <dt>hg_cmd
+ *   <dd>
+ *       <ul>
+ *         <li>Override the default Mercurial command used when generating statistics.
+ *         <li>Default value is "hg".
+ *       </ul>
+ *   <dt>tracked_bookmarks
+ *   <dd>
+ *       <ul>
+ *         <li>Set the list of bookmarks that should be tracked.
+ *         <li>Default value is ["remote/master"].
+ *       </ul>
+ * </dl>
  *
  * <p>Example config section:
  *
- * <p>[version_control] hg_cmd = hg3 generate_statistics = true
+ * <pre>
+ *  [version_control]
+ *    generate_statistics = true
+ *    hg_cmd = hg3
+ *    tracked_bookmarks = \
+ *      remote/master, \
+ *      remote/mybookmark
+ * </pre>
  */
 public class VersionControlBuckConfig {
   static final String VC_SECTION_KEY = "version_control";
@@ -43,6 +68,9 @@ public class VersionControlBuckConfig {
 
   static final String HG_CMD_SETTING_KEY = "hg_cmd";
   static final String HG_CMD_DEFAULT = "hg";
+
+  static final String TRACKED_BOOKMARKS_KEY = "tracked_bookmarks";
+  static final ImmutableSet<String> TRACKED_BOOKMARKS_DEFAULT = ImmutableSet.of("remote/master");
 
   static final String PREGENERATED_CURRENT_REVISION_ID = "pregenerated_current_revision_id";
   static final String PREGENERATED_BASE_BOOKMARKS = "pregenerated_base_bookmarks";
@@ -62,6 +90,13 @@ public class VersionControlBuckConfig {
   public boolean shouldGenerateStatistics() {
     return delegate.getBooleanValue(
         VC_SECTION_KEY, GENERATE_STATISTICS_KEY, GENERATE_STATISTICS_DEFAULT);
+  }
+
+  public ImmutableSet<String> getTrackedBookmarks() {
+    return delegate
+        .getOptionalListWithoutComments(VC_SECTION_KEY, TRACKED_BOOKMARKS_KEY)
+        .map(ImmutableSet::copyOf)
+        .orElse(TRACKED_BOOKMARKS_DEFAULT);
   }
 
   public Optional<FastVersionControlStats> getPregeneratedVersionControlStats() {

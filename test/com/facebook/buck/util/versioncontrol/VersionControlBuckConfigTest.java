@@ -24,6 +24,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -31,6 +32,9 @@ public class VersionControlBuckConfigTest {
   private static final String HG_CMD = "myhg";
   private static final String GENERATE_STATISTICS = "true";
   private static final boolean GENERATE_STATISTICS_RESULT = true;
+  private static final String TRACKED_BOOKMARKS = "bookmark1, bookmark2";
+  private static final ImmutableSet<String> TRACKED_BOOKMARKS_RESULT =
+      ImmutableSet.of("bookmark1", "bookmark2");
 
   @Test
   public void givenHgCmdInConfigThenReturnHgCmdFromConfig() {
@@ -42,7 +46,7 @@ public class VersionControlBuckConfigTest {
                     ImmutableMap.of(VersionControlBuckConfig.HG_CMD_SETTING_KEY, HG_CMD)))
             .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
-    assertThat(HG_CMD, is(equalTo(config.getHgCmd())));
+    assertThat(config.getHgCmd(), is(equalTo(HG_CMD)));
   }
 
   @Test
@@ -53,7 +57,34 @@ public class VersionControlBuckConfigTest {
                 ImmutableMap.of(VersionControlBuckConfig.VC_SECTION_KEY, ImmutableMap.of()))
             .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
-    assertThat(VersionControlBuckConfig.HG_CMD_DEFAULT, is(equalTo(config.getHgCmd())));
+    assertThat(config.getHgCmd(), is(equalTo(VersionControlBuckConfig.HG_CMD_DEFAULT)));
+  }
+
+  @Test
+  public void givenTrackedBookmarksInConfigThenReturnTrackedBookmarksFromConfig() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    VersionControlBuckConfig.VC_SECTION_KEY,
+                    ImmutableMap.of(
+                        VersionControlBuckConfig.TRACKED_BOOKMARKS_KEY, TRACKED_BOOKMARKS)))
+            .build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    assertThat(config.getTrackedBookmarks(), is(equalTo(TRACKED_BOOKMARKS_RESULT)));
+  }
+
+  @Test
+  public void givenTrackedBookmarksNotInConfigThenReturnDefault() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(VersionControlBuckConfig.VC_SECTION_KEY, ImmutableMap.of()))
+            .build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    assertThat(
+        config.getTrackedBookmarks(),
+        is(equalTo(VersionControlBuckConfig.TRACKED_BOOKMARKS_DEFAULT)));
   }
 
   @Test
@@ -67,7 +98,7 @@ public class VersionControlBuckConfigTest {
                         VersionControlBuckConfig.GENERATE_STATISTICS_KEY, GENERATE_STATISTICS)))
             .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
-    assertThat(GENERATE_STATISTICS_RESULT, is(equalTo(config.shouldGenerateStatistics())));
+    assertThat(config.shouldGenerateStatistics(), is(equalTo(GENERATE_STATISTICS_RESULT)));
   }
 
   @Test
@@ -79,8 +110,8 @@ public class VersionControlBuckConfigTest {
             .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(
-        VersionControlBuckConfig.GENERATE_STATISTICS_DEFAULT,
-        is(equalTo(config.shouldGenerateStatistics())));
+        config.shouldGenerateStatistics(),
+        is(equalTo(VersionControlBuckConfig.GENERATE_STATISTICS_DEFAULT)));
   }
 
   @Test
