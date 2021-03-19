@@ -88,7 +88,10 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     try (ByteBufferUnmapper unmapper =
         ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
       ByteBuffer map = unmapper.getByteBuffer();
-      return computeHash(map, file.size());
+
+      Hasher hasher = HASH_FUNCTION.newHasher();
+      addBytesToHasher(map, file.size(), hasher);
+      return hasher.hash();
     }
   }
 
@@ -101,7 +104,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     }
   }
 
-  private HashCode computeHash(ByteBuffer map, long fileSize) {
+  private void addBytesToHasher(ByteBuffer map, long fileSize, Hasher hasher) {
     List<Range<Long>> ranges = generateHashRanges(fileSize);
     List<Pair<Range<Long>, ByteBuffer>> rangeBuffers =
         ranges.stream()
@@ -128,7 +131,7 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
         .forEachOrdered((pair) -> concatenatedHashes.put(pair.getSecond().asBytes()));
 
     concatenatedHashes.rewind();
-    return hashByteBuffer(concatenatedHashes);
+    hasher.putBytes(concatenatedHashes);
   }
 
   private static HashCode hashByteBuffer(ByteBuffer byteBuffer) {
