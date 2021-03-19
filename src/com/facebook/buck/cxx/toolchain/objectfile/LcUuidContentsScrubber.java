@@ -46,6 +46,9 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
   private static final long CONCURRENT_FILE_SIZE_THRESHOLD = (50 * 1024 * 1024);
   private final boolean scrubConcurrently;
 
+  // FileChannel.map() is limited to mapping a maximum of 2GiB slices
+  private static final long MAX_MEMORY_MAP_FILE_SIZE = Integer.MAX_VALUE;
+
   public LcUuidContentsScrubber(boolean scrubConcurrently) {
     this.scrubConcurrently = scrubConcurrently;
   }
@@ -61,9 +64,16 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
     setFileUuid(file, hashCode);
   }
 
+  private static long mapSizeForUuidOperations(FileChannel file) throws IOException {
+    // The Mach-O load commands usually take up at most 32/64KiB, so there's no need
+    // to map more than MAX_MEMORY_MAP_FILE_SIZE.
+    return Math.min(file.size(), MAX_MEMORY_MAP_FILE_SIZE);
+  }
+
   private void setFileUuid(FileChannel file, HashCode hashCode) throws IOException, ScrubException {
+    long size = mapSizeForUuidOperations(file);
     try (ByteBufferUnmapper unmapper =
-        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, size))) {
       ByteBuffer map = unmapper.getByteBuffer();
 
       try {
@@ -83,8 +93,9 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
   }
 
   private void resetFileUuid(FileChannel file) throws IOException, ScrubException {
+    long size = mapSizeForUuidOperations(file);
     try (ByteBufferUnmapper unmapper =
-        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, size))) {
       ByteBuffer map = unmapper.getByteBuffer();
       resetUuidIfPresent(map);
     }
