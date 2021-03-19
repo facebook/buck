@@ -116,10 +116,6 @@ public class WriteFile extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
-  public byte[] getFileContents() {
-    return fileContents.clone();
-  }
-
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
     return ImmutableSortedSet.of();
