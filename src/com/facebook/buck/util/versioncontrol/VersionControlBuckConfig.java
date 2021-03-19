@@ -45,6 +45,7 @@ import java.util.Optional;
  *   <dd>
  *       <ul>
  *         <li>Set the list of bookmarks that should be tracked.
+ *         <li>Bookmarks in list can be regular expressions.
  *         <li>Default value is ["remote/master"].
  *       </ul>
  * </dl>
@@ -52,12 +53,12 @@ import java.util.Optional;
  * <p>Example config section:
  *
  * <pre>
- *  [version_control]
- *    generate_statistics = true
- *    hg_cmd = hg3
- *    tracked_bookmarks = \
- *      remote/master, \
- *      remote/mybookmark
+ * [version_control]
+ *   generate_statistics = true
+ *   hg_cmd = hg3
+ *   tracked_bookmarks = \
+ *     remote/master, \
+ *     remote/mybookmark
  * </pre>
  */
 public class VersionControlBuckConfig {

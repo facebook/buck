@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.not;
 import com.google.common.collect.ImmutableSet;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -32,26 +33,42 @@ public class VersionControlStatsGeneratorTest {
 
   private static final ImmutableSet TRACKED_BOOKMARKS = ImmutableSet.of("remote/master");
 
+  private final VersionControlSupplier<InputStream> diff =
+      () -> {
+        try {
+          return new FileInputStream("/tmp/this_is_not_really_a_valid_diff_but_whatever.diff");
+        } catch (IOException e) {
+          throw new VersionControlCommandFailedException(e);
+        }
+      };
+
+  private final FullVersionControlStats fakeStats =
+      FullVersionControlStats.builder()
+          .setCurrentRevisionId("f00")
+          .setBranchedFromMasterRevisionId("b47")
+          .setBranchedFromMasterTS(0L)
+          .setBaseBookmarks(
+              ImmutableSet.of(
+                  "remote/master",
+                  "test_bookmark",
+                  "remote/another_bookmark",
+                  "remote/bookmark with some spaces"))
+          .setDiff(diff)
+          .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
+          .build();
+
   private final FullVersionControlStats expected =
       FullVersionControlStats.builder()
           .setCurrentRevisionId("f00")
           .setBranchedFromMasterRevisionId("b47")
           .setBranchedFromMasterTS(0L)
           .setBaseBookmarks(ImmutableSet.of("remote/master"))
-          .setDiff(
-              () -> {
-                try {
-                  return new FileInputStream(
-                      "/tmp/this_is_not_really_a_valid_diff_but_whatever.diff");
-                } catch (IOException e) {
-                  throw new VersionControlCommandFailedException(e);
-                }
-              })
+          .setDiff(diff)
           .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
           .build();
 
   private final VersionControlCmdLineInterface versionControlCmdLineInterface =
-      new FakeVersionControlCmdLineInterface(expected);
+      new FakeVersionControlCmdLineInterface(fakeStats);
 
   @Test
   public void fastModeGeneratesBasicStats() throws Exception {
@@ -76,6 +93,17 @@ public class VersionControlStatsGeneratorTest {
                 versionControlCmdLineInterface, Optional.empty(), ImmutableSet.of())
             .generateStats(VersionControlStatsGenerator.Mode.FAST);
     assertThat(actual.get().getBaseBookmarks(), is(empty()));
+  }
+
+  @Test
+  public void includeBookmarksThatHaveMatchingPrefix() throws Exception {
+    Optional<FullVersionControlStats> actual =
+        new VersionControlStatsGenerator(
+                versionControlCmdLineInterface, Optional.empty(), ImmutableSet.of("remote/\\w*"))
+            .generateStats(VersionControlStatsGenerator.Mode.FAST);
+    assertThat(
+        actual.get().getBaseBookmarks(),
+        is(equalTo(ImmutableSet.of("remote/master", "remote/another_bookmark"))));
   }
 
   @Test

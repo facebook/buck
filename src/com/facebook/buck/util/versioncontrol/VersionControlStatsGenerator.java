@@ -21,11 +21,11 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.Threads;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.InputStream;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -186,7 +186,18 @@ public class VersionControlStatsGenerator {
         }
         versionControlStatsBuilder.setCurrentRevisionId(fastStats.getCurrentRevisionId());
         versionControlStatsBuilder.setBaseBookmarks(
-            Sets.intersection(fastStats.getBaseBookmarks(), trackedBookmarks));
+            fastStats.getBaseBookmarks().stream()
+                .filter(
+                    bookmark -> {
+                      for (String tracked : trackedBookmarks) {
+                        if (bookmark.matches(tracked)) {
+                          return true;
+                        }
+                      }
+                      return false;
+                    })
+                .collect(Collectors.toSet()));
+        //  Sets.intersection(fastStats.getBaseBookmarks(), trackedBookmarks));
         versionControlStatsBuilder.setBranchedFromMasterRevisionId(
             fastStats.getBranchedFromMasterRevisionId());
         versionControlStatsBuilder.setBranchedFromMasterTS(fastStats.getBranchedFromMasterTS());
