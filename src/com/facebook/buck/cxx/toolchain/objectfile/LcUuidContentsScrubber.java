@@ -56,20 +56,37 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
       return;
     }
 
-    long size = file.size();
+    resetFileUuid(file);
+    HashCode hashCode = computeFileHash(file);
+    setFileUuid(file, hashCode);
+  }
+
+  private void setFileUuid(FileChannel file, HashCode hashCode) throws IOException, ScrubException {
     try (ByteBufferUnmapper unmapper =
-        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, size))) {
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
       ByteBuffer map = unmapper.getByteBuffer();
 
-      resetUuidIfPresent(map);
-      HashCode hashCode = computeHash(map, size);
-
-      map.rewind();
       try {
         Machos.setUuidIfPresent(map, Arrays.copyOf(hashCode.asBytes(), UUID_LENGTH));
       } catch (Machos.MachoException e) {
         throw new ScrubException(e.getMessage());
       }
+    }
+  }
+
+  private HashCode computeFileHash(FileChannel file) throws IOException {
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
+      ByteBuffer map = unmapper.getByteBuffer();
+      return computeHash(map, file.size());
+    }
+  }
+
+  private void resetFileUuid(FileChannel file) throws IOException, ScrubException {
+    try (ByteBufferUnmapper unmapper =
+        ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
+      ByteBuffer map = unmapper.getByteBuffer();
+      resetUuidIfPresent(map);
     }
   }
 
