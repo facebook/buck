@@ -72,7 +72,9 @@ public interface SwiftPlatform {
 
   /** @return true if the platform supports the -prefix-serialized-debug-info flag. */
   @Value.Default
-  default boolean getPrefixSerializedDebugInfo() { return false; };
+  default boolean getPrefixSerializedDebugInfo() {
+    return false;
+  };
 
   @Value.Default
   default ImmutableList<Path> getAdditionalSystemFrameworkSearchPaths() {
