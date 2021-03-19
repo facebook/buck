@@ -17,7 +17,9 @@
 package com.facebook.buck.util.versioncontrol;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -180,6 +182,13 @@ public class HgCmdLineInterfaceIntegrationTest {
       // here.
       assertThat(String.join("\n", expectedValue), Matchers.containsString(actualDiff));
     }
+  }
+
+  @Test
+  public void testFastVersionControlStatsHasLocalBookmarks()
+      throws InterruptedException, VersionControlCommandFailedException {
+    FastVersionControlStats stats = repoTwoCmdLine.fastVersionControlStats();
+    assertThat(stats.getBaseBookmarks(), is(equalTo(ImmutableSet.of("branch_from_master2"))));
   }
 
   private static void run(Path directory, String... args) throws IOException, InterruptedException {

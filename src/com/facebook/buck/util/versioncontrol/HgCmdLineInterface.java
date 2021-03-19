@@ -70,7 +70,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           "--rev",
           ". + ancestor(.,present(remote/master))",
           "--template",
-          "{node|short} {date|hgdate} {remotebookmarks}\\n");
+          "{node|short} {date|hgdate} {remotebookmarks} {bookmarks}\\n");
 
   private ProcessExecutorFactory processExecutorFactory;
   private final Path projectRoot;
@@ -169,12 +169,12 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
         String.format(
             "Unexpected number of words output from '%s', expected 3 or more:\n%%s",
             String.join(" ", FAST_STATS_COMMAND));
-    String[] currentRevisionWords = currentRevisionLine.split(" ", 4);
+    String[] currentRevisionWords = currentRevisionLine.split("\\s+", 4);
     if (currentRevisionWords.length < 3) {
       throw new VersionControlCommandFailedException(
           String.format(numberOfWordsMismatchFormat, currentRevisionLine));
     }
-    String[] baseRevisionWords = baseRevisionLine.split(" ", 4);
+    String[] baseRevisionWords = baseRevisionLine.split("\\s+", 4);
     if (baseRevisionWords.length < 3) {
       throw new VersionControlCommandFailedException(
           String.format(numberOfWordsMismatchFormat, baseRevisionLine));
@@ -182,7 +182,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return ImmutableFastVersionControlStats.ofImpl(
         currentRevisionWords[0],
         baseRevisionWords.length == 4
-            ? ImmutableSet.copyOf(baseRevisionWords[3].split(" "))
+            ? ImmutableSet.copyOf(baseRevisionWords[3].split("\\s+"))
             : ImmutableSet.of(),
         baseRevisionWords[0],
         Long.valueOf(baseRevisionWords[1]));
