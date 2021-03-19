@@ -31,19 +31,19 @@ public abstract class Watchman {
 
   private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
-  private final ImmutableMap<String, String> clockIds;
+  private final ImmutableMap<String, String> clockIdsByWatchRoot;
   private final Optional<Path> transportPath;
   private final String version;
 
   public Watchman(
       ImmutableMap<AbsPath, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
-      ImmutableMap<String, String> clockIds,
+      ImmutableMap<String, String> clockIdsByWatchRoot,
       Optional<Path> transportPath,
       String version) {
     this.projectWatches = projectWatches;
     this.capabilities = capabilities;
-    this.clockIds = clockIds;
+    this.clockIdsByWatchRoot = clockIdsByWatchRoot;
     this.transportPath = transportPath;
     this.version = version;
   }
@@ -52,7 +52,7 @@ public abstract class Watchman {
   public ImmutableMap<AbsPath, WatchmanCursor> buildClockWatchmanCursorMap() {
     ImmutableMap.Builder<AbsPath, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
     for (Map.Entry<AbsPath, ProjectWatch> entry : projectWatches.entrySet()) {
-      String clockId = clockIds.get(entry.getValue().getWatchRoot());
+      String clockId = clockIdsByWatchRoot.get(entry.getValue().getWatchRoot());
       Preconditions.checkNotNull(
           clockId, "No ClockId found for watch root %s", entry.getValue().getWatchRoot());
       cursorBuilder.put(entry.getKey(), new WatchmanCursor(clockId));
@@ -77,8 +77,8 @@ public abstract class Watchman {
     return capabilities;
   }
 
-  public ImmutableMap<String, String> getClockIds() {
-    return clockIds;
+  public ImmutableMap<String, String> getClockIdsByWatchRoot() {
+    return clockIdsByWatchRoot;
   }
 
   public boolean hasWildmatchGlob() {

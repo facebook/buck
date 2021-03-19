@@ -164,7 +164,7 @@ public class BuckGlobalStateFactory {
     ImmutableMap<AbsPath, WatchmanCursor> cursor;
     if (cells.getRootCell().getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
             == WatchmanWatcher.CursorType.CLOCK_ID
-        && !watchman.getClockIds().isEmpty()) {
+        && !watchman.getClockIdsByWatchRoot().isEmpty()) {
       cursor = watchman.buildClockWatchmanCursorMap();
     } else {
       LOG.debug("Falling back to named cursors: %s", watchman.getProjectWatches());

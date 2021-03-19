@@ -380,7 +380,7 @@ public class WatchmanFactoryTest {
             Capability.CLOCK_SYNC_TIMEOUT),
         watchman.getCapabilities());
 
-    assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIds());
+    assertEquals(ImmutableMap.of(root, "c:0:0:1"), watchman.getClockIdsByWatchRoot());
     assertEquals("4.7.0", watchman.getVersion());
   }
 
@@ -433,7 +433,7 @@ public class WatchmanFactoryTest {
             Optional.empty(),
             Optional.empty());
 
-    assertEquals(ImmutableMap.of(), watchman.getClockIds());
+    assertEquals(ImmutableMap.of(), watchman.getClockIdsByWatchRoot());
     assertEquals("4.7.0", watchman.getVersion());
   }
 }
