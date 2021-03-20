@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
-import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
@@ -43,8 +42,10 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
@@ -77,12 +78,9 @@ public class CalculateSourceAbi
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
-      boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-      ImmutableList<String> startJavacdCommandOptions,
-      int javacdWorkerToolPoolSize,
-      int javacdBorrowFromPoolTimeoutInSeconds) {
+      BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,
@@ -91,12 +89,9 @@ public class CalculateSourceAbi
             buildTarget,
             projectFilesystem,
             jarBuildStepsFactory,
-            isJavaCDEnabled,
             javaRuntimeLauncher,
             javacdBinaryPathSourcePathSupplier,
-            startJavacdCommandOptions,
-            javacdWorkerToolPoolSize,
-            javacdBorrowFromPoolTimeoutInSeconds));
+            javaCDParams));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -118,26 +113,9 @@ public class CalculateSourceAbi
     @AddToRuleKey private final PublicOutputPath rootOutputPath;
     @AddToRuleKey private final PublicOutputPath annotationsOutputPath;
 
-    @AddToRuleKey private final boolean isJavaCDEnabled;
+    @AddToRuleKey private final BaseJavaCDParams javaCDParams;
+
     @AddToRuleKey private final Tool javaRuntimeLauncher;
-
-    @ExcludeFromRuleKey(
-        reason = "start javacd jvm options is not a part of a rule key",
-        serialization = DefaultFieldSerialization.class,
-        inputs = IgnoredFieldInputs.class)
-    private final ImmutableList<String> startJavacdCommandOptions;
-
-    @ExcludeFromRuleKey(
-        reason = "javacd worker tool pool size is not a part of a rule key",
-        serialization = DefaultFieldSerialization.class,
-        inputs = IgnoredFieldInputs.class)
-    private final int javacdWorkerToolPoolSize;
-
-    @ExcludeFromRuleKey(
-        reason = "javacd borrow from the pool is not a part of a rule key",
-        serialization = DefaultFieldSerialization.class,
-        inputs = IgnoredFieldInputs.class)
-    private final int javacdBorrowFromPoolTimeoutInSeconds;
 
     @ExcludeFromRuleKey(
         reason = "path to javacd binary is not a part of a rule key",
@@ -149,20 +127,13 @@ public class CalculateSourceAbi
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
-        boolean isJavaCDEnabled,
         Tool javaRuntimeLauncher,
         Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-        ImmutableList<String> startJavacdCommandOptions,
-        int javacdWorkerToolPoolSize,
-        int javacdBorrowFromPoolTimeoutInSeconds) {
+        BaseJavaCDParams javaCDParams) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
-      this.isJavaCDEnabled = isJavaCDEnabled;
+      this.javaCDParams = javaCDParams;
       this.javaRuntimeLauncher = javaRuntimeLauncher;
-      this.startJavacdCommandOptions = startJavacdCommandOptions;
-      this.javacdWorkerToolPoolSize = javacdWorkerToolPoolSize;
-      this.javacdBorrowFromPoolTimeoutInSeconds = javacdBorrowFromPoolTimeoutInSeconds;
-
       CompilerOutputPaths outputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
@@ -178,10 +149,7 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
       AbiJarStepsBuilder stepsBuilder =
-          JavaCompileStepsBuilderFactoryCreator.createFactory(
-                  jarBuildStepsFactory.getConfiguredCompiler(),
-                  createJavaCDParams(filesystem, sourcePathResolver))
-              .getAbiJarBuilder();
+          getJavaCompileStepsBuilderFactory(filesystem, sourcePathResolver).getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,
@@ -205,9 +173,7 @@ public class CalculateSourceAbi
       RelPath classesDir = compilerOutputPaths.getClassesDir();
 
       AbiJarPipelineStepsBuilder stepsBuilder =
-          JavaCompileStepsBuilderFactoryCreator.createFactory(
-                  jarBuildStepsFactory.getConfiguredCompiler(),
-                  createJavaCDParams(filesystem, sourcePathResolver))
+          getJavaCompileStepsBuilderFactory(filesystem, sourcePathResolver)
               .getPipelineAbiJarBuilder();
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,
@@ -220,17 +186,21 @@ public class CalculateSourceAbi
       return stepsBuilder.build();
     }
 
+    private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
+        ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
+      return JavaCompileStepsBuilderFactoryCreator.createFactory(
+          jarBuildStepsFactory.getConfiguredCompiler(),
+          createJavaCDParams(filesystem, sourcePathResolver));
+    }
+
     private JavaCDParams createJavaCDParams(
         ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
       return JavaCDParams.of(
-          isJavaCDEnabled,
+          javaCDParams,
           javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
           () ->
               sourcePathResolver.getRelativePath(
-                  filesystem, javacdBinaryPathSourcePathSupplier.get()),
-          startJavacdCommandOptions,
-          javacdWorkerToolPoolSize,
-          javacdBorrowFromPoolTimeoutInSeconds);
+                  filesystem, javacdBinaryPathSourcePathSupplier.get()));
     }
   }
 

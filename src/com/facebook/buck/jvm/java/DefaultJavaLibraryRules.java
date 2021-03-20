@@ -43,6 +43,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -113,12 +114,9 @@ public abstract class DefaultJavaLibraryRules {
         boolean isDesugarEnabled,
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
-        boolean isJavaCDEnabled,
         Tool javaRuntimeLauncher,
         Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-        ImmutableList<String> startCommandOptions,
-        int workerToolPoolSize,
-        int borrowFromPoolTimeoutInSeconds);
+        BaseJavaCDParams javaCDParams);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -484,12 +482,9 @@ public abstract class DefaultJavaLibraryRules {
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-            javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             getJavacdBinarySourcePathSupplier(projectFilesystem),
-            javaCDBuckConfig.getJvmFlags(),
-            javaCDBuckConfig.getWorkerToolSize(),
-            javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
+            createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -535,12 +530,9 @@ public abstract class DefaultJavaLibraryRules {
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-                javaBuckConfig.isJavaCDEnabled(),
                 javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
                 getJavacdBinarySourcePathSupplier(projectFilesystem),
-                javaCDBuckConfig.getJvmFlags(),
-                javaCDBuckConfig.getWorkerToolSize(),
-                javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
+                createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -593,12 +585,9 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             getJavacdBinarySourcePathSupplier(projectFilesystem),
-            javaCDBuckConfig.getJvmFlags(),
-            javaCDBuckConfig.getWorkerToolSize(),
-            javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds()));
+            createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
   @Nullable
@@ -622,12 +611,9 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            javaBuckConfig.isJavaCDEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             getJavacdBinarySourcePathSupplier(projectFilesystem),
-            javaCDBuckConfig.getJvmFlags(),
-            javaCDBuckConfig.getWorkerToolSize(),
-            javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds()));
+            createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
   @Nullable
@@ -810,6 +796,16 @@ public abstract class DefaultJavaLibraryRules {
     } else {
       return UnusedDependenciesAction.IGNORE;
     }
+  }
+
+  /** Returns a new {@link BaseJavaCDParams} built from configuration values */
+  public static BaseJavaCDParams createJavaCDParams(
+      JavaBuckConfig javaBuckConfig, JavaCDBuckConfig javaCDBuckConfig) {
+    return BaseJavaCDParams.of(
+        javaBuckConfig.isJavaCDEnabled(),
+        javaCDBuckConfig.getJvmFlags(),
+        javaCDBuckConfig.getWorkerToolSize(),
+        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
   }
 
   @org.immutables.builder.Builder.AccessibleFields

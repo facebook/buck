@@ -35,7 +35,6 @@ import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.AbsPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
@@ -44,6 +43,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JavaAbiInfoS
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

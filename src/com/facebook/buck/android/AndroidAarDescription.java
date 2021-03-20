@@ -245,7 +245,6 @@ public class AndroidAarDescription
                   .getJavacOptions(),
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
-              javaBuckConfig.isJavaCDEnabled(),
               javaBuckConfig
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
@@ -253,9 +252,7 @@ public class AndroidAarDescription
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
               DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
-              javaCDBuckConfig.getJvmFlags(),
-              javaCDBuckConfig.getWorkerToolSize(),
-              javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
+              DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

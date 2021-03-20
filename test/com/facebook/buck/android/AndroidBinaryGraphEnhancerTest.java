@@ -75,6 +75,7 @@ import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -808,15 +809,12 @@ public class AndroidBinaryGraphEnhancerTest {
             graphBuilder,
             false,
             false,
-            false,
             new FakeTool(),
             () ->
                 ExplicitBuildTargetSourcePath.of(
                     buildTarget, Paths.get("test/external_actions.jar")),
             () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
-            ImmutableList.of(),
-            1,
-            1);
+            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =

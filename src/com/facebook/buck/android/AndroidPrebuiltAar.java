@@ -36,6 +36,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -67,12 +68,9 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-      ImmutableList<String> startCommandOptions,
-      int workerToolPoolSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      BaseJavaCDParams javaCDParams) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -118,12 +116,9 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         false,
         false,
         false,
-        isJavaCDEnabled,
         javaRuntimeLauncher,
         javacdBinaryPathSourcePathSupplier,
-        startCommandOptions,
-        workerToolPoolSize,
-        borrowFromPoolTimeoutInSeconds);
+        javaCDParams);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;

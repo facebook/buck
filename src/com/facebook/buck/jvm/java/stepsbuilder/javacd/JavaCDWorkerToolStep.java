@@ -21,7 +21,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;

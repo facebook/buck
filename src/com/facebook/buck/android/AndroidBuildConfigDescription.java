@@ -42,11 +42,11 @@ import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -114,14 +114,11 @@ public class AndroidBuildConfigDescription
             .getJavacOptions(),
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
-        javaBuckConfig.isJavaCDEnabled(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
         DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
-        javaCDBuckConfig.getJvmFlags(),
-        javaCDBuckConfig.getWorkerToolSize(),
-        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
+        DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
   /**
@@ -143,14 +140,11 @@ public class AndroidBuildConfigDescription
       JavacOptions javacOptions,
       ActionGraphBuilder graphBuilder,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> externalActionsSourcePathSupplier,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-      ImmutableList<String> startCommandOptions,
-      int workerToolPoolSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      BaseJavaCDParams javaCDParams) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -204,12 +198,9 @@ public class AndroidBuildConfigDescription
         javacOptions,
         androidBuildConfig,
         withDownwardApi,
-        isJavaCDEnabled,
         javaRuntimeLauncher,
         javacdBinaryPathSourcePathSupplier,
-        startCommandOptions,
-        workerToolPoolSize,
-        borrowFromPoolTimeoutInSeconds);
+        javaCDParams);
   }
 
   @Override

@@ -1,14 +1,7 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
-
-PARAMS_SRCS = [
-    "JavaCDParams.java",
-]
-
 java_library(
     name = "creator",
     srcs = glob(
         ["*.java"],
-        exclude = PARAMS_SRCS,
     ),
     visibility = [
         "//src/com/facebook/buck/...",
@@ -20,18 +13,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/impl:impl",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd:javacd",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/params:params",
         "//third-party/java/guava:guava",
-    ],
-    exported_deps = [":params"],
-)
-
-java_immutables_library(
-    name = "params",
-    srcs = PARAMS_SRCS,
-    visibility = [
-        "//src/com/facebook/buck/...",
-    ],
-    deps = [
-        "//src/com/facebook/buck/core/filesystems:filesystems",
     ],
 )

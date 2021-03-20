@@ -58,6 +58,7 @@ import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -481,7 +482,6 @@ public class AndroidBinaryGraphEnhancer {
               javacOptions,
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
-              javaBuckConfig.isJavaCDEnabled(),
               javaBuckConfig
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
@@ -489,9 +489,7 @@ public class AndroidBinaryGraphEnhancer {
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
               DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
-              javaCDBuckConfig.getJvmFlags(),
-              javaCDBuckConfig.getWorkerToolSize(),
-              javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
+              DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -744,14 +742,11 @@ public class AndroidBinaryGraphEnhancer {
       JavacOptions javacOptions,
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
-      boolean isJavaCDEnabled,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> externalActionsSourcePathSupplier,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-      ImmutableList<String> startCommandOptions,
-      int workerToolPoolSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      BaseJavaCDParams javaCDParams) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -794,14 +789,11 @@ public class AndroidBinaryGraphEnhancer {
               javacOptions,
               graphBuilder,
               withDownwardApi,
-              isJavaCDEnabled,
               shouldExecuteInSeparateProcess,
               javaRuntimeLauncher,
               externalActionsSourcePathSupplier,
               javacdBinaryPathSourcePathSupplier,
-              startCommandOptions,
-              workerToolPoolSize,
-              borrowFromPoolTimeoutInSeconds);
+              javaCDParams);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(

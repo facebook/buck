@@ -24,8 +24,8 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 
 /**
  * Factory that creates {@link JavaCompileStepsBuilder } builders instances applicable to JavaCD.

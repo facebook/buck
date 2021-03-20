@@ -30,7 +30,6 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
-import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
@@ -46,8 +45,9 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
-import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -84,26 +84,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @AddToRuleKey
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
-  @AddToRuleKey private final boolean isJavaCDEnabled;
+  @AddToRuleKey private final BaseJavaCDParams javaCDParams;
+
   @AddToRuleKey private final Tool javaRuntimeLauncher;
-
-  @ExcludeFromRuleKey(
-      reason = "start javacd jvm options is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
-  private final ImmutableList<String> startJavacdCommandOptions;
-
-  @ExcludeFromRuleKey(
-      reason = "javacd worker tool pool size is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
-  private final int javacdWorkerToolPoolSize;
-
-  @ExcludeFromRuleKey(
-      reason = "javacd borrow from the pool is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = IgnoredFieldInputs.class)
-  private final int javacdBorrowFromPoolTimeoutInSeconds;
 
   @ExcludeFromRuleKey(
       reason = "path to javacd binary is not a part of a rule key",
@@ -118,12 +101,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
-      boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-      ImmutableList<String> startJavacdCommandOptions,
-      int javacdWorkerToolPoolSize,
-      int javacdBorrowFromPoolTimeoutInSeconds) {
+      BaseJavaCDParams javaCDParams) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -134,11 +114,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                 rule ->
                     new NonHashableSourcePathContainer(
                         Objects.requireNonNull(rule.getSourcePathToOutput())));
-    this.isJavaCDEnabled = isJavaCDEnabled;
+    this.javaCDParams = javaCDParams;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.startJavacdCommandOptions = startJavacdCommandOptions;
-    this.javacdWorkerToolPoolSize = javacdWorkerToolPoolSize;
-    this.javacdBorrowFromPoolTimeoutInSeconds = javacdBorrowFromPoolTimeoutInSeconds;
 
     CompilerOutputPaths outputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -235,14 +212,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   private JavaCDParams createJavaCDParams(
       ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
     return JavaCDParams.of(
-        isJavaCDEnabled,
+        javaCDParams,
         javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
         () ->
             sourcePathResolver.getRelativePath(
-                filesystem, javacdBinaryPathSourcePathSupplier.get()),
-        startJavacdCommandOptions,
-        javacdWorkerToolPoolSize,
-        javacdBorrowFromPoolTimeoutInSeconds);
+                filesystem, javacdBinaryPathSourcePathSupplier.get()));
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

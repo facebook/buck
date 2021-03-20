@@ -14,43 +14,50 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.creator;
+package com.facebook.buck.jvm.java.stepsbuilder.params;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Supplier;
+import org.immutables.value.Value;
 
 /** Params related to javacd. Used to pass into javacd worker tool step. */
 @BuckStyleValue
 public abstract class JavaCDParams {
 
-  public abstract boolean hasJavaCDEnabled();
+  abstract BaseJavaCDParams getBaseJavaCDParams();
+
+  @Value.Derived
+  public boolean hasJavaCDEnabled() {
+    return getBaseJavaCDParams().hasJavaCDEnabled();
+  }
 
   public abstract ImmutableList<String> getJavaRuntimeLauncherCommand();
 
   public abstract Supplier<RelPath> getJavacdBinaryPathSupplier();
 
-  public abstract ImmutableList<String> getStartCommandOptions();
+  @Value.Derived
+  public ImmutableList<String> getStartCommandOptions() {
+    return getBaseJavaCDParams().getStartCommandOptions();
+  }
 
-  public abstract int getWorkerToolPoolSize();
+  @Value.Derived
+  public int getWorkerToolPoolSize() {
+    return getBaseJavaCDParams().getWorkerToolPoolSize();
+  }
 
-  public abstract int getBorrowFromPoolTimeoutInSeconds();
+  @Value.Derived
+  public int getBorrowFromPoolTimeoutInSeconds() {
+    return getBaseJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
+  }
 
   /** Creates {@link JavaCDParams} */
   public static JavaCDParams of(
-      boolean hasJavaCDEnabled,
+      BaseJavaCDParams baseJavaCDParams,
       ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<RelPath> javacdBinaryPathSupplier,
-      Iterable<String> startCommandOptions,
-      int workerToolPoolSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      Supplier<RelPath> javacdBinaryPathSupplier) {
     return ImmutableJavaCDParams.ofImpl(
-        hasJavaCDEnabled,
-        javaRuntimeLauncherCommand,
-        javacdBinaryPathSupplier,
-        startCommandOptions,
-        workerToolPoolSize,
-        borrowFromPoolTimeoutInSeconds);
+        baseJavaCDParams, javaRuntimeLauncherCommand, javacdBinaryPathSupplier);
   }
 }

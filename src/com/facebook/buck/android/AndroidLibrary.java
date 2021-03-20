@@ -43,8 +43,8 @@ import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.Objects;
@@ -112,12 +112,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      boolean isJavaCDEnabled,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
-      ImmutableList<String> startCommandOptions,
-      int workerToolPoolSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,
@@ -140,12 +137,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled,
         neverMarkAsUnusedDependency,
-        isJavaCDEnabled,
         javaRuntimeLauncher,
         javacdBinaryPathSourcePathSupplier,
-        startCommandOptions,
-        workerToolPoolSize,
-        borrowFromPoolTimeoutInSeconds);
+        javaCDParams);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.map(this::evalType).orElseGet(super::getType);
   }
@@ -237,12 +231,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               isDesugarEnabled,
               isInterfaceMethodsDesugarEnabled,
               neverMarkAsUnusedDependency,
-              isJavaCDEnabled,
               javaRuntimeLauncher,
               javacdBinaryPathSourcePathSupplier,
-              startCommandOptions,
-              workerToolPoolSize,
-              borrowFromPoolTimeoutInSeconds) ->
+              javaCDParams) ->
               new AndroidLibrary(
                   target,
                   filesystem,
@@ -267,12 +258,9 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
                   neverMarkAsUnusedDependency,
-                  isJavaCDEnabled,
                   javaRuntimeLauncher,
                   javacdBinaryPathSourcePathSupplier,
-                  startCommandOptions,
-                  workerToolPoolSize,
-                  borrowFromPoolTimeoutInSeconds));
+                  javaCDParams));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());
 

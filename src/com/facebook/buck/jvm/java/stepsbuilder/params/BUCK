@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "params",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+    ],
+)
