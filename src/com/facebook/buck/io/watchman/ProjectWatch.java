@@ -17,16 +17,23 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.base.Preconditions;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 @BuckStyleValue
-public interface ProjectWatch {
+public abstract class ProjectWatch {
 
-  String getWatchRoot();
+  public abstract String getWatchRoot();
 
-  Optional<String> getProjectPrefix();
+  @Value.Check
+  protected void check() {
+    Preconditions.checkArgument(!getWatchRoot().isEmpty(), "watchRoot must not be empty");
+  }
 
-  static ProjectWatch of(String watchRoot, Optional<String> projectPrefix) {
+  public abstract Optional<String> getProjectPrefix();
+
+  public static ProjectWatch of(String watchRoot, Optional<String> projectPrefix) {
     return ImmutableProjectWatch.ofImpl(watchRoot, projectPrefix);
   }
 }

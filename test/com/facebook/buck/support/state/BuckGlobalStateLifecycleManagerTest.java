@@ -106,7 +106,10 @@ public class BuckGlobalStateLifecycleManagerTest {
     watchmanClient = new FakeWatchmanClient(0, ImmutableMap.of());
     watchman =
         FakeWatchmanFactory.createWatchman(
-            watchmanClient, filesystem.getRootPath().getPath(), filesystem.getPath(""), "watch");
+            watchmanClient,
+            filesystem.getRootPath().getPath(),
+            filesystem.getRootPath().getPath(),
+            "watch");
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     targetConfigurationSerializer =
