@@ -265,7 +265,7 @@ public class WatchmanFactory {
     ImmutableMap.Builder<AbsPath, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
     for (AbsPath projectRoot : projectWatchList) {
       Optional<ProjectWatch> projectWatch =
-          queryWatchProject(client, projectRoot.getPath(), clock, endTimeNanos - clock.nanoTime());
+          queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
         return NULL_WATCHMAN;
       }
@@ -367,21 +367,18 @@ public class WatchmanFactory {
    *     watch, and relative path from the root to {@code rootPath}
    */
   private static Optional<ProjectWatch> queryWatchProject(
-      WatchmanClient watchmanClient, Path rootPath, Clock clock, long timeoutNanos)
+      WatchmanClient watchmanClient, AbsPath rootPath, Clock clock, long timeoutNanos)
       throws IOException, InterruptedException {
-    Path absoluteRootPath = rootPath.toAbsolutePath();
-    LOG.info("Adding watchman root: %s", absoluteRootPath);
+    LOG.info("Adding watchman root: %s", rootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
-            timeoutNanos,
-            WARN_TIMEOUT_NANOS,
-            WatchmanQuery.watchProject(absoluteRootPath.toString()));
+            timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(rootPath.toString()));
 
     LOG.info(
         "Took %d ms to add root %s",
-        TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - projectWatchTimeNanos), absoluteRootPath);
+        TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - projectWatchTimeNanos), rootPath);
 
     if (!result.isLeft()) {
       return Optional.empty();
