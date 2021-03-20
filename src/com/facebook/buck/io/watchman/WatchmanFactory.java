@@ -373,19 +373,12 @@ public class WatchmanFactory {
     LOG.info("Adding watchman root: %s", absoluteRootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
-    watchmanClient.queryWithTimeout(
-        timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(absoluteRootPath.toString()));
-
-    // TODO(mzlee): There is a bug in watchman (that will be fixed
-    // in a later watchman release) where watch-project returns
-    // before the crawl is finished which causes the next
-    // interaction to block. Calling watch-project a second time
-    // properly attributes where we are spending time.
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
-            timeoutNanos - (clock.nanoTime() - projectWatchTimeNanos),
+            timeoutNanos,
             WARN_TIMEOUT_NANOS,
             WatchmanQuery.watchProject(absoluteRootPath.toString()));
+
     LOG.info(
         "Took %d ms to add root %s",
         TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - projectWatchTimeNanos), absoluteRootPath);
