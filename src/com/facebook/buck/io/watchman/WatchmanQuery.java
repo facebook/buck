@@ -29,15 +29,29 @@ public abstract class WatchmanQuery {
 
   public abstract ImmutableList<Object> toProtocolArgs();
 
-  public String getQueryType() {
-    return (String) toProtocolArgs().get(0);
+  /** Short query description to be used in logs. */
+  public String queryDesc() {
+    String command = (String) toProtocolArgs().get(0);
+    if (this instanceof QueryWithSync) {
+      return ((QueryWithSync) this).queryDescPrefix() + command;
+    } else {
+      return command;
+    }
+  }
+
+  private interface QueryWithSync {
+    boolean doesSync();
+
+    default String queryDescPrefix() {
+      return doesSync() ? "sync+" : "";
+    }
   }
 
   /** {@code query} query. */
   @BuckStyleValue
   @Value.Immutable(copy = true, builder = false, prehash = false, intern = false)
   @SuppressWarnings("immutables:untype")
-  public abstract static class Query extends WatchmanQuery {
+  public abstract static class Query extends WatchmanQuery implements QueryWithSync {
     public abstract String getPath();
 
     public abstract Optional<String> getRelativeRoot();
@@ -73,6 +87,12 @@ public abstract class WatchmanQuery {
     @Value.Parameter(false)
     public Optional<Integer> getSyncTimeout() {
       return Optional.empty();
+    }
+
+    @Override
+    public boolean doesSync() {
+      // Sync is disabled when `sync_timeout` parameter is specified as zero
+      return !getSyncTimeout().equals(Optional.of(0));
     }
 
     public Query withSyncTimeout(int syncTimeoutMillis) {
@@ -142,11 +162,16 @@ public abstract class WatchmanQuery {
 
   /** {@code clock} query. */
   @BuckStyleValue
-  public abstract static class Clock extends WatchmanQuery {
+  public abstract static class Clock extends WatchmanQuery implements QueryWithSync {
     public abstract String getPath();
 
     /** Milliseconds. */
     public abstract Optional<Integer> getSyncTimeout();
+
+    @Override
+    public boolean doesSync() {
+      return getSyncTimeout().isPresent();
+    }
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {

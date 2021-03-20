@@ -138,7 +138,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
               .getRawStream()
               .format(
                   "Waiting for watchman query '%s' for %ds...\n",
-                  query.getQueryType(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
+                  query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
         }
         try {
           Map<String, Object> result = future.get(remainingNanos, TimeUnit.NANOSECONDS);
@@ -152,14 +152,14 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
                 .getRawStream()
                 .format(
                     "Watchman query '%s' finished in %ds...\n",
-                    query.getQueryType(), TimeUnit.NANOSECONDS.toSeconds(queryDurationNanos));
+                    query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(queryDurationNanos));
           }
           return Either.ofLeft(result);
         } catch (TimeoutException te) {
           LOG.debug("Timed out");
         }
       }
-      showTimeoutWarning(timeoutNanos, query.getQueryType());
+      showTimeoutWarning(timeoutNanos, query.queryDesc());
       return Either.ofRight(Timeout.INSTANCE);
     }
   }
