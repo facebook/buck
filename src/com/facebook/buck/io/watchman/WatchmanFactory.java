@@ -44,6 +44,7 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /** Factory that is responsible for creating instances of {@link Watchman}. */
 public class WatchmanFactory {
@@ -143,12 +144,12 @@ public class WatchmanFactory {
       if (pathToTransportOpt.isPresent()) {
         pathToTransport = pathToTransportOpt.get();
       } else {
-        LOG.warn("Could not determine the socket to talk to Watchman, disabling.");
-        return NULL_WATCHMAN;
+        return returnNullWatchman(
+            console, "Could not determine the socket to talk to Watchman, disabling.", null);
       }
     } catch (IOException e) {
-      LOG.warn(e, "Unable to determine the version of watchman. Going without.");
-      return NULL_WATCHMAN;
+      return returnNullWatchman(
+          console, "Unable to determine the version of watchman. Going without.", e);
     }
 
     try (WatchmanClient client =
@@ -168,8 +169,8 @@ public class WatchmanFactory {
       LOG.debug("Connected to Watchman");
       return watchman;
     } catch (ClassCastException | IOException e) {
-      LOG.warn(e, "Unable to determine the version of watchman. Going without.");
-      return NULL_WATCHMAN;
+      return returnNullWatchman(
+          console, "Unable to determine the version of watchman. Going without.", e);
     }
   }
 
@@ -245,19 +246,18 @@ public class WatchmanFactory {
         ALL_CAPABILITIES);
 
     if (!result.isLeft()) {
-      LOG.warn("Could not get version response from Watchman, disabling Watchman");
-      return NULL_WATCHMAN;
+      return returnNullWatchman(
+          console, "Could not get version response from Watchman, disabling Watchman", null);
     }
     Object versionRaw = result.getLeft().get("version");
     if (!(versionRaw instanceof String)) {
-      LOG.warn("Unexpected version format, disabling Watchman");
-      return NULL_WATCHMAN;
+      return returnNullWatchman(console, "Unexpected version format, disabling Watchman", null);
     }
     String version = (String) versionRaw;
     ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
     if (!extractCapabilities(result.getLeft(), capabilitiesBuilder)) {
-      LOG.warn("Could not extract capabilities, disabling Watchman");
-      return NULL_WATCHMAN;
+      return returnNullWatchman(
+          console, "Could not extract capabilities, disabling Watchman", null);
     }
     ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
     LOG.debug("Got Watchman capabilities: %s", capabilities);
@@ -267,7 +267,7 @@ public class WatchmanFactory {
       Optional<ProjectWatch> projectWatch =
           queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
-        return NULL_WATCHMAN;
+        return returnNullWatchman(console, "watch-project failed, disabling Watchman", null);
       }
       projectWatchesBuilder.put(projectRoot, projectWatch.get());
     }
@@ -304,6 +304,23 @@ public class WatchmanFactory {
         return createWatchmanClient(transportPath, console, clock);
       }
     };
+  }
+
+  private static Watchman returnNullWatchman(
+      Console console, String reason, @Nullable Throwable e) {
+    if (e != null) {
+      LOG.warn(e, reason);
+    } else {
+      LOG.warn(reason);
+    }
+    // Unavailable watchman is an important event,
+    // so print that to the console, not just log it.
+    // TODO(nga): we print to raw stream here because printing to regular stream
+    //   marks the stream as dirty which disables super-console.
+    //   But if super-console is running, it will likely overwrite this message.
+    //   But at least we will see the message when running in CI.
+    console.getStdErr().getRawStream().println(reason);
+    return NULL_WATCHMAN;
   }
 
   @VisibleForTesting
