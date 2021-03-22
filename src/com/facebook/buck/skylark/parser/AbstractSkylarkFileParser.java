@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -115,7 +116,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       ParseContext context,
       ReadConfigContext readConfigContext,
       Globber globber,
-      ImmutableList<AbsPath> loadedPaths);
+      ImmutableList<String> loadedPaths);
 
   abstract Globber getGlobber(AbsPath parseFile);
 
@@ -185,9 +186,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       Module module = makeModule(getBuckOrPackage().fileKind, containingLabel);
       exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
 
-      ImmutableList.Builder<AbsPath> loadedPaths =
+      ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
-      loadedPaths.add(parseFile);
+      loadedPaths.add(parseFile.toString());
       loadedPaths.addAll(envData.getLoadedPaths());
 
       return getParseResult(
@@ -269,7 +270,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * @return transitive closure of all paths loaded during parsing of {@code containingPath}
    *     including {@code containingPath} itself as the first element.
    */
-  private ImmutableList<AbsPath> toLoadedPaths(
+  private ImmutableList<String> toLoadedPaths(
       AbsPath containingPath,
       ImmutableCollection<ExtensionData> dependencies,
       @Nullable ExtensionData implicitLoadExtensionData) {
@@ -281,10 +282,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     for (ExtensionData dependency : dependencies) {
       expectedSize += dependency.getLoadTransitiveClosure().size();
     }
-    ImmutableList.Builder<AbsPath> loadedPathsBuilder =
+    ImmutableList.Builder<String> loadedPathsBuilder =
         ImmutableList.builderWithExpectedSize(expectedSize);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
-    loadedPathsBuilder.add(containingPath);
+    loadedPathsBuilder.add(containingPath.toString());
     for (ExtensionData dependency : dependencies) {
       loadedPathsBuilder.addAll(dependency.getLoadTransitiveClosure());
     }
@@ -392,7 +393,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadIncludes(label, getImports(fileAst, label), loadStack);
 
     return ImmutableIncludesData.ofImpl(
-        filePath, dependencies, toIncludedPaths(filePath, dependencies, null));
+        filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
   }
 
   /**
@@ -436,12 +437,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return includes.build();
   }
 
-  private ImmutableSortedSet<AbsPath> toIncludedPaths(
-      AbsPath containingPath,
+  private ImmutableSet<String> toIncludedPaths(
+      String containingPath,
       ImmutableList<IncludesData> dependencies,
       @Nullable ExtensionData implicitLoadExtensionData) {
-    ImmutableSortedSet.Builder<AbsPath> includedPathsBuilder =
-        ImmutableSortedSet.orderedBy(AbsPath.comparator());
+    ImmutableSet.Builder<String> includedPathsBuilder = ImmutableSet.builder();
     includedPathsBuilder.add(containingPath);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     for (int i = 0; i < dependencies.size(); ++i) {
@@ -851,7 +851,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   @Override
-  public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath parseFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException {
 
     ForwardRelativePath basePath = getBasePath(parseFile);
@@ -866,7 +866,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // it might be potentially faster to keep sorted sets for each dependency separately and just
     // merge sorted lists as we aggregate transitive close up
     // But Guava does not seem to have a built-in way of merging sorted lists/sets
-    return toIncludedPaths(parseFile, dependencies, implicitLoad.getExtensionData());
+    return ImmutableSortedSet.copyOf(
+        toIncludedPaths(parseFile.toString(), dependencies, implicitLoad.getExtensionData()));
   }
 
   @Override

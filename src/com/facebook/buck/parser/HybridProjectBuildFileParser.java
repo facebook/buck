@@ -77,7 +77,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return getParserForBuildFile(buildFile).getIncludedFiles(buildFile);
   }

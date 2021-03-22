@@ -34,5 +34,5 @@ abstract class IncludesData {
   public abstract ImmutableSet<IncludesData> getDependencies();
 
   /** @return the set of files loaded in order to parse this extension. */
-  public abstract ImmutableSet<AbsPath> getLoadTransitiveClosure();
+  public abstract ImmutableSet<String> getLoadTransitiveClosure();
 }

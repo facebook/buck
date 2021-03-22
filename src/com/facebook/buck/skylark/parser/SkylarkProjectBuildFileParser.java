@@ -113,7 +113,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
       ParseContext context,
       ReadConfigContext readConfigContext,
       Globber globber,
-      ImmutableList<AbsPath> loadedPaths) {
+      ImmutableList<String> loadedPaths) {
     Preconditions.checkState(globber instanceof CachingGlobber);
     TwoArraysImmutableHashMap<String, RecordedRule> rules = context.getRecordedRules();
     if (LOG.isVerboseEnabled()) {
@@ -160,7 +160,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
       return BuildFileManifest.of(
           targets,
-          ImmutableSortedSet.copyOf(AbsPath.comparator(), parseResult.getLoadedPaths()),
+          ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
           (ImmutableMap<String, Object>)
               (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
           Optional.empty(),

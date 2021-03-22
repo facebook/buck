@@ -94,7 +94,7 @@ public class EventReportingProjectBuildFileParserTest {
     }
 
     @Override
-    public ImmutableSortedSet<AbsPath> getIncludedFiles(AbsPath buildFile)
+    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
         throws BuildFileParseException {
       return ImmutableSortedSet.of();
     }

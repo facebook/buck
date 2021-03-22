@@ -33,7 +33,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -1081,10 +1080,11 @@ public class SkylarkProjectBuildFileParserTest {
             "load('//src/test:build_rules.bzl', 'get_name')",
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile.getPath(), Arrays.asList("def get_name():", "  return 'jar'"));
-    ImmutableSortedSet<AbsPath> includes = parser.getIncludedFiles(buildFile);
+    ImmutableSortedSet<String> includes = parser.getIncludedFiles(buildFile);
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
         includes.stream()
+            .map(projectFilesystem::resolve)
             .map(
                 p ->
                     p.getPath()
@@ -1111,9 +1111,10 @@ public class SkylarkProjectBuildFileParserTest {
     RawTargetNode prebuiltJarRule =
         Iterables.getOnlyElement(buildFileManifest.getTargets().values());
     assertThat(prebuiltJarRule.getBySnakeCase("name"), equalTo("foo"));
-    ImmutableSortedSet<AbsPath> includes = buildFileManifest.getIncludes();
+    ImmutableSortedSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes.stream()
+            .map(projectFilesystem::resolve)
             .map(
                 p ->
                     p.getPath()
@@ -1495,14 +1496,14 @@ public class SkylarkProjectBuildFileParserTest {
               "Expected file at %s to parse and have manifest includes %s",
               kvp.getKey(), buildFileManifest.getIncludes()),
           buildFileManifest.getIncludes().stream()
-              .map(PathWrapper::getPath)
+              .map(Paths::get)
               .collect(ImmutableList.toImmutableList()),
           Matchers.containsInAnyOrder(expectedIncludes.toArray()));
       assertThat(
           String.format(
               "Expected file at %s to parse and have includes %s", kvp.getKey(), expectedIncludes),
           parser.getIncludedFiles(AbsPath.of(projectFilesystem.resolve(kvp.getKey()))).stream()
-              .map(PathWrapper::getPath)
+              .map(Paths::get)
               .collect(ImmutableList.toImmutableList()),
           Matchers.containsInAnyOrder(expectedIncludes.toArray()));
     }

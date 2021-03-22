@@ -16,7 +16,6 @@
 
 package com.facebook.buck.skylark.parser;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
 import net.starlark.java.eval.StarlarkThread;
@@ -29,5 +28,5 @@ import net.starlark.java.eval.StarlarkThread;
 public abstract class EnvironmentData {
   public abstract StarlarkThread getEnvironment();
 
-  public abstract ImmutableSet<AbsPath> getLoadedPaths();
+  public abstract ImmutableSet<String> getLoadedPaths();
 }

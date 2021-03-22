@@ -44,6 +44,7 @@ import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -146,6 +147,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
 
     BuildFileManifest buildFileManifest =
         env.getDep(BuildPackagePathToBuildFileManifestKey.of(packagePath));
+    FileSystem fileSystem = superRootPath.getFileSystem();
     ImmutableMap<String, UnconfiguredTargetNodeWithDeps> rawTargetNodesWithDeps = builder.build();
     ImmutableList<ParsingError> errors =
         getParsingErrors(errorsBuilder.build(), buildFileManifest.getErrors());
@@ -155,7 +157,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
      */
     ImmutableSet<Path> includes =
         buildFileManifest.getIncludes().stream()
-            .map(include -> superRootPath.relativize(include.getPath()))
+            .map(include -> superRootPath.relativize(fileSystem.getPath(include)))
             .collect(ImmutableSet.toImmutableSet());
     return UnconfiguredTargetNodeWithDepsPackage.of(
         packagePath, rawTargetNodesWithDeps, errors, includes);

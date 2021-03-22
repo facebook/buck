@@ -163,10 +163,11 @@ public class SkylarkPackageFileParserTest {
         Arrays.asList("load('//src/test:helper_rules.bzl', 'custom_package')", "custom_package()"));
     Files.write(
         extensionFile.getPath(), Arrays.asList("def custom_package():", "  native.package()"));
-    ImmutableSortedSet<AbsPath> includes = parser.getIncludedFiles(packageFile);
+    ImmutableSortedSet<String> includes = parser.getIncludedFiles(packageFile);
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
         includes.stream()
+            .map(projectFilesystem::resolve)
             .map(
                 p ->
                     p.getPath()

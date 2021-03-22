@@ -120,10 +120,8 @@ public class BuildFileManifestCacheTest {
                 ImmutableList.of(),
                 ImmutableList.of(),
                 TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("key2", 2))));
-    ImmutableSortedSet<AbsPath> includes =
-        ImmutableSortedSet.orderedBy(AbsPath.comparator())
-            .add(includesFolder.resolve("include1.bzl"))
-            .build();
+    ImmutableSortedSet<String> includes =
+        ImmutableSortedSet.of(includesFolder.resolve("include1.bzl").toString());
     ImmutableMap<String, Object> configs = ImmutableMap.of("config1", "cval1");
     ImmutableList<GlobSpecWithResult> globManifest =
         ImmutableList.of(
@@ -138,10 +136,9 @@ public class BuildFileManifestCacheTest {
     cache.put(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")), manifestCell1Root);
 
     includes =
-        ImmutableSortedSet.orderedBy(AbsPath.comparator())
-            .add(includesFolder.resolve("include2.bzl"))
-            .add(cell2IncludesFolder.resolve("include2.bzl"))
-            .build();
+        ImmutableSortedSet.of(
+            includesFolder.resolve("include2.bzl").toString(),
+            cell2IncludesFolder.resolve("include2.bzl").toString());
     manifestCell1Folder =
         BuildFileManifestFactory.create(
             targets, includes, configs, Optional.empty(), globManifest, ImmutableList.of());

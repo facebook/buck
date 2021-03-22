@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -41,7 +40,7 @@ public class BuildFileManifestFactory {
 
   public static BuildFileManifest create(
       ImmutableMap<String, RawTargetNode> targets,
-      ImmutableSortedSet<AbsPath> includes,
+      ImmutableSortedSet<String> includes,
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<GlobSpecWithResult> globManifest,
