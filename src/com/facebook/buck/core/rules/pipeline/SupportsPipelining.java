@@ -27,13 +27,13 @@ import javax.annotation.Nullable;
  * The steps required to build this rule locally can run more efficiently when executed immediately
  * after those of a dependency.
  *
- * @param <T> the type that is used to share build state between rules in the pipeline
+ * @param <State> the type that is used to share build state between rules in the pipeline
  * @deprecated Rule pipelining couples rules in a way that makes it very easy to violate buck's
  *     assumptions and makes it nearly impossible for buck to understand and restrict what rules are
  *     doing.
  */
 @Deprecated
-public interface SupportsPipelining<T extends RulePipelineState> extends BuildRule {
+public interface SupportsPipelining<State extends RulePipelineState> extends BuildRule {
   static boolean isSupported(BuildRule rule) {
     if (!(rule instanceof SupportsPipelining)) {
       return false;
@@ -46,10 +46,12 @@ public interface SupportsPipelining<T extends RulePipelineState> extends BuildRu
   boolean useRulePipelining();
 
   @Nullable
-  SupportsPipelining<T> getPreviousRuleInPipeline();
+  SupportsPipelining<State> getPreviousRuleInPipeline();
 
   ImmutableList<? extends Step> getPipelinedBuildSteps(
-      BuildContext context, BuildableContext buildableContext, StateHolder<T> stateHolder);
+      BuildContext context, BuildableContext buildableContext, StateHolder<State> stateHolder);
 
-  RulePipelineStateFactory<T> getPipelineStateFactory();
+  RulePipelineStateFactory<State> getPipelineStateFactory();
+
+  boolean doNotCreateState();
 }

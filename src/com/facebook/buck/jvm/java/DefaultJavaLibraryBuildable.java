@@ -342,4 +342,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   public boolean hasAnnotationProcessing() {
     return jarBuildStepsFactory.hasAnnotationProcessing();
   }
+
+  public boolean doNotCreateState() {
+    return javaCDParams.pipeliningSupported();
+  }
 }

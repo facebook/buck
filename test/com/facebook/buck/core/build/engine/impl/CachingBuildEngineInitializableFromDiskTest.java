@@ -172,6 +172,11 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     public RulePipelineStateFactory<SimplePipelineState> getPipelineStateFactory() {
       return pipelineStateFactory;
     }
+
+    @Override
+    public boolean doNotCreateState() {
+      return false;
+    }
   }
 
   @Before

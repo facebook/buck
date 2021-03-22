@@ -20,8 +20,9 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
-public interface RulePipelineStateFactory<T extends RulePipelineState> {
+/** Factory responsible for creating pipelining state. */
+public interface RulePipelineStateFactory<State extends RulePipelineState> {
 
-  T createPipelineState(
+  State createPipelineState(
       BuildContext context, ProjectFilesystem filesystem, BuildTarget firstTarget);
 }

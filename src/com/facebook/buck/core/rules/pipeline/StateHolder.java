@@ -16,16 +16,19 @@
 
 package com.facebook.buck.core.rules.pipeline;
 
+import java.util.Optional;
+
 /** Holds rule pipelining state */
 public class StateHolder<State extends RulePipelineState> {
 
-  private final State state;
+  private final Optional<State> state;
 
-  public StateHolder(State state) {
+  public StateHolder(Optional<State> state) {
     this.state = state;
   }
 
   public State getState() {
-    return state;
+    return state.orElseThrow(
+        () -> new IllegalStateException("State could not be created in the current process"));
   }
 }

@@ -203,6 +203,10 @@ public class CalculateSourceAbi
               sourcePathResolver.getRelativePath(
                   filesystem, javacdBinaryPathSourcePathSupplier.get()));
     }
+
+    public boolean doNotCreateState() {
+      return javaCDParams.pipeliningSupported();
+    }
   }
 
   @Override
@@ -279,5 +283,10 @@ public class CalculateSourceAbi
         .jarBuildStepsFactory
         .getInputsAfterBuildingLocally(
             context, getProjectFilesystem(), ruleFinder, cellPathResolver, getBuildTarget());
+  }
+
+  @Override
+  public boolean doNotCreateState() {
+    return getBuildable().doNotCreateState();
   }
 }

@@ -427,5 +427,10 @@ public class BuildRulePipelinesRunnerTest {
     public RulePipelineStateFactory<TestPipelineState> getPipelineStateFactory() {
       return TestPipelineState::new;
     }
+
+    @Override
+    public boolean doNotCreateState() {
+      return false;
+    }
   }
 }

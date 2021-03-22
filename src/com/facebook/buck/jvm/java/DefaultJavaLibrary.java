@@ -499,6 +499,11 @@ public class DefaultJavaLibrary
     return getBuildable().getPipelineStateFactory();
   }
 
+  @Override
+  public boolean doNotCreateState() {
+    return getBuildable().doNotCreateState();
+  }
+
   @Nullable
   @Override
   public SupportsPipelining<JavacPipelineState> getPreviousRuleInPipeline() {
