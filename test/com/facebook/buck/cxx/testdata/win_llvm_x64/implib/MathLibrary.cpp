@@ -20,3 +20,16 @@ namespace MathLibrary
         return a + (a * b);
     }
 }
+
+
+double MathLibrary_Add(double a, double b) {
+    return MathLibrary::Functions::Add(a, b);
+}
+
+double MathLibrary_Multiply(double a, double b) {
+    return MathLibrary::Functions::Multiply(a, b);
+}
+
+double MathLibrary_AddMultiply(double a, double b) {
+    return MathLibrary::Functions::AddMultiply(a, b);
+}

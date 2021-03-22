@@ -7,6 +7,14 @@ prebuilt_cxx_library(
     visibility = ["PUBLIC"],
 )
 
+prebuilt_cxx_library(
+    name = "implib_prebuilt_plugin",
+    shared_lib = "//implib:implib#windows-x86_64,shared",
+    soname = "MathPlugin.dll",
+    preferred_linkage = "shared",
+    visibility = ["PUBLIC"],
+)
+
 cxx_library(
     name = "helloworld_static",
     srcs = ["HelloWorldLibrary.cpp"],
@@ -28,4 +36,20 @@ genrule(
     name = "log",
     out = "log.txt",
     cmd_exe = "$(exe :app#windows-x86_64) > %OUT%",
+)
+
+cxx_binary(
+    name = "appWithPlugin",
+    srcs = ["MathPluginClient.cpp"],
+    link_style = "shared",
+    deps = [
+        ":helloworld_static",
+        ":implib_prebuilt_plugin",
+    ],
+)
+
+genrule(
+    name = "logWithPlugin",
+    out = "log.txt",
+    cmd_exe = "$(exe :appWithPlugin#windows-x86_64) > %OUT%",
 )

@@ -13,8 +13,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-// MathClient.cpp : Defines the entry point for the console application.
-// Compile by using: cl /EHsc /link MathLibrary.lib MathClient.cpp
 
 #include <iostream>
 #include "HelloWorldLibrary.h"

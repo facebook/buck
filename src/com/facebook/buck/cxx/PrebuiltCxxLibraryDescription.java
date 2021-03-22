@@ -85,6 +85,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Streams;
+import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -541,15 +542,31 @@ public class PrebuiltCxxLibraryDescription
 
       private String getSoname(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         Optional<String> soname = args.getSoname();
-        if (!soname.isPresent()
-            && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS
-            && getImportLibrary(cxxPlatform, graphBuilder).isPresent()) {
+        if (!soname.isPresent() && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
           // TODO(fishb): We should allow `shared_lib` to be absent (ex. link against import lib
           //  of pre-deployed DLL)
           SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, false, graphBuilder);
-          Path sharedLibraryPath =
-              graphBuilder.getSourcePathResolver().getIdeallyRelativePath(sharedLibrary);
-          soname = Optional.of(sharedLibraryPath.getFileName().toString());
+          String sharedLibraryFilename =
+              graphBuilder
+                  .getSourcePathResolver()
+                  .getIdeallyRelativePath(sharedLibrary)
+                  .getFileName()
+                  .toString();
+
+          // If "import_lib" is specified then we can assume that "shared_lib"
+          // refers to the actual DLL and can use the filename of "shared_lib"
+          // as the soname unconditionally.
+          //
+          // If "import_lib" is not specified, "shared_lib" can refer to either
+          // the static import library OR the associated DLL (the former has
+          // been a common usage to date).  Only use the file name of
+          // "shared_lib" as the soname if the extension is not ".lib", under
+          // the assumption that all static import libs will have a ".lib"
+          // extension.
+          if (getImportLibrary(cxxPlatform, graphBuilder).isPresent()
+              || !Files.getFileExtension(sharedLibraryFilename).equalsIgnoreCase("lib")) {
+            soname = Optional.of(sharedLibraryFilename);
+          }
         }
         return PrebuiltCxxLibraryDescription.getSoname(getBuildTarget(), cxxPlatform, soname);
       }
@@ -802,20 +819,42 @@ public class PrebuiltCxxLibraryDescription
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
             Preconditions.checkState(linkable.getPreferredLinkage() != Linkage.STATIC);
-            Optional<SourcePath> importLibraryPath = getImportLibrary(cxxPlatform, graphBuilder);
-            if (importLibraryPath.isPresent()
-                && cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
-              SourcePathArg importLibrary =
-                  SourcePathArg.of(
-                      importLibraryPath.orElseThrow(
-                          () ->
-                              new HumanReadableException(
-                                  "Could not find import library for %s.", getBuildTarget())));
-              if (args.isLinkWhole() || forceLinkWhole) {
-                throw new HumanReadableException(
-                    "%s: whole linking is not supported for import libraries", getBuildTarget());
+            if (cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS) {
+              // If present, link against the static import library provided in
+              // "import_lib".
+              //
+              // If not present, check "shared_lib" for something that
+              // resembles a static import library (i.e. has ".lib" extension)
+              // and link against that. Unfortunately we cannot assume that
+              // "shared_lib" always refers to a DLL, as it has been a common
+              // practice to supply the static import library in the
+              // "shared_lib" field.
+              //
+              // If "shared_lib" does not resemble a static import library,
+              // don't link against anything. The shared library will still be
+              // present in any resulting DLL symlink trees, making it
+              // available for runtime/plugin-style use via
+              // LoadLibrary()/GetProcAddress() and friends.
+
+              Optional<SourcePath> importLibrary = getImportLibrary(cxxPlatform, graphBuilder);
+              if (importLibrary.isPresent()) {
+                SourcePathArg importLibraryArg = SourcePathArg.of(importLibrary.get());
+                linkerArgsBuilder.add(
+                    FileListableLinkerInputArg.withSourcePathArg(importLibraryArg));
               } else {
-                linkerArgsBuilder.add(FileListableLinkerInputArg.withSourcePathArg(importLibrary));
+                SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
+                String sharedLibraryFilename =
+                    graphBuilder
+                        .getSourcePathResolver()
+                        .getIdeallyRelativePath(sharedLibrary)
+                        .getFileName()
+                        .toString();
+                if (Files.getFileExtension(sharedLibraryFilename).equalsIgnoreCase("lib")) {
+                  SourcePathArg sharedLibraryAsImportLibraryArg = SourcePathArg.of(sharedLibrary);
+                  linkerArgsBuilder.add(
+                      FileListableLinkerInputArg.withSourcePathArg(
+                          sharedLibraryAsImportLibraryArg));
+                }
               }
             } else {
               SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
@@ -826,8 +865,7 @@ public class PrebuiltCxxLibraryDescription
                 }
                 linkerArgsBuilder.add(new RelativeLinkArg((PathSourcePath) sharedLibrary));
               } else {
-                linkerArgsBuilder.add(
-                    SourcePathArg.of(requireSharedLibrary(cxxPlatform, true, graphBuilder)));
+                linkerArgsBuilder.add(SourcePathArg.of(sharedLibrary));
               }
             }
           } else {

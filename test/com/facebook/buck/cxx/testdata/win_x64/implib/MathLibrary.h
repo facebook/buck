@@ -23,3 +23,11 @@ namespace MathLibrary
         static MATHLIBRARY_API double AddMultiply(double a, double b);
     };
 }
+
+extern "C" {
+
+MATHLIBRARY_API double MathLibrary_Add(double a, double b);
+MATHLIBRARY_API double MathLibrary_Multiply(double a, double b);
+MATHLIBRARY_API double MathLibrary_AddMultiply(double a, double b);
+
+}

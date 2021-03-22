@@ -224,6 +224,30 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryWithPrebuiltPluginDll() throws IOException {
+    ProcessResult appResult =
+        workspace.runBuckCommand("build", "//implib_prebuilt:appWithPlugin#windows-x86_64");
+    appResult.assertSuccess();
+
+    ProcessResult runResult =
+        workspace.runBuckCommand("run", "//implib_prebuilt:appWithPlugin#windows-x86_64");
+    runResult.assertSuccess();
+
+    ProcessResult logResult = workspace.runBuckCommand("build", "//implib_prebuilt:logWithPlugin");
+    logResult.assertSuccess();
+    Path outputPath =
+        workspace
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    workspace.getProjectFileSystem().getBuckPaths(),
+                    BuildTargetFactory.newInstance("//implib_prebuilt:logWithPlugin"),
+                    "%s"))
+            .resolve("log.txt");
+    String outputPathContents = workspace.getFileContents(outputPath);
+    assertThat(outputPathContents, Matchers.containsString("a + (a * b)"));
+  }
+
+  @Test
   public void simpleCrossCellBinaryWithPrebuiltDll() throws IOException {
     ProcessResult appResult =
         workspace.runBuckCommand("build", "implib_prebuilt_cell2//:app#windows-x86_64");
