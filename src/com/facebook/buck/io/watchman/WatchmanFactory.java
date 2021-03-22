@@ -290,6 +290,8 @@ public class WatchmanFactory {
               clockSyncTimeoutMillis);
       if (clockId.isPresent()) {
         clockIdsBuilder.put(watchRoot, clockId.get());
+      } else {
+        return returnNullWatchman(console, "clock query timed out, disabling Watchman", null);
       }
     }
 

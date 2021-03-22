@@ -421,7 +421,7 @@ public class WatchmanFactoryTest {
                 WatchmanQuery.watchProject(root),
                 ImmutableMap.of("version", "4.7.0", "watch", root),
                 WatchmanQuery.clock(root, Optional.of(60 * 1000)),
-                ImmutableMap.of()));
+                ImmutableMap.of("clock", "123")));
     Watchman watchman =
         watchmanFactory.build(
             executor,
@@ -433,7 +433,7 @@ public class WatchmanFactoryTest {
             Optional.empty(),
             Optional.empty());
 
-    assertEquals(ImmutableMap.of(), watchman.getClockIdsByWatchRoot());
+    assertEquals(ImmutableMap.of(root, "123"), watchman.getClockIdsByWatchRoot());
     assertEquals("4.7.0", watchman.getVersion());
   }
 }

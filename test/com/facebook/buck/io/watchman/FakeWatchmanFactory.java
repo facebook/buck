@@ -42,7 +42,7 @@ public class FakeWatchmanFactory {
             AbsPath.of(rootPath), ProjectWatch.of(watchPath.toString(), Optional.of(projectName))),
         ImmutableSet.of(
             Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
-        ImmutableMap.of(),
+        ImmutableMap.of(rootPath.toString(), "123"),
         Optional.of(Paths.get(".watchman-sock")),
         /* version */ "") {
       @Override
