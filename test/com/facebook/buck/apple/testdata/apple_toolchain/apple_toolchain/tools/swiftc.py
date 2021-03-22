@@ -20,6 +20,7 @@ parser.add_argument("-serialize-debugging-options", action="store_true")
 parser.add_argument("-test-arg1", action="store_true")
 parser.add_argument("-test-arg2", action="store_true")
 parser.add_argument("-prefix-serialized-debug-info", action="store_true")
+parser.add_argument("-sdk")
 
 (options, args) = parser.parse_known_args()
 
@@ -39,6 +40,9 @@ with open(options.output, "w") as output:
         output.write("swift compile: ")
         with open(source) as inputfile:
             output.write(inputfile.read())
+
+    if options.sdk:
+        output.write(f"swift flags: -sdk {options.sdk}\n")
 
     if options.prefix_serialized_debug_info:
         output.write("swift flags: -prefix-serialized-debug-info\n")

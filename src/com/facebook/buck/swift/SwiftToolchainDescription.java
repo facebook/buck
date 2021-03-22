@@ -28,6 +28,9 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -47,16 +50,25 @@ public class SwiftToolchainDescription
     Verify.verify(!buildTarget.isFlavored());
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
     Tool swiftc = Tools.resolveTool(args.getSwiftc(), actionGraphBuilder);
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            context.getActionGraphBuilder(),
+            ImmutableList.of(LocationMacroExpander.INSTANCE),
+            Optional.empty());
+
     if (!args.getSwiftcFlags().isEmpty()) {
       CommandTool.Builder swiftcBuilder = new CommandTool.Builder(swiftc);
-      args.getSwiftcFlags().forEach(swiftcBuilder::addArg);
+      args.getSwiftcFlags().forEach(a -> swiftcBuilder.addArg(macrosConverter.convert(a)));
       swiftc = swiftcBuilder.build();
     }
     Optional<Tool> swiftStdlibTool =
         args.getSwiftStdlibTool().map(path -> Tools.resolveTool(path, actionGraphBuilder));
     if (swiftStdlibTool.isPresent() && !args.getSwiftStdlibToolFlags().isEmpty()) {
       CommandTool.Builder swiftStdlibToolBuilder = new CommandTool.Builder(swiftStdlibTool.get());
-      args.getSwiftStdlibToolFlags().forEach(swiftStdlibToolBuilder::addArg);
+      args.getSwiftStdlibToolFlags()
+          .forEach(a -> swiftStdlibToolBuilder.addArg(macrosConverter.convert(a)));
       swiftStdlibTool = Optional.of(swiftStdlibToolBuilder.build());
     }
     return new SwiftToolchainBuildRule(
@@ -93,13 +105,13 @@ public class SwiftToolchainDescription
     SourcePath getSwiftc();
 
     /** Flags for Swift compiler. */
-    ImmutableList<String> getSwiftcFlags();
+    ImmutableList<StringWithMacros> getSwiftcFlags();
 
     /** Swift stdlib tool binary. */
     Optional<SourcePath> getSwiftStdlibTool();
 
     /** Flags for Swift stdlib tool. */
-    ImmutableList<String> getSwiftStdlibToolFlags();
+    ImmutableList<StringWithMacros> getSwiftStdlibToolFlags();
 
     /** Runtime paths for bundling. */
     ImmutableList<String> getRuntimePathsForBundling();

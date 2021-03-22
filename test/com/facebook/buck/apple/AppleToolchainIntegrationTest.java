@@ -188,23 +188,39 @@ public class AppleToolchainIntegrationTest {
             workspace.getProjectFileSystem().getBuckPaths(),
             BuildTargetFactory.newInstance("//:SwiftCompanionLibrary#iphoneos-arm64,swift-compile"),
             "%s");
+    RelPath sdkRelPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem().getBuckPaths(),
+            BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
+            "%s/sdk");
+    Path sdkPath = workspace.getDestPath().resolve(sdkRelPath.getPath());
+
     assertEquals(
         String.format(
             "linker: input:%n"
                 + swiftLibraryPath
                 + "/SwiftLibrary.o%n"
                 + "swift compile: swift code%n"
+                + "swift flags: -sdk "
+                + sdkPath
+                + "%n"
                 + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: input:%n"
                 + companionLibraryPath
                 + "/SwiftCompanionLibrary.o%n"
                 + "swift compile: swift source 1%n"
                 + "swift compile: swift source 2%n"
+                + "swift flags: -sdk "
+                + sdkPath
+                + "%n"
                 + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: input:%n"
                 + anotherSwiftLibraryPath
                 + "/AnotherSwiftLibrary.o%n"
                 + "swift compile: extra swift code%n"
+                + "swift flags: -sdk "
+                + sdkPath
+                + "%n"
                 + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation%n"

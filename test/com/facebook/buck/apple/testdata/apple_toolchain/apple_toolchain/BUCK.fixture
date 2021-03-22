@@ -134,6 +134,8 @@ swift_toolchain(
     swiftc_flags = [
         "-test-arg1",
         "-test-arg2",
+        "-sdk",
+        "$(location //apple_toolchain/tools:gen-sdk)",
     ],
     runtime_paths_for_bundling = [
         "/test/bundling",
