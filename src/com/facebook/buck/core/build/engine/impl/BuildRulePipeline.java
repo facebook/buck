@@ -69,7 +69,7 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
         checkState(ruleFuture.isDone() || ruleFuture.isCancelled());
       }
     } finally {
-      stateHolder.getState().close();
+      stateHolder.close();
       stages.clear();
     }
   }

@@ -19,7 +19,7 @@ package com.facebook.buck.core.rules.pipeline;
 import java.util.Optional;
 
 /** Holds rule pipelining state */
-public class StateHolder<State extends RulePipelineState> {
+public class StateHolder<State extends RulePipelineState> implements AutoCloseable {
 
   private final Optional<State> state;
 
@@ -27,8 +27,19 @@ public class StateHolder<State extends RulePipelineState> {
     this.state = state;
   }
 
+  private boolean isStateCreated() {
+    return state.isPresent();
+  }
+
   public State getState() {
     return state.orElseThrow(
         () -> new IllegalStateException("State could not be created in the current process"));
+  }
+
+  @Override
+  public void close() {
+    if (isStateCreated()) {
+      getState().close();
+    }
   }
 }
