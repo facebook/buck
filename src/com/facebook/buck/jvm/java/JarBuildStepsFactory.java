@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -448,7 +449,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       RelPath classesDir,
-      JavacPipelineState state,
+      StateHolder<JavacPipelineState> stateHolder,
       AbiJarPipelineStepsBuilder stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
@@ -467,7 +468,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         CompilerOutputPathsValue.of(buckPaths, buildTarget),
         FilesystemParamsUtils.of(filesystem),
         buildableContext,
-        state,
+        stateHolder,
         resourcesMap,
         cellToPathMappings);
   }
@@ -561,7 +562,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       BuildContext context,
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
-      JavacPipelineState state,
+      StateHolder<JavacPipelineState> stateHolder,
       RelPath pathToClassHashes,
       RelPath classesDir,
       LibraryJarPipelineStepsBuilder stepsBuilder) {
@@ -585,7 +586,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         libraryTargetValue,
         FilesystemParamsUtils.of(filesystem),
         buildableContext,
-        state,
+        stateHolder,
         CompilerOutputPathsValue.of(buckPaths, libraryTarget),
         pathToClassHashes,
         resourcesMap,

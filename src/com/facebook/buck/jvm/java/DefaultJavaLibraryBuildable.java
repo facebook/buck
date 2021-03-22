@@ -32,6 +32,7 @@ import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -180,7 +181,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   public ImmutableList<Step> getPipelinedBuildSteps(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
-      JavacPipelineState state,
+      StateHolder<JavacPipelineState> stateHolder,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
@@ -198,7 +199,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         buildContext,
         filesystem,
         ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-        state,
+        stateHolder,
         outputPathResolver.resolvePath(pathToClassHashesOutputPath),
         classesDir,
         stepsBuilder);

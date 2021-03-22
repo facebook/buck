@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.impl;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
@@ -44,7 +45,7 @@ class DefaultLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactory.Ex
       BuildTargetValue libraryTarget,
       FilesystemParams filesystemParams,
       BuildableContext buildableContext,
-      JavacPipelineState state,
+      StateHolder<JavacPipelineState> stateHolder,
       CompilerOutputPathsValue compilerOutputPathsValue,
       RelPath pathToClassHashes,
       ImmutableMap<RelPath, RelPath> resourcesMap,
@@ -55,7 +56,7 @@ class DefaultLibraryJarPipelineStepsBuilder<T extends CompileToJarStepFactory.Ex
             filesystemParams,
             cellToPathMappings,
             libraryTarget,
-            state,
+            stateHolder.getState(),
             compilerOutputPathsValue,
             stepsBuilder,
             buildableContext,

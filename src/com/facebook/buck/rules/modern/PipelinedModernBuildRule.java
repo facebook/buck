@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -41,7 +42,7 @@ public abstract class PipelinedModernBuildRule<
 
   @Override
   public final ImmutableList<? extends Step> getPipelinedBuildSteps(
-      BuildContext context, BuildableContext buildableContext, State state) {
+      BuildContext context, BuildableContext buildableContext, StateHolder<State> stateHolder) {
     ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
     recordOutputs(outputsBuilder::add);
     ImmutableList<Path> outputs = outputsBuilder.build();
@@ -60,7 +61,7 @@ public abstract class PipelinedModernBuildRule<
             .getPipelinedBuildSteps(
                 context,
                 getProjectFilesystem(),
-                state,
+                stateHolder,
                 outputPathResolver,
                 getBuildCellPathFactory(context, getProjectFilesystem(), outputPathResolver)));
     return stepsBuilder.build();

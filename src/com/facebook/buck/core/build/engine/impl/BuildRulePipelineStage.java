@@ -18,6 +18,7 @@ package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -42,7 +43,10 @@ class BuildRulePipelineStage<T extends RulePipelineState>
 
   @Nullable private BuildRulePipelineStage<T> nextStage;
   @Nullable private Throwable error = null;
-  @Nullable private Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
+
+  @Nullable
+  private Function<StateHolder<T>, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
+
   @Nullable private BuildRulePipeline<T> pipeline;
 
   BuildRulePipelineStage(SupportsPipelining<T> rule) {
@@ -63,7 +67,7 @@ class BuildRulePipelineStage<T extends RulePipelineState>
   }
 
   public void setRuleStepRunnerFactory(
-      Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
+      Function<StateHolder<T>, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
     Preconditions.checkState(this.ruleStepRunnerFactory == null);
     this.ruleStepRunnerFactory = ruleStepsFactory;
   }
@@ -114,7 +118,7 @@ class BuildRulePipelineStage<T extends RulePipelineState>
     Preconditions.checkNotNull(ruleStepRunnerFactory);
 
     RunnableWithFuture<Optional<BuildResult>> runner =
-        ruleStepRunnerFactory.apply(pipeline.getState());
+        ruleStepRunnerFactory.apply(pipeline.getStateHolder());
     future.setFuture(runner.getFuture());
     runner.run();
   }

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,35 +31,39 @@ import javax.annotation.Nullable;
 /**
  * Runs a list of rules one after another on the same thread, allowing each to access shared state.
  */
-class BuildRulePipeline<T extends RulePipelineState> implements Runnable {
+class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
 
-  @Nullable private T state;
-  private final List<BuildRulePipelineStage<T>> rules = new ArrayList<>();
+  @Nullable private StateHolder<State> stateHolder;
+  private final List<BuildRulePipelineStage<State>> rules = new ArrayList<>();
 
-  public BuildRulePipeline(BuildRulePipelineStage<T> rootRule, @Nullable T state) {
-    this.state = state;
+  public BuildRulePipeline(BuildRulePipelineStage<State> rootRule, StateHolder<State> stateHolder) {
+    this.stateHolder = stateHolder;
     buildPipeline(rootRule);
   }
 
-  private void buildPipeline(BuildRulePipelineStage<T> firstStage) {
-    BuildRulePipelineStage<T> current = firstStage;
+  private void buildPipeline(BuildRulePipelineStage<State> firstStage) {
+    BuildRulePipelineStage<State> current = firstStage;
     while (current != null) {
-      BuildRulePipelineStage<T> stage = current;
+      BuildRulePipelineStage<State> stage = current;
       stage.setPipeline(this);
       rules.add(stage);
       current = stage.getNextStage();
     }
   }
 
-  public T getState() {
-    return Objects.requireNonNull(state);
+  public StateHolder<State> getStateHolder() {
+    return Objects.requireNonNull(stateHolder);
+  }
+
+  public State getState() {
+    return getStateHolder().getState();
   }
 
   @Override
   public void run() {
     try {
       Throwable error = null;
-      for (BuildRulePipelineStage<T> rule : rules) {
+      for (BuildRulePipelineStage<State> rule : rules) {
         if (error == null) {
           rule.run();
           error = rule.getError();
@@ -76,7 +81,7 @@ class BuildRulePipeline<T extends RulePipelineState> implements Runnable {
       }
     } finally {
       getState().close();
-      state = null;
+      stateHolder = null;
       rules.clear();
     }
   }

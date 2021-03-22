@@ -69,6 +69,7 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy.StrategyBuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
@@ -1159,9 +1160,9 @@ class CachingBuildRuleBuilder {
         (BuildRulePipelinesRunner<T>) this.pipelinesRunner;
     pipelinesRunner.addRule(
         rule,
-        pipelineState ->
+        stateHolder ->
             new RunnableWithFuture<Optional<BuildResult>>() {
-              final BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, pipelineState);
+              final BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, stateHolder);
 
               @Override
               public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -1449,20 +1450,20 @@ class CachingBuildRuleBuilder {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     private final StepExecutionContext ruleExecutionContext;
-    private final Optional<T> pipelineState;
+    private final Optional<StateHolder<T>> stateHolder;
 
     public BuildRuleSteps(CacheResult cacheResult) {
       this(cacheResult, Optional.empty());
     }
 
-    public BuildRuleSteps(CacheResult cacheResult, T pipelineState) {
-      this(cacheResult, Optional.of(pipelineState));
+    public BuildRuleSteps(CacheResult cacheResult, StateHolder<T> stateHolder) {
+      this(cacheResult, Optional.of(stateHolder));
     }
 
-    private BuildRuleSteps(CacheResult cacheResult, Optional<T> pipelineState) {
+    private BuildRuleSteps(CacheResult cacheResult, Optional<StateHolder<T>> stateHolder) {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
-      this.pipelineState = pipelineState;
+      this.stateHolder = stateHolder;
       ContextualProcessExecutor contextualProcessExecutor =
           new ContextualProcessExecutor(
               executionContext.getProcessExecutor(), processExecutorContext);
@@ -1519,11 +1520,11 @@ class CachingBuildRuleBuilder {
     private List<? extends Step> getSteps(
         BuildContext buildRuleBuildContext, BuildableContext buildableContext) {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
-        if (pipelineState.isPresent()) {
+        if (stateHolder.isPresent()) {
           @SuppressWarnings("unchecked")
           SupportsPipelining<T> pipelinedRule = (SupportsPipelining<T>) rule;
           return pipelinedRule.getPipelinedBuildSteps(
-              buildRuleBuildContext, buildableContext, pipelineState.get());
+              buildRuleBuildContext, buildableContext, stateHolder.get());
         } else {
           return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
         }

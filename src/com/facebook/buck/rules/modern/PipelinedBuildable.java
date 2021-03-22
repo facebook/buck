@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -27,7 +28,7 @@ public interface PipelinedBuildable<State extends RulePipelineState> extends Bui
   ImmutableList<Step> getPipelinedBuildSteps(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
-      State state,
+      StateHolder<State> stateHolder,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory);
 }

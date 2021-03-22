@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -163,7 +164,7 @@ public class CalculateSourceAbi
     public ImmutableList<Step> getPipelinedBuildSteps(
         BuildContext buildContext,
         ProjectFilesystem filesystem,
-        JavacPipelineState state,
+        StateHolder<JavacPipelineState> stateHolder,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
@@ -181,7 +182,7 @@ public class CalculateSourceAbi
           filesystem,
           ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
           classesDir,
-          state,
+          stateHolder,
           stepsBuilder);
       return stepsBuilder.build();
     }

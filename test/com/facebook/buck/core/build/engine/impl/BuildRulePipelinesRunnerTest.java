@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -383,13 +384,16 @@ public class BuildRulePipelinesRunnerTest {
 
     @Override
     public ImmutableList<? extends Step> getPipelinedBuildSteps(
-        BuildContext context, BuildableContext buildableContext, TestPipelineState state) {
+        BuildContext context,
+        BuildableContext buildableContext,
+        StateHolder<TestPipelineState> state) {
       return ImmutableList.of();
     }
 
-    public RunnableWithFuture<Optional<BuildResult>> newRunner(TestPipelineState pipeline) {
+    public RunnableWithFuture<Optional<BuildResult>> newRunner(
+        StateHolder<TestPipelineState> stateHolder) {
       assertNull(this.pipeline);
-      this.pipeline = pipeline;
+      this.pipeline = stateHolder.getState();
       return new RunnableWithFuture<Optional<BuildResult>>() {
         @Override
         public ListenableFuture<Optional<BuildResult>> getFuture() {

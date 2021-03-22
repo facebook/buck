@@ -41,6 +41,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -161,7 +162,9 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
 
     @Override
     public ImmutableList<? extends Step> getPipelinedBuildSteps(
-        BuildContext context, BuildableContext buildableContext, SimplePipelineState state) {
+        BuildContext context,
+        BuildableContext buildableContext,
+        StateHolder<SimplePipelineState> state) {
       return ImmutableList.of();
     }
 

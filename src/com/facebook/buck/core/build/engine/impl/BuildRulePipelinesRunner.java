@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
+import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
@@ -45,7 +46,7 @@ public class BuildRulePipelinesRunner<T extends RulePipelineState> {
   /** Gives the factory a way to construct a {@link RunnableWithFuture} to build the given rule. */
   public void addRule(
       SupportsPipelining<T> rule,
-      Function<T, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory) {
+      Function<StateHolder<T>, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory) {
     BuildRulePipelineStage<T> pipelineStage = getOrCreateStage(rule);
 
     SupportsPipelining<T> previousRuleInPipeline = rule.getPreviousRuleInPipeline();
@@ -121,7 +122,8 @@ public class BuildRulePipelinesRunner<T extends RulePipelineState> {
     BuildRulePipeline<T> pipeline =
         new BuildRulePipeline<>(
             rootPipelineStage,
-            pipelineStateFactory.createPipelineState(context, projectFilesystem, buildTarget));
+            new StateHolder<>(
+                pipelineStateFactory.createPipelineState(context, projectFilesystem, buildTarget)));
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
       public ListenableFuture<Optional<BuildResult>> getFuture() {

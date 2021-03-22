@@ -49,7 +49,7 @@ public interface SupportsPipelining<T extends RulePipelineState> extends BuildRu
   SupportsPipelining<T> getPreviousRuleInPipeline();
 
   ImmutableList<? extends Step> getPipelinedBuildSteps(
-      BuildContext context, BuildableContext buildableContext, T state);
+      BuildContext context, BuildableContext buildableContext, StateHolder<T> stateHolder);
 
   RulePipelineStateFactory<T> getPipelineStateFactory();
 }
