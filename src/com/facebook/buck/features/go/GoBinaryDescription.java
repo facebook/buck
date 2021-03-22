@@ -33,8 +33,16 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -46,6 +54,9 @@ public class GoBinaryDescription
         ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
         VersionRoot<GoBinaryDescriptionArg>,
         Flavored {
+
+  public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
 
   private final GoBuckConfig goBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
@@ -86,6 +97,17 @@ public class GoBinaryDescription
                 buildTarget,
                 args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
+
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            context.getActionGraphBuilder(),
+            MACRO_EXPANDERS);
+
+    Function<ImmutableList<StringWithMacros>, ImmutableList<Arg>> expandMacros =
+        l -> ImmutableList.copyOf(Iterables.transform(l, arg -> macrosConverter.convert(arg)));
+
     return GoDescriptors.createGoBinaryRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -99,13 +121,15 @@ public class GoBinaryDescription
         args.getResources(),
         args.getCompilerFlags(),
         args.getAssemblerFlags(),
-        args.getLinkerFlags(),
+        expandMacros.apply(args.getLinkerFlags()),
         Iterables.concat(
-            ImmutableList.<ImmutableList<String>>builder()
-                .add(args.getExternalLinkerFlags())
+            ImmutableList.<ImmutableList<Arg>>builder()
+                .add(expandMacros.apply(args.getExternalLinkerFlags()))
                 .addAll(
-                    args.getPlatformExternalLinkerFlags()
-                        .getMatchingValues(platform.getFlavor().toString()))
+                    Iterables.transform(
+                        args.getPlatformExternalLinkerFlags()
+                            .getMatchingValues(platform.getFlavor().toString()),
+                        expandMacros))
                 .build()),
         platform);
   }
@@ -137,7 +161,8 @@ public class GoBinaryDescription
   interface AbstractGoBinaryDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {
     @Value.Default
-    default PatternMatchedCollection<ImmutableList<String>> getPlatformExternalLinkerFlags() {
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>>
+        getPlatformExternalLinkerFlags() {
       return PatternMatchedCollection.of();
     }
   }

@@ -326,8 +326,8 @@ abstract class GoDescriptors {
       ImmutableSortedSet<SourcePath> resources,
       List<String> compilerFlags,
       List<String> assemblerFlags,
-      List<String> linkerFlags,
-      Iterable<String> externalLinkerFlags,
+      List<Arg> linkerArgs,
+      Iterable<Arg> externalLinkerArgs,
       GoPlatform platform) {
 
     ImmutableList.Builder<BuildRule> extraDeps = ImmutableList.builder();
@@ -416,10 +416,10 @@ abstract class GoDescriptors {
             platform.getCxxPlatform(),
             cgoLinkables,
             linkStyle,
-            StringArg.from(
-                Iterables.concat(
-                    platform.getExternalLinkerFlags(), extraFlags.build(), externalLinkerFlags)));
-
+            Iterables.concat(
+                StringArg.from(
+                    Iterables.concat(platform.getExternalLinkerFlags(), extraFlags.build())),
+                externalLinkerArgs));
     // collect build rules from args (required otherwise referenced sources
     // won't build before linking)
     for (Arg arg : cxxLinkerArgs) {
@@ -456,7 +456,7 @@ abstract class GoDescriptors {
         platform.getLinker(),
         cxxLinker,
         linkMode.get(),
-        ImmutableList.copyOf(linkerFlags),
+        ImmutableList.copyOf(linkerArgs),
         cxxLinkerArgs,
         platform,
         downwardApiConfig.isEnabledForGo());

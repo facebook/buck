@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -35,9 +36,9 @@ public interface HasGoLinkable {
 
   ImmutableList<String> getAssemblerFlags();
 
-  ImmutableList<String> getLinkerFlags();
+  ImmutableList<StringWithMacros> getLinkerFlags();
 
-  ImmutableList<String> getExternalLinkerFlags();
+  ImmutableList<StringWithMacros> getExternalLinkerFlags();
 
   @Value.NaturalOrder
   ImmutableSortedSet<SourcePath> getResources();

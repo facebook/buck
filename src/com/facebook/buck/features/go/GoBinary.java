@@ -49,6 +49,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 
@@ -57,7 +58,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final Tool linker;
   @AddToRuleKey private final Linker cxxLinker;
-  @AddToRuleKey private final ImmutableList<String> linkerFlags;
+  @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
   @AddToRuleKey private final ImmutableList<Arg> cxxLinkerArgs;
   @AddToRuleKey private final GoLinkStep.LinkMode linkMode;
   @AddToRuleKey private final GoPlatform platform;
@@ -78,7 +79,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool linker,
       Linker cxxLinker,
       GoLinkStep.LinkMode linkMode,
-      ImmutableList<String> linkerFlags,
+      ImmutableList<Arg> linkerArgs,
       ImmutableList<Arg> cxxLinkerArgs,
       GoPlatform platform,
       boolean withDownwardApi) {
@@ -100,7 +101,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.output =
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, outputFormat);
 
-    this.linkerFlags = linkerFlags;
+    this.linkerArgs = linkerArgs;
     this.linkMode = linkMode;
   }
 
@@ -206,7 +207,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getEnvironment(context),
             cxxLinker.getCommandPrefix(resolver),
             linker.getCommandPrefix(resolver),
-            linkerFlags,
+            Arg.stringify(linkerArgs, resolver),
             externalLinkerFlags.build(),
             ImmutableList.of(linkTree.getRoot()),
             platform,

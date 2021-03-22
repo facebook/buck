@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
@@ -58,12 +59,14 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -352,6 +355,7 @@ public class GoTestDescription
 
     testMain =
         createTestMainRule(
+            context,
             buildTarget,
             projectFilesystem,
             params,
@@ -402,6 +406,7 @@ public class GoTestDescription
   }
 
   private GoBinary createTestMainRule(
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -413,6 +418,16 @@ public class GoTestDescription
         new NoopBuildRuleWithDeclaredAndExtraDeps(
             buildTarget.withAppendedFlavors(TEST_LIBRARY_FLAVOR), projectFilesystem, params);
     graphBuilder.addToIndex(testLibrary);
+
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
+
+    Function<ImmutableList<StringWithMacros>, ImmutableList<Arg>> expandMacros =
+        l -> ImmutableList.copyOf(Iterables.transform(l, arg -> macrosConverter.convert(arg)));
 
     GoBinary testMain =
         GoDescriptors.createGoBinaryRule(
@@ -430,8 +445,8 @@ public class GoTestDescription
             args.getResources(),
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
-            args.getLinkerFlags(),
-            args.getExternalLinkerFlags(),
+            expandMacros.apply(args.getLinkerFlags()),
+            expandMacros.apply(args.getExternalLinkerFlags()),
             platform);
     graphBuilder.addToIndex(testMain);
     return testMain;
