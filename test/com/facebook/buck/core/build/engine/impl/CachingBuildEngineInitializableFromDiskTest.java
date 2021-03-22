@@ -47,6 +47,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -56,11 +57,13 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.junit.Assume;
 import org.junit.AssumptionViolatedException;
@@ -122,7 +125,8 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     @AddToRuleKey private final PipelineType pipelineType;
 
     private final BuildRule dependency;
-    private final RulePipelineStateFactory<SimplePipelineState> pipelineStateFactory;
+    private final RulePipelineStateFactory<SimplePipelineState, AbstractMessage>
+        pipelineStateFactory;
 
     public InitializableFromDiskRule(
         BuildTarget buildTarget,
@@ -130,7 +134,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
         BuildRule dependency,
         ImmutableSortedSet<SourcePath> inputs,
         ImmutableSortedSet<SourcePath> depfileInputs,
-        RulePipelineStateFactory<SimplePipelineState> pipelineStateFactory,
+        RulePipelineStateFactory<SimplePipelineState, AbstractMessage> pipelineStateFactory,
         PipelineType pipelineType) {
       super(
           buildTarget,
@@ -164,12 +168,13 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     public ImmutableList<? extends Step> getPipelinedBuildSteps(
         BuildContext context,
         BuildableContext buildableContext,
-        StateHolder<SimplePipelineState> state) {
+        StateHolder<SimplePipelineState> stateHolder) {
       return ImmutableList.of();
     }
 
     @Override
-    public RulePipelineStateFactory<SimplePipelineState> getPipelineStateFactory() {
+    public RulePipelineStateFactory<SimplePipelineState, AbstractMessage>
+        getPipelineStateFactory() {
       return pipelineStateFactory;
     }
 
@@ -183,8 +188,19 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
   public void setUpChild() throws Exception {
     depfileInput = FakeSourcePath.of(filesystem, "path/in/depfile");
     nonDepfileInput = FakeSourcePath.of(filesystem, "path/not/in/depfile");
-    RulePipelineStateFactory<SimplePipelineState> pipelineStateFactory =
-        (context, filesystem, firstTarget) -> new SimplePipelineState();
+    RulePipelineStateFactory<SimplePipelineState, AbstractMessage> pipelineStateFactory =
+        new RulePipelineStateFactory<SimplePipelineState, AbstractMessage>() {
+          @Override
+          public AbstractMessage createPipelineStateMessage(
+              BuildContext context, ProjectFilesystem filesystem, BuildTarget firstTarget) {
+            return PipelineState.getDefaultInstance();
+          }
+
+          @Override
+          public Function<AbstractMessage, SimplePipelineState> getStateCreatorFunction() {
+            return message -> new SimplePipelineState();
+          }
+        };
     rootRule = new SimpleNoopRule(BUILD_TARGET.withFlavors(InternalFlavor.of("root")), filesystem);
     dependency =
         new InitializableFromDiskRule(

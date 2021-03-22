@@ -30,6 +30,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.protobuf.AbstractMessage;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -97,6 +98,7 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
     return pipelineStage.isReady();
   }
 
+  /** Returns a future for pipelining rule */
   public ListenableFuture<Optional<BuildResult>> getFuture(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<?> pipelineStage = getExistingStage(rule);
     Preconditions.checkState(pipelineStage.isReady());
@@ -117,18 +119,16 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
       BuildContext context, SupportsPipelining<State> rootRule) {
     BuildRulePipelineStage<State> rootPipelineStage = getOrCreateStage(rootRule);
 
-    RulePipelineStateFactory<State> pipelineStateFactory = rootRule.getPipelineStateFactory();
+    RulePipelineStateFactory<State, ?> pipelineStateFactory = rootRule.getPipelineStateFactory();
     ProjectFilesystem projectFilesystem = rootRule.getProjectFilesystem();
     BuildTarget buildTarget = rootRule.getBuildTarget();
-    BuildRulePipeline<State> pipeline =
-        new BuildRulePipeline<>(
-            rootPipelineStage,
-            new StateHolder<>(
-                rootRule.doNotCreateState()
-                    ? Optional.empty()
-                    : Optional.of(
-                        pipelineStateFactory.createPipelineState(
-                            context, projectFilesystem, buildTarget))));
+    StateHolder<State> stateHolder =
+        new StateHolder<>(
+            rootRule.doNotCreateState()
+                ? Optional.empty()
+                : Optional.of(
+                    createState(context, pipelineStateFactory, projectFilesystem, buildTarget)));
+    BuildRulePipeline<State> pipeline = new BuildRulePipeline<>(rootPipelineStage, stateHolder);
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
       public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -143,6 +143,19 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
         pipeline.run();
       }
     };
+  }
+
+  private State createState(
+      BuildContext context,
+      RulePipelineStateFactory<State, ? extends AbstractMessage> pipelineStateFactory,
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget) {
+    AbstractMessage message =
+        pipelineStateFactory.createPipelineStateMessage(context, projectFilesystem, buildTarget);
+    @SuppressWarnings("unchecked")
+    Function<AbstractMessage, State> stateCreatorFunction =
+        (Function<AbstractMessage, State>) pipelineStateFactory.getStateCreatorFunction();
+    return stateCreatorFunction.apply(message);
   }
 
   private BuildRulePipelineStage<?> getExistingStage(SupportsPipelining<?> rule) {

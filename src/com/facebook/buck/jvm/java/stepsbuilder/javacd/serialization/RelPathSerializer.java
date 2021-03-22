@@ -17,11 +17,27 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
 import com.facebook.buck.core.filesystems.RelPath;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.List;
 
 /** {@link RelPath} to protobuf serializer */
 public class RelPathSerializer {
 
   private RelPathSerializer() {}
+
+  /**
+   * Deserializes list of {@link com.facebook.buck.javacd.model.RelPath} into a sorted set of {@link
+   * RelPath}
+   */
+  public static ImmutableSortedSet<RelPath> toSortedSetOfRelPath(
+      List<com.facebook.buck.javacd.model.RelPath> list) {
+    ImmutableSortedSet.Builder<RelPath> builder =
+        ImmutableSortedSet.orderedBy(RelPath.comparator());
+    for (com.facebook.buck.javacd.model.RelPath item : list) {
+      builder.add(RelPathSerializer.deserialize(item));
+    }
+    return builder.build();
+  }
 
   /**
    * Serializes {@link RelPath} into javacd model's {@link com.facebook.buck.javacd.model.RelPath}.

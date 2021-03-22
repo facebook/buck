@@ -31,6 +31,7 @@ public class StateHolder<State extends RulePipelineState> implements AutoCloseab
     return state.isPresent();
   }
 
+  /** Returns build rule's pipelining state. */
   public State getState() {
     return state.orElseThrow(
         () -> new IllegalStateException("State could not be created in the current process"));

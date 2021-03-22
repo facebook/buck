@@ -12,5 +12,6 @@ java_library(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/step:step",
+        "//third-party/java/protobuf:protobuf",
     ],
 )

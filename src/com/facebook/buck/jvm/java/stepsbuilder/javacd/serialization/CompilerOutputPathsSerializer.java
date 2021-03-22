@@ -22,7 +22,7 @@ import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import java.util.Optional;
 
 /** {@link CompilerOutputPaths} to protobuf serializer */
-class CompilerOutputPathsSerializer {
+public class CompilerOutputPathsSerializer {
 
   private CompilerOutputPathsSerializer() {}
 

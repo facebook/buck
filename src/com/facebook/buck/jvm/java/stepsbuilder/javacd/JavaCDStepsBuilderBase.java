@@ -23,12 +23,10 @@ import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.JavaAbiInfo;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
@@ -144,10 +142,10 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
       builder.addJavaSrcs(RelPathSerializer.serialize(javaSrc));
     }
     for (BaseJavaAbiInfo javaAbiInfo : fullJarInfos) {
-      builder.addFullJarInfos(toJavaAbiInfo(javaAbiInfo));
+      builder.addFullJarInfos(JavaAbiInfoSerializer.toJavaAbiInfo(javaAbiInfo));
     }
     for (BaseJavaAbiInfo javaAbiInfo : abiJarInfos) {
-      builder.addAbiJarInfos(toJavaAbiInfo(javaAbiInfo));
+      builder.addAbiJarInfos(JavaAbiInfoSerializer.toJavaAbiInfo(javaAbiInfo));
     }
     resourcesMap.forEach(
         (key, value) ->
@@ -174,10 +172,5 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     Preconditions.checkState(extraParams instanceof JavaExtraParams);
     JavaExtraParams javaExtraParams = (JavaExtraParams) extraParams;
     return ResolvedJavacOptionsSerializer.serialize(javaExtraParams.getResolvedJavacOptions());
-  }
-
-  private JavaAbiInfo toJavaAbiInfo(BaseJavaAbiInfo javaAbiInfo) {
-    Preconditions.checkState(javaAbiInfo instanceof DefaultBaseJavaAbiInfo);
-    return JavaAbiInfoSerializer.serialize((DefaultBaseJavaAbiInfo) javaAbiInfo);
   }
 }

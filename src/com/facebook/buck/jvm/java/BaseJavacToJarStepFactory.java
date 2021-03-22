@@ -25,9 +25,17 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JavaAbiInfoSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
@@ -57,7 +65,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   }
 
   /** Creates pipeline state for java compilation. */
-  public JavacPipelineState createPipelineState(
+  public PipelineState createPipelineState(
       BuildTargetValue buildTargetValue,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<RelPath> javaSrcs,
@@ -75,31 +83,40 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       ResolvedJavac resolvedJavac,
       ResolvedJavacOptions resolvedJavacOptions) {
 
-    CompilerParameters compilerParameters =
-        CompilerParameters.builder()
-            .setClasspathEntries(compileTimeClasspathPaths)
-            .setSourceFilePaths(javaSrcs)
-            .setOutputPaths(compilerOutputPaths)
-            .setShouldTrackClassUsage(trackClassUsage)
-            .setShouldTrackJavacPhaseEvents(trackJavacPhaseEvents)
-            .setAbiGenerationMode(abiGenerationMode)
-            .setAbiCompatibilityMode(abiCompatibilityMode)
-            .setSourceOnlyAbiRuleInfoFactory(
-                DefaultSourceOnlyAbiRuleInfoFactory.of(
-                    fullJarInfos,
-                    abiJarInfos,
-                    buildTargetValue.getFullyQualifiedName(),
-                    isRequiredForSourceOnlyAbi))
-            .build();
-
-    return new JavacPipelineState(
-        resolvedJavac,
-        resolvedJavacOptions,
-        buildTargetValue,
-        compilerParameters,
-        abiJarParameters,
-        libraryJarParameters,
-        withDownwardApi);
+    PipelineState.Builder pipelineStateBuilder = PipelineState.newBuilder();
+    pipelineStateBuilder.setBuildTargetValue(
+        BuildTargetValueSerializer.serialize(buildTargetValue));
+    for (RelPath relPath : compileTimeClasspathPaths) {
+      pipelineStateBuilder.addCompileTimeClasspathPaths(RelPathSerializer.serialize(relPath));
+    }
+    for (RelPath relPath : javaSrcs) {
+      pipelineStateBuilder.addJavaSrcs(RelPathSerializer.serialize(relPath));
+    }
+    for (BaseJavaAbiInfo jarInfo : fullJarInfos) {
+      pipelineStateBuilder.addFullJarInfos(JavaAbiInfoSerializer.toJavaAbiInfo(jarInfo));
+    }
+    for (BaseJavaAbiInfo abiJarInfo : abiJarInfos) {
+      pipelineStateBuilder.addAbiJarInfos(JavaAbiInfoSerializer.toJavaAbiInfo(abiJarInfo));
+    }
+    pipelineStateBuilder.setTrackClassUsage(trackClassUsage);
+    pipelineStateBuilder.setTrackJavacPhaseEvents(trackJavacPhaseEvents);
+    pipelineStateBuilder.setAbiCompatibilityMode(abiCompatibilityMode);
+    pipelineStateBuilder.setAbiGenerationMode(abiGenerationMode);
+    pipelineStateBuilder.setIsRequiredForSourceOnlyAbi(isRequiredForSourceOnlyAbi);
+    pipelineStateBuilder.setOutputPaths(
+        CompilerOutputPathsSerializer.serialize(compilerOutputPaths));
+    if (abiJarParameters != null) {
+      pipelineStateBuilder.setAbiJarParameters(JarParametersSerializer.serialize(abiJarParameters));
+    }
+    if (libraryJarParameters != null) {
+      pipelineStateBuilder.setLibraryJarParameters(
+          JarParametersSerializer.serialize(libraryJarParameters));
+    }
+    pipelineStateBuilder.setWithDownwardApi(withDownwardApi);
+    pipelineStateBuilder.setResolvedJavac(ResolvedJavacSerializer.serialize(resolvedJavac));
+    pipelineStateBuilder.setResolvedJavacOptions(
+        ResolvedJavacOptionsSerializer.serialize(resolvedJavacOptions));
+    return pipelineStateBuilder.build();
   }
 
   @Override

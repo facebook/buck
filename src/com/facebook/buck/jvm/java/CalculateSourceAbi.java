@@ -36,6 +36,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -255,7 +256,7 @@ public class CalculateSourceAbi
   }
 
   @Override
-  public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
+  public RulePipelineStateFactory<JavacPipelineState, PipelineState> getPipelineStateFactory() {
     return getBuildable().jarBuildStepsFactory;
   }
 

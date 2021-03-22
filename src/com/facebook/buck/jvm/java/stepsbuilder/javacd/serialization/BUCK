@@ -2,7 +2,7 @@ java_library(
     name = "serialization",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/...",
+        "//src/com/facebook/buck/jvm/java/...",
     ],
     deps = [
         "//src-gen:javacd-model",
@@ -10,9 +10,7 @@ java_library(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/common:common",
         "//src/com/facebook/buck/jvm/java:config",
-        "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
-        "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
         "//src/com/facebook/buck/step/isolatedsteps/java:java",
         "//src/com/facebook/buck/util/types:types",
         "//third-party/java/guava:guava",

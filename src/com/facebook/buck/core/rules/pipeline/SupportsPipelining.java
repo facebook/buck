@@ -34,6 +34,7 @@ import javax.annotation.Nullable;
  */
 @Deprecated
 public interface SupportsPipelining<State extends RulePipelineState> extends BuildRule {
+
   static boolean isSupported(BuildRule rule) {
     if (!(rule instanceof SupportsPipelining)) {
       return false;
@@ -51,7 +52,7 @@ public interface SupportsPipelining<State extends RulePipelineState> extends Bui
   ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, StateHolder<State> stateHolder);
 
-  RulePipelineStateFactory<State> getPipelineStateFactory();
+  RulePipelineStateFactory<State, ?> getPipelineStateFactory();
 
   boolean doNotCreateState();
 }

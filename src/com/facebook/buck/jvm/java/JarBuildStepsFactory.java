@@ -42,6 +42,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
@@ -53,6 +54,13 @@ import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JavaAbiInfoSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -68,13 +76,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Jar (java-archive) Build steps factory. */
 public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
-    implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState> {
+    implements AddsToRuleKey, RulePipelineStateFactory<JavacPipelineState, PipelineState> {
 
   private static final Path[] METADATA_DIRS =
       new Path[] {Paths.get("META-INF"), Paths.get("_STRIPPED_RESOURCES")};
@@ -719,7 +728,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   @Override
-  public JavacPipelineState createPipelineState(
+  public PipelineState createPipelineStateMessage(
       BuildContext context, ProjectFilesystem filesystem, BuildTarget buildTarget) {
     JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
 
@@ -742,12 +751,11 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
     BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
     CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, buckPaths);
+    RelPath classesDir = compilerOutputPaths.getClassesDir();
     JarParameters abiJarParameters =
-        getAbiJarParameters(buildTarget, context, filesystem, compilerOutputPaths.getClassesDir())
-            .orElse(null);
+        getAbiJarParameters(buildTarget, context, filesystem, classesDir).orElse(null);
     JarParameters libraryJarParameters =
-        getLibraryJarParameters(context, filesystem, compilerOutputPaths.getClassesDir())
-            .orElse(null);
+        getLibraryJarParameters(context, filesystem, classesDir).orElse(null);
 
     AbsPath rootPath = filesystem.getRootPath();
 
@@ -772,6 +780,43 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         withDownwardApi,
         resolvedJavac,
         extraParams.getResolvedJavacOptions());
+  }
+
+  @Override
+  public Function<PipelineState, JavacPipelineState> getStateCreatorFunction() {
+    return (PipelineState pipelineState) ->
+        new JavacPipelineState(
+            ResolvedJavacSerializer.deserialize(pipelineState.getResolvedJavac()),
+            ResolvedJavacOptionsSerializer.deserialize(pipelineState.getResolvedJavacOptions()),
+            BuildTargetValueSerializer.deserialize(pipelineState.getBuildTargetValue()),
+            createCompilerParameters(pipelineState),
+            pipelineState.hasAbiJarParameters()
+                ? JarParametersSerializer.deserialize(pipelineState.getAbiJarParameters())
+                : null,
+            pipelineState.hasLibraryJarParameters()
+                ? JarParametersSerializer.deserialize(pipelineState.getLibraryJarParameters())
+                : null,
+            pipelineState.getWithDownwardApi());
+  }
+
+  private static CompilerParameters createCompilerParameters(PipelineState pipelineState) {
+    return CompilerParameters.builder()
+        .setClasspathEntries(
+            RelPathSerializer.toSortedSetOfRelPath(
+                pipelineState.getCompileTimeClasspathPathsList()))
+        .setSourceFilePaths(RelPathSerializer.toSortedSetOfRelPath(pipelineState.getJavaSrcsList()))
+        .setOutputPaths(CompilerOutputPathsSerializer.deserialize(pipelineState.getOutputPaths()))
+        .setShouldTrackClassUsage(pipelineState.getTrackClassUsage())
+        .setShouldTrackJavacPhaseEvents(pipelineState.getTrackJavacPhaseEvents())
+        .setAbiGenerationMode(pipelineState.getAbiGenerationMode())
+        .setAbiCompatibilityMode(pipelineState.getAbiCompatibilityMode())
+        .setSourceOnlyAbiRuleInfoFactory(
+            DefaultSourceOnlyAbiRuleInfoFactory.of(
+                JavaAbiInfoSerializer.toJavaAbiInfo(pipelineState.getFullJarInfosList()),
+                JavaAbiInfoSerializer.toJavaAbiInfo(pipelineState.getAbiJarInfosList()),
+                pipelineState.getBuildTargetValue().getFullyQualifiedName(),
+                pipelineState.getIsRequiredForSourceOnlyAbi()))
+        .build();
   }
 
   boolean hasAnnotationProcessing() {

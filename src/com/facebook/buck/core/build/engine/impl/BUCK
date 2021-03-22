@@ -24,6 +24,7 @@ java_library(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/protobuf:protobuf",
     ],
     exported_deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",

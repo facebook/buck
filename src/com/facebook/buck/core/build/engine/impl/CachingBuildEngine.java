@@ -440,9 +440,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                   }
                 }
               }
-              return cancelledResult.isPresent()
-                  ? Futures.immediateFuture(cancelledResult.get())
-                  : result;
+              return cancelledResult.map(Futures::immediateFuture).orElse(result);
             },
             MoreExecutors.directExecutor());
     future.setFuture(chainedResult);
@@ -504,7 +502,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
           .post(new ExperimentEvent("engine_dep_resolving", mode.toString(), "", null, null));
       if (mode == EngineDepsResolvingMode.PARALLEL) {
         Collection<BuildRule> allRules = resolver.getBuildRules();
-        pending.ensureCapacity(pending.size() + allRules.size());
+        pending.ensureCapacity(allRules.size());
         allRules.stream()
             .map(
                 r ->

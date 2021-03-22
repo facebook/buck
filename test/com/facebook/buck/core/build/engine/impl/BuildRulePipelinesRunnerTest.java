@@ -35,10 +35,12 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.AbstractMessage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +50,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -56,8 +59,32 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.ExternalResource;
 
 public class BuildRulePipelinesRunnerTest {
+
   @Rule public PipelineTester tester = new PipelineTester();
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static final RulePipelineStateFactory<TestPipelineState, AbstractMessage>
+      RULE_PIPELINE_STATE_FACTORY =
+          new RulePipelineStateFactory<TestPipelineState, AbstractMessage>() {
+
+            private BuildContext context;
+            private ProjectFilesystem filesystem;
+            private BuildTarget firstTarget;
+
+            @Override
+            public AbstractMessage createPipelineStateMessage(
+                BuildContext context, ProjectFilesystem filesystem, BuildTarget firstTarget) {
+              this.context = context;
+              this.filesystem = filesystem;
+              this.firstTarget = firstTarget;
+              return PipelineState.getDefaultInstance();
+            }
+
+            @Override
+            public Function<AbstractMessage, TestPipelineState> getStateCreatorFunction() {
+              return message -> new TestPipelineState(context, filesystem, firstTarget);
+            }
+          };
 
   @Test
   public void testPipelineRunsAllRules() throws Exception {
@@ -222,6 +249,7 @@ public class BuildRulePipelinesRunnerTest {
   }
 
   private static class PipelineTester extends ExternalResource {
+
     private final BuildRulePipelinesRunner<TestPipelineState> runner =
         new BuildRulePipelinesRunner<>();
     private final List<TestPipelineRule> rules = new ArrayList<>();
@@ -235,9 +263,7 @@ public class BuildRulePipelinesRunnerTest {
         TestPipelineRule newRule =
             new TestPipelineRule(String.format("//:rule%d", i), previousRule);
         rules.add(newRule);
-
         runner.addRule(newRule, newRule::newRunner);
-
         previousRule = newRule;
       }
 
@@ -306,6 +332,7 @@ public class BuildRulePipelinesRunnerTest {
   }
 
   private static class TestPipelineState implements RulePipelineState {
+
     private boolean isClosed;
 
     @SuppressWarnings("unused")
@@ -324,6 +351,7 @@ public class BuildRulePipelinesRunnerTest {
 
   private static class TestPipelineRule extends FakeBuildRule
       implements SupportsPipelining<TestPipelineState> {
+
     private final TestPipelineRule previous;
     private final CountDownLatch started = new CountDownLatch(1);
     private final CountDownLatch mayFinish = new CountDownLatch(1);
@@ -386,14 +414,14 @@ public class BuildRulePipelinesRunnerTest {
     public ImmutableList<? extends Step> getPipelinedBuildSteps(
         BuildContext context,
         BuildableContext buildableContext,
-        StateHolder<TestPipelineState> state) {
+        StateHolder<TestPipelineState> stateHolder) {
       return ImmutableList.of();
     }
 
     public RunnableWithFuture<Optional<BuildResult>> newRunner(
         StateHolder<TestPipelineState> stateHolder) {
-      assertNull(this.pipeline);
-      this.pipeline = stateHolder.getState();
+      assertNull(pipeline);
+      pipeline = stateHolder.getState();
       return new RunnableWithFuture<Optional<BuildResult>>() {
         @Override
         public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -424,8 +452,8 @@ public class BuildRulePipelinesRunnerTest {
     }
 
     @Override
-    public RulePipelineStateFactory<TestPipelineState> getPipelineStateFactory() {
-      return TestPipelineState::new;
+    public RulePipelineStateFactory<TestPipelineState, AbstractMessage> getPipelineStateFactory() {
+      return RULE_PIPELINE_STATE_FACTORY;
     }
 
     @Override

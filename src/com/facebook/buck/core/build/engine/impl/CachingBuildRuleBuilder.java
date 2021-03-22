@@ -868,10 +868,8 @@ class CachingBuildRuleBuilder {
         outputHash = hashString.getLeftOption().map(HashCode::fromString);
 
         // Determine if this is rule is cacheable.
-        if (outputSize.isPresent()) {
-          shouldUploadToCache =
-              buildCacheArtifactUploader.shouldUploadToCache(success, outputSize.get());
-        }
+        shouldUploadToCache =
+            buildCacheArtifactUploader.shouldUploadToCache(success, outputSizeValue);
 
         // Upload it to the cache.
         if (shouldUploadToCache.equals(UploadToCacheResultType.CACHEABLE)) {
@@ -1152,17 +1150,17 @@ class CachingBuildRuleBuilder {
     return firstFailure == null;
   }
 
-  private <T extends RulePipelineState> void addToPipelinesRunner(
-      SupportsPipelining<T> rule, CacheResult cacheResult) {
+  private <State extends RulePipelineState> void addToPipelinesRunner(
+      SupportsPipelining<State> rule, CacheResult cacheResult) {
 
     @SuppressWarnings("unchecked")
-    BuildRulePipelinesRunner<T> pipelinesRunner =
-        (BuildRulePipelinesRunner<T>) this.pipelinesRunner;
+    BuildRulePipelinesRunner<State> pipelinesRunner =
+        (BuildRulePipelinesRunner<State>) this.pipelinesRunner;
     pipelinesRunner.addRule(
         rule,
         stateHolder ->
             new RunnableWithFuture<Optional<BuildResult>>() {
-              final BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, stateHolder);
+              final BuildRuleSteps<State> steps = new BuildRuleSteps<>(cacheResult, stateHolder);
 
               @Override
               public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -1445,22 +1443,22 @@ class CachingBuildRuleBuilder {
   }
 
   /** Encapsulates the steps involved in building a single {@link BuildRule} locally. */
-  public class BuildRuleSteps<T extends RulePipelineState> {
+  public class BuildRuleSteps<State extends RulePipelineState> {
 
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     private final StepExecutionContext ruleExecutionContext;
-    private final Optional<StateHolder<T>> stateHolder;
+    private final Optional<StateHolder<State>> stateHolder;
 
     public BuildRuleSteps(CacheResult cacheResult) {
       this(cacheResult, Optional.empty());
     }
 
-    public BuildRuleSteps(CacheResult cacheResult, StateHolder<T> stateHolder) {
+    public BuildRuleSteps(CacheResult cacheResult, StateHolder<State> stateHolder) {
       this(cacheResult, Optional.of(stateHolder));
     }
 
-    private BuildRuleSteps(CacheResult cacheResult, Optional<StateHolder<T>> stateHolder) {
+    private BuildRuleSteps(CacheResult cacheResult, Optional<StateHolder<State>> stateHolder) {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
       this.stateHolder = stateHolder;
@@ -1522,12 +1520,12 @@ class CachingBuildRuleBuilder {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
         if (stateHolder.isPresent()) {
           @SuppressWarnings("unchecked")
-          SupportsPipelining<T> pipelinedRule = (SupportsPipelining<T>) rule;
+          SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;
           return pipelinedRule.getPipelinedBuildSteps(
               buildRuleBuildContext, buildableContext, stateHolder.get());
-        } else {
-          return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
         }
+
+        return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
       }
     }
 

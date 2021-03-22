@@ -41,6 +41,7 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
 
   private void buildPipeline(BuildRulePipelineStage<State> firstStage) {
     BuildRulePipelineStage<State> current = firstStage;
+
     while (current != null) {
       current.setStateHolder(stateHolder);
       stages.add(current);

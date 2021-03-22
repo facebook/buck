@@ -41,6 +41,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
@@ -495,7 +496,7 @@ public class DefaultJavaLibrary
   }
 
   @Override
-  public RulePipelineStateFactory<JavacPipelineState> getPipelineStateFactory() {
+  public RulePipelineStateFactory<JavacPipelineState, PipelineState> getPipelineStateFactory() {
     return getBuildable().getPipelineStateFactory();
   }
 

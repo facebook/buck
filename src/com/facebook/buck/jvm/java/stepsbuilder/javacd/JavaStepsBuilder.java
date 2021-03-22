@@ -23,10 +23,8 @@ import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.JavaAbiInfo;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
-import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.JavaExtraParams;
@@ -47,7 +45,6 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -136,10 +133,10 @@ public class JavaStepsBuilder {
         buildTargetValue,
         CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
         pathToClassHashes,
-        toSortedSetOfRelPath(command.getCompileTimeClasspathPathsList()),
-        toSortedSetOfRelPath(command.getJavaSrcsList()),
-        toJavaAbiInfo(command.getFullJarInfosList()),
-        toJavaAbiInfo(command.getAbiJarInfosList()),
+        RelPathSerializer.toSortedSetOfRelPath(command.getCompileTimeClasspathPathsList()),
+        RelPathSerializer.toSortedSetOfRelPath(command.getJavaSrcsList()),
+        JavaAbiInfoSerializer.toJavaAbiInfo(command.getFullJarInfosList()),
+        JavaAbiInfoSerializer.toJavaAbiInfo(command.getAbiJarInfosList()),
         toResourceMap(command.getResourcesMapList()),
         cellToPathMappings,
         command.hasLibraryJarParameters()
@@ -180,10 +177,10 @@ public class JavaStepsBuilder {
         path -> {},
         BuildTargetValueSerializer.deserialize(command.getBuildTargetValue()),
         CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
-        toSortedSetOfRelPath(command.getCompileTimeClasspathPathsList()),
-        toSortedSetOfRelPath(command.getJavaSrcsList()),
-        toJavaAbiInfo(command.getFullJarInfosList()),
-        toJavaAbiInfo(command.getAbiJarInfosList()),
+        RelPathSerializer.toSortedSetOfRelPath(command.getCompileTimeClasspathPathsList()),
+        RelPathSerializer.toSortedSetOfRelPath(command.getJavaSrcsList()),
+        JavaAbiInfoSerializer.toJavaAbiInfo(command.getFullJarInfosList()),
+        JavaAbiInfoSerializer.toJavaAbiInfo(command.getAbiJarInfosList()),
         toResourceMap(command.getResourcesMapList()),
         toCellToPathMapping(command.getCellToPathMappingsMap()),
         abiJarCommand.hasAbiJarParameters()
@@ -241,25 +238,6 @@ public class JavaStepsBuilder {
       builder.put(
           RelPathSerializer.deserialize(entry.getKey()),
           RelPathSerializer.deserialize(entry.getValue()));
-    }
-    return builder.build();
-  }
-
-  private ImmutableList<BaseJavaAbiInfo> toJavaAbiInfo(List<JavaAbiInfo> list) {
-    ImmutableList.Builder<BaseJavaAbiInfo> builder =
-        ImmutableList.builderWithExpectedSize(list.size());
-    for (JavaAbiInfo item : list) {
-      builder.add(JavaAbiInfoSerializer.deserialize(item));
-    }
-    return builder.build();
-  }
-
-  private ImmutableSortedSet<RelPath> toSortedSetOfRelPath(
-      List<com.facebook.buck.javacd.model.RelPath> list) {
-    ImmutableSortedSet.Builder<RelPath> builder =
-        ImmutableSortedSet.orderedBy(RelPath.comparator());
-    for (com.facebook.buck.javacd.model.RelPath item : list) {
-      builder.add(RelPathSerializer.deserialize(item));
     }
     return builder.build();
   }
