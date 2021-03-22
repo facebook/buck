@@ -24,17 +24,15 @@ import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * Runs a list of rules one after another on the same thread, allowing each to access shared state.
  */
 class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
 
-  @Nullable private StateHolder<State> stateHolder;
-  private final List<BuildRulePipelineStage<State>> rules = new ArrayList<>();
+  private final StateHolder<State> stateHolder;
+  private final List<BuildRulePipelineStage<State>> stages = new ArrayList<>();
 
   public BuildRulePipeline(BuildRulePipelineStage<State> rootRule, StateHolder<State> stateHolder) {
     this.stateHolder = stateHolder;
@@ -44,45 +42,35 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
   private void buildPipeline(BuildRulePipelineStage<State> firstStage) {
     BuildRulePipelineStage<State> current = firstStage;
     while (current != null) {
-      BuildRulePipelineStage<State> stage = current;
-      stage.setPipeline(this);
-      rules.add(stage);
-      current = stage.getNextStage();
+      current.setStateHolder(stateHolder);
+      stages.add(current);
+      current = current.getNextStage();
     }
-  }
-
-  public StateHolder<State> getStateHolder() {
-    return Objects.requireNonNull(stateHolder);
-  }
-
-  public State getState() {
-    return getStateHolder().getState();
   }
 
   @Override
   public void run() {
     try {
       Throwable error = null;
-      for (BuildRulePipelineStage<State> rule : rules) {
+      for (BuildRulePipelineStage<State> stage : stages) {
         if (error == null) {
-          rule.run();
-          error = rule.getError();
+          stage.run();
+          error = stage.getError();
         } else {
           // It doesn't really matter what error we use here -- we just want the future to
           // complete so that Buck doesn't hang. We use the real error in case it ever is shown
           // to the user (which does not happen as of the time of this comment, but for safety).
-          rule.abort(error);
+          stage.abort(error);
         }
-        // If everything is working correctly, each rule in the pipeline should show itself
+        // If everything is working correctly, each stage in the pipeline should show itself
         // complete before we start the next one. Just a sanity check against weird behavior
         // creeping in.
-        SettableFuture<Optional<BuildResult>> ruleFuture = rule.getFuture();
+        SettableFuture<Optional<BuildResult>> ruleFuture = stage.getFuture();
         checkState(ruleFuture.isDone() || ruleFuture.isCancelled());
       }
     } finally {
-      getState().close();
-      stateHolder = null;
-      rules.clear();
+      stateHolder.getState().close();
+      stages.clear();
     }
   }
 }

@@ -38,18 +38,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /** Constructs build rule pipelines for a single build. */
-public class BuildRulePipelinesRunner<T extends RulePipelineState> {
+public class BuildRulePipelinesRunner<State extends RulePipelineState> {
 
-  private final Map<SupportsPipelining<T>, BuildRulePipelineStage<T>> rules =
+  private final Map<SupportsPipelining<State>, BuildRulePipelineStage<State>> rules =
       new ConcurrentHashMap<>();
 
   /** Gives the factory a way to construct a {@link RunnableWithFuture} to build the given rule. */
   public void addRule(
-      SupportsPipelining<T> rule,
-      Function<StateHolder<T>, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory) {
-    BuildRulePipelineStage<T> pipelineStage = getOrCreateStage(rule);
+      SupportsPipelining<State> rule,
+      Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>>
+          ruleStepRunnerFactory) {
+    BuildRulePipelineStage<State> pipelineStage = getOrCreateStage(rule);
 
-    SupportsPipelining<T> previousRuleInPipeline = rule.getPreviousRuleInPipeline();
+    SupportsPipelining<State> previousRuleInPipeline = rule.getPreviousRuleInPipeline();
     if (previousRuleInPipeline != null) {
       verifyRules(rule, previousRuleInPipeline);
       // set next stage for the previous stage to the current stage.
@@ -86,19 +87,19 @@ public class BuildRulePipelinesRunner<T extends RulePipelineState> {
    */
   public void removeRule(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<? extends RulePipelineState> pipelineStage = rules.remove(rule);
-    if (pipelineStage != null && pipelineStage.pipelineIsReady()) {
+    if (pipelineStage != null && pipelineStage.isReady()) {
       pipelineStage.waitForResult();
     }
   }
 
   public boolean isPipelineReady(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<?> pipelineStage = getExistingStage(rule);
-    return pipelineStage.pipelineIsReady();
+    return pipelineStage.isReady();
   }
 
   public ListenableFuture<Optional<BuildResult>> getFuture(SupportsPipelining<?> rule) {
     BuildRulePipelineStage<?> pipelineStage = getExistingStage(rule);
-    Preconditions.checkState(pipelineStage.pipelineIsReady());
+    Preconditions.checkState(pipelineStage.isReady());
     return pipelineStage.getFuture();
   }
 
@@ -106,20 +107,20 @@ public class BuildRulePipelinesRunner<T extends RulePipelineState> {
   public ListenableFuture<Optional<BuildResult>> runPipelineStartingAt(
       BuildContext context, SupportsPipelining<?> rootRule, ExecutorService executor) {
     @SuppressWarnings("unchecked")
-    SupportsPipelining<T> rule = (SupportsPipelining<T>) rootRule;
+    SupportsPipelining<State> rule = (SupportsPipelining<State>) rootRule;
     RunnableWithFuture<Optional<BuildResult>> runner = newPipelineRunner(context, rule);
     executor.execute(runner);
     return runner.getFuture();
   }
 
   private RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
-      BuildContext context, SupportsPipelining<T> rootRule) {
-    BuildRulePipelineStage<T> rootPipelineStage = getOrCreateStage(rootRule);
+      BuildContext context, SupportsPipelining<State> rootRule) {
+    BuildRulePipelineStage<State> rootPipelineStage = getOrCreateStage(rootRule);
 
-    RulePipelineStateFactory<T> pipelineStateFactory = rootRule.getPipelineStateFactory();
+    RulePipelineStateFactory<State> pipelineStateFactory = rootRule.getPipelineStateFactory();
     ProjectFilesystem projectFilesystem = rootRule.getProjectFilesystem();
     BuildTarget buildTarget = rootRule.getBuildTarget();
-    BuildRulePipeline<T> pipeline =
+    BuildRulePipeline<State> pipeline =
         new BuildRulePipeline<>(
             rootPipelineStage,
             new StateHolder<>(
@@ -144,7 +145,7 @@ public class BuildRulePipelinesRunner<T extends RulePipelineState> {
     return Optional.ofNullable(rules.get(rule)).orElseThrow(IllegalStateException::new);
   }
 
-  private BuildRulePipelineStage<T> getOrCreateStage(SupportsPipelining<T> rule) {
+  private BuildRulePipelineStage<State> getOrCreateStage(SupportsPipelining<State> rule) {
     return rules.computeIfAbsent(rule, BuildRulePipelineStage::new);
   }
 }

@@ -35,21 +35,22 @@ import javax.annotation.Nullable;
  * Creates and runs the steps for a single build rule within a pipeline, cascading any failures to
  * rules later in the pipeline.
  */
-class BuildRulePipelineStage<T extends RulePipelineState>
+class BuildRulePipelineStage<State extends RulePipelineState>
     implements RunnableWithFuture<Optional<BuildResult>> {
 
-  private final SupportsPipelining<T> rule;
+  private final SupportsPipelining<State> rule;
   private final SettableFuture<Optional<BuildResult>> future;
 
-  @Nullable private BuildRulePipelineStage<T> nextStage;
+  @Nullable private BuildRulePipelineStage<State> nextStage;
   @Nullable private Throwable error = null;
 
   @Nullable
-  private Function<StateHolder<T>, RunnableWithFuture<Optional<BuildResult>>> ruleStepRunnerFactory;
+  private Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>>
+      ruleStepRunnerFactory;
 
-  @Nullable private BuildRulePipeline<T> pipeline;
+  @Nullable private StateHolder<State> stateHolder;
 
-  BuildRulePipelineStage(SupportsPipelining<T> rule) {
+  BuildRulePipelineStage(SupportsPipelining<State> rule) {
     this.rule = rule;
     this.future = SettableFuture.create();
     Futures.addCallback(
@@ -67,28 +68,28 @@ class BuildRulePipelineStage<T extends RulePipelineState>
   }
 
   public void setRuleStepRunnerFactory(
-      Function<StateHolder<T>, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
+      Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
     Preconditions.checkState(this.ruleStepRunnerFactory == null);
     this.ruleStepRunnerFactory = ruleStepsFactory;
   }
 
-  public void setPipeline(BuildRulePipeline<T> pipeline) {
-    Preconditions.checkState(this.pipeline == null);
-    this.pipeline = pipeline;
+  public void setStateHolder(StateHolder<State> stateHolder) {
+    Preconditions.checkState(this.stateHolder == null);
+    this.stateHolder = stateHolder;
   }
 
-  public void setNextStage(BuildRulePipelineStage<T> nextStage) {
+  public void setNextStage(BuildRulePipelineStage<State> nextStage) {
     Preconditions.checkState(this.nextStage == null);
     this.nextStage = nextStage;
   }
 
   @Nullable
-  public BuildRulePipelineStage<T> getNextStage() {
+  public BuildRulePipelineStage<State> getNextStage() {
     return nextStage;
   }
 
-  public boolean pipelineIsReady() {
-    return pipeline != null;
+  public boolean isReady() {
+    return stateHolder != null;
   }
 
   public void waitForResult() {
@@ -114,11 +115,10 @@ class BuildRulePipelineStage<T extends RulePipelineState>
 
   @Override
   public void run() {
-    Preconditions.checkNotNull(pipeline);
+    Preconditions.checkNotNull(stateHolder);
     Preconditions.checkNotNull(ruleStepRunnerFactory);
 
-    RunnableWithFuture<Optional<BuildResult>> runner =
-        ruleStepRunnerFactory.apply(pipeline.getStateHolder());
+    RunnableWithFuture<Optional<BuildResult>> runner = ruleStepRunnerFactory.apply(stateHolder);
     future.setFuture(runner.getFuture());
     runner.run();
   }
