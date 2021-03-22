@@ -92,6 +92,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -301,10 +302,20 @@ class NativeLibraryMergeEnhancer {
         StringBuilder sb = new StringBuilder();
         sb.append("Native library merge of ")
             .append(linkable)
-            .append(" has inconsistent application module mappings: ");
+            .append(" has inconsistent application module mappings: \n");
+        HashMap<APKModule, List<NativeLinkable>> moduleToConstituent = new HashMap<>();
         for (NativeLinkable innerConstituent : linkable.constituents.getLinkables()) {
           APKModule innerConstituentModule = linkableToModuleMap.get(innerConstituent);
-          sb.append(innerConstituent).append(" -> ").append(innerConstituentModule).append(", ");
+          moduleToConstituent.putIfAbsent(innerConstituentModule, new LinkedList<>());
+          moduleToConstituent.get(innerConstituentModule).add(innerConstituent);
+        }
+        for (Map.Entry<APKModule, List<NativeLinkable>> apkModuleListEntry :
+            moduleToConstituent.entrySet()) {
+          sb.append("  Module ").append(apkModuleListEntry.getKey().getName()).append(": { \n");
+          for (NativeLinkable nativeLinkable : apkModuleListEntry.getValue()) {
+            sb.append("    ").append(nativeLinkable).append(",\n");
+          }
+          sb.append("  }\n");
         }
         throw new RuntimeException(
             "Native library merge of "
