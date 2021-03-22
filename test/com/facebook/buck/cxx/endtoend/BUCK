@@ -1,5 +1,5 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
-
+load("//tools/build_rules:python_rules.bzl", "e2e_test")
 
 TEST_SRCS = [
     "*Test.java",
@@ -23,3 +23,8 @@ java_test(
     ],
 )
 
+e2e_test(
+    name = "e2e",
+    srcs = glob(["*test.py"]),
+    data = "//test/com/facebook/buck/testutil/endtoend:testdata",
+)

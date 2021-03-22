@@ -68,3 +68,13 @@ def pytest_test(name, srcs = None, deps = None, main_module = "tools.pytest.pyte
         **kwargs
     )
 
+def e2e_test(
+        name,
+        srcs = None,
+        deps = None,
+        env = None,
+        data = None,
+        conftest = "fbsource//xplat/build_infra/buck_e2e:conftest.py",
+        resources = (),
+        **kwargs):
+    return
