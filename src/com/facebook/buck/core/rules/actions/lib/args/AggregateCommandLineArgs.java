@@ -24,17 +24,36 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Container class for lists of {@link CommandLineArgs}. This is useful when merging args that were
  * passed in as providers, as the backing objects are immutable, and thus can be iterated over
  * without copying them.
  */
-class AggregateCommandLineArgs implements CommandLineArgs {
+class AggregateCommandLineArgs extends StarlarkValue implements CommandLineArgs {
   @AddToRuleKey private final ImmutableList<CommandLineArgs> args;
 
   AggregateCommandLineArgs(ImmutableList<CommandLineArgs> args) {
     this.args = args;
+  }
+
+  @Override
+  public void repr(Printer printer) {
+    printer.append("<command line arguments>");
+  }
+
+  @Override
+  public boolean isImmutable() {
+    /**
+     * We already validate that the types added here are Immutable in {@link CommandLineArgsFactory}
+     * there is no need to do further validation.
+     *
+     * <p>See also {@link AggregateCommandLineArgs}, {@link ListCommandLineArgs}, {@link
+     * com.facebook.buck.core.rules.providers.lib.RunInfo}
+     */
+    return true;
   }
 
   @Override

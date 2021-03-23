@@ -30,7 +30,7 @@ import net.starlark.java.syntax.TokenKind;
  * * y == y * x}.
  */
 // TODO(adonovan): rename BinaryOperand?
-public interface HasBinary extends StarlarkValue {
+public interface HasBinary /* extends StarlarkValue */ {
 
   /**
    * Returns {@code this op that}, if thisLeft, or {@code that op this} otherwise. May return null

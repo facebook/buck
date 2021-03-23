@@ -48,7 +48,7 @@ public final class StarlarkFlagGuardingTest {
 
   /** Mock containing exposed methods for flag-guarding tests. */
   @StarlarkBuiltin(name = "Mock", doc = "")
-  public static class Mock implements StarlarkValue {
+  public static class Mock extends StarlarkValue {
 
     @StarlarkMethod(
         name = "positionals_only_method",

@@ -16,8 +16,6 @@
 
 package com.facebook.buck.core.starlark.rule.attr;
 
-import net.starlark.java.eval.StarlarkValue;
-
 /**
  * Simple wrapper object to hold onto Attribute objects and get around some type erasure problems in
  * {@link net.starlark.java.eval.Dict#cast(Object, Class, Class, String)}. If using {@code
@@ -27,7 +25,7 @@ import net.starlark.java.eval.StarlarkValue;
  * net.starlark.java.eval.Dict#cast(Object, Class, Class, String)} to succeed in order to validate
  * the types of the objects in that dictionary, so add an intermediate class. This is terrible.
  */
-public interface AttributeHolder extends StarlarkValue {
+public interface AttributeHolder {
   /** Get the actual attribute object */
   Attribute<?> getAttribute();
 }

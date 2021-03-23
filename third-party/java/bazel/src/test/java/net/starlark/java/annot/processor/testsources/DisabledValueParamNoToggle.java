@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has a parameter which has a "disabled value" set but
  * is always-on.
  */
-public class DisabledValueParamNoToggle implements StarlarkValue {
+public class DisabledValueParamNoToggle extends StarlarkValue {
 
   @StarlarkMethod(
       name = "no_toggle_method",

@@ -26,7 +26,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod which has a "extraKeywords" parameter which has enableOnlyWithFlag
  * set. (This is unsupported.)
  */
-public class ToggledKwargsParam implements StarlarkValue {
+public class ToggledKwargsParam extends StarlarkValue {
 
   private static final String FOO = "-foo";
 

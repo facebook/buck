@@ -272,7 +272,7 @@ public final class Benchmarks {
   // The type of the parameter to each bench(b) function.
   // Provides n, the number of iterations.
   @StarlarkBuiltin(name = "Benchmark")
-  private static class Benchmark implements StarlarkValue {
+  private static class Benchmark extends StarlarkValue {
 
     private final String name;
     private final StarlarkFunction f;

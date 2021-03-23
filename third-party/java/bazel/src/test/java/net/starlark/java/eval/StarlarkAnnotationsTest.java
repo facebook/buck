@@ -31,7 +31,7 @@ public class StarlarkAnnotationsTest {
 
   /** MockClassA */
   @StarlarkBuiltin(name = "MockClassA", doc = "MockClassA")
-  public static class MockClassA implements StarlarkValue {
+  public static class MockClassA extends StarlarkValue {
     @StarlarkMethod(name = "foo", doc = "MockClassA#foo")
     public void foo() {}
 
@@ -43,7 +43,7 @@ public class StarlarkAnnotationsTest {
 
   /** MockInterfaceB1 */
   @StarlarkBuiltin(name = "MockInterfaceB1", doc = "MockInterfaceB1")
-  public static interface MockInterfaceB1 extends StarlarkValue {
+  public static interface MockInterfaceB1 {
     @StarlarkMethod(name = "foo", doc = "MockInterfaceB1#foo")
     void foo();
 
@@ -56,7 +56,7 @@ public class StarlarkAnnotationsTest {
 
   /** MockInterfaceB2 */
   @StarlarkBuiltin(name = "MockInterfaceB2", doc = "MockInterfaceB2")
-  public static interface MockInterfaceB2 extends StarlarkValue {
+  public static interface MockInterfaceB2 {
     @StarlarkMethod(name = "baz", doc = "MockInterfaceB2#baz")
     void baz();
 
@@ -104,14 +104,14 @@ public class StarlarkAnnotationsTest {
 
   /** ClassAModule test class */
   @StarlarkBuiltin(name = "ClassAModule", doc = "ClassAModule")
-  public static class ClassAModule implements StarlarkValue {}
+  public static class ClassAModule extends StarlarkValue {}
 
   /** ExtendsClassA test class */
   public static class ExtendsClassA extends ClassAModule {}
 
   /** InterfaceBModule test interface */
   @StarlarkBuiltin(name = "InterfaceBModule", doc = "InterfaceBModule")
-  public static interface InterfaceBModule extends StarlarkValue {}
+  public static interface InterfaceBModule {}
 
   /** ExtendsInterfaceB test interface */
   public static interface ExtendsInterfaceB extends InterfaceBModule {}

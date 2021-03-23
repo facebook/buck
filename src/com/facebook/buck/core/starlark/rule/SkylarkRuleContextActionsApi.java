@@ -28,7 +28,6 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.NoneType;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
-import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Struct containing methods that create actions within the implementation function of a user
@@ -37,7 +36,7 @@ import net.starlark.java.eval.StarlarkValue;
 @StarlarkBuiltin(
     name = "actions",
     doc = "Struct containing methods to create actions within a rule's implementation method")
-public interface SkylarkRuleContextActionsApi extends StarlarkValue {
+public interface SkylarkRuleContextActionsApi {
 
   @StarlarkMethod(
       name = "args",

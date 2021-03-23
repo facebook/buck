@@ -828,5 +828,5 @@ class MethodLibrary {
               + "<a href=\"globals.html#False\">False</a>. "
               + "Any value can be converted to a boolean using the "
               + "<a href=\"globals.html#bool\">bool</a> function.")
-  static final class BoolModule implements StarlarkValue {} // (documentation only)
+  static final class BoolModule extends StarlarkValue {} // (documentation only)
 }

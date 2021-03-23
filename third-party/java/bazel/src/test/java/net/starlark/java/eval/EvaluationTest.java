@@ -681,7 +681,7 @@ public final class EvaluationTest {
         .testExpression("'%s' % obj", "<str marker>");
   }
 
-  private static class Dummy implements StarlarkValue {}
+  private static class Dummy extends StarlarkValue {}
 
   @Test
   public void testStringRepresentationsOfArbitraryObjects() throws Exception {

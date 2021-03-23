@@ -54,8 +54,8 @@ import net.starlark.java.eval.StarlarkValue;
  * <p>Parsing is robust against bad input, for example, from the command line.
  */
 @StarlarkBuiltin(name = "Label", doc = "A BUILD target identifier.")
-public final class Label
-    implements Comparable<Label>, Serializable, StarlarkValue, CommandLineItem {
+public final class Label extends StarlarkValue
+    implements Comparable<Label>, Serializable, CommandLineItem {
 
   /**
    * Package names that aren't made relative to the current repository because they mean special

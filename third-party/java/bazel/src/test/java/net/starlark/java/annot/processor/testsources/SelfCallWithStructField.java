@@ -20,7 +20,7 @@ import net.starlark.java.eval.StarlarkValue;
 /**
  * Test case for a class with a StarlarkMethod method which has selfCall=true and structField=true.
  */
-public class SelfCallWithStructField implements StarlarkValue {
+public class SelfCallWithStructField extends StarlarkValue {
 
   @StarlarkMethod(name = "selfCallMethod", selfCall = true, structField = true, documented = false)
   public Integer selfCallMethod() {

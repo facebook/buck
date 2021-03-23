@@ -19,7 +19,6 @@ package com.facebook.buck.core.starlark.rule.artifact;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.EvalException;
-import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Helper struct fields that should be available to users of Artifact inside of user defined rules
@@ -29,7 +28,7 @@ import net.starlark.java.eval.StarlarkValue;
  * root. Should this be necessary in the future, we may expose those things.
  */
 @StarlarkBuiltin(name = "Artifact", doc = "Represents either a generated file, or a source file")
-public interface SkylarkArtifactApi extends StarlarkValue {
+public interface SkylarkArtifactApi {
 
   @StarlarkMethod(
       name = "basename",
@@ -79,12 +78,4 @@ public interface SkylarkArtifactApi extends StarlarkValue {
           "Get an instance of this artifact that signals it is intended to be used as an output. "
               + "This is normally only of use with `ctx.actions.run()`, or `ctx.actions.args()`")
   SkylarkOutputArtifactApi asSkylarkOutputArtifact() throws EvalException;
-
-  @Override
-  default boolean isImmutable() {
-    // The user-facing attributes of Artifact do not change over the lifetime
-    // of the object. An apt comparison is String. It is "immutable", but it has
-    // a mutable field that caches the hashcode
-    return true;
-  }
 }

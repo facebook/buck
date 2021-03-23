@@ -29,7 +29,6 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
-import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.syntax.Location;
 
 /**
@@ -46,7 +45,7 @@ import net.starlark.java.syntax.Location;
  * <p>Prefer to use {@link Key} as a serializable identifier of {@link Provider}. In particular,
  * {@link Key} should be used in all data structures exposed to Skyframe.
  */
-public interface Provider extends StarlarkValue {
+public interface Provider {
 
   /**
    * Has this {@link Provider} been exported? All native providers are always exported. Starlark

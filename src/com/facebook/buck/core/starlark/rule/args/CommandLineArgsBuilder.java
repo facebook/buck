@@ -29,9 +29,10 @@ import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkValue;
 
 /** Struct exposed to skylark to create {@link CommandLineArgs} instances. */
-public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
+public class CommandLineArgsBuilder extends StarlarkValue implements CommandLineArgsBuilderApi {
 
   ImmutableList.Builder<Object> argsBuilder = ImmutableList.builder();
 

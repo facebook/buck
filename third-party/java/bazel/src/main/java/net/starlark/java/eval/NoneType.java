@@ -23,7 +23,7 @@ import net.starlark.java.annot.StarlarkBuiltin;
     documented = false,
     doc = "The type of the Starlark None value.")
 @Immutable
-public final class NoneType implements StarlarkValue {
+public final class NoneType extends StarlarkValue {
 
   static final NoneType NONE = new NoneType();
 

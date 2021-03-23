@@ -20,7 +20,7 @@ import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Simple skylark object that is mutable and cannot be made immutable */
-public class FakeMutableSkylarkObject implements StarlarkValue {
+public class FakeMutableSkylarkObject extends StarlarkValue {
   @Override
   public void repr(Printer printer) {
     printer.append("mutable_object()");

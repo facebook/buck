@@ -22,7 +22,7 @@ import net.starlark.java.annot.StarlarkBuiltin;
     name = "float",
     category = "core",
     doc = "The type of floating-point numbers in Starlark.")
-public final class StarlarkFloat implements StarlarkValue, Comparable<StarlarkFloat> {
+public final class StarlarkFloat extends StarlarkValue implements Comparable<StarlarkFloat> {
 
   private final double v;
 

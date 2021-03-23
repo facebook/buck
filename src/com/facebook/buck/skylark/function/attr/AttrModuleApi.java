@@ -26,13 +26,12 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.NoneType;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
-import net.starlark.java.eval.StarlarkValue;
 
 /** Skylark module used to configure the attribute schema for user defined rules */
 @StarlarkBuiltin(
     name = "attr",
     doc = "A module which contains methods to define parameters for user defined rules")
-public interface AttrModuleApi extends StarlarkValue {
+public interface AttrModuleApi {
   @StarlarkMethod(
       name = "int",
       doc = "Specifies a parameter for a User Defined Rule that is an integer.",

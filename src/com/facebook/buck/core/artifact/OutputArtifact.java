@@ -35,8 +35,8 @@ import net.starlark.java.eval.Printer;
  * fashion)
  */
 @BuckStyleValue
-public abstract class OutputArtifact
-    implements SkylarkOutputArtifactApi, Comparable<OutputArtifact>, AddsToRuleKey {
+public abstract class OutputArtifact extends SkylarkOutputArtifactApi
+    implements Comparable<OutputArtifact>, AddsToRuleKey {
   abstract ArtifactImpl getImpl();
 
   @Override

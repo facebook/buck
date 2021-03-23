@@ -15,7 +15,7 @@
 package net.starlark.java.eval;
 
 /** Base interface for all Starlark values besides boxed Java primitives. */
-public interface StarlarkValue {
+public abstract class StarlarkValue {
 
   /**
    * Prints an official representation of object x.
@@ -26,7 +26,7 @@ public interface StarlarkValue {
    *
    * @param printer a printer to be used for formatting nested values.
    */
-  default void repr(Printer printer) {
+  public void repr(Printer printer) {
     printer.append("<unknown object ").append(getClass().getName()).append(">");
   }
 
@@ -37,7 +37,7 @@ public interface StarlarkValue {
    *
    * @param printer a printer to be used for formatting nested values.
    */
-  default void str(Printer printer) {
+  public void str(Printer printer) {
     repr(printer);
   }
 
@@ -53,12 +53,12 @@ public interface StarlarkValue {
    *
    * @param printer a printer to be used for formatting nested values.
    */
-  default void debugPrint(Printer printer) {
+  public void debugPrint(Printer printer) {
     str(printer);
   }
 
   /** Returns the truth-value of this Starlark value. */
-  default boolean truth() {
+  public boolean truth() {
     return true;
   }
 
@@ -68,7 +68,7 @@ public interface StarlarkValue {
   // its hash must be part of its identity.
   // But this must wait until --incompatible_disallow_hashing_frozen_mutables=true is removed.
   // (see github.com/bazelbuild/bazel/issues/7800)
-  default boolean isImmutable() {
+  public boolean isImmutable() {
     return false;
   }
 
@@ -80,7 +80,7 @@ public interface StarlarkValue {
    *
    * @throws EvalException otherwise.
    */
-  default void checkHashable() throws EvalException {
+  public void checkHashable() throws EvalException {
     // Bazel makes widespread assumptions that all Starlark values can be hashed
     // by Java code, so we cannot implement checkHashable by having
     // StarlarkValue.hashCode throw an unchecked exception, which would be more

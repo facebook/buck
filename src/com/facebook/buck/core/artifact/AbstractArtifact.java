@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * The abstract {@link Artifact} with information on whether or not the artifact is a bound
@@ -27,7 +28,7 @@ import net.starlark.java.eval.Starlark;
  * An unbound artifact is a declared artifact that will become a build artifact once bound with an
  * action.
  */
-abstract class AbstractArtifact implements Artifact {
+abstract class AbstractArtifact extends StarlarkValue implements Artifact {
 
   /** @return whether the artifact is bound, as described above */
   @Override
@@ -106,5 +107,13 @@ abstract class AbstractArtifact implements Artifact {
     }
 
     return 0;
+  }
+
+  @Override
+  public boolean isImmutable() {
+    // The user-facing attributes of Artifact do not change over the lifetime
+    // of the object. An apt comparison is String. It is "immutable", but it has
+    // a mutable field that caches the hashcode
+    return true;
   }
 }

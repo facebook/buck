@@ -33,6 +33,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.syntax.Location;
 import org.junit.Rule;
 import org.junit.Test;
@@ -343,7 +344,7 @@ public class ArtifactImplTest {
     assertFalse(artifact.isBound());
     assertTrue(artifact.isImmutable());
 
-    assertTrue(artifact.asSkylarkOutputArtifact().isImmutable());
+    assertTrue(((StarlarkValue) artifact.asSkylarkOutputArtifact()).isImmutable());
 
     ActionAnalysisDataKey key = ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a"));
     BuildArtifact materialized = artifact.materialize(key);

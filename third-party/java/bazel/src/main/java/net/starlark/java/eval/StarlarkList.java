@@ -71,7 +71,7 @@ import net.starlark.java.annot.StarlarkMethod;
             + "['a', 'b', 'c', 'd'][3:0:-1]  # ['d', 'c', 'b']</pre>"
             + "Lists are mutable, as in Python.")
 public final class StarlarkList<E> extends Sequence<E> implements
-    StarlarkValue, Mutability.Freezable, Comparable<StarlarkList<?>> {
+    Mutability.Freezable, Comparable<StarlarkList<?>> {
 
   // The implementation strategy is similar to ArrayList,
   // but without the extra indirection of using ArrayList.

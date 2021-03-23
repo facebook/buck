@@ -26,7 +26,7 @@ import net.starlark.java.eval.StarlarkThread;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test source file verifying various proper uses of StarlarkMethod. */
-public class GoldenCase implements StarlarkValue {
+public class GoldenCase extends StarlarkValue {
 
   @StarlarkMethod(name = "struct_field_method", documented = false, structField = true)
   public String structFieldMethod() {

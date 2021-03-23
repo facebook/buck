@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * A container {@link CommandLineArgs} for holding and transforming an entire list of command line
@@ -32,9 +34,26 @@ import java.util.stream.Stream;
  * etc, as we do not have to create an entire new list of {@link CommandLineArgs}. Returned streams
  * can also be more efficient
  */
-class ListCommandLineArgs implements CommandLineArgs {
+class ListCommandLineArgs extends StarlarkValue implements CommandLineArgs {
   @AddToRuleKey private final ImmutableList<Object> objects;
   @AddToRuleKey private final String formatString;
+
+  @Override
+  public void repr(Printer printer) {
+    printer.append("<command line arguments>");
+  }
+
+  @Override
+  public boolean isImmutable() {
+    /**
+     * We already validate that the types added here are Immutable in {@link CommandLineArgsFactory}
+     * there is no need to do further validation.
+     *
+     * <p>See also {@link AggregateCommandLineArgs}, {@link ListCommandLineArgs}, {@link
+     * com.facebook.buck.core.rules.providers.lib.RunInfo}
+     */
+    return true;
+  }
 
   /**
    * Create an instance of {@link ListCommandLineArgs}

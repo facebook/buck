@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which specifies extraKeywords whilst also specifying an
  * undocumented parameter.
  */
-public class KwargsWithUndocumentedParams implements StarlarkValue {
+public class KwargsWithUndocumentedParams extends StarlarkValue {
 
   @StarlarkMethod(
       name = "undocumented_with_kwargs",

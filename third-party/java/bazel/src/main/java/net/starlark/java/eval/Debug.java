@@ -38,12 +38,12 @@ public final class Debug {
   }
 
   /** A Starlark value that can expose additional information to a debugger. */
-  public interface ValueWithDebugAttributes extends StarlarkValue {
+  public abstract class ValueWithDebugAttributes extends StarlarkValue {
     /**
      * Returns a list of DebugAttribute of this value. For example, it can be the internal fields of
      * a value that are not accessible from Starlark, or the values inside a collection.
      */
-    ImmutableList<DebugAttribute> getDebugAttributes();
+    public abstract ImmutableList<DebugAttribute> getDebugAttributes();
   }
 
   /** A name/value pair used in the return value of getDebugAttributes. */

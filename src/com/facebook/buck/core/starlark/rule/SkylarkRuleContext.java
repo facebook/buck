@@ -21,9 +21,10 @@ import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.google.common.collect.ImmutableSet;
 import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 
 /** The context passed to user defined rules' implementation functions */
-public class SkylarkRuleContext implements SkylarkRuleContextApi {
+public class SkylarkRuleContext extends StarlarkValue implements SkylarkRuleContextApi {
 
   private final Label label;
   private final CapturingActionRegistry registry;

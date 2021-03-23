@@ -16,8 +16,6 @@
 
 package com.facebook.buck.core.rules.providers;
 
-import net.starlark.java.eval.StarlarkValue;
-
 /**
  * Declared Provider (a constructor for {@link ProviderInfo}).
  *
@@ -26,7 +24,7 @@ import net.starlark.java.eval.StarlarkValue;
  * "providers" and "provider infos"; the former is a Java instance of this class, and the latter is
  * a Java instance of {@link ProviderInfo}.
  */
-public interface Provider<T extends ProviderInfo<T>> extends StarlarkValue {
+public interface Provider<T extends ProviderInfo<T>> {
 
   /**
    * Returns a serializable representation of this {@link

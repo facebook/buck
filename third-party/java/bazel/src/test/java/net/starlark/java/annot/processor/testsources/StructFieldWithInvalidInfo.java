@@ -18,7 +18,7 @@ import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test case which verifies a struct field method cannot specify useStarlarkThread. */
-public class StructFieldWithInvalidInfo implements StarlarkValue {
+public class StructFieldWithInvalidInfo extends StarlarkValue {
 
   @StarlarkMethod(
       name = "struct_field_method_with_info",

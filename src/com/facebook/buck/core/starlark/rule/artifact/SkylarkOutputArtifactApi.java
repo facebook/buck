@@ -21,4 +21,4 @@ import net.starlark.java.eval.StarlarkValue;
 /**
  * Dummy interface to represent {@link com.facebook.buck.core.artifact.OutputArtifact} in skylark
  */
-public interface SkylarkOutputArtifactApi extends StarlarkValue {}
+public abstract class SkylarkOutputArtifactApi extends StarlarkValue {}

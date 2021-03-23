@@ -34,7 +34,7 @@ public final class EvalUtilsTest {
 
   /** MockClassA */
   @StarlarkBuiltin(name = "MockClassA", doc = "MockClassA")
-  public static class MockClassA implements StarlarkValue {}
+  public static class MockClassA extends StarlarkValue {}
 
   /** MockClassB */
   public static class MockClassB extends MockClassA {

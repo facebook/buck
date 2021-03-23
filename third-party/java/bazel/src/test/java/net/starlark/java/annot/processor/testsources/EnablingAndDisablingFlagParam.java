@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has a parameter with both enableOnlyWithFlag and
  * disableWithFlag specified.
  */
-public class EnablingAndDisablingFlagParam implements StarlarkValue {
+public class EnablingAndDisablingFlagParam extends StarlarkValue {
 
   private static final String FOO = "-foo";
 

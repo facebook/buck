@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has a parameter which may be disabled with semantic
  * flag but has no "disabled value".
  */
-public class ToggledParamNoDisabledValue implements StarlarkValue {
+public class ToggledParamNoDisabledValue extends StarlarkValue {
 
   private static final String FOO = "-foo";
 

@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has a positional-only parameter specified after a
  * named positional parameter.
  */
-public class PositionalOnlyParamAfterNamed implements StarlarkValue {
+public class PositionalOnlyParamAfterNamed extends StarlarkValue {
 
   @StarlarkMethod(
       name = "positional_only_after_named",

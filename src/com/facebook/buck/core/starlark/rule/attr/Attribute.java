@@ -36,10 +36,11 @@ import com.google.common.base.Verify;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import net.starlark.java.eval.StarlarkValue;
 import org.immutables.value.Value;
 
 /** Representation of a parameter of a user defined rule */
-public abstract class Attribute<CoercedType> implements AttributeHolder {
+public abstract class Attribute<CoercedType> extends StarlarkValue implements AttributeHolder {
 
   private static final PostCoercionTransform<RuleAnalysisContext, ?, Object> IDENTITY =
       (Object object, RuleAnalysisContext analysisContext) -> object;

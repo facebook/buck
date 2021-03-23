@@ -24,7 +24,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which specifies extraKeywords, but specifies the argument
  * out of order.
  */
-public class ExtraKeywordsOutOfOrder implements StarlarkValue {
+public class ExtraKeywordsOutOfOrder extends StarlarkValue {
 
   @StarlarkMethod(
       name = "extra_kwargs_out_of_order",

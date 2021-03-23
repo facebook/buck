@@ -27,7 +27,7 @@ import net.starlark.java.syntax.Location;
  * default, {@code fastcall} delegates to {@code call}, and call throws an exception, so an
  * implementer may override either one.
  */
-public abstract class StarlarkCallable implements StarlarkValue {
+public abstract class StarlarkCallable extends StarlarkValue {
 
   /**
    * Defines the "convenient" implementation of function calling for a callable value.

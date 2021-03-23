@@ -24,7 +24,7 @@ import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
  *
  * <p>This is not intended to be used by users, but only by the build engine.
  */
-interface DeclaredArtifact extends Artifact {
+public interface DeclaredArtifact extends Artifact {
 
   /**
    * Binds an corresponding {@link com.facebook.buck.core.rules.actions.Action} as represented by

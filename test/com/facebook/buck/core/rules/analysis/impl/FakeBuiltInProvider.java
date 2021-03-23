@@ -18,8 +18,9 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.StarlarkValue;
 
-public class FakeBuiltInProvider implements Provider<FakeInfo> {
+public class FakeBuiltInProvider extends StarlarkValue implements Provider<FakeInfo> {
 
   private final Key<FakeInfo> key;
   private final String name;

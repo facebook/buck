@@ -40,8 +40,7 @@ import java.util.stream.StreamSupport;
  * but there appears to be little demand, and doing so carries some risk of obscuring unintended
  * mutations to Starlark values that would currently cause the program to crash.
  */
-public abstract class Sequence<E> extends StarlarkIndexable<E>
-    implements StarlarkValue, RandomAccess {
+public abstract class Sequence<E> extends StarlarkIndexable<E> implements RandomAccess {
 
   public abstract int size();
   public abstract E get(int index);

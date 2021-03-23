@@ -56,6 +56,7 @@ import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.eval.Tuple;
 import net.starlark.java.syntax.Location;
 import org.junit.Rule;
@@ -227,7 +228,7 @@ public class RunInfoTest {
             ImmutableList.of(StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(3)));
     CommandLineArgs args = new ImmutableRunInfo(ImmutableMap.of(), args1);
 
-    assertTrue(args.isImmutable());
+    assertTrue(((StarlarkValue) args).isImmutable());
 
     UserDefinedProvider provider = new UserDefinedProvider(Location.BUILTIN, new String[] {"foo"});
     provider.export(Label.parseAbsolute("//:foo.bzl"), "provider");

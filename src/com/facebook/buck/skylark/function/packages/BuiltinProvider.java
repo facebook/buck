@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.syntax.Location;
 
 /**
@@ -46,7 +47,7 @@ import net.starlark.java.syntax.Location;
  * should be annotated with {@link StarlarkMethod} with {@link StarlarkMethod#selfCall} set to true,
  * and with {@link StarlarkConstructor} for the info type it constructs.
  */
-public abstract class BuiltinProvider<T extends Info> implements Provider {
+public abstract class BuiltinProvider<T extends Info> extends StarlarkValue implements Provider {
   private final NativeProvider.NativeKey key;
   private final String name;
   private final Class<T> valueClass;

@@ -22,7 +22,7 @@ import net.starlark.java.eval.StarlarkValue;
 /**
  * Test case for a StarlarkMethod method which specifies extraPositionals, but omits that argument.
  */
-public class ExtraPositionalsMissing implements StarlarkValue {
+public class ExtraPositionalsMissing extends StarlarkValue {
 
   @StarlarkMethod(
       name = "extra_positionals_missing",

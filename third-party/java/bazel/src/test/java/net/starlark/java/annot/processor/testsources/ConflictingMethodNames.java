@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a class which contains multiple StarlarkMethod methods with the same name. This
  * should cause a compile failure -- overrides are not allowed.
  */
-public class ConflictingMethodNames implements StarlarkValue {
+public class ConflictingMethodNames extends StarlarkValue {
 
   @StarlarkMethod(
       name = "conflicting_method",

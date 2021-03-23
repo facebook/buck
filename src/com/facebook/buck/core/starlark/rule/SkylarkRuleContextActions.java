@@ -42,12 +42,14 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Container for all methods that create actions within the implementation function of a user
  * defined rule
  */
-public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
+public class SkylarkRuleContextActions extends StarlarkValue
+    implements SkylarkRuleContextActionsApi {
 
   private final ActionRegistry registry;
 

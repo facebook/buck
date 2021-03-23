@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has a positional parameter with no default value
  * specified after a positional parameter with a default value.
  */
-public class NonDefaultParamAfterDefault implements StarlarkValue {
+public class NonDefaultParamAfterDefault extends StarlarkValue {
 
   @StarlarkMethod(
       name = "non_default_after_default",

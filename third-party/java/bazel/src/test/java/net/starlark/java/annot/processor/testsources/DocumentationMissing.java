@@ -21,7 +21,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has no documentation and is not explicitly marked
  * "documented=false".
  */
-public class DocumentationMissing implements StarlarkValue {
+public class DocumentationMissing extends StarlarkValue {
 
   @StarlarkMethod(name = "undocumented_method")
   public String undocumentedMethod() {

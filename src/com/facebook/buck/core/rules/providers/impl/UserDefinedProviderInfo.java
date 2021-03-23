@@ -33,7 +33,7 @@ import net.starlark.java.eval.Structure;
  * e.g. {@code FooInfo = provider(fields=["foo"]); info = FooInfo(foo="bar")} in a build file
  */
 public class UserDefinedProviderInfo extends Structure
-    implements ProviderInfo<UserDefinedProviderInfo>, StarlarkValue {
+    implements ProviderInfo<UserDefinedProviderInfo> {
 
   private final Provider<UserDefinedProviderInfo> provider;
   private final ImmutableMap<String, Object> fieldValues;

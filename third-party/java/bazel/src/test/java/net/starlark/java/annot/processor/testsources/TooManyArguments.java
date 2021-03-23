@@ -22,7 +22,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has more arguments than are declared by the
  * annotation.
  */
-public class TooManyArguments implements StarlarkValue {
+public class TooManyArguments extends StarlarkValue {
 
   @StarlarkMethod(
       name = "method_with_too_many_arguments",

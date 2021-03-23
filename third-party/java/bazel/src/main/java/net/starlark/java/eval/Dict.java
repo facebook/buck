@@ -92,7 +92,6 @@ import net.starlark.java.annot.StarlarkMethod;
             + "</ol>")
 public final class Dict<K, V> extends StarlarkIndexable<K>
     implements Map<K, V>,
-        StarlarkValue,
         Mutability.Freezable {
 
   // TODO(adonovan): for dicts that are born frozen, use ImmutableMap, which is also

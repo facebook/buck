@@ -29,8 +29,6 @@
 // limitations under the License.
 package com.facebook.buck.skylark.function.packages;
 
-import net.starlark.java.eval.Printer;
-import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.syntax.Location;
 
 /**
@@ -39,7 +37,7 @@ import net.starlark.java.syntax.Location;
  * values, each keyed by its Provider. Every Info is an instance of a Provider: if a Provider is
  * like a Java class, then an Info is like an instance of that class.
  */
-public interface Info extends StarlarkValue {
+public interface Info {
 
   /** Returns the provider that instantiated this Info. */
   Provider getProvider();
@@ -60,12 +58,5 @@ public interface Info extends StarlarkValue {
   // Alternatively rename various constructor parameters from 'location' to 'creationLoc'.
   default Location getLocation() {
     return getCreationLoc();
-  }
-
-  @Override
-  default void repr(Printer printer) {
-    printer.append("<instance of provider ");
-    printer.append(getProvider().getPrintableName());
-    printer.append(">");
   }
 }

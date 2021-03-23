@@ -61,7 +61,7 @@ public final class Starlark {
   public static final Object UNBOUND = new UnboundMarker();
 
   @Immutable
-  private static final class UnboundMarker implements StarlarkValue {
+  private static final class UnboundMarker extends StarlarkValue {
     private UnboundMarker() {}
 
     @Override

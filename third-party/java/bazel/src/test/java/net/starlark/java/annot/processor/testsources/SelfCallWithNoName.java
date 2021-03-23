@@ -18,7 +18,7 @@ import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test case for a class with a StarlarkMethod which has selfCall=true but no name. */
-public class SelfCallWithNoName implements StarlarkValue {
+public class SelfCallWithNoName extends StarlarkValue {
 
   @StarlarkMethod(name = "", selfCall = true, documented = false)
   public Integer selfCallMethod() {

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.function.packages.Provider;
 import com.facebook.buck.skylark.function.packages.StarlarkProvider;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.Dict;
@@ -25,6 +24,7 @@ import net.starlark.java.eval.Sequence;
 import net.starlark.java.eval.StarlarkIterable;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Implements a version of the `provider()` function for use in Skylark build/extension files. At
@@ -34,7 +34,8 @@ import net.starlark.java.eval.StarlarkThread;
 public class SkylarkProviderFunction implements SkylarkProviderFunctionApi {
 
   @Override
-  public Provider provider(String doc, Object fields, StarlarkThread thread) throws EvalException {
+  public StarlarkValue /* +Provider */ provider(String doc, Object fields, StarlarkThread thread)
+      throws EvalException {
     @Nullable StarlarkIterable<String> fieldNames;
     if (fields instanceof StarlarkList<?>) {
       Sequence<String> list =

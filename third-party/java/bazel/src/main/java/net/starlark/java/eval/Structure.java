@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  * An interface for Starlark values (such as Bazel structs) with fields that may be accessed using
  * Starlark's {@code x.field} notation and optionally updating using an {@code x.f=y} assignment.
  */
-public abstract class Structure implements StarlarkValue {
+public abstract class Structure extends StarlarkValue {
 
   /**
    * Returns the value of the field with the given name, or null if the field does not exist. The

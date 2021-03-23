@@ -36,6 +36,7 @@ import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkValue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -43,7 +44,8 @@ import org.junit.rules.ExpectedException;
 public class UserDefinedProviderInfoTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static class FakeUserDefinedProvider implements Provider<UserDefinedProviderInfo> {
+  private static class FakeUserDefinedProvider extends StarlarkValue
+      implements Provider<UserDefinedProviderInfo> {
 
     private final Key key;
 

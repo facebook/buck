@@ -41,7 +41,7 @@ import net.starlark.java.eval.Structure;
     name = "json",
     category = "core.lib",
     doc = "Module json is a Starlark module of JSON-related functions.")
-public final class Json implements StarlarkValue {
+public final class Json extends StarlarkValue {
 
   private Json() {}
 

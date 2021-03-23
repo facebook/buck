@@ -80,7 +80,7 @@ public final class StarlarkEvaluationTest {
   }
 
   // A trivial struct-like class with Starlark fields defined by a map.
-  private static class SimpleStruct extends Structure implements StarlarkValue {
+  private static class SimpleStruct extends Structure {
     final ImmutableMap<String, Object> fields;
 
     SimpleStruct(ImmutableMap<String, Object> fields) {
@@ -117,7 +117,7 @@ public final class StarlarkEvaluationTest {
   }
 
   @StarlarkBuiltin(name = "Mock", doc = "")
-  class Mock implements StarlarkValue {
+  class Mock extends StarlarkValue {
     @StarlarkMethod(
         name = "MockFn",
         selfCall = true,
@@ -447,7 +447,7 @@ public final class StarlarkEvaluationTest {
   }
 
   @StarlarkBuiltin(name = "MockInterface", doc = "")
-  static interface MockInterface extends StarlarkValue {
+  static interface MockInterface {
     @StarlarkMethod(
         name = "is_empty_interface",
         parameters = {@Param(name = "str")},
@@ -468,7 +468,7 @@ public final class StarlarkEvaluationTest {
   }
 
   @StarlarkBuiltin(name = "ParamterizedMock", doc = "")
-  static interface ParameterizedApi<ObjectT> extends StarlarkValue {
+  static interface ParameterizedApi<ObjectT> {
     @StarlarkMethod(
         name = "method",
         documented = false,
@@ -478,7 +478,7 @@ public final class StarlarkEvaluationTest {
     public ObjectT method(ObjectT o);
   }
 
-  static final class ParameterizedMock implements ParameterizedApi<String> {
+  static final class ParameterizedMock extends StarlarkValue implements ParameterizedApi<String> {
     @Override
     public String method(String o) {
       return o;

@@ -38,9 +38,10 @@ import net.starlark.java.eval.Sequence;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
+import net.starlark.java.eval.StarlarkValue;
 
 /** Class that actually instantiates Attribute objects for user defined rules */
-public class AttrModule implements AttrModuleApi {
+public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public void repr(Printer printer) {

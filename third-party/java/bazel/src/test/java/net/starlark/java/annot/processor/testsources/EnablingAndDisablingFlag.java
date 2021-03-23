@@ -21,7 +21,7 @@ import net.starlark.java.eval.StarlarkValue;
 /**
  * Test case for a StarlarkMethod method which has both enablingFlag and disablingFlag specified.
  */
-public class EnablingAndDisablingFlag implements StarlarkValue {
+public class EnablingAndDisablingFlag extends StarlarkValue {
 
   static final String FOO = "-foo";
 

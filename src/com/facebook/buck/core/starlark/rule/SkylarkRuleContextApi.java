@@ -19,7 +19,6 @@ package com.facebook.buck.core.starlark.rule;
 import com.facebook.buck.core.model.label.Label;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
-import net.starlark.java.eval.StarlarkValue;
 
 /** The `ctx` variable that is passed to user implementation functions */
 @StarlarkBuiltin(
@@ -27,7 +26,7 @@ import net.starlark.java.eval.StarlarkValue;
     doc =
         "The ctx variable that is passed to rule implementation functions. "
             + "Provides information about dependencies, attributes, actions, etc")
-interface SkylarkRuleContextApi extends StarlarkValue {
+interface SkylarkRuleContextApi {
 
   @StarlarkMethod(
       name = "actions",

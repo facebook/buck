@@ -28,6 +28,7 @@ import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkSemantics;
+import net.starlark.java.eval.StarlarkValue;
 
 /** Implementation of {@link ProviderInfoCollection}. */
 public class ProviderInfoCollectionImpl extends ProviderInfoCollection {
@@ -102,7 +103,7 @@ public class ProviderInfoCollectionImpl extends ProviderInfoCollection {
 
     @Override
     public ProviderInfoCollection.Builder put(ProviderInfo<?> info) {
-      if (!info.isImmutable()) {
+      if (!((StarlarkValue) info).isImmutable()) {
         throw new MutableObjectException(info);
       }
       mapBuilder.put(info.getProvider().getKey(), info);

@@ -58,7 +58,7 @@ import net.starlark.java.annot.StarlarkMethod;
             + "Implicit concatenation of strings is not allowed; use the <code>+</code> "
             + "operator instead. Comparison operators perform a lexicographical comparison; "
             + "use <code>==</code> to test for equality.")
-final class StringModule implements StarlarkValue {
+final class StringModule extends StarlarkValue {
 
   static final StringModule INSTANCE = new StringModule();
 

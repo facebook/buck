@@ -16,28 +16,8 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
-import net.starlark.java.eval.Printer;
-import net.starlark.java.eval.StarlarkValue;
-
 /**
  * Simple interface to expose {@link com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs}
  * to skylark. It cannot actually be used by anything in skylark directly
  */
-public interface CommandLineArgsApi extends StarlarkValue {
-  @Override
-  default void repr(Printer printer) {
-    printer.append("<command line arguments>");
-  }
-
-  @Override
-  default boolean isImmutable() {
-    /**
-     * We already validate that the types added here are Immutable in {@link CommandLineArgsFactory}
-     * there is no need to do further validation.
-     *
-     * <p>See also {@link AggregateCommandLineArgs}, {@link ListCommandLineArgs}, {@link
-     * com.facebook.buck.core.rules.providers.lib.RunInfo}
-     */
-    return true;
-  }
-}
+public interface CommandLineArgsApi /* extends StarlarkValue */ {}

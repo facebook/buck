@@ -32,7 +32,7 @@ import net.starlark.java.annot.StarlarkBuiltin;
             + "100 % -7  # -5 (unlike in some other languages)\n"
             + "int(\"18\")\n"
             + "</pre>")
-public abstract class StarlarkInt implements StarlarkValue, Comparable<StarlarkInt> {
+public abstract class StarlarkInt extends StarlarkValue implements Comparable<StarlarkInt> {
 
   // A cache of small integers >= LEAST_SMALLINT.
   private static final int LEAST_SMALLINT = -128;

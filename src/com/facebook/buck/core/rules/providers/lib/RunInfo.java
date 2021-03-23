@@ -35,6 +35,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.StarlarkList;
 
 /**
@@ -48,6 +49,23 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
 
   public static final BuiltInProvider<RunInfo> PROVIDER =
       BuiltInProvider.of(ImmutableRunInfo.class);
+
+  @Override
+  public void repr(Printer printer) {
+    printer.append("<command line arguments>");
+  }
+
+  @Override
+  public boolean isImmutable() {
+    /**
+     * We already validate that the types added here are Immutable in {@link CommandLineArgsFactory}
+     * there is no need to do further validation.
+     *
+     * <p>See also {@link AggregateCommandLineArgs}, {@link ListCommandLineArgs}, {@link
+     * com.facebook.buck.core.rules.providers.lib.RunInfo}
+     */
+    return true;
+  }
 
   /** @return any additional environment variables that should be used when executing */
   @AddToRuleKey

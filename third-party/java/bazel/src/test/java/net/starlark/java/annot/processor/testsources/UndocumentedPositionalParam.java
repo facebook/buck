@@ -20,7 +20,7 @@ import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test case for a StarlarkMethod method which specifies an undocumented positional parameter. */
-public class UndocumentedPositionalParam implements StarlarkValue {
+public class UndocumentedPositionalParam extends StarlarkValue {
 
   @StarlarkMethod(
       name = "undocumented_positional",

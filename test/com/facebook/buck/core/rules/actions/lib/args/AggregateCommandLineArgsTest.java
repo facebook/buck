@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.function.Function;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.eval.Tuple;
 import net.starlark.java.syntax.Location;
 import org.hamcrest.Matchers;
@@ -270,7 +271,7 @@ public class AggregateCommandLineArgsTest {
     CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of(args1, args2));
 
     assertThat(args, Matchers.instanceOf(AggregateCommandLineArgs.class));
-    assertTrue(args.isImmutable());
+    assertTrue(((StarlarkValue) args).isImmutable());
 
     UserDefinedProvider provider = new UserDefinedProvider(Location.BUILTIN, new String[] {"foo"});
     provider.export(Label.parseAbsolute("//:foo.bzl"), "provider");

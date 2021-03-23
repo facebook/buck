@@ -57,7 +57,7 @@ import net.starlark.java.syntax.TokenKind;
     name = "selector",
     doc = "A selector between configuration-dependent values.",
     documented = false)
-public final class SelectorValue implements StarlarkValue, HasBinary {
+public final class SelectorValue extends StarlarkValue implements HasBinary {
 
   // TODO(adonovan): combine Selector{List,Value} and BuildType.SelectorList.
   // We don't need three classes for the same concept.

@@ -96,10 +96,12 @@ final class ParamDescriptor {
       // Note Starlark does this validation with annotation processor,
       // we should do that too.
       if (!validStarlarkValueClass(allowedClass)) {
-        throw new IllegalArgumentException(
-            String.format(
-                "Starlark-incompatible param type `%s` for param `%s`",
-                allowedClass, param.name()));
+        if (!allowedClass.isInterface()) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Starlark-incompatible param type `%s` for param `%s`",
+                  allowedClass, param.name()));
+        }
       }
     }
 

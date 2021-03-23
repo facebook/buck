@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod which has a positional parameter specified after a non positional
  * parameter.
  */
-public class PositionalParamAfterNonPositional implements StarlarkValue {
+public class PositionalParamAfterNonPositional extends StarlarkValue {
 
   @StarlarkMethod(
       name = "positional_after_non_positional",

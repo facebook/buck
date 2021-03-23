@@ -24,7 +24,7 @@ import net.starlark.java.eval.StarlarkValue;
  * type. (Parameters, if generic, may only have wildcards, as the types of these parameters must be
  * validated dynamically.)
  */
-public class SpecifiedGenericType implements StarlarkValue {
+public class SpecifiedGenericType extends StarlarkValue {
 
   @StarlarkMethod(
       name = "specified_generic_type",

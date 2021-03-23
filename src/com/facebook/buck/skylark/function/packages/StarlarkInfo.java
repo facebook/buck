@@ -41,6 +41,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.HasBinary;
+import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.TokenKind;
@@ -379,5 +380,12 @@ public final class StarlarkInfo extends StructImpl implements HasBinary {
     }
 
     return new StarlarkInfo(xprov, ztable, Location.BUILTIN, x.unknownFieldError);
+  }
+
+  @Override
+  public void repr(Printer printer) {
+    printer.append("<instance of provider ");
+    printer.append(getProvider().getPrintableName());
+    printer.append(">");
   }
 }

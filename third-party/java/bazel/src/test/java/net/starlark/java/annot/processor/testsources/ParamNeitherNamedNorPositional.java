@@ -21,7 +21,7 @@ import net.starlark.java.eval.StarlarkValue;
 /**
  * Test case for a StarlarkMethod method which has a parameter with is neither named nor positional.
  */
-public class ParamNeitherNamedNorPositional implements StarlarkValue {
+public class ParamNeitherNamedNorPositional extends StarlarkValue {
 
   @StarlarkMethod(
       name = "param_neither_named_nor_positional",

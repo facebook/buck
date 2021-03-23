@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod which does not have an appropriate StarlarkThread parameter
  * despite having useStarlarkThread set.
  */
-public class StarlarkThreadMissing implements StarlarkValue {
+public class StarlarkThreadMissing extends StarlarkValue {
 
   @StarlarkMethod(
       name = "three_arg_method_missing_env",

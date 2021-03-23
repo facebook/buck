@@ -37,7 +37,7 @@ import net.starlark.java.syntax.Location;
  *
  * <p>We currently do not support method calls.
  */
-public abstract class BuckStarlarkStructObject extends Structure implements StarlarkValue {
+public abstract class BuckStarlarkStructObject extends Structure {
 
   private @Nullable ImmutableMap<String, Method> values;
 

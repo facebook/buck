@@ -18,7 +18,7 @@ import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test case which verifies a method annotated with StarlarkMethod cannot be static. */
-public class StaticMethod implements StarlarkValue {
+public class StaticMethod extends StarlarkValue {
 
   @StarlarkMethod(name = "private_method", doc = "A private method")
   public static String staticMethod() {

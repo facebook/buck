@@ -20,7 +20,7 @@ import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test case which verifies a struct field method cannot specify extraArgs. */
-public class StructFieldWithExtraKeywords implements StarlarkValue {
+public class StructFieldWithExtraKeywords extends StarlarkValue {
 
   @StarlarkMethod(
       name = "struct_field_method_with_extra_kwargs",

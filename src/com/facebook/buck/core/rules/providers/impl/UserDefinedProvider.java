@@ -31,7 +31,6 @@ import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkCallable;
 import net.starlark.java.eval.StarlarkThread;
-import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.syntax.Location;
 
 /**
@@ -45,7 +44,7 @@ import net.starlark.java.syntax.Location;
  * methods (especially ones that get the user defined name of the class) are not safe to call.
  */
 public class UserDefinedProvider extends StarlarkCallable
-    implements Provider<UserDefinedProviderInfo>, StarlarkValue, StarlarkExportable {
+    implements Provider<UserDefinedProviderInfo>, StarlarkExportable {
 
   private final Key key;
   private final Location location;

@@ -19,7 +19,7 @@ import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.StarlarkValue;
 
 /** Test case which verifies a struct field method cannot have arguments. */
-public class StructFieldWithArguments implements StarlarkValue {
+public class StructFieldWithArguments extends StarlarkValue {
 
   @StarlarkMethod(
       name = "struct_field_method",

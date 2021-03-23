@@ -28,7 +28,6 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.NoneType;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
-import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Struct for creating more efficient and validated lists of arguments to pass to actions' command
@@ -37,7 +36,7 @@ import net.starlark.java.eval.StarlarkValue;
 @StarlarkBuiltin(
     name = "args",
     doc = "Struct for creating lists of arguments to use in command lines of actions")
-public interface CommandLineArgsBuilderApi extends StarlarkValue {
+public interface CommandLineArgsBuilderApi {
   @StarlarkMethod(
       name = "add",
       doc =

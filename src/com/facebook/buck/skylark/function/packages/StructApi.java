@@ -37,7 +37,6 @@ import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.StarlarkThread;
-import net.starlark.java.eval.StarlarkValue;
 
 /** Interface for the "struct" object in the build API. */
 @StarlarkBuiltin(
@@ -46,7 +45,7 @@ import net.starlark.java.eval.StarlarkValue;
         "A generic object with fields."
             + "<p>Structs fields cannot be reassigned once the struct is created. Two structs are "
             + "equal if they have the same fields and if corresponding field values are equal.")
-public interface StructApi extends StarlarkValue {
+public interface StructApi {
 
   @StarlarkMethod(
       name = "to_proto",
@@ -101,7 +100,7 @@ public interface StructApi extends StarlarkValue {
 
   /** Callable Provider for new struct objects. */
   @StarlarkBuiltin(name = "Provider", documented = false, doc = "")
-  interface StructProviderApi extends StarlarkValue {
+  interface StructProviderApi {
 
     @StarlarkMethod(
         name = "struct",

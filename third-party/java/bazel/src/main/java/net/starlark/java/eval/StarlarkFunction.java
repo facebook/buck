@@ -408,12 +408,12 @@ public final class StarlarkFunction extends StarlarkCallable {
   // It is not visible to Java or Starlark code.
   static final Object MANDATORY = new Mandatory();
 
-  private static class Mandatory implements StarlarkValue {}
+  private static class Mandatory extends StarlarkValue {}
 
   // A Cell is a local variable shared between an inner and an outer function.
   // It is a StarlarkValue because it is a stack operand and a Tuple element,
   // but it is not visible to Java or Starlark code.
-  static final class Cell implements StarlarkValue {
+  static final class Cell extends StarlarkValue {
     Object x;
 
     Cell(Object x) {

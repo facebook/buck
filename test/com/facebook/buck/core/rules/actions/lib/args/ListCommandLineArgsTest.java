@@ -52,6 +52,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.eval.Tuple;
 import net.starlark.java.syntax.Location;
 import org.hamcrest.Matchers;
@@ -229,7 +230,7 @@ public class ListCommandLineArgsTest {
     CommandLineArgs args = CommandLineArgsFactory.from(ImmutableList.of(1, "foo", path1));
 
     assertThat(args, Matchers.instanceOf(ListCommandLineArgs.class));
-    assertTrue(args.isImmutable());
+    assertTrue(((StarlarkValue) args).isImmutable());
 
     UserDefinedProvider provider = new UserDefinedProvider(Location.BUILTIN, new String[] {"foo"});
     provider.export(Label.parseAbsolute("//:foo.bzl"), "provider");

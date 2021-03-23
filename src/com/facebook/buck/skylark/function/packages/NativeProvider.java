@@ -49,7 +49,7 @@ import net.starlark.java.syntax.Location;
  * @deprecated use {@link BuiltinProvider} instead.
  */
 @Deprecated
-public abstract class NativeProvider<V extends Info> implements StarlarkValue, Provider {
+public abstract class NativeProvider<V extends Info> extends StarlarkValue implements Provider {
   private final String name;
   private final NativeKey key;
   private final String errorMessageFormatForUnknownField;

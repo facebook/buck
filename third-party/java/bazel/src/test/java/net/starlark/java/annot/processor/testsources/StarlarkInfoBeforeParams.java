@@ -23,7 +23,7 @@ import net.starlark.java.eval.StarlarkValue;
 /**
  * Test case for a StarlarkCallable method which specifies StarlarkThread before other parameters.
  */
-public class StarlarkInfoBeforeParams implements StarlarkValue {
+public class StarlarkInfoBeforeParams extends StarlarkValue {
 
   @StarlarkMethod(
       name = "skylark_info_wrong_order",

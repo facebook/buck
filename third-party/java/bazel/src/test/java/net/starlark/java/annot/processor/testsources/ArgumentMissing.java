@@ -22,7 +22,7 @@ import net.starlark.java.eval.StarlarkValue;
  * Test case for a StarlarkMethod method which has no arguments when the annotation indicates it
  * should.
  */
-public class ArgumentMissing implements StarlarkValue {
+public class ArgumentMissing extends StarlarkValue {
 
   @StarlarkMethod(
       name = "method_with_params",
