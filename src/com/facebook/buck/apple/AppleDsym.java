@@ -83,6 +83,8 @@ public class AppleDsym extends AbstractBuildRule
       SourcePathRuleFinder sourcePathRuleFinder,
       Tool dsymutil,
       ImmutableList<String> dsymutilExtraFlags,
+      boolean verifyDsym,
+      Optional<Tool> dwarfdump,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
       ImmutableSortedSet<SourcePath> additionalSymbolDeps,
@@ -91,6 +93,9 @@ public class AppleDsym extends AbstractBuildRule
       boolean isCacheable,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
+    Preconditions.checkArgument(
+        !verifyDsym || dwarfdump.isPresent(),
+        "Requested verification of dSYM but missing dwarfdump tool");
     this.dsymutil = dsymutil;
     this.dsymutilExtraFlags = dsymutilExtraFlags;
     this.lldb = lldb;

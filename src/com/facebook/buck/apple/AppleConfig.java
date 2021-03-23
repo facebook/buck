@@ -80,6 +80,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String CONDITIONAL_RELINKING_FALLBACK = "conditional_relinking_fallback";
 
   private static final String DSYMUTIL_EXTRA_FLAGS = "dsymutil_extra_flags";
+  private static final String VERIFY_DSYM = "verify_dsym";
 
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
   private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
@@ -643,6 +644,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate
         .getOptionalFlags(APPLE_SECTION, DSYMUTIL_EXTRA_FLAGS)
         .orElse(ImmutableList.of());
+  }
+
+  public boolean getVerifyDsym() {
+    return delegate.getBooleanValue(APPLE_SECTION, VERIFY_DSYM, false);
   }
 
   @BuckStyleValue

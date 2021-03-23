@@ -367,6 +367,7 @@ public class AppleTestDescription
                         args.getTests(),
                         debugFormat,
                         appleConfig.getDsymutilExtraFlags(),
+                        appleConfig.getVerifyDsym(),
                         appleConfig.useDryRunCodeSigning(),
                         appleConfig.cacheBundlesAndPackages(),
                         appleConfig.shouldVerifyBundleResources(),
