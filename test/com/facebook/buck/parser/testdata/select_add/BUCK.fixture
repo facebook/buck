@@ -1,0 +1,10 @@
+load(":defs.bzl", "test")
+
+# Test select add permutations
+test()
+
+# Test one simple example to check that constructed selector list actually works
+cxx_library(
+    name = "foo",
+    srcs = ["a.cpp"] + select({"DEFAULT": ["b.cpp"]}),
+)

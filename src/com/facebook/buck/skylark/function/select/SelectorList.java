@@ -40,6 +40,7 @@ import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.HasBinary;
 import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Sequence;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.syntax.TokenKind;
@@ -160,7 +161,7 @@ public final class SelectorList extends StarlarkValue implements HasBinary {
     return new SelectorList(getNativeType(firstValue), elements.build());
   }
 
-  private static final Class<?> NATIVE_LIST_TYPE = List.class;
+  private static final Class<?> NATIVE_LIST_TYPE = Sequence.class;
 
   private static String getTypeName(Object x) {
     if (x instanceof SelectorList) {
