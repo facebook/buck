@@ -49,7 +49,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.nio.file.Files;
 import java.util.stream.Stream;
 
