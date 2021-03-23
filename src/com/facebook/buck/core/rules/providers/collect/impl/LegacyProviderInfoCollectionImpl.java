@@ -26,7 +26,7 @@ import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkSemantics;
 
 /** Implementation of {@link ProviderInfoCollection}. */
-public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection {
+public class LegacyProviderInfoCollectionImpl extends ProviderInfoCollection {
 
   private static final LegacyProviderInfoCollectionImpl INSTANCE =
       new LegacyProviderInfoCollectionImpl();

@@ -30,7 +30,7 @@ import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkSemantics;
 
 /** Implementation of {@link ProviderInfoCollection}. */
-public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
+public class ProviderInfoCollectionImpl extends ProviderInfoCollection {
 
   private final ImmutableMap<Provider.Key<?>, ? extends ProviderInfo<?>> infoMap;
 

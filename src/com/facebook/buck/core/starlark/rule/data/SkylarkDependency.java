@@ -25,14 +25,13 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.StarlarkIndexable;
 import net.starlark.java.eval.StarlarkSemantics;
-import net.starlark.java.eval.StarlarkValue;
 
 /**
  * Skylark object provided to users to get extra information about a dependency, including its
  * original build target, its {@link ProviderInfoCollection}, and more in the future. {@link
  * StarlarkIndexable} operations are proxied to the provided {@link ProviderInfoCollection}
  */
-public class SkylarkDependency implements StarlarkValue, StarlarkIndexable {
+public class SkylarkDependency extends StarlarkIndexable<Object> {
 
   private final Label label;
   private final ProviderInfoCollection providerInfos;

@@ -14,14 +14,16 @@
 
 package net.starlark.java.eval;
 
+import java.util.Iterator;
+
 /**
  * A Starlark value that support indexed access ({@code object[key]}) and membership tests ({@code
  * key in object}).
  */
-public interface StarlarkIndexable extends StarlarkValue {
+public abstract class StarlarkIndexable<K> extends StarlarkIterable<K> {
 
   /** Returns the value associated with the given key. */
-  Object getIndex(StarlarkSemantics semantics, Object key) throws EvalException;
+  public abstract Object getIndex(StarlarkSemantics semantics, Object key) throws EvalException;
 
   /**
    * Returns whether the key is in the object. New types should try to follow the semantics of dict:
@@ -29,5 +31,11 @@ public interface StarlarkIndexable extends StarlarkValue {
    * failure. Note however that the builtin types string, list, and tuple do not follow this
    * convention.
    */
-  boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException;
+  public abstract boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException;
+
+  @Override
+  public Iterator<K> iterator() {
+    // TODO(nga): throw EvalException
+    throw new RuntimeException(String.format("type '%s' is not iterable", Starlark.type(this)));
+  }
 }

@@ -32,21 +32,22 @@ import net.starlark.java.eval.StarlarkIndexable;
  * <p>This is {@link StarlarkIndexable}, so that this can be used to access individual provider
  * information from within skylark extension rule implementations.
  */
-public interface ProviderInfoCollection extends StarlarkIndexable {
+public abstract class ProviderInfoCollection extends StarlarkIndexable<Object> {
 
   /** @return the {@link ProviderInfo} of the specific type given the {@link Provider} */
-  <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider);
+  public abstract <T extends ProviderInfo<T>> Optional<T> get(Provider<T> provider);
 
   /**
    * @return whether collection contains a {@link ProviderInfo} of the specific type given by the
    *     {@link Provider}
    */
-  <T extends ProviderInfo<T>> boolean contains(Provider<T> provider);
+  public abstract <T extends ProviderInfo<T>> boolean contains(Provider<T> provider);
 
   /** @return the {@link DefaultInfo} contained in this collection */
-  DefaultInfo getDefaultInfo();
+  public abstract DefaultInfo getDefaultInfo();
 
-  interface Builder {
+  /** Builder. */
+  public interface Builder {
 
     /**
      * Add a new {@link ProviderInfo} to the collection. Multiple {@link ProviderInfo} objects with

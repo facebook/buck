@@ -72,5 +72,4 @@ public abstract class StarlarkIterable<T> implements
   public boolean updateIteratorCount(int delta) {
     return mutability().updateIteratorCount(this, delta);
   }
-
 }
