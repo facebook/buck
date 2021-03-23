@@ -30,7 +30,6 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import java.util.List;
 import java.util.stream.Collectors;
 import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.StarlarkList;
@@ -78,7 +77,9 @@ public abstract class UnflavoredDepListAttribute
 
   @Override
   public PostCoercionTransform<
-          RuleAnalysisContext, ImmutableList<UnflavoredBuildTarget>, List<SkylarkDependency>>
+          RuleAnalysisContext,
+          ImmutableList<UnflavoredBuildTarget>,
+          StarlarkList<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }

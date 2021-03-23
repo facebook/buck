@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Sequence;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
@@ -42,6 +43,16 @@ public class BuildFileManifestPojoizer {
 
   private static ImmutableList<Object> convertListToPojo(Collection<?> object)
       throws EvalException {
+    ImmutableList.Builder<Object> builder = ImmutableList.builderWithExpectedSize(object.size());
+
+    for (Object obj : object) {
+      builder.add(convertToPojo(obj));
+    }
+
+    return builder.build();
+  }
+
+  private static ImmutableList<Object> convertSeqToPojo(Sequence<?> object) throws EvalException {
     ImmutableList.Builder<Object> builder = ImmutableList.builderWithExpectedSize(object.size());
 
     for (Object obj : object) {
@@ -107,6 +118,8 @@ public class BuildFileManifestPojoizer {
       return obj;
     } else if (obj instanceof StarlarkInt) {
       return ((StarlarkInt) obj).toInt("convert to pojo");
+    } else if (obj instanceof Sequence<?>) {
+      return convertSeqToPojo((Sequence<?>) obj);
     } else if (obj instanceof List<?>) {
       return convertListToPojo((List<?>) obj);
     } else if (obj instanceof Map<?, ?>) {

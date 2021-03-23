@@ -24,11 +24,11 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.Tuple;
 import net.starlark.java.syntax.Location;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -87,7 +87,7 @@ public class UserDefinedProviderTest {
               Starlark.call(
                   env.getEnv(),
                   provider,
-                  ImmutableList.of(),
+                  Tuple.of(),
                   ImmutableMap.of("foo", "val_1", "bar", "val_2", "baz", "val_3"));
       Assert.assertTrue(providerInfo.isImmutable());
     }
@@ -110,8 +110,7 @@ public class UserDefinedProviderTest {
       thrown.expect(Exception.class);
       thrown.expectMessage(
           "Tried to get name before function has been assigned to a variable and exported");
-      Starlark.call(
-          env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", "foo_value"));
+      Starlark.call(env.getEnv(), provider, Tuple.of(), ImmutableMap.of("foo", "foo_value"));
     }
   }
 
@@ -127,7 +126,7 @@ public class UserDefinedProviderTest {
           Starlark.call(
               env.getEnv(),
               provider,
-              ImmutableList.of(),
+              Tuple.of(),
               ImmutableMap.of("foo", "foo_value", "baz", "baz_value"));
 
       assertTrue(rawInfo instanceof UserDefinedProviderInfo);
@@ -151,7 +150,7 @@ public class UserDefinedProviderTest {
           Starlark.call(
               env.getEnv(),
               provider,
-              ImmutableList.of(),
+              Tuple.of(),
               ImmutableMap.of("foo", "foo_value", "bar", "bar_value", "baz", "baz_value"));
 
       assertTrue(rawInfo instanceof UserDefinedProviderInfo);

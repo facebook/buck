@@ -18,12 +18,11 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.function.packages.Provider;
 import com.facebook.buck.skylark.function.packages.StarlarkProvider;
-import java.util.Collection;
-import java.util.Map;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Sequence;
+import net.starlark.java.eval.StarlarkIterable;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
 
@@ -36,7 +35,7 @@ public class SkylarkProviderFunction implements SkylarkProviderFunctionApi {
 
   @Override
   public Provider provider(String doc, Object fields, StarlarkThread thread) throws EvalException {
-    @Nullable Collection<String> fieldNames;
+    @Nullable StarlarkIterable<String> fieldNames;
     if (fields instanceof StarlarkList<?>) {
       Sequence<String> list =
           Sequence.cast(
@@ -45,13 +44,13 @@ public class SkylarkProviderFunction implements SkylarkProviderFunctionApi {
               "Expected list of strings or dictionary of string -> string for 'fields'");
       fieldNames = list;
     } else if (fields instanceof Dict) {
-      Map<String, String> dict =
+      Dict<String, String> dict =
           Dict.cast(
               fields,
               String.class,
               String.class,
               "Expected list of strings or dictionary of string -> string for 'fields'");
-      fieldNames = dict.keySet();
+      fieldNames = dict;
     } else {
       throw new EvalException("fields attribute must be either list or dict.");
     }

@@ -18,8 +18,15 @@ import static java.lang.Math.min;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.AbstractList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.RandomAccess;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A Sequence is a finite iterable sequence of Starlark values, such as a list or tuple.
@@ -33,29 +40,61 @@ import java.util.RandomAccess;
  * but there appears to be little demand, and doing so carries some risk of obscuring unintended
  * mutations to Starlark values that would currently cause the program to crash.
  */
-public interface Sequence<E>
-    extends StarlarkValue, List<E>, RandomAccess, StarlarkIndexable, StarlarkIterable<E> {
+public abstract class Sequence<E> extends StarlarkIterable<E>
+    implements StarlarkValue, RandomAccess, StarlarkIndexable {
+
+  public abstract int size();
+  public abstract E get(int index);
+
+  private static final Object[] EMPTY_ARRAY = {};
+
+  public Object[] toArray() {
+    int size = size();
+    Object[] array = size != 0 ? new Object[size] : EMPTY_ARRAY;
+    for (int i = 0; i < size; ++i) {
+      array[i] = get(i);
+    }
+    return array;
+  }
+
+  public boolean contains(Object value) {
+    if (value == null) {
+      return false;
+    }
+
+    int size = size();
+    for (int i = 0; i < size; ++i) {
+      if (value.equals(get(i))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean isEmpty() {
+    return size() == 0;
+  }
 
   @Override
-  default boolean truth() {
+  public boolean truth() {
     return !isEmpty();
   }
 
   /** Returns an ImmutableList object with the current underlying contents of this Sequence. */
-  default ImmutableList<E> getImmutableList() {
+  public ImmutableList<E> getImmutableList() {
     return ImmutableList.copyOf(this);
   }
 
   /** Retrieves an entry from a Sequence. */
   @Override
-  default E getIndex(StarlarkSemantics semantics, Object key) throws EvalException {
+  public E getIndex(StarlarkSemantics semantics, Object key) throws EvalException {
     int index = Starlark.toInt(key, "sequence index");
     return get(EvalUtils.getSequenceIndex(index, size()));
   }
 
   @Override
-  default boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException {
-    return contains(key);
+  public boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException {
+    return contains((E) key);
   }
 
   /**
@@ -66,7 +105,7 @@ public interface Sequence<E>
    *
    * @throws ClassCastException if any comparison failed.
    */
-  static int compare(List<?> x, List<?> y) {
+  static int compare(Sequence<?> x, Sequence<?> y) {
     for (int i = 0; i < min(x.size(), y.size()); i++) {
       Object xelem = x.get(i);
       Object yelem = y.get(i);
@@ -100,7 +139,7 @@ public interface Sequence<E>
    * For negative strides ({@code step < 0}), {@code -1 <= stop <= start < size()}. <br>
    * The caller must ensure that the start and stop indices are valid and that step is non-zero.
    */
-  Sequence<E> getSlice(Mutability mu, int start, int stop, int step);
+  public abstract Sequence<E> getSlice(Mutability mu, int start, int stop, int step);
 
   /**
    * Casts a non-null Starlark value {@code x} to a {@code Sequence<T>}, after checking that each
@@ -130,5 +169,71 @@ public interface Sequence<E>
   public static <T> Sequence<T> noneableCast(Object x, Class<T> type, String what)
       throws EvalException {
     return x == Starlark.NONE ? StarlarkList.empty() : cast(x, type, what);
+  }
+
+  @Override
+  public Iterator<E> iterator() {
+    return new Iterator<E>() {
+      final int size = size();
+      int i = 0;
+      @Override
+      public boolean hasNext() {
+        return i < size;
+      }
+
+      @Override
+      public E next() {
+        if (!hasNext()) {
+          throw new NoSuchElementException();
+        }
+        return get(i++);
+      }
+    };
+  }
+
+  @Override
+  public Spliterator<E> spliterator() {
+    return Spliterators.spliterator(this.iterator(), size(), 0);
+  }
+
+  public Stream<E> stream() {
+    return StreamSupport.stream(spliterator(), false);
+  }
+
+  private class AsList extends AbstractList<E> {
+    @Override
+    public E get(int index) {
+      return Sequence.this.get(index);
+    }
+
+    @Override
+    public int size() {
+      return Sequence.this.size();
+    }
+
+    @Override
+    public boolean contains(Object o) {
+      return Sequence.this.contains(o);
+    }
+
+    @Override
+    public Iterator<E> iterator() {
+      return Sequence.this.iterator();
+    }
+
+    @Override
+    public String toString() {
+      return Sequence.this.toString();
+    }
+
+    @Override
+    public Stream<E> stream() {
+      return Sequence.this.stream();
+    }
+  }
+
+  /** View as list. */
+  public List<E> asList() {
+    return new AsList();
   }
 }

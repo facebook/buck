@@ -49,8 +49,8 @@ public class PrinterTest {
     assertThat(Starlark.repr(StarlarkInt.of(3))).isEqualTo("3");
     assertThat(Starlark.repr(Starlark.NONE)).isEqualTo("None");
 
-    List<?> list = StarlarkList.of(null, "foo", "bar");
-    List<?> tuple = Tuple.of("foo", "bar");
+    Sequence<?> list = StarlarkList.of(null, "foo", "bar");
+    Sequence<?> tuple = Tuple.of("foo", "bar");
 
     assertThat(Starlark.str(Tuple.of(StarlarkInt.of(1), list, StarlarkInt.of(3))))
         .isEqualTo("(1, [\"foo\", \"bar\"], 3)");

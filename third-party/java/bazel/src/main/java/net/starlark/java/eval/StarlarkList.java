@@ -17,9 +17,13 @@ package net.starlark.java.eval;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
@@ -71,8 +75,8 @@ import net.starlark.java.annot.StarlarkMethod;
             + "['a', 'b', 'c', 'd'][::2]  # ['a', 'c']\n"
             + "['a', 'b', 'c', 'd'][3:0:-1]  # ['d', 'c', 'b']</pre>"
             + "Lists are mutable, as in Python.")
-public final class StarlarkList<E> extends AbstractList<E>
-    implements Sequence<E>, StarlarkValue, Mutability.Freezable, Comparable<StarlarkList<?>> {
+public final class StarlarkList<E> extends Sequence<E> implements
+    StarlarkValue, Mutability.Freezable, Comparable<StarlarkList<?>> {
 
   // The implementation strategy is similar to ArrayList,
   // but without the extra indirection of using ArrayList.
@@ -549,17 +553,5 @@ public final class StarlarkList<E> extends AbstractList<E>
   @Override
   public Object[] toArray() {
     return size != 0 ? Arrays.copyOf(elems, size, Object[].class) : EMPTY_ARRAY;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public <T> T[] toArray(T[] a) {
-    if (a.length < size) {
-      return (T[]) Arrays.copyOf(elems, size, a.getClass());
-    } else {
-      System.arraycopy(elems, 0, a, 0, size);
-      Arrays.fill(a, size, a.length, null);
-      return a;
-    }
   }
 }

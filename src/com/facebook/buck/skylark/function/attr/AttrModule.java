@@ -51,7 +51,7 @@ public class AttrModule implements AttrModuleApi {
   public AttributeHolder intAttribute(
       StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<StarlarkInt> values)
       throws EvalException {
-    List<StarlarkInt> validatedValues = Sequence.cast(values, StarlarkInt.class, null);
+    List<StarlarkInt> validatedValues = Sequence.cast(values, StarlarkInt.class, null).asList();
     return IntAttribute.of(
         defaultValue.toInt("defaultValue"),
         doc,
@@ -91,7 +91,7 @@ public class AttrModule implements AttrModuleApi {
   public AttributeHolder stringAttribute(
       String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
       throws EvalException {
-    List<String> validatedValues = Sequence.cast(values, String.class, null);
+    List<String> validatedValues = Sequence.cast(values, String.class, null).asList();
 
     return StringAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
@@ -167,7 +167,7 @@ public class AttrModule implements AttrModuleApi {
   public AttributeHolder outputListAttribute(
       StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
-    List<String> validatedValues = Sequence.cast(defaultValue, String.class, null);
+    List<String> validatedValues = Sequence.cast(defaultValue, String.class, null).asList();
     return OutputListAttribute.of(validatedValues, doc, mandatory, allowEmpty);
   }
 }

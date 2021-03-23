@@ -148,8 +148,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
     try {
       return StarlarkList.copyOf(
           env.mutability(),
-          parseContext.getPackageContext().getGlobber().run(include, exclude, excludeDirectories)
-              .stream()
+          parseContext.getPackageContext().getGlobber()
+              .run(include.asList(), exclude.asList(), excludeDirectories).stream()
               .sorted()
               .collect(ImmutableList.toImmutableList()));
     } catch (FileNotFoundException e) {

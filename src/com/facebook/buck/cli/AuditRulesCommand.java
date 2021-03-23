@@ -53,6 +53,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.NoneType;
+import net.starlark.java.eval.Sequence;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -231,7 +232,11 @@ public class AuditRulesCommand extends AbstractCommand {
       return Escaper.escapeAsPythonString(value.toString());
     } else if (value instanceof Number) {
       return value.toString();
-    } else if (value instanceof List) {
+    } else if (value instanceof Sequence<?> || value instanceof List<?>) {
+      if (value instanceof Sequence<?>) {
+        value = ((Sequence<?>) value).asList();
+      }
+
       StringBuilder out = new StringBuilder("[\n");
 
       String indentPlus1 = indent + INDENT;

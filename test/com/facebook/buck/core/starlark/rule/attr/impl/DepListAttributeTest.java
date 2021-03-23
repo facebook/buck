@@ -46,7 +46,6 @@ import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Paths;
-import java.util.List;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.StarlarkList;
 import org.junit.Rule;
@@ -246,7 +245,7 @@ public class DepListAttributeTest {
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//foo:bar", "//foo:baz"));
 
-    List<SkylarkDependency> transformed =
+    StarlarkList<SkylarkDependency> transformed =
         attr.getPostCoercionTransform()
             .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(deps));
 

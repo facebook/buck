@@ -40,6 +40,7 @@ import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkCallable;
+import net.starlark.java.eval.StarlarkIterable;
 import net.starlark.java.eval.StarlarkThread;
 import net.starlark.java.syntax.Location;
 
@@ -100,7 +101,7 @@ public final class StarlarkProvider
    */
   // TODO(adonovan): in what sense is this "schemaful" if schema may be null?
   public static StarlarkProvider createUnexportedSchemaful(
-      @Nullable Collection<String> schema, Location location) {
+      @Nullable StarlarkIterable<String> schema, Location location) {
     return new StarlarkProvider(
         /*key=*/ null, schema == null ? null : ImmutableList.sortedCopyOf(schema), location);
   }

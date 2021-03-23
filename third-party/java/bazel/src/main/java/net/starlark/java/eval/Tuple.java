@@ -41,8 +41,8 @@ import net.starlark.java.annot.StarlarkBuiltin;
             + "('a', 'b', 'c', 'd')[::2]  # ('a', 'c')\n"
             + "('a', 'b', 'c', 'd')[3:0:-1]  # ('d', 'c', 'b')</pre>"
             + "Tuples are immutable, therefore <code>x[1] = \"a\"</code> is not supported.")
-public final class Tuple extends AbstractList<Object>
-    implements Sequence<Object>, Comparable<Tuple> {
+public final class Tuple extends Sequence<Object>
+    implements Comparable<Tuple> {
 
   private final Object[] elems;
 
@@ -161,7 +161,6 @@ public final class Tuple extends AbstractList<Object>
     return false;
   }
 
-  @Override
   public Tuple subList(int from, int to) {
     return wrap(Arrays.copyOfRange(elems, from, to));
   }
@@ -170,18 +169,6 @@ public final class Tuple extends AbstractList<Object>
   @Override
   public Object[] toArray() {
     return elems.length != 0 ? Arrays.copyOf(elems, elems.length, Object[].class) : elems;
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public <T> T[] toArray(T[] a) {
-    if (a.length < elems.length) {
-      return (T[]) Arrays.copyOf(elems, elems.length, a.getClass());
-    } else {
-      System.arraycopy(elems, 0, a, 0, elems.length);
-      Arrays.fill(a, elems.length, a.length, null);
-      return a;
-    }
   }
 
   @Override

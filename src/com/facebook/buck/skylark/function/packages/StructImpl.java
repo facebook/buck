@@ -312,10 +312,10 @@ public abstract class StructImpl implements Info, Structure, StructApi {
         printJson(entry.getValue(), sb, "dict value", String.valueOf(entry.getKey()));
       }
       sb.append("}");
-    } else if (value instanceof List) {
+    } else if (value instanceof Sequence) {
       sb.append("[");
       String join = "";
-      for (Object item : ((List<?>) value)) {
+      for (Object item : ((Sequence<?>) value)) {
         sb.append(join);
         join = ",";
         printJson(item, sb, "list element in struct field", key);

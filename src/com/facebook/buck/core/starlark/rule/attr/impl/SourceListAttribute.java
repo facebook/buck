@@ -26,7 +26,6 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import java.util.List;
 import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.StarlarkList;
 
@@ -73,7 +72,8 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, ImmutableList<SourcePath>, List<Artifact>>
+  public PostCoercionTransform<
+          RuleAnalysisContext, ImmutableList<SourcePath>, StarlarkList<Artifact>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }

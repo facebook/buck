@@ -242,18 +242,9 @@ public final class Starlark {
    * this method does not freeze the value. Callers should exercise care not to mutate the
    * underlying object during iteration.
    */
-  static Iterable<?> toIterable(Object x) throws EvalException {
-    // Instanceof class is much faster than instanceof interface,
-    // and practically all iterables in Starlark either
-    // implement AbstractList (list, tuple, range) or is dict.
-    if (x instanceof AbstractCollection<?>) {
-      return (AbstractCollection<?>) x;
-    }
-    if (x instanceof Dict<?, ?>) {
-      return (Dict<?, ?>) x;
-    }
+  static StarlarkIterable<?> toIterable(Object x) throws EvalException {
     if (x instanceof StarlarkIterable) {
-      return (Iterable<?>) x;
+      return (StarlarkIterable<?>) x;
     }
     throw errorf("type '%s' is not iterable", type(x));
   }
@@ -267,7 +258,7 @@ public final class Starlark {
     if (x instanceof Sequence) {
       // The returned array type must be exactly Object[],
       // not a subclass, so calling toArray() is not enough.
-      return ((Sequence<?>) x).toArray(EMPTY);
+      return ((Sequence<?>) x).toArray();
     } else if (x instanceof Dict) {
       return ((Dict<?, ?>) x).keySet().toArray();
     } else {
@@ -477,7 +468,7 @@ public final class Starlark {
   }
 
   /** Returns a string formatted as if by the Starlark expression {@code pattern % arguments}. */
-  public static String formatWithList(String pattern, List<?> arguments) {
+  public static String formatWithList(String pattern, Sequence<?> arguments) {
     Printer pr = new Printer();
     Printer.formatWithList(pr, pattern, arguments);
     return pr.toString();
@@ -593,7 +584,7 @@ public final class Starlark {
    * <p>See also {@link #fastcall}.
    */
   public static Object call(
-      StarlarkThread thread, Object fn, List<Object> args, Map<String, Object> kwargs)
+      StarlarkThread thread, Object fn, Sequence<Object> args, Map<String, Object> kwargs)
       throws EvalException, InterruptedException {
     Object[] named = new Object[2 * kwargs.size()];
     int i = 0;

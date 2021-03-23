@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.function;
 import com.google.protobuf.TextFormat;
 import java.util.List;
 import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.Sequence;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.Structure;
@@ -47,6 +48,8 @@ class JsonPrinter {
       sb.append("null");
     } else if (value instanceof Structure) {
       printJson((Structure) value, sb, loc);
+    } else if (value instanceof Sequence) {
+      printJson(((Sequence<?>) value).asList(), sb, loc, key);
     } else if (value instanceof List) {
       printJson((List<?>) value, sb, loc, key);
     } else if (value instanceof String) {

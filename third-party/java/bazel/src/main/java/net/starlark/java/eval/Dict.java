@@ -90,12 +90,11 @@ import net.starlark.java.annot.StarlarkMethod;
             + " order, positional arguments before named. As with comprehensions, duplicate keys"
             + " are permitted.\n"
             + "</ol>")
-public final class Dict<K, V>
+public final class Dict<K, V> extends StarlarkIterable<K>
     implements Map<K, V>,
         StarlarkValue,
         Mutability.Freezable,
-        StarlarkIndexable,
-        StarlarkIterable<K> {
+        StarlarkIndexable {
 
   // TODO(adonovan): for dicts that are born frozen, use ImmutableMap, which is also
   // insertion-ordered and has smaller Entries (singly linked, no hash).

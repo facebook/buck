@@ -56,6 +56,7 @@ import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkInt;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.Tuple;
 import net.starlark.java.syntax.Location;
 import org.junit.Rule;
 import org.junit.Test;
@@ -233,8 +234,7 @@ public class RunInfoTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              Starlark.call(
-                  env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", args));
+              Starlark.call(env.getEnv(), provider, Tuple.of(), ImmutableMap.of("foo", args));
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }

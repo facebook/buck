@@ -241,10 +241,10 @@ public class SourceListAttributeTest {
 
     ImmutableList<Artifact> expected = ImmutableList.of(buildArtifact1, sourceArtifact);
 
-    Object transformed =
+    StarlarkList<?> transformed =
         attr.getPostCoercionTransform()
             .postCoercionTransform(coerced, new FakeRuleAnalysisContextImpl(deps));
 
-    assertEquals(expected, transformed);
+    assertEquals(expected, transformed.asList());
   }
 }

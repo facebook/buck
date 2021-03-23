@@ -74,7 +74,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import net.starlark.java.eval.StarlarkList;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -364,7 +363,7 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.of(StarlarkList.of(null, "f*"), StarlarkList.of(null), true),
+                    GlobSpec.of(ImmutableList.of("f*"), ImmutableList.of(), true),
                     ImmutableSet.of("file1", "file2")))));
   }
 

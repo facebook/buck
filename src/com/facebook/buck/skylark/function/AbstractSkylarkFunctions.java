@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -309,12 +308,12 @@ public abstract class AbstractSkylarkFunctions {
         for (Map.Entry<?, ?> entry : sval.getDictionary().entrySet()) {
           dictionary.put(
               entry.getKey(),
-              Starlark.call(thread, func, Arrays.asList(entry.getValue()), ImmutableMap.of()));
+              Starlark.call(thread, func, Tuple.of(entry.getValue()), ImmutableMap.of()));
         }
 
         new_elements.add(new SelectorValue(dictionary, sval.getNoMatchError()));
       } else {
-        new_elements.add(Starlark.call(thread, func, Arrays.asList(element), ImmutableMap.of()));
+        new_elements.add(Starlark.call(thread, func, Tuple.of(element), ImmutableMap.of()));
       }
     }
     return SelectorList.of(new_elements);
@@ -389,8 +388,7 @@ public abstract class AbstractSkylarkFunctions {
 
         for (Map.Entry<?, ?> entry : sval.getDictionary().entrySet()) {
           Boolean result =
-              (Boolean)
-                  Starlark.call(thread, func, Arrays.asList(entry.getValue()), ImmutableMap.of());
+              (Boolean) Starlark.call(thread, func, Tuple.of(entry.getValue()), ImmutableMap.of());
           if (result) {
             return true;
           }
@@ -398,7 +396,7 @@ public abstract class AbstractSkylarkFunctions {
 
       } else {
         Boolean result =
-            (Boolean) Starlark.call(thread, func, Arrays.asList(element), ImmutableMap.of());
+            (Boolean) Starlark.call(thread, func, Tuple.of(element), ImmutableMap.of());
         if (result) {
           return true;
         }

@@ -84,7 +84,7 @@ public final class FunctionTest {
           @Override
           public NoneType call(StarlarkThread thread, Tuple args, Dict<String, Object> kwargs)
               throws EvalException {
-            params.addAll(args);
+            params.addAll(args.asList());
             return Starlark.NONE;
           }
         };

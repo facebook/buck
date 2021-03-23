@@ -21,4 +21,7 @@ package net.starlark.java.eval;
  * <p>Functionally this interface is equivalent to {@code java.lang.Iterable}, but it additionally
  * affirms that the iterability of a Java class should be exposed to Starlark programs.
  */
-public interface StarlarkIterable<T> extends StarlarkValue, Iterable<T> {}
+public abstract class StarlarkIterable<T> implements
+    StarlarkValue, Iterable<T> {
+
+}

@@ -45,26 +45,6 @@ public final class StarlarkMutableTest {
           UnsupportedOperationException.class,
           () -> it.remove());
     }
-    {
-      Iterator<?> it = list.listIterator();
-      it.next();
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> it.remove());
-    }
-    {
-      Iterator<?> it = list.listIterator(1);
-      it.next();
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> it.remove());
-    }
-    {
-      List<Object> sublist = list.subList(1, 2);
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> sublist.set(0, 4));
-    }
   }
 
   @Test

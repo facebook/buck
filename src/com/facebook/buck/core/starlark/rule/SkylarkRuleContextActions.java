@@ -155,7 +155,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
     try {
       argumentsValidated =
           CommandLineArgsFactory.from(
-              arguments.stream()
+              arguments.asList().stream()
                   .map(SkylarkRuleContextActions::getImmutableArg)
                   .collect(ImmutableList.toImmutableList()));
       firstArgument =

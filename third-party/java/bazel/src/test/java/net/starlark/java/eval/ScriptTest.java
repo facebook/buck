@@ -152,7 +152,7 @@ public final class ScriptTest {
     }
 
     try {
-      Starlark.call(thread, f, ImmutableList.of(), ImmutableMap.of());
+      Starlark.call(thread, f, Tuple.of(), ImmutableMap.of());
       reportErrorf(thread, "evaluation succeeded unexpectedly (want error matching %s)", wantError);
     } catch (EvalException ex) {
       // Verify error matches expectation.

@@ -46,7 +46,7 @@ final class FormatParser {
    * @param kwargs Named arguments
    * @return The formatted string
    */
-  String format(String input, List<Object> args, Map<String, Object> kwargs) throws EvalException {
+  String format(String input, Sequence<Object> args, Map<String, Object> kwargs) throws EvalException {
     char[] chars = input.toCharArray();
     StringBuilder output = new StringBuilder();
     History history = new History();
@@ -85,7 +85,7 @@ final class FormatParser {
   private int processOpeningBrace(
       char[] chars,
       int pos,
-      List<Object> args,
+      Sequence<Object> args,
       Map<String, Object> kwargs,
       History history,
       StringBuilder output)

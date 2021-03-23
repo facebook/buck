@@ -52,6 +52,7 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
+import net.starlark.java.eval.Tuple;
 import net.starlark.java.syntax.Location;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -235,8 +236,7 @@ public class ListCommandLineArgsTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              Starlark.call(
-                  env.getEnv(), provider, ImmutableList.of(), ImmutableMap.of("foo", args));
+              Starlark.call(env.getEnv(), provider, Tuple.of(), ImmutableMap.of("foo", args));
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }

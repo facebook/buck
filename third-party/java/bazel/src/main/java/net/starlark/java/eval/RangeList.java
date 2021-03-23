@@ -49,7 +49,7 @@ import net.starlark.java.annot.StarlarkBuiltin;
             + "range(10)[3:0:-1]  # range(3, 0, -1)</pre>"
             + "Ranges are immutable, as in Python 3.")
 @Immutable
-final class RangeList extends AbstractList<StarlarkInt> implements Sequence<StarlarkInt> {
+final class RangeList extends Sequence<StarlarkInt> {
 
   private final int start;
   private final int stop;

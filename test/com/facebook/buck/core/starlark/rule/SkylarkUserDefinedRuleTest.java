@@ -308,8 +308,7 @@ public class SkylarkUserDefinedRuleTest {
 
       StarlarkThread env = newEnvironment(mutability);
 
-      Object res =
-          Starlark.call(env, rule, ImmutableList.of(), ImmutableMap.of("name", "some_rule_name"));
+      Object res = Starlark.call(env, rule, Tuple.of(), ImmutableMap.of("name", "some_rule_name"));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, "some_rule_name").getRecordedRules();
@@ -361,7 +360,7 @@ public class SkylarkUserDefinedRuleTest {
           Starlark.call(
               env,
               rule,
-              ImmutableList.of(),
+              Tuple.of(),
               ImmutableMap.of(
                   "name", "some_rule_name", "arg2", "arg2_val", "arg4", StarlarkInt.of(2)));
 
@@ -406,10 +405,7 @@ public class SkylarkUserDefinedRuleTest {
       expectedException.expect(EvalException.class);
       expectedException.expectMessage("missing mandatory named-only argument 'arg4' while calling");
       Starlark.call(
-          env,
-          rule,
-          ImmutableList.of(),
-          ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val"));
+          env, rule, Tuple.of(), ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val"));
     }
   }
 
@@ -452,7 +448,7 @@ public class SkylarkUserDefinedRuleTest {
           Starlark.call(
               env,
               rule,
-              ImmutableList.of(),
+              Tuple.of(),
               ImmutableMap.of(
                   "name",
                   "some_rule_name",

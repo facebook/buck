@@ -305,11 +305,11 @@ public class Printer {
    * @throws IllegalFormatException if the format string is invalid or the arguments do not match it
    */
   public static void format(Printer printer, String format, Object... arguments) {
-    formatWithList(printer, format, Arrays.asList(arguments));
+    formatWithList(printer, format, Tuple.wrap(arguments));
   }
 
   /** Same as {@link #format}, but with a list instead of variadic args. */
-  public static void formatWithList(Printer printer, String pattern, List<?> arguments) {
+  public static void formatWithList(Printer printer, String pattern, Sequence<?> arguments) {
     // N.B. MissingFormatWidthException is the only kind of IllegalFormatException
     // whose constructor can take and display arbitrary error message, hence its use below.
     // TODO(adonovan): this suggests we're using the wrong exception. Throw IAE?

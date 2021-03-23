@@ -57,6 +57,7 @@ import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkCallable;
 import net.starlark.java.eval.StarlarkList;
 import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.Tuple;
 
 /**
  * Description for User Defined Rules. This Description runs user-supplied implementation functions
@@ -96,11 +97,11 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
 
         implementation = args.getImplementation();
 
-        implResult = Starlark.call(env, implementation, ImmutableList.of(ctx), ImmutableMap.of());
+        implResult = Starlark.call(env, implementation, Tuple.of(ctx), ImmutableMap.of());
       }
 
       List<SkylarkProviderInfo> returnedProviders =
-          Sequence.noneableCast(implResult, SkylarkProviderInfo.class, null);
+          Sequence.noneableCast(implResult, SkylarkProviderInfo.class, null).asList();
 
       // TODO: Verify that we get providers back, validate types, etc, etc
       return getProviderInfos(returnedProviders, ImmutableSet.of(), ctx, implementation, args);
