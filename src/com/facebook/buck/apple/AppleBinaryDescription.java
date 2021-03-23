@@ -614,8 +614,6 @@ public class AppleBinaryDescription
     return (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_OS_64_32_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR)
-        || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_X86_64_FLAVOR)
-        || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_ARM64_FLAVOR)
         || flavors.contains(LEGACY_WATCH_FLAVOR));
   }
 

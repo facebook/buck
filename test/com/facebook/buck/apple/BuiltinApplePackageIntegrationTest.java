@@ -162,7 +162,6 @@ public class BuiltinApplePackageIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "watchsimulator_target_sdk_version", "2.0");
-    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", "true");
     packageHasProperStructureForWatchHelper(workspace, true);
   }
 
@@ -172,7 +171,6 @@ public class BuiltinApplePackageIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "watch_application_bundle", tmp);
     workspace.setUp();
     workspace.addBuckConfigLocalOption("apple", "watchsimulator_target_sdk_version", "2.1");
-    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", "true");
     packageHasProperStructureForWatchHelper(workspace, false);
   }
 
