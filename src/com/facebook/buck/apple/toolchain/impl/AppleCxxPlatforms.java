@@ -143,6 +143,31 @@ public class AppleCxxPlatforms {
     return appleCxxPlatformsBuilder.build();
   }
 
+  private static VersionedTool getXcodeToolWithToolPath(
+      ProjectFilesystem filesystem,
+      Path toolPath,
+      AppleConfig appleConfig,
+      String toolName,
+      String toolVersion) {
+    return VersionedTool.of(
+        Joiner.on('-').join(ImmutableList.of("apple", toolName)),
+        PathSourcePath.of(filesystem, toolPath),
+        appleConfig.getXcodeToolVersion(toolName, toolVersion));
+  }
+
+  private static Optional<Tool> getOptionalXcodeTool(
+      ProjectFilesystem filesystem,
+      ImmutableList<Path> toolSearchPaths,
+      XcodeToolFinder xcodeToolFinder,
+      AppleConfig appleConfig,
+      String toolName,
+      String toolVersion) {
+    Optional<Path> maybeToolPath = getOptionalToolPath(toolName, toolSearchPaths, xcodeToolFinder);
+    return maybeToolPath.map(
+        toolPath ->
+            getXcodeToolWithToolPath(filesystem, toolPath, appleConfig, toolName, toolVersion));
+  }
+
   private static VersionedTool getXcodeTool(
       ProjectFilesystem filesystem,
       ImmutableList<Path> toolSearchPaths,
@@ -150,10 +175,12 @@ public class AppleCxxPlatforms {
       AppleConfig appleConfig,
       String toolName,
       String toolVersion) {
-    return VersionedTool.of(
-        Joiner.on('-').join(ImmutableList.of("apple", toolName)),
-        PathSourcePath.of(filesystem, getToolPath(toolName, toolSearchPaths, xcodeToolFinder)),
-        appleConfig.getXcodeToolVersion(toolName, toolVersion));
+    return getXcodeToolWithToolPath(
+        filesystem,
+        getToolPath(toolName, toolSearchPaths, xcodeToolFinder),
+        appleConfig,
+        toolName,
+        toolVersion);
   }
 
   @VisibleForTesting
@@ -294,6 +321,10 @@ public class AppleCxxPlatforms {
     Tool dsymutil =
         getXcodeTool(
             filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "dsymutil", version);
+
+    Optional<Tool> dwarfdump =
+        getOptionalXcodeTool(
+            filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "dwarfdump", version);
 
     // We are seeing a stack overflow in dsymutil during (fat) LTO
     // builds. Upstream dsymutil was patched to avoid recursion in the
@@ -523,6 +554,7 @@ public class AppleCxxPlatforms {
                 "copySceneKitAssets", toolSearchPaths, xcodeToolFinder, version, filesystem))
         .setXctest(xctest)
         .setDsymutil(dsymutil)
+        .setDwarfdump(dwarfdump)
         .setLipo(lipo)
         .setWatchKitStubBinary(watchKitStubBinaryPath)
         .setLldb(lldb)
@@ -673,9 +705,14 @@ public class AppleCxxPlatforms {
             input -> VersionedTool.of(tool, PathSourcePath.of(filesystem, input), version, params));
   }
 
+  private static Optional<Path> getOptionalToolPath(
+      String tool, ImmutableList<Path> toolSearchPaths, XcodeToolFinder xcodeToolFinder) {
+    return xcodeToolFinder.getToolPath(toolSearchPaths, tool);
+  }
+
   private static Path getToolPath(
       String tool, ImmutableList<Path> toolSearchPaths, XcodeToolFinder xcodeToolFinder) {
-    Optional<Path> result = xcodeToolFinder.getToolPath(toolSearchPaths, tool);
+    Optional<Path> result = getOptionalToolPath(tool, toolSearchPaths, xcodeToolFinder);
     if (!result.isPresent()) {
       throw new HumanReadableException("Cannot find tool %s in paths %s", tool, toolSearchPaths);
     }

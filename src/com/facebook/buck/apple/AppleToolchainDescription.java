@@ -150,6 +150,10 @@ public class AppleToolchainDescription
                             sdkPaths.getPlatformPath(),
                             sdkPaths.getDeveloperPath())));
 
+    Optional<Tool> dwarfdumpTool =
+        args.getDwarfdump()
+            .map(dwarfdumpSrcPath -> Tools.resolveTool(dwarfdumpSrcPath, actionGraphBuilder));
+
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatform.builder()
             .setMinVersion(args.getMinVersion())
@@ -163,6 +167,7 @@ public class AppleToolchainDescription
                     .map(path -> Tools.resolveTool(path, actionGraphBuilder)))
             .setXctest(Tools.resolveTool(args.getXctest(), actionGraphBuilder))
             .setDsymutil(dsymutil)
+            .setDwarfdump(dwarfdumpTool)
             .setLipo(Tools.resolveTool(args.getLipo(), actionGraphBuilder))
             .setLldb(Tools.resolveTool(args.getLldb(), actionGraphBuilder))
             .setCodesignProvider(ToolProviders.getToolProvider(args.getCodesign()))
@@ -281,6 +286,9 @@ public class AppleToolchainDescription
 
     /** dsymutil binary. */
     SourcePath getDsymutil();
+
+    /** dwarfdump binary. */
+    Optional<SourcePath> getDwarfdump();
 
     /** ibtool binary. */
     SourcePath getIbtool();

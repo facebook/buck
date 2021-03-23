@@ -116,6 +116,7 @@ public class FakeAppleRuleDescriptions {
             "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
             "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
             "Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil",
+            "Toolchains/XcodeDefault.xctoolchain/usr/bin/dwarfdump",
             "Toolchains/XcodeDefault.xctoolchain/usr/bin/ld",
             "Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
             "Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo",

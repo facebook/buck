@@ -135,6 +135,7 @@ public class AppleCxxPlatformsTest {
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
+        root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/dwarfdump"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ld"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool"),
         root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo"),
