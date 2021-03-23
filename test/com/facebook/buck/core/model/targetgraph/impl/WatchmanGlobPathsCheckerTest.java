@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
@@ -27,15 +29,19 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,6 +74,23 @@ public class WatchmanGlobPathsCheckerTest {
     assumeTrue(watchman.getTransportPath().isPresent());
   }
 
+  private void watchmanSync() throws IOException, InterruptedException {
+    WatchmanClient client = watchman.createClient();
+    try {
+
+      assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());
+      // synchronize using clock request
+      Either<Map<String, Object>, WatchmanClient.Timeout> clockResult =
+          client.queryWithTimeout(
+              Long.MAX_VALUE,
+              Long.MAX_VALUE,
+              WatchmanQuery.clock(root.toString(), Optional.of(10000)));
+      assertTrue(clockResult.isLeft());
+    } finally {
+      client.close();
+    }
+  }
+
   @Test
   public void testCheckPathsThrowsWithNonExistingPath() {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
@@ -83,9 +106,11 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassesWithExistingPath() throws IOException {
+  public void testCheckPathsPassesWithExistingPath() throws IOException, InterruptedException {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
+
+    watchmanSync();
 
     checker.checkPaths(
         projectFilesystem,
@@ -94,10 +119,12 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassesWithExistingFiles() throws IOException {
+  public void testCheckPathsPassesWithExistingFiles() throws IOException, InterruptedException {
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
+
+    watchmanSync();
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -106,10 +133,12 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassesWithExistingDirectory() throws IOException {
+  public void testCheckPathsPassesWithExistingDirectory() throws IOException, InterruptedException {
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
+
+    watchmanSync();
 
     checker.checkDirPaths(
         projectFilesystem,
@@ -118,13 +147,15 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithExistingDirectory() throws IOException {
+  public void testCheckPathsFailedWithExistingDirectory() throws IOException, InterruptedException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'b'");
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
+
+    watchmanSync();
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -133,13 +164,15 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithExistingFiles() throws IOException {
+  public void testCheckPathsFailedWithExistingFiles() throws IOException, InterruptedException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'b'");
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
+
+    watchmanSync();
 
     checker.checkDirPaths(
         projectFilesystem,
@@ -148,7 +181,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithCaseSensitive() throws IOException {
+  public void testCheckPathsFailedWithCaseSensitive() throws IOException, InterruptedException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'b'");
@@ -156,6 +189,8 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("B");
 
+    watchmanSync();
+
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
@@ -163,11 +198,13 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassWithSymlink() throws IOException {
+  public void testCheckPathsPassWithSymlink() throws IOException, InterruptedException {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
     Files.createSymbolicLink(root.resolve("symlink-to-regular-file").getPath(), Paths.get("b"));
+
+    watchmanSync();
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -176,7 +213,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithMultipleFiles() throws IOException {
+  public void testCheckPathsFailedWithMultipleFiles() throws IOException, InterruptedException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'd'");
@@ -184,6 +221,8 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
     tmp.newFile("c");
+
+    watchmanSync();
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -193,13 +232,16 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testFallbackCheckPathsFailedWithExistingFiles() throws IOException {
+  public void testFallbackCheckPathsFailedWithExistingFiles()
+      throws IOException, InterruptedException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("In //:a expected directory: b");
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, true);
     tmp.newFile("b");
     projectFilesystem.createNewFile(Paths.get("b"));
+
+    watchmanSync();
 
     checker.checkDirPaths(
         projectFilesystem,
@@ -208,7 +250,8 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testFallbackCheckPathsFailedWithMultipleFiles() throws IOException {
+  public void testFallbackCheckPathsFailedWithMultipleFiles()
+      throws IOException, InterruptedException {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("//:a references non-existing file or directory 'd'");
 
@@ -217,6 +260,8 @@ public class WatchmanGlobPathsCheckerTest {
     tmp.newFile("c");
     projectFilesystem.createNewFile(Paths.get("b"));
     projectFilesystem.createNewFile(Paths.get("c"));
+
+    watchmanSync();
 
     checker.checkFilePaths(
         projectFilesystem,
