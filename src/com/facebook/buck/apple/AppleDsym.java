@@ -18,6 +18,8 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -41,15 +43,21 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MoveStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SortedSet;
+import java.util.stream.Stream;
 
 /** Creates dSYM bundle for the given _unstripped_ binary. */
 public class AppleDsym extends AbstractBuildRule
@@ -62,6 +70,9 @@ public class AppleDsym extends AbstractBuildRule
 
   @AddToRuleKey private final Tool dsymutil;
   @AddToRuleKey private final ImmutableList<String> dsymutilExtraFlags;
+
+  @AddToRuleKey private final Optional<Tool> dwarfdump;
+  @AddToRuleKey private final boolean verifyDsym;
 
   @AddToRuleKey private final SourcePath unstrippedBinarySourcePath;
 
@@ -98,6 +109,8 @@ public class AppleDsym extends AbstractBuildRule
         "Requested verification of dSYM but missing dwarfdump tool");
     this.dsymutil = dsymutil;
     this.dsymutilExtraFlags = dsymutilExtraFlags;
+    this.dwarfdump = dwarfdump;
+    this.verifyDsym = verifyDsym;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.additionalSymbolDeps = additionalSymbolDeps;
@@ -167,24 +180,69 @@ public class AppleDsym extends AbstractBuildRule
                 context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath),
             true));
 
+    RelPath cellPath =
+        ProjectFilesystemUtils.relativize(
+            getProjectFilesystem().getRootPath(), context.getBuildCellRootPath());
+
     steps.add(
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
             dsymutilExtraFlags,
-            false /* includePapertrail */,
+            verifyDsym /* includePapertrail */,
             unstrippedBinaryPath.getPath(),
             dsymOutputPath,
-            ProjectFilesystemUtils.relativize(
-                getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
+            cellPath,
             osoPrefix,
             withDownwardApi));
+
+    Path dwarfFilePath = dwarfFileFolder.resolve(unstrippedBinaryPath.getFileName());
+
+    if (verifyDsym && dwarfdump.isPresent()) {
+      RelPath warningsOutputPath =
+          BuildTargetPaths.getScratchPath(
+              getProjectFilesystem(), this.getBuildTarget(), "%s_dwarfdump_warnings.txt");
+      steps.add(
+          new AppleDsymExtractPapertrailStep(
+              getProjectFilesystem(),
+              dwarfdump.get().getEnvironment(context.getSourcePathResolver()),
+              dwarfdump.get().getCommandPrefix(context.getSourcePathResolver()),
+              dwarfFilePath,
+              warningsOutputPath.getPath(),
+              cellPath,
+              withDownwardApi));
+
+      steps.add(
+          new AbstractExecutionStep("verify-dsym") {
+            @Override
+            public StepExecutionResult execute(StepExecutionContext context)
+                throws IOException, InterruptedException {
+              AbsPath warningsPath = getProjectFilesystem().resolve(warningsOutputPath);
+              try (Stream<String> stream = Files.lines(warningsPath.getPath())) {
+                Optional<String> lineWithObjectError =
+                    stream
+                        .filter(
+                            l ->
+                                l.contains("unable to open object file: No such file or directory"))
+                        .findFirst();
+                if (lineWithObjectError.isPresent()) {
+                  // Unfortunately, the warnings that dsymutil stores do not the object file names,
+                  // so there's nothing else useful we can print
+                  throw new HumanReadableException(
+                      "dSYM verification failed, missing object files when looking up N_OSO entries");
+                }
+              }
+
+              return StepExecutionResults.SUCCESS;
+            }
+          });
+    }
 
     steps.add(
         new MoveStep(
             getProjectFilesystem(),
-            dwarfFileFolder.resolve(unstrippedBinaryPath.getFileName()),
+            dwarfFilePath,
             dwarfFileFolder.resolve(getDwarfFilenameForDsymTarget(getBuildTarget()))));
 
     return steps.build();

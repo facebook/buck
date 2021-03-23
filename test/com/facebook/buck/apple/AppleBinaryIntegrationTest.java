@@ -1411,6 +1411,32 @@ public class AppleBinaryIntegrationTest {
   }
 
   @Test
+  public void testAppleBinaryDsymVerification() throws Exception {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_no_debug", tmp);
+    workspace.addBuckConfigLocalOption("apple", "verify_dsym", "true");
+    // This will cause invalid paths to the .o files which will end up failing the dSYM verification
+    workspace.addBuckConfigLocalOption(
+        "apple", "dsymutil_extra_flags", "--oso-prepend-path NON_EXISTENT_PATH");
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//:DemoAppBinary#iphonesimulator-i386,iphonesimulator-x86_64,no-linkermap");
+    BuildTarget targetToBuild =
+        target.withAppendedFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
+
+    ProcessResult result = workspace.runBuckCommand("build", targetToBuild.getFullyQualifiedName());
+    result.assertFailure();
+
+    assertTrue(result.getStderr().contains("dSYM verification failed"));
+  }
+
+  @Test
   public void
       testFlavoredAppleBundleBuildsAndDsymFileCreatedAndBinaryIsStrippedWithLinkerNormFlags()
           throws Exception {
