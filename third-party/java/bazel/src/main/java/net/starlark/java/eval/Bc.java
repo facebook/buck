@@ -934,6 +934,12 @@ class Bc {
           }
         }
       }
+
+      @Override
+      public String toString() {
+        return "CompileExpressionResult{"
+            + "slot=" + BcSlot.slotToString(slot) + ", value=" + value + '}';
+      }
     }
 
     /** Compile an expression and return a register containing the result. */

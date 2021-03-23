@@ -52,4 +52,17 @@ class BcSlot {
         return false;
     }
   }
+
+  static String slotToString(int slot) {
+    int index = slot & ~MASK;
+    switch (slot & MASK) {
+      case LOCAL_FLAG: return "LOCAL:" + index;
+      case GLOBAL_FLAG: return "GLOBAL:" + index;
+      case FREE_FLAG: return "FREE:" + index;
+      case CELL_FLAG: return "CELL:" + index;
+      case CONST_FLAG: return "CONST:" + index;
+      case ANY_FLAG: return "ANY:" + index;
+      default: return "INCORRECT:" + slot;
+    }
+  }
 }
