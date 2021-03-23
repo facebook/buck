@@ -153,11 +153,16 @@ public class AppleDsym extends AbstractBuildRule
     AbsPath unstrippedBinaryPath =
         context.getSourcePathResolver().getAbsolutePath(unstrippedBinarySourcePath);
     Path dwarfFileFolder = dsymOutputPath.resolve(DSYM_DWARF_FILE_FOLDER);
-    return ImmutableList.of(
+
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    steps.add(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dsymOutputPath),
-            true),
+            true));
+
+    steps.add(
         new DsymStep(
             getProjectFilesystem(),
             dsymutil.getEnvironment(context.getSourcePathResolver()),
@@ -169,11 +174,15 @@ public class AppleDsym extends AbstractBuildRule
             ProjectFilesystemUtils.relativize(
                 getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
             osoPrefix,
-            withDownwardApi),
+            withDownwardApi));
+
+    steps.add(
         new MoveStep(
             getProjectFilesystem(),
             dwarfFileFolder.resolve(unstrippedBinaryPath.getFileName()),
             dwarfFileFolder.resolve(getDwarfFilenameForDsymTarget(getBuildTarget()))));
+
+    return steps.build();
   }
 
   @Override
