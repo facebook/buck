@@ -306,8 +306,6 @@ class Bc {
    * The compiler implementation.
    */
   private static class Compiler {
-    private static final int[] EMPTY_INTS = {};
-
     private final int nlocals;
     @javax.annotation.Nonnull
     private final Resolver.Function rfn;
@@ -315,7 +313,7 @@ class Bc {
     private final int[] globalIndex;
     private final Tuple freevars;
     /** {@code 0..ip} of the array is bytecode. */
-    private int[] text = EMPTY_INTS;
+    private int[] text = ArraysForStarlark.EMPTY_INT_ARRAY;
     /** Current instruction pointer. */
     private int ip = 0;
     /** Number of currently allocated registers. */
@@ -1286,9 +1284,6 @@ class Bc {
       }
     }
 
-    private static final String[] EMPTY_STRINGS = {};
-    private static final Object[] EMPTY = {};
-
     Compiled finish() {
       ImmutableMap.Builder<Integer, Node> instrToNode = ImmutableMap.builder();
       for (int i = 0; i != this.instrToNode.size(); i += 2) {
@@ -1297,11 +1292,11 @@ class Bc {
 
       return new Compiled(
           rfn,
-          strings.toArray(EMPTY_STRINGS),
-          objects.toArray(EMPTY),
+          strings.toArray(ArraysForStarlark.EMPTY_STRING_ARRAY),
+          objects.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
           Arrays.copyOf(text, ip),
           maxSlots,
-          constSlots.toArray(EMPTY),
+          constSlots.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
           maxLoopDepth,
           instrToNode.build());
     }

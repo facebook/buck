@@ -45,11 +45,9 @@ public abstract class Sequence<E> extends StarlarkIndexable<E> implements Random
   public abstract int size();
   public abstract E get(int index);
 
-  private static final Object[] EMPTY_ARRAY = {};
-
   public Object[] toArray() {
     int size = size();
-    Object[] array = size != 0 ? new Object[size] : EMPTY_ARRAY;
+    Object[] array = ArraysForStarlark.newObjectArray(size);
     for (int i = 0; i < size; ++i) {
       array[i] = get(i);
     }

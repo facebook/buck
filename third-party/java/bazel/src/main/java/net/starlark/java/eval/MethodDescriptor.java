@@ -152,15 +152,13 @@ final class MethodDescriptor {
         annotation.useStarlarkSemantics());
   }
 
-  private static final Object[] EMPTY = {};
-
   /** Calls this method, which must have {@code structField=true}. */
   Object callField(Object obj, StarlarkSemantics semantics, @Nullable Mutability mu)
       throws EvalException, InterruptedException {
     if (!structField) {
       throw new IllegalStateException("not a struct field: " + name);
     }
-    Object[] args = useStarlarkSemantics ? new Object[] {semantics} : EMPTY;
+    Object[] args = useStarlarkSemantics ? new Object[] {semantics} : ArraysForStarlark.EMPTY_OBJECT_ARRAY;
     return call(obj, args, mu);
   }
 

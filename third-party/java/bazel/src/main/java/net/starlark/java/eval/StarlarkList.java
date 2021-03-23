@@ -80,12 +80,10 @@ public final class StarlarkList<E> extends Sequence<E> implements
   // elems.getClass() == Object[].class. This is necessary to avoid ArrayStoreException.
   private int size;
   private int iteratorCount; // number of active iterators (unused once frozen)
-  private Object[] elems = EMPTY_ARRAY; // elems[i] == null  iff  i >= size
+  private Object[] elems; // elems[i] == null  iff  i >= size
 
   /** Final except for {@link #unsafeShallowFreeze}; must not be modified any other way. */
   private Mutability mutability;
-
-  private static final Object[] EMPTY_ARRAY = {};
 
   private StarlarkList(@Nullable Mutability mutability, Object[] elems, int size) {
     Preconditions.checkArgument(elems.getClass() == Object[].class);
@@ -134,7 +132,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * environments were then frozen. This instance is for empty lists that were always frozen from
    * the beginning.
    */
-  private static final StarlarkList<?> EMPTY = wrap(Mutability.IMMUTABLE, EMPTY_ARRAY);
+  private static final StarlarkList<?> EMPTY = wrap(Mutability.IMMUTABLE,
+      ArraysForStarlark.EMPTY_OBJECT_ARRAY);
 
   /** Returns an empty frozen list of the desired type. */
   @SuppressWarnings("unchecked")
@@ -144,7 +143,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
 
   /** Returns a new, empty list with the specified Mutability. */
   public static <T> StarlarkList<T> newList(Mutability mutability) {
-    return wrap(mutability, EMPTY_ARRAY);
+    return wrap(mutability, ArraysForStarlark.EMPTY_OBJECT_ARRAY);
   }
 
   /**
@@ -280,7 +279,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
   /** Returns a new StarlarkList containing n consecutive repeats of this tuple. */
   public StarlarkList<E> repeat(StarlarkInt n, Mutability mutability) throws EvalException {
     if (n.signum() <= 0) {
-      return wrap(mutability, EMPTY_ARRAY);
+      return wrap(mutability, ArraysForStarlark.EMPTY_OBJECT_ARRAY);
     }
 
     // TODO(adonovan): reject unreasonably large n.
@@ -547,6 +546,6 @@ public final class StarlarkList<E> extends Sequence<E> implements
   /** Returns a new array of class Object[] containing the list elements. */
   @Override
   public Object[] toArray() {
-    return size != 0 ? Arrays.copyOf(elems, size, Object[].class) : EMPTY_ARRAY;
+    return size != 0 ? Arrays.copyOf(elems, size, Object[].class) : ArraysForStarlark.EMPTY_OBJECT_ARRAY;
   }
 }

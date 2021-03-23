@@ -890,10 +890,9 @@ public final class Starlark {
             globalIndex,
             /*defaultValues=*/ Tuple.empty(),
             /*freevars=*/ Tuple.empty());
-    return Starlark.fastcall(thread, toplevel, EMPTY, EMPTY);
+    return Starlark.fastcall(thread, toplevel,
+        ArraysForStarlark.EMPTY_OBJECT_ARRAY, ArraysForStarlark.EMPTY_OBJECT_ARRAY);
   }
-
-  private static final Object[] EMPTY = {};
 
   /**
    * Parses the input as an expression, resolves it in the specified module environment, compiles
@@ -907,7 +906,8 @@ public final class Starlark {
       ParserInput input, FileOptions options, Module module, StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
     StarlarkFunction fn = newExprFunction(input, options, module);
-    return Starlark.fastcall(thread, fn, EMPTY, EMPTY);
+    return Starlark.fastcall(thread, fn, ArraysForStarlark.EMPTY_OBJECT_ARRAY,
+        ArraysForStarlark.EMPTY_OBJECT_ARRAY);
   }
 
   /** Variant of {@link #eval} that creates a module for the given predeclared environment. */

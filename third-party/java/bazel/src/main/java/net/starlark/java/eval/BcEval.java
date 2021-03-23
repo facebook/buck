@@ -9,7 +9,7 @@ import java.util.*;
 
 /** Bytecode interpreter. Takes a compiled function body and returns a result. */
 class BcEval {
-  private static final Object[] EMPTY = {};
+
   private static final TokenKind[] TOKENS = TokenKind.values();
 
   private final StarlarkThread.Frame fr;
@@ -431,7 +431,7 @@ class BcEval {
   private Object[] nextNSlots() throws EvalException {
     int size = nextOperand();
     if (size == 0) {
-      return EMPTY;
+      return ArraysForStarlark.EMPTY_OBJECT_ARRAY;
     }
     Object[] array = new Object[size];
     for (int j = 0; j != array.length; ++j) {
@@ -537,12 +537,12 @@ class BcEval {
 
     Object fn = getSlot(nextOperand());
     int npos = nextOperand();
-    Object[] pos = npos != 0 ? new Object[npos] : EMPTY;
+    Object[] pos = ArraysForStarlark.newObjectArray(npos);
     for (int i = 0; i < npos; ++i) {
       pos[i] = getSlot(nextOperand());
     }
     int nnamed = nextOperand();
-    Object[] named = nnamed != 0 ? new Object[nnamed * 2] : EMPTY;
+    Object[] named = ArraysForStarlark.newObjectArray(nnamed * 2);
     for (int i = 0; i < nnamed; ++i) {
       named[i * 2] = compiled.strings[nextOperand()];
       named[i * 2 + 1] = getSlot(nextOperand());

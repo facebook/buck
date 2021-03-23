@@ -161,7 +161,7 @@ class MethodLibrary {
     StarlarkCallable keyfn = (StarlarkCallable) key;
 
     // decorate
-    Object[] empty = {};
+    Object[] empty = ArraysForStarlark.EMPTY_OBJECT_ARRAY;
     for (int i = 0; i < array.length; i++) {
       Object v = array[i];
       Object k = Starlark.fastcall(thread, keyfn, new Object[] {v}, empty);

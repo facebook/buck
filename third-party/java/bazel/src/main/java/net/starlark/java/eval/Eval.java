@@ -14,7 +14,6 @@
 
 package net.starlark.java.eval;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.math.BigInteger;
@@ -46,7 +45,6 @@ import net.starlark.java.syntax.LambdaExpression;
 import net.starlark.java.syntax.ListExpression;
 import net.starlark.java.syntax.LoadStatement;
 import net.starlark.java.syntax.Location;
-import net.starlark.java.syntax.Parameter;
 import net.starlark.java.syntax.Resolver;
 import net.starlark.java.syntax.ReturnStatement;
 import net.starlark.java.syntax.SliceExpression;
@@ -604,7 +602,7 @@ final class Eval {
     int i;
 
     // f(expr) -- positional args
-    Object[] positional = npos == 0 ? EMPTY : new Object[npos];
+    Object[] positional = ArraysForStarlark.newObjectArray(npos);
     for (i = 0; i < npos; i++) {
       Argument arg = arguments.get(i);
       Object value = eval(fr, arg.getValue());
@@ -612,7 +610,7 @@ final class Eval {
     }
 
     // f(id=expr) -- named args
-    Object[] named = n == npos ? EMPTY : new Object[2 * (n - npos)];
+    Object[] named = ArraysForStarlark.newObjectArray(2 * (n - npos));
     for (int j = 0; i < n; i++) {
       Argument.Keyword arg = (Argument.Keyword) arguments.get(i);
       Object value = eval(fr, arg.getValue());
@@ -809,6 +807,4 @@ final class Eval {
 
     return comp.isDict() ? dict : list;
   }
-
-  private static final Object[] EMPTY = {};
 }
