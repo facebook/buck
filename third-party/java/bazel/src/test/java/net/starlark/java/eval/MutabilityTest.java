@@ -17,6 +17,7 @@ package net.starlark.java.eval;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
+import java.util.Iterator;
 import net.starlark.java.eval.Mutability.Freezable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,7 +28,7 @@ import org.junit.runners.JUnit4;
 public final class MutabilityTest {
 
   /** A trivial Freezable that can do nothing but freeze. */
-  private static class DummyFreezable implements Mutability.Freezable {
+  private static class DummyFreezable extends StarlarkIterable<String> {
     private final Mutability mutability;
 
     public DummyFreezable(Mutability mutability) {
@@ -38,10 +39,15 @@ public final class MutabilityTest {
     public Mutability mutability() {
       return mutability;
     }
+
+    @Override
+    public Iterator<String> iterator() {
+      throw new AssertionError();
+    }
   }
 
   private static void assertCheckMutableFailsBecauseFrozen(DummyFreezable x) {
-    EvalException ex = assertThrows(EvalException.class, () -> Starlark.checkMutable(x));
+    EvalException ex = assertThrows(EvalException.class, () -> x.checkMutable());
     assertThat(ex).hasMessageThat().contains("trying to mutate a frozen DummyFreezable value");
   }
 
@@ -50,7 +56,7 @@ public final class MutabilityTest {
     Mutability mutability = Mutability.create("test");
     DummyFreezable dummy = new DummyFreezable(mutability);
 
-    Starlark.checkMutable(dummy);
+    dummy.checkMutable();
     mutability.freeze();
     assertCheckMutableFailsBecauseFrozen(dummy);
   }
@@ -60,7 +66,7 @@ public final class MutabilityTest {
     DummyFreezable dummy;
     try (Mutability mutability = Mutability.create("test")) {
       dummy = new DummyFreezable(mutability);
-      Starlark.checkMutable(dummy);
+      dummy.checkMutable();
     }
     assertCheckMutableFailsBecauseFrozen(dummy);
   }
@@ -70,7 +76,7 @@ public final class MutabilityTest {
     Mutability mutability = Mutability.create("test");
     DummyFreezable dummy = new DummyFreezable(mutability);
 
-    Starlark.checkMutable(dummy);
+    dummy.checkMutable();
   }
 
   @Test
@@ -78,20 +84,20 @@ public final class MutabilityTest {
     Mutability mutability = Mutability.create("test");
     DummyFreezable x = new DummyFreezable(mutability);
     x.updateIteratorCount(+1);
-    EvalException ex = assertThrows(EvalException.class, () -> Starlark.checkMutable(x));
+    EvalException ex = assertThrows(EvalException.class, () -> x.checkMutable());
     assertThat(ex)
         .hasMessageThat()
         .contains("DummyFreezable value is temporarily immutable due to active for-loop iteration");
 
     x.updateIteratorCount(+1);
     x.updateIteratorCount(-1); // net +1 => still immutable
-    ex = assertThrows(EvalException.class, () -> Starlark.checkMutable(x));
+    ex = assertThrows(EvalException.class, () -> x.checkMutable());
     assertThat(ex)
         .hasMessageThat()
         .contains("DummyFreezable value is temporarily immutable due to active for-loop iteration");
 
     x.updateIteratorCount(-1); // net 0 => mutable
-    Starlark.checkMutable(x); // ok
+    x.checkMutable(); // ok
 
     assertThrows(IllegalStateException.class, () -> x.updateIteratorCount(-1)); // underflow
   }

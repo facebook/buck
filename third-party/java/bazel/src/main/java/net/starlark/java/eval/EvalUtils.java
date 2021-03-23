@@ -22,16 +22,12 @@ final class EvalUtils {
 
   private EvalUtils() {}
 
-  static void addIterator(Object x) {
-    if (x instanceof Mutability.Freezable) {
-      ((Mutability.Freezable) x).updateIteratorCount(+1);
-    }
+  static void addIterator(StarlarkIterable<?> x) {
+    x.updateIteratorCount(+1);
   }
 
-  static void removeIterator(Object x) {
-    if (x instanceof Mutability.Freezable) {
-      ((Mutability.Freezable) x).updateIteratorCount(-1);
-    }
+  static void removeIterator(StarlarkIterable<?> x) {
+    x.updateIteratorCount(-1);
   }
 
   // The following functions for indexing and slicing match the behavior of Python.

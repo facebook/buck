@@ -17,13 +17,8 @@ package net.starlark.java.eval;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
-import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
@@ -358,7 +353,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * @param element the element to add
    */
   public void addElement(E element) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     grow(size + 1);
     elems[size++] = element;
   }
@@ -370,7 +365,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * @param element the element to add
    */
   public void addElementAt(int index, E element) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     grow(size + 1);
     System.arraycopy(elems, index, elems, index + 1, size - index);
     elems[index] = element;
@@ -383,7 +378,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * @param elements the elements to add
    */
   public void addElements(Iterable<? extends E> elements) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     if (elements instanceof StarlarkList) {
       StarlarkList<?> that = (StarlarkList) elements;
       // (safe even if this == that)
@@ -413,7 +408,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * @param index the index of the element to remove
    */
   public void removeElementAt(int index) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     int n = size - index - 1;
     if (n > 0) {
       System.arraycopy(elems, index + 1, elems, index, n);
@@ -442,7 +437,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * index < size()}.
    */
   public void setElementAt(int index, E value) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     Preconditions.checkArgument(index < size);
     elems[index] = value;
   }
@@ -458,7 +453,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
 
   @StarlarkMethod(name = "clear", doc = "Removes all the elements of the list.")
   public void clearElements() throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     for (int i = 0; i < size; i++) {
       elems[i] = null; // aid GC
     }

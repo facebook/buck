@@ -25,8 +25,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.time.Duration;
-import java.util.AbstractCollection;
-import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -215,21 +213,6 @@ public final class Starlark {
       return !((String) x).isEmpty();
     } else {
       throw new IllegalArgumentException("invalid Starlark value: " + x.getClass());
-    }
-  }
-
-  /**
-   * Checks whether the Freezable Starlark value is frozen or temporarily immutable due to active
-   * iterators.
-   *
-   * @throws EvalException if the value is not mutable.
-   */
-  public static void checkMutable(Mutability.Freezable x) throws EvalException {
-    if (x.mutability().isFrozen()) {
-      throw errorf("trying to mutate a frozen %s value", type(x));
-    }
-    if (x.updateIteratorCount(0)) {
-      throw errorf("%s value is temporarily immutable due to active for-loop iteration", type(x));
     }
   }
 

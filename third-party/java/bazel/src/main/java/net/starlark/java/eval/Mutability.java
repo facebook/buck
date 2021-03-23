@@ -96,7 +96,7 @@ public final class Mutability implements AutoCloseable {
   // the value. This field is set to null when the Mutability becomes permanently frozen, at which
   // point there is no need to track iterators. This map does not contain Freezable values that
   // define their own implementation of updateIteratorCount.
-  private IdentityHashMap<Freezable, Integer> iteratorCount =
+  private IdentityHashMap<StarlarkIterable<?>, Integer> iteratorCount =
       new IdentityHashMap<>(10); // 10 nested for-loops seems plenty
 
   // An optional list of values that are formatted with toString and joined with spaces to yield the
@@ -147,7 +147,7 @@ public final class Mutability implements AutoCloseable {
 
   // Defines the default behavior of mutable Freezable sequence values,
   // which become temporarily immutable while there are active iterators.
-  private boolean updateIteratorCount(Freezable x, int delta) {
+  boolean updateIteratorCount(StarlarkIterable<?> x, int delta) {
     if (isFrozen()) {
       return false;
     }
@@ -208,30 +208,6 @@ public final class Mutability implements AutoCloseable {
     Mutability mutability();
 
     /**
-     * Registers a change to this Freezable's iterator count and reports whether it is temporarily
-     * immutable.
-     *
-     * <p>If the value is permanently frozen ({@code mutability().isFrozen()), this function is a
-     * no-op that returns false.
-     *
-     * <p>Otherwise, if delta is positive, this increments the count of active iterators over the
-     * value, causing it to appear temporarily frozen (if it wasn't already). If delta is negative,
-     * the counter is decremented, and if delta is zero the counter is unchanged. It is illegal to
-     * decrement the counter if it was already zero. The return value is true if the count is
-     * positive after the change, and false otherwise.
-     *
-     * <p>The default implementation stores the counter of iterators in a hash table in the
-     * Mutability, but a subclass of Freezable may define a more efficient implementation such as an
-     * integer field in the freezable value itself.
-     *
-     * <p>Call this function with a positive value when starting an iteration and with a negative
-     * value when ending it.
-     */
-    default boolean updateIteratorCount(int delta) {
-      return mutability().updateIteratorCount(this, delta);
-    }
-
-    /**
      * Freezes this object (and not its contents). Use with care.
      *
      * <p>This method is optional (i.e. may throw {@link NotImplementedException}).
@@ -255,7 +231,7 @@ public final class Mutability implements AutoCloseable {
      * is violated. To be used by implementors of {@link #unsafeShallowFreeze}.
      */
     static void checkUnsafeShallowFreezePrecondition(
-        Freezable freezable) {
+        StarlarkIterable<?> freezable) {
       Mutability mutability = freezable.mutability();
       if (mutability.isFrozen()) {
         // It's not safe to rewrite the Mutability pointer if this is already frozen, because we

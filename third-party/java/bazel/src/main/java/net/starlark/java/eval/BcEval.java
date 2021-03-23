@@ -174,7 +174,7 @@ class BcEval {
 
   /** Pop one for statement. */
   private void popFor() {
-    EvalUtils.removeIterator(loops[(loopDepth - 1) * 2]);
+    EvalUtils.removeIterator((StarlarkIterable<?>) loops[(loopDepth - 1) * 2]);
     loops[(loopDepth - 1) * 2] = null;
     loops[(loopDepth - 1) * 2 + 1] = null;
     --loopDepth;
@@ -366,7 +366,7 @@ class BcEval {
     int nextValueSlot = nextOperand();
     int end = nextOperand();
 
-    Iterable<?> seq = Starlark.toIterable(value);
+    StarlarkIterable<?> seq = Starlark.toIterable(value);
     Iterator<?> iterator = seq.iterator();
     if (!iterator.hasNext()) {
       validateInstructionDecodedCorrectly();

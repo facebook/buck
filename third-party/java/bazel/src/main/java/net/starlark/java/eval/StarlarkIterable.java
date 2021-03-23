@@ -24,4 +24,53 @@ package net.starlark.java.eval;
 public abstract class StarlarkIterable<T> implements
     StarlarkValue, Iterable<T> {
 
+  /**
+   * Checks whether the Freezable Starlark value is frozen or temporarily immutable due to active
+   * iterators.
+   *
+   * @throws EvalException if the value is not mutable.
+   */
+  protected void checkMutable() throws EvalException {
+    if (mutability().isFrozen()) {
+      throw Starlark.errorf("trying to mutate a frozen %s value", Starlark.type(this));
+    }
+    if (updateIteratorCount(0)) {
+      throw Starlark
+          .errorf("%s value is temporarily immutable due to active for-loop iteration", Starlark
+              .type(this));
+    }
+  }
+
+  /**
+   * Returns the {@link Mutability} associated with this. This should not change
+   * over the lifetime of the object.
+   */
+  public Mutability mutability() {
+    return Mutability.IMMUTABLE;
+  }
+
+  /**
+   * Registers a change to this Freezable's iterator count and reports whether it is temporarily
+   * immutable.
+   *
+   * <p>If the value is permanently frozen ({@code mutability().isFrozen()), this function is a
+   * no-op that returns false.
+   *
+   * <p>Otherwise, if delta is positive, this increments the count of active iterators over the
+   * value, causing it to appear temporarily frozen (if it wasn't already). If delta is negative,
+   * the counter is decremented, and if delta is zero the counter is unchanged. It is illegal to
+   * decrement the counter if it was already zero. The return value is true if the count is
+   * positive after the change, and false otherwise.
+   *
+   * <p>The default implementation stores the counter of iterators in a hash table in the
+   * Mutability, but a subclass of Freezable may define a more efficient implementation such as an
+   * integer field in the freezable value itself.
+   *
+   * <p>Call this function with a positive value when starting an iteration and with a negative
+   * value when ending it.
+   */
+  public boolean updateIteratorCount(int delta) {
+    return mutability().updateIteratorCount(this, delta);
+  }
+
 }

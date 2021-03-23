@@ -215,7 +215,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
       },
       trustReturnsValid = true)
   public Object pop(Object key, Object defaultValue) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     Object value = contents.remove(key);
     if (value != null) {
       return value;
@@ -242,7 +242,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
       throw Starlark.errorf("popitem: empty dictionary");
     }
 
-    Starlark.checkMutable(this);
+    checkMutable();
 
     Iterator<Entry<K, V>> iterator = contents.entrySet().iterator();
     Entry<K, V> entry = iterator.next();
@@ -267,7 +267,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
       },
       trustReturnsValid = true)
   public V setdefault(K key, V defaultValue) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     Starlark.checkHashable(key);
 
     V prev = contents.putIfAbsent(key, defaultValue); // see class doc comment
@@ -296,7 +296,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
       extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."))
   public void update(Object pairs, Dict<String, Object> kwargs)
       throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     @SuppressWarnings("unchecked")
     Dict<Object, Object> dict = (Dict) this; // see class doc comment
     update("update", dict, pairs, kwargs);
@@ -485,7 +485,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
    * @throws EvalException if the key is invalid or the dict is frozen
    */
   public void putEntry(K key, V value) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     Starlark.checkHashable(key);
     contents.put(key, value);
   }
@@ -497,7 +497,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
    * @throws EvalException if some key is invalid or the dict is frozen
    */
   public <K2 extends K, V2 extends V> void putEntries(Map<K2, V2> map) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     for (Map.Entry<K2, V2> e : map.entrySet()) {
       K2 k = e.getKey();
       Starlark.checkHashable(k);
@@ -513,7 +513,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
    * @throws EvalException if the dict is frozen
    */
   V removeEntry(Object key) throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     return contents.remove(key);
   }
 
@@ -524,7 +524,7 @@ public final class Dict<K, V> extends StarlarkIterable<K>
    */
   @StarlarkMethod(name = "clear", doc = "Remove all items from the dictionary.")
   public void clearEntries() throws EvalException {
-    Starlark.checkMutable(this);
+    checkMutable();
     contents.clear();
   }
 
