@@ -354,6 +354,10 @@ public class XCodeProjectCommandHelper {
     return IDEForceKill.PROMPT;
   }
 
+  private static boolean getBuildModularDependencyHeaders(BuckConfig buckConfig) {
+    return buckConfig.getBooleanValue("project", "build_modular_dependency_headers", true);
+  }
+
   private ProjectTestsMode getXcodeProjectTestsMode(BuckConfig buckConfig) {
     return buckConfig
         .getEnum("project", "xcode_project_tests_mode", ProjectTestsMode.class)
@@ -561,7 +565,8 @@ public class XCodeProjectCommandHelper {
               cxxBuckConfig,
               appleConfig,
               swiftBuckConfig,
-              sharedLibraryToBundle);
+              sharedLibraryToBundle,
+              getBuildModularDependencyHeaders(buckConfig));
       Objects.requireNonNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       WorkspaceAndProjectGenerator.Result result =
