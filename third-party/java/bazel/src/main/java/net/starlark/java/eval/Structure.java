@@ -21,7 +21,7 @@ import javax.annotation.Nullable;
  * An interface for Starlark values (such as Bazel structs) with fields that may be accessed using
  * Starlark's {@code x.field} notation and optionally updating using an {@code x.f=y} assignment.
  */
-public interface Structure extends StarlarkValue {
+public abstract class Structure implements StarlarkValue {
 
   /**
    * Returns the value of the field with the given name, or null if the field does not exist. The
@@ -34,7 +34,7 @@ public interface Structure extends StarlarkValue {
    */
   // TODO(adonovan): rename "getField".
   @Nullable
-  Object getValue(String name) throws EvalException;
+  public abstract Object getValue(String name) throws EvalException;
 
   /**
    * Returns the value of the field with the given name, or null if the field does not exist. The
@@ -46,7 +46,7 @@ public interface Structure extends StarlarkValue {
    * @throws EvalException if the field exists but could not be retrieved
    */
   @Nullable
-  default Object getValue(StarlarkSemantics semantics, String name) throws EvalException {
+  public Object getValue(StarlarkSemantics semantics, String name) throws EvalException {
     return this.getValue(name);
   }
 
@@ -59,7 +59,7 @@ public interface Structure extends StarlarkValue {
    * <p>The Starlark expression {@code dir(x)} reports the union of {@code getFieldNames()} and any
    * StarlarkMethod-annotated fields and methods of this value.
    */
-  ImmutableCollection<String> getFieldNames();
+  public abstract ImmutableCollection<String> getFieldNames();
 
   /**
    * Returns the error message to print for an attempt to access an undefined field.
@@ -67,7 +67,7 @@ public interface Structure extends StarlarkValue {
    * <p>May return null to use a default error message.
    */
   @Nullable
-  String getErrorMessageForUnknownField(String field);
+  public abstract String getErrorMessageForUnknownField(String field);
 
   /**
    * Updates the named field of this value as if by the Starlark statement {@code this.field =
@@ -76,7 +76,7 @@ public interface Structure extends StarlarkValue {
    * @throws EvalException if the update failed because this value is immutable, does not support
    *     field update, or update of that particular field, or because the value was inappropriate.
    */
-  default void setField(String field, Object value) throws EvalException {
+  public void setField(String field, Object value) throws EvalException {
     throw Starlark.errorf("%s value does not support field assignment", Starlark.type(this));
   }
 }

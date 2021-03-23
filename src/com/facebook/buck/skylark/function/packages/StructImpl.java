@@ -61,7 +61,7 @@ import net.starlark.java.syntax.Location;
  * reported by {@code getFieldNames} their corresponding field values are equivalent, or accessing
  * them both returns an error.
  */
-public abstract class StructImpl implements Info, Structure, StructApi {
+public abstract class StructImpl extends Structure implements Info, StructApi {
 
   private final Provider provider;
   private final Location location;

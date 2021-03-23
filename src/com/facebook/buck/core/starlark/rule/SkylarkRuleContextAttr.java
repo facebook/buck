@@ -39,7 +39,7 @@ import net.starlark.java.eval.Structure;
  * The struct representing the 'attr' property of the 'ctx' struct passed to a user defined rule's
  * implementation function
  */
-public class SkylarkRuleContextAttr implements Structure, StarlarkValue {
+public class SkylarkRuleContextAttr extends Structure implements StarlarkValue {
 
   private final String methodName;
   private final Map<String, Attribute<?>> attributes;

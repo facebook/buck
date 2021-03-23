@@ -214,7 +214,7 @@ public final class MethodLibraryTest {
   }
 
   @StarlarkBuiltin(name = "AStruct", documented = false, doc = "")
-  static final class AStruct implements Structure, StarlarkValue {
+  static final class AStruct extends Structure implements StarlarkValue {
     @Override
     public Object getValue(String name) {
       switch (name) {

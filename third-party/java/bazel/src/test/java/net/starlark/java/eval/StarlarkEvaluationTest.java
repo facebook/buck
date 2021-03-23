@@ -80,7 +80,7 @@ public final class StarlarkEvaluationTest {
   }
 
   // A trivial struct-like class with Starlark fields defined by a map.
-  private static class SimpleStruct implements StarlarkValue, Structure {
+  private static class SimpleStruct extends Structure implements StarlarkValue {
     final ImmutableMap<String, Object> fields;
 
     SimpleStruct(ImmutableMap<String, Object> fields) {

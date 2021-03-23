@@ -32,8 +32,8 @@ import net.starlark.java.eval.Structure;
  * {@link ProviderInfo} that is created by a {@link Provider} that is defined at runtime by a user.
  * e.g. {@code FooInfo = provider(fields=["foo"]); info = FooInfo(foo="bar")} in a build file
  */
-public class UserDefinedProviderInfo
-    implements ProviderInfo<UserDefinedProviderInfo>, StarlarkValue, Structure {
+public class UserDefinedProviderInfo extends Structure
+    implements ProviderInfo<UserDefinedProviderInfo>, StarlarkValue {
 
   private final Provider<UserDefinedProviderInfo> provider;
   private final ImmutableMap<String, Object> fieldValues;

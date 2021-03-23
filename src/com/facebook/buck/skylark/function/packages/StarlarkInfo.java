@@ -42,12 +42,11 @@ import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.HasBinary;
 import net.starlark.java.eval.Starlark;
-import net.starlark.java.eval.Structure;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.TokenKind;
 
 /** An Info (provider instance) for providers defined in Starlark. */
-public final class StarlarkInfo extends StructImpl implements HasBinary, Structure {
+public final class StarlarkInfo extends StructImpl implements HasBinary {
 
   // For a n-element info, the table contains n key strings, sorted,
   // followed by the n corresponding legal Starlark values.
