@@ -668,7 +668,7 @@ public class HaskellDescriptionUtils {
         graphBuilder,
         srcs,
         ideProjects,
-        argCompilerFlags,
+        HaskellIdeDescription.filterRTSFlags(argCompilerFlags),
         haskellPackages.build(),
         prebuiltHaskellPackages.build(),
         platform,

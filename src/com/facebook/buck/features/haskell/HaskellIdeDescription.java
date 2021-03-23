@@ -99,7 +99,7 @@ public class HaskellIdeDescription
         HaskellIdeDep ideDep = (HaskellIdeDep) project;
         depsBuilder.addAll(ideDep.getIdeDeps(platform));
 
-        flagsBuilder.addAll(ideDep.getIdeCompilerFlags());
+        flagsBuilder.addAll(filterRTSFlags(ideDep.getIdeCompilerFlags()));
 
         HaskellSources srcs =
             HaskellSources.from(
@@ -198,6 +198,25 @@ public class HaskellIdeDescription
         HaskellPlatformsProvider.DEFAULT_NAME,
         toolchainTargetConfiguration,
         HaskellPlatformsProvider.class);
+  }
+
+  // filter out sections of RTS arguments
+  public static ImmutableList<String> filterRTSFlags(Collection<String> flags) {
+    ImmutableList.Builder<String> filteredFlags = ImmutableList.builder();
+    boolean insideRTSsection = false;
+
+    for (String flag : flags) {
+      if (flag.equals("+RTS")) {
+        insideRTSsection = true;
+      } else if (flag.equals("-RTS")) {
+        insideRTSsection = false;
+      } else if (flag.startsWith("+RTS")) {
+        continue; // catch qouted RTS argument sets, e.g. "+RTS foo"
+      } else if (!insideRTSsection) {
+        filteredFlags.add(flag);
+      }
+    }
+    return filteredFlags.build();
   }
 
   public static ImmutableList<String> deduplicateFlags(Collection<String> flags) {

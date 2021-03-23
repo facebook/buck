@@ -76,6 +76,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -920,7 +921,7 @@ public class HaskellLibraryDescription
       }
 
       @Override
-      public Iterable<String> getIdeCompilerFlags() {
+      public Collection<String> getIdeCompilerFlags() {
         return args.getCompilerFlags();
       }
 

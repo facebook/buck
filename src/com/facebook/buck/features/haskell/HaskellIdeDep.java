@@ -18,11 +18,12 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
+import java.util.Collection;
 
 public interface HaskellIdeDep {
   public Iterable<BuildRule> getIdeDeps(HaskellPlatform platform);
 
-  public Iterable<String> getIdeCompilerFlags();
+  public Collection<String> getIdeCompilerFlags();
 
   public SourceSortedSet getIdeSources();
 }
