@@ -163,6 +163,7 @@ public class AppleDsym extends AbstractBuildRule
             dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
             dsymutilExtraFlags,
+            false /* includePapertrail */,
             unstrippedBinaryPath.getPath(),
             dsymOutputPath,
             ProjectFilesystemUtils.relativize(

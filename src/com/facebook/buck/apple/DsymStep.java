@@ -50,11 +50,14 @@ class DsymStep extends IsolatedShellStep {
   private final Path output;
   private final Optional<String> osoPrependPath;
 
+  private static final ImmutableList<String> PAPERTRAIL_FLAGS = ImmutableList.of("--papertrail");
+
   public DsymStep(
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       List<String> command,
       List<String> extraFlags,
+      boolean includePapertrail,
       Path input,
       Path output,
       RelPath cellPath,
@@ -62,9 +65,12 @@ class DsymStep extends IsolatedShellStep {
       boolean withDownwardApi) {
     super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
+    ImmutableList<String> papertrailFlags =
+        includePapertrail ? PAPERTRAIL_FLAGS : ImmutableList.of();
+
     this.filesystem = filesystem;
     this.environment = environment;
-    this.command = ImmutableList.copyOf(Iterables.concat(command, extraFlags));
+    this.command = ImmutableList.copyOf(Iterables.concat(command, extraFlags, papertrailFlags));
     this.input = input;
     this.output = output;
     this.osoPrependPath = osoPrependPath;
