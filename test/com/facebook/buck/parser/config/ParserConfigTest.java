@@ -30,7 +30,6 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.watchman.WatchmanWatcher.CursorType;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -129,25 +128,6 @@ public class ParserConfigTest {
 
     config = parseConfig("[project]\nwatch_cells = true");
     assertTrue(config.getWatchCells());
-  }
-
-  @Test
-  public void testGetWatchmanCursor() throws IOException {
-    assertEquals(
-        "watchman_cursor defaults to clock_id",
-        CursorType.CLOCK_ID,
-        getDefaultConfig().getWatchmanCursor());
-
-    ParserConfig config = parseConfig("[project]\nwatchman_cursor = named");
-    assertEquals(CursorType.NAMED, config.getWatchmanCursor());
-
-    config = parseConfig("[project]\nwatchman_cursor = clock_id");
-    assertEquals(CursorType.CLOCK_ID, config.getWatchmanCursor());
-
-    config = parseConfig("[project]\nwatchman_cursor = some_trash_value");
-
-    thrown.expect(HumanReadableException.class);
-    config.getWatchmanCursor();
   }
 
   @Test

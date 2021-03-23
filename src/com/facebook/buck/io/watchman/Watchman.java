@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /** Contains the configuration for a Watchman client as well as the ability to create a client. */
 public abstract class Watchman {
@@ -56,15 +55,6 @@ public abstract class Watchman {
       Preconditions.checkNotNull(
           clockId, "No ClockId found for watch root %s", entry.getValue().getWatchRoot());
       cursorBuilder.put(entry.getKey(), new WatchmanCursor(clockId));
-    }
-    return cursorBuilder.build();
-  }
-
-  /** Build. */
-  public ImmutableMap<AbsPath, WatchmanCursor> buildNamedWatchmanCursorMap() {
-    ImmutableMap.Builder<AbsPath, WatchmanCursor> cursorBuilder = ImmutableMap.builder();
-    for (AbsPath cellPath : projectWatches.keySet()) {
-      cursorBuilder.put(cellPath, new WatchmanCursor("n:buckd" + UUID.randomUUID()));
     }
     return cursorBuilder.build();
   }

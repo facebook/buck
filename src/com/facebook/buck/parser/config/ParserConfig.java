@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
@@ -228,13 +227,6 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getWatchCells() {
     return getDelegate().getBooleanValue("project", "watch_cells", true);
-  }
-
-  @Value.Lazy
-  public WatchmanWatcher.CursorType getWatchmanCursor() {
-    return getDelegate()
-        .getEnum("project", "watchman_cursor", WatchmanWatcher.CursorType.class)
-        .orElse(WatchmanWatcher.CursorType.CLOCK_ID);
   }
 
   @Value.Lazy

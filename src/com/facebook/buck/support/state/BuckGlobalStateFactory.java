@@ -41,7 +41,6 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.manifest.BuildFileManifestCache;
@@ -161,14 +160,7 @@ public class BuckGlobalStateFactory {
         LOG.warn("Can't start web server");
       }
     }
-    ImmutableMap<AbsPath, WatchmanCursor> cursor;
-    if (cells.getRootCell().getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
-        == WatchmanWatcher.CursorType.CLOCK_ID) {
-      cursor = watchman.buildClockWatchmanCursorMap();
-    } else {
-      LOG.debug("Falling back to named cursors: %s", watchman.getProjectWatches());
-      cursor = watchman.buildNamedWatchmanCursorMap();
-    }
+    ImmutableMap<AbsPath, WatchmanCursor> cursor = watchman.buildClockWatchmanCursorMap();
     LOG.debug("Using Watchman Cursor: %s", cursor);
     ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools =
         new ConcurrentHashMap<>();

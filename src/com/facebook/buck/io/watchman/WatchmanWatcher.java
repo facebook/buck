@@ -61,12 +61,6 @@ public class WatchmanWatcher {
     ;
   }
 
-  // The type of cursor used to communicate with Watchman
-  public enum CursorType {
-    NAMED,
-    CLOCK_ID,
-  }
-
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
   /**
    * The maximum number of watchman changes to process in each call to postEvents before giving up
