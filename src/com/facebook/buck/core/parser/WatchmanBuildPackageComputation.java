@@ -33,7 +33,6 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.io.watchman.WatchmanQueryTimedOutException;
-import com.facebook.buck.skylark.io.impl.SyncCookieState;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -147,10 +146,7 @@ public class WatchmanBuildPackageComputation
       // TODO: Avoid costly per-glob sync cookies by reusing SyncCookieState instances.
       WatchmanGlobber globber =
           WatchmanGlobber.create(
-              watchmanClient,
-              new SyncCookieState(),
-              getWatchRelativePath(basePath).toString(),
-              watch.getWatchRoot());
+              watchmanClient, getWatchRelativePath(basePath).toString(), watch.getWatchRoot());
       LOG.info("Globber with basepath %s, pattern: %s", basePath, pattern);
 
       paths =

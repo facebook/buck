@@ -22,7 +22,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
-import com.facebook.buck.skylark.io.impl.SyncCookieState;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -89,8 +88,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private final boolean disableSha1FastPath;
 
   private final Sha1Hasher sha1Hasher;
-
-  private final SyncCookieState syncCookieState = new SyncCookieState();
 
   private final EdenWatchmanDelayInit edenWatchmanDelayInit = new EdenWatchmanDelayInit();
 
@@ -262,7 +259,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     Path watchRootPath = edenWatchman.getWatchmanRootPath();
     try (WatchmanClient watchmanClient = watchman.createClient()) {
       WatchmanGlobber globber =
-          WatchmanGlobber.create(watchmanClient, syncCookieState, "", watchRootPath.toString());
+          WatchmanGlobber.create(watchmanClient, "", watchRootPath.toString());
       String pathString = watchRootPath.relativize(path.getPath()).toString();
       Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
           globber.runWithExtraFields(

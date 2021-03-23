@@ -26,7 +26,6 @@ import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
-import com.facebook.buck.skylark.io.impl.SyncCookieState;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -60,7 +59,6 @@ class WatchmanPathsChecker implements PathsChecker {
   private final LoadingCache<AbsPath, Set<ForwardRelativePath>> filePathsCache = initCache();
   private final LoadingCache<AbsPath, Set<ForwardRelativePath>> dirPathsCache = initCache();
 
-  private final SyncCookieState syncCookieState = new SyncCookieState();
   private final boolean useFallbackFileSystemPathsChecker;
   private final MissingPathsChecker fallbackFileSystemPathsChecker = new MissingPathsChecker();
   private final Watchman watchman;
@@ -229,8 +227,7 @@ class WatchmanPathsChecker implements PathsChecker {
         throw new FileSystemNotWatchedException(msg);
       }
 
-      WatchmanGlobber globber =
-          WatchmanGlobber.create(watchmanClient, syncCookieState, "", watch.getWatchRoot());
+      WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", watch.getWatchRoot());
       return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
     }
   }

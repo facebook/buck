@@ -45,7 +45,6 @@ import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.HybridGlobberFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
-import com.facebook.buck.skylark.io.impl.SyncCookieState;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
@@ -339,13 +338,11 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private static GlobberFactory getSkylarkGlobberFactory(
       ProjectBuildFileParserOptions buildFileParserOptions, SkylarkGlobHandler skylarkGlobHandler)
       throws IOException {
-    SyncCookieState syncCookieState = new SyncCookieState();
     return skylarkGlobHandler == SkylarkGlobHandler.JAVA
             || buildFileParserOptions.getWatchman() == WatchmanFactory.NULL_WATCHMAN
         ? NativeGlobber.Factory.INSTANCE
         : HybridGlobberFactory.using(
             buildFileParserOptions.getWatchman(),
-            syncCookieState,
             buildFileParserOptions.getProjectRoot().getPath());
   }
 }

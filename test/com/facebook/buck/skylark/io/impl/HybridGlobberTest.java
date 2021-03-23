@@ -80,8 +80,7 @@ public class HybridGlobberTest {
   }
 
   private WatchmanGlobber newGlobber(Either<Map<String, Object>, WatchmanClient.Timeout> result) {
-    return WatchmanGlobber.create(
-        new StubWatchmanClient(result), new SyncCookieState(), "", root.toString());
+    return WatchmanGlobber.create(new StubWatchmanClient(result), "", root.toString());
   }
 
   @Test

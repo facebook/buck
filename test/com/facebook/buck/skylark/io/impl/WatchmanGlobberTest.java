@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.io.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -58,6 +59,8 @@ public class WatchmanGlobberTest {
   private static final Logger LOG = Logger.get(WatchmanGlobberTest.class);
 
   private AbsPath root;
+  private WatchmanClient watchmanClient;
+  private Watchman watchman;
   private WatchmanGlobber globber;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -68,17 +71,28 @@ public class WatchmanGlobberTest {
   public void setUp() throws Exception {
     root = tmp.getRoot();
     WatchmanFactory watchmanFactory = new WatchmanFactory();
-    Watchman watchman =
+    watchman =
         watchmanFactory.build(
-            ImmutableSet.of(),
+            ImmutableSet.of(root),
             ImmutableMap.of(),
             new TestConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
-    globber =
-        WatchmanGlobber.create(watchman.createClient(), new SyncCookieState(), "", root.toString());
+    watchmanClient = watchman.createClient();
+    globber = WatchmanGlobber.create(watchmanClient, "", root.toString());
+  }
+
+  private void watchmanSync() throws IOException, InterruptedException {
+    assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());
+    // synchronize using clock request
+    Either<Map<String, Object>, WatchmanClient.Timeout> clockResult =
+        watchmanClient.queryWithTimeout(
+            Long.MAX_VALUE,
+            Long.MAX_VALUE,
+            WatchmanQuery.clock(root.toString(), Optional.of(10000)));
+    assertTrue(clockResult.isLeft());
   }
 
   @Test
@@ -86,6 +100,8 @@ public class WatchmanGlobberTest {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
     tmp.newFile("bar.jpg");
+
+    watchmanSync();
 
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
@@ -97,6 +113,9 @@ public class WatchmanGlobberTest {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
     tmp.newFile("bar.jpg");
+
+    watchmanSync();
+
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), false),
         equalTo(Optional.of(ImmutableSet.of("foo.txt"))));
@@ -105,6 +124,9 @@ public class WatchmanGlobberTest {
   @Test
   public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
     tmp.newFolder("some_dir");
+
+    watchmanSync();
+
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
         equalTo(Optional.of(ImmutableSet.of("some_dir"))));
@@ -115,6 +137,9 @@ public class WatchmanGlobberTest {
     tmp.newFolder("some_dir");
     AbsPath buildFile = root.resolve("BUCK");
     MostFiles.write(buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
+
+    watchmanSync();
+
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
         equalTo(Optional.of(ImmutableSet.of())));
@@ -129,6 +154,8 @@ public class WatchmanGlobberTest {
     tmp.newFile("regular-file");
     Files.createSymbolicLink(
         root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
+
+    watchmanSync();
 
     assertThat(
         globber.run(
@@ -159,6 +186,8 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
 
+    watchmanSync();
+
     assertThat(
         globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
         equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
@@ -173,6 +202,8 @@ public class WatchmanGlobberTest {
 
     tmp.newFolder("directory");
     tmp.newFile("directory/file");
+
+    watchmanSync();
 
     // HACK: Watchman's case sensitivity rules are strange without **/.
     assertThat(
@@ -189,6 +220,8 @@ public class WatchmanGlobberTest {
 
     tmp.newFolder("directory");
     tmp.newFile("directory/file");
+
+    watchmanSync();
 
     // HACK: Watchman's case sensitivity rules are strange without **/.
     assertThat(
@@ -228,6 +261,9 @@ public class WatchmanGlobberTest {
     AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
 
     tmp.newFile("file");
+
+    watchmanSync();
+
     assertThat(
         globber.run(Collections.singleton("file"), Collections.singleton("FILE"), false),
         equalTo(Optional.of(ImmutableSet.of())));
@@ -236,6 +272,9 @@ public class WatchmanGlobberTest {
   @Test
   public void testExcludingIsCaseSensitiveIfForced() throws Exception {
     tmp.newFile("file");
+
+    watchmanSync();
+
     assertThat(
         globber.run(
             Collections.singleton("file"),
@@ -253,6 +292,8 @@ public class WatchmanGlobberTest {
     tmp.newFile("regular-file");
     Files.createSymbolicLink(
         root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
+
+    watchmanSync();
 
     assertThat(
         globber.run(
@@ -285,28 +326,18 @@ public class WatchmanGlobberTest {
     globber =
         WatchmanGlobber.create(
             new StubWatchmanClient(Either.ofRight(WatchmanClient.Timeout.INSTANCE)),
-            new SyncCookieState(),
             "",
             root.toString());
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
   }
 
   @Test
-  public void watchmanSyncIsIssuedForTheFirstInvocation() throws Exception {
-    CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
-    globber = WatchmanGlobber.create(watchmanClient, new SyncCookieState(), "", root.toString());
-    globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
-
-    assertFalse(watchmanClient.syncDisabled());
-  }
-
-  @Test
   public void watchmanSyncIsNotIssuedForTheSecondInvocation() throws Exception {
     CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
-    globber = WatchmanGlobber.create(watchmanClient, new SyncCookieState(), "", root.toString());
+    globber = WatchmanGlobber.create(watchmanClient, "", root.toString());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
+    assertTrue(watchmanClient.syncDisabled());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
-
     assertTrue(watchmanClient.syncDisabled());
   }
 
@@ -339,7 +370,7 @@ public class WatchmanGlobberTest {
         };
 
     String queryRoot = root.toString();
-    globber = WatchmanGlobber.create(client, new SyncCookieState(), "", queryRoot);
+    globber = WatchmanGlobber.create(client, "", queryRoot);
 
     thrown.expect(WatchmanQueryFailedException.class);
     thrown.expect(
@@ -355,6 +386,8 @@ public class WatchmanGlobberTest {
   @Test
   public void testGlobberRunWithExtraFields() throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
+
+    watchmanSync();
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -378,6 +411,8 @@ public class WatchmanGlobberTest {
   public void testGlobberWildcardRunWithExtraFields() throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
+
+    watchmanSync();
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -403,6 +438,8 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFieldsNoMatch() throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
 
+    watchmanSync();
+
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
             Collections.singleton("bar.txt"),
@@ -419,6 +456,9 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFieldsButStillNameOnly()
       throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
+
+    watchmanSync();
+
     assertThat(
         globber.run(Collections.singleton("foo.txt"), Collections.emptySet(), false),
         equalTo(Optional.of(ImmutableSet.of("foo.txt"))));

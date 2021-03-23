@@ -27,7 +27,6 @@ import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.skylark.io.impl.SyncCookieState;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,7 +60,6 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
 
   private final Watchman watchman;
   private final Optional<PackageBoundaryChecker> fallbackPackageBoundaryChecker;
-  private final SyncCookieState syncCookieState = new SyncCookieState();
   private final LoadingCache<Pair<Cell, ForwardRelativePath>, Optional<ForwardRelativePath>>
       basePathOfAncestorCache =
           CacheBuilder.newBuilder()
@@ -290,8 +288,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
         throw new FileSystemNotWatchedException(msg);
       }
 
-      WatchmanGlobber globber =
-          WatchmanGlobber.create(watchmanClient, syncCookieState, "", watch.getWatchRoot());
+      WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", watch.getWatchRoot());
       return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
     }
   }

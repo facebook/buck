@@ -137,17 +137,12 @@ public class WatchmanGlobber {
   private final String basePath;
 
   private final String watchmanWatchRoot;
-  private final SyncCookieState syncCookieState;
 
   private WatchmanGlobber(
-      WatchmanClient watchmanClient,
-      String basePath,
-      String watchmanWatchRoot,
-      SyncCookieState syncCookieState) {
+      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
     this.watchmanClient = watchmanClient;
     this.basePath = basePath;
     this.watchmanWatchRoot = watchmanWatchRoot;
-    this.syncCookieState = syncCookieState;
   }
 
   /**
@@ -236,20 +231,12 @@ public class WatchmanGlobber {
       query = query.withCaseSensitive(true);
     }
 
-    // Sync cookies cause a massive overhead when issuing thousands of
-    // glob queries.  Only enable them (by not setting sync_timeout to 0)
-    // for the very first request issued by this process.
-    if (!syncCookieState.shouldSyncCookies()) {
-      query = query.withSyncTimeout(0);
-    }
+    // Disable sync cookies. We did `clock` while creating watchman
+    // (we recreate watchman and re-watch and re-clock on each buck command),
+    // and `clock` query performed the sync.
+    query = query.withSyncTimeout(0);
 
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        watchmanClient.queryWithTimeout(timeoutNanos, pollingTimeNanos, query);
-    if (result.isLeft()) {
-      // Disable sync cookies only on successful query.
-      this.syncCookieState.disableSyncCookies();
-    }
-    return result;
+    return watchmanClient.queryWithTimeout(timeoutNanos, pollingTimeNanos, query);
   }
 
   /**
@@ -370,10 +357,7 @@ public class WatchmanGlobber {
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
   public static WatchmanGlobber create(
-      WatchmanClient watchmanClient,
-      SyncCookieState syncCookieState,
-      String basePath,
-      String watchmanWatchRoot) {
-    return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot, syncCookieState);
+      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
+    return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot);
   }
 }
