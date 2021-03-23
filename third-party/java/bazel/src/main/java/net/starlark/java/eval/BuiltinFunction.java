@@ -36,7 +36,7 @@ import net.starlark.java.spelling.SpellChecker;
     name = "builtin_function_or_method", // (following Python)
     category = "core",
     doc = "The type of a built-in function, defined by Java code.")
-public final class BuiltinFunction implements StarlarkCallable {
+public final class BuiltinFunction extends StarlarkCallable {
 
   private final Object obj;
   private final String methodName;

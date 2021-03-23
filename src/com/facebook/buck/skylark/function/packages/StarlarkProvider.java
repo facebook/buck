@@ -59,8 +59,8 @@ import net.starlark.java.syntax.Location;
  * pre-exported provider directly. Exported providers use only their key for {@link #equals} and
  * {@link #hashCode}.
  */
-public final class StarlarkProvider
-    implements StarlarkCallable, /* StarlarkExportable, */ Provider {
+public final class StarlarkProvider extends StarlarkCallable
+    implements /* StarlarkExportable, */ Provider {
 
   /** Default value for {@link #errorMessageFormatForUnknownField}. */
   private static final String DEFAULT_ERROR_MESSAGE_FORMAT = "Object has no '%s' attribute.";

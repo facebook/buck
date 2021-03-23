@@ -43,7 +43,7 @@ import net.starlark.java.syntax.Location;
  *
  * <p>This class currently doesn't handle optionals and other java/skylark object coercing.
  */
-public abstract class BuckStarlarkFunction implements StarlarkCallable {
+public abstract class BuckStarlarkFunction extends StarlarkCallable {
 
   private final MethodDescriptor methodDescriptor;
   private static final MethodHandles.Lookup lookup = MethodHandles.lookup();

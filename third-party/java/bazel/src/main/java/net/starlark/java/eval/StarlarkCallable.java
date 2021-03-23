@@ -27,7 +27,7 @@ import net.starlark.java.syntax.Location;
  * default, {@code fastcall} delegates to {@code call}, and call throws an exception, so an
  * implementer may override either one.
  */
-public interface StarlarkCallable extends StarlarkValue {
+public abstract class StarlarkCallable implements StarlarkValue {
 
   /**
    * Defines the "convenient" implementation of function calling for a callable value.
@@ -45,7 +45,7 @@ public interface StarlarkCallable extends StarlarkValue {
    * @param kwargs a new, mutable dict of the arguments passed by keyword. Iteration order is
    *     determined by keyword order in the call expression.
    */
-  default Object call(StarlarkThread thread, Tuple args, Dict<String, Object> kwargs)
+  public Object call(StarlarkThread thread, Tuple args, Dict<String, Object> kwargs)
       throws EvalException, InterruptedException {
     throw Starlark.errorf("function %s not implemented", getName());
   }
@@ -75,7 +75,7 @@ public interface StarlarkCallable extends StarlarkValue {
    * @param positional a list of positional arguments
    * @param named a list of named arguments, as alternating Strings/Objects. May contain dups.
    */
-  default Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
+  public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
     LinkedHashMap<String, Object> kwargs = Maps.newLinkedHashMapWithExpectedSize(named.length >> 1);
     for (int i = 0; i < named.length; i += 2) {
@@ -87,13 +87,13 @@ public interface StarlarkCallable extends StarlarkValue {
   }
 
   /** Returns the form this callable value should take in a stack trace. */
-  String getName();
+  public abstract String getName();
 
   /**
    * Returns the location of the definition of this callable value, or BUILTIN if it was not defined
    * in Starlark code.
    */
-  default Location getLocation() {
+  public Location getLocation() {
     return Location.BUILTIN;
   }
 }

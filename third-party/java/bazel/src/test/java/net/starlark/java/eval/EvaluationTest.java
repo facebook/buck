@@ -94,7 +94,7 @@ public final class EvaluationTest {
     assertThat(interrupt.callCount).isEqualTo(2);
   }
 
-  private static class InterruptFunction implements StarlarkCallable {
+  private static class InterruptFunction extends StarlarkCallable {
 
     private int callCount = 0;
 

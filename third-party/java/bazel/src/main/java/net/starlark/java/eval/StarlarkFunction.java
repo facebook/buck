@@ -35,7 +35,7 @@ import net.starlark.java.syntax.StringLiteral;
     name = "function",
     category = "core",
     doc = "The type of functions declared in Starlark.")
-public final class StarlarkFunction implements StarlarkCallable {
+public final class StarlarkFunction extends StarlarkCallable {
 
   final Resolver.Function rfn;
   private final Module module; // a function closes over its defining module

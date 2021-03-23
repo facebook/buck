@@ -60,7 +60,7 @@ import net.starlark.java.syntax.Location;
  * adds invocations to the parse context. Type checking is done with coercion later; it is not
  * checked in this class.
  */
-public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExportable {
+public class SkylarkUserDefinedRule extends StarlarkCallable implements StarlarkExportable {
 
   private static final String TEST_RULE_SUFFIX = "_test";
 
@@ -345,8 +345,8 @@ public class SkylarkUserDefinedRule implements StarlarkCallable, StarlarkExporta
   }
 
   /** Function with a signature, used only in tests. */
-  interface BaseFunction extends StarlarkCallable {
-    FunctionSignature getSignature();
+  abstract static class BaseFunction extends StarlarkCallable {
+    abstract FunctionSignature getSignature();
   }
 
   private static void validateImplementation(Location location, StarlarkCallable implementation)

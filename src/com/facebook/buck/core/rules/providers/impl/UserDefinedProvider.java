@@ -44,11 +44,8 @@ import net.starlark.java.syntax.Location;
  * <p>NOTE: Until {@link #export(com.facebook.buck.core.model.label.Label, String)} is called, many
  * methods (especially ones that get the user defined name of the class) are not safe to call.
  */
-public class UserDefinedProvider
-    implements StarlarkCallable,
-        Provider<UserDefinedProviderInfo>,
-        StarlarkValue,
-        StarlarkExportable {
+public class UserDefinedProvider extends StarlarkCallable
+    implements Provider<UserDefinedProviderInfo>, StarlarkValue, StarlarkExportable {
 
   private final Key key;
   private final Location location;

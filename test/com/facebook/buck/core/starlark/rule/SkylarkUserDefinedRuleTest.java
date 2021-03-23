@@ -68,7 +68,7 @@ public class SkylarkUserDefinedRuleTest {
       ImmutableMap.of(
           ParamName.bySnakeCase("name"), IMPLICIT_ATTRIBUTES.get(ParamName.bySnakeCase("name")));
 
-  public static class SimpleFunction implements SkylarkUserDefinedRule.BaseFunction {
+  public static class SimpleFunction extends SkylarkUserDefinedRule.BaseFunction {
 
     private final String name;
     private final FunctionSignature signature;
