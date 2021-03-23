@@ -1482,11 +1482,12 @@ class CachingBuildRuleBuilder {
           future.set(Optional.of(canceled(firstFailure)));
           return;
         }
+
         try (Scope ignored = buildRuleScope()) {
           LOG.debug("Building locally: %s", rule);
           // Attempt to get an approximation of how long it takes to actually run the command.
           long start = System.nanoTime();
-          executeCommands(ruleExecutionContext, buildRuleBuildContext, buildableContext);
+          executeCommands(ruleExecutionContext);
           long end = System.nanoTime();
           LOG.debug(
               "Build completed: %s %s (%dns)",
@@ -1501,22 +1502,18 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    private void executeCommands(
-        StepExecutionContext executionContext,
-        BuildContext buildRuleBuildContext,
-        BuildableContext buildableContext)
+    private void executeCommands(StepExecutionContext executionContext)
         throws StepFailedException, InterruptedException {
       try (Scope ignored = BuildRuleExecutionEvent.scope(eventBus, rule)) {
         // Get and run all of the commands.
-        for (Step step : getSteps(buildRuleBuildContext, buildableContext)) {
+        for (Step step : getSteps()) {
           StepRunner.runStep(executionContext, step, Optional.of(rule.getBuildTarget()));
           rethrowIgnoredInterruptedException(step);
         }
       }
     }
 
-    private List<? extends Step> getSteps(
-        BuildContext buildRuleBuildContext, BuildableContext buildableContext) {
+    private List<? extends Step> getSteps() {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
         if (stateHolder.isPresent()) {
           @SuppressWarnings("unchecked")
