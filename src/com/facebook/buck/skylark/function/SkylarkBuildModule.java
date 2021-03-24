@@ -21,7 +21,6 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.skylark.function.packages.Info;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -145,18 +144,12 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       throw new EvalException("Recursive globs are prohibited at top-level directory");
     }
 
-    try {
-      return StarlarkList.copyOf(
-          env.mutability(),
-          parseContext.getPackageContext().getGlobber()
-              .run(include.asList(), exclude.asList(), excludeDirectories).stream()
-              .sorted()
-              .collect(ImmutableList.toImmutableList()));
-    } catch (FileNotFoundException e) {
-      throw new EvalException("Cannot find " + e.getMessage());
-    } catch (Exception e) {
-      throw new EvalException(null, "Other exception: " + e.toString(), e);
-    }
+    return StarlarkList.copyOf(
+        env.mutability(),
+        parseContext.getPackageContext().getGlobber()
+            .run(include.asList(), exclude.asList(), excludeDirectories).stream()
+            .sorted()
+            .collect(ImmutableList.toImmutableList()));
   }
 
   /** {@code host_info} */
