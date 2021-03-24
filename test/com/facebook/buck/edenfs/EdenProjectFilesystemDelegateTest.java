@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.config.Config;
@@ -274,10 +275,13 @@ public class EdenProjectFilesystemDelegateTest {
   }
 
   @Test
-  public void computeSha1ViaWatchman() throws IOException {
+  public void computeSha1ViaWatchman() throws IOException, InterruptedException {
     ProjectFilesystemDelegate delegate =
         new DefaultProjectFilesystemDelegate(tmp.getRoot(), Optional.empty());
     Path path = tmp.newFile("foo").getPath();
+
+    WatchmanTestUtils.sync(watchman);
+
     EdenMount mount = createMock(EdenMount.class);
 
     Config configWithFileSystem =
@@ -334,6 +338,8 @@ public class EdenProjectFilesystemDelegateTest {
     Path link = tmp.getRoot().resolve("link").getPath();
     Path target = tmp.newFile("target").getPath();
     Files.createSymbolicLink(link, target);
+
+    WatchmanTestUtils.sync(watchman);
 
     Config configWithFileSystem =
         ConfigBuilder.createFromText(
