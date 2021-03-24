@@ -9,7 +9,8 @@
   "report-blacklist-path-regex": [
     "src/com/facebook/buck/jvm/java/runner",
     "src/com/facebook/buck/testrunner",
-    "src-gen"
+    "src-gen",
+    "third-party"
   ],
   "external-java-packages": [
     "com.android.",
