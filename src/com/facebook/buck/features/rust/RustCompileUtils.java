@@ -942,6 +942,26 @@ public class RustCompileUtils {
         }
       }
       return rustArch + "-apple-ios";
+    } else if (platform.equals(ApplePlatform.MACOSX.getName())
+        || platform.equals(ApplePlatform.MACOSXCATALYST.getName())) {
+      switch (rawArch) {
+        case "arm64":
+          rustArch = "aarch64";
+          break;
+        case "x86_64":
+          rustArch = rawArch;
+          break;
+        case "i386":
+          // Rust does not support i386 target for macOS 32bit. Furthermore, i686 is Tier 3,
+          // so by default, it's not part of the official compiler builds. But let's support it,
+          // in case there's some unforeseen use case.
+          rustArch = "i686";
+          break;
+        default:
+          return null;
+      }
+
+      return rustArch + "-apple-darwin";
     } else if (platform.equals("android")) {
       // This is according to https://forge.rust-lang.org/platform-support.html
       if (rawArch.equals("armv7")) {

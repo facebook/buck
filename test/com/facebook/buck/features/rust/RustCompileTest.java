@@ -110,6 +110,21 @@ public class RustCompileTest {
     assertEquals(
         "i686-linux-android",
         RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("android-i386")));
+    assertEquals(
+        "x86_64-apple-darwin",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("macosx-x86_64")));
+    assertEquals(
+        "i686-apple-darwin",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("macosx-i386")));
+    assertEquals(
+        "aarch64-apple-darwin",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("macosx-arm64")));
+    assertEquals(
+        "x86_64-apple-darwin",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("maccatalyst-x86_64")));
+    assertEquals(
+        "aarch64-apple-darwin",
+        RustCompileUtils.targetTripleForFlavor(InternalFlavor.of("maccatalyst-arm64")));
   }
 
   private static Tool fakeTool() {
