@@ -230,9 +230,9 @@ class BcEval {
   }
 
   private Object getGlobal(int index) throws EvalException {
-    Object value = fn().getGlobal(index);
+    Object value = fn().getModule().getGlobalByIndex(index);
     if (value == null) {
-      String name = rfn.getGlobals().get(index);
+      String name = fn().getModule().getGlobalNameByIndexSlow(index);
       throw referencedBeforeAssignment(Resolver.Scope.GLOBAL, name);
     }
     return value;
@@ -279,14 +279,14 @@ class BcEval {
 
   private void setGlobal() throws EvalException {
     Object value = getSlot(nextOperand());
-    int nameIndex = nextOperand();
-    String name = compiled.strings[nextOperand()];
+    int globalVarIndex = nextOperand();
+    int nameConstantIndex = nextOperand();
     boolean postAssignHook = nextOperand() != 0;
-    StarlarkFunction fn = fn();
-    fn.setGlobal(nameIndex, value);
+    fn().getModule().setGlobalByIndex(globalVarIndex, value);
     if (postAssignHook) {
       if (fr.thread.postAssignHook != null) {
         if (fn().isToplevel()) {
+          String name = compiled.strings[nameConstantIndex];
           fr.thread.postAssignHook.assign(name, value);
         }
       }

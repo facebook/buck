@@ -80,6 +80,7 @@ class Bc {
 
     /** Original function. This is used only for debugging here. */
     private final Resolver.Function rfn;
+    private final Module module;
     /** Strings references by the bytecode. */
     public final String[] strings;
     /** Other objects references by the bytecode. */
@@ -101,6 +102,7 @@ class Bc {
 
     private Compiled(
         Resolver.Function rfn,
+        Module module,
         String[] strings,
         Object[] objects,
         int[] text,
@@ -109,6 +111,7 @@ class Bc {
         int loopDepth,
         ImmutableMap<Integer, Node> instrToNode) {
       this.rfn = rfn;
+      this.module = module;
       this.strings = strings;
       this.objects = objects;
       this.text = text;
@@ -120,12 +123,12 @@ class Bc {
 
     @Override
     public String toString() {
-      return toStringImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn),
+      return toStringImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn, module),
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
 
     ImmutableList<String> toStringInstructions() {
-      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn),
+      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn, module),
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
 
@@ -170,6 +173,7 @@ class Bc {
               .operands
               .codeSize(
                   rfn,
+                  module,
                   text,
                   Arrays.asList(strings),
                   Arrays.asList(constSlots),
@@ -437,6 +441,7 @@ class Bc {
         int expectedArgCount =
             opcode.operands.codeSize(
                 rfn,
+                module,
                 text, strings.values, constSlots.values, prevIp + BcInstr.INSTR_HEADER_LEN);
         Preconditions.checkState(
             expectedArgCount == args.length,
@@ -765,11 +770,12 @@ class Bc {
           cp(identifier, rhs, binding.getIndex());
           return;
         case GLOBAL:
+          int globalVarIndex = this.globalIndex[binding.getIndex()];
           write(
               BcInstr.Opcode.SET_GLOBAL,
               identifier,
               rhs,
-              binding.getIndex(),
+              globalVarIndex,
               allocString(identifier.getName()),
               postAssignHook ? 1 : 0);
           return;
@@ -1024,13 +1030,14 @@ class Bc {
         case LOCAL:
           return new CompileExpressionResult(binding.getIndex() | BcSlot.LOCAL_FLAG, null);
         case GLOBAL:
+          int globalVarIndex = this.globalIndex[binding.getIndex()];
           if (!binding.isFirstReassignable()) {
-            Object globalValue = module.getGlobalByIndex(globalIndex[binding.getIndex()]);
+            Object globalValue = module.getGlobalByIndex(globalVarIndex);
             if (globalValue != null) {
               return compileConstant(globalValue);
             }
           }
-          return new CompileExpressionResult(binding.getIndex() | BcSlot.GLOBAL_FLAG, null);
+          return new CompileExpressionResult(BcSlot.global(globalVarIndex), null);
         case FREE:
           if (!binding.isFirstReassignable()) {
             StarlarkFunction.Cell cell = (StarlarkFunction.Cell) freevars.get(binding.getIndex());
@@ -1298,6 +1305,7 @@ class Bc {
 
       return new Compiled(
           rfn,
+          module,
           strings.toArray(ArraysForStarlark.EMPTY_STRING_ARRAY),
           objects.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
           Arrays.copyOf(text, ip),

@@ -6,7 +6,7 @@ class BcSlot {
   static final int MASK = 0xf0_00_00_00;
   /** Local/temporary variable. */
   static final int LOCAL_FLAG = 0x00_00_00_00;
-  /** Global variable. */
+  /** Global variable, index is a index in Module. */
   static final int GLOBAL_FLAG = 0x10_00_00_00;
   /** Cell. */
   static final int CELL_FLAG = 0x20_00_00_00;

@@ -15,6 +15,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -22,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.Resolver;
 
@@ -266,5 +268,26 @@ public final class Module implements Resolver.Module {
   @Override
   public String toString() {
     return String.format("<module %s>", clientData == null ? "?" : clientData);
+  }
+
+  /** O(N) */
+  String getGlobalNameByIndexSlow(int index) {
+    for (Map.Entry<String, Integer> e : globalIndex.entrySet()) {
+      if (e.getValue() == index) {
+        return e.getKey();
+      }
+    }
+    throw new IllegalStateException("wrong global index: " + index);
+  }
+
+  /** O(N) */
+  ImmutableList<String> getGlobalNamesSlow() {
+    String[] names = new String[globalIndex.size()];
+    for (Map.Entry<String, Integer> e : globalIndex.entrySet()) {
+      int index = e.getValue();
+      Preconditions.checkState(names[index] == null);
+      names[index] = e.getKey();
+    }
+    return ImmutableList.copyOf(names);
   }
 }
