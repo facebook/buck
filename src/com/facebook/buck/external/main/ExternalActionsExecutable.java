@@ -30,6 +30,7 @@ import com.facebook.buck.external.parser.ParsedEnvVars;
 import com.facebook.buck.external.utils.BuildStepsRetriever;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
 import com.facebook.buck.util.Ansi;
@@ -40,6 +41,7 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import java.io.OutputStream;
 
@@ -64,6 +66,7 @@ public class ExternalActionsExecutable {
     // Note that creating if expected environment variables are not present, this will throw a
     // runtime exception
     ParsedEnvVars parsedEnvVars = ParsedEnvVars.parse(EnvVariablesProvider.getSystemEnv());
+    String actionId = parsedEnvVars.getActionId();
     Console console = createConsole(parsedEnvVars);
     try (NamedPipeWriter namedPipe =
             NAMED_PIPE_FACTORY.connectAsWriter(parsedEnvVars.getEventPipe());
@@ -74,9 +77,13 @@ public class ExternalActionsExecutable {
       logger.cleanHandlers();
       logger.addHandler(new ExternalLogHandler(outputStream, DOWNWARD_PROTOCOL));
 
-      executeSteps(args, parsedEnvVars, console, outputStream);
+      StepExecutionResult stepExecutionResult =
+          executeSteps(args, parsedEnvVars, console, outputStream);
+      if (!stepExecutionResult.isSuccess()) {
+        handleExceptionAndTerminate(actionId, console, getErrorMessage(stepExecutionResult));
+      }
     } catch (Exception e) {
-      handleExceptionAndTerminate(Thread.currentThread(), console, e);
+      handleExceptionAndTerminate(actionId, console, e);
     }
     System.exit(0);
   }
@@ -90,23 +97,44 @@ public class ExternalActionsExecutable {
   }
 
   private static void handleExceptionAndTerminate(
-      Thread thread, Console console, Throwable throwable) {
+      String actionId, Console console, Throwable throwable) {
+    handleExceptionAndTerminate(actionId, console, ErrorLogger.getUserFriendlyMessage(throwable));
+  }
+
+  private static void handleExceptionAndTerminate(
+      String actionId, Console console, String errorMessage) {
     // Remove an existing `ExternalLogHandler` handler that depend on the closed event pipe stream.
     Logger logger = Logger.get("");
     logger.cleanHandlers();
 
-    String errorMessage = ErrorLogger.getUserFriendlyMessage(throwable);
     // this method logs the message with log.warn that would be noop as all logger handlers have
     // been cleaned and prints the message into a std err.
     console.printErrorText(
-        "Failed to execute external action. Thread: "
-            + thread
+        "Failed to execute external action: "
+            + actionId
+            + ". Thread: "
+            + Thread.currentThread()
             + System.lineSeparator()
             + errorMessage);
     System.exit(1);
   }
 
-  private static void executeSteps(
+  private static String getErrorMessage(StepExecutionResult stepExecutionResult) {
+    StringBuilder errorMessage = new StringBuilder();
+    stepExecutionResult
+        .getStderr()
+        .ifPresent(
+            stdErr ->
+                errorMessage.append("Std err: ").append(stdErr).append(System.lineSeparator()));
+    stepExecutionResult
+        .getCause()
+        .ifPresent(
+            cause ->
+                errorMessage.append("Cause: ").append(Throwables.getStackTraceAsString(cause)));
+    return errorMessage.toString();
+  }
+
+  private static StepExecutionResult executeSteps(
       String[] args, ParsedEnvVars parsedEnvVars, Console console, OutputStream outputStream)
       throws Exception {
     ParsedArgs parsedArgs = new ExternalArgsParser().parse(args);
@@ -128,7 +156,7 @@ public class ExternalActionsExecutable {
                 parsedEnvVars.getRuleCellRoot(),
                 parsedEnvVars.getActionId(),
                 clock)) {
-      IsolatedStepsRunner.execute(stepsToExecute, executionContext);
+      return IsolatedStepsRunner.execute(stepsToExecute, executionContext);
     }
   }
 }
