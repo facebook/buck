@@ -2,8 +2,12 @@
   <library name="eden">
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/third-party/java/eden/eden.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/eden/eden_config.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/eden/edens-sources.jar!/gen-java" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/eden/eden_config-sources.jar!/gen-java" />
+    </SOURCES>
   </library>
 </component>
