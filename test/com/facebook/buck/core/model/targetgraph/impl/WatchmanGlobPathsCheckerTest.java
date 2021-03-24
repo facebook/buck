@@ -16,8 +16,6 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
@@ -29,19 +27,16 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.io.watchman.WatchmanQuery;
+import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,23 +69,6 @@ public class WatchmanGlobPathsCheckerTest {
     assumeTrue(watchman.getTransportPath().isPresent());
   }
 
-  private void watchmanSync() throws IOException, InterruptedException {
-    WatchmanClient client = watchman.createClient();
-    try {
-
-      assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());
-      // synchronize using clock request
-      Either<Map<String, Object>, WatchmanClient.Timeout> clockResult =
-          client.queryWithTimeout(
-              Long.MAX_VALUE,
-              Long.MAX_VALUE,
-              WatchmanQuery.clock(root.toString(), Optional.of(10000)));
-      assertTrue(clockResult.isLeft());
-    } finally {
-      client.close();
-    }
-  }
-
   @Test
   public void testCheckPathsThrowsWithNonExistingPath() {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
@@ -110,7 +88,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkPaths(
         projectFilesystem,
@@ -124,7 +102,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -138,7 +116,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkDirPaths(
         projectFilesystem,
@@ -155,7 +133,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -172,7 +150,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkDirPaths(
         projectFilesystem,
@@ -189,7 +167,7 @@ public class WatchmanGlobPathsCheckerTest {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("B");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -204,7 +182,7 @@ public class WatchmanGlobPathsCheckerTest {
 
     Files.createSymbolicLink(root.resolve("symlink-to-regular-file").getPath(), Paths.get("b"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -222,7 +200,7 @@ public class WatchmanGlobPathsCheckerTest {
     tmp.newFile("b");
     tmp.newFile("c");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkFilePaths(
         projectFilesystem,
@@ -241,7 +219,7 @@ public class WatchmanGlobPathsCheckerTest {
     tmp.newFile("b");
     projectFilesystem.createNewFile(Paths.get("b"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkDirPaths(
         projectFilesystem,
@@ -261,7 +239,7 @@ public class WatchmanGlobPathsCheckerTest {
     projectFilesystem.createNewFile(Paths.get("b"));
     projectFilesystem.createNewFile(Paths.get("c"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     checker.checkFilePaths(
         projectFilesystem,

@@ -18,7 +18,6 @@ package com.facebook.buck.skylark.io.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -33,6 +32,7 @@ import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
+import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -59,7 +59,6 @@ public class WatchmanGlobberTest {
   private static final Logger LOG = Logger.get(WatchmanGlobberTest.class);
 
   private AbsPath root;
-  private WatchmanClient watchmanClient;
   private Watchman watchman;
   private WatchmanGlobber globber;
 
@@ -80,19 +79,8 @@ public class WatchmanGlobberTest {
             Optional.empty(),
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
-    watchmanClient = watchman.createClient();
+    WatchmanClient watchmanClient = watchman.createClient();
     globber = WatchmanGlobber.create(watchmanClient, "", root.toString());
-  }
-
-  private void watchmanSync() throws IOException, InterruptedException {
-    assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());
-    // synchronize using clock request
-    Either<Map<String, Object>, WatchmanClient.Timeout> clockResult =
-        watchmanClient.queryWithTimeout(
-            Long.MAX_VALUE,
-            Long.MAX_VALUE,
-            WatchmanQuery.clock(root.toString(), Optional.of(10000)));
-    assertTrue(clockResult.isLeft());
   }
 
   @Test
@@ -101,7 +89,7 @@ public class WatchmanGlobberTest {
     tmp.newFile("bar.txt");
     tmp.newFile("bar.jpg");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
@@ -114,7 +102,7 @@ public class WatchmanGlobberTest {
     tmp.newFile("bar.txt");
     tmp.newFile("bar.jpg");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), false),
@@ -125,7 +113,7 @@ public class WatchmanGlobberTest {
   public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
     tmp.newFolder("some_dir");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
@@ -138,7 +126,7 @@ public class WatchmanGlobberTest {
     AbsPath buildFile = root.resolve("BUCK");
     MostFiles.write(buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
@@ -155,7 +143,7 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(
@@ -186,7 +174,7 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
@@ -203,7 +191,7 @@ public class WatchmanGlobberTest {
     tmp.newFolder("directory");
     tmp.newFile("directory/file");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     // HACK: Watchman's case sensitivity rules are strange without **/.
     assertThat(
@@ -221,7 +209,7 @@ public class WatchmanGlobberTest {
     tmp.newFolder("directory");
     tmp.newFile("directory/file");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     // HACK: Watchman's case sensitivity rules are strange without **/.
     assertThat(
@@ -262,7 +250,7 @@ public class WatchmanGlobberTest {
 
     tmp.newFile("file");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("file"), Collections.singleton("FILE"), false),
@@ -273,7 +261,7 @@ public class WatchmanGlobberTest {
   public void testExcludingIsCaseSensitiveIfForced() throws Exception {
     tmp.newFile("file");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(
@@ -293,7 +281,7 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(
@@ -387,7 +375,7 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFields() throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -412,7 +400,7 @@ public class WatchmanGlobberTest {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -438,7 +426,7 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFieldsNoMatch() throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -457,7 +445,7 @@ public class WatchmanGlobberTest {
       throws IOException, InterruptedException {
     tmp.newFile("foo.txt");
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     assertThat(
         globber.run(Collections.singleton("foo.txt"), Collections.emptySet(), false),

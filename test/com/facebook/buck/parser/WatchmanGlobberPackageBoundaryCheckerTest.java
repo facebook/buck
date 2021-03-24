@@ -16,8 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
@@ -30,19 +28,16 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.io.watchman.WatchmanQuery;
+import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -74,23 +69,6 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     assumeTrue(watchman.getTransportPath().isPresent());
   }
 
-  private void watchmanSync() throws IOException, InterruptedException {
-    WatchmanClient client = watchman.createClient();
-    try {
-
-      assertEquals(ImmutableSet.of(tmp.getRoot()), watchman.getProjectWatches().keySet());
-      // synchronize using clock request
-      Either<Map<String, Object>, WatchmanClient.Timeout> clockResult =
-          client.queryWithTimeout(
-              Long.MAX_VALUE,
-              Long.MAX_VALUE,
-              WatchmanQuery.clock(tmp.getRoot().toString(), Optional.of(10000)));
-      assertTrue(clockResult.isLeft());
-    } finally {
-      client.close();
-    }
-  }
-
   @Test
   public void testEnforceFailsWhenPathReferencesParentDirectory()
       throws IOException, InterruptedException {
@@ -99,7 +77,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     Files.createDirectories(a.getPath());
     touch(tmp.getRoot().resolve("a/Test.java"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -118,7 +96,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     Files.createDirectories(a.getPath());
     touch(tmp.getRoot().resolve("a/Test.java"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder()
@@ -141,7 +119,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     Files.createDirectories(a.getPath());
     touch(tmp.getRoot().resolve("a/b/Test.java"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -163,7 +141,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     touch(tmp.getRoot().resolve("a/b/BUCK"));
     touch(tmp.getRoot().resolve("a/BUCK"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -194,7 +172,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     touch(tmp.getRoot().resolve("a/b/Test.java"));
     touch(tmp.getRoot().resolve("a/b/BUCK"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
@@ -209,7 +187,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     Files.createDirectories(a.getPath());
     touch(tmp.getRoot().resolve("a/b/BUCK"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
@@ -225,7 +203,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     touch(tmp.getRoot().resolve("a/b/BUCK"));
     touch(tmp.getRoot().resolve("a/b/Test.java"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
@@ -242,7 +220,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     touch(tmp.getRoot().resolve("a/b/BUCK"));
     touch(tmp.getRoot().resolve("a/b/c/d/Test.java"));
 
-    watchmanSync();
+    WatchmanTestUtils.sync(watchman);
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
