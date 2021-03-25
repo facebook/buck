@@ -30,14 +30,14 @@ import java.util.Optional;
 public class XCConfigurationList extends PBXProjectItem {
   private List<XCBuildConfiguration> buildConfigurations;
   private Optional<String> defaultConfigurationName;
-  private boolean defaultConfigurationIsVisible;
+  private String defaultConfigurationIsVisible;
 
   private final LoadingCache<String, XCBuildConfiguration> buildConfigurationsByName;
 
   public XCConfigurationList(AbstractPBXObjectFactory objectFactory) {
     buildConfigurations = new ArrayList<>();
     defaultConfigurationName = Optional.empty();
-    defaultConfigurationIsVisible = false;
+    defaultConfigurationIsVisible = "0";
 
     buildConfigurationsByName =
         CacheBuilder.newBuilder()
