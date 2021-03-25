@@ -35,6 +35,7 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
   @AddToRuleKey
   public abstract boolean hasJavaCDEnabled();
 
+  @AddToRuleKey
   @Value.Default
   boolean pipeliningEnabled() {
     // TODO: msemko remove this method when pipelining support is ready.
@@ -42,6 +43,7 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
   }
 
   /** Returns whether the pipelining case supported by javacd */
+  @AddToRuleKey
   @Value.Derived
   public boolean pipeliningSupported() {
     // TODO: msemko inline this method when pipelining support is ready. Replace with
