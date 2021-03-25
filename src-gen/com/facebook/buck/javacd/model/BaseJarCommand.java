@@ -5,6 +5,10 @@
 package com.facebook.buck.javacd.model;
 
 /**
+ * <pre>
+ * Common parameters for build jar commands (abi and library jar ones)
+ * </pre>
+ *
  * Protobuf type {@code javacd.api.v1.BaseJarCommand}
  */
 @javax.annotation.Generated(value="protoc", comments="annotations:BaseJarCommand.java.pb.meta")
@@ -155,11 +159,11 @@ private static final long serialVersionUID = 0L;
           }
           case 106: {
             if (!((mutable_bitField0_ & 0x00001000) != 0)) {
-              resourcesMap_ = new java.util.ArrayList<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry>();
+              resourcesMap_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPathMapEntry>();
               mutable_bitField0_ |= 0x00001000;
             }
             resourcesMap_.add(
-                input.readMessage(com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.parser(), extensionRegistry));
+                input.readMessage(com.facebook.buck.javacd.model.RelPathMapEntry.parser(), extensionRegistry));
             break;
           }
           case 114: {
@@ -286,1002 +290,39 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.javacd.model.BaseJarCommand.class, com.facebook.buck.javacd.model.BaseJarCommand.Builder.class);
   }
 
-  /**
-   * Protobuf enum {@code javacd.api.v1.BaseJarCommand.AbiGenerationMode}
-   */
-  public enum AbiGenerationMode
-      implements com.google.protobuf.ProtocolMessageEnum {
-    /**
-     * <code>UNKNOWN = 0;</code>
-     */
-    UNKNOWN(0),
-    /**
-     * <pre>
-     ** Generate ABIs by stripping .class files 
-     * </pre>
-     *
-     * <code>CLASS = 1;</code>
-     */
-    CLASS(1),
-    /**
-     * <pre>
-     ** Generate ABIs by parsing .java files with dependency ABIs available 
-     * </pre>
-     *
-     * <code>SOURCE = 2;</code>
-     */
-    SOURCE(2),
-    /**
-     * <pre>
-     **
-     * Output warnings for things that aren't legal when generating ABIs from source without
-     * dependency ABIs
-     * </pre>
-     *
-     * <code>MIGRATING_TO_SOURCE_ONLY = 3;</code>
-     */
-    MIGRATING_TO_SOURCE_ONLY(3),
-    /**
-     * <pre>
-     **
-     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
-     * </pre>
-     *
-     * <code>SOURCE_ONLY = 4;</code>
-     */
-    SOURCE_ONLY(4),
-    UNRECOGNIZED(-1),
-    ;
-
-    /**
-     * <code>UNKNOWN = 0;</code>
-     */
-    public static final int UNKNOWN_VALUE = 0;
-    /**
-     * <pre>
-     ** Generate ABIs by stripping .class files 
-     * </pre>
-     *
-     * <code>CLASS = 1;</code>
-     */
-    public static final int CLASS_VALUE = 1;
-    /**
-     * <pre>
-     ** Generate ABIs by parsing .java files with dependency ABIs available 
-     * </pre>
-     *
-     * <code>SOURCE = 2;</code>
-     */
-    public static final int SOURCE_VALUE = 2;
-    /**
-     * <pre>
-     **
-     * Output warnings for things that aren't legal when generating ABIs from source without
-     * dependency ABIs
-     * </pre>
-     *
-     * <code>MIGRATING_TO_SOURCE_ONLY = 3;</code>
-     */
-    public static final int MIGRATING_TO_SOURCE_ONLY_VALUE = 3;
-    /**
-     * <pre>
-     **
-     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
-     * </pre>
-     *
-     * <code>SOURCE_ONLY = 4;</code>
-     */
-    public static final int SOURCE_ONLY_VALUE = 4;
-
-
-    public final int getNumber() {
-      if (this == UNRECOGNIZED) {
-        throw new java.lang.IllegalArgumentException(
-            "Can't get the number of an unknown enum value.");
-      }
-      return value;
-    }
-
-    /**
-     * @deprecated Use {@link #forNumber(int)} instead.
-     */
-    @java.lang.Deprecated
-    public static AbiGenerationMode valueOf(int value) {
-      return forNumber(value);
-    }
-
-    public static AbiGenerationMode forNumber(int value) {
-      switch (value) {
-        case 0: return UNKNOWN;
-        case 1: return CLASS;
-        case 2: return SOURCE;
-        case 3: return MIGRATING_TO_SOURCE_ONLY;
-        case 4: return SOURCE_ONLY;
-        default: return null;
-      }
-    }
-
-    public static com.google.protobuf.Internal.EnumLiteMap<AbiGenerationMode>
-        internalGetValueMap() {
-      return internalValueMap;
-    }
-    private static final com.google.protobuf.Internal.EnumLiteMap<
-        AbiGenerationMode> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<AbiGenerationMode>() {
-            public AbiGenerationMode findValueByNumber(int number) {
-              return AbiGenerationMode.forNumber(number);
-            }
-          };
-
-    public final com.google.protobuf.Descriptors.EnumValueDescriptor
-        getValueDescriptor() {
-      return getDescriptor().getValues().get(ordinal());
-    }
-    public final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptorForType() {
-      return getDescriptor();
-    }
-    public static final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptor() {
-      return com.facebook.buck.javacd.model.BaseJarCommand.getDescriptor().getEnumTypes().get(0);
-    }
-
-    private static final AbiGenerationMode[] VALUES = values();
-
-    public static AbiGenerationMode valueOf(
-        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-      if (desc.getType() != getDescriptor()) {
-        throw new java.lang.IllegalArgumentException(
-          "EnumValueDescriptor is not for this type.");
-      }
-      if (desc.getIndex() == -1) {
-        return UNRECOGNIZED;
-      }
-      return VALUES[desc.getIndex()];
-    }
-
-    private final int value;
-
-    private AbiGenerationMode(int value) {
-      this.value = value;
-    }
-
-    // @@protoc_insertion_point(enum_scope:javacd.api.v1.BaseJarCommand.AbiGenerationMode)
-  }
-
-  public interface RelPathMapEntryOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:javacd.api.v1.BaseJarCommand.RelPathMapEntry)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>.javacd.api.v1.RelPath key = 1;</code>
-     */
-    boolean hasKey();
-    /**
-     * <code>.javacd.api.v1.RelPath key = 1;</code>
-     */
-    com.facebook.buck.javacd.model.RelPath getKey();
-    /**
-     * <code>.javacd.api.v1.RelPath key = 1;</code>
-     */
-    com.facebook.buck.javacd.model.RelPathOrBuilder getKeyOrBuilder();
-
-    /**
-     * <code>.javacd.api.v1.RelPath value = 2;</code>
-     */
-    boolean hasValue();
-    /**
-     * <code>.javacd.api.v1.RelPath value = 2;</code>
-     */
-    com.facebook.buck.javacd.model.RelPath getValue();
-    /**
-     * <code>.javacd.api.v1.RelPath value = 2;</code>
-     */
-    com.facebook.buck.javacd.model.RelPathOrBuilder getValueOrBuilder();
-  }
-  /**
-   * Protobuf type {@code javacd.api.v1.BaseJarCommand.RelPathMapEntry}
-   */
-  public  static final class RelPathMapEntry extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:javacd.api.v1.BaseJarCommand.RelPathMapEntry)
-      RelPathMapEntryOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use RelPathMapEntry.newBuilder() to construct.
-    private RelPathMapEntry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private RelPathMapEntry() {
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private RelPathMapEntry(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-              if (key_ != null) {
-                subBuilder = key_.toBuilder();
-              }
-              key_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(key_);
-                key_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            case 18: {
-              com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-              if (value_ != null) {
-                subBuilder = value_.toBuilder();
-              }
-              value_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(value_);
-                value_ = subBuilder.buildPartial();
-              }
-
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_BaseJarCommand_RelPathMapEntry_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_BaseJarCommand_RelPathMapEntry_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.class, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder.class);
-    }
-
-    public static final int KEY_FIELD_NUMBER = 1;
-    private com.facebook.buck.javacd.model.RelPath key_;
-    /**
-     * <code>.javacd.api.v1.RelPath key = 1;</code>
-     */
-    public boolean hasKey() {
-      return key_ != null;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath key = 1;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath getKey() {
-      return key_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : key_;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath key = 1;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getKeyOrBuilder() {
-      return getKey();
-    }
-
-    public static final int VALUE_FIELD_NUMBER = 2;
-    private com.facebook.buck.javacd.model.RelPath value_;
-    /**
-     * <code>.javacd.api.v1.RelPath value = 2;</code>
-     */
-    public boolean hasValue() {
-      return value_ != null;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath value = 2;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath getValue() {
-      return value_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : value_;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath value = 2;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getValueOrBuilder() {
-      return getValue();
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (key_ != null) {
-        output.writeMessage(1, getKey());
-      }
-      if (value_ != null) {
-        output.writeMessage(2, getValue());
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (key_ != null) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getKey());
-      }
-      if (value_ != null) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getValue());
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry)) {
-        return super.equals(obj);
-      }
-      com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry other = (com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry) obj;
-
-      if (hasKey() != other.hasKey()) return false;
-      if (hasKey()) {
-        if (!getKey()
-            .equals(other.getKey())) return false;
-      }
-      if (hasValue() != other.hasValue()) return false;
-      if (hasValue()) {
-        if (!getValue()
-            .equals(other.getValue())) return false;
-      }
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasKey()) {
-        hash = (37 * hash) + KEY_FIELD_NUMBER;
-        hash = (53 * hash) + getKey().hashCode();
-      }
-      if (hasValue()) {
-        hash = (37 * hash) + VALUE_FIELD_NUMBER;
-        hash = (53 * hash) + getValue().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code javacd.api.v1.BaseJarCommand.RelPathMapEntry}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:javacd.api.v1.BaseJarCommand.RelPathMapEntry)
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_BaseJarCommand_RelPathMapEntry_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_BaseJarCommand_RelPathMapEntry_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.class, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder.class);
-      }
-
-      // Construct using com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        if (keyBuilder_ == null) {
-          key_ = null;
-        } else {
-          key_ = null;
-          keyBuilder_ = null;
-        }
-        if (valueBuilder_ == null) {
-          value_ = null;
-        } else {
-          value_ = null;
-          valueBuilder_ = null;
-        }
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_BaseJarCommand_RelPathMapEntry_descriptor;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry getDefaultInstanceForType() {
-        return com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry build() {
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry buildPartial() {
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry result = new com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry(this);
-        if (keyBuilder_ == null) {
-          result.key_ = key_;
-        } else {
-          result.key_ = keyBuilder_.build();
-        }
-        if (valueBuilder_ == null) {
-          result.value_ = value_;
-        } else {
-          result.value_ = valueBuilder_.build();
-        }
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry) {
-          return mergeFrom((com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry other) {
-        if (other == com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.getDefaultInstance()) return this;
-        if (other.hasKey()) {
-          mergeKey(other.getKey());
-        }
-        if (other.hasValue()) {
-          mergeValue(other.getValue());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-
-      private com.facebook.buck.javacd.model.RelPath key_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> keyBuilder_;
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public boolean hasKey() {
-        return keyBuilder_ != null || key_ != null;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath getKey() {
-        if (keyBuilder_ == null) {
-          return key_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : key_;
-        } else {
-          return keyBuilder_.getMessage();
-        }
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public Builder setKey(com.facebook.buck.javacd.model.RelPath value) {
-        if (keyBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          key_ = value;
-          onChanged();
-        } else {
-          keyBuilder_.setMessage(value);
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public Builder setKey(
-          com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-        if (keyBuilder_ == null) {
-          key_ = builderForValue.build();
-          onChanged();
-        } else {
-          keyBuilder_.setMessage(builderForValue.build());
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public Builder mergeKey(com.facebook.buck.javacd.model.RelPath value) {
-        if (keyBuilder_ == null) {
-          if (key_ != null) {
-            key_ =
-              com.facebook.buck.javacd.model.RelPath.newBuilder(key_).mergeFrom(value).buildPartial();
-          } else {
-            key_ = value;
-          }
-          onChanged();
-        } else {
-          keyBuilder_.mergeFrom(value);
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public Builder clearKey() {
-        if (keyBuilder_ == null) {
-          key_ = null;
-          onChanged();
-        } else {
-          key_ = null;
-          keyBuilder_ = null;
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath.Builder getKeyBuilder() {
-        
-        onChanged();
-        return getKeyFieldBuilder().getBuilder();
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPathOrBuilder getKeyOrBuilder() {
-        if (keyBuilder_ != null) {
-          return keyBuilder_.getMessageOrBuilder();
-        } else {
-          return key_ == null ?
-              com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : key_;
-        }
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath key = 1;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-          getKeyFieldBuilder() {
-        if (keyBuilder_ == null) {
-          keyBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                  getKey(),
-                  getParentForChildren(),
-                  isClean());
-          key_ = null;
-        }
-        return keyBuilder_;
-      }
-
-      private com.facebook.buck.javacd.model.RelPath value_;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> valueBuilder_;
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public boolean hasValue() {
-        return valueBuilder_ != null || value_ != null;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath getValue() {
-        if (valueBuilder_ == null) {
-          return value_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : value_;
-        } else {
-          return valueBuilder_.getMessage();
-        }
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public Builder setValue(com.facebook.buck.javacd.model.RelPath value) {
-        if (valueBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          value_ = value;
-          onChanged();
-        } else {
-          valueBuilder_.setMessage(value);
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public Builder setValue(
-          com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-        if (valueBuilder_ == null) {
-          value_ = builderForValue.build();
-          onChanged();
-        } else {
-          valueBuilder_.setMessage(builderForValue.build());
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public Builder mergeValue(com.facebook.buck.javacd.model.RelPath value) {
-        if (valueBuilder_ == null) {
-          if (value_ != null) {
-            value_ =
-              com.facebook.buck.javacd.model.RelPath.newBuilder(value_).mergeFrom(value).buildPartial();
-          } else {
-            value_ = value;
-          }
-          onChanged();
-        } else {
-          valueBuilder_.mergeFrom(value);
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public Builder clearValue() {
-        if (valueBuilder_ == null) {
-          value_ = null;
-          onChanged();
-        } else {
-          value_ = null;
-          valueBuilder_ = null;
-        }
-
-        return this;
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath.Builder getValueBuilder() {
-        
-        onChanged();
-        return getValueFieldBuilder().getBuilder();
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPathOrBuilder getValueOrBuilder() {
-        if (valueBuilder_ != null) {
-          return valueBuilder_.getMessageOrBuilder();
-        } else {
-          return value_ == null ?
-              com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : value_;
-        }
-      }
-      /**
-       * <code>.javacd.api.v1.RelPath value = 2;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-          getValueFieldBuilder() {
-        if (valueBuilder_ == null) {
-          valueBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                  getValue(),
-                  getParentForChildren(),
-                  isClean());
-          value_ = null;
-        }
-        return valueBuilder_;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:javacd.api.v1.BaseJarCommand.RelPathMapEntry)
-    }
-
-    // @@protoc_insertion_point(class_scope:javacd.api.v1.BaseJarCommand.RelPathMapEntry)
-    private static final com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry();
-    }
-
-    public static com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    private static final com.google.protobuf.Parser<RelPathMapEntry>
-        PARSER = new com.google.protobuf.AbstractParser<RelPathMapEntry>() {
-      @java.lang.Override
-      public RelPathMapEntry parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new RelPathMapEntry(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<RelPathMapEntry> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<RelPathMapEntry> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
   private int bitField0_;
   public static final int ABICOMPATIBILITYMODE_FIELD_NUMBER = 1;
   private int abiCompatibilityMode_;
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
    */
   public int getAbiCompatibilityModeValue() {
     return abiCompatibilityMode_;
   }
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
    */
-  public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiCompatibilityMode() {
+  public com.facebook.buck.javacd.model.AbiGenerationMode getAbiCompatibilityMode() {
     @SuppressWarnings("deprecation")
-    com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiCompatibilityMode_);
-    return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+    com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiCompatibilityMode_);
+    return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
   }
 
   public static final int ABIGENERATIONMODE_FIELD_NUMBER = 2;
   private int abiGenerationMode_;
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
    */
   public int getAbiGenerationModeValue() {
     return abiGenerationMode_;
   }
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
    */
-  public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiGenerationMode() {
+  public com.facebook.buck.javacd.model.AbiGenerationMode getAbiGenerationMode() {
     @SuppressWarnings("deprecation")
-    com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiGenerationMode_);
-    return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+    com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiGenerationMode_);
+    return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
   }
 
   public static final int ISREQUIREDFORSOURCEONLYABI_FIELD_NUMBER = 3;
@@ -1515,56 +556,36 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int RESOURCESMAP_FIELD_NUMBER = 13;
-  private java.util.List<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry> resourcesMap_;
+  private java.util.List<com.facebook.buck.javacd.model.RelPathMapEntry> resourcesMap_;
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  public java.util.List<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry> getResourcesMapList() {
+  public java.util.List<com.facebook.buck.javacd.model.RelPathMapEntry> getResourcesMapList() {
     return resourcesMap_;
   }
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  public java.util.List<? extends com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder> 
+  public java.util.List<? extends com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder> 
       getResourcesMapOrBuilderList() {
     return resourcesMap_;
   }
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
   public int getResourcesMapCount() {
     return resourcesMap_.size();
   }
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry getResourcesMap(int index) {
+  public com.facebook.buck.javacd.model.RelPathMapEntry getResourcesMap(int index) {
     return resourcesMap_.get(index);
   }
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+  public com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
       int index) {
     return resourcesMap_.get(index);
   }
@@ -1743,10 +764,10 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       output.writeEnum(1, abiCompatibilityMode_);
     }
-    if (abiGenerationMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiGenerationMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       output.writeEnum(2, abiGenerationMode_);
     }
     if (isRequiredForSourceOnlyAbi_ != false) {
@@ -1809,11 +830,11 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(1, abiCompatibilityMode_);
     }
-    if (abiGenerationMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiGenerationMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(2, abiGenerationMode_);
     }
@@ -2129,6 +1150,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * Common parameters for build jar commands (abi and library jar ones)
+   * </pre>
+   *
    * Protobuf type {@code javacd.api.v1.BaseJarCommand}
    */
   public static final class Builder extends
@@ -2640,13 +1665,13 @@ private static final long serialVersionUID = 0L;
 
     private int abiCompatibilityMode_ = 0;
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
      */
     public int getAbiCompatibilityModeValue() {
       return abiCompatibilityMode_;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
      */
     public Builder setAbiCompatibilityModeValue(int value) {
       abiCompatibilityMode_ = value;
@@ -2654,17 +1679,17 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiCompatibilityMode() {
+    public com.facebook.buck.javacd.model.AbiGenerationMode getAbiCompatibilityMode() {
       @SuppressWarnings("deprecation")
-      com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiCompatibilityMode_);
-      return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+      com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiCompatibilityMode_);
+      return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
      */
-    public Builder setAbiCompatibilityMode(com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode value) {
+    public Builder setAbiCompatibilityMode(com.facebook.buck.javacd.model.AbiGenerationMode value) {
       if (value == null) {
         throw new NullPointerException();
       }
@@ -2674,7 +1699,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
      */
     public Builder clearAbiCompatibilityMode() {
       
@@ -2685,13 +1710,13 @@ private static final long serialVersionUID = 0L;
 
     private int abiGenerationMode_ = 0;
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
      */
     public int getAbiGenerationModeValue() {
       return abiGenerationMode_;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
      */
     public Builder setAbiGenerationModeValue(int value) {
       abiGenerationMode_ = value;
@@ -2699,17 +1724,17 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiGenerationMode() {
+    public com.facebook.buck.javacd.model.AbiGenerationMode getAbiGenerationMode() {
       @SuppressWarnings("deprecation")
-      com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiGenerationMode_);
-      return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+      com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiGenerationMode_);
+      return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
      */
-    public Builder setAbiGenerationMode(com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode value) {
+    public Builder setAbiGenerationMode(com.facebook.buck.javacd.model.AbiGenerationMode value) {
       if (value == null) {
         throw new NullPointerException();
       }
@@ -2719,7 +1744,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
      */
     public Builder clearAbiGenerationMode() {
       
@@ -4117,26 +3142,22 @@ private static final long serialVersionUID = 0L;
       return abiJarInfosBuilder_;
     }
 
-    private java.util.List<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry> resourcesMap_ =
+    private java.util.List<com.facebook.buck.javacd.model.RelPathMapEntry> resourcesMap_ =
       java.util.Collections.emptyList();
     private void ensureResourcesMapIsMutable() {
       if (!((bitField0_ & 0x00001000) != 0)) {
-        resourcesMap_ = new java.util.ArrayList<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry>(resourcesMap_);
+        resourcesMap_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPathMapEntry>(resourcesMap_);
         bitField0_ |= 0x00001000;
        }
     }
 
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder> resourcesMapBuilder_;
+        com.facebook.buck.javacd.model.RelPathMapEntry, com.facebook.buck.javacd.model.RelPathMapEntry.Builder, com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder> resourcesMapBuilder_;
 
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public java.util.List<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry> getResourcesMapList() {
+    public java.util.List<com.facebook.buck.javacd.model.RelPathMapEntry> getResourcesMapList() {
       if (resourcesMapBuilder_ == null) {
         return java.util.Collections.unmodifiableList(resourcesMap_);
       } else {
@@ -4144,11 +3165,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public int getResourcesMapCount() {
       if (resourcesMapBuilder_ == null) {
@@ -4158,13 +3175,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry getResourcesMap(int index) {
+    public com.facebook.buck.javacd.model.RelPathMapEntry getResourcesMap(int index) {
       if (resourcesMapBuilder_ == null) {
         return resourcesMap_.get(index);
       } else {
@@ -4172,14 +3185,10 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder setResourcesMap(
-        int index, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry value) {
+        int index, com.facebook.buck.javacd.model.RelPathMapEntry value) {
       if (resourcesMapBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -4193,14 +3202,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder setResourcesMap(
-        int index, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder builderForValue) {
+        int index, com.facebook.buck.javacd.model.RelPathMapEntry.Builder builderForValue) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         resourcesMap_.set(index, builderForValue.build());
@@ -4211,13 +3216,9 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public Builder addResourcesMap(com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry value) {
+    public Builder addResourcesMap(com.facebook.buck.javacd.model.RelPathMapEntry value) {
       if (resourcesMapBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -4231,14 +3232,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder addResourcesMap(
-        int index, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry value) {
+        int index, com.facebook.buck.javacd.model.RelPathMapEntry value) {
       if (resourcesMapBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -4252,14 +3249,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder addResourcesMap(
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder builderForValue) {
+        com.facebook.buck.javacd.model.RelPathMapEntry.Builder builderForValue) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         resourcesMap_.add(builderForValue.build());
@@ -4270,14 +3263,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder addResourcesMap(
-        int index, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder builderForValue) {
+        int index, com.facebook.buck.javacd.model.RelPathMapEntry.Builder builderForValue) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         resourcesMap_.add(index, builderForValue.build());
@@ -4288,14 +3277,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder addAllResourcesMap(
-        java.lang.Iterable<? extends com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry> values) {
+        java.lang.Iterable<? extends com.facebook.buck.javacd.model.RelPathMapEntry> values) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -4307,11 +3292,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder clearResourcesMap() {
       if (resourcesMapBuilder_ == null) {
@@ -4324,11 +3305,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
     public Builder removeResourcesMap(int index) {
       if (resourcesMapBuilder_ == null) {
@@ -4341,24 +3318,16 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder getResourcesMapBuilder(
+    public com.facebook.buck.javacd.model.RelPathMapEntry.Builder getResourcesMapBuilder(
         int index) {
       return getResourcesMapFieldBuilder().getBuilder(index);
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+    public com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
         int index) {
       if (resourcesMapBuilder_ == null) {
         return resourcesMap_.get(index);  } else {
@@ -4366,13 +3335,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public java.util.List<? extends com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder> 
+    public java.util.List<? extends com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder> 
          getResourcesMapOrBuilderList() {
       if (resourcesMapBuilder_ != null) {
         return resourcesMapBuilder_.getMessageOrBuilderList();
@@ -4381,45 +3346,33 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder addResourcesMapBuilder() {
+    public com.facebook.buck.javacd.model.RelPathMapEntry.Builder addResourcesMapBuilder() {
       return getResourcesMapFieldBuilder().addBuilder(
-          com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.getDefaultInstance());
+          com.facebook.buck.javacd.model.RelPathMapEntry.getDefaultInstance());
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder addResourcesMapBuilder(
+    public com.facebook.buck.javacd.model.RelPathMapEntry.Builder addResourcesMapBuilder(
         int index) {
       return getResourcesMapFieldBuilder().addBuilder(
-          index, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.getDefaultInstance());
+          index, com.facebook.buck.javacd.model.RelPathMapEntry.getDefaultInstance());
     }
     /**
-     * <pre>
-     * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-     * </pre>
-     *
-     * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
      */
-    public java.util.List<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder> 
+    public java.util.List<com.facebook.buck.javacd.model.RelPathMapEntry.Builder> 
          getResourcesMapBuilderList() {
       return getResourcesMapFieldBuilder().getBuilderList();
     }
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder> 
+        com.facebook.buck.javacd.model.RelPathMapEntry, com.facebook.buck.javacd.model.RelPathMapEntry.Builder, com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder> 
         getResourcesMapFieldBuilder() {
       if (resourcesMapBuilder_ == null) {
         resourcesMapBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-            com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry.Builder, com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder>(
+            com.facebook.buck.javacd.model.RelPathMapEntry, com.facebook.buck.javacd.model.RelPathMapEntry.Builder, com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder>(
                 resourcesMap_,
                 ((bitField0_ & 0x00001000) != 0),
                 getParentForChildren(),

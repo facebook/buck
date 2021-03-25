@@ -5,6 +5,10 @@
 package com.facebook.buck.javacd.model;
 
 /**
+ * <pre>
+ * library jar command
+ * </pre>
+ *
  * Protobuf type {@code javacd.api.v1.LibraryJarCommand}
  */
 @javax.annotation.Generated(value="protoc", comments="annotations:LibraryJarCommand.java.pb.meta")
@@ -68,66 +72,14 @@ private static final long serialVersionUID = 0L;
             break;
           }
           case 26: {
-            com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-            if (pathToClasses_ != null) {
-              subBuilder = pathToClasses_.toBuilder();
+            com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder subBuilder = null;
+            if (libraryJarBaseCommand_ != null) {
+              subBuilder = libraryJarBaseCommand_.toBuilder();
             }
-            pathToClasses_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
+            libraryJarBaseCommand_ = input.readMessage(com.facebook.buck.javacd.model.LibraryJarBaseCommand.parser(), extensionRegistry);
             if (subBuilder != null) {
-              subBuilder.mergeFrom(pathToClasses_);
-              pathToClasses_ = subBuilder.buildPartial();
-            }
-
-            break;
-          }
-          case 34: {
-            com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-            if (rootOutput_ != null) {
-              subBuilder = rootOutput_.toBuilder();
-            }
-            rootOutput_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(rootOutput_);
-              rootOutput_ = subBuilder.buildPartial();
-            }
-
-            break;
-          }
-          case 42: {
-            com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-            if (pathToClassHashes_ != null) {
-              subBuilder = pathToClassHashes_.toBuilder();
-            }
-            pathToClassHashes_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(pathToClassHashes_);
-              pathToClassHashes_ = subBuilder.buildPartial();
-            }
-
-            break;
-          }
-          case 50: {
-            com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-            if (annotationsPath_ != null) {
-              subBuilder = annotationsPath_.toBuilder();
-            }
-            annotationsPath_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(annotationsPath_);
-              annotationsPath_ = subBuilder.buildPartial();
-            }
-
-            break;
-          }
-          case 58: {
-            com.facebook.buck.javacd.model.UnusedDependenciesParams.Builder subBuilder = null;
-            if (unusedDependenciesParams_ != null) {
-              subBuilder = unusedDependenciesParams_.toBuilder();
-            }
-            unusedDependenciesParams_ = input.readMessage(com.facebook.buck.javacd.model.UnusedDependenciesParams.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(unusedDependenciesParams_);
-              unusedDependenciesParams_ = subBuilder.buildPartial();
+              subBuilder.mergeFrom(libraryJarBaseCommand_);
+              libraryJarBaseCommand_ = subBuilder.buildPartial();
             }
 
             break;
@@ -218,109 +170,25 @@ private static final long serialVersionUID = 0L;
     return postprocessClassesCommands_.getByteString(index);
   }
 
-  public static final int PATHTOCLASSES_FIELD_NUMBER = 3;
-  private com.facebook.buck.javacd.model.RelPath pathToClasses_;
+  public static final int LIBRARYJARBASECOMMAND_FIELD_NUMBER = 3;
+  private com.facebook.buck.javacd.model.LibraryJarBaseCommand libraryJarBaseCommand_;
   /**
-   * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
-  public boolean hasPathToClasses() {
-    return pathToClasses_ != null;
+  public boolean hasLibraryJarBaseCommand() {
+    return libraryJarBaseCommand_ != null;
   }
   /**
-   * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
-  public com.facebook.buck.javacd.model.RelPath getPathToClasses() {
-    return pathToClasses_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : pathToClasses_;
+  public com.facebook.buck.javacd.model.LibraryJarBaseCommand getLibraryJarBaseCommand() {
+    return libraryJarBaseCommand_ == null ? com.facebook.buck.javacd.model.LibraryJarBaseCommand.getDefaultInstance() : libraryJarBaseCommand_;
   }
   /**
-   * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
    */
-  public com.facebook.buck.javacd.model.RelPathOrBuilder getPathToClassesOrBuilder() {
-    return getPathToClasses();
-  }
-
-  public static final int ROOTOUTPUT_FIELD_NUMBER = 4;
-  private com.facebook.buck.javacd.model.RelPath rootOutput_;
-  /**
-   * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-   */
-  public boolean hasRootOutput() {
-    return rootOutput_ != null;
-  }
-  /**
-   * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-   */
-  public com.facebook.buck.javacd.model.RelPath getRootOutput() {
-    return rootOutput_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : rootOutput_;
-  }
-  /**
-   * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-   */
-  public com.facebook.buck.javacd.model.RelPathOrBuilder getRootOutputOrBuilder() {
-    return getRootOutput();
-  }
-
-  public static final int PATHTOCLASSHASHES_FIELD_NUMBER = 5;
-  private com.facebook.buck.javacd.model.RelPath pathToClassHashes_;
-  /**
-   * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-   */
-  public boolean hasPathToClassHashes() {
-    return pathToClassHashes_ != null;
-  }
-  /**
-   * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-   */
-  public com.facebook.buck.javacd.model.RelPath getPathToClassHashes() {
-    return pathToClassHashes_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : pathToClassHashes_;
-  }
-  /**
-   * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-   */
-  public com.facebook.buck.javacd.model.RelPathOrBuilder getPathToClassHashesOrBuilder() {
-    return getPathToClassHashes();
-  }
-
-  public static final int ANNOTATIONSPATH_FIELD_NUMBER = 6;
-  private com.facebook.buck.javacd.model.RelPath annotationsPath_;
-  /**
-   * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-   */
-  public boolean hasAnnotationsPath() {
-    return annotationsPath_ != null;
-  }
-  /**
-   * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-   */
-  public com.facebook.buck.javacd.model.RelPath getAnnotationsPath() {
-    return annotationsPath_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : annotationsPath_;
-  }
-  /**
-   * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-   */
-  public com.facebook.buck.javacd.model.RelPathOrBuilder getAnnotationsPathOrBuilder() {
-    return getAnnotationsPath();
-  }
-
-  public static final int UNUSEDDEPENDENCIESPARAMS_FIELD_NUMBER = 7;
-  private com.facebook.buck.javacd.model.UnusedDependenciesParams unusedDependenciesParams_;
-  /**
-   * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-   */
-  public boolean hasUnusedDependenciesParams() {
-    return unusedDependenciesParams_ != null;
-  }
-  /**
-   * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-   */
-  public com.facebook.buck.javacd.model.UnusedDependenciesParams getUnusedDependenciesParams() {
-    return unusedDependenciesParams_ == null ? com.facebook.buck.javacd.model.UnusedDependenciesParams.getDefaultInstance() : unusedDependenciesParams_;
-  }
-  /**
-   * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-   */
-  public com.facebook.buck.javacd.model.UnusedDependenciesParamsOrBuilder getUnusedDependenciesParamsOrBuilder() {
-    return getUnusedDependenciesParams();
+  public com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder() {
+    return getLibraryJarBaseCommand();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -343,20 +211,8 @@ private static final long serialVersionUID = 0L;
     for (int i = 0; i < postprocessClassesCommands_.size(); i++) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 2, postprocessClassesCommands_.getRaw(i));
     }
-    if (pathToClasses_ != null) {
-      output.writeMessage(3, getPathToClasses());
-    }
-    if (rootOutput_ != null) {
-      output.writeMessage(4, getRootOutput());
-    }
-    if (pathToClassHashes_ != null) {
-      output.writeMessage(5, getPathToClassHashes());
-    }
-    if (annotationsPath_ != null) {
-      output.writeMessage(6, getAnnotationsPath());
-    }
-    if (unusedDependenciesParams_ != null) {
-      output.writeMessage(7, getUnusedDependenciesParams());
+    if (libraryJarBaseCommand_ != null) {
+      output.writeMessage(3, getLibraryJarBaseCommand());
     }
     unknownFields.writeTo(output);
   }
@@ -379,25 +235,9 @@ private static final long serialVersionUID = 0L;
       size += dataSize;
       size += 1 * getPostprocessClassesCommandsList().size();
     }
-    if (pathToClasses_ != null) {
+    if (libraryJarBaseCommand_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(3, getPathToClasses());
-    }
-    if (rootOutput_ != null) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(4, getRootOutput());
-    }
-    if (pathToClassHashes_ != null) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(5, getPathToClassHashes());
-    }
-    if (annotationsPath_ != null) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(6, getAnnotationsPath());
-    }
-    if (unusedDependenciesParams_ != null) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(7, getUnusedDependenciesParams());
+        .computeMessageSize(3, getLibraryJarBaseCommand());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -421,30 +261,10 @@ private static final long serialVersionUID = 0L;
     }
     if (!getPostprocessClassesCommandsList()
         .equals(other.getPostprocessClassesCommandsList())) return false;
-    if (hasPathToClasses() != other.hasPathToClasses()) return false;
-    if (hasPathToClasses()) {
-      if (!getPathToClasses()
-          .equals(other.getPathToClasses())) return false;
-    }
-    if (hasRootOutput() != other.hasRootOutput()) return false;
-    if (hasRootOutput()) {
-      if (!getRootOutput()
-          .equals(other.getRootOutput())) return false;
-    }
-    if (hasPathToClassHashes() != other.hasPathToClassHashes()) return false;
-    if (hasPathToClassHashes()) {
-      if (!getPathToClassHashes()
-          .equals(other.getPathToClassHashes())) return false;
-    }
-    if (hasAnnotationsPath() != other.hasAnnotationsPath()) return false;
-    if (hasAnnotationsPath()) {
-      if (!getAnnotationsPath()
-          .equals(other.getAnnotationsPath())) return false;
-    }
-    if (hasUnusedDependenciesParams() != other.hasUnusedDependenciesParams()) return false;
-    if (hasUnusedDependenciesParams()) {
-      if (!getUnusedDependenciesParams()
-          .equals(other.getUnusedDependenciesParams())) return false;
+    if (hasLibraryJarBaseCommand() != other.hasLibraryJarBaseCommand()) return false;
+    if (hasLibraryJarBaseCommand()) {
+      if (!getLibraryJarBaseCommand()
+          .equals(other.getLibraryJarBaseCommand())) return false;
     }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
@@ -465,25 +285,9 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + POSTPROCESSCLASSESCOMMANDS_FIELD_NUMBER;
       hash = (53 * hash) + getPostprocessClassesCommandsList().hashCode();
     }
-    if (hasPathToClasses()) {
-      hash = (37 * hash) + PATHTOCLASSES_FIELD_NUMBER;
-      hash = (53 * hash) + getPathToClasses().hashCode();
-    }
-    if (hasRootOutput()) {
-      hash = (37 * hash) + ROOTOUTPUT_FIELD_NUMBER;
-      hash = (53 * hash) + getRootOutput().hashCode();
-    }
-    if (hasPathToClassHashes()) {
-      hash = (37 * hash) + PATHTOCLASSHASHES_FIELD_NUMBER;
-      hash = (53 * hash) + getPathToClassHashes().hashCode();
-    }
-    if (hasAnnotationsPath()) {
-      hash = (37 * hash) + ANNOTATIONSPATH_FIELD_NUMBER;
-      hash = (53 * hash) + getAnnotationsPath().hashCode();
-    }
-    if (hasUnusedDependenciesParams()) {
-      hash = (37 * hash) + UNUSEDDEPENDENCIESPARAMS_FIELD_NUMBER;
-      hash = (53 * hash) + getUnusedDependenciesParams().hashCode();
+    if (hasLibraryJarBaseCommand()) {
+      hash = (37 * hash) + LIBRARYJARBASECOMMAND_FIELD_NUMBER;
+      hash = (53 * hash) + getLibraryJarBaseCommand().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -581,6 +385,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * library jar command
+   * </pre>
+   *
    * Protobuf type {@code javacd.api.v1.LibraryJarCommand}
    */
   public static final class Builder extends
@@ -626,35 +434,11 @@ private static final long serialVersionUID = 0L;
       }
       postprocessClassesCommands_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000002);
-      if (pathToClassesBuilder_ == null) {
-        pathToClasses_ = null;
+      if (libraryJarBaseCommandBuilder_ == null) {
+        libraryJarBaseCommand_ = null;
       } else {
-        pathToClasses_ = null;
-        pathToClassesBuilder_ = null;
-      }
-      if (rootOutputBuilder_ == null) {
-        rootOutput_ = null;
-      } else {
-        rootOutput_ = null;
-        rootOutputBuilder_ = null;
-      }
-      if (pathToClassHashesBuilder_ == null) {
-        pathToClassHashes_ = null;
-      } else {
-        pathToClassHashes_ = null;
-        pathToClassHashesBuilder_ = null;
-      }
-      if (annotationsPathBuilder_ == null) {
-        annotationsPath_ = null;
-      } else {
-        annotationsPath_ = null;
-        annotationsPathBuilder_ = null;
-      }
-      if (unusedDependenciesParamsBuilder_ == null) {
-        unusedDependenciesParams_ = null;
-      } else {
-        unusedDependenciesParams_ = null;
-        unusedDependenciesParamsBuilder_ = null;
+        libraryJarBaseCommand_ = null;
+        libraryJarBaseCommandBuilder_ = null;
       }
       return this;
     }
@@ -694,30 +478,10 @@ private static final long serialVersionUID = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
       }
       result.postprocessClassesCommands_ = postprocessClassesCommands_;
-      if (pathToClassesBuilder_ == null) {
-        result.pathToClasses_ = pathToClasses_;
+      if (libraryJarBaseCommandBuilder_ == null) {
+        result.libraryJarBaseCommand_ = libraryJarBaseCommand_;
       } else {
-        result.pathToClasses_ = pathToClassesBuilder_.build();
-      }
-      if (rootOutputBuilder_ == null) {
-        result.rootOutput_ = rootOutput_;
-      } else {
-        result.rootOutput_ = rootOutputBuilder_.build();
-      }
-      if (pathToClassHashesBuilder_ == null) {
-        result.pathToClassHashes_ = pathToClassHashes_;
-      } else {
-        result.pathToClassHashes_ = pathToClassHashesBuilder_.build();
-      }
-      if (annotationsPathBuilder_ == null) {
-        result.annotationsPath_ = annotationsPath_;
-      } else {
-        result.annotationsPath_ = annotationsPathBuilder_.build();
-      }
-      if (unusedDependenciesParamsBuilder_ == null) {
-        result.unusedDependenciesParams_ = unusedDependenciesParams_;
-      } else {
-        result.unusedDependenciesParams_ = unusedDependenciesParamsBuilder_.build();
+        result.libraryJarBaseCommand_ = libraryJarBaseCommandBuilder_.build();
       }
       result.bitField0_ = to_bitField0_;
       onBuilt();
@@ -781,20 +545,8 @@ private static final long serialVersionUID = 0L;
         }
         onChanged();
       }
-      if (other.hasPathToClasses()) {
-        mergePathToClasses(other.getPathToClasses());
-      }
-      if (other.hasRootOutput()) {
-        mergeRootOutput(other.getRootOutput());
-      }
-      if (other.hasPathToClassHashes()) {
-        mergePathToClassHashes(other.getPathToClassHashes());
-      }
-      if (other.hasAnnotationsPath()) {
-        mergeAnnotationsPath(other.getAnnotationsPath());
-      }
-      if (other.hasUnusedDependenciesParams()) {
-        mergeUnusedDependenciesParams(other.getUnusedDependenciesParams());
+      if (other.hasLibraryJarBaseCommand()) {
+        mergeLibraryJarBaseCommand(other.getLibraryJarBaseCommand());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1037,589 +789,121 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private com.facebook.buck.javacd.model.RelPath pathToClasses_;
+    private com.facebook.buck.javacd.model.LibraryJarBaseCommand libraryJarBaseCommand_;
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> pathToClassesBuilder_;
+        com.facebook.buck.javacd.model.LibraryJarBaseCommand, com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder, com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder> libraryJarBaseCommandBuilder_;
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public boolean hasPathToClasses() {
-      return pathToClassesBuilder_ != null || pathToClasses_ != null;
+    public boolean hasLibraryJarBaseCommand() {
+      return libraryJarBaseCommandBuilder_ != null || libraryJarBaseCommand_ != null;
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public com.facebook.buck.javacd.model.RelPath getPathToClasses() {
-      if (pathToClassesBuilder_ == null) {
-        return pathToClasses_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : pathToClasses_;
+    public com.facebook.buck.javacd.model.LibraryJarBaseCommand getLibraryJarBaseCommand() {
+      if (libraryJarBaseCommandBuilder_ == null) {
+        return libraryJarBaseCommand_ == null ? com.facebook.buck.javacd.model.LibraryJarBaseCommand.getDefaultInstance() : libraryJarBaseCommand_;
       } else {
-        return pathToClassesBuilder_.getMessage();
+        return libraryJarBaseCommandBuilder_.getMessage();
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public Builder setPathToClasses(com.facebook.buck.javacd.model.RelPath value) {
-      if (pathToClassesBuilder_ == null) {
+    public Builder setLibraryJarBaseCommand(com.facebook.buck.javacd.model.LibraryJarBaseCommand value) {
+      if (libraryJarBaseCommandBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        pathToClasses_ = value;
+        libraryJarBaseCommand_ = value;
         onChanged();
       } else {
-        pathToClassesBuilder_.setMessage(value);
+        libraryJarBaseCommandBuilder_.setMessage(value);
       }
 
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public Builder setPathToClasses(
-        com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-      if (pathToClassesBuilder_ == null) {
-        pathToClasses_ = builderForValue.build();
+    public Builder setLibraryJarBaseCommand(
+        com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder builderForValue) {
+      if (libraryJarBaseCommandBuilder_ == null) {
+        libraryJarBaseCommand_ = builderForValue.build();
         onChanged();
       } else {
-        pathToClassesBuilder_.setMessage(builderForValue.build());
+        libraryJarBaseCommandBuilder_.setMessage(builderForValue.build());
       }
 
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public Builder mergePathToClasses(com.facebook.buck.javacd.model.RelPath value) {
-      if (pathToClassesBuilder_ == null) {
-        if (pathToClasses_ != null) {
-          pathToClasses_ =
-            com.facebook.buck.javacd.model.RelPath.newBuilder(pathToClasses_).mergeFrom(value).buildPartial();
+    public Builder mergeLibraryJarBaseCommand(com.facebook.buck.javacd.model.LibraryJarBaseCommand value) {
+      if (libraryJarBaseCommandBuilder_ == null) {
+        if (libraryJarBaseCommand_ != null) {
+          libraryJarBaseCommand_ =
+            com.facebook.buck.javacd.model.LibraryJarBaseCommand.newBuilder(libraryJarBaseCommand_).mergeFrom(value).buildPartial();
         } else {
-          pathToClasses_ = value;
+          libraryJarBaseCommand_ = value;
         }
         onChanged();
       } else {
-        pathToClassesBuilder_.mergeFrom(value);
+        libraryJarBaseCommandBuilder_.mergeFrom(value);
       }
 
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public Builder clearPathToClasses() {
-      if (pathToClassesBuilder_ == null) {
-        pathToClasses_ = null;
+    public Builder clearLibraryJarBaseCommand() {
+      if (libraryJarBaseCommandBuilder_ == null) {
+        libraryJarBaseCommand_ = null;
         onChanged();
       } else {
-        pathToClasses_ = null;
-        pathToClassesBuilder_ = null;
+        libraryJarBaseCommand_ = null;
+        libraryJarBaseCommandBuilder_ = null;
       }
 
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public com.facebook.buck.javacd.model.RelPath.Builder getPathToClassesBuilder() {
+    public com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder getLibraryJarBaseCommandBuilder() {
       
       onChanged();
-      return getPathToClassesFieldBuilder().getBuilder();
+      return getLibraryJarBaseCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getPathToClassesOrBuilder() {
-      if (pathToClassesBuilder_ != null) {
-        return pathToClassesBuilder_.getMessageOrBuilder();
+    public com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder() {
+      if (libraryJarBaseCommandBuilder_ != null) {
+        return libraryJarBaseCommandBuilder_.getMessageOrBuilder();
       } else {
-        return pathToClasses_ == null ?
-            com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : pathToClasses_;
+        return libraryJarBaseCommand_ == null ?
+            com.facebook.buck.javacd.model.LibraryJarBaseCommand.getDefaultInstance() : libraryJarBaseCommand_;
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-        getPathToClassesFieldBuilder() {
-      if (pathToClassesBuilder_ == null) {
-        pathToClassesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                getPathToClasses(),
+        com.facebook.buck.javacd.model.LibraryJarBaseCommand, com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder, com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder> 
+        getLibraryJarBaseCommandFieldBuilder() {
+      if (libraryJarBaseCommandBuilder_ == null) {
+        libraryJarBaseCommandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.javacd.model.LibraryJarBaseCommand, com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder, com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder>(
+                getLibraryJarBaseCommand(),
                 getParentForChildren(),
                 isClean());
-        pathToClasses_ = null;
+        libraryJarBaseCommand_ = null;
       }
-      return pathToClassesBuilder_;
-    }
-
-    private com.facebook.buck.javacd.model.RelPath rootOutput_;
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> rootOutputBuilder_;
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public boolean hasRootOutput() {
-      return rootOutputBuilder_ != null || rootOutput_ != null;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath getRootOutput() {
-      if (rootOutputBuilder_ == null) {
-        return rootOutput_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : rootOutput_;
-      } else {
-        return rootOutputBuilder_.getMessage();
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public Builder setRootOutput(com.facebook.buck.javacd.model.RelPath value) {
-      if (rootOutputBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        rootOutput_ = value;
-        onChanged();
-      } else {
-        rootOutputBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public Builder setRootOutput(
-        com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-      if (rootOutputBuilder_ == null) {
-        rootOutput_ = builderForValue.build();
-        onChanged();
-      } else {
-        rootOutputBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public Builder mergeRootOutput(com.facebook.buck.javacd.model.RelPath value) {
-      if (rootOutputBuilder_ == null) {
-        if (rootOutput_ != null) {
-          rootOutput_ =
-            com.facebook.buck.javacd.model.RelPath.newBuilder(rootOutput_).mergeFrom(value).buildPartial();
-        } else {
-          rootOutput_ = value;
-        }
-        onChanged();
-      } else {
-        rootOutputBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public Builder clearRootOutput() {
-      if (rootOutputBuilder_ == null) {
-        rootOutput_ = null;
-        onChanged();
-      } else {
-        rootOutput_ = null;
-        rootOutputBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath.Builder getRootOutputBuilder() {
-      
-      onChanged();
-      return getRootOutputFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getRootOutputOrBuilder() {
-      if (rootOutputBuilder_ != null) {
-        return rootOutputBuilder_.getMessageOrBuilder();
-      } else {
-        return rootOutput_ == null ?
-            com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : rootOutput_;
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-        getRootOutputFieldBuilder() {
-      if (rootOutputBuilder_ == null) {
-        rootOutputBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                getRootOutput(),
-                getParentForChildren(),
-                isClean());
-        rootOutput_ = null;
-      }
-      return rootOutputBuilder_;
-    }
-
-    private com.facebook.buck.javacd.model.RelPath pathToClassHashes_;
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> pathToClassHashesBuilder_;
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public boolean hasPathToClassHashes() {
-      return pathToClassHashesBuilder_ != null || pathToClassHashes_ != null;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath getPathToClassHashes() {
-      if (pathToClassHashesBuilder_ == null) {
-        return pathToClassHashes_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : pathToClassHashes_;
-      } else {
-        return pathToClassHashesBuilder_.getMessage();
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public Builder setPathToClassHashes(com.facebook.buck.javacd.model.RelPath value) {
-      if (pathToClassHashesBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        pathToClassHashes_ = value;
-        onChanged();
-      } else {
-        pathToClassHashesBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public Builder setPathToClassHashes(
-        com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-      if (pathToClassHashesBuilder_ == null) {
-        pathToClassHashes_ = builderForValue.build();
-        onChanged();
-      } else {
-        pathToClassHashesBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public Builder mergePathToClassHashes(com.facebook.buck.javacd.model.RelPath value) {
-      if (pathToClassHashesBuilder_ == null) {
-        if (pathToClassHashes_ != null) {
-          pathToClassHashes_ =
-            com.facebook.buck.javacd.model.RelPath.newBuilder(pathToClassHashes_).mergeFrom(value).buildPartial();
-        } else {
-          pathToClassHashes_ = value;
-        }
-        onChanged();
-      } else {
-        pathToClassHashesBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public Builder clearPathToClassHashes() {
-      if (pathToClassHashesBuilder_ == null) {
-        pathToClassHashes_ = null;
-        onChanged();
-      } else {
-        pathToClassHashes_ = null;
-        pathToClassHashesBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath.Builder getPathToClassHashesBuilder() {
-      
-      onChanged();
-      return getPathToClassHashesFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getPathToClassHashesOrBuilder() {
-      if (pathToClassHashesBuilder_ != null) {
-        return pathToClassHashesBuilder_.getMessageOrBuilder();
-      } else {
-        return pathToClassHashes_ == null ?
-            com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : pathToClassHashes_;
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-        getPathToClassHashesFieldBuilder() {
-      if (pathToClassHashesBuilder_ == null) {
-        pathToClassHashesBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                getPathToClassHashes(),
-                getParentForChildren(),
-                isClean());
-        pathToClassHashes_ = null;
-      }
-      return pathToClassHashesBuilder_;
-    }
-
-    private com.facebook.buck.javacd.model.RelPath annotationsPath_;
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> annotationsPathBuilder_;
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public boolean hasAnnotationsPath() {
-      return annotationsPathBuilder_ != null || annotationsPath_ != null;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath getAnnotationsPath() {
-      if (annotationsPathBuilder_ == null) {
-        return annotationsPath_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : annotationsPath_;
-      } else {
-        return annotationsPathBuilder_.getMessage();
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public Builder setAnnotationsPath(com.facebook.buck.javacd.model.RelPath value) {
-      if (annotationsPathBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        annotationsPath_ = value;
-        onChanged();
-      } else {
-        annotationsPathBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public Builder setAnnotationsPath(
-        com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-      if (annotationsPathBuilder_ == null) {
-        annotationsPath_ = builderForValue.build();
-        onChanged();
-      } else {
-        annotationsPathBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public Builder mergeAnnotationsPath(com.facebook.buck.javacd.model.RelPath value) {
-      if (annotationsPathBuilder_ == null) {
-        if (annotationsPath_ != null) {
-          annotationsPath_ =
-            com.facebook.buck.javacd.model.RelPath.newBuilder(annotationsPath_).mergeFrom(value).buildPartial();
-        } else {
-          annotationsPath_ = value;
-        }
-        onChanged();
-      } else {
-        annotationsPathBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public Builder clearAnnotationsPath() {
-      if (annotationsPathBuilder_ == null) {
-        annotationsPath_ = null;
-        onChanged();
-      } else {
-        annotationsPath_ = null;
-        annotationsPathBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath.Builder getAnnotationsPathBuilder() {
-      
-      onChanged();
-      return getAnnotationsPathFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getAnnotationsPathOrBuilder() {
-      if (annotationsPathBuilder_ != null) {
-        return annotationsPathBuilder_.getMessageOrBuilder();
-      } else {
-        return annotationsPath_ == null ?
-            com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : annotationsPath_;
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-        getAnnotationsPathFieldBuilder() {
-      if (annotationsPathBuilder_ == null) {
-        annotationsPathBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                getAnnotationsPath(),
-                getParentForChildren(),
-                isClean());
-        annotationsPath_ = null;
-      }
-      return annotationsPathBuilder_;
-    }
-
-    private com.facebook.buck.javacd.model.UnusedDependenciesParams unusedDependenciesParams_;
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.UnusedDependenciesParams, com.facebook.buck.javacd.model.UnusedDependenciesParams.Builder, com.facebook.buck.javacd.model.UnusedDependenciesParamsOrBuilder> unusedDependenciesParamsBuilder_;
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public boolean hasUnusedDependenciesParams() {
-      return unusedDependenciesParamsBuilder_ != null || unusedDependenciesParams_ != null;
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public com.facebook.buck.javacd.model.UnusedDependenciesParams getUnusedDependenciesParams() {
-      if (unusedDependenciesParamsBuilder_ == null) {
-        return unusedDependenciesParams_ == null ? com.facebook.buck.javacd.model.UnusedDependenciesParams.getDefaultInstance() : unusedDependenciesParams_;
-      } else {
-        return unusedDependenciesParamsBuilder_.getMessage();
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public Builder setUnusedDependenciesParams(com.facebook.buck.javacd.model.UnusedDependenciesParams value) {
-      if (unusedDependenciesParamsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        unusedDependenciesParams_ = value;
-        onChanged();
-      } else {
-        unusedDependenciesParamsBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public Builder setUnusedDependenciesParams(
-        com.facebook.buck.javacd.model.UnusedDependenciesParams.Builder builderForValue) {
-      if (unusedDependenciesParamsBuilder_ == null) {
-        unusedDependenciesParams_ = builderForValue.build();
-        onChanged();
-      } else {
-        unusedDependenciesParamsBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public Builder mergeUnusedDependenciesParams(com.facebook.buck.javacd.model.UnusedDependenciesParams value) {
-      if (unusedDependenciesParamsBuilder_ == null) {
-        if (unusedDependenciesParams_ != null) {
-          unusedDependenciesParams_ =
-            com.facebook.buck.javacd.model.UnusedDependenciesParams.newBuilder(unusedDependenciesParams_).mergeFrom(value).buildPartial();
-        } else {
-          unusedDependenciesParams_ = value;
-        }
-        onChanged();
-      } else {
-        unusedDependenciesParamsBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public Builder clearUnusedDependenciesParams() {
-      if (unusedDependenciesParamsBuilder_ == null) {
-        unusedDependenciesParams_ = null;
-        onChanged();
-      } else {
-        unusedDependenciesParams_ = null;
-        unusedDependenciesParamsBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public com.facebook.buck.javacd.model.UnusedDependenciesParams.Builder getUnusedDependenciesParamsBuilder() {
-      
-      onChanged();
-      return getUnusedDependenciesParamsFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    public com.facebook.buck.javacd.model.UnusedDependenciesParamsOrBuilder getUnusedDependenciesParamsOrBuilder() {
-      if (unusedDependenciesParamsBuilder_ != null) {
-        return unusedDependenciesParamsBuilder_.getMessageOrBuilder();
-      } else {
-        return unusedDependenciesParams_ == null ?
-            com.facebook.buck.javacd.model.UnusedDependenciesParams.getDefaultInstance() : unusedDependenciesParams_;
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.UnusedDependenciesParams, com.facebook.buck.javacd.model.UnusedDependenciesParams.Builder, com.facebook.buck.javacd.model.UnusedDependenciesParamsOrBuilder> 
-        getUnusedDependenciesParamsFieldBuilder() {
-      if (unusedDependenciesParamsBuilder_ == null) {
-        unusedDependenciesParamsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.javacd.model.UnusedDependenciesParams, com.facebook.buck.javacd.model.UnusedDependenciesParams.Builder, com.facebook.buck.javacd.model.UnusedDependenciesParamsOrBuilder>(
-                getUnusedDependenciesParams(),
-                getParentForChildren(),
-                isClean());
-        unusedDependenciesParams_ = null;
-      }
-      return unusedDependenciesParamsBuilder_;
+      return libraryJarBaseCommandBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

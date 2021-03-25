@@ -5,6 +5,10 @@
 package com.facebook.buck.javacd.model;
 
 /**
+ * <pre>
+ * abi jar command
+ * </pre>
+ *
  * Protobuf type {@code javacd.api.v1.AbiJarCommand}
  */
 @javax.annotation.Generated(value="protoc", comments="annotations:AbiJarCommand.java.pb.meta")
@@ -321,6 +325,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * abi jar command
+   * </pre>
+   *
    * Protobuf type {@code javacd.api.v1.AbiJarCommand}
    */
   public static final class Builder extends

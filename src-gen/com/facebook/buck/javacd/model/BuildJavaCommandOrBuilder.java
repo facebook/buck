@@ -10,55 +10,41 @@ public interface BuildJavaCommandOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <pre>
-   * BaseJavacToJarStepFactory params
-   * </pre>
-   *
-   * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+   * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
    */
-  int getSpoolModeValue();
+  boolean hasBaseCommandParams();
   /**
-   * <pre>
-   * BaseJavacToJarStepFactory params
-   * </pre>
-   *
-   * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+   * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
    */
-  com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode getSpoolMode();
+  com.facebook.buck.javacd.model.BaseCommandParams getBaseCommandParams();
+  /**
+   * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
+   */
+  com.facebook.buck.javacd.model.BaseCommandParamsOrBuilder getBaseCommandParamsOrBuilder();
 
   /**
-   * <code>bool hasAnnotationProcessing = 2;</code>
-   */
-  boolean getHasAnnotationProcessing();
-
-  /**
-   * <code>bool withDownwardApi = 3;</code>
-   */
-  boolean getWithDownwardApi();
-
-  /**
-   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
    */
   boolean hasLibraryJarCommand();
   /**
-   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
    */
   com.facebook.buck.javacd.model.LibraryJarCommand getLibraryJarCommand();
   /**
-   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
    */
   com.facebook.buck.javacd.model.LibraryJarCommandOrBuilder getLibraryJarCommandOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
    */
   boolean hasAbiJarCommand();
   /**
-   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
    */
   com.facebook.buck.javacd.model.AbiJarCommand getAbiJarCommand();
   /**
-   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
    */
   com.facebook.buck.javacd.model.AbiJarCommandOrBuilder getAbiJarCommandOrBuilder();
 

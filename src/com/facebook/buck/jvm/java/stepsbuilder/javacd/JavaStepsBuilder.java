@@ -20,10 +20,13 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.AbiJarCommand;
+import com.facebook.buck.javacd.model.BaseCommandParams;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
+import com.facebook.buck.javacd.model.RelPathMapEntry;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
@@ -72,7 +75,7 @@ public class JavaStepsBuilder {
   }
 
   private Pair<AbsPath, ImmutableList<IsolatedStep>> buildSteps(BuildJavaCommand buildJavaCommand) {
-    boolean withDownwardApi = buildJavaCommand.getWithDownwardApi();
+    boolean withDownwardApi = buildJavaCommand.getBaseCommandParams().getWithDownwardApi();
     DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> factory =
         creteDefaultStepsFactory(buildJavaCommand, withDownwardApi);
 
@@ -110,13 +113,14 @@ public class JavaStepsBuilder {
       LibraryJarCommand libraryJarCommand,
       boolean withDownwardApi) {
     BaseJarCommand command = libraryJarCommand.getBaseJarCommand();
+    LibraryJarBaseCommand libraryJarBaseCommand = libraryJarCommand.getLibraryJarBaseCommand();
 
     ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
         toCellToPathMapping(command.getCellToPathMappingsMap());
     BuildTargetValue buildTargetValue =
         BuildTargetValueSerializer.deserialize(command.getBuildTargetValue());
     RelPath pathToClassHashes =
-        RelPathSerializer.deserialize(libraryJarCommand.getPathToClassHashes());
+        RelPathSerializer.deserialize(libraryJarBaseCommand.getPathToClassHashes());
 
     FilesystemParams filesystemParams = command.getFilesystemParams();
 
@@ -143,8 +147,8 @@ public class JavaStepsBuilder {
             ? JarParametersSerializer.deserialize(command.getLibraryJarParameters())
             : null,
         AbsPathSerializer.deserialize(command.getBuildCellRootPath()),
-        libraryJarCommand.hasPathToClasses()
-            ? Optional.of(RelPathSerializer.deserialize(libraryJarCommand.getPathToClasses()))
+        libraryJarBaseCommand.hasPathToClasses()
+            ? Optional.of(RelPathSerializer.deserialize(libraryJarBaseCommand.getPathToClasses()))
             : Optional.empty(),
         ResolvedJavacSerializer.deserialize(command.getResolvedJavac()),
         JavaExtraParams.of(
@@ -203,10 +207,11 @@ public class JavaStepsBuilder {
 
   private DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
       BuildJavaCommand buildJavaCommand, boolean withDownwardApi) {
+    BaseCommandParams baseCommandParams = buildJavaCommand.getBaseCommandParams();
     BaseJavacToJarStepFactory baseJavacToJarStepFactory =
         new BaseJavacToJarStepFactory(
-            buildJavaCommand.getSpoolMode(),
-            buildJavaCommand.getHasAnnotationProcessing(),
+            baseCommandParams.getSpoolMode(),
+            baseCommandParams.getHasAnnotationProcessing(),
             withDownwardApi);
     return new DefaultJavaCompileStepsBuilderFactory<>(baseJavacToJarStepFactory);
   }
@@ -217,24 +222,24 @@ public class JavaStepsBuilder {
       BuildTargetValue buildTargetValue,
       RelPath pathToClassHashes,
       LibraryStepsBuilderBase javaCompileStepsBuilder) {
-
-    if (command.hasUnusedDependenciesParams()) {
-      UnusedDependenciesParams unusedDependenciesParams = command.getUnusedDependenciesParams();
+    LibraryJarBaseCommand libraryJarBaseCommand = command.getLibraryJarBaseCommand();
+    if (libraryJarBaseCommand.hasUnusedDependenciesParams()) {
+      UnusedDependenciesParams unusedDependenciesParams =
+          libraryJarBaseCommand.getUnusedDependenciesParams();
       javaCompileStepsBuilder.addUnusedDependencyStep(
           unusedDependenciesParams, cellToPathMappings, buildTargetValue.getFullyQualifiedName());
     }
 
     javaCompileStepsBuilder.addMakeMissingOutputsStep(
-        RelPathSerializer.deserialize(command.getRootOutput()),
+        RelPathSerializer.deserialize(libraryJarBaseCommand.getRootOutput()),
         pathToClassHashes,
-        RelPathSerializer.deserialize(command.getAnnotationsPath()));
+        RelPathSerializer.deserialize(libraryJarBaseCommand.getAnnotationsPath()));
   }
 
-  private ImmutableMap<RelPath, RelPath> toResourceMap(
-      List<BaseJarCommand.RelPathMapEntry> resourcesMapList) {
+  private ImmutableMap<RelPath, RelPath> toResourceMap(List<RelPathMapEntry> resourcesMapList) {
     ImmutableMap.Builder<RelPath, RelPath> builder =
         ImmutableMap.builderWithExpectedSize(resourcesMapList.size());
-    for (BaseJarCommand.RelPathMapEntry entry : resourcesMapList) {
+    for (RelPathMapEntry entry : resourcesMapList) {
       builder.put(
           RelPathSerializer.deserialize(entry.getKey()),
           RelPathSerializer.deserialize(entry.getValue()));

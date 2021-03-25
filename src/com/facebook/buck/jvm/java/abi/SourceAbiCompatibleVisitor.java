@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.abi;
 
 import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.usesDependencies;
 
-import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.infer.annotation.PropagatesNullable;
 import java.util.Objects;
 import javax.annotation.Nullable;

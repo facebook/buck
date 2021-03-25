@@ -24,8 +24,8 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -167,8 +167,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         delegate.getBoolean(SECTION, "track_javac_phase_events");
     trackJavacPhaseEvents.ifPresent(builder::setTrackJavacPhaseEvents);
 
-    Optional<BuildJavaCommand.SpoolMode> spoolMode =
-        delegate.getEnum(SECTION, "jar_spool_mode", BuildJavaCommand.SpoolMode.class);
+    Optional<SpoolMode> spoolMode = delegate.getEnum(SECTION, "jar_spool_mode", SpoolMode.class);
     spoolMode.ifPresent(builder::setSpoolMode);
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);

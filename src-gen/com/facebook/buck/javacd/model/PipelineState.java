@@ -5,6 +5,10 @@
 package com.facebook.buck.javacd.model;
 
 /**
+ * <pre>
+ * Represents pipelining state
+ * </pre>
+ *
  * Protobuf type {@code javacd.api.v1.PipelineState}
  */
 @javax.annotation.Generated(value="protoc", comments="annotations:PipelineState.java.pb.meta")
@@ -423,35 +427,35 @@ private static final long serialVersionUID = 0L;
   public static final int ABICOMPATIBILITYMODE_FIELD_NUMBER = 8;
   private int abiCompatibilityMode_;
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
    */
   public int getAbiCompatibilityModeValue() {
     return abiCompatibilityMode_;
   }
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
    */
-  public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiCompatibilityMode() {
+  public com.facebook.buck.javacd.model.AbiGenerationMode getAbiCompatibilityMode() {
     @SuppressWarnings("deprecation")
-    com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiCompatibilityMode_);
-    return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+    com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiCompatibilityMode_);
+    return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
   }
 
   public static final int ABIGENERATIONMODE_FIELD_NUMBER = 9;
   private int abiGenerationMode_;
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
    */
   public int getAbiGenerationModeValue() {
     return abiGenerationMode_;
   }
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
    */
-  public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiGenerationMode() {
+  public com.facebook.buck.javacd.model.AbiGenerationMode getAbiGenerationMode() {
     @SuppressWarnings("deprecation")
-    com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiGenerationMode_);
-    return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+    com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiGenerationMode_);
+    return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
   }
 
   public static final int ISREQUIREDFORSOURCEONLYABI_FIELD_NUMBER = 10;
@@ -612,10 +616,10 @@ private static final long serialVersionUID = 0L;
     if (trackJavacPhaseEvents_ != false) {
       output.writeBool(7, trackJavacPhaseEvents_);
     }
-    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       output.writeEnum(8, abiCompatibilityMode_);
     }
-    if (abiGenerationMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiGenerationMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       output.writeEnum(9, abiGenerationMode_);
     }
     if (isRequiredForSourceOnlyAbi_ != false) {
@@ -676,11 +680,11 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(7, trackJavacPhaseEvents_);
     }
-    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiCompatibilityMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(8, abiCompatibilityMode_);
     }
-    if (abiGenerationMode_ != com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNKNOWN.getNumber()) {
+    if (abiGenerationMode_ != com.facebook.buck.javacd.model.AbiGenerationMode.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(9, abiGenerationMode_);
     }
@@ -938,6 +942,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * Represents pipelining state
+   * </pre>
+   *
    * Protobuf type {@code javacd.api.v1.PipelineState}
    */
   public static final class Builder extends
@@ -2501,13 +2509,13 @@ private static final long serialVersionUID = 0L;
 
     private int abiCompatibilityMode_ = 0;
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
      */
     public int getAbiCompatibilityModeValue() {
       return abiCompatibilityMode_;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
      */
     public Builder setAbiCompatibilityModeValue(int value) {
       abiCompatibilityMode_ = value;
@@ -2515,17 +2523,17 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiCompatibilityMode() {
+    public com.facebook.buck.javacd.model.AbiGenerationMode getAbiCompatibilityMode() {
       @SuppressWarnings("deprecation")
-      com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiCompatibilityMode_);
-      return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+      com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiCompatibilityMode_);
+      return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
      */
-    public Builder setAbiCompatibilityMode(com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode value) {
+    public Builder setAbiCompatibilityMode(com.facebook.buck.javacd.model.AbiGenerationMode value) {
       if (value == null) {
         throw new NullPointerException();
       }
@@ -2535,7 +2543,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
      */
     public Builder clearAbiCompatibilityMode() {
       
@@ -2546,13 +2554,13 @@ private static final long serialVersionUID = 0L;
 
     private int abiGenerationMode_ = 0;
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
      */
     public int getAbiGenerationModeValue() {
       return abiGenerationMode_;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
      */
     public Builder setAbiGenerationModeValue(int value) {
       abiGenerationMode_ = value;
@@ -2560,17 +2568,17 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
      */
-    public com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiGenerationMode() {
+    public com.facebook.buck.javacd.model.AbiGenerationMode getAbiGenerationMode() {
       @SuppressWarnings("deprecation")
-      com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode result = com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.valueOf(abiGenerationMode_);
-      return result == null ? com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode.UNRECOGNIZED : result;
+      com.facebook.buck.javacd.model.AbiGenerationMode result = com.facebook.buck.javacd.model.AbiGenerationMode.valueOf(abiGenerationMode_);
+      return result == null ? com.facebook.buck.javacd.model.AbiGenerationMode.UNRECOGNIZED : result;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
      */
-    public Builder setAbiGenerationMode(com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode value) {
+    public Builder setAbiGenerationMode(com.facebook.buck.javacd.model.AbiGenerationMode value) {
       if (value == null) {
         throw new NullPointerException();
       }
@@ -2580,7 +2588,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+     * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
      */
     public Builder clearAbiGenerationMode() {
       

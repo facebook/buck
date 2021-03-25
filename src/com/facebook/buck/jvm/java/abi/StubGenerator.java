@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.jvm.java.JavacEventSink;
 import com.facebook.buck.jvm.java.JavacEventSinkScopedSimplePerfEvent;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;

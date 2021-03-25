@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
-import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
@@ -33,7 +33,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory {
 
   private final boolean hasAnnotationProcessing;
-  private final BuildJavaCommand.SpoolMode spoolMode;
+  private final SpoolMode spoolMode;
   private final boolean withDownwardApi;
   // TODO msemko: remove delegate when all builders are ready.
   private final DefaultJavaCompileStepsBuilderFactory<?> delegate;

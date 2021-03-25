@@ -20,9 +20,11 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.BaseJarCommand;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -45,7 +47,7 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
 
   JavaCDLibraryJarStepsBuilder(
       boolean hasAnnotationProcessing,
-      BuildJavaCommand.SpoolMode spoolMode,
+      SpoolMode spoolMode,
       boolean withDownwardApi,
       JavaCDParams javaCDParams) {
     super(
@@ -59,8 +61,8 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
 
   @Override
   public void addBuildStepsForLibraryJar(
-      BaseJarCommand.AbiGenerationMode abiCompatibilityMode,
-      BaseJarCommand.AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
       ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
@@ -109,9 +111,12 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
     for (String postprocessClassesCommand : postprocessClassesCommands) {
       libraryJarCommandBuilder.addPostprocessClassesCommands(postprocessClassesCommand);
     }
+
+    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
+        libraryJarCommandBuilder.getLibraryJarBaseCommandBuilder();
     pathToClasses
         .map(RelPathSerializer::serialize)
-        .ifPresent(libraryJarCommandBuilder::setPathToClasses);
+        .ifPresent(libraryJarBaseCommandBuilder::setPathToClasses);
   }
 
   @Override

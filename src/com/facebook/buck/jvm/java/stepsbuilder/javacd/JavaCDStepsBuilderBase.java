@@ -19,11 +19,15 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.AbiJarCommand;
+import com.facebook.buck.javacd.model.BaseCommandParams;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
+import com.facebook.buck.javacd.model.RelPathMapEntry;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -67,15 +71,17 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
   protected JavaCDStepsBuilderBase(
       boolean hasAnnotationProcessing,
-      BuildJavaCommand.SpoolMode spoolMode,
+      SpoolMode spoolMode,
       boolean withDownwardApi,
       Type type,
       JavaCDParams javaCDParams) {
     this.type = type;
     this.javaCDParams = javaCDParams;
-    commandBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
-    commandBuilder.setWithDownwardApi(withDownwardApi);
-    commandBuilder.setSpoolMode(spoolMode);
+    BaseCommandParams.Builder baseCommandParamsBuilder =
+        commandBuilder.getBaseCommandParamsBuilder();
+    baseCommandParamsBuilder.setHasAnnotationProcessing(hasAnnotationProcessing);
+    baseCommandParamsBuilder.setWithDownwardApi(withDownwardApi);
+    baseCommandParamsBuilder.setSpoolMode(spoolMode);
   }
 
   @Override
@@ -105,8 +111,8 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
   protected abstract T buildCommand();
 
   protected BaseJarCommand buildBaseJarCommand(
-      BaseJarCommand.AbiGenerationMode abiCompatibilityMode,
-      BaseJarCommand.AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
@@ -150,7 +156,7 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     resourcesMap.forEach(
         (key, value) ->
             builder.addResourcesMap(
-                BaseJarCommand.RelPathMapEntry.newBuilder()
+                RelPathMapEntry.newBuilder()
                     .setKey(RelPathSerializer.serialize(key))
                     .setValue(RelPathSerializer.serialize(value))
                     .build()));

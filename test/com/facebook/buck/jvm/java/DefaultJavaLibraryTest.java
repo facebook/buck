@@ -61,7 +61,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -985,7 +985,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(BuildJavaCommand.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -1008,7 +1008,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(BuildJavaCommand.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
     BuildContext buildContext = createBuildContext();
@@ -1031,7 +1031,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(BuildJavaCommand.SpoolMode.INTERMEDIATE_TO_DISK),
+            Optional.of(SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -1392,7 +1392,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
-      Optional<BuildJavaCommand.SpoolMode> spoolMode,
+      Optional<SpoolMode> spoolMode,
       ImmutableList<String> postprocessClassesCommands)
       throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();

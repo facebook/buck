@@ -20,9 +20,10 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.AbiJarCommand;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.BaseJarCommand;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -46,7 +47,7 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
 
   JavaCDAbiJarStepsBuilder(
       boolean hasAnnotationProcessing,
-      BuildJavaCommand.SpoolMode spoolMode,
+      SpoolMode spoolMode,
       boolean withDownwardApi,
       JavaCDParams javaCDParams) {
     super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, javaCDParams);
@@ -54,8 +55,8 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
 
   @Override
   public void addBuildStepsForAbiJar(
-      BaseJarCommand.AbiGenerationMode abiCompatibilityMode,
-      BaseJarCommand.AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,

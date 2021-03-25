@@ -129,22 +129,22 @@ public interface PipelineStateOrBuilder extends
   boolean getTrackJavacPhaseEvents();
 
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
    */
   int getAbiCompatibilityModeValue();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 8;</code>
    */
-  com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiCompatibilityMode();
+  com.facebook.buck.javacd.model.AbiGenerationMode getAbiCompatibilityMode();
 
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
    */
   int getAbiGenerationModeValue();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 9;</code>
    */
-  com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiGenerationMode();
+  com.facebook.buck.javacd.model.AbiGenerationMode getAbiGenerationMode();
 
   /**
    * <code>bool isRequiredForSourceOnlyAbi = 10;</code>

@@ -18,7 +18,8 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
+import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
@@ -37,7 +38,7 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
 
   protected JavaCDLibraryCompileStepsBuilder(
       boolean hasAnnotationProcessing,
-      BuildJavaCommand.SpoolMode spoolMode,
+      SpoolMode spoolMode,
       boolean withDownwardApi,
       Type type,
       MessageOrBuilder commandBuilder,
@@ -51,16 +52,21 @@ abstract class JavaCDLibraryCompileStepsBuilder<T extends Message> extends JavaC
       UnusedDependenciesParams unusedDependenciesParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       String buildTargetFullyQualifiedName) {
-    getLibraryJarCommandBuilder().setUnusedDependenciesParams(unusedDependenciesParams);
+    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
+        getLibraryJarCommandBuilder().getLibraryJarBaseCommandBuilder();
+    libraryJarBaseCommandBuilder.setUnusedDependenciesParams(unusedDependenciesParams);
   }
 
   @Override
   public void addMakeMissingOutputsStep(
       RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath) {
     LibraryJarCommand.Builder libraryJarCommandBuilder = getLibraryJarCommandBuilder();
-    libraryJarCommandBuilder.setRootOutput(RelPathSerializer.serialize(rootOutput));
-    libraryJarCommandBuilder.setPathToClassHashes(RelPathSerializer.serialize(pathToClassHashes));
-    libraryJarCommandBuilder.setAnnotationsPath(RelPathSerializer.serialize(annotationsPath));
+    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
+        libraryJarCommandBuilder.getLibraryJarBaseCommandBuilder();
+    libraryJarBaseCommandBuilder.setRootOutput(RelPathSerializer.serialize(rootOutput));
+    libraryJarBaseCommandBuilder.setPathToClassHashes(
+        RelPathSerializer.serialize(pathToClassHashes));
+    libraryJarBaseCommandBuilder.setAnnotationsPath(RelPathSerializer.serialize(annotationsPath));
   }
 
   protected LibraryJarCommand.Builder getLibraryJarCommandBuilder() {

@@ -35,12 +35,15 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.BuildTargetValue;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.JarParameters;
 import com.facebook.buck.javacd.model.JavaAbiInfo;
+import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.javacd.model.OutputPathsValue;
 import com.facebook.buck.javacd.model.RelPath;
@@ -312,241 +315,204 @@ public class JavaCDIntegrationTest {
     String sourceAbiOutputPathDir = "output#source-abi";
     String sourceOnlyAbiOutputPathDir = "output#source-only-abi";
 
-    BuildJavaCommand buildJavaCommand =
-        BuildJavaCommand.newBuilder()
-            .setWithDownwardApi(true)
-            .setSpoolMode(BuildJavaCommand.SpoolMode.DIRECT_TO_JAR)
-            .setHasAnnotationProcessing(false)
-            .setLibraryJarCommand(
-                LibraryJarCommand.newBuilder()
-                    .setBaseJarCommand(
-                        BaseJarCommand.newBuilder()
-                            .setAbiCompatibilityMode(BaseJarCommand.AbiGenerationMode.SOURCE_ONLY)
-                            .setAbiGenerationMode(BaseJarCommand.AbiGenerationMode.SOURCE_ONLY)
-                            .setTrackClassUsage(true)
-                            .setFilesystemParams(
-                                FilesystemParams.newBuilder()
-                                    .setRootPath(
-                                        com.facebook.buck.javacd.model.AbsPath.newBuilder()
-                                            .setPath(baseDirectory)
-                                            .build())
-                                    .setConfiguredBuckOut(
-                                        RelPath.newBuilder().setPath("buck-out").build())
-                                    .addGlobIgnorePaths("ant-out/**")
-                                    .addGlobIgnorePaths("**/*.pyc")
-                                    .build())
-                            .setBuildTargetValue(
-                                BuildTargetValue.newBuilder()
-                                    .setFullyQualifiedName(target)
-                                    .setType(BuildTargetValue.Type.LIBRARY)
-                                    .build())
-                            .setOutputPathsValue(
-                                OutputPathsValue.newBuilder()
-                                    .setLibraryPaths(
-                                        OutputPathsValue.OutputPaths.newBuilder()
-                                            .setClassesDir(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        outputPathDir
-                                                            + "/lib__path__scratch/classes")
-                                                    .build())
-                                            .setOutputJarDirPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(outputPathDir + "/lib__path__output")
-                                                    .build())
-                                            .setAnnotationPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(outputPathDir + "/__path_gen__")
-                                                    .build())
-                                            .setPathToSourcesList(
-                                                RelPath.newBuilder()
-                                                    .setPath(outputPathDir + "/__path__srcs")
-                                                    .build())
-                                            .setWorkingDirectory(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        outputPathDir
-                                                            + "/lib__path__working_directory")
-                                                    .build())
-                                            .setOutputJarPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        outputPathDir
-                                                            + "/lib__path__output/path.jar")
-                                                    .build())
-                                            .build())
-                                    .setSourceAbiPaths(
-                                        OutputPathsValue.OutputPaths.newBuilder()
-                                            .setClassesDir(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceAbiOutputPathDir
-                                                            + "/lib__path__scratch/classes")
-                                                    .build())
-                                            .setOutputJarDirPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceAbiOutputPathDir
-                                                            + "/lib__path__output")
-                                                    .build())
-                                            .setAnnotationPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceAbiOutputPathDir + "/__path_gen__")
-                                                    .build())
-                                            .setPathToSourcesList(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceAbiOutputPathDir + "/__path__srcs")
-                                                    .build())
-                                            .setWorkingDirectory(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceAbiOutputPathDir
-                                                            + "/lib__path__working_directory")
-                                                    .build())
-                                            .setOutputJarPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceAbiOutputPathDir
-                                                            + "/lib__path__output/path.jar")
-                                                    .build())
-                                            .build())
-                                    .setSourceOnlyAbiPaths(
-                                        OutputPathsValue.OutputPaths.newBuilder()
-                                            .setClassesDir(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceOnlyAbiOutputPathDir
-                                                            + "/lib__path__scratch/classes")
-                                                    .build())
-                                            .setOutputJarDirPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceOnlyAbiOutputPathDir
-                                                            + "/lib__path__output")
-                                                    .build())
-                                            .setAnnotationPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceOnlyAbiOutputPathDir
-                                                            + "/__path_gen__")
-                                                    .build())
-                                            .setPathToSourcesList(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceOnlyAbiOutputPathDir
-                                                            + "/__path__srcs")
-                                                    .build())
-                                            .setWorkingDirectory(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceOnlyAbiOutputPathDir
-                                                            + "/lib__path__working_directory")
-                                                    .build())
-                                            .setOutputJarPath(
-                                                RelPath.newBuilder()
-                                                    .setPath(
-                                                        sourceOnlyAbiOutputPathDir
-                                                            + "/lib__path__output/path.jar")
-                                                    .build())
-                                            .build())
-                                    .build())
-                            .addCompileTimeClasspathPaths(
-                                RelPath.newBuilder().setPath("libs/exceptions-abi.jar").build())
-                            .addCompileTimeClasspathPaths(
-                                RelPath.newBuilder().setPath("libs/filesystems-abi.jar").build())
-                            .addCompileTimeClasspathPaths(
-                                RelPath.newBuilder().setPath("libs/platform-abi.jar").build())
-                            .addCompileTimeClasspathPaths(
-                                RelPath.newBuilder().setPath("libs/guava-abi.jar").build())
-                            .addCompileTimeClasspathPaths(
-                                RelPath.newBuilder().setPath("libs/jsr305-abi.jar").build())
-                            .addJavaSrcs(
-                                RelPath.newBuilder()
-                                    .setPath(
-                                        "src/com/facebook/buck/core/path/TestForwardRelativePath.java")
-                                    .build())
-                            .addJavaSrcs(
-                                RelPath.newBuilder()
-                                    .setPath(
-                                        "src/com/facebook/buck/core/path/TestGenruleOutPath.java")
-                                    .build())
-                            .addFullJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName(
-                                        "//src/com/facebook/buck/core/exceptions:exceptions")
-                                    .build())
-                            .addFullJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName(
-                                        "//src/com/facebook/buck/core/filesystems:filesystems")
-                                    .build())
-                            .addFullJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName(
-                                        "//src/com/facebook/buck/util/environment:platform")
-                                    .build())
-                            .addFullJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName("//third-party/java/guava:guava")
-                                    .build())
-                            .addFullJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName("//third-party/java/jsr:jsr305")
-                                    .build())
-                            .addAbiJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName("//third-party/java/guava:guava")
-                                    .build())
-                            .addAbiJarInfos(
-                                JavaAbiInfo.newBuilder()
-                                    .setBuildTargetName("//third-party/java/jsr:jsr305")
-                                    .build())
-                            .putCellToPathMappings("", RelPath.newBuilder().setPath("").build())
-                            .setLibraryJarParameters(
-                                JarParameters.newBuilder()
-                                    .setJarPath(
-                                        RelPath.newBuilder()
-                                            .setPath("output/lib__path__output/path.jar")
-                                            .build())
-                                    .addEntriesToJar(
-                                        RelPath.newBuilder()
-                                            .setPath("output/lib__path__scratch/classes")
-                                            .build())
-                                    .setDuplicatesLogLevel(JarParameters.LogLevel.INFO)
-                                    .build())
-                            .setBuildCellRootPath(
-                                com.facebook.buck.javacd.model.AbsPath.newBuilder()
-                                    .setPath(baseDirectory)
-                                    .build())
-                            .setResolvedJavac(
-                                ResolvedJavac.newBuilder()
-                                    .setJcr199Javac(ResolvedJavac.JSR199Javac.getDefaultInstance())
-                                    .build())
-                            .setResolvedJavacOptions(
-                                ResolvedJavacOptions.newBuilder()
-                                    .addBootclasspathList(
-                                        RelPath.newBuilder()
-                                            .setPath("third-party/java/jdk/jdk8-rt-stub.jar")
-                                            .build())
-                                    .setLanguageLevelOptions(
-                                        ResolvedJavacOptions.JavacLanguageLevelOptions.newBuilder()
-                                            .setSourceLevel("8")
-                                            .setTargetLevel("8")
-                                            .build())
-                                    .setDebug(true)
-                                    .build())
-                            .build())
-                    .setPathToClasses(
-                        RelPath.newBuilder().setPath("output/lib__path__output/path.jar").build())
-                    .setRootOutput(RelPath.newBuilder().setPath("output/lib__path__output").build())
-                    .setPathToClassHashes(
-                        RelPath.newBuilder().setPath("output/path.classes.txt").build())
-                    .setAnnotationsPath(RelPath.newBuilder().setPath("output/__path_gen__").build())
-                    .build())
-            .build();
-    return buildJavaCommand;
+    BuildJavaCommand.Builder buildJavaCommandBuilder = BuildJavaCommand.newBuilder();
+    buildJavaCommandBuilder
+        .getBaseCommandParamsBuilder()
+        .setWithDownwardApi(true)
+        .setSpoolMode(SpoolMode.DIRECT_TO_JAR)
+        .setHasAnnotationProcessing(false);
+
+    LibraryJarCommand.Builder libraryJarBuilder = LibraryJarCommand.newBuilder();
+    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
+        libraryJarBuilder.getLibraryJarBaseCommandBuilder();
+    libraryJarBaseCommandBuilder
+        .setPathToClasses(RelPath.newBuilder().setPath("output/lib__path__output/path.jar").build())
+        .setRootOutput(RelPath.newBuilder().setPath("output/lib__path__output").build())
+        .setPathToClassHashes(RelPath.newBuilder().setPath("output/path.classes.txt").build())
+        .setAnnotationsPath(RelPath.newBuilder().setPath("output/__path_gen__").build());
+
+    return buildJavaCommandBuilder
+        .setLibraryJarCommand(
+            libraryJarBuilder
+                .setBaseJarCommand(
+                    buildBaseJarCommand(
+                        target,
+                        baseDirectory,
+                        outputPathDir,
+                        sourceAbiOutputPathDir,
+                        sourceOnlyAbiOutputPathDir))
+                .build())
+        .build();
+  }
+
+  private BaseJarCommand buildBaseJarCommand(
+      String target,
+      String baseDirectory,
+      String outputPathDir,
+      String sourceAbiOutputPathDir,
+      String sourceOnlyAbiOutputPathDir) {
+    return BaseJarCommand.newBuilder()
+        .setAbiCompatibilityMode(AbiGenerationMode.SOURCE_ONLY)
+        .setAbiGenerationMode(AbiGenerationMode.SOURCE_ONLY)
+        .setTrackClassUsage(true)
+        .setFilesystemParams(
+            FilesystemParams.newBuilder()
+                .setRootPath(
+                    com.facebook.buck.javacd.model.AbsPath.newBuilder()
+                        .setPath(baseDirectory)
+                        .build())
+                .setConfiguredBuckOut(RelPath.newBuilder().setPath("buck-out").build())
+                .addGlobIgnorePaths("ant-out/**")
+                .addGlobIgnorePaths("**/*.pyc")
+                .build())
+        .setBuildTargetValue(
+            BuildTargetValue.newBuilder()
+                .setFullyQualifiedName(target)
+                .setType(BuildTargetValue.Type.LIBRARY)
+                .build())
+        .setOutputPathsValue(
+            OutputPathsValue.newBuilder()
+                .setLibraryPaths(
+                    OutputPathsValue.OutputPaths.newBuilder()
+                        .setClassesDir(
+                            RelPath.newBuilder()
+                                .setPath(outputPathDir + "/lib__path__scratch/classes")
+                                .build())
+                        .setOutputJarDirPath(
+                            RelPath.newBuilder()
+                                .setPath(outputPathDir + "/lib__path__output")
+                                .build())
+                        .setAnnotationPath(
+                            RelPath.newBuilder().setPath(outputPathDir + "/__path_gen__").build())
+                        .setPathToSourcesList(
+                            RelPath.newBuilder().setPath(outputPathDir + "/__path__srcs").build())
+                        .setWorkingDirectory(
+                            RelPath.newBuilder()
+                                .setPath(outputPathDir + "/lib__path__working_directory")
+                                .build())
+                        .setOutputJarPath(
+                            RelPath.newBuilder()
+                                .setPath(outputPathDir + "/lib__path__output/path.jar")
+                                .build())
+                        .build())
+                .setSourceAbiPaths(
+                    OutputPathsValue.OutputPaths.newBuilder()
+                        .setClassesDir(
+                            RelPath.newBuilder()
+                                .setPath(sourceAbiOutputPathDir + "/lib__path__scratch/classes")
+                                .build())
+                        .setOutputJarDirPath(
+                            RelPath.newBuilder()
+                                .setPath(sourceAbiOutputPathDir + "/lib__path__output")
+                                .build())
+                        .setAnnotationPath(
+                            RelPath.newBuilder()
+                                .setPath(sourceAbiOutputPathDir + "/__path_gen__")
+                                .build())
+                        .setPathToSourcesList(
+                            RelPath.newBuilder()
+                                .setPath(sourceAbiOutputPathDir + "/__path__srcs")
+                                .build())
+                        .setWorkingDirectory(
+                            RelPath.newBuilder()
+                                .setPath(sourceAbiOutputPathDir + "/lib__path__working_directory")
+                                .build())
+                        .setOutputJarPath(
+                            RelPath.newBuilder()
+                                .setPath(sourceAbiOutputPathDir + "/lib__path__output/path.jar")
+                                .build())
+                        .build())
+                .setSourceOnlyAbiPaths(
+                    OutputPathsValue.OutputPaths.newBuilder()
+                        .setClassesDir(
+                            RelPath.newBuilder()
+                                .setPath(sourceOnlyAbiOutputPathDir + "/lib__path__scratch/classes")
+                                .build())
+                        .setOutputJarDirPath(
+                            RelPath.newBuilder()
+                                .setPath(sourceOnlyAbiOutputPathDir + "/lib__path__output")
+                                .build())
+                        .setAnnotationPath(
+                            RelPath.newBuilder()
+                                .setPath(sourceOnlyAbiOutputPathDir + "/__path_gen__")
+                                .build())
+                        .setPathToSourcesList(
+                            RelPath.newBuilder()
+                                .setPath(sourceOnlyAbiOutputPathDir + "/__path__srcs")
+                                .build())
+                        .setWorkingDirectory(
+                            RelPath.newBuilder()
+                                .setPath(
+                                    sourceOnlyAbiOutputPathDir + "/lib__path__working_directory")
+                                .build())
+                        .setOutputJarPath(
+                            RelPath.newBuilder()
+                                .setPath(sourceOnlyAbiOutputPathDir + "/lib__path__output/path.jar")
+                                .build())
+                        .build())
+                .build())
+        .addCompileTimeClasspathPaths(
+            RelPath.newBuilder().setPath("libs/exceptions-abi.jar").build())
+        .addCompileTimeClasspathPaths(
+            RelPath.newBuilder().setPath("libs/filesystems-abi.jar").build())
+        .addCompileTimeClasspathPaths(RelPath.newBuilder().setPath("libs/platform-abi.jar").build())
+        .addCompileTimeClasspathPaths(RelPath.newBuilder().setPath("libs/guava-abi.jar").build())
+        .addCompileTimeClasspathPaths(RelPath.newBuilder().setPath("libs/jsr305-abi.jar").build())
+        .addJavaSrcs(
+            RelPath.newBuilder()
+                .setPath("src/com/facebook/buck/core/path/TestForwardRelativePath.java")
+                .build())
+        .addJavaSrcs(
+            RelPath.newBuilder()
+                .setPath("src/com/facebook/buck/core/path/TestGenruleOutPath.java")
+                .build())
+        .addFullJarInfos(
+            JavaAbiInfo.newBuilder()
+                .setBuildTargetName("//src/com/facebook/buck/core/exceptions:exceptions")
+                .build())
+        .addFullJarInfos(
+            JavaAbiInfo.newBuilder()
+                .setBuildTargetName("//src/com/facebook/buck/core/filesystems:filesystems")
+                .build())
+        .addFullJarInfos(
+            JavaAbiInfo.newBuilder()
+                .setBuildTargetName("//src/com/facebook/buck/util/environment:platform")
+                .build())
+        .addFullJarInfos(
+            JavaAbiInfo.newBuilder().setBuildTargetName("//third-party/java/guava:guava").build())
+        .addFullJarInfos(
+            JavaAbiInfo.newBuilder().setBuildTargetName("//third-party/java/jsr:jsr305").build())
+        .addAbiJarInfos(
+            JavaAbiInfo.newBuilder().setBuildTargetName("//third-party/java/guava:guava").build())
+        .addAbiJarInfos(
+            JavaAbiInfo.newBuilder().setBuildTargetName("//third-party/java/jsr:jsr305").build())
+        .putCellToPathMappings("", RelPath.newBuilder().setPath("").build())
+        .setLibraryJarParameters(
+            JarParameters.newBuilder()
+                .setJarPath(
+                    RelPath.newBuilder().setPath("output/lib__path__output/path.jar").build())
+                .addEntriesToJar(
+                    RelPath.newBuilder().setPath("output/lib__path__scratch/classes").build())
+                .setDuplicatesLogLevel(JarParameters.LogLevel.INFO)
+                .build())
+        .setBuildCellRootPath(
+            com.facebook.buck.javacd.model.AbsPath.newBuilder().setPath(baseDirectory).build())
+        .setResolvedJavac(
+            ResolvedJavac.newBuilder()
+                .setJcr199Javac(ResolvedJavac.JSR199Javac.getDefaultInstance())
+                .build())
+        .setResolvedJavacOptions(
+            ResolvedJavacOptions.newBuilder()
+                .addBootclasspathList(
+                    RelPath.newBuilder().setPath("third-party/java/jdk/jdk8-rt-stub.jar").build())
+                .setLanguageLevelOptions(
+                    ResolvedJavacOptions.JavacLanguageLevelOptions.newBuilder()
+                        .setSourceLevel("8")
+                        .setTargetLevel("8")
+                        .build())
+                .setDebug(true)
+                .build())
+        .build();
   }
 
   private ImmutableList<String> getLaunchJavaCDCommand() {

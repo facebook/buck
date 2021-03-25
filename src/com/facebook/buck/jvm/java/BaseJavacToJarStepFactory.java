@@ -22,8 +22,8 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
@@ -54,12 +54,10 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
   private static final Logger LOG = Logger.get(BaseJavacToJarStepFactory.class);
 
-  @AddToRuleKey private final BuildJavaCommand.SpoolMode spoolMode;
+  @AddToRuleKey private final SpoolMode spoolMode;
 
   public BaseJavacToJarStepFactory(
-      BuildJavaCommand.SpoolMode spoolMode,
-      boolean hasAnnotationProcessing,
-      boolean withDownwardApi) {
+      SpoolMode spoolMode, boolean hasAnnotationProcessing, boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
     this.spoolMode = spoolMode;
   }
@@ -233,15 +231,13 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     boolean isSpoolingToJarEnabled =
         AbiGenerationModeUtils.isSourceAbi(compilerParameters.getAbiGenerationMode())
             || (postprocessClassesCommands.isEmpty()
-                && this.spoolMode == BuildJavaCommand.SpoolMode.DIRECT_TO_JAR
+                && this.spoolMode == SpoolMode.DIRECT_TO_JAR
                 && resolvedJavac instanceof Jsr199Javac.ResolvedJsr199Javac);
 
     LOG.info(
         "Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
         invokingRule.getFullyQualifiedName(),
-        (isSpoolingToJarEnabled)
-            ? (BuildJavaCommand.SpoolMode.DIRECT_TO_JAR)
-            : (BuildJavaCommand.SpoolMode.INTERMEDIATE_TO_DISK),
+        (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
         spoolMode,
         postprocessClassesCommands.toString());
 
@@ -306,7 +302,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     return withDownwardApi;
   }
 
-  public BuildJavaCommand.SpoolMode getSpoolMode() {
+  public SpoolMode getSpoolMode() {
     return spoolMode;
   }
 

@@ -5,6 +5,10 @@
 package com.facebook.buck.javacd.model;
 
 /**
+ * <pre>
+ * Represents a single rule command either library or abi jar
+ * </pre>
+ *
  * Protobuf type {@code javacd.api.v1.BuildJavaCommand}
  */
 @javax.annotation.Generated(value="protoc", comments="annotations:BuildJavaCommand.java.pb.meta")
@@ -18,7 +22,6 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private BuildJavaCommand() {
-    spoolMode_ = 0;
   }
 
   @java.lang.Override
@@ -45,25 +48,22 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
-          case 8: {
-            int rawValue = input.readEnum();
+          case 10: {
+            com.facebook.buck.javacd.model.BaseCommandParams.Builder subBuilder = null;
+            if (baseCommandParams_ != null) {
+              subBuilder = baseCommandParams_.toBuilder();
+            }
+            baseCommandParams_ = input.readMessage(com.facebook.buck.javacd.model.BaseCommandParams.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(baseCommandParams_);
+              baseCommandParams_ = subBuilder.buildPartial();
+            }
 
-            spoolMode_ = rawValue;
             break;
           }
-          case 16: {
-
-            hasAnnotationProcessing_ = input.readBool();
-            break;
-          }
-          case 24: {
-
-            withDownwardApi_ = input.readBool();
-            break;
-          }
-          case 34: {
+          case 18: {
             com.facebook.buck.javacd.model.LibraryJarCommand.Builder subBuilder = null;
-            if (commandCase_ == 4) {
+            if (commandCase_ == 2) {
               subBuilder = ((com.facebook.buck.javacd.model.LibraryJarCommand) command_).toBuilder();
             }
             command_ =
@@ -72,12 +72,12 @@ private static final long serialVersionUID = 0L;
               subBuilder.mergeFrom((com.facebook.buck.javacd.model.LibraryJarCommand) command_);
               command_ = subBuilder.buildPartial();
             }
-            commandCase_ = 4;
+            commandCase_ = 2;
             break;
           }
-          case 42: {
+          case 26: {
             com.facebook.buck.javacd.model.AbiJarCommand.Builder subBuilder = null;
-            if (commandCase_ == 5) {
+            if (commandCase_ == 3) {
               subBuilder = ((com.facebook.buck.javacd.model.AbiJarCommand) command_).toBuilder();
             }
             command_ =
@@ -86,7 +86,7 @@ private static final long serialVersionUID = 0L;
               subBuilder.mergeFrom((com.facebook.buck.javacd.model.AbiJarCommand) command_);
               command_ = subBuilder.buildPartial();
             }
-            commandCase_ = 5;
+            commandCase_ = 3;
             break;
           }
           default: {
@@ -121,149 +121,12 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.javacd.model.BuildJavaCommand.class, com.facebook.buck.javacd.model.BuildJavaCommand.Builder.class);
   }
 
-  /**
-   * <pre>
-   ** The method in which the compiler output is spooled. 
-   * </pre>
-   *
-   * Protobuf enum {@code javacd.api.v1.BuildJavaCommand.SpoolMode}
-   */
-  public enum SpoolMode
-      implements com.google.protobuf.ProtocolMessageEnum {
-    /**
-     * <code>UNKNOWN = 0;</code>
-     */
-    UNKNOWN(0),
-    /**
-     * <pre>
-     **
-     * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory. If `postprocessClassesCommands` are present, the builder will resort to writing .class files to
-     * disk by necessity.
-     * </pre>
-     *
-     * <code>DIRECT_TO_JAR = 1;</code>
-     */
-    DIRECT_TO_JAR(1),
-    /**
-     * <pre>
-     **
-     * Writes the intermediate .class files from the compiler output to disk which is later packed
-     * up into a .jar file.
-     * </pre>
-     *
-     * <code>INTERMEDIATE_TO_DISK = 2;</code>
-     */
-    INTERMEDIATE_TO_DISK(2),
-    UNRECOGNIZED(-1),
-    ;
-
-    /**
-     * <code>UNKNOWN = 0;</code>
-     */
-    public static final int UNKNOWN_VALUE = 0;
-    /**
-     * <pre>
-     **
-     * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory. If `postprocessClassesCommands` are present, the builder will resort to writing .class files to
-     * disk by necessity.
-     * </pre>
-     *
-     * <code>DIRECT_TO_JAR = 1;</code>
-     */
-    public static final int DIRECT_TO_JAR_VALUE = 1;
-    /**
-     * <pre>
-     **
-     * Writes the intermediate .class files from the compiler output to disk which is later packed
-     * up into a .jar file.
-     * </pre>
-     *
-     * <code>INTERMEDIATE_TO_DISK = 2;</code>
-     */
-    public static final int INTERMEDIATE_TO_DISK_VALUE = 2;
-
-
-    public final int getNumber() {
-      if (this == UNRECOGNIZED) {
-        throw new java.lang.IllegalArgumentException(
-            "Can't get the number of an unknown enum value.");
-      }
-      return value;
-    }
-
-    /**
-     * @deprecated Use {@link #forNumber(int)} instead.
-     */
-    @java.lang.Deprecated
-    public static SpoolMode valueOf(int value) {
-      return forNumber(value);
-    }
-
-    public static SpoolMode forNumber(int value) {
-      switch (value) {
-        case 0: return UNKNOWN;
-        case 1: return DIRECT_TO_JAR;
-        case 2: return INTERMEDIATE_TO_DISK;
-        default: return null;
-      }
-    }
-
-    public static com.google.protobuf.Internal.EnumLiteMap<SpoolMode>
-        internalGetValueMap() {
-      return internalValueMap;
-    }
-    private static final com.google.protobuf.Internal.EnumLiteMap<
-        SpoolMode> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<SpoolMode>() {
-            public SpoolMode findValueByNumber(int number) {
-              return SpoolMode.forNumber(number);
-            }
-          };
-
-    public final com.google.protobuf.Descriptors.EnumValueDescriptor
-        getValueDescriptor() {
-      return getDescriptor().getValues().get(ordinal());
-    }
-    public final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptorForType() {
-      return getDescriptor();
-    }
-    public static final com.google.protobuf.Descriptors.EnumDescriptor
-        getDescriptor() {
-      return com.facebook.buck.javacd.model.BuildJavaCommand.getDescriptor().getEnumTypes().get(0);
-    }
-
-    private static final SpoolMode[] VALUES = values();
-
-    public static SpoolMode valueOf(
-        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
-      if (desc.getType() != getDescriptor()) {
-        throw new java.lang.IllegalArgumentException(
-          "EnumValueDescriptor is not for this type.");
-      }
-      if (desc.getIndex() == -1) {
-        return UNRECOGNIZED;
-      }
-      return VALUES[desc.getIndex()];
-    }
-
-    private final int value;
-
-    private SpoolMode(int value) {
-      this.value = value;
-    }
-
-    // @@protoc_insertion_point(enum_scope:javacd.api.v1.BuildJavaCommand.SpoolMode)
-  }
-
   private int commandCase_ = 0;
   private java.lang.Object command_;
   public enum CommandCase
       implements com.google.protobuf.Internal.EnumLite {
-    LIBRARYJARCOMMAND(4),
-    ABIJARCOMMAND(5),
+    LIBRARYJARCOMMAND(2),
+    ABIJARCOMMAND(3),
     COMMAND_NOT_SET(0);
     private final int value;
     private CommandCase(int value) {
@@ -279,8 +142,8 @@ private static final long serialVersionUID = 0L;
 
     public static CommandCase forNumber(int value) {
       switch (value) {
-        case 4: return LIBRARYJARCOMMAND;
-        case 5: return ABIJARCOMMAND;
+        case 2: return LIBRARYJARCOMMAND;
+        case 3: return ABIJARCOMMAND;
         case 0: return COMMAND_NOT_SET;
         default: return null;
       }
@@ -296,96 +159,74 @@ private static final long serialVersionUID = 0L;
         commandCase_);
   }
 
-  public static final int SPOOLMODE_FIELD_NUMBER = 1;
-  private int spoolMode_;
+  public static final int BASECOMMANDPARAMS_FIELD_NUMBER = 1;
+  private com.facebook.buck.javacd.model.BaseCommandParams baseCommandParams_;
   /**
-   * <pre>
-   * BaseJavacToJarStepFactory params
-   * </pre>
-   *
-   * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+   * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
    */
-  public int getSpoolModeValue() {
-    return spoolMode_;
+  public boolean hasBaseCommandParams() {
+    return baseCommandParams_ != null;
   }
   /**
-   * <pre>
-   * BaseJavacToJarStepFactory params
-   * </pre>
-   *
-   * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+   * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
    */
-  public com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode getSpoolMode() {
-    @SuppressWarnings("deprecation")
-    com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode result = com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode.valueOf(spoolMode_);
-    return result == null ? com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode.UNRECOGNIZED : result;
+  public com.facebook.buck.javacd.model.BaseCommandParams getBaseCommandParams() {
+    return baseCommandParams_ == null ? com.facebook.buck.javacd.model.BaseCommandParams.getDefaultInstance() : baseCommandParams_;
+  }
+  /**
+   * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
+   */
+  public com.facebook.buck.javacd.model.BaseCommandParamsOrBuilder getBaseCommandParamsOrBuilder() {
+    return getBaseCommandParams();
   }
 
-  public static final int HASANNOTATIONPROCESSING_FIELD_NUMBER = 2;
-  private boolean hasAnnotationProcessing_;
+  public static final int LIBRARYJARCOMMAND_FIELD_NUMBER = 2;
   /**
-   * <code>bool hasAnnotationProcessing = 2;</code>
-   */
-  public boolean getHasAnnotationProcessing() {
-    return hasAnnotationProcessing_;
-  }
-
-  public static final int WITHDOWNWARDAPI_FIELD_NUMBER = 3;
-  private boolean withDownwardApi_;
-  /**
-   * <code>bool withDownwardApi = 3;</code>
-   */
-  public boolean getWithDownwardApi() {
-    return withDownwardApi_;
-  }
-
-  public static final int LIBRARYJARCOMMAND_FIELD_NUMBER = 4;
-  /**
-   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
    */
   public boolean hasLibraryJarCommand() {
-    return commandCase_ == 4;
+    return commandCase_ == 2;
   }
   /**
-   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
    */
   public com.facebook.buck.javacd.model.LibraryJarCommand getLibraryJarCommand() {
-    if (commandCase_ == 4) {
+    if (commandCase_ == 2) {
        return (com.facebook.buck.javacd.model.LibraryJarCommand) command_;
     }
     return com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance();
   }
   /**
-   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+   * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
    */
   public com.facebook.buck.javacd.model.LibraryJarCommandOrBuilder getLibraryJarCommandOrBuilder() {
-    if (commandCase_ == 4) {
+    if (commandCase_ == 2) {
        return (com.facebook.buck.javacd.model.LibraryJarCommand) command_;
     }
     return com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance();
   }
 
-  public static final int ABIJARCOMMAND_FIELD_NUMBER = 5;
+  public static final int ABIJARCOMMAND_FIELD_NUMBER = 3;
   /**
-   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
    */
   public boolean hasAbiJarCommand() {
-    return commandCase_ == 5;
+    return commandCase_ == 3;
   }
   /**
-   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
    */
   public com.facebook.buck.javacd.model.AbiJarCommand getAbiJarCommand() {
-    if (commandCase_ == 5) {
+    if (commandCase_ == 3) {
        return (com.facebook.buck.javacd.model.AbiJarCommand) command_;
     }
     return com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance();
   }
   /**
-   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+   * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
    */
   public com.facebook.buck.javacd.model.AbiJarCommandOrBuilder getAbiJarCommandOrBuilder() {
-    if (commandCase_ == 5) {
+    if (commandCase_ == 3) {
        return (com.facebook.buck.javacd.model.AbiJarCommand) command_;
     }
     return com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance();
@@ -405,20 +246,14 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (spoolMode_ != com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode.UNKNOWN.getNumber()) {
-      output.writeEnum(1, spoolMode_);
+    if (baseCommandParams_ != null) {
+      output.writeMessage(1, getBaseCommandParams());
     }
-    if (hasAnnotationProcessing_ != false) {
-      output.writeBool(2, hasAnnotationProcessing_);
+    if (commandCase_ == 2) {
+      output.writeMessage(2, (com.facebook.buck.javacd.model.LibraryJarCommand) command_);
     }
-    if (withDownwardApi_ != false) {
-      output.writeBool(3, withDownwardApi_);
-    }
-    if (commandCase_ == 4) {
-      output.writeMessage(4, (com.facebook.buck.javacd.model.LibraryJarCommand) command_);
-    }
-    if (commandCase_ == 5) {
-      output.writeMessage(5, (com.facebook.buck.javacd.model.AbiJarCommand) command_);
+    if (commandCase_ == 3) {
+      output.writeMessage(3, (com.facebook.buck.javacd.model.AbiJarCommand) command_);
     }
     unknownFields.writeTo(output);
   }
@@ -429,25 +264,17 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (spoolMode_ != com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode.UNKNOWN.getNumber()) {
+    if (baseCommandParams_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeEnumSize(1, spoolMode_);
+        .computeMessageSize(1, getBaseCommandParams());
     }
-    if (hasAnnotationProcessing_ != false) {
+    if (commandCase_ == 2) {
       size += com.google.protobuf.CodedOutputStream
-        .computeBoolSize(2, hasAnnotationProcessing_);
+        .computeMessageSize(2, (com.facebook.buck.javacd.model.LibraryJarCommand) command_);
     }
-    if (withDownwardApi_ != false) {
+    if (commandCase_ == 3) {
       size += com.google.protobuf.CodedOutputStream
-        .computeBoolSize(3, withDownwardApi_);
-    }
-    if (commandCase_ == 4) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(4, (com.facebook.buck.javacd.model.LibraryJarCommand) command_);
-    }
-    if (commandCase_ == 5) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(5, (com.facebook.buck.javacd.model.AbiJarCommand) command_);
+        .computeMessageSize(3, (com.facebook.buck.javacd.model.AbiJarCommand) command_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -464,18 +291,18 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.javacd.model.BuildJavaCommand other = (com.facebook.buck.javacd.model.BuildJavaCommand) obj;
 
-    if (spoolMode_ != other.spoolMode_) return false;
-    if (getHasAnnotationProcessing()
-        != other.getHasAnnotationProcessing()) return false;
-    if (getWithDownwardApi()
-        != other.getWithDownwardApi()) return false;
+    if (hasBaseCommandParams() != other.hasBaseCommandParams()) return false;
+    if (hasBaseCommandParams()) {
+      if (!getBaseCommandParams()
+          .equals(other.getBaseCommandParams())) return false;
+    }
     if (!getCommandCase().equals(other.getCommandCase())) return false;
     switch (commandCase_) {
-      case 4:
+      case 2:
         if (!getLibraryJarCommand()
             .equals(other.getLibraryJarCommand())) return false;
         break;
-      case 5:
+      case 3:
         if (!getAbiJarCommand()
             .equals(other.getAbiJarCommand())) return false;
         break;
@@ -493,20 +320,16 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + SPOOLMODE_FIELD_NUMBER;
-    hash = (53 * hash) + spoolMode_;
-    hash = (37 * hash) + HASANNOTATIONPROCESSING_FIELD_NUMBER;
-    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-        getHasAnnotationProcessing());
-    hash = (37 * hash) + WITHDOWNWARDAPI_FIELD_NUMBER;
-    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-        getWithDownwardApi());
+    if (hasBaseCommandParams()) {
+      hash = (37 * hash) + BASECOMMANDPARAMS_FIELD_NUMBER;
+      hash = (53 * hash) + getBaseCommandParams().hashCode();
+    }
     switch (commandCase_) {
-      case 4:
+      case 2:
         hash = (37 * hash) + LIBRARYJARCOMMAND_FIELD_NUMBER;
         hash = (53 * hash) + getLibraryJarCommand().hashCode();
         break;
-      case 5:
+      case 3:
         hash = (37 * hash) + ABIJARCOMMAND_FIELD_NUMBER;
         hash = (53 * hash) + getAbiJarCommand().hashCode();
         break;
@@ -609,6 +432,10 @@ private static final long serialVersionUID = 0L;
     return builder;
   }
   /**
+   * <pre>
+   * Represents a single rule command either library or abi jar
+   * </pre>
+   *
    * Protobuf type {@code javacd.api.v1.BuildJavaCommand}
    */
   public static final class Builder extends
@@ -646,12 +473,12 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      spoolMode_ = 0;
-
-      hasAnnotationProcessing_ = false;
-
-      withDownwardApi_ = false;
-
+      if (baseCommandParamsBuilder_ == null) {
+        baseCommandParams_ = null;
+      } else {
+        baseCommandParams_ = null;
+        baseCommandParamsBuilder_ = null;
+      }
       commandCase_ = 0;
       command_ = null;
       return this;
@@ -680,17 +507,19 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.javacd.model.BuildJavaCommand buildPartial() {
       com.facebook.buck.javacd.model.BuildJavaCommand result = new com.facebook.buck.javacd.model.BuildJavaCommand(this);
-      result.spoolMode_ = spoolMode_;
-      result.hasAnnotationProcessing_ = hasAnnotationProcessing_;
-      result.withDownwardApi_ = withDownwardApi_;
-      if (commandCase_ == 4) {
+      if (baseCommandParamsBuilder_ == null) {
+        result.baseCommandParams_ = baseCommandParams_;
+      } else {
+        result.baseCommandParams_ = baseCommandParamsBuilder_.build();
+      }
+      if (commandCase_ == 2) {
         if (libraryJarCommandBuilder_ == null) {
           result.command_ = command_;
         } else {
           result.command_ = libraryJarCommandBuilder_.build();
         }
       }
-      if (commandCase_ == 5) {
+      if (commandCase_ == 3) {
         if (abiJarCommandBuilder_ == null) {
           result.command_ = command_;
         } else {
@@ -746,14 +575,8 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.javacd.model.BuildJavaCommand other) {
       if (other == com.facebook.buck.javacd.model.BuildJavaCommand.getDefaultInstance()) return this;
-      if (other.spoolMode_ != 0) {
-        setSpoolModeValue(other.getSpoolModeValue());
-      }
-      if (other.getHasAnnotationProcessing() != false) {
-        setHasAnnotationProcessing(other.getHasAnnotationProcessing());
-      }
-      if (other.getWithDownwardApi() != false) {
-        setWithDownwardApi(other.getWithDownwardApi());
+      if (other.hasBaseCommandParams()) {
+        mergeBaseCommandParams(other.getBaseCommandParams());
       }
       switch (other.getCommandCase()) {
         case LIBRARYJARCOMMAND: {
@@ -812,149 +635,149 @@ private static final long serialVersionUID = 0L;
     }
 
 
-    private int spoolMode_ = 0;
+    private com.facebook.buck.javacd.model.BaseCommandParams baseCommandParams_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.javacd.model.BaseCommandParams, com.facebook.buck.javacd.model.BaseCommandParams.Builder, com.facebook.buck.javacd.model.BaseCommandParamsOrBuilder> baseCommandParamsBuilder_;
     /**
-     * <pre>
-     * BaseJavacToJarStepFactory params
-     * </pre>
-     *
-     * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
      */
-    public int getSpoolModeValue() {
-      return spoolMode_;
+    public boolean hasBaseCommandParams() {
+      return baseCommandParamsBuilder_ != null || baseCommandParams_ != null;
     }
     /**
-     * <pre>
-     * BaseJavacToJarStepFactory params
-     * </pre>
-     *
-     * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
      */
-    public Builder setSpoolModeValue(int value) {
-      spoolMode_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <pre>
-     * BaseJavacToJarStepFactory params
-     * </pre>
-     *
-     * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
-     */
-    public com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode getSpoolMode() {
-      @SuppressWarnings("deprecation")
-      com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode result = com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode.valueOf(spoolMode_);
-      return result == null ? com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode.UNRECOGNIZED : result;
-    }
-    /**
-     * <pre>
-     * BaseJavacToJarStepFactory params
-     * </pre>
-     *
-     * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
-     */
-    public Builder setSpoolMode(com.facebook.buck.javacd.model.BuildJavaCommand.SpoolMode value) {
-      if (value == null) {
-        throw new NullPointerException();
+    public com.facebook.buck.javacd.model.BaseCommandParams getBaseCommandParams() {
+      if (baseCommandParamsBuilder_ == null) {
+        return baseCommandParams_ == null ? com.facebook.buck.javacd.model.BaseCommandParams.getDefaultInstance() : baseCommandParams_;
+      } else {
+        return baseCommandParamsBuilder_.getMessage();
       }
-      
-      spoolMode_ = value.getNumber();
-      onChanged();
-      return this;
     }
     /**
-     * <pre>
-     * BaseJavacToJarStepFactory params
-     * </pre>
-     *
-     * <code>.javacd.api.v1.BuildJavaCommand.SpoolMode spoolMode = 1;</code>
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
      */
-    public Builder clearSpoolMode() {
-      
-      spoolMode_ = 0;
-      onChanged();
-      return this;
-    }
+    public Builder setBaseCommandParams(com.facebook.buck.javacd.model.BaseCommandParams value) {
+      if (baseCommandParamsBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        baseCommandParams_ = value;
+        onChanged();
+      } else {
+        baseCommandParamsBuilder_.setMessage(value);
+      }
 
-    private boolean hasAnnotationProcessing_ ;
-    /**
-     * <code>bool hasAnnotationProcessing = 2;</code>
-     */
-    public boolean getHasAnnotationProcessing() {
-      return hasAnnotationProcessing_;
-    }
-    /**
-     * <code>bool hasAnnotationProcessing = 2;</code>
-     */
-    public Builder setHasAnnotationProcessing(boolean value) {
-      
-      hasAnnotationProcessing_ = value;
-      onChanged();
       return this;
     }
     /**
-     * <code>bool hasAnnotationProcessing = 2;</code>
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
      */
-    public Builder clearHasAnnotationProcessing() {
-      
-      hasAnnotationProcessing_ = false;
-      onChanged();
-      return this;
-    }
+    public Builder setBaseCommandParams(
+        com.facebook.buck.javacd.model.BaseCommandParams.Builder builderForValue) {
+      if (baseCommandParamsBuilder_ == null) {
+        baseCommandParams_ = builderForValue.build();
+        onChanged();
+      } else {
+        baseCommandParamsBuilder_.setMessage(builderForValue.build());
+      }
 
-    private boolean withDownwardApi_ ;
-    /**
-     * <code>bool withDownwardApi = 3;</code>
-     */
-    public boolean getWithDownwardApi() {
-      return withDownwardApi_;
-    }
-    /**
-     * <code>bool withDownwardApi = 3;</code>
-     */
-    public Builder setWithDownwardApi(boolean value) {
-      
-      withDownwardApi_ = value;
-      onChanged();
       return this;
     }
     /**
-     * <code>bool withDownwardApi = 3;</code>
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
      */
-    public Builder clearWithDownwardApi() {
-      
-      withDownwardApi_ = false;
-      onChanged();
+    public Builder mergeBaseCommandParams(com.facebook.buck.javacd.model.BaseCommandParams value) {
+      if (baseCommandParamsBuilder_ == null) {
+        if (baseCommandParams_ != null) {
+          baseCommandParams_ =
+            com.facebook.buck.javacd.model.BaseCommandParams.newBuilder(baseCommandParams_).mergeFrom(value).buildPartial();
+        } else {
+          baseCommandParams_ = value;
+        }
+        onChanged();
+      } else {
+        baseCommandParamsBuilder_.mergeFrom(value);
+      }
+
       return this;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
+     */
+    public Builder clearBaseCommandParams() {
+      if (baseCommandParamsBuilder_ == null) {
+        baseCommandParams_ = null;
+        onChanged();
+      } else {
+        baseCommandParams_ = null;
+        baseCommandParamsBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
+     */
+    public com.facebook.buck.javacd.model.BaseCommandParams.Builder getBaseCommandParamsBuilder() {
+      
+      onChanged();
+      return getBaseCommandParamsFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
+     */
+    public com.facebook.buck.javacd.model.BaseCommandParamsOrBuilder getBaseCommandParamsOrBuilder() {
+      if (baseCommandParamsBuilder_ != null) {
+        return baseCommandParamsBuilder_.getMessageOrBuilder();
+      } else {
+        return baseCommandParams_ == null ?
+            com.facebook.buck.javacd.model.BaseCommandParams.getDefaultInstance() : baseCommandParams_;
+      }
+    }
+    /**
+     * <code>.javacd.api.v1.BaseCommandParams baseCommandParams = 1;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.javacd.model.BaseCommandParams, com.facebook.buck.javacd.model.BaseCommandParams.Builder, com.facebook.buck.javacd.model.BaseCommandParamsOrBuilder> 
+        getBaseCommandParamsFieldBuilder() {
+      if (baseCommandParamsBuilder_ == null) {
+        baseCommandParamsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.javacd.model.BaseCommandParams, com.facebook.buck.javacd.model.BaseCommandParams.Builder, com.facebook.buck.javacd.model.BaseCommandParamsOrBuilder>(
+                getBaseCommandParams(),
+                getParentForChildren(),
+                isClean());
+        baseCommandParams_ = null;
+      }
+      return baseCommandParamsBuilder_;
     }
 
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.LibraryJarCommand, com.facebook.buck.javacd.model.LibraryJarCommand.Builder, com.facebook.buck.javacd.model.LibraryJarCommandOrBuilder> libraryJarCommandBuilder_;
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public boolean hasLibraryJarCommand() {
-      return commandCase_ == 4;
+      return commandCase_ == 2;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public com.facebook.buck.javacd.model.LibraryJarCommand getLibraryJarCommand() {
       if (libraryJarCommandBuilder_ == null) {
-        if (commandCase_ == 4) {
+        if (commandCase_ == 2) {
           return (com.facebook.buck.javacd.model.LibraryJarCommand) command_;
         }
         return com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance();
       } else {
-        if (commandCase_ == 4) {
+        if (commandCase_ == 2) {
           return libraryJarCommandBuilder_.getMessage();
         }
         return com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance();
       }
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public Builder setLibraryJarCommand(com.facebook.buck.javacd.model.LibraryJarCommand value) {
       if (libraryJarCommandBuilder_ == null) {
@@ -966,11 +789,11 @@ private static final long serialVersionUID = 0L;
       } else {
         libraryJarCommandBuilder_.setMessage(value);
       }
-      commandCase_ = 4;
+      commandCase_ = 2;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public Builder setLibraryJarCommand(
         com.facebook.buck.javacd.model.LibraryJarCommand.Builder builderForValue) {
@@ -980,15 +803,15 @@ private static final long serialVersionUID = 0L;
       } else {
         libraryJarCommandBuilder_.setMessage(builderForValue.build());
       }
-      commandCase_ = 4;
+      commandCase_ = 2;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public Builder mergeLibraryJarCommand(com.facebook.buck.javacd.model.LibraryJarCommand value) {
       if (libraryJarCommandBuilder_ == null) {
-        if (commandCase_ == 4 &&
+        if (commandCase_ == 2 &&
             command_ != com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance()) {
           command_ = com.facebook.buck.javacd.model.LibraryJarCommand.newBuilder((com.facebook.buck.javacd.model.LibraryJarCommand) command_)
               .mergeFrom(value).buildPartial();
@@ -997,26 +820,26 @@ private static final long serialVersionUID = 0L;
         }
         onChanged();
       } else {
-        if (commandCase_ == 4) {
+        if (commandCase_ == 2) {
           libraryJarCommandBuilder_.mergeFrom(value);
         }
         libraryJarCommandBuilder_.setMessage(value);
       }
-      commandCase_ = 4;
+      commandCase_ = 2;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public Builder clearLibraryJarCommand() {
       if (libraryJarCommandBuilder_ == null) {
-        if (commandCase_ == 4) {
+        if (commandCase_ == 2) {
           commandCase_ = 0;
           command_ = null;
           onChanged();
         }
       } else {
-        if (commandCase_ == 4) {
+        if (commandCase_ == 2) {
           commandCase_ = 0;
           command_ = null;
         }
@@ -1025,32 +848,32 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public com.facebook.buck.javacd.model.LibraryJarCommand.Builder getLibraryJarCommandBuilder() {
       return getLibraryJarCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     public com.facebook.buck.javacd.model.LibraryJarCommandOrBuilder getLibraryJarCommandOrBuilder() {
-      if ((commandCase_ == 4) && (libraryJarCommandBuilder_ != null)) {
+      if ((commandCase_ == 2) && (libraryJarCommandBuilder_ != null)) {
         return libraryJarCommandBuilder_.getMessageOrBuilder();
       } else {
-        if (commandCase_ == 4) {
+        if (commandCase_ == 2) {
           return (com.facebook.buck.javacd.model.LibraryJarCommand) command_;
         }
         return com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance();
       }
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 4;</code>
+     * <code>.javacd.api.v1.LibraryJarCommand libraryJarCommand = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.LibraryJarCommand, com.facebook.buck.javacd.model.LibraryJarCommand.Builder, com.facebook.buck.javacd.model.LibraryJarCommandOrBuilder> 
         getLibraryJarCommandFieldBuilder() {
       if (libraryJarCommandBuilder_ == null) {
-        if (!(commandCase_ == 4)) {
+        if (!(commandCase_ == 2)) {
           command_ = com.facebook.buck.javacd.model.LibraryJarCommand.getDefaultInstance();
         }
         libraryJarCommandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1060,7 +883,7 @@ private static final long serialVersionUID = 0L;
                 isClean());
         command_ = null;
       }
-      commandCase_ = 4;
+      commandCase_ = 2;
       onChanged();;
       return libraryJarCommandBuilder_;
     }
@@ -1068,29 +891,29 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.AbiJarCommand, com.facebook.buck.javacd.model.AbiJarCommand.Builder, com.facebook.buck.javacd.model.AbiJarCommandOrBuilder> abiJarCommandBuilder_;
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public boolean hasAbiJarCommand() {
-      return commandCase_ == 5;
+      return commandCase_ == 3;
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public com.facebook.buck.javacd.model.AbiJarCommand getAbiJarCommand() {
       if (abiJarCommandBuilder_ == null) {
-        if (commandCase_ == 5) {
+        if (commandCase_ == 3) {
           return (com.facebook.buck.javacd.model.AbiJarCommand) command_;
         }
         return com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance();
       } else {
-        if (commandCase_ == 5) {
+        if (commandCase_ == 3) {
           return abiJarCommandBuilder_.getMessage();
         }
         return com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance();
       }
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public Builder setAbiJarCommand(com.facebook.buck.javacd.model.AbiJarCommand value) {
       if (abiJarCommandBuilder_ == null) {
@@ -1102,11 +925,11 @@ private static final long serialVersionUID = 0L;
       } else {
         abiJarCommandBuilder_.setMessage(value);
       }
-      commandCase_ = 5;
+      commandCase_ = 3;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public Builder setAbiJarCommand(
         com.facebook.buck.javacd.model.AbiJarCommand.Builder builderForValue) {
@@ -1116,15 +939,15 @@ private static final long serialVersionUID = 0L;
       } else {
         abiJarCommandBuilder_.setMessage(builderForValue.build());
       }
-      commandCase_ = 5;
+      commandCase_ = 3;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public Builder mergeAbiJarCommand(com.facebook.buck.javacd.model.AbiJarCommand value) {
       if (abiJarCommandBuilder_ == null) {
-        if (commandCase_ == 5 &&
+        if (commandCase_ == 3 &&
             command_ != com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance()) {
           command_ = com.facebook.buck.javacd.model.AbiJarCommand.newBuilder((com.facebook.buck.javacd.model.AbiJarCommand) command_)
               .mergeFrom(value).buildPartial();
@@ -1133,26 +956,26 @@ private static final long serialVersionUID = 0L;
         }
         onChanged();
       } else {
-        if (commandCase_ == 5) {
+        if (commandCase_ == 3) {
           abiJarCommandBuilder_.mergeFrom(value);
         }
         abiJarCommandBuilder_.setMessage(value);
       }
-      commandCase_ = 5;
+      commandCase_ = 3;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public Builder clearAbiJarCommand() {
       if (abiJarCommandBuilder_ == null) {
-        if (commandCase_ == 5) {
+        if (commandCase_ == 3) {
           commandCase_ = 0;
           command_ = null;
           onChanged();
         }
       } else {
-        if (commandCase_ == 5) {
+        if (commandCase_ == 3) {
           commandCase_ = 0;
           command_ = null;
         }
@@ -1161,32 +984,32 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public com.facebook.buck.javacd.model.AbiJarCommand.Builder getAbiJarCommandBuilder() {
       return getAbiJarCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     public com.facebook.buck.javacd.model.AbiJarCommandOrBuilder getAbiJarCommandOrBuilder() {
-      if ((commandCase_ == 5) && (abiJarCommandBuilder_ != null)) {
+      if ((commandCase_ == 3) && (abiJarCommandBuilder_ != null)) {
         return abiJarCommandBuilder_.getMessageOrBuilder();
       } else {
-        if (commandCase_ == 5) {
+        if (commandCase_ == 3) {
           return (com.facebook.buck.javacd.model.AbiJarCommand) command_;
         }
         return com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance();
       }
     }
     /**
-     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 5;</code>
+     * <code>.javacd.api.v1.AbiJarCommand abiJarCommand = 3;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.AbiJarCommand, com.facebook.buck.javacd.model.AbiJarCommand.Builder, com.facebook.buck.javacd.model.AbiJarCommandOrBuilder> 
         getAbiJarCommandFieldBuilder() {
       if (abiJarCommandBuilder_ == null) {
-        if (!(commandCase_ == 5)) {
+        if (!(commandCase_ == 3)) {
           command_ = com.facebook.buck.javacd.model.AbiJarCommand.getDefaultInstance();
         }
         abiJarCommandBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
@@ -1196,7 +1019,7 @@ private static final long serialVersionUID = 0L;
                 isClean());
         command_ = null;
       }
-      commandCase_ = 5;
+      commandCase_ = 3;
       onChanged();;
       return abiJarCommandBuilder_;
     }

@@ -10,22 +10,22 @@ public interface BaseJarCommandOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
    */
   int getAbiCompatibilityModeValue();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 1;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiCompatibilityMode = 1;</code>
    */
-  com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiCompatibilityMode();
+  com.facebook.buck.javacd.model.AbiGenerationMode getAbiCompatibilityMode();
 
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
    */
   int getAbiGenerationModeValue();
   /**
-   * <code>.javacd.api.v1.BaseJarCommand.AbiGenerationMode abiGenerationMode = 2;</code>
+   * <code>.javacd.api.v1.AbiGenerationMode abiGenerationMode = 2;</code>
    */
-  com.facebook.buck.javacd.model.BaseJarCommand.AbiGenerationMode getAbiGenerationMode();
+  com.facebook.buck.javacd.model.AbiGenerationMode getAbiGenerationMode();
 
   /**
    * <code>bool isRequiredForSourceOnlyAbi = 3;</code>
@@ -178,47 +178,27 @@ public interface BaseJarCommandOrBuilder extends
       int index);
 
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  java.util.List<com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry> 
+  java.util.List<com.facebook.buck.javacd.model.RelPathMapEntry> 
       getResourcesMapList();
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntry getResourcesMap(int index);
+  com.facebook.buck.javacd.model.RelPathMapEntry getResourcesMap(int index);
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
   int getResourcesMapCount();
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  java.util.List<? extends com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder> 
+  java.util.List<? extends com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder> 
       getResourcesMapOrBuilderList();
   /**
-   * <pre>
-   * protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-   * </pre>
-   *
-   * <code>repeated .javacd.api.v1.BaseJarCommand.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
    */
-  com.facebook.buck.javacd.model.BaseJarCommand.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+  com.facebook.buck.javacd.model.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
       int index);
 
   /**
