@@ -37,8 +37,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiElementVisitor;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtil;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -154,18 +154,25 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       return buckTargetLocator.resolve(buckFile, buckTargetPattern).orElse(null);
     }
 
+    private static Pair<BuckVisibilityState, BuckListMaker> unknownVisibilityWithNullList() {
+      return new Pair<>(new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN), null);
+    }
+
     @VisibleForTesting
     static Pair<BuckVisibilityState, BuckListMaker> getVisibilityStateWithList(
         Project project,
         BuckTargetLocator buckTargetLocator,
         VirtualFile buckFile,
         BuckTargetPattern buckTargetPattern) {
-      PsiFile psiFile = PsiUtil.getPsiFile(project, buckFile);
+      PsiFile psiFile = PsiManager.getInstance(project).findFile(buckFile);
+      if (psiFile == null) {
+        return unknownVisibilityWithNullList();
+      }
       BuckFunctionTrailer buckFunctionTrailer =
           BuckPsiUtils.findTargetInPsiTree(psiFile, buckTargetPattern.getRuleName().orElse(null));
       // If build rule can't be found, assume visibility cannot be determined
       if (buckFunctionTrailer == null) {
-        return new Pair<>(new BuckVisibilityState(BuckVisibilityState.VisibleState.UNKNOWN), null);
+        return unknownVisibilityWithNullList();
       }
       // Find the list of deps listed under visibility
       BuckArgument visibilityArgument =
