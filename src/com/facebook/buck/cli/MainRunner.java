@@ -80,8 +80,10 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.EventBusEventConsole;
 import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
+import com.facebook.buck.event.console.EventConsole;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
 import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
@@ -771,10 +773,17 @@ public final class MainRunner {
 
       Clock clock = makeClock(buckConfig);
 
+      DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
+
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       Watchman watchman =
           buildWatchman(
-              daemonMode, parserConfig, projectWatchList, clientEnvironment, printConsole, clock);
+              daemonMode,
+              parserConfig,
+              projectWatchList,
+              clientEnvironment,
+              new EventBusEventConsole(buildEventBus),
+              clock);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
@@ -986,7 +995,6 @@ public final class MainRunner {
                       printConsole.getStdErr().getRawStream(),
                       verbosity,
                       logStreamFactory);
-          DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
 
           CloseableWrapper<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
               workerToolPoolsWrapper =
@@ -2164,7 +2172,7 @@ public final class MainRunner {
       ParserConfig parserConfig,
       ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> clientEnvironment,
-      Console console,
+      EventConsole console,
       Clock clock)
       throws InterruptedException {
     Watchman watchman;

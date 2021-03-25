@@ -18,11 +18,11 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
@@ -58,7 +58,7 @@ public class TestWithBuckd extends ExternalResource {
         watchmanFactory.build(
             ImmutableSet.of(temporaryPaths.getRoot()),
             getWatchmanEnv(),
-            new TestConsole(),
+            new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
             Optional.empty());

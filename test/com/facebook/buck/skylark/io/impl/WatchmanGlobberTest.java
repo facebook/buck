@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
@@ -35,7 +36,6 @@ import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -74,7 +74,7 @@ public class WatchmanGlobberTest {
         watchmanFactory.build(
             ImmutableSet.of(root),
             ImmutableMap.of(),
-            new TestConsole(),
+            new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
             Optional.empty());

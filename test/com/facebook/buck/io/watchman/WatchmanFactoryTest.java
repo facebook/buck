@@ -19,9 +19,9 @@ package com.facebook.buck.io.watchman;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory.InitialWatchmanClientFactory;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.FakeListeningProcessExecutor;
 import com.facebook.buck.util.FakeListeningProcessState;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -95,7 +95,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.empty(),
             Optional.empty());
@@ -122,7 +122,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.empty(),
             Optional.empty());
@@ -163,7 +163,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.empty(),
             Optional.empty());
@@ -213,7 +213,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.empty(),
             Optional.empty());
@@ -263,7 +263,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.of(TimeUnit.SECONDS.toMillis(5)),
             Optional.empty());
@@ -313,7 +313,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.of(TimeUnit.SECONDS.toMillis(5)),
             Optional.empty());
@@ -365,7 +365,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.empty(),
             Optional.empty());
@@ -428,7 +428,7 @@ public class WatchmanFactoryTest {
             rootPaths,
             env,
             finder,
-            new TestConsole(),
+            new TestEventConsole(),
             clock,
             Optional.empty(),
             Optional.empty());

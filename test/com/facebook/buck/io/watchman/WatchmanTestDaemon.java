@@ -19,9 +19,9 @@ package com.facebook.buck.io.watchman;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.LogConfig;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessListeners;
@@ -145,7 +145,7 @@ public class WatchmanTestDaemon implements Closeable {
     try {
       try (WatchmanClient client =
           WatchmanFactory.createWatchmanClient(
-              watchmanSockFile, new TestConsole(), new DefaultClock())) {
+              watchmanSockFile, new TestEventConsole(), new DefaultClock())) {
         Either<Map<String, Object>, WatchmanClient.Timeout> response =
             client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, WatchmanQuery.getPid());
         return response.isLeft();

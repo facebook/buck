@@ -18,8 +18,8 @@ package com.facebook.buck.io.watchman;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -84,7 +84,7 @@ public class WatchmanClientIntegrationTest {
   public void testWatchmanGlob() throws InterruptedException, IOException {
     WatchmanClient client =
         WatchmanFactory.createWatchmanClient(
-            watchmanDaemon.getTransportPath(), new TestConsole(), new DefaultClock());
+            watchmanDaemon.getTransportPath(), new TestEventConsole(), new DefaultClock());
 
     Either<Map<String, Object>, WatchmanClient.Timeout> versionResponse =
         client.queryWithTimeout(

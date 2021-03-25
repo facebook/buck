@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
@@ -35,8 +36,6 @@ import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.io.watchman.WatchmanQueryTimedOutException;
 import com.facebook.buck.io.watchman.WatchmanTestDaemon;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -70,13 +69,11 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   @Rule public TemporaryPaths watchmanStateDirectory = new TemporaryPaths();
 
   private Clock clock;
-  private Console console;
   private WatchmanTestDaemon watchmanDaemon;
 
   @Before
   public void setUpWatchman() throws IOException, InterruptedException {
     clock = new DefaultClock();
-    console = new TestConsole();
 
     try {
       watchmanDaemon =
@@ -228,14 +225,15 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
         createWatchmanClient(),
         watchmanDaemon.getTransportPath(),
         watchedProjects,
-        console,
+        new TestEventConsole(),
         clock,
         endTimeNanos,
         syncTimeoutMillis);
   }
 
   private WatchmanClient createWatchmanClient() throws IOException {
-    return WatchmanFactory.createWatchmanClient(watchmanDaemon.getTransportPath(), console, clock);
+    return WatchmanFactory.createWatchmanClient(
+        watchmanDaemon.getTransportPath(), new TestEventConsole(), clock);
   }
 
   MockWatchmanFactory createMockWatchmanFactory(QueryWithTimeoutFunction mockQueryWithTimeout) {

@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
@@ -35,7 +36,6 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.ConfigBuilder;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -86,7 +86,7 @@ public class EdenProjectFilesystemDelegateTest {
         watchmanFactory.build(
             ImmutableSet.of(tmp.getRoot()),
             ImmutableMap.of(),
-            new TestConsole(),
+            new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
             Optional.empty());

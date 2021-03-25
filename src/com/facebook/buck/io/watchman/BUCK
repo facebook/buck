@@ -15,6 +15,9 @@ java_library(
     visibility = [
         "PUBLIC",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/event/console:console",
+    ],
 )
 
 java_library(

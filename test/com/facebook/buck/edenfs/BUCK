@@ -18,6 +18,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/event/console:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/testutil:testutil",

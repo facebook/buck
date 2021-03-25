@@ -12,6 +12,7 @@ standard_java_test(
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/util:process_executor",
         "//test/com/facebook/buck/cli:testutil",
+        "//test/com/facebook/buck/event/console:testutil",
         "//test/com/facebook/buck/io:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/io/watchman:testutil",

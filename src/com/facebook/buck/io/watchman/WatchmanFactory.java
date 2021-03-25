@@ -18,10 +18,10 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.console.EventConsole;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.io.windowspipe.WindowsNamedPipe;
-import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -91,7 +91,7 @@ public class WatchmanFactory {
      * locally.
      */
     WatchmanClient tryCreateClientToFetchInitialWatchmanData(
-        Path socketPath, Console console, Clock clock) throws IOException;
+        Path socketPath, EventConsole console, Clock clock) throws IOException;
   }
 
   public WatchmanFactory() {
@@ -106,7 +106,7 @@ public class WatchmanFactory {
   public Watchman build(
       ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
-      Console console,
+      EventConsole console,
       Clock clock,
       Optional<Long> commandTimeoutMillis,
       Optional<Integer> syncTimeoutMillis)
@@ -129,7 +129,7 @@ public class WatchmanFactory {
       ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
-      Console console,
+      EventConsole console,
       Clock clock,
       Optional<Long> commandTimeoutMillis,
       Optional<Integer> syncTimeoutMillis)
@@ -178,7 +178,7 @@ public class WatchmanFactory {
       ListeningProcessExecutor executor,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
-      Console console,
+      EventConsole console,
       Clock clock,
       long timeoutMillis)
       throws IOException, InterruptedException {
@@ -224,7 +224,7 @@ public class WatchmanFactory {
       WatchmanClient client,
       Path transportPath,
       ImmutableSet<AbsPath> projectWatchList,
-      Console console,
+      EventConsole console,
       Clock clock,
       long endTimeNanos,
       int clockSyncTimeoutMillis)
@@ -309,7 +309,7 @@ public class WatchmanFactory {
   }
 
   private static Watchman returnNullWatchman(
-      Console console, String reason, @Nullable Throwable e) {
+      EventConsole console, String reason, @Nullable Throwable e) {
     if (e != null) {
       LOG.warn(e, reason);
     } else {
@@ -317,17 +317,13 @@ public class WatchmanFactory {
     }
     // Unavailable watchman is an important event,
     // so print that to the console, not just log it.
-    // TODO(nga): we print to raw stream here because printing to regular stream
-    //   marks the stream as dirty which disables super-console.
-    //   But if super-console is running, it will likely overwrite this message.
-    //   But at least we will see the message when running in CI.
-    console.getStdErr().getRawStream().println(reason);
+    console.err(reason);
     return NULL_WATCHMAN;
   }
 
   @VisibleForTesting
   public static WatchmanClient createWatchmanClient(
-      Path transportPath, Console console, Clock clock) throws IOException {
+      Path transportPath, EventConsole console, Clock clock) throws IOException {
     return new WatchmanTransportClient(console, clock, createLocalWatchmanTransport(transportPath));
   }
 
@@ -476,7 +472,7 @@ public class WatchmanFactory {
   @SuppressWarnings("unchecked")
   private static Optional<Map<String, Object>> execute(
       ListeningProcessExecutor executor,
-      Console console,
+      EventConsole console,
       Clock clock,
       long commandTimeoutMillis,
       long timeoutNanos,
@@ -503,7 +499,7 @@ public class WatchmanFactory {
       // rest of the timeout period.
       long remainingNanos = timeoutNanos - (clock.nanoTime() - startTimeNanos);
       if (remainingNanos > 0) {
-        console.getStdErr().getRawStream().format("Waiting for watchman...\n");
+        console.warn("Waiting for watchman...");
         exitCode = executor.waitForProcess(process, remainingNanos, TimeUnit.NANOSECONDS);
       }
     }
@@ -514,12 +510,10 @@ public class WatchmanFactory {
         exitCode);
     if (exitCode == Integer.MIN_VALUE) {
       LOG.warn("Watchman did not respond within %d ms, disabling.", commandTimeoutMillis);
-      console
-          .getStdErr()
-          .getRawStream()
-          .format(
-              "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.\n",
-              commandTimeoutMillis, Joiner.on(" ").join(args));
+      console.warn(
+          String.format(
+              "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.",
+              commandTimeoutMillis, Joiner.on(" ").join(args)));
       return Optional.empty();
     }
     if (exitCode != 0) {

@@ -1,0 +1,14 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    exported_deps = [
+        "//src/com/facebook/buck/event/console:console",
+    ],
+)

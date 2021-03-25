@@ -20,7 +20,7 @@ import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExe
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.util.Console;
+import com.facebook.buck.event.console.EventConsole;
 import com.facebook.buck.util.bser.BserDeserializer;
 import com.facebook.buck.util.bser.BserSerializer;
 import com.facebook.buck.util.timing.Clock;
@@ -43,11 +43,11 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final ListeningExecutorService listeningExecutorService;
   private final Clock clock;
   private final Transport transport;
-  private final Console console;
+  private final EventConsole console;
   private final BserSerializer bserSerializer;
   private final BserDeserializer bserDeserializer;
 
-  public WatchmanTransportClient(Console console, Clock clock, Transport transport) {
+  public WatchmanTransportClient(EventConsole console, Clock clock, Transport transport) {
     this.listeningExecutorService = listeningDecorator(newSingleThreadExecutor("Watchman"));
     this.console = console;
     this.clock = clock;
@@ -105,18 +105,13 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
         "Watchman did not respond to '%s' within %dms.",
         whichQuery, TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
 
-    if (console.getVerbosity().isSilent()) {
-      return;
-    }
     if (timeoutNanos < 0) {
       timeoutNanos = 0;
     }
-    console
-        .getStdErr()
-        .getRawStream()
-        .format(
-            "Timed out after %ds waiting for watchman query '%s'.\n",
-            TimeUnit.NANOSECONDS.toSeconds(timeoutNanos), whichQuery);
+    console.warn(
+        String.format(
+            "Timed out after %ds waiting for watchman query '%s'.",
+            TimeUnit.NANOSECONDS.toSeconds(timeoutNanos), whichQuery));
   }
 
   private Either<Map<String, Object>, Timeout> waitForQueryNotifyingUserIfSlow(
@@ -132,28 +127,20 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
         LOG.debug("Waiting for Watchman query [%s]...", query);
-        if (!console.getVerbosity().isSilent()) {
-          console
-              .getStdErr()
-              .getRawStream()
-              .format(
-                  "Waiting for watchman query '%s' for %ds...\n",
-                  query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos));
-        }
+        console.warn(
+            String.format(
+                "Waiting for watchman query '%s' for %ds...",
+                query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos)));
         try {
           Map<String, Object> result = future.get(remainingNanos, TimeUnit.NANOSECONDS);
-          if (!console.getVerbosity().isSilent()) {
-            long queryDurationNanos = clock.nanoTime() - queryStartNanos;
-            LOG.debug(
-                "Watchman query [%s] finished in %dms",
-                query, TimeUnit.NANOSECONDS.toMillis(queryDurationNanos));
-            console
-                .getStdErr()
-                .getRawStream()
-                .format(
-                    "Watchman query '%s' finished in %ds...\n",
-                    query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(queryDurationNanos));
-          }
+          long queryDurationNanos = clock.nanoTime() - queryStartNanos;
+          LOG.debug(
+              "Watchman query [%s] finished in %dms",
+              query, TimeUnit.NANOSECONDS.toMillis(queryDurationNanos));
+          console.warn(
+              String.format(
+                  "Watchman query '%s' finished in %ds...",
+                  query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(queryDurationNanos)));
           return Either.ofLeft(result);
         } catch (TimeoutException te) {
           LOG.debug("Timed out");

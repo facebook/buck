@@ -22,6 +22,7 @@ java_test(
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
+        "//test/com/facebook/buck/event/console:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
