@@ -91,7 +91,7 @@ public class BuckDepVisibilityInspection extends LocalInspectionTool {
       }
       VirtualFile depTargetBuckFile =
           buckTargetLocator.findVirtualFileForTargetPattern(depTargetPattern).orElse(null);
-      if (depTargetBuckFile == null) {
+      if (depTargetBuckFile == null || depTargetBuckFile.isDirectory()) {
         return;
       }
       Pair<BuckVisibilityState, BuckListMaker> visibilityStateListPair =
