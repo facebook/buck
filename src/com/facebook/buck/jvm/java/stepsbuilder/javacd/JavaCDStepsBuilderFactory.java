@@ -18,13 +18,10 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 
 /**
@@ -35,18 +32,13 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   private final boolean hasAnnotationProcessing;
   private final SpoolMode spoolMode;
   private final boolean withDownwardApi;
-  // TODO msemko: remove delegate when all builders are ready.
-  private final DefaultJavaCompileStepsBuilderFactory<?> delegate;
   private final JavaCDParams javaCDParams;
 
   public JavaCDStepsBuilderFactory(
-      BaseJavacToJarStepFactory configuredCompiler,
-      DefaultJavaCompileStepsBuilderFactory<?> delegate,
-      JavaCDParams javaCDParams) {
+      BaseJavacToJarStepFactory configuredCompiler, JavaCDParams javaCDParams) {
     this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
     this.spoolMode = configuredCompiler.getSpoolMode();
     this.withDownwardApi = configuredCompiler.isWithDownwardApi();
-    this.delegate = delegate;
     this.javaCDParams = javaCDParams;
   }
 
@@ -57,22 +49,10 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
         hasAnnotationProcessing, spoolMode, withDownwardApi, javaCDParams);
   }
 
-  /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance. */
-  @Override
-  public LibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
-    return delegate.getPipelineLibraryJarBuilder();
-  }
-
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance. */
   @Override
   public AbiJarStepsBuilder getAbiJarBuilder() {
     return new JavaCDAbiJarStepsBuilder(
         hasAnnotationProcessing, spoolMode, withDownwardApi, javaCDParams);
-  }
-
-  /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance. */
-  @Override
-  public AbiJarPipelineStepsBuilder getPipelineAbiJarBuilder() {
-    return delegate.getPipelineAbiJarBuilder();
   }
 }

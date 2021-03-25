@@ -61,8 +61,6 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
   protected enum Type {
     LIBRARY_JAR,
     ABI_JAR,
-    LIBRARY_JAR_PIPELINE,
-    ABI_JAR_PIPELINE,
   }
 
   private final BuildJavaCommand.Builder commandBuilder = BuildJavaCommand.newBuilder();
@@ -95,8 +93,6 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
         commandBuilder.setAbiJarCommand((AbiJarCommand) buildCommand());
         break;
 
-      case ABI_JAR_PIPELINE:
-      case LIBRARY_JAR_PIPELINE:
       default:
         throw new IllegalStateException(type + " is not supported!");
     }

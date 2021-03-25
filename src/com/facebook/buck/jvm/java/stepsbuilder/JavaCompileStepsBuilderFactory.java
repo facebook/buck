@@ -22,12 +22,6 @@ public interface JavaCompileStepsBuilderFactory {
   /** Creates an appropriate {@link LibraryJarStepsBuilder} instance */
   LibraryJarStepsBuilder getLibraryJarBuilder();
 
-  /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance */
-  LibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder();
-
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance */
   AbiJarStepsBuilder getAbiJarBuilder();
-
-  /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance */
-  AbiJarPipelineStepsBuilder getPipelineAbiJarBuilder();
 }

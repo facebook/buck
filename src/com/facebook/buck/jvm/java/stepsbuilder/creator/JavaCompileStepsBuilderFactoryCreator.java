@@ -33,16 +33,12 @@ public class JavaCompileStepsBuilderFactoryCreator {
       JavaCompileStepsBuilderFactory createFactory(
           CompileToJarStepFactory<T> configuredCompiler, JavaCDParams javaCDParams) {
 
-    DefaultJavaCompileStepsBuilderFactory<T> defaultJavaCompileStepsBuilderFactory =
-        new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
-
     if (configuredCompiler.supportsCompilationDaemon()) {
       BaseJavacToJarStepFactory baseJavacToJarStepFactory =
           (BaseJavacToJarStepFactory) configuredCompiler;
-      return new JavaCDStepsBuilderFactory(
-          baseJavacToJarStepFactory, defaultJavaCompileStepsBuilderFactory, javaCDParams);
+      return new JavaCDStepsBuilderFactory(baseJavacToJarStepFactory, javaCDParams);
     }
 
-    return defaultJavaCompileStepsBuilderFactory;
+    return new DefaultJavaCompileStepsBuilderFactory<>(configuredCompiler);
   }
 }

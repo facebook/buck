@@ -42,7 +42,6 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
@@ -55,6 +54,7 @@ import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Objects;
@@ -168,15 +168,12 @@ public class CalculateSourceAbi
         StateHolder<JavacPipelineState> stateHolder,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
-
       CompilerOutputPaths compilerOutputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       RelPath classesDir = compilerOutputPaths.getClassesDir();
 
-      AbiJarPipelineStepsBuilder stepsBuilder =
-          getJavaCompileStepsBuilderFactory(filesystem, sourcePathResolver)
-              .getPipelineAbiJarBuilder();
+      ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
+
       jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
           buildTarget,
           buildContext,
@@ -185,7 +182,8 @@ public class CalculateSourceAbi
           classesDir,
           stateHolder,
           stepsBuilder);
-      return stepsBuilder.build();
+
+      return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
     }
 
     private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(

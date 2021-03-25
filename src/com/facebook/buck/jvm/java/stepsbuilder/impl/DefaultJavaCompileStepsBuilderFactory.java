@@ -17,11 +17,9 @@
 package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 
 /**
@@ -43,21 +41,9 @@ public class DefaultJavaCompileStepsBuilderFactory<T extends CompileToJarStepFac
     return new DefaultLibraryJarStepsBuilder<>(configuredCompiler);
   }
 
-  /** Creates an appropriate {@link LibraryJarPipelineStepsBuilder} instance */
-  @Override
-  public LibraryJarPipelineStepsBuilder getPipelineLibraryJarBuilder() {
-    return new DefaultLibraryJarPipelineStepsBuilder<>(configuredCompiler);
-  }
-
   /** Creates an appropriate {@link AbiJarStepsBuilder} instance */
   @Override
   public AbiJarStepsBuilder getAbiJarBuilder() {
     return new DefaultAbiJarCompileStepsBuilder<>(configuredCompiler);
-  }
-
-  /** Creates an appropriate {@link AbiJarPipelineStepsBuilder} instance */
-  @Override
-  public AbiJarPipelineStepsBuilder getPipelineAbiJarBuilder() {
-    return new DefaultAbiJarPipelineStepsBuilder<>(configuredCompiler);
   }
 }

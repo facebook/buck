@@ -45,10 +45,10 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExpo
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
+import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultLibraryStepsBuilderBase;
 import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -59,6 +59,7 @@ import com.facebook.buck.rules.modern.PipelinedBuildable;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -191,14 +192,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       StateHolder<JavacPipelineState> stateHolder,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
-    JavaCompileStepsBuilderFactory javaCompileStepsBuilderFactory =
-        getJavaCompileStepsBuilderFactory(filesystem, sourcePathResolver);
-    LibraryJarPipelineStepsBuilder stepsBuilder =
-        javaCompileStepsBuilderFactory.getPipelineLibraryJarBuilder();
     CompilerOutputPaths compilerOutputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
     RelPath classesDir = compilerOutputPaths.getClassesDir();
+
+    ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
 
     jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
         buildContext,
@@ -209,10 +207,13 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
         classesDir,
         stepsBuilder);
 
+    DefaultLibraryStepsBuilderBase<?> defaultLibraryStepsBuilderBase =
+        new DefaultLibraryStepsBuilderBase<>(jarBuildStepsFactory.getConfiguredCompiler());
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
-        buildContext, filesystem, outputPathResolver, stepsBuilder);
+        buildContext, filesystem, outputPathResolver, defaultLibraryStepsBuilderBase);
+    stepsBuilder.addAll(defaultLibraryStepsBuilderBase.buildIsolatedSteps());
 
-    return stepsBuilder.build();
+    return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
   }
 
   private JavaCDParams createJavaCDParams(

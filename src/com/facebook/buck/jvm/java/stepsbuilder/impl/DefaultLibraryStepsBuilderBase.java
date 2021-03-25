@@ -27,10 +27,10 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 /** Default implementation of {@link LibraryStepsBuilderBase}. */
-abstract class DefaultLibraryStepsBuilderBase<T extends CompileToJarStepFactory.ExtraParams>
+public class DefaultLibraryStepsBuilderBase<T extends CompileToJarStepFactory.ExtraParams>
     extends DefaultJavaStepsBuilderBase<T> implements LibraryStepsBuilderBase {
 
-  DefaultLibraryStepsBuilderBase(CompileToJarStepFactory<T> configuredCompiler) {
+  public DefaultLibraryStepsBuilderBase(CompileToJarStepFactory<T> configuredCompiler) {
     super(configuredCompiler);
   }
 

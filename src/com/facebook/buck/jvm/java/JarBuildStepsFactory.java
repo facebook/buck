@@ -42,6 +42,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -50,9 +51,8 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarPipelineStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarPipelineStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsSerializer;
@@ -65,6 +65,7 @@ import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -459,7 +460,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       RelPath classesDir,
       StateHolder<JavacPipelineState> stateHolder,
-      AbiJarPipelineStepsBuilder stepsBuilder) {
+      ImmutableList.Builder<IsolatedStep> stepsBuilder) {
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -472,14 +473,17 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
     BuckPaths buckPaths = filesystem.getBuckPaths();
     BuildTargetValue buildTargetValue = BuildTargetValue.withExtraParams(buildTarget, buckPaths);
-    stepsBuilder.addPipelinedBuildStepsForAbiJar(
-        buildTargetValue,
-        CompilerOutputPathsValue.of(buckPaths, buildTarget),
-        FilesystemParamsUtils.of(filesystem),
-        buildableContext,
-        stateHolder,
-        resourcesMap,
-        cellToPathMappings);
+
+    ((BaseJavacToJarStepFactory) configuredCompiler)
+        .createPipelinedCompileToJarStep(
+            FilesystemParamsUtils.of(filesystem),
+            cellToPathMappings,
+            buildTargetValue,
+            stateHolder.getState(),
+            CompilerOutputPathsValue.of(buckPaths, buildTarget),
+            stepsBuilder,
+            buildableContext,
+            resourcesMap);
   }
 
   /** Adds build steps for library jar */
@@ -574,7 +578,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       StateHolder<JavacPipelineState> stateHolder,
       RelPath pathToClassHashes,
       RelPath classesDir,
-      LibraryJarPipelineStepsBuilder stepsBuilder) {
+      ImmutableList.Builder<IsolatedStep> stepsBuilder) {
+    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
 
     ImmutableMap<RelPath, RelPath> resourcesMap =
         CopyResourcesStep.getResourcesMap(
@@ -590,17 +595,26 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     BuckPaths buckPaths = filesystem.getBuckPaths();
     BuildTargetValue libraryTargetValue =
         BuildTargetValue.withExtraParams(libraryTarget, buckPaths);
-    Preconditions.checkArgument(postprocessClassesCommands.isEmpty());
-    stepsBuilder.addPipelinedBuildStepsForLibraryJar(
-        libraryTargetValue,
-        FilesystemParamsUtils.of(filesystem),
-        buildableContext,
-        stateHolder,
-        CompilerOutputPathsValue.of(buckPaths, libraryTarget),
-        pathToClassHashes,
-        resourcesMap,
-        cellToPathMappings,
-        pathToClasses);
+    FilesystemParams filesystemParams = FilesystemParamsUtils.of(filesystem);
+    CompilerOutputPathsValue compilerOutputPathsValue =
+        CompilerOutputPathsValue.of(buckPaths, libraryTarget);
+
+    ((BaseJavacToJarStepFactory) configuredCompiler)
+        .createPipelinedCompileToJarStep(
+            filesystemParams,
+            cellToPathMappings,
+            libraryTargetValue,
+            stateHolder.getState(),
+            compilerOutputPathsValue,
+            stepsBuilder,
+            buildableContext,
+            resourcesMap);
+
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        FilesystemParamsUtils.getIgnoredPaths(filesystemParams),
+        stepsBuilder,
+        pathToClasses,
+        pathToClassHashes);
   }
 
   private BaseJavaAbiInfo toBaseJavaAbiInfo(JavaDependencyInfo info) {
