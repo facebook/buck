@@ -31,16 +31,11 @@ option java_outer_classname = "JavaCDProto";
 // best practices to include version number in package
 package javacd.api.v1;
 
-message BuildJavaCommand {
-    // BaseJavacToJarStepFactory params
+// Base parameters used by all commands (abi or library jars, as well as pipelining command)
+message BaseCommandParams{
     SpoolMode spoolMode = 1;
     bool hasAnnotationProcessing = 2;
     bool withDownwardApi = 3;
-
-    oneof command {
-        LibraryJarCommand libraryJarCommand = 4;
-        AbiJarCommand abiJarCommand = 5;
-    }
 
     /** The method in which the compiler output is spooled. */
     enum SpoolMode {
@@ -61,6 +56,17 @@ message BuildJavaCommand {
     }
 }
 
+// Represents a single rule command either library or abi jar
+message BuildJavaCommand {
+    BaseCommandParams baseCommandParams = 1;
+    // abi or library
+    oneof command {
+        LibraryJarCommand libraryJarCommand = 2;
+        AbiJarCommand abiJarCommand = 3;
+    }
+}
+
+// Common parameters for build jar commands (abi and library jar ones)
 message BaseJarCommand {
     AbiGenerationMode abiCompatibilityMode = 1;
     AbiGenerationMode abiGenerationMode = 2;
@@ -74,40 +80,39 @@ message BaseJarCommand {
     repeated RelPath javaSrcs = 10;
     repeated JavaAbiInfo fullJarInfos = 11;
     repeated JavaAbiInfo abiJarInfos = 12;
-    // protobuf map doesn't support custom type as map key, so would present a map as list of entries.
     repeated RelPathMapEntry resourcesMap = 13;
     map<string, RelPath> cellToPathMappings = 14;
     JarParameters libraryJarParameters = 15;
     AbsPath buildCellRootPath = 16;
     ResolvedJavac resolvedJavac = 17;
     ResolvedJavacOptions resolvedJavacOptions = 18;
-
-    message RelPathMapEntry {
-        RelPath key = 1;
-        RelPath value = 2;
-    }
-
-    enum AbiGenerationMode {
-        UNKNOWN = 0;
-        /** Generate ABIs by stripping .class files */
-        CLASS = 1;
-        /** Generate ABIs by parsing .java files with dependency ABIs available */
-        SOURCE = 2;
-        /**
-         * Output warnings for things that aren't legal when generating ABIs from source without
-         * dependency ABIs
-         */
-        MIGRATING_TO_SOURCE_ONLY = 3;
-        /**
-         * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
-         */
-        SOURCE_ONLY = 4;
-    }
 }
 
-message LibraryJarCommand {
-    BaseJarCommand baseJarCommand = 1;
-    repeated string postprocessClassesCommands = 2;
+enum AbiGenerationMode {
+    UNKNOWN = 0;
+    /** Generate ABIs by stripping .class files */
+    CLASS = 1;
+    /** Generate ABIs by parsing .java files with dependency ABIs available */
+    SOURCE = 2;
+    /**
+     * Output warnings for things that aren't legal when generating ABIs from source without
+     * dependency ABIs
+     */
+    MIGRATING_TO_SOURCE_ONLY = 3;
+    /**
+     * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
+     */
+    SOURCE_ONLY = 4;
+}
+
+// protobuf map doesn't support custom type as map key, so would present a map as list of entries.
+message RelPathMapEntry {
+    RelPath key = 1;
+    RelPath value = 2;
+}
+
+// Represents base parameter for library commands (both library jar and pipelining library jar)
+message LibraryJarBaseCommand{
     RelPath pathToClasses = 3;
     RelPath rootOutput = 4;
     RelPath pathToClassHashes = 5;
@@ -115,11 +120,43 @@ message LibraryJarCommand {
     UnusedDependenciesParams unusedDependenciesParams = 7;
 }
 
+// library jar command
+message LibraryJarCommand {
+    BaseJarCommand baseJarCommand = 1;
+    repeated string postprocessClassesCommands = 2;
+    LibraryJarBaseCommand libraryJarBaseCommand = 3;
+}
+
+// abi jar command
 message AbiJarCommand {
     BaseJarCommand baseJarCommand = 1;
     JarParameters abiJarParameters = 2;
 }
 
+// Represents pipelining command (consist from base parameters, pipelining state, abi command and maybe library command)
+message PipeliningCommand {
+    BaseCommandParams baseCommandParams = 1;
+    PipelineState pipeliningState = 2;
+    BasePipeliningCommand abiCommand = 3;
+    LibraryPipeliningCommand libraryCommand = 4;
+}
+
+// Represents base parameters for pipelining command (used by abi and library pipelining commands)
+message BasePipeliningCommand{
+    BuildTargetValue buildTargetValue = 1;
+    FilesystemParams filesystemParams = 2;
+    OutputPathsValue outputPathsValue = 3;
+    repeated RelPathMapEntry resourcesMap = 4;
+    map<string, RelPath> cellToPathMappings = 5;
+}
+
+// Represents library pipelining command
+message LibraryPipeliningCommand{
+    BasePipeliningCommand basePipeliningCommand = 1;
+    LibraryJarBaseCommand libraryJarBaseCommand = 2;
+}
+
+// Represents pipelining state
 message PipelineState {
     BuildTargetValue buildTargetValue = 1;
     repeated RelPath compileTimeClasspathPaths = 2;
@@ -128,8 +165,8 @@ message PipelineState {
     repeated JavaAbiInfo abiJarInfos = 5;
     bool trackClassUsage = 6;
     bool trackJavacPhaseEvents = 7;
-    BaseJarCommand.AbiGenerationMode abiCompatibilityMode = 8;
-    BaseJarCommand.AbiGenerationMode abiGenerationMode = 9;
+    AbiGenerationMode abiCompatibilityMode = 8;
+    AbiGenerationMode abiGenerationMode = 9;
     bool isRequiredForSourceOnlyAbi = 10;
     OutputPathsValue.OutputPaths outputPaths = 11;
     JarParameters abiJarParameters = 12;
