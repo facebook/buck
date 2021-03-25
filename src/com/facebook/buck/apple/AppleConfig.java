@@ -323,6 +323,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_missing_umbrella_headers", false);
   }
 
+  public boolean shouldUseShortNamesForTargetsInXcodeProject() {
+    return delegate.getBooleanValue(APPLE_SECTION, "use_short_names_for_targets", true);
+  }
+
   public boolean shouldUseSwiftDelegate() {
     // TODO(mgd): Remove Swift delegation from Apple rules
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);

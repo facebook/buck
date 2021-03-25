@@ -379,6 +379,7 @@ public class XCodeProjectCommandHelper {
             .setShouldUseShortNamesForTargets(true)
             .setShouldCreateDirectoryStructure(combinedProject)
             .setShouldGenerateProjectSchemes(createProjectSchemes)
+            .setShouldUseShortNamesForTargets(appleConfig.shouldUseShortNamesForTargetsInXcodeProject())
             .build();
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
