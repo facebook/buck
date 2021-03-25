@@ -386,7 +386,7 @@
 				<string>49524373A439BFE700000000</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
-			<false/>
+			<string>0</string>
 		</dict>
 		<key>E66DC04EADDF308200000000</key>
 		<dict>
@@ -452,7 +452,7 @@
 				<string>49524373A439BFE700000001</string>
 			</array>
 			<key>defaultConfigurationIsVisible</key>
-			<false/>
+			<string>0</string>
 		</dict>
 		<key>96C8479350C8E2F900000000</key>
 		<dict>
