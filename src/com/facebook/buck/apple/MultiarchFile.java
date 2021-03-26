@@ -20,19 +20,23 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -49,7 +53,7 @@ import java.util.stream.Stream;
 
 /** Puts together multiple thin library/binaries into a multi-arch file. */
 public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements HasAppleDebugSymbolDeps {
+    implements HasAppleDebugSymbolDeps, BinaryBuildRule {
 
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Tool lipo;
@@ -185,5 +189,10 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public boolean isCacheable() {
     return isCacheable;
+  }
+
+  @Override
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
 }

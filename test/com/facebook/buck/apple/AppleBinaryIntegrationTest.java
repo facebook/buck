@@ -2153,4 +2153,51 @@ public class AppleBinaryIntegrationTest {
         workspace.runCommand("file", outputPath.toString()).getStdout().get(),
         containsString("executable"));
   }
+
+  @Test
+  public void testAppleBinaryWithMultiarchGenruleExecution() throws Exception {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_with_multiarch_and_genrule", tmp);
+    // Due to building of ARM64 binary and not having removed the OSO scrubber
+    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", "true");
+    workspace.setUp();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance("//Apps/TestApp:Binary")
+            .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    // Check type of iOS Simulator binary
+
+    Path outputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem().getBuckPaths(), target, "%s"));
+    assertThat(Files.exists(outputPath), is(true));
+    assertThat(
+        workspace.runCommand("file", outputPath.toString()).getStdout().get(),
+        containsString("executable"));
+
+    // Check type of generator executable
+
+    BuildTarget generatorTarget =
+        BuildTargetFactory.newInstance("//Apps/TestApp:generator")
+            .withAppendedFlavors(
+                InternalFlavor.of("macosx-x86_64"), InternalFlavor.of("macosx-arm64"));
+    Path generatorOutputPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem().getBuckPaths(), generatorTarget, "%s"));
+
+    String generatorFileOutput =
+        workspace.runCommand("file", generatorOutputPath.toString()).getStdout().get();
+    assertThat(
+        generatorFileOutput,
+        containsString(
+            "Mach-O universal binary with 2 architectures: [x86_64:Mach-O 64-bit executable x86_64] [arm64:Mach-O 64-bit executable arm64]"));
+  }
 }

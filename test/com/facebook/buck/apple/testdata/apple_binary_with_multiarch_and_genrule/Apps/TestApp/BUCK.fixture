@@ -1,0 +1,18 @@
+apple_binary(
+    name = "Binary",
+    srcs = [":generated-c-file"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/CoreFoundation.framework",
+    ],
+)
+
+genrule(
+    name = "generated-c-file",
+    cmd = "$(exe :generator#macosx-x86_64,macosx-arm64) > $OUT",
+    out = "main.c",
+)
+
+apple_binary(
+    name = "generator",
+    srcs = ["generator.c"],
+)
