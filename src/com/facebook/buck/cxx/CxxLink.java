@@ -25,9 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
-import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
@@ -86,6 +83,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   // Stored here so we can access it without an OutputPathResolver.
   private final Path output;
   private final ImmutableMap<String, Path> extraOutputs;
+  private final Optional<String> pathNormalizationPrefix;
 
   public CxxLink(
       BuildTarget buildTarget,
@@ -141,12 +139,49 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       boolean withDownwardApi,
       CxxConditionalLinkStrategy linkStrategy,
       CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy) {
+    this(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        linker,
+        output,
+        extraOutputs,
+        args,
+        postprocessor,
+        ruleScheduleInfo,
+        linkerMapEnabled,
+        cacheable,
+        thinLto,
+        fatLto,
+        withDownwardApi,
+        linkStrategy,
+        debugSymbolLinkStrategy,
+        computeCellRoots(cellResolver, buildTarget.getCell()));
+  }
+
+  private CxxLink(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      Linker linker,
+      Path output,
+      ImmutableMap<String, Path> extraOutputs,
+      ImmutableList<Arg> args,
+      Optional<LinkOutputPostprocessor> postprocessor,
+      Optional<RuleScheduleInfo> ruleScheduleInfo,
+      boolean linkerMapEnabled,
+      boolean cacheable,
+      boolean thinLto,
+      boolean fatLto,
+      boolean withDownwardApi,
+      CxxConditionalLinkStrategy linkStrategy,
+      CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy,
+      ImmutableSortedSet<String> cellRoots) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         new Impl(
-            projectFilesystem,
             linker,
             output,
             extraOutputs,
@@ -156,7 +191,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             thinLto,
             fatLto,
             buildTarget,
-            computeCellRoots(cellResolver, buildTarget.getCell()),
+            cellRoots,
             withDownwardApi,
             linkStrategy,
             debugSymbolLinkStrategy));
@@ -168,6 +203,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     // against correctness issues
     this.cacheable = cacheable && !this.incremental;
     this.extraOutputs = extraOutputs;
+    this.pathNormalizationPrefix =
+        linker.pathNormalizationPrefix(getCellRootMap(cellRoots, projectFilesystem));
     performChecks(buildTarget);
   }
 
@@ -186,15 +223,25 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     return excludedPaths.build();
   }
 
-  private static ImmutableSortedSet<Path> computeCellRoots(
+  private static ImmutableSortedSet<String> computeCellRoots(
       CellPathResolver cellResolver, CanonicalCellName cell) {
-    ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<String> builder = ImmutableSortedSet.naturalOrder();
     AbsPath cellPath = cellResolver.getNewCellPathResolver().getCellPath(cell);
-    builder.add(cellPath.relativize(cellPath).getPath());
+    builder.add(cellPath.relativize(cellPath).toString());
     cellResolver
         .getKnownRoots()
-        .forEach(path -> builder.add(cellPath.relativize(path.getPath()).getPath()));
+        .forEach(path -> builder.add(cellPath.relativize(path.getPath()).toString()));
     return builder.build();
+  }
+
+  private static ImmutableSortedMap<Path, Path> getCellRootMap(
+      ImmutableSortedSet<String> relativeCellRoots, ProjectFilesystem filesystem) {
+    return relativeCellRoots.stream()
+        .collect(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Ordering.natural(),
+                root -> MorePaths.normalize(filesystem.getRootPath().resolve(root).getPath()),
+                root -> Paths.get(root)));
   }
 
   private void performChecks(BuildTarget buildTarget) {
@@ -206,7 +253,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
   @Override
   public Optional<String> getPathNormalizationPrefix() {
-    return getBuildable().getPathNormalizationPrefix();
+    return this.pathNormalizationPrefix;
   }
 
   /** Buildable implementation of CxxLink. */
@@ -217,16 +264,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final boolean thinLto;
     @AddToRuleKey private final boolean fatLto;
     @AddToRuleKey private final ImmutableSortedSet<String> relativeCellRoots;
-    // Path is not a rulekey-compatible type but that's fine, since `cellRootMap`
-    // is just a derivation of `relativeCellRoots` which is already part of
-    // the rulekey. We could just compute it on the fly but it's more convenient
-    // just to store it.
-    @ExcludeFromRuleKey(
-        reason = "`cellRootMap` is just a derived field `relativeCellRoots`",
-        serialization = DefaultFieldSerialization.class,
-        inputs = IgnoredFieldInputs.class)
-    private final ImmutableSortedMap<Path, Path> cellRootMap;
-
     @AddToRuleKey private final PublicOutputPath output;
     @AddToRuleKey private final Optional<PublicOutputPath> linkerMapPath;
     @AddToRuleKey private final Optional<PublicOutputPath> thinLTOPath;
@@ -237,7 +274,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final CxxDebugSymbolLinkStrategy debugStrategy;
 
     public Impl(
-        ProjectFilesystem filesystem,
         Linker linker,
         Path output,
         ImmutableMap<String, Path> extraOutputs,
@@ -247,7 +283,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         boolean thinLto,
         boolean fatLto,
         BuildTarget buildTarget,
-        ImmutableSortedSet<Path> relativeCellRoots,
+        ImmutableSortedSet<String> relativeCellRoots,
         boolean withDownwardApi,
         CxxConditionalLinkStrategy linkStrategy,
         CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy) {
@@ -276,17 +312,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       this.postprocessor = postprocessor;
       this.thinLto = thinLto;
       this.fatLto = fatLto;
-      this.relativeCellRoots =
-          relativeCellRoots.stream()
-              .map(Object::toString)
-              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-      this.cellRootMap =
-          this.relativeCellRoots.stream()
-              .collect(
-                  ImmutableSortedMap.toImmutableSortedMap(
-                      Ordering.natural(),
-                      root -> MorePaths.normalize(filesystem.getRootPath().resolve(root).getPath()),
-                      root -> Paths.get(root)));
+      this.relativeCellRoots = relativeCellRoots;
       this.buildTarget = buildTarget;
       this.linkStrategy = linkStrategy;
       this.debugStrategy = debugSymbolLinkStrategy;
@@ -294,10 +320,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
     public boolean isLinkerMapEnabled() {
       return this.linkerMapPath.isPresent();
-    }
-
-    private Optional<String> getPathNormalizationPrefix() {
-      return linker.pathNormalizationPrefix(cellRootMap);
     }
 
     @Override
@@ -357,6 +379,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             return filesystem.exists(skipLinkingPath.getPath());
           };
 
+      ImmutableSortedMap<Path, Path> cellRootMap = getCellRootMap(relativeCellRoots, filesystem);
       Builder<Step> stepsBuilder =
           new Builder<Step>()
               .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
