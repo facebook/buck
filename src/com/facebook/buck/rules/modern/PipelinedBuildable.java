@@ -27,21 +27,6 @@ import com.google.protobuf.AbstractMessage;
 /** Interface for the buildable of a PipelinedModernBuildRule. */
 public interface PipelinedBuildable<State extends RulePipelineState> extends Buildable {
 
-  /**
-   * Return a list of steps for pipelining rule. Default implementation is creating intermediate
-   * protobuf message and then creates a list of steps from it.
-   */
-  default ImmutableList<Step> getPipelinedBuildSteps(
-      BuildContext buildContext,
-      ProjectFilesystem filesystem,
-      StateHolder<State> stateHolder,
-      OutputPathResolver outputPathResolver,
-      BuildCellRelativePathFactory buildCellPathFactory) {
-    AbstractMessage pipelinedCommand =
-        getPipelinedCommand(buildContext, filesystem, outputPathResolver, buildCellPathFactory);
-    return getPipelinedBuildSteps(stateHolder, pipelinedCommand);
-  }
-
   AbstractMessage getPipelinedCommand(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
@@ -49,5 +34,5 @@ public interface PipelinedBuildable<State extends RulePipelineState> extends Bui
       BuildCellRelativePathFactory buildCellPathFactory);
 
   ImmutableList<Step> getPipelinedBuildSteps(
-      StateHolder<State> stateHolder, AbstractMessage message);
+      StateHolder<State> stateHolder, AbstractMessage command);
 }

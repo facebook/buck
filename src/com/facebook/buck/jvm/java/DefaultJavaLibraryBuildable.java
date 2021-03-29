@@ -316,9 +316,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   @Override
   public ImmutableList<Step> getPipelinedBuildSteps(
-      StateHolder<JavacPipelineState> stateHolder, AbstractMessage message) {
-    Preconditions.checkState(message instanceof LibraryPipeliningCommand);
-    LibraryPipeliningCommand libraryPipeliningCommand = (LibraryPipeliningCommand) message;
+      StateHolder<JavacPipelineState> stateHolder, AbstractMessage command) {
+    Preconditions.checkState(command instanceof LibraryPipeliningCommand);
+    LibraryPipeliningCommand libraryPipeliningCommand = (LibraryPipeliningCommand) command;
 
     BasePipeliningCommand basePipeliningCommand =
         libraryPipeliningCommand.getBasePipeliningCommand();

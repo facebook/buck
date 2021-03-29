@@ -54,5 +54,5 @@ public interface SupportsPipelining<State extends RulePipelineState> extends Bui
 
   RulePipelineStateFactory<State, ?> getPipelineStateFactory();
 
-  boolean doNotCreateState();
+  boolean supportsCompilationDaemon();
 }

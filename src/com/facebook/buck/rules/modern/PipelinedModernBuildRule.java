@@ -64,13 +64,13 @@ public abstract class PipelinedModernBuildRule<
 
     PipelinedBuildable<State> buildable = getBuildable();
 
-    AbstractMessage pipelinedMessage =
+    AbstractMessage pipelinedCommand =
         buildable.getPipelinedCommand(
             context,
             projectFilesystem,
             outputPathResolver,
             getBuildCellPathFactory(context, projectFilesystem, outputPathResolver));
-    ImmutableList<Step> steps = buildable.getPipelinedBuildSteps(stateHolder, pipelinedMessage);
+    ImmutableList<Step> steps = buildable.getPipelinedBuildSteps(stateHolder, pipelinedCommand);
 
     stepsBuilder.addAll(steps);
     return stepsBuilder.build();

@@ -26,7 +26,6 @@ import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
 import com.facebook.buck.javacd.model.LibraryJarCommand;
-import com.facebook.buck.javacd.model.RelPathMapEntry;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
@@ -48,8 +47,6 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /** Java steps builder */
@@ -116,7 +113,7 @@ public class JavaStepsBuilder {
     LibraryJarBaseCommand libraryJarBaseCommand = libraryJarCommand.getLibraryJarBaseCommand();
 
     ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
-        toCellToPathMapping(command.getCellToPathMappingsMap());
+        RelPathSerializer.toCellToPathMapping(command.getCellToPathMappingsMap());
     BuildTargetValue buildTargetValue =
         BuildTargetValueSerializer.deserialize(command.getBuildTargetValue());
     RelPath pathToClassHashes =
@@ -141,7 +138,7 @@ public class JavaStepsBuilder {
         RelPathSerializer.toSortedSetOfRelPath(command.getJavaSrcsList()),
         JavaAbiInfoSerializer.toJavaAbiInfo(command.getFullJarInfosList()),
         JavaAbiInfoSerializer.toJavaAbiInfo(command.getAbiJarInfosList()),
-        toResourceMap(command.getResourcesMapList()),
+        RelPathSerializer.toResourceMap(command.getResourcesMapList()),
         cellToPathMappings,
         command.hasLibraryJarParameters()
             ? JarParametersSerializer.deserialize(command.getLibraryJarParameters())
@@ -185,8 +182,8 @@ public class JavaStepsBuilder {
         RelPathSerializer.toSortedSetOfRelPath(command.getJavaSrcsList()),
         JavaAbiInfoSerializer.toJavaAbiInfo(command.getFullJarInfosList()),
         JavaAbiInfoSerializer.toJavaAbiInfo(command.getAbiJarInfosList()),
-        toResourceMap(command.getResourcesMapList()),
-        toCellToPathMapping(command.getCellToPathMappingsMap()),
+        RelPathSerializer.toResourceMap(command.getResourcesMapList()),
+        RelPathSerializer.toCellToPathMapping(command.getCellToPathMappingsMap()),
         abiJarCommand.hasAbiJarParameters()
             ? JarParametersSerializer.deserialize(abiJarCommand.getAbiJarParameters())
             : null,
@@ -234,33 +231,5 @@ public class JavaStepsBuilder {
         RelPathSerializer.deserialize(libraryJarBaseCommand.getRootOutput()),
         pathToClassHashes,
         RelPathSerializer.deserialize(libraryJarBaseCommand.getAnnotationsPath()));
-  }
-
-  private ImmutableMap<RelPath, RelPath> toResourceMap(List<RelPathMapEntry> resourcesMapList) {
-    ImmutableMap.Builder<RelPath, RelPath> builder =
-        ImmutableMap.builderWithExpectedSize(resourcesMapList.size());
-    for (RelPathMapEntry entry : resourcesMapList) {
-      builder.put(
-          RelPathSerializer.deserialize(entry.getKey()),
-          RelPathSerializer.deserialize(entry.getValue()));
-    }
-    return builder.build();
-  }
-
-  private ImmutableMap<CanonicalCellName, RelPath> toCellToPathMapping(
-      Map<String, com.facebook.buck.javacd.model.RelPath> cellToPathMappings) {
-    ImmutableMap.Builder<CanonicalCellName, RelPath> builder =
-        ImmutableMap.builderWithExpectedSize(cellToPathMappings.size());
-    cellToPathMappings.forEach(
-        (key, value) ->
-            builder.put(toCanonicalCellName(key), RelPathSerializer.deserialize(value)));
-    return builder.build();
-  }
-
-  private CanonicalCellName toCanonicalCellName(String cellName) {
-    if (cellName.isEmpty()) {
-      return CanonicalCellName.rootCell();
-    }
-    return CanonicalCellName.of(Optional.of(cellName));
   }
 }

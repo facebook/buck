@@ -501,8 +501,8 @@ public class DefaultJavaLibrary
   }
 
   @Override
-  public boolean doNotCreateState() {
-    return getBuildable().doNotCreateState();
+  public boolean supportsCompilationDaemon() {
+    return getBuildable().supportsCompilationDaemon();
   }
 
   @Nullable

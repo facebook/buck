@@ -240,9 +240,9 @@ public class CalculateSourceAbi
 
     @Override
     public ImmutableList<Step> getPipelinedBuildSteps(
-        StateHolder<JavacPipelineState> stateHolder, AbstractMessage message) {
-      Preconditions.checkState(message instanceof BasePipeliningCommand);
-      BasePipeliningCommand basePipeliningCommand = (BasePipeliningCommand) message;
+        StateHolder<JavacPipelineState> stateHolder, AbstractMessage command) {
+      Preconditions.checkState(command instanceof BasePipeliningCommand);
+      BasePipeliningCommand basePipeliningCommand = (BasePipeliningCommand) command;
 
       FilesystemParams filesystemParams = basePipeliningCommand.getFilesystemParams();
       CompilerOutputPathsValue compilerOutputPathsValue =

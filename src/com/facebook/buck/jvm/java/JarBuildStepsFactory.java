@@ -565,7 +565,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         extraParams);
   }
 
-  private Optional<RelPath> getPathToClasses(
+  public Optional<RelPath> getPathToClasses(
       BuildContext context, BuildTarget buildTarget, BuckPaths buckPaths) {
     return Optional.ofNullable(getSourcePathToOutput(buildTarget, buckPaths))
         .map(sourcePath -> context.getSourcePathResolver().getCellUnsafeRelPath(sourcePath));
