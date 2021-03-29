@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from xplat.build_infra.buck_e2e.api.buck_repo import BuckRepo
-from xplat.build_infra.buck_e2e.asserts import assert_parse_error, expect_failure
+from xplat.build_infra.buck_e2e.api.buck_result import ExitCode
+from xplat.build_infra.buck_e2e.asserts import expect_failure
 from xplat.build_infra.buck_e2e.repo_workspace import (
     buck_test,
     exec_path,
@@ -37,10 +38,10 @@ async def test_should_build_and_run_successfully(repo: BuckRepo):
 
 @buck_test(data="testdata/cxx")
 async def test_successful_env_empty_file(repo: BuckRepo):
-    build_failure = await expect_failure(
-        repo.build("//simple_parse_error_helloworld:simple_parse_error_helloworld")
+    await expect_failure(
+        repo.build("//simple_parse_error_helloworld:simple_parse_error_helloworld"),
+        exit_code=ExitCode.PARSE_ERROR,
     )
-    assert_parse_error(build_failure)
 
 
 @buck_test(data="testdata/cxx")
