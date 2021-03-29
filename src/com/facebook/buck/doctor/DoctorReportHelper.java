@@ -35,7 +35,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import com.google.common.io.LineProcessor;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -57,6 +59,7 @@ public class DoctorReportHelper {
   private static final Logger LOG = Logger.get(DoctorReportHelper.class);
 
   private static final int ARGS_MAX_CHARS = 60;
+  private static final int MAX_MACHINE_LOG_LINES = 10;
   private static final String WARNING_FILE_TEMPLATE =
       "Command %s does not contain a %s. Some " + "information will not be available";
   private static final String DECODE_FAIL_TEMPLATE = "Decoding remote response failed. Reason: %s";
@@ -116,11 +119,26 @@ public class DoctorReportHelper {
     Optional<String> machineLog;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
-      machineLog =
-          Optional.of(
-              Files.toString(
+      List<String> logLines =
+          Files.asCharSource(
                   filesystem.resolve(entry.getMachineReadableLogFile().get()).toFile(),
-                  StandardCharsets.UTF_8));
+                  StandardCharsets.UTF_8)
+              .readLines(
+                  new LineProcessor<List<String>>() {
+                    final List<String> result = Lists.newArrayList();
+
+                    @Override
+                    public boolean processLine(String line) {
+                      result.add(line);
+                      return result.size() < MAX_MACHINE_LOG_LINES;
+                    }
+
+                    @Override
+                    public List<String> getResult() {
+                      return result;
+                    }
+                  });
+      machineLog = Optional.of(String.join("\n", logLines));
     } else {
       LOG.warn(String.format(WARNING_FILE_TEMPLATE, entry.toString(), "machine readable log"));
       machineLog = Optional.empty();
