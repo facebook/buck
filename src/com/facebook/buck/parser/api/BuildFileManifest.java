@@ -23,7 +23,7 @@ import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /** Describes the content of a build file, which includes defined targets and their metadata. */
@@ -33,7 +33,7 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   public abstract TwoArraysImmutableHashMap<String, RawTargetNode> getTargets();
 
   @Override
-  public abstract ImmutableSortedSet<String> getIncludes();
+  public abstract ImmutableSet<String> getIncludes();
 
   @Override
   public abstract ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
@@ -49,7 +49,7 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
 
   public static BuildFileManifest of(
       TwoArraysImmutableHashMap<String, RawTargetNode> targets,
-      ImmutableSortedSet<String> includes,
+      ImmutableSet<String> includes,
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<GlobSpecWithResult> globManifest,

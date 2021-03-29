@@ -53,7 +53,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MapDifference;
 import com.google.common.eventbus.Subscribe;
@@ -284,9 +283,7 @@ public class DaemonicParserState {
 
   /** Add all the includes from the manifest and Buck defaults. */
   private static void addAllIncludes(
-      ImmutableSet.Builder<AbsPath> dependents,
-      ImmutableSortedSet<String> manifestIncludes,
-      Cell cell) {
+      ImmutableSet.Builder<AbsPath> dependents, ImmutableSet<String> manifestIncludes, Cell cell) {
     manifestIncludes.forEach(
         includedPath -> dependents.add(cell.getFilesystem().resolve(includedPath)));
 

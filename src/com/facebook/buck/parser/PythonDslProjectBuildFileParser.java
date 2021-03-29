@@ -485,7 +485,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         // empty list
         return BuildFileManifest.of(
             TwoArraysImmutableHashMap.of(),
-            ImmutableSortedSet.of(),
+            ImmutableSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
             ImmutableList.of(),
@@ -516,7 +516,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<TwoArraysImmutableHashMap<String, Object>> values) {
     return BuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
-        ImmutableSortedSet.copyOf(
+        ImmutableSet.copyOf(
             Objects.requireNonNull(
                 (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
         ImmutableMap.copyOf(
@@ -893,7 +893,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException {
-    return getManifest(buildFile).getIncludes();
+    return ImmutableSortedSet.copyOf(getManifest(buildFile).getIncludes());
   }
 
   @Override

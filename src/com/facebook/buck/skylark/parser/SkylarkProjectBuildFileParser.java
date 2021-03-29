@@ -43,7 +43,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -160,7 +159,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
       return BuildFileManifest.of(
           targets,
-          ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
+          parseResult.getLoadedPaths(),
           (ImmutableMap<String, Object>)
               (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
           Optional.empty(),

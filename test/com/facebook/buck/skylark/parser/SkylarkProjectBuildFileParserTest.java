@@ -1110,7 +1110,7 @@ public class SkylarkProjectBuildFileParserTest {
     RawTargetNode prebuiltJarRule =
         Iterables.getOnlyElement(buildFileManifest.getTargets().values());
     assertThat(prebuiltJarRule.getBySnakeCase("name"), equalTo("foo"));
-    ImmutableSortedSet<String> includes = buildFileManifest.getIncludes();
+    ImmutableSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes.stream()
             .map(projectFilesystem::resolve)

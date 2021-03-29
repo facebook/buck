@@ -34,7 +34,6 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -112,7 +111,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
 
       return PackageFileManifest.of(
           parseResult.getPackage(),
-          ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
+          parseResult.getLoadedPaths(),
           (ImmutableMap<String, Object>)
               (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
           Optional.empty(),

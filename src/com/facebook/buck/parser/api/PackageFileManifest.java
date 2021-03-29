@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.exceptions.ParsingError;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /**
@@ -34,7 +34,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
   public static final PackageFileManifest EMPTY_SINGLETON =
       ImmutablePackageFileManifest.of(
           PackageMetadata.EMPTY_SINGLETON,
-          ImmutableSortedSet.of(),
+          ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.empty(),
           ImmutableList.of());
@@ -43,7 +43,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
   public abstract PackageMetadata getPackage();
 
   @Override
-  public abstract ImmutableSortedSet<String> getIncludes();
+  public abstract ImmutableSet<String> getIncludes();
 
   @Override
   public abstract ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
@@ -56,7 +56,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
 
   public static PackageFileManifest of(
       PackageMetadata getPackage,
-      ImmutableSortedSet<String> includes,
+      ImmutableSet<String> includes,
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<ParsingError> errors) {
