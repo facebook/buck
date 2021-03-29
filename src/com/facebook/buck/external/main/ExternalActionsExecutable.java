@@ -156,8 +156,7 @@ public class ExternalActionsExecutable {
                 parsedEnvVars.getRuleCellRoot(),
                 parsedEnvVars.getActionId(),
                 clock)) {
-      return IsolatedStepsRunner.executeAndPropagateExceptionIfOccurred(
-          stepsToExecute, executionContext);
+      return IsolatedStepsRunner.execute(stepsToExecute, executionContext);
     }
   }
 }

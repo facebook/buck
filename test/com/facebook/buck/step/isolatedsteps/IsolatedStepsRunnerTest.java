@@ -129,12 +129,14 @@ public class IsolatedStepsRunnerTest {
   }
 
   @Test
-  public void logsErrorIfStepExecutionFails() throws Exception {
+  public void logsErrorIfExecuteWithDefaultExceptionHandlingAndStepExecutionFails()
+      throws Exception {
     IsolatedStep isolatedStep = createFailedStep();
     ImmutableList<IsolatedStep> step = ImmutableList.of(isolatedStep);
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
 
-    StepExecutionResult result = IsolatedStepsRunner.execute(step, context);
+    StepExecutionResult result =
+        IsolatedStepsRunner.executeWithDefaultExceptionHandling(step, context);
 
     assertThat(result.getExitCode(), is(StepExecutionResults.ERROR.getExitCode()));
     Optional<Exception> cause = result.getCause();
@@ -170,15 +172,13 @@ public class IsolatedStepsRunnerTest {
   }
 
   @Test
-  public void propagatesIfStepExecutionFails() throws Exception {
+  public void propagatesExceptionIfStepExecutionFails() throws Exception {
     IsolatedStep isolatedStep = createFailedStep();
     ImmutableList<IsolatedStep> step = ImmutableList.of(isolatedStep);
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
 
     StepFailedException stepFailedException =
-        assertThrows(
-            StepFailedException.class,
-            () -> IsolatedStepsRunner.executeAndPropagateExceptionIfOccurred(step, context));
+        assertThrows(StepFailedException.class, () -> IsolatedStepsRunner.execute(step, context));
 
     assertThat(stepFailedException, notNullValue());
 

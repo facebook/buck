@@ -36,31 +36,10 @@ public class IsolatedStepsRunner {
 
   /**
    * Executes the given {@link IsolatedStep} instances with the given {@link
-   * IsolatedExecutionContext}.
-   *
-   * <p>The difference from this method and {@link #executeAndPropagateExceptionIfOccurred} is that
-   * this method logs and do not propagate {@link StepFailedException} in case it occurred.
-   */
-  public static StepExecutionResult execute(
-      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
-    try {
-      return executeAndPropagateExceptionIfOccurred(steps, executionContext);
-    } catch (StepFailedException e) {
-      executionContext.logError(e, "Failed to execute steps");
-
-      return StepExecutionResult.builder()
-          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
-          .setCause(e)
-          .build();
-    }
-  }
-
-  /**
-   * Executes the given {@link IsolatedStep} instances with the given {@link
    * IsolatedExecutionContext} and throws {@link StepFailedException} if it occurred during the
    * execution of any steps.
    */
-  public static StepExecutionResult executeAndPropagateExceptionIfOccurred(
+  public static StepExecutionResult execute(
       ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext)
       throws StepFailedException {
     try {
@@ -73,6 +52,27 @@ public class IsolatedStepsRunner {
       executionContext.logError(e, "Received interrupt");
     }
     return StepExecutionResults.ERROR;
+  }
+
+  /**
+   * Executes the given {@link IsolatedStep} instances with the given {@link
+   * IsolatedExecutionContext} and handles {@link StepFailedException} (log it with an error level).
+   *
+   * <p>The difference from this method and {@link #execute} is that this method logs and do not
+   * propagate {@link StepFailedException} in case it occurred.
+   */
+  public static StepExecutionResult executeWithDefaultExceptionHandling(
+      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
+    try {
+      return execute(steps, executionContext);
+    } catch (StepFailedException e) {
+      executionContext.logError(e, "Failed to execute steps");
+
+      return StepExecutionResult.builder()
+          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+          .setCause(e)
+          .build();
+    }
   }
 
   private static void runStep(IsolatedExecutionContext context, IsolatedStep step)
