@@ -18,7 +18,6 @@ package com.facebook.buck.core.build.engine.manifest;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -128,12 +127,12 @@ public class ManifestTest {
     RuleKey key = new RuleKey("aa");
 
     Path tmp1 = Files.createTempDirectory("tmp1");
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp1);
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
     SourcePath input1 = PathSourcePath.of(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
     Path tmp2 = Files.createTempDirectory("tmp2");
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp2);
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
     SourcePath input2 = PathSourcePath.of(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 
@@ -194,12 +193,12 @@ public class ManifestTest {
     RuleKey key = new RuleKey("aa");
 
     Path tmp1 = Files.createTempDirectory("tmp1");
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp1);
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
     SourcePath input1 = PathSourcePath.of(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
     Path tmp2 = Files.createTempDirectory("tmp2");
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp2);
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
     SourcePath input2 = PathSourcePath.of(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 

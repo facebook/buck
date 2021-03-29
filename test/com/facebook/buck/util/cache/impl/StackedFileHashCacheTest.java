@@ -18,7 +18,6 @@ package com.facebook.buck.util.cache.impl;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -238,8 +237,7 @@ public class StackedFileHashCacheTest {
   @Test
   public void skipsFirstCacheAbsolutePath() throws IOException {
     Path fullPath = Paths.get("some/path");
-    ProjectFilesystem filesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
@@ -249,8 +247,7 @@ public class StackedFileHashCacheTest {
 
   @Test
   public void skipsFirstCache() throws IOException {
-    ProjectFilesystem filesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmp.getRoot());
     Path path = filesystem.getPath("some/path");
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);

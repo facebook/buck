@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -43,7 +42,7 @@ public class PrebuiltJarTest {
 
   @Before
   public void setUp() throws IOException {
-    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), temp.newFolder());
+    filesystem = new FakeProjectFilesystem(temp.newFolder());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//lib:junit");
     BuildRuleParams buildRuleParams = TestBuildRuleParams.create();

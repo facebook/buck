@@ -29,7 +29,6 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -100,8 +99,7 @@ public class SwiftLibraryIntegrationTest {
   public void headersOfDependentTargetsAreIncluded() {
     // The output path used by the buildable for the link tree.
     BuildTarget symlinkTarget = BuildTargetFactory.newInstance("//:symlink");
-    ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpDir.getRoot());
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
     RelPath symlinkTreeRoot =
         BuildTargetPaths.getGenPath(
             projectFilesystem.getBuckPaths(), symlinkTarget, "%s/symlink-tree-root");

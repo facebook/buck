@@ -37,17 +37,38 @@ public class IsolatedStepsRunner {
   /**
    * Executes the given {@link IsolatedStep} instances with the given {@link
    * IsolatedExecutionContext}.
+   *
+   * <p>The difference from this method and {@link #executeAndPropagateExceptionIfOccurred} is that
+   * this method logs and do not propagate {@link StepFailedException} in case it occurred.
    */
   public static StepExecutionResult execute(
       ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
+    try {
+      return executeAndPropagateExceptionIfOccurred(steps, executionContext);
+    } catch (StepFailedException e) {
+      executionContext.logError(e, "Failed to execute steps");
+
+      return StepExecutionResult.builder()
+          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+          .setCause(e)
+          .build();
+    }
+  }
+
+  /**
+   * Executes the given {@link IsolatedStep} instances with the given {@link
+   * IsolatedExecutionContext} and throws {@link StepFailedException} if it occurred during the
+   * execution of any steps.
+   */
+  public static StepExecutionResult executeAndPropagateExceptionIfOccurred(
+      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext)
+      throws StepFailedException {
     try {
       for (IsolatedStep step : steps) {
         runStep(executionContext, step);
         rethrowIgnoredInterruptedException(step);
       }
       return StepExecutionResults.SUCCESS;
-    } catch (StepFailedException e) {
-      executionContext.logError(e, "Failed to execute steps");
     } catch (InterruptedException e) {
       executionContext.logError(e, "Received interrupt");
     }
@@ -56,12 +77,12 @@ public class IsolatedStepsRunner {
 
   private static void runStep(IsolatedExecutionContext context, IsolatedStep step)
       throws InterruptedException, StepFailedException {
+    String stepDescription = step.getIsolatedStepDescription(context);
     if (context.getVerbosity().shouldPrintCommand()) {
-      context.getStdErr().println(step.getIsolatedStepDescription(context));
+      context.getStdErr().println(stepDescription);
     }
 
-    StepEvent.Started started =
-        StepEvent.started(step.getShortName(), step.getIsolatedStepDescription(context));
+    StepEvent.Started started = StepEvent.started(step.getShortName(), stepDescription);
     IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
     isolatedEventBus.post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
@@ -69,14 +90,20 @@ public class IsolatedStepsRunner {
       executionResult = step.executeIsolatedStep(context);
     } catch (IOException | RuntimeException e) {
       throw StepFailedException.createForFailingStepWithException(
-          step, step.getIsolatedStepDescription(context), e);
+          step, descriptionForStep(step, context), e);
     } finally {
       isolatedEventBus.post(StepEvent.finished(started, executionResult.getExitCode()));
     }
     if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingStepWithExitCode(
-          step, step.getIsolatedStepDescription(context), true, executionResult);
+          step, stepDescription, true, executionResult);
     }
+  }
+
+  private static String descriptionForStep(IsolatedStep step, IsolatedExecutionContext context) {
+    return context.getVerbosity().shouldPrintCommand()
+        ? step.getIsolatedStepDescription(context)
+        : step.getShortName();
   }
 
   private static void rethrowIgnoredInterruptedException(IsolatedStep step)

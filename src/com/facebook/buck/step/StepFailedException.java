@@ -72,28 +72,26 @@ public class StepFailedException extends Exception implements WrapsException, Ex
       boolean isTruncateFailingCommandEnabled,
       StepExecutionResult executionResult) {
     int exitCode = executionResult.getExitCode();
-    StringBuilder messageBuilder = new StringBuilder();
-    messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
+    StringBuilder errorMessage = new StringBuilder();
+    errorMessage.append(String.format("Command failed with exit code %d.", exitCode));
     ImmutableList<String> executedCommand = executionResult.getExecutedCommand();
     if (!executedCommand.isEmpty()) {
       appendToErrorMessage(
-          messageBuilder, "command", executedCommand.toString(), isTruncateFailingCommandEnabled);
+          errorMessage, "command", executedCommand.toString(), isTruncateFailingCommandEnabled);
     }
 
     executionResult
         .getStderr()
-        .ifPresent(stderr -> appendToErrorMessage(messageBuilder, "stderr", stderr, false));
+        .ifPresent(stderr -> appendToErrorMessage(errorMessage, "stderr", stderr, false));
 
-    StepFailedException ret =
-        new StepFailedException(
-            executionResult
-                .getCause()
-                .map(cause -> new HumanReadableException(cause, messageBuilder.toString()))
-                .orElse(new HumanReadableException(messageBuilder.toString())),
-            step,
-            descriptionForStep,
-            OptionalInt.of(exitCode));
-    return ret;
+    return new StepFailedException(
+        executionResult
+            .getCause()
+            .map(cause -> new HumanReadableException(cause, errorMessage.toString()))
+            .orElse(new HumanReadableException(errorMessage.toString())),
+        step,
+        descriptionForStep,
+        OptionalInt.of(exitCode));
   }
 
   /** Same as above but includes RE action metadata */
@@ -108,10 +106,9 @@ public class StepFailedException extends Exception implements WrapsException, Ex
     return ret;
   }
 
-  private static StringBuilder appendToErrorMessage(
-      StringBuilder messageBuilder, String name, String value, boolean truncate) {
-    return messageBuilder
-        .append(System.lineSeparator())
+  private static void appendToErrorMessage(
+      StringBuilder sb, String name, String value, boolean truncate) {
+    sb.append(System.lineSeparator())
         .append(System.lineSeparator())
         .append(name)
         .append(": ")
