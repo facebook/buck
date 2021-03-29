@@ -36,7 +36,7 @@ public class AbiFilteringClassVisitorTest {
   public void setUp() {
     mockVisitor = createMock(ClassVisitor.class);
     filteringVisitor =
-        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of());
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of(), false);
   }
 
   @Test
@@ -92,7 +92,7 @@ public class AbiFilteringClassVisitorTest {
   @Test
   public void testIncludesPrivateMethodsWhenRetained() {
     filteringVisitor =
-        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of("foo"), ImmutableSet.of());
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of("foo"), ImmutableSet.of(), false);
     testIncludesMethodWithAccess(Opcodes.ACC_PRIVATE);
   }
 
@@ -166,7 +166,7 @@ public class AbiFilteringClassVisitorTest {
   @Test
   public void testIncludesInnerClassEntryForReferencedOtherClassInnerClass() {
     filteringVisitor =
-        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of("Bar$Inner"));
+        new AbiFilteringClassVisitor(mockVisitor, ImmutableList.of(), ImmutableSet.of("Bar$Inner"), false);
 
     visitClass(mockVisitor, "Foo");
     mockVisitor.visitInnerClass("Bar$Inner", "Bar", "Inner", Opcodes.ACC_PUBLIC);
