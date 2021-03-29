@@ -98,6 +98,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
+
   @AddToRuleKey private final ResourcesParameters resourcesParameters;
 
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
@@ -839,5 +840,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   public CompileToJarStepFactory<T> getConfiguredCompiler() {
     return configuredCompiler;
+  }
+
+  public ResourcesParameters getResourcesParameters() {
+    return resourcesParameters;
   }
 }

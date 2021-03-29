@@ -22,13 +22,32 @@ import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.AbstractMessage;
 
 /** Interface for the buildable of a PipelinedModernBuildRule. */
 public interface PipelinedBuildable<State extends RulePipelineState> extends Buildable {
-  ImmutableList<Step> getPipelinedBuildSteps(
+
+  /**
+   * Return a list of steps for pipelining rule. Default implementation is creating intermediate
+   * protobuf message and then creates a list of steps from it.
+   */
+  default ImmutableList<Step> getPipelinedBuildSteps(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       StateHolder<State> stateHolder,
       OutputPathResolver outputPathResolver,
+      BuildCellRelativePathFactory buildCellPathFactory) {
+    AbstractMessage pipelinedCommand =
+        getPipelinedCommand(buildContext, filesystem, outputPathResolver, buildCellPathFactory);
+    return getPipelinedBuildSteps(stateHolder, pipelinedCommand);
+  }
+
+  AbstractMessage getPipelinedCommand(
+      BuildContext buildContext,
+      ProjectFilesystem filesystem,
+      OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory);
+
+  ImmutableList<Step> getPipelinedBuildSteps(
+      StateHolder<State> stateHolder, AbstractMessage message);
 }
