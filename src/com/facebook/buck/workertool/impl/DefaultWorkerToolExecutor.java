@@ -16,10 +16,10 @@
 
 package com.facebook.buck.workertool.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
 import com.facebook.buck.downward.model.ResultEvent;
@@ -41,6 +41,7 @@ import com.facebook.buck.workertool.utils.WorkerToolConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -52,7 +53,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import javax.annotation.Nullable;
+import java.util.stream.Collectors;
 
 /** Default implementation of {@link WorkerToolExecutor} */
 class DefaultWorkerToolExecutor implements WorkerToolExecutor {
@@ -77,8 +78,20 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private final ExecutorService workerToolProcessMonitorExecutor;
   private final Future<?> waitForLaunchedProcessFuture;
 
-  @Nullable private volatile String executingActionId;
-  @Nullable private volatile SettableFuture<ResultEvent> resultEventFuture;
+  private ImmutableList<ExecutingAction> executingActions = ImmutableList.of();
+
+  /** Holds execution action details */
+  @BuckStyleValue
+  abstract static class ExecutingAction {
+
+    abstract String getActionId();
+
+    abstract SettableFuture<ResultEvent> getResultEventFuture();
+
+    public static ExecutingAction of(String actionId) {
+      return ImmutableExecutingAction.ofImpl(actionId, SettableFuture.create());
+    }
+  }
 
   DefaultWorkerToolExecutor(
       IsolatedExecutionContext context, ImmutableList<String> startWorkerToolCommand)
@@ -167,13 +180,8 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     checkState(isAlive(), "Launched process is not alive");
     runUnderLock(
         () -> {
-          // `executingActionId` and `resultEventFuture` have to be null when a request to execute a
-          // new command arrived.
-          checkState(
-              executingActionId == null, "Action with id" + executingActionId + " is executing");
-          executingActionId = actionId;
-          checkState(resultEventFuture == null, "Result event future is not null");
-          resultEventFuture = SettableFuture.create();
+          checkThatNoActionsAreExecuting();
+          executingActions = ImmutableList.of(ExecutingAction.of(actionId));
         });
 
     CommandTypeMessage executeCommandTypeMessage =
@@ -187,19 +195,31 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     LOG.info(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
 
-    // TODO : msemko: add timeout/heartbeat, ... ?
-    ResultEvent resultEvent = resultEventFuture.get();
+    ExecutingAction executingAction = Iterables.getOnlyElement(executingActions);
+    SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
 
+    // TODO : msemko: add timeout/heartbeat, ... ?
+    return resultEventFuture.get();
+  }
+
+  private void checkThatNoActionsAreExecuting() {
+    // `executingActions` list has to be empty when a request to execute a new command arrived.
+    checkState(
+        executingActions.isEmpty(),
+        "Actions "
+            + executingActions.stream()
+                .map(ExecutingAction::getActionId)
+                .collect(Collectors.joining(", "))
+            + " are executing...");
+  }
+
+  private void prepareForTheNextCommand() {
     runUnderLock(
         () -> {
-          // After receiving the result from `WorkerToolExecutorNamedPipeEventHandler` set
-          // `executingActionId` and `resultEventFuture` to null that signals that new command could
-          // be executed.
-          resultEventFuture = null;
-          executingActionId = null;
+          // Set `executingActions` to an empty list that signals that new command could be
+          // executed.
+          executingActions = ImmutableList.of();
         });
-
-    return resultEvent;
   }
 
   /**
@@ -209,17 +229,32 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private void receiveResultEvent(ResultEvent resultEvent) {
     runUnderLock(
         () -> {
-          // `executingActionId` and `resultEventFuture` have to be not null that signals that
+          // `executingActions` has to be not empty that signals that
           // executor is waiting for a result event from a launched process.
-          checkNotNull(executingActionId, "The is no action executing at the moment.");
-          checkNotNull(resultEventFuture, "Result event future is null");
-
+          checkState(!executingActions.isEmpty(), "The is no action executing at the moment.");
           String actionId = resultEvent.getActionId();
+
+          ExecutingAction executingAction =
+              executingActions.stream()
+                  .filter(action -> !action.getResultEventFuture().isDone())
+                  .findFirst()
+                  .orElseThrow(
+                      () ->
+                          new IllegalStateException(
+                              "The is no not completed executing action at the moment."));
+
+          String executingActionId = executingAction.getActionId();
           checkState(
               actionId.equals(executingActionId),
               String.format(
-                  "Received action id %s is not equals to expected one %s",
-                  actionId, executingActionId));
+                  "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
+                  actionId,
+                  executingActionId,
+                  executingActions.stream()
+                      .map(ExecutingAction::getActionId)
+                      .collect(Collectors.joining(", "))));
+
+          SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
           resultEventFuture.set(resultEvent);
         });
   }
@@ -273,8 +308,11 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private void shutdownResultEventFutureIfNotDone(String errorMessage) {
     runUnderLock(
         () -> {
-          if (resultEventFuture != null && !resultEventFuture.isDone()) {
-            resultEventFuture.setException(new IllegalStateException(errorMessage));
+          for (ExecutingAction executingAction : executingActions) {
+            SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
+            if (resultEventFuture != null && !resultEventFuture.isDone()) {
+              resultEventFuture.setException(new IllegalStateException(errorMessage));
+            }
           }
         });
   }
@@ -392,6 +430,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @Override
   public void prepareForReuse() {
     launchedProcess.updateThreadId();
+    prepareForTheNextCommand();
   }
 
   @Override
