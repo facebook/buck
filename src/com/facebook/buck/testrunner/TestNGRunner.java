@@ -64,6 +64,8 @@ public final class TestNGRunner extends BaseRunner {
       if (!mightBeATestClass(testClass)) {
         results = Collections.emptyList();
       } else {
+        // TestNG can run a test class's tests in parallel via DataProvider.
+        // Use concurrency-safe collection to avoid comodification errors. 
         results = new ConcurrentLinkedQueue<>();
         TestNG testng = new TestNG();
         testng.setUseDefaultListeners(false);
