@@ -38,8 +38,7 @@ function sedInPlace() {
   esac
 }
 
-cd `dirname $0`
-cd `git rev-parse --show-cdup`
+cd "$(buck root)"
 
 if [ "$1" == "--debug" ]; then
   shift
