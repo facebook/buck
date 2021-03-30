@@ -48,15 +48,6 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Whether to chmod exo files remotely. This is very slow when there are lots of files. Setting
-   * this false speeds up rapid and multi installs.
-   */
-  @Value.Lazy
-  public boolean getChmodExoFilesRemotely() {
-    return getDelegate().getBooleanValue("adb", "chmod_exo_files_remotely", true);
-  }
-
-  /**
    * Whether to skip installing metadata when there are no files to install in a given category. If
    * exo metadata is derived from the set of installed files, it's not necessary to reinstall.
    */

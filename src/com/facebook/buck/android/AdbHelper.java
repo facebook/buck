@@ -114,7 +114,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final ImmutableList<String> rapidInstallTypes;
   // Caches the list of android devices for this execution
   private final Supplier<GetDevicesResult> devicesSupplier;
-  private final boolean chmodExoFilesRemotely;
   private final boolean skipMetadataIfNoInstalls;
 
   @Nullable private ListeningExecutorService executorService = null;
@@ -126,7 +125,6 @@ public class AdbHelper implements AndroidDevicesHelper {
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
       ImmutableList<String> rapidInstallTypes,
-      boolean chmodExoFilesRemotely,
       boolean skipMetadataIfNoInstalls) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
@@ -135,7 +133,6 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.rapidInstallTypes = rapidInstallTypes;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
-    this.chmodExoFilesRemotely = chmodExoFilesRemotely;
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
   }
 
@@ -598,8 +595,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
         nextAgentPort.incrementAndGet(),
-        rapidInstallTypes,
-        chmodExoFilesRemotely);
+        rapidInstallTypes);
   }
 
   @VisibleForTesting

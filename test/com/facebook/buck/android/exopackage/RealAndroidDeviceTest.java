@@ -56,8 +56,7 @@ public class RealAndroidDeviceTest {
         TestConsole.createNullConsole(),
         null,
         -1,
-        ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true);
+        ImmutableList.of());
   }
 
   /** Verify that successful installation on device results in true. */

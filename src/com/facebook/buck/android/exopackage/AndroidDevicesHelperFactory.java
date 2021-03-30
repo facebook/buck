@@ -41,7 +41,6 @@ public class AndroidDevicesHelperFactory {
         contextSupplier,
         adbConfig.getRestartAdbOnFailure(),
         adbConfig.getAdbRapidInstallTypes(),
-        adbConfig.getChmodExoFilesRemotely(),
         adbConfig.getSkipInstallMetadata());
   }
 }

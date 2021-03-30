@@ -101,7 +101,6 @@ public class AdbHelperTest {
         () -> executionContext,
         true,
         ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true,
         /* skipMetadataIfNoInstalls= */ false);
   }
 
@@ -566,7 +565,6 @@ public class AdbHelperTest {
         () -> testContext,
         true,
         ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true,
         /* skipMetadataIfNoInstalls= */ false) {
       @Override
       AndroidDebugBridgeFacade createAdb() {
@@ -597,7 +595,6 @@ public class AdbHelperTest {
         () -> testContext,
         true,
         ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true,
         /* skipMetadataIfNoInstalls= */ false);
   }
 

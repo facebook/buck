@@ -116,7 +116,6 @@ public class RealAndroidDevice implements AndroidDevice {
   private final ImmutableList<String> rapidInstallTypes;
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
-  private final boolean chmodExoFilesRemotely;
 
   public RealAndroidDevice(
       BuckEventBus eventBus,
@@ -124,8 +123,7 @@ public class RealAndroidDevice implements AndroidDevice {
       Console console,
       @Nullable Path agentApkPath,
       int agentPort,
-      ImmutableList<String> rapidInstallTypes,
-      boolean chmodExoFilesRemotely) {
+      ImmutableList<String> rapidInstallTypes) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
@@ -138,19 +136,11 @@ public class RealAndroidDevice implements AndroidDevice {
                     this,
                     Objects.requireNonNull(agentApkPath, "Agent not configured for this device.")));
     this.agentPort = agentPort;
-    this.chmodExoFilesRemotely = chmodExoFilesRemotely;
   }
 
   @VisibleForTesting
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(
-        buckEventBus,
-        device,
-        console,
-        null,
-        -1,
-        ImmutableList.of(),
-        /* chmodExoFilesRemotely= */ true);
+    this(buckEventBus, device, console, null, -1, ImmutableList.of());
   }
 
   /**
@@ -958,12 +948,6 @@ public class RealAndroidDevice implements AndroidDevice {
     if (shellException != null) {
       throw shellException;
     }
-
-    if (chmodExoFilesRemotely) {
-      for (Path targetFileName : installPaths.keySet()) {
-        chmod644(targetFileName);
-      }
-    }
   }
 
   private class BuckInitiatedInstallReceiver extends CollectingOutputReceiver {
@@ -1094,22 +1078,6 @@ public class RealAndroidDevice implements AndroidDevice {
     if (failure != null) {
       throw failure;
     }
-    if (chmodExoFilesRemotely) {
-      for (Path targetFileName : installPaths.keySet()) {
-        chmod644(targetFileName);
-      }
-    }
-  }
-
-  private void chmod644(Path targetDevicePath)
-      throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
-          IOException {
-    // The standard Java libraries on Android always create new files un-readable by other users.
-    // We use the shell user or root to create these files, so we need to explicitly set the mode
-    // to allow the app to read them.  Ideally, the agent would do this automatically, but
-    // there's no easy way to do this in Java.  We can drop this if we drop support for the
-    // Java agent.
-    executeCommandWithErrorChecking("chmod 644 " + targetDevicePath);
   }
 
   @Override
