@@ -40,6 +40,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -226,14 +227,15 @@ public class SplitZipStep implements Step {
               dexSplitMode.getDexStore());
         }
       } else {
+        File metadataFile =
+            addtionalDexStoreJarMetaPath
+                .resolve("assets")
+                .resolve(dexStore.getName())
+                .resolve("metadata.txt")
+                .toFile();
+        Files.createParentDirs(metadataFile);
         try (BufferedWriter secondaryMetaInfoWriter =
-            Files.newWriter(
-                addtionalDexStoreJarMetaPath
-                    .resolve("assets")
-                    .resolve(dexStore.getName())
-                    .resolve("metadata.txt")
-                    .toFile(),
-                StandardCharsets.UTF_8)) {
+            Files.newWriter(metadataFile, StandardCharsets.UTF_8)) {
           writeMetaList(
               secondaryMetaInfoWriter,
               dexStore,
