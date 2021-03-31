@@ -114,6 +114,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   // Caches the list of android devices for this execution
   private final Supplier<GetDevicesResult> devicesSupplier;
   private final boolean skipMetadataIfNoInstalls;
+  private final boolean alwaysUseJavaAgent;
 
   @Nullable private ListeningExecutorService executorService = null;
 
@@ -123,7 +124,8 @@ public class AdbHelper implements AndroidDevicesHelper {
       ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
-      boolean skipMetadataIfNoInstalls) {
+      boolean skipMetadataIfNoInstalls,
+      boolean alwaysUseJavaAgent) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.toolchainProvider = toolchainProvider;
@@ -131,6 +133,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.restartAdbOnFailure = restartAdbOnFailure;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
+    this.alwaysUseJavaAgent = alwaysUseJavaAgent;
   }
 
   @VisibleForTesting
@@ -591,7 +594,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         device,
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
-        nextAgentPort.incrementAndGet());
+        nextAgentPort.incrementAndGet(),
+        alwaysUseJavaAgent);
   }
 
   @VisibleForTesting

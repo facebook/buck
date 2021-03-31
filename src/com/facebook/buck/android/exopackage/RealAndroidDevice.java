@@ -118,7 +118,8 @@ public class RealAndroidDevice implements AndroidDevice {
       IDevice device,
       Console console,
       @Nullable Path agentApkPath,
-      int agentPort) {
+      int agentPort,
+      boolean alwaysUseJavaAgent) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
@@ -128,13 +129,14 @@ public class RealAndroidDevice implements AndroidDevice {
                 ExopackageAgent.installAgentIfNecessary(
                     eventBus,
                     this,
-                    Objects.requireNonNull(agentApkPath, "Agent not configured for this device.")));
+                    Objects.requireNonNull(agentApkPath, "Agent not configured for this device."),
+                    alwaysUseJavaAgent));
     this.agentPort = agentPort;
   }
 
   @VisibleForTesting
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1);
+    this(buckEventBus, device, console, null, -1, true);
   }
 
   /**

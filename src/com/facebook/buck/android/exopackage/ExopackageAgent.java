@@ -43,8 +43,12 @@ class ExopackageAgent {
    * Sets {@link #useNativeAgent} to true on pre-L devices, because our native agent is built
    * without -fPIC. The java agent works fine on L as long as we don't use it for mkdir.
    */
-  private static boolean determineBestAgent(BuckEventBus eventBus, AndroidDevice device)
-      throws Exception {
+  private static boolean useNativeAgent(
+      BuckEventBus eventBus, AndroidDevice device, boolean alwaysUseJavaAgent) throws Exception {
+    if (alwaysUseJavaAgent) {
+      return false;
+    }
+
     String value;
     try (SimplePerfEvent.Scope scope =
         SimplePerfEvent.scope(eventBus.isolated(), "get_device_sdk_version")) {
@@ -77,7 +81,7 @@ class ExopackageAgent {
   }
 
   public static ExopackageAgent installAgentIfNecessary(
-      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath) {
+      BuckEventBus eventBus, AndroidDevice device, Path agentApkPath, boolean alwaysUseJavaAgent) {
     try {
       Optional<PackageInfo> agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       if (agentInfo.isPresent()
@@ -96,7 +100,7 @@ class ExopackageAgent {
         agentInfo = device.getPackageInfo(AgentUtil.AGENT_PACKAGE_NAME);
       }
       return new ExopackageAgent(
-          determineBestAgent(eventBus, device),
+          useNativeAgent(eventBus, device, alwaysUseJavaAgent),
           agentInfo.get().apkPath,
           agentInfo.get().nativeLibPath);
     } catch (Exception e) {

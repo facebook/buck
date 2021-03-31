@@ -40,6 +40,7 @@ public class AndroidDevicesHelperFactory {
         toolchainProvider,
         contextSupplier,
         adbConfig.getRestartAdbOnFailure(),
-        adbConfig.getSkipInstallMetadata());
+        adbConfig.getSkipInstallMetadata(),
+        adbConfig.getAlwaysUseJavaAgent());
   }
 }

@@ -100,7 +100,8 @@ public class AdbHelperTest {
             .build(),
         () -> executionContext,
         true,
-        /* skipMetadataIfNoInstalls= */ false);
+        /* skipMetadataIfNoInstalls= */ false,
+        /* alwaysUseJavaAgent */ true);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -563,7 +564,8 @@ public class AdbHelperTest {
             .build(),
         () -> testContext,
         true,
-        /* skipMetadataIfNoInstalls= */ false) {
+        /* skipMetadataIfNoInstalls= */ false,
+        /* alwaysUseJavaAgent */ true) {
       @Override
       AndroidDebugBridgeFacade createAdb() {
         return facade;
@@ -592,7 +594,8 @@ public class AdbHelperTest {
             .build(),
         () -> testContext,
         true,
-        /* skipMetadataIfNoInstalls= */ false);
+        /* skipMetadataIfNoInstalls= */ false,
+        /* alwaysUseJavaAgent */ false);
   }
 
   private static AdbOptions createAdbOptions() {

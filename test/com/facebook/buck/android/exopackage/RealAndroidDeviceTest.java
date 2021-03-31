@@ -50,7 +50,12 @@ public class RealAndroidDeviceTest {
 
   private static RealAndroidDevice createAndroidDevice(IDevice device) {
     return new RealAndroidDevice(
-        BuckEventBusForTests.newInstance(), device, TestConsole.createNullConsole(), null, -1);
+        BuckEventBusForTests.newInstance(),
+        device,
+        TestConsole.createNullConsole(),
+        null,
+        -1,
+        true);
   }
 
   /** Verify that successful installation on device results in true. */

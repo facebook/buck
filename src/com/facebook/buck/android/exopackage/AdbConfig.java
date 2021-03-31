@@ -49,4 +49,13 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   public boolean getSkipInstallMetadata() {
     return getDelegate().getBooleanValue("adb", "skip_install_metadata", true);
   }
+
+  /**
+   * Whether to skip installing metadata when there are no files to install in a given category. If
+   * exo metadata is derived from the set of installed files, it's not necessary to reinstall.
+   */
+  @Value.Lazy
+  public boolean getAlwaysUseJavaAgent() {
+    return getDelegate().getBooleanValue("adb", "always_use_java_agent", false);
+  }
 }
