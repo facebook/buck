@@ -28,7 +28,6 @@ import com.android.ddmlib.InstallException;
 import com.facebook.buck.android.TestDevice;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.testutil.TestConsole;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -51,12 +50,7 @@ public class RealAndroidDeviceTest {
 
   private static RealAndroidDevice createAndroidDevice(IDevice device) {
     return new RealAndroidDevice(
-        BuckEventBusForTests.newInstance(),
-        device,
-        TestConsole.createNullConsole(),
-        null,
-        -1,
-        ImmutableList.of());
+        BuckEventBusForTests.newInstance(), device, TestConsole.createNullConsole(), null, -1);
   }
 
   /** Verify that successful installation on device results in true. */

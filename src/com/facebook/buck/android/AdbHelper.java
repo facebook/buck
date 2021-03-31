@@ -111,7 +111,6 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final ToolchainProvider toolchainProvider;
   private final Supplier<ExecutionContext> contextSupplier;
   private final boolean restartAdbOnFailure;
-  private final ImmutableList<String> rapidInstallTypes;
   // Caches the list of android devices for this execution
   private final Supplier<GetDevicesResult> devicesSupplier;
   private final boolean skipMetadataIfNoInstalls;
@@ -124,14 +123,12 @@ public class AdbHelper implements AndroidDevicesHelper {
       ToolchainProvider toolchainProvider,
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
-      ImmutableList<String> rapidInstallTypes,
       boolean skipMetadataIfNoInstalls) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.toolchainProvider = toolchainProvider;
     this.contextSupplier = contextSupplier;
     this.restartAdbOnFailure = restartAdbOnFailure;
-    this.rapidInstallTypes = rapidInstallTypes;
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
   }
@@ -594,8 +591,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         device,
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
-        nextAgentPort.incrementAndGet(),
-        rapidInstallTypes);
+        nextAgentPort.incrementAndGet());
   }
 
   @VisibleForTesting

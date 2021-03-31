@@ -100,7 +100,6 @@ public class AdbHelperTest {
             .build(),
         () -> executionContext,
         true,
-        ImmutableList.of(),
         /* skipMetadataIfNoInstalls= */ false);
   }
 
@@ -564,7 +563,6 @@ public class AdbHelperTest {
             .build(),
         () -> testContext,
         true,
-        ImmutableList.of(),
         /* skipMetadataIfNoInstalls= */ false) {
       @Override
       AndroidDebugBridgeFacade createAdb() {
@@ -594,7 +592,6 @@ public class AdbHelperTest {
             .build(),
         () -> testContext,
         true,
-        ImmutableList.of(),
         /* skipMetadataIfNoInstalls= */ false);
   }
 

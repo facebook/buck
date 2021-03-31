@@ -19,7 +19,6 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
 @BuckStyleValue
@@ -35,11 +34,6 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   public boolean getRestartAdbOnFailure() {
     return Boolean.parseBoolean(
         getDelegate().getValue("adb", "adb_restart_on_failure").orElse("true"));
-  }
-
-  @Value.Lazy
-  public ImmutableList<String> getAdbRapidInstallTypes() {
-    return getDelegate().getListWithoutComments("adb", "rapid_install_types_beta");
   }
 
   @Value.Lazy
