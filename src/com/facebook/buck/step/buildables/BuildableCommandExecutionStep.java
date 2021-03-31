@@ -121,7 +121,8 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   }
 
   private Path writeBuildableCommandAndGetPath() throws IOException {
-    Path buildableCommandPath = projectFilesystem.createTempFile(TEMP_FILE_NAME_PREFIX, "");
+    Path buildableCommandPath =
+        projectFilesystem.resolve(projectFilesystem.createTempFile(TEMP_FILE_NAME_PREFIX, ""));
     try (OutputStream outputStream = new FileOutputStream(buildableCommandPath.toFile())) {
       buildableCommand.writeTo(outputStream);
     }

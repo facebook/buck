@@ -345,7 +345,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
 
     private Path createTempFile(ProjectFilesystem filesystem) {
       try {
-        return filesystem.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX);
+        return filesystem.resolve(filesystem.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX));
       } catch (IOException e) {
         throw new IllegalStateException(
             "Failed to create temp file when creating android manifest buildable command");
