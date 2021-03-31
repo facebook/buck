@@ -213,11 +213,7 @@ public class AabBuilderStep implements Step {
     if (moduleInfo.getResourceApk() != null) {
       if (moduleInfo.isBaseModule()) {
         packageFile(
-            moduleBuilder,
-            moduleInfo.getResourceApk().toFile(),
-            resolve(null, ""),
-            addedFiles,
-            addedSourceFiles);
+            moduleBuilder, moduleInfo.getResourceApk().toFile(), addedFiles, addedSourceFiles);
       } else {
         processFileForResource(
             moduleBuilder,
@@ -242,7 +238,8 @@ public class AabBuilderStep implements Step {
         addSourceFolder(
             moduleBuilder,
             filesystem.getPathForRelativePath(assetDirectory).toFile(),
-            subFolderName.isEmpty() ? "" : resolve(null, subFolderName),
+            // infer has a hard time detecting that subFolderName can't be nonnull
+            subFolderName == null || subFolderName.isEmpty() ? "" : subFolderName,
             addedFiles,
             addedSourceFiles);
       }
@@ -255,7 +252,6 @@ public class AabBuilderStep implements Step {
         packageFile(
             moduleBuilder,
             filesystem.getPathForRelativePath(zipFile).toFile(),
-            resolve(null, ""),
             addedFiles,
             addedSourceFiles);
       }
@@ -266,7 +262,6 @@ public class AabBuilderStep implements Step {
         packageFile(
             moduleBuilder,
             filesystem.getPathForRelativePath(jarFile).toFile(),
-            resolve(null, ""),
             addedFiles,
             addedSourceFiles);
       }
@@ -304,10 +299,10 @@ public class AabBuilderStep implements Step {
       Set<String> addedFiles,
       Set<Path> addedSourceFiles)
       throws DuplicateFileException, ApkCreationException, SealedApkException {
-    path = resolve(path, file.getName());
+    path = Paths.get(path).resolve(file.getName()).toString();
     if (file.isDirectory() && ApkBuilder.checkFolderForPackaging(file.getName())) {
       if (file.getName().equals(BundleModule.RESOURCES_DIRECTORY.toString())) {
-        path = resolve(null, BundleModule.RESOURCES_DIRECTORY.toString());
+        path = BundleModule.RESOURCES_DIRECTORY.toString();
       }
       File[] files = file.listFiles();
       if (files == null) {
@@ -350,10 +345,6 @@ public class AabBuilderStep implements Step {
       possibleName = Paths.get("dex").resolve("classes" + ind + ".dex").toString();
     }
     return possibleName;
-  }
-
-  private String resolve(@Nullable String path, String fileName) {
-    return path == null ? fileName : path + File.separator + fileName;
   }
 
   private void addNativeLibraries(
@@ -400,11 +391,7 @@ public class AabBuilderStep implements Step {
   }
 
   private void packageFile(
-      ApkBuilder builder,
-      File original,
-      String destination,
-      Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      ApkBuilder builder, File original, Set<String> addedFiles, Set<Path> addedSourceFiles)
       throws IOException, ApkCreationException, DuplicateFileException, SealedApkException {
     if (addedSourceFiles.contains(original.toPath())) {
       return;
@@ -420,7 +407,7 @@ public class AabBuilderStep implements Step {
           addFile(
               builder,
               convertZipEntryToFile(zipFile, entry).toPath(),
-              destination + location + entry.getName(),
+              Paths.get(location).resolve(entry.getName()).toString(),
               addedFiles,
               addedSourceFiles);
         }
@@ -469,7 +456,7 @@ public class AabBuilderStep implements Step {
     String empty = "";
 
     if (entry.getName().equals(BundleModule.MANIFEST_FILENAME)) {
-      location = resolve(BundleModule.MANIFEST_DIRECTORY.toString(), empty);
+      location = BundleModule.MANIFEST_DIRECTORY.toString();
 
     } else if (entry.getName().startsWith(BundleModule.LIB_DIRECTORY.toString() + fileSeparator)
         || entry.getName().startsWith(BundleModule.RESOURCES_DIRECTORY.toString() + fileSeparator)
@@ -480,7 +467,7 @@ public class AabBuilderStep implements Step {
       location = empty;
 
     } else {
-      location = resolve(BundleModule.ROOT_DIRECTORY.toString(), empty);
+      location = BundleModule.ROOT_DIRECTORY.toString();
     }
 
     return location;
