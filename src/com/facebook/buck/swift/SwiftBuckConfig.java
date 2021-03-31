@@ -41,6 +41,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
       "transform_errors_to_absolute_paths";
   public static final String USE_DEBUG_PREFIX_MAP = "use_debug_prefix_map";
   public static final String PREFIX_SERIALIZED_DEBUG_INFO = "prefix_serialized_debug_info";
+  public static final String ADD_XCTEST_IMPORT_PATHS = "add_xctest_import_paths";
   private final BuckConfig delegate;
 
   @Override
@@ -179,5 +180,13 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getPrefixSerializedDebugInfo() {
     return delegate.getBooleanValue(SECTION_NAME, PREFIX_SERIALIZED_DEBUG_INFO, false);
+  }
+
+  /**
+   * If true, add -I$PLATFORM_DIR/Developer/usr/lib so that libXCTestSwiftSupport.dylib can be found
+   * at compile time.
+   */
+  public boolean getAddXctestImportPaths() {
+    return delegate.getBooleanValue(SECTION_NAME, ADD_XCTEST_IMPORT_PATHS, false);
   }
 }

@@ -762,7 +762,7 @@ public class AppleTestDescription
               libraryTarget,
               params,
               graphBuilder,
-              addRpathFlags(args, appleCxxPlatform),
+              appendTestArgs(args, appleCxxPlatform),
               // For now, instead of building all deps as dylibs and fixing up their install_names,
               // we'll just link them statically.
               Optional.of(Linker.LinkableDepType.STATIC),
@@ -775,9 +775,10 @@ public class AppleTestDescription
     return library;
   }
 
-  private AppleTestDescriptionArg addRpathFlags(
+  private AppleTestDescriptionArg appendTestArgs(
       AppleTestDescriptionArg args, AppleCxxPlatform appleCxxPlatform) {
-    // When embedding XCTest we need to modify the rpath so that the test library can find it.
+    AppleTestDescriptionArg.Builder builder = AppleTestDescriptionArg.builder().from(args);
+
     if (appleConfig.getEmbedXctestInTestBundles()) {
       AppleBundleDestinations destination =
           AppleBundleDestinations.platformDestinations(
@@ -785,13 +786,18 @@ public class AppleTestDescription
       Path pathToFrameworks =
           destination.getExecutablesPath().relativize(destination.getFrameworksPath());
       String linkerArg = "-Wl,-rpath,@executable_path/" + pathToFrameworks.toString();
-      AppleTestDescriptionArg.Builder builder = AppleTestDescriptionArg.builder();
-      builder.from(args);
       builder.addLinkerFlags(StringWithMacros.ofConstantString(linkerArg));
-      return builder.build();
-    } else {
-      return args;
     }
+
+    if (swiftBuckConfig.getAddXctestImportPaths()) {
+      // When importing XCTest in Swift, we will need to add the linker search paths to
+      // find libXCTestSupport.dylib and XCTest.framework.
+      builder.addLinkerFlags(
+          StringWithMacros.ofConstantString("-L$PLATFORM_DIR/Developer/usr/lib"),
+          StringWithMacros.ofConstantString("-F$PLATFORM_DIR/Developer/Library/Frameworks"));
+    }
+
+    return builder.build();
   }
 
   @Override

@@ -71,7 +71,8 @@ public class SwiftCompile extends SwiftCompileBase {
       ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
       boolean withDownwardApi,
-      boolean hasPrefixSerializedDebugInfo) {
+      boolean hasPrefixSerializedDebugInfo,
+      boolean addXCTestImportPaths) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -95,7 +96,8 @@ public class SwiftCompile extends SwiftCompileBase {
         debugPrefixMap,
         importUnderlyingModule,
         withDownwardApi,
-        hasPrefixSerializedDebugInfo);
+        hasPrefixSerializedDebugInfo,
+        addXCTestImportPaths);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
   }

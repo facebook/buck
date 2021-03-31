@@ -322,7 +322,8 @@ public class SwiftLibraryDescription
           swiftPlatform.get().getDebugPrefixMap(),
           false,
           downwardApiConfig.isEnabledForApple(),
-          swiftPlatform.get().getPrefixSerializedDebugInfo());
+          swiftPlatform.get().getPrefixSerializedDebugInfo(),
+          swiftBuckConfig.getAddXctestImportPaths());
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -493,7 +494,8 @@ public class SwiftLibraryDescription
         swiftPlatform.getDebugPrefixMap(),
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple(),
-        swiftPlatform.getPrefixSerializedDebugInfo());
+        swiftPlatform.getPrefixSerializedDebugInfo(),
+        swiftBuckConfig.getAddXctestImportPaths());
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -562,7 +564,8 @@ public class SwiftLibraryDescription
         swiftPlatform.getDebugPrefixMap(),
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple(),
-        swiftPlatform.getPrefixSerializedDebugInfo());
+        swiftPlatform.getPrefixSerializedDebugInfo(),
+        swiftBuckConfig.getAddXctestImportPaths());
   }
 
   public static String getModuleName(

@@ -34,6 +34,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.PreprocessorFlags;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -73,6 +74,7 @@ import java.util.SortedSet;
 public abstract class SwiftCompileBase extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
 
+  private static final Logger LOG = Logger.get(SwiftCompileBase.class);
   private static final String INCLUDE_FLAG = "-I";
   private static final String DEBUG_PREFIX_MAP_FLAG = "-debug-prefix-map";
 
@@ -135,6 +137,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey protected final boolean prefixSerializedDebugInfo;
 
+  @AddToRuleKey private final boolean addXCTestImportPaths;
+
   // The following fields do not have to be part of the rulekey, all the other must.
 
   private BuildableSupport.DepsSupplier depsSupplier;
@@ -171,7 +175,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
       boolean withDownwardApi,
-      boolean hasPrefixSerializedDebugInfo) {
+      boolean hasPrefixSerializedDebugInfo,
+      boolean addXCTestImportPaths) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -180,6 +185,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
     this.importUnderlyingModule = importUnderlyingModule;
+    this.addXCTestImportPaths = addXCTestImportPaths;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
 
     String escapedModuleName = SwiftCompileBase.getNormalizedModuleName(moduleName);
@@ -260,6 +266,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     compilerArgs.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
+
+    if (addXCTestImportPaths) {
+      compilerArgs.addAll(xctestImportArgs(resolver));
+    }
 
     compilerArgs.addAll(
         Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
@@ -352,6 +362,28 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     }
 
     return compilerArgs.build();
+  }
+
+  private Iterable<String> xctestImportArgs(SourcePathResolverAdapter resolver) {
+    for (FrameworkPath frameworkPath : frameworks) {
+      if (frameworkPath
+          .getFileName(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath())
+          .endsWith("XCTest.framework")) {
+        // XCTest.swiftmodule is in a different path to XCTest.framework
+        // which we need to import for Swift specific API
+        Optional<Path> developerFrameworkPath = frameworkPathToSearchPath.apply(frameworkPath);
+        if (developerFrameworkPath.isPresent()
+            && developerFrameworkPath.get().getParent() != null
+            && developerFrameworkPath.get().getParent().getParent() != null) {
+          Path xctestImportPath =
+              developerFrameworkPath.get().getParent().getParent().resolve("usr/lib");
+          return ImmutableList.of("-I", xctestImportPath.toString());
+        } else {
+          LOG.error("Failed to determine platform path from %s", frameworkPath);
+        }
+      }
+    }
+    return ImmutableList.of();
   }
 
   @VisibleForTesting
