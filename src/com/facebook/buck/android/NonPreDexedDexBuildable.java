@@ -215,6 +215,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             () ->
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
+
     this.dexTool = dexTool;
     this.desugarInterfaceMethods = desugarInterfaceMethods;
     this.withDownwardApi = withDownwardApi;
@@ -491,13 +492,35 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     return steps.build();
   }
 
+  private ImmutableMap<String, SourcePath> getMapOfModuleToSecondaryDexSourcePaths() {
+    ImmutableMap.Builder<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths =
+        ImmutableMap.builder();
+    if (moduleMappedClasspathEntriesToDex.isPresent()) {
+      for (APKModule apkModule : moduleMappedClasspathEntriesToDex.get().keySet()) {
+        if (apkModule.isRootModule()) {
+          continue;
+        }
+        mapOfModuleToSecondaryDexSourcePaths.put(
+            apkModule.getName(),
+            genSourcePath(
+                getSecondaryDexRoot()
+                    .resolve("__additional_dex__")
+                    .resolve("assets")
+                    .resolve(apkModule.getName())));
+      }
+    }
+
+    return mapOfModuleToSecondaryDexSourcePaths.build();
+  }
+
   @Override
   public DexFilesInfo getDexFilesInfo() {
     return new DexFilesInfo(
         genSourcePath(getNonPredexedPrimaryDexPath()),
         new DexFilesInfo.DexSecondaryDexDirView(
             genSourcePath(getSecondaryDexRoot()), genSourcePath(getSecondaryDexListing())),
-        shouldProguard ? Optional.of(genSourcePath(getProguardConfigDir())) : Optional.empty());
+        shouldProguard ? Optional.of(genSourcePath(getProguardConfigDir())) : Optional.empty(),
+        getMapOfModuleToSecondaryDexSourcePaths());
   }
 
   private SourcePath genSourcePath(Path path) {

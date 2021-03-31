@@ -106,10 +106,12 @@ public class AabBuilderStep implements Step {
       output = context.getStdOut();
     }
 
+    // We should only add a single source file to a given Module.
+    Set<Path> addedSourceFiles = new HashSet<>();
+
     File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
     for (ModuleInfo moduleInfo : modulesInfo) {
       Set<String> addedFiles = new HashSet<>();
-      Set<Path> addedSourceFiles = new HashSet<>();
       StepExecutionResult moduleBuildResult =
           addModule(
               context,
@@ -119,6 +121,7 @@ public class AabBuilderStep implements Step {
               moduleInfo,
               addedFiles,
               addedSourceFiles);
+
       if (!moduleBuildResult.isSuccess()) {
         return moduleBuildResult;
       }
@@ -142,8 +145,13 @@ public class AabBuilderStep implements Step {
       Path file,
       String destination,
       Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      Set<Path> addedSourceFiles,
+      StepExecutionContext context)
       throws SealedApkException, DuplicateFileException, ApkCreationException {
+    if (addedSourceFiles.contains((file))) {
+      context.logError(
+          new Exception("duplicate file"), "File %s was added more than once", file.toString());
+    }
 
     if (addedFiles.contains(destination) || addedSourceFiles.contains(file)) {
       return;
@@ -177,7 +185,7 @@ public class AabBuilderStep implements Step {
               null,
               null,
               verboseStream);
-      addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles);
+      addModuleFiles(moduleBuilder, moduleInfo, addedFiles, addedSourceFiles, context);
       // Build the APK
       moduleBuilder.sealApk();
     } catch (ApkCreationException | SealedApkException e) {
@@ -196,7 +204,8 @@ public class AabBuilderStep implements Step {
       ApkBuilder moduleBuilder,
       ModuleInfo moduleInfo,
       Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      Set<Path> addedSourceFiles,
+      StepExecutionContext context)
       throws ApkCreationException, DuplicateFileException, SealedApkException, IOException {
 
     moduleBuilder.setDebugMode(debugMode);
@@ -207,20 +216,26 @@ public class AabBuilderStep implements Step {
             filesystem.getPathForRelativePath(dexFile),
             getDexFileName(addedFiles),
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       }
     }
     if (moduleInfo.getResourceApk() != null) {
       if (moduleInfo.isBaseModule()) {
         packageFile(
-            moduleBuilder, moduleInfo.getResourceApk().toFile(), addedFiles, addedSourceFiles);
+            moduleBuilder,
+            moduleInfo.getResourceApk().toFile(),
+            addedFiles,
+            addedSourceFiles,
+            context);
       } else {
         processFileForResource(
             moduleBuilder,
             filesystem.getPathForRelativePath(moduleInfo.getResourceApk()).toFile(),
             "",
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       }
     }
     if (moduleInfo.getNativeLibraryDirectories() != null) {
@@ -229,7 +244,8 @@ public class AabBuilderStep implements Step {
             moduleBuilder,
             filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile(),
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       }
     }
     if (moduleInfo.getAssetDirectories() != null) {
@@ -241,7 +257,8 @@ public class AabBuilderStep implements Step {
             // infer has a hard time detecting that subFolderName can't be nonnull
             subFolderName == null || subFolderName.isEmpty() ? "" : subFolderName,
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       }
     }
     if (moduleInfo.getZipFiles() != null) {
@@ -253,7 +270,8 @@ public class AabBuilderStep implements Step {
             moduleBuilder,
             filesystem.getPathForRelativePath(zipFile).toFile(),
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       }
     }
     if (moduleInfo.getJarFilesThatMayContainResources() != null) {
@@ -263,7 +281,8 @@ public class AabBuilderStep implements Step {
             moduleBuilder,
             filesystem.getPathForRelativePath(jarFile).toFile(),
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       }
     }
   }
@@ -273,7 +292,8 @@ public class AabBuilderStep implements Step {
       File sourceFolder,
       String destination,
       Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      Set<Path> addedSourceFiles,
+      StepExecutionContext context)
       throws ApkCreationException, DuplicateFileException, SealedApkException {
     if (sourceFolder.isDirectory()) {
       File[] files = sourceFolder.listFiles();
@@ -281,7 +301,7 @@ public class AabBuilderStep implements Step {
         return;
       }
       for (File file : files) {
-        processFileForResource(builder, file, destination, addedFiles, addedSourceFiles);
+        processFileForResource(builder, file, destination, addedFiles, addedSourceFiles, context);
       }
     } else {
       if (sourceFolder.exists()) {
@@ -297,7 +317,8 @@ public class AabBuilderStep implements Step {
       File file,
       String path,
       Set<String> addedFiles,
-      Set<Path> addedSourceFiles)
+      Set<Path> addedSourceFiles,
+      StepExecutionContext context)
       throws DuplicateFileException, ApkCreationException, SealedApkException {
     path = Paths.get(path).resolve(file.getName()).toString();
     if (file.isDirectory() && ApkBuilder.checkFolderForPackaging(file.getName())) {
@@ -309,11 +330,17 @@ public class AabBuilderStep implements Step {
         return;
       }
       for (File contentFile : files) {
-        processFileForResource(builder, contentFile, path, addedFiles, addedSourceFiles);
+        processFileForResource(builder, contentFile, path, addedFiles, addedSourceFiles, context);
       }
     } else if (!file.isDirectory() && ApkBuilder.checkFileForPackaging(file.getName())) {
       if (file.getName().endsWith(".dex")) {
-        addFile(builder, file.toPath(), getDexFileName(addedFiles), addedFiles, addedSourceFiles);
+        addFile(
+            builder,
+            file.toPath(),
+            getDexFileName(addedFiles),
+            addedFiles,
+            addedSourceFiles,
+            context);
       } else if (file.getName().equals(BundleModule.MANIFEST_FILENAME)) {
         addFile(
             builder,
@@ -322,7 +349,8 @@ public class AabBuilderStep implements Step {
                 .resolve(file.getName())
                 .toString(),
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       } else if (file.getName()
           .equals(BundleModule.SpecialModuleEntry.RESOURCE_TABLE.getPath().toString())) {
         addFile(
@@ -330,9 +358,10 @@ public class AabBuilderStep implements Step {
             file.toPath(),
             Paths.get(file.getName()).toString(),
             addedFiles,
-            addedSourceFiles);
+            addedSourceFiles,
+            context);
       } else {
-        addFile(builder, file.toPath(), path, addedFiles, addedSourceFiles);
+        addFile(builder, file.toPath(), path, addedFiles, addedSourceFiles, context);
       }
     }
   }
@@ -348,7 +377,11 @@ public class AabBuilderStep implements Step {
   }
 
   private void addNativeLibraries(
-      ApkBuilder builder, File nativeFolder, Set<String> addedFiles, Set<Path> addedSourceFiles)
+      ApkBuilder builder,
+      File nativeFolder,
+      Set<String> addedFiles,
+      Set<Path> addedSourceFiles,
+      StepExecutionContext context)
       throws ApkCreationException, SealedApkException, DuplicateFileException {
     if (!nativeFolder.isDirectory()) {
       if (nativeFolder.exists()) {
@@ -378,7 +411,7 @@ public class AabBuilderStep implements Step {
                 .resolve(abi.getName())
                 .resolve(lib.getName());
 
-        addFile(builder, lib.toPath(), libPath.toString(), addedFiles, addedSourceFiles);
+        addFile(builder, lib.toPath(), libPath.toString(), addedFiles, addedSourceFiles, context);
       }
     }
   }
@@ -391,9 +424,17 @@ public class AabBuilderStep implements Step {
   }
 
   private void packageFile(
-      ApkBuilder builder, File original, Set<String> addedFiles, Set<Path> addedSourceFiles)
+      ApkBuilder builder,
+      File original,
+      Set<String> addedFiles,
+      Set<Path> addedSourceFiles,
+      StepExecutionContext context)
       throws IOException, ApkCreationException, DuplicateFileException, SealedApkException {
     if (addedSourceFiles.contains(original.toPath())) {
+      context.logError(
+          new Exception("duplicate file"),
+          "File %s was added more than once",
+          original.toPath().toString());
       return;
     }
     try (ZipFile zipFile = new ZipFile(original)) {
@@ -409,7 +450,8 @@ public class AabBuilderStep implements Step {
               convertZipEntryToFile(zipFile, entry).toPath(),
               Paths.get(location).resolve(entry.getName()).toString(),
               addedFiles,
-              addedSourceFiles);
+              addedSourceFiles,
+              context);
         }
       }
     }

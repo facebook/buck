@@ -4,3 +4,4 @@
 -keep class javax.** { *; }
 -keep class org.** { *; }
 -keep class twitter4j.** { *; }
+-keep class gen.** { *; }

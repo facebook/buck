@@ -62,6 +62,17 @@ class DexFilesInfo implements AddsToRuleKey {
     this.mapOfModuleToSecondaryDexSourcePaths = ImmutableMap.of();
   }
 
+  DexFilesInfo(
+      SourcePath primaryDexPath,
+      DexSecondaryDexDirView secondaryDexDirs,
+      Optional<SourcePath> proguardTextFilesPath,
+      ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths) {
+    this.primaryDexPath = primaryDexPath;
+    this.secondaryDexDirs = Either.ofRight(secondaryDexDirs);
+    this.proguardTextFilesPath = proguardTextFilesPath;
+    this.mapOfModuleToSecondaryDexSourcePaths = mapOfModuleToSecondaryDexSourcePaths;
+  }
+
   public ImmutableSet<Path> getSecondaryDexDirs(
       ProjectFilesystem filesystem, SourcePathResolverAdapter resolver) {
     return secondaryDexDirs.transform(

@@ -285,6 +285,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSet<String> moduleNames =
           apkModules.stream().map(APKModule::getName).collect(ImmutableSet.toImmutableSet());
 
+      // TODO: longinoa - this does not support {@link NonPreDexedDexBuildable} ie
+      // shouldPreDex=false
       for (Path path : dexFilesInfo.getSecondaryDexDirs(getProjectFilesystem(), pathResolver)) {
         if (path.getFileName().toString().equals("additional_dexes")) {
           File[] assetFiles = path.toFile().listFiles();

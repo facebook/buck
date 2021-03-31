@@ -215,4 +215,23 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileDoesNotExist("base/assets/native2/libs.xzs");
     zipInspector.assertFileDoesNotExist("base/assets/native1/libs.xzs");
   }
+
+  @Test
+  public void testAppBundleWithRedex() throws IOException {
+    String target = "//apps/sample:android_bundle_with_proguard";
+    ProcessResult result = workspace.runBuckCommand("build", target);
+    result.assertSuccess();
+
+    Path aab =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance(target),
+                "%s.signed.aab"));
+
+    ZipInspector zipInspector = new ZipInspector(aab);
+
+    zipInspector.assertFileDoesNotExist("base/assets/many_libs/many_libs.dex.jar.xzs");
+    zipInspector.assertFileExists("many_libs/assets/many_libs/many_libs.dex.jar.xzs");
+  }
 }
