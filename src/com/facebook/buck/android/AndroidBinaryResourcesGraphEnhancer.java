@@ -654,16 +654,21 @@ class AndroidBinaryResourcesGraphEnhancer {
       BuildTarget target =
           buildTarget.withAppendedFlavors(InternalFlavor.of(AAPT2_COMPILE_FLAVOR_PREFIX + index++));
       Aapt2Compile rule =
-          new Aapt2Compile(
-              target,
-              projectFilesystem,
-              actionGraphBuilder,
-              toolProvider.resolve(actionGraphBuilder, target.getTargetConfiguration()),
-              resDir,
-              skipCrunchPngs,
-              failOnLegacyErrors,
-              withDownwardApi);
-      actionGraphBuilder.addToIndex(rule);
+          (Aapt2Compile)
+              actionGraphBuilder.computeIfAbsent(
+                  target,
+                  aaptTarget -> {
+                    return new Aapt2Compile(
+                        aaptTarget,
+                        projectFilesystem,
+                        actionGraphBuilder,
+                        toolProvider.resolve(
+                            actionGraphBuilder, aaptTarget.getTargetConfiguration()),
+                        resDir,
+                        skipCrunchPngs,
+                        failOnLegacyErrors,
+                        withDownwardApi);
+                  });
       builder.add(rule);
     }
     return builder.build();
