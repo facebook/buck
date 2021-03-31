@@ -31,32 +31,22 @@
 
 
 // Return 0 on success
-static int parse_args(int num_args, char** args, char** out_ip_str, uint16_t* out_port, uint32_t* out_nonce) {
-  if (num_args != 3) {
-    fprintf(stderr, "usage: multi-receive-file IP PORT NONCE\n");
+static int parse_args(int num_args, char** args, uint16_t* out_port) {
+  if (num_args != 1) {
+    fprintf(stderr, "usage: multi-receive-file PORT\n");
     return -1;
   }
 
-  *out_ip_str = args[0];
-
   char* endptr;
 
-  const char* port_str = args[1];
+  const char* port_str = args[0];
   long port = strtol(port_str, &endptr, 10);
   if (*port_str == '\0' || *endptr != '\0' || port <= 0 || port > USHRT_MAX) {
     fprintf(stderr, "Invalid port: %s\n", port_str);
     return -1;
   }
 
-  const char* nonce_str = args[2];
-  long nonce = strtol(nonce_str, &endptr, 10);
-  if (*nonce_str == '\0' || *endptr != '\0' || nonce <= 0 || nonce > INT_MAX) {
-    fprintf(stderr, "Invalid nonce: %s\n", nonce_str);
-    return -1;
-  }
-
   *out_port = (uint16_t)port;
-  *out_nonce = (uint32_t)nonce;
   return 0;
 }
 
@@ -148,42 +138,6 @@ static int get_client(int listen_socket, int* out_client_socket) {
   *out_client_socket = client_socket;
 
   ret = set_socket_timeout(client_socket);
-  if (ret != 0) {
-    return -1;
-  }
-
-  return 0;
-}
-
-// On success, returns 0 and sets *out_client_socket to the socket fd.
-static int connect_client(const char* ip_str, uint16_t port, int* out_client_socket) {
-  int ret;
-  struct sockaddr_in addr;
-  memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
-  ret = inet_aton(ip_str, &addr.sin_addr);
-  if (ret != 1) {
-    fprintf(stderr, "Invalid IP address: %s\n", ip_str);
-    return -1;
-  }
-
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
-  if (sock < 0) {
-    perror("socket");
-    return -1;
-  }
-
-  // Set this here so it will be closed if we have an error.
-  *out_client_socket = sock;
-
-  ret = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
-  if (ret < 0) {
-    perror("connect");
-    return -1;
-  }
-
-  ret = set_socket_timeout(sock);
   if (ret != 0) {
     return -1;
   }
@@ -459,65 +413,21 @@ fail1:
   return -1;
 }
 
-// Returns an appropriate process exit code.
-static int multi_receive_file_from_server(const char* ip_str, uint16_t port, uint32_t nonce) {
-  // Send a byte to trigger the installer to accept our connection.
-  printf("\n");
-  fflush(stdout);
-
-  int client_socket = -1;
-  if (connect_client(ip_str, port, &client_socket) != 0) {
-    goto fail1;
-  }
-
-  uint8_t nonce_buffer[4];
-  nonce_buffer[0] = nonce >> 24;
-  nonce_buffer[1] = nonce >> 16;
-  nonce_buffer[2] = nonce >> 8;
-  nonce_buffer[3] = nonce;
-  ssize_t wrote = write(client_socket, nonce_buffer, sizeof(nonce_buffer));
-  if (wrote != sizeof(nonce_buffer)) {
-    perror("write(nonce)");
-    goto fail1;
-  }
-
-  int ret = multi_receive_file_from_socket(client_socket);
-  if (ret != 0) {
-    goto fail1;
-  }
-
-  close(client_socket);
-
-  return 0;
-
-fail1:
-  if (client_socket >= 0) {
-    close(client_socket);
-  }
-  return 1;
-}
-
 int do_multi_receive_file(int num_args, char** args) {
-  char* ip_str;
   uint16_t port;
-  uint32_t nonce;
-  if (parse_args(num_args, args, &ip_str, &port, &nonce) != 0) {
+  if (parse_args(num_args, args, &port) != 0) {
     return 1;
   }
 
-  if (strcmp(ip_str, "-") == 0) {
-    int socket = accept_authentic_connection_from_client(port);
-    if (socket < 0) {
-      return 1;
-    }
-    int ret = multi_receive_file_from_socket(socket);
-    close(socket);
-    if (ret != 0) {
-      return 1;
-    }
-    return 0;
-  } else {
-    return multi_receive_file_from_server(ip_str, port, nonce);
+  int socket = accept_authentic_connection_from_client(port);
+  if (socket < 0) {
+    return 1;
   }
+  int ret = multi_receive_file_from_socket(socket);
+  close(socket);
+  if (ret != 0) {
+    return 1;
+  }
+  return 0;
 }
 

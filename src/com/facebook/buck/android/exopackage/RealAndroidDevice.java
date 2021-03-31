@@ -882,11 +882,7 @@ public class RealAndroidDevice implements AndroidDevice {
         "umask 022 && "
             + agent.get().getAgentCommand()
             + "multi-receive-file "
-            + "-"
-            + " "
             + agentPort
-            + " "
-            + "1"
             + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 

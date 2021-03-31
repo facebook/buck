@@ -254,51 +254,14 @@ public class AgentMain {
   }
 
   private static void doMultiReceiveFile(List<String> userArgs) throws IOException {
-    if (userArgs.size() != 3) {
-      throw new IllegalArgumentException("usage: multi-receive-file IP PORT NONCE");
+    if (userArgs.size() != 1) {
+      throw new IllegalArgumentException("usage: multi-receive-file PORT");
     }
 
-    String ip = userArgs.get(0);
-    int port = Integer.parseInt(userArgs.get(1));
-    int nonce = Integer.parseInt(userArgs.get(2));
-
-    if (ip.equals("-")) {
-      BufferedInputStream connection = acceptAuthenticConnectionFromClient(port);
-      // TODO: Maybe don't leak connection.
-      multiReceiveFileFromStream(connection);
-    } else {
-      multiReceiveFileFromServer(ip, port, nonce);
-    }
-  }
-
-  private static void multiReceiveFileFromServer(String ip, int port, int nonce)
-      throws IOException {
-    // Send a byte to trigger the installer to accept our connection.
-    System.out.println();
-    System.out.flush();
-
-    Socket clientSocket = null;
-    try {
-      clientSocket = new Socket(ip, port);
-      clientSocket.setSoTimeout(RECEIVE_TIMEOUT_MS);
-
-      byte[] nonceBuffer =
-          new byte[] {
-            (byte) ((nonce >> 24) & 0xFF),
-            (byte) ((nonce >> 16) & 0xFF),
-            (byte) ((nonce >> 8) & 0xFF),
-            (byte) (nonce & 0xFF),
-          };
-      clientSocket.getOutputStream().write(nonceBuffer);
-
-      BufferedInputStream stream = new BufferedInputStream(clientSocket.getInputStream());
-
-      multiReceiveFileFromStream(stream);
-    } finally {
-      if (clientSocket != null) {
-        clientSocket.close();
-      }
-    }
+    int port = Integer.parseInt(userArgs.get(0));
+    BufferedInputStream connection = acceptAuthenticConnectionFromClient(port);
+    // TODO: Maybe don't leak connection.
+    multiReceiveFileFromStream(connection);
   }
 
   private static void multiReceiveFileFromStream(BufferedInputStream stream) throws IOException {
