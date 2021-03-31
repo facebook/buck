@@ -317,7 +317,8 @@ public class AppleTestDescription
             testHostWithTargetApp.flatMap(TestHostInfo::getTestHostAppBinarySourcePath),
             testHostWithTargetApp.map(TestHostInfo::getBlacklist).orElse(ImmutableSet.of()),
             libraryTarget,
-            RichStream.from(args.getTestHostApp()).toImmutableSortedSet(Ordering.natural()));
+            RichStream.from(args.getTestHostApp()).toImmutableSortedSet(Ordering.natural()),
+            appleCxxPlatform);
     if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
       return library;
     }
@@ -744,7 +745,8 @@ public class AppleTestDescription
       Optional<SourcePath> testHostAppBinarySourcePath,
       ImmutableSet<BuildTarget> blacklist,
       BuildTarget libraryTarget,
-      ImmutableSortedSet<BuildTarget> extraCxxDeps) {
+      ImmutableSortedSet<BuildTarget> extraCxxDeps,
+      AppleCxxPlatform appleCxxPlatform) {
     BuildTarget existingLibraryTarget =
         libraryTarget
             .withAppendedFlavors(AppleDebuggableBinary.RULE_FLAVOR, CxxStrip.RULE_FLAVOR)
@@ -760,7 +762,7 @@ public class AppleTestDescription
               libraryTarget,
               params,
               graphBuilder,
-              args,
+              addRpathFlags(args, appleCxxPlatform),
               // For now, instead of building all deps as dylibs and fixing up their install_names,
               // we'll just link them statically.
               Optional.of(Linker.LinkableDepType.STATIC),
@@ -771,6 +773,25 @@ public class AppleTestDescription
       graphBuilder.computeIfAbsent(library.getBuildTarget(), ignored -> library);
     }
     return library;
+  }
+
+  private AppleTestDescriptionArg addRpathFlags(
+      AppleTestDescriptionArg args, AppleCxxPlatform appleCxxPlatform) {
+    // When embedding XCTest we need to modify the rpath so that the test library can find it.
+    if (appleConfig.getEmbedXctestInTestBundles()) {
+      AppleBundleDestinations destination =
+          AppleBundleDestinations.platformDestinations(
+              appleCxxPlatform.getAppleSdk().getApplePlatform());
+      Path pathToFrameworks =
+          destination.getExecutablesPath().relativize(destination.getFrameworksPath());
+      String linkerArg = "-Wl,-rpath,@executable_path/" + pathToFrameworks.toString();
+      AppleTestDescriptionArg.Builder builder = AppleTestDescriptionArg.builder();
+      builder.from(args);
+      builder.addLinkerFlags(StringWithMacros.ofConstantString(linkerArg));
+      return builder.build();
+    } else {
+      return args;
+    }
   }
 
   @Override

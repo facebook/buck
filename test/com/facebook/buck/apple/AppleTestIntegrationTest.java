@@ -524,7 +524,7 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  public void testEmbedsXCTest() throws IOException {
+  public void testEmbedsXCTest() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
     workspace.setUp();
@@ -542,15 +542,22 @@ public class AppleTestIntegrationTest {
                 LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s");
+    Path testLibraryPath =
+        workspace.getDestPath().resolve(testBundlePath.getPath()).resolve("foo.xctest/foo");
 
     assertTrue(filesystem.exists(testBundlePath.resolve("foo.xctest/Frameworks/XCTest.framework")));
     assertFalse(
         filesystem.exists(
             testBundlePath.resolve("foo.xctest/Frameworks/libXCTestSwiftSupport.dylib")));
+
+    ProcessExecutor.Result otoolResult =
+        workspace.runCommand("otool", "-l", testLibraryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    assertThat(otoolResult.getStdout().orElse(""), containsString("@executable_path/Frameworks"));
   }
 
   @Test
-  public void testEmbedsXCTestSwiftSupport() throws IOException {
+  public void testEmbedsXCTestSwiftSupport() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_swift_test_case", tmp);
     workspace.setUp();
@@ -568,6 +575,11 @@ public class AppleTestIntegrationTest {
                 LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s");
+    Path testLibraryPath =
+        workspace
+            .getDestPath()
+            .resolve(testBundlePath.getPath())
+            .resolve("LibTest.xctest/Contents/MacOS/LibTest");
 
     assertTrue(
         filesystem.exists(
@@ -576,10 +588,16 @@ public class AppleTestIntegrationTest {
         filesystem.exists(
             testBundlePath.resolve(
                 "LibTest.xctest/Contents/Frameworks/libXCTestSwiftSupport.dylib")));
+
+    ProcessExecutor.Result otoolResult =
+        workspace.runCommand("otool", "-l", testLibraryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    assertThat(
+        otoolResult.getStdout().orElse(""), containsString("@executable_path/../Frameworks"));
   }
 
   @Test
-  public void testEmbedsXCTestSwiftSupportWithSwiftDeps() throws IOException {
+  public void testEmbedsXCTestSwiftSupportWithSwiftDeps() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_test_objc_uses_apple_library_with_swift_sources_and_xctest_dep", tmp);
@@ -599,6 +617,11 @@ public class AppleTestIntegrationTest {
                 LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s");
+    Path testLibraryPath =
+        workspace
+            .getDestPath()
+            .resolve(testBundlePath.getPath())
+            .resolve("LibTest.xctest/Contents/MacOS/LibTest");
 
     assertTrue(
         filesystem.exists(
@@ -607,6 +630,12 @@ public class AppleTestIntegrationTest {
         filesystem.exists(
             testBundlePath.resolve(
                 "LibTest.xctest/Contents/Frameworks/libXCTestSwiftSupport.dylib")));
+
+    ProcessExecutor.Result otoolResult =
+        workspace.runCommand("otool", "-l", testLibraryPath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    assertThat(
+        otoolResult.getStdout().orElse(""), containsString("@executable_path/../Frameworks"));
   }
 
   @Test
