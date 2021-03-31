@@ -19,9 +19,9 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -66,7 +66,8 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<String> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        WatchmanPathEvent.of(FILESYSTEM.getRootPath(), Kind.MODIFY, RelPath.of(input2.getPath())));
+        WatchmanPathEvent.of(
+            FILESYSTEM.getRootPath(), Kind.MODIFY, ForwardRelativePath.ofPath(input2.getPath())));
     assertTrue(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }
@@ -84,7 +85,9 @@ public class RuleKeyCacheRecyclerTest {
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
         WatchmanPathEvent.of(
-            FILESYSTEM.getRootPath(), Kind.MODIFY, RelPath.of(input.getPath().resolve("subpath"))));
+            FILESYSTEM.getRootPath(),
+            Kind.MODIFY,
+            ForwardRelativePath.ofPath(input.getPath().resolve("subpath"))));
     assertFalse(cache.isCached(appendable));
   }
 

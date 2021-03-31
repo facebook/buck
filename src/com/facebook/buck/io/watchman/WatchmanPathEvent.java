@@ -18,6 +18,7 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** Buck sends this event for every file that was added, modified or deleted */
@@ -34,9 +35,18 @@ public abstract class WatchmanPathEvent implements WatchmanEvent {
    * Relative path of the actual file the event is about. The path is relative to the cell path
    * returned by {@link #getCellPath()}.
    */
-  public abstract RelPath getPath();
+  public abstract ForwardRelativePath getPath();
 
-  public static WatchmanPathEvent of(AbsPath cellPath, WatchmanEvent.Kind kind, RelPath path) {
+  /**
+   * Relative path of the actual file the event is about. The path is relative to the cell path
+   * returned by {@link #getCellPath()}.
+   */
+  public RelPath getRelPath() {
+    return getPath().toRelPath(getCellPath().getFileSystem());
+  }
+
+  public static WatchmanPathEvent of(
+      AbsPath cellPath, WatchmanEvent.Kind kind, ForwardRelativePath path) {
     return ImmutableWatchmanPathEvent.ofImpl(cellPath, kind, path);
   }
 }

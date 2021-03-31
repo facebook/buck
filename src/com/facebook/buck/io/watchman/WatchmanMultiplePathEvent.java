@@ -17,9 +17,9 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 
 /**
  * Buck sends this event for all files, directories and symlinks that were changed since last
@@ -36,7 +36,7 @@ public abstract class WatchmanMultiplePathEvent implements WatchmanEvent {
     public abstract WatchmanEvent.Type getType();
 
     /** Path to a changed file or directory, relative to monitored root (cell root) */
-    public abstract Path getPath();
+    public abstract ForwardRelativePath getPath();
 
     /** Kind of a file system change, like modification or deletion of the file */
     public abstract WatchmanEvent.Kind getKind();

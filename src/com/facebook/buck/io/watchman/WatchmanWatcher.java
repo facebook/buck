@@ -17,7 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import java.io.IOException;
-import java.nio.file.FileSystem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -362,7 +361,6 @@ public class WatchmanWatcher {
           perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
         }
 
-        FileSystem fileSystem = cellPath.getFileSystem();
         List<WatchmanMultiplePathEvent.Change> changes = new ArrayList<>(files.size());
         for (Map<String, Object> file : files) {
           String fileName = (String) file.get("name");
@@ -400,9 +398,9 @@ public class WatchmanWatcher {
             }
           }
 
-          RelPath filePath = RelPath.of(fileSystem.getPath(fileName));
+          ForwardRelativePath filePath = ForwardRelativePath.of(fileName);
 
-          changes.add(ImmutableChange.ofImpl(type, filePath.getPath(), kind));
+          changes.add(ImmutableChange.ofImpl(type, filePath, kind));
 
           if (type != WatchmanEvent.Type.DIRECTORY) {
             // WatchmanPathEvent is sent for everything but directories - this is legacy

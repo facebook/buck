@@ -19,11 +19,13 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.PackageFileManifest;
@@ -37,7 +39,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -427,8 +428,9 @@ class DaemonicCellState {
   }
 
   /** @return {@code true} if the given path has dependencies that are present in the given set. */
-  boolean pathDependentPresentIn(Path path, Set<AbsPath> buildFiles) {
+  boolean pathDependentPresentIn(ForwardRelativePath path, Set<AbsPath> buildFiles) {
+    RelPath relPath = path.toRelPath(cellRoot.getFileSystem());
     return !Collections.disjoint(
-        buildFileDependents.getOrDefault(cellRoot.resolve(path), ImmutableSet.of()), buildFiles);
+        buildFileDependents.getOrDefault(cellRoot.resolve(relPath), ImmutableSet.of()), buildFiles);
   }
 }

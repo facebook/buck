@@ -82,7 +82,7 @@ public class RuleKeyCacheRecycler<V> {
     // them with a specific filesystem.  So, we assume the event can refer to any of the watched
     // filesystems and forward invalidations to all of them.
     for (ProjectFilesystem filesystem : watchedFilesystems) {
-      RelPath path = event.getPath().normalize();
+      RelPath path = event.getRelPath().normalize();
       LOG.verbose(
           "invalidating path \"%s\" from filesystem at \"%s\" due to event (%s)",
           path, filesystem.getRootPath(), event);

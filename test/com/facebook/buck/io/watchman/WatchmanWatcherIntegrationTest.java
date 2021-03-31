@@ -110,7 +110,7 @@ public class WatchmanWatcherIntegrationTest {
         new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent event = watchmanEventCollector.getOnlyEvent(WatchmanPathEvent.class);
-    RelPath eventPath = event.getPath();
+    RelPath eventPath = event.getRelPath();
     assertThat(eventPath, Matchers.equalTo(path));
     assertSame(event.getKind(), Kind.CREATE);
   }

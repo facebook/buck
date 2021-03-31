@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.cache.impl;
 
-import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
@@ -70,11 +70,12 @@ public class CacheBenchmark {
       String path = folders.get(random.nextInt(folders.size()));
       // create a folder? 25% chance of doing so.
       if (random.nextInt(4) == 0) {
-        path += generateRandomString() + "/";
+        path += generateRandomString();
         // is it a leaf?
         if (random.nextBoolean()) {
           leaves.add(path);
         }
+        path += "/";
         folders.add(path);
       } else {
         // it's a file.
@@ -114,6 +115,6 @@ public class CacheBenchmark {
         leaf ->
             cache.onFileSystemChange(
                 WatchmanPathEvent.of(
-                    projectFilesystem.resolve(leaf), Kind.CREATE, RelPath.of(Paths.get(leaf)))));
+                    projectFilesystem.resolve(leaf), Kind.CREATE, ForwardRelativePath.of(leaf))));
   }
 }

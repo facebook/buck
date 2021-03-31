@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -438,6 +439,17 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     DISABLED,
     WARN,
     ENFORCE,
+  }
+
+  /**
+   * Whether the cell is enforcing buck package boundaries for the package at the passed path.
+   *
+   * @param path Path of package (or file in a package) relative to the cell root.
+   * @return How to enforce buck package boundaries for {@code path}
+   */
+  public PackageBoundaryEnforcement getPackageBoundaryEnforcementPolicy(ForwardRelativePath path) {
+    return getPackageBoundaryEnforcementPolicy(
+        path.toPath(getDelegate().getFilesystem().getFileSystem()));
   }
 
   /**

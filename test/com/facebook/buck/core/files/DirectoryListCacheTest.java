@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
@@ -81,13 +81,13 @@ public class DirectoryListCacheTest {
 
     // should not invalidate
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("dir1/file")));
+        WatchmanPathEvent.of(tmp.getRoot(), kind, ForwardRelativePath.of("dir1/file"));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertTrue(dlist.isPresent());
 
     // should invalidate
-    event = WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("dir/file1")));
+    event = WatchmanPathEvent.of(tmp.getRoot(), kind, ForwardRelativePath.of("dir/file1"));
     cache.getInvalidator().onFileSystemChange(event);
 
     dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
@@ -106,7 +106,7 @@ public class DirectoryListCacheTest {
             ImmutableSortedSet.of()));
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("file1")));
+        WatchmanPathEvent.of(tmp.getRoot(), kind, ForwardRelativePath.of("file1"));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("")));
     assertFalse(dlist.isPresent());
@@ -124,7 +124,7 @@ public class DirectoryListCacheTest {
 
     // should not invalidate
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(tmp.getRoot(), Kind.MODIFY, RelPath.of(Paths.get("dir/file")));
+        WatchmanPathEvent.of(tmp.getRoot(), Kind.MODIFY, ForwardRelativePath.of("dir/file"));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertTrue(dlist.isPresent());
@@ -185,7 +185,7 @@ public class DirectoryListCacheTest {
     MoreFiles.deleteRecursively(dir2.getPath(), RecursiveDeleteOption.ALLOW_INSECURE);
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(root, Kind.DELETE, RelPath.of(Paths.get("dir1/dir2/file2")));
+        WatchmanPathEvent.of(root, Kind.DELETE, ForwardRelativePath.of("dir1/dir2/file2"));
     FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
     cache.getInvalidator().onInvalidationStart(started);
     cache.getInvalidator().onFileSystemChange(event);
@@ -226,7 +226,7 @@ public class DirectoryListCacheTest {
     MoreFiles.deleteRecursively(root.getPath(), RecursiveDeleteOption.ALLOW_INSECURE);
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(root, Kind.DELETE, RelPath.of(Paths.get("dir/file")));
+        WatchmanPathEvent.of(root, Kind.DELETE, ForwardRelativePath.of("dir/file"));
     FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
     cache.getInvalidator().onInvalidationStart(started);
     cache.getInvalidator().onFileSystemChange(event);
@@ -306,7 +306,7 @@ public class DirectoryListCacheTest {
 
     // Watchman fires a Create event for baz.txt
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(root, Kind.CREATE, RelPath.of(Paths.get("dir2/foo/quux/baz.txt")));
+        WatchmanPathEvent.of(root, Kind.CREATE, ForwardRelativePath.of("dir2/foo/quux/baz.txt"));
 
     // Invalidate caches accordingly
     FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();

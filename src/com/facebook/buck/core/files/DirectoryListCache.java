@@ -163,7 +163,7 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
       }
 
       // for CREATE and DELETE, invalidate containing folder
-      RelPath folderPath = MorePaths.getParentOrEmpty(event.getPath());
+      RelPath folderPath = MorePaths.getParentOrEmpty(event.getRelPath());
       dirListCache.cache.remove(ImmutableDirectoryListKey.of(folderPath.getPath()));
 
       // When a new folder is created via recursive copy, Watchmen informs us of the files that

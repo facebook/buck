@@ -159,7 +159,7 @@ public class BuildFileManifestCache
       // If dependency file is modified or deleted, invalidate packages that depend on it
       // Dependent files may come from different cells
       if (event.getKind() == Kind.MODIFY || event.getKind() == Kind.DELETE) {
-        RelPath eventPath = event.getPath();
+        RelPath eventPath = event.getRelPath();
 
         // Convert any path to be relative to super root, because that's how we store dependencies
         Path relativeToSuperRootPath = rootToSuperRootRelativePath.resolve(eventPath.getPath());
@@ -176,8 +176,8 @@ public class BuildFileManifestCache
       }
 
       // Build file was altered
-      if (event.getPath().endsWith(buildFileName)) {
-        RelPath packagePath = MorePaths.getParentOrEmpty(event.getPath());
+      if (event.getRelPath().endsWith(buildFileName)) {
+        RelPath packagePath = MorePaths.getParentOrEmpty(event.getRelPath());
         switch (event.getKind()) {
           case MODIFY:
             // If build file is modified, just invalidate containing package
@@ -204,7 +204,7 @@ public class BuildFileManifestCache
           break;
         case CREATE:
         case DELETE:
-          RelPath packagePath = MorePaths.getParentOrEmpty(event.getPath());
+          RelPath packagePath = MorePaths.getParentOrEmpty(event.getRelPath());
           // if regular file is created or deleted, invalidate containing package
           // TODO: consider package boundary violations
           invalidateContainingPackage(packagePath.getPath());

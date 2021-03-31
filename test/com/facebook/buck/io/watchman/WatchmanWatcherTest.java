@@ -26,6 +26,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -121,8 +122,8 @@ public class WatchmanWatcherTest {
     assertEquals(Kind.MODIFY, pathEvent.getKind());
     assertEquals(
         "Path should match watchman output.",
-        MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
-        pathEvent.getPath().toString());
+        ForwardRelativePath.of("foo/bar/baz"),
+        pathEvent.getPath());
   }
 
   @Test
@@ -190,12 +191,12 @@ public class WatchmanWatcherTest {
     List<WatchmanPathEvent> pathEvents = eventBuffer.filterEventsByClass(WatchmanPathEvent.class);
     assertEquals(
         "Path should match watchman output.",
-        MorePaths.pathWithPlatformSeparators("foo/bar/baz"),
-        pathEvents.get(0).getPath().toString());
+        ForwardRelativePath.of("foo/bar/baz"),
+        pathEvents.get(0).getPath());
     assertEquals(
         "Path should match watchman output.",
-        MorePaths.pathWithPlatformSeparators("foo/bar/boz"),
-        pathEvents.get(1).getPath().toString());
+        ForwardRelativePath.of("foo/bar/boz"),
+        pathEvents.get(1).getPath());
   }
 
   @Test
@@ -674,7 +675,7 @@ public class WatchmanWatcherTest {
                 c ->
                     c.getType() == Type.FILE
                         && c.getKind() == Kind.MODIFY
-                        && c.getPath().equals(Paths.get("foo/bar/changedfile"))));
+                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/changedfile"))));
 
     assertTrue(
         changes.stream()
@@ -682,7 +683,7 @@ public class WatchmanWatcherTest {
                 c ->
                     c.getType() == Type.DIRECTORY
                         && c.getKind() == Kind.DELETE
-                        && c.getPath().equals(Paths.get("foo/bar/deleteddir"))));
+                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/deleteddir"))));
 
     assertTrue(
         changes.stream()
@@ -690,7 +691,7 @@ public class WatchmanWatcherTest {
                 c ->
                     c.getType() == Type.FILE
                         && c.getKind() == Kind.CREATE
-                        && c.getPath().equals(Paths.get("foo/bar/newfile"))));
+                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/newfile"))));
 
     assertTrue(
         changes.stream()
@@ -698,7 +699,7 @@ public class WatchmanWatcherTest {
                 c ->
                     c.getType() == Type.DIRECTORY
                         && c.getKind() == Kind.CREATE
-                        && c.getPath().equals(Paths.get("foo/bar/newdir"))));
+                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/newdir"))));
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus, ImmutableMap<String, Object> response) {

@@ -48,7 +48,7 @@ public class WatchedFileHashCache extends DefaultFileHashCache {
   @Subscribe
   public synchronized void onFileSystemChange(WatchmanPathEvent event) {
     // Path event, remove the path from the cache as it has been changed, added or deleted.
-    RelPath path = event.getPath().normalize();
+    RelPath path = event.getRelPath().normalize();
     LOG.verbose("Invalidating %s", path);
     fileHashCacheEngine.invalidateWithParents(path.getPath());
   }

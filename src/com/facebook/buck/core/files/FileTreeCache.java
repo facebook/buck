@@ -97,7 +97,7 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
       // for CREATE and DELETE, invalidate all folders up the tree
       // TODO(sergeyb): be smarter - modify data in-place instead of full invalidation of the tree
       // this might require to unify FileTreeCache and DirectoryListCache
-      RelPath folderPath = MorePaths.getParentOrEmpty(event.getPath());
+      RelPath folderPath = MorePaths.getParentOrEmpty(event.getRelPath());
 
       while (true) {
         fileTreeCache.cache.remove(ImmutableFileTreeKey.of(folderPath.getPath()));
