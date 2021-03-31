@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -520,6 +521,92 @@ public class AppleTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//:foo");
     result.assertSuccess();
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   FooXCTest"));
+  }
+
+  @Test
+  public void testEmbedsXCTest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xctest", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "embed_xctest_in_test_bundles", "true");
+    BuildTarget target = workspace.newBuildTarget("//:foo");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    RelPath testBundlePath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+
+    assertTrue(filesystem.exists(testBundlePath.resolve("foo.xctest/Frameworks/XCTest.framework")));
+    assertFalse(
+        filesystem.exists(
+            testBundlePath.resolve("foo.xctest/Frameworks/libXCTestSwiftSupport.dylib")));
+  }
+
+  @Test
+  public void testEmbedsXCTestSwiftSupport() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_swift_test_case", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "embed_xctest_in_test_bundles", "true");
+    BuildTarget target = workspace.newBuildTarget("//:LibTest");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    RelPath testBundlePath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+
+    assertTrue(
+        filesystem.exists(
+            testBundlePath.resolve("LibTest.xctest/Contents/Frameworks/XCTest.framework")));
+    assertTrue(
+        filesystem.exists(
+            testBundlePath.resolve(
+                "LibTest.xctest/Contents/Frameworks/libXCTestSwiftSupport.dylib")));
+  }
+
+  @Test
+  public void testEmbedsXCTestSwiftSupportWithSwiftDeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_test_objc_uses_apple_library_with_swift_sources_and_xctest_dep", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "embed_xctest_in_test_bundles", "true");
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    BuildTarget target = workspace.newBuildTarget("//:LibTest");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    RelPath testBundlePath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+
+    assertTrue(
+        filesystem.exists(
+            testBundlePath.resolve("LibTest.xctest/Contents/Frameworks/XCTest.framework")));
+    assertTrue(
+        filesystem.exists(
+            testBundlePath.resolve(
+                "LibTest.xctest/Contents/Frameworks/libXCTestSwiftSupport.dylib")));
   }
 
   @Test

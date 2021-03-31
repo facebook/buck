@@ -242,7 +242,8 @@ public class AppleBundleDescription
         appleConfig.getCodeSignTypeOverride(),
         appleConfig.getBundleInputBasedRulekeyEnabled(),
         appleConfig.getIncrementalHashCacheEnabled(),
-        appleConfig.getParallelCodeSignOnCopyEnabled());
+        appleConfig.getParallelCodeSignOnCopyEnabled(),
+        false);
   }
 
   private static Optional<String> getMinimumOSVersionForBundle(

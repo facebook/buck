@@ -111,6 +111,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private static final String STRIP_SWIFT_SYMBOLS = "strip_swift_symbols";
 
+  private static final String EMBED_XCTEST_IN_TEST_BUNDLES = "embed_xctest_in_test_bundles";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -648,6 +650,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getVerifyDsym() {
     return delegate.getBooleanValue(APPLE_SECTION, VERIFY_DSYM, false);
+  }
+
+  public boolean getEmbedXctestInTestBundles() {
+    return delegate.getBooleanValue(APPLE_SECTION, EMBED_XCTEST_IN_TEST_BUNDLES, false);
   }
 
   @BuckStyleValue

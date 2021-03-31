@@ -323,7 +323,6 @@ public class AppleTestDescription
     }
 
     String platformName = appleCxxPlatform.getAppleSdk().getApplePlatform().getName();
-
     BuildTarget appleBundleBuildTarget =
         buildTarget.withAppendedFlavors(
             BUNDLE_FLAVOR,
@@ -390,7 +389,8 @@ public class AppleTestDescription
                         appleConfig.getCodeSignTypeOverride(),
                         appleConfig.getBundleInputBasedRulekeyEnabled(),
                         appleConfig.getIncrementalHashCacheEnabled(),
-                        appleConfig.getParallelCodeSignOnCopyEnabled()));
+                        appleConfig.getParallelCodeSignOnCopyEnabled(),
+                        appleConfig.getEmbedXctestInTestBundles()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);

@@ -77,6 +77,7 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -785,7 +786,8 @@ public class AppleDescriptions {
       Optional<AppleCodeSignType> codeSignTypeOverride,
       boolean bundleInputBasedRulekeyEnabled,
       boolean shouldCacheFileHashes,
-      boolean parallelCodeSignOnCopyEnabled) {
+      boolean parallelCodeSignOnCopyEnabled,
+      boolean shouldEmbedXctest) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -1014,6 +1016,19 @@ public class AppleDescriptions {
         incrementalBundlingEnabled,
         shouldCacheFileHashes);
 
+    if (shouldEmbedXctest) {
+      addXctestLibrariesToBundleParts(
+          bundlePartsReadyToCopy,
+          appleCxxPlatform.getAppleSdkPaths().getPlatformPath(),
+          buildTarget,
+          graphBuilder,
+          projectFilesystem,
+          incrementalBundlingEnabled,
+          shouldCacheFileHashes,
+          hasSwiftXCTestDependencies(
+              xcodeDescriptions, targetGraph, binaryTarget, graphBuilder.getSourcePathResolver()));
+    }
+
     BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
     BuildTarget infoPlistBuildTarget =
@@ -1124,7 +1139,8 @@ public class AppleDescriptions {
                             graphBuilder,
                             projectFilesystem,
                             shouldCacheFileHashes,
-                            false)));
+                            false,
+                            Optional.empty())));
               });
       if (dryRunCodeSigning) {
         final boolean codeSignOnCopy = false;
@@ -1141,7 +1157,8 @@ public class AppleDescriptions {
                     graphBuilder,
                     projectFilesystem,
                     shouldCacheFileHashes,
-                    false),
+                    false,
+                    Optional.empty()),
                 codeSignOnCopy,
                 Optional.of("BUCK_code_sign_entitlements.plist"),
                 ignoreMissingSource));
@@ -1167,7 +1184,8 @@ public class AppleDescriptions {
                     graphBuilder,
                     projectFilesystem,
                     shouldCacheFileHashes,
-                    false),
+                    false,
+                    Optional.empty()),
                 codeSignOnCopy,
                 newNameAfterCopy,
                 ignoreIfMissing));
@@ -1197,7 +1215,8 @@ public class AppleDescriptions {
                   graphBuilder,
                   projectFilesystem,
                   shouldCacheFileHashes,
-                  true)));
+                  true,
+                  Optional.empty())));
       infoPlistFileBundlePath =
           RelPath.of(destination.getPath(destinations)).resolveRel("Info.plist");
     }
@@ -1212,7 +1231,8 @@ public class AppleDescriptions {
               graphBuilder,
               projectFilesystem,
               shouldCacheFileHashes,
-              true);
+              true,
+              Optional.empty());
       {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = false;
@@ -1267,7 +1287,8 @@ public class AppleDescriptions {
                       graphBuilder,
                       projectFilesystem,
                       shouldCacheFileHashes,
-                      true),
+                      true,
+                      Optional.empty()),
                   codeSignOnCopy));
         }
       }
@@ -1428,7 +1449,8 @@ public class AppleDescriptions {
                           graphBuilder,
                           projectFilesystem,
                           shouldCacheFileHashes,
-                          true),
+                          true,
+                          Optional.empty()),
                       codeSignOnCopy,
                       newNameAfterCopy,
                       ignoreIfMissing);
@@ -1443,13 +1465,16 @@ public class AppleDescriptions {
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       boolean shouldCacheFileHashes,
-      boolean sourcePathIsTheOnlyFileToBeHashedFromGeneratingTarget) {
+      boolean sourcePathIsTheOnlyFileToBeHashedFromGeneratingTarget,
+      // If using a SourcePath outside the repo we need to use a different path to calculate the
+      // incremental hashTarget to ensure cache alignment across machines.
+      Optional<SourcePath> hashTargetCalculationSourcePathOverride) {
     if (!incrementalBundlingEnabled) {
       return Optional.empty();
     }
     BuildTarget hashTarget =
         SourcePathSupport.generateBuildTargetForSourcePathWithoutUniquenessCheck(
-            sourcePath,
+            hashTargetCalculationSourcePathOverride.orElse(sourcePath),
             baseTarget,
             "ib-hash-",
             sourcePathIsTheOnlyFileToBeHashedFromGeneratingTarget);
@@ -1522,7 +1547,8 @@ public class AppleDescriptions {
                 graphBuilder,
                 projectFilesystem,
                 shouldCacheFileHashes,
-                true)));
+                true,
+                Optional.empty())));
   }
 
   /**
@@ -1678,6 +1704,119 @@ public class AppleDescriptions {
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
+  private static void addXctestLibrariesToBundleParts(
+      ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
+      Path platformPath,
+      BuildTarget bundleTarget,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      boolean incrementalBundlingEnabled,
+      boolean shouldCacheFileHashes,
+      boolean hasSwiftXCTestDependencies) {
+    // We have to be careful to provide consistent hash paths for incremental bundling. If the
+    // platform dir is outside of the repo (ie an Xcode toolchain) then substitute the hash path
+    // for one based at /PLATFORM_DIR to ensure cache alignment across users.
+    Path platformHashPath =
+        projectFilesystem
+            .getPathRelativeToProjectRoot(platformPath)
+            .orElseGet(() -> Paths.get("/PLATFORM_DIR"));
+
+    Path xctestPlatformPath = Paths.get("Developer/Library/Frameworks/XCTest.framework");
+    SourcePath xctestFrameworkPath =
+        PathSourcePath.of(projectFilesystem, platformPath.resolve(xctestPlatformPath));
+    bundlePartsBuilder.add(
+        DirectoryAppleBundlePart.of(
+            xctestFrameworkPath,
+            AppleBundleDestination.FRAMEWORKS,
+            getSourcePathToContentHash(
+                incrementalBundlingEnabled,
+                xctestFrameworkPath,
+                bundleTarget,
+                graphBuilder,
+                projectFilesystem,
+                shouldCacheFileHashes,
+                true,
+                Optional.of(
+                    PathSourcePath.of(
+                        projectFilesystem, platformHashPath.resolve(xctestPlatformPath)))),
+            true));
+
+    if (!hasSwiftXCTestDependencies) {
+      return;
+    }
+
+    Path xctestSwiftSupportPlatformPath =
+        Paths.get("Developer/usr/lib/libXCTestSwiftSupport.dylib");
+    SourcePath xctestSwiftSupportPath =
+        PathSourcePath.of(projectFilesystem, platformPath.resolve(xctestSwiftSupportPlatformPath));
+    bundlePartsBuilder.add(
+        FileAppleBundlePart.of(
+            xctestSwiftSupportPath,
+            AppleBundleDestination.FRAMEWORKS,
+            getSourcePathToContentHash(
+                incrementalBundlingEnabled,
+                xctestSwiftSupportPath,
+                bundleTarget,
+                graphBuilder,
+                projectFilesystem,
+                shouldCacheFileHashes,
+                true,
+                Optional.of(
+                    PathSourcePath.of(
+                        projectFilesystem,
+                        platformHashPath.resolve(xctestSwiftSupportPlatformPath)))),
+            true,
+            Optional.empty(),
+            false));
+  }
+
+  private static boolean hasSwiftXCTestDependencies(
+      XCodeDescriptions xcodeDescriptions,
+      TargetGraph targetGraph,
+      BuildTarget binaryTarget,
+      SourcePathResolverAdapter resolver) {
+    Optional<TargetNode<AppleTestDescriptionArg>> testLibraryTargetNode =
+        TargetNodes.castArg(targetGraph.get(binaryTarget), AppleTestDescriptionArg.class);
+    if (!testLibraryTargetNode.isPresent()) {
+      return false;
+    }
+    if (targetNodeContainsSwiftSourceCode(testLibraryTargetNode.get())) {
+      return true;
+    }
+
+    return !AppleBuildRules.collectTransitiveBuildRuleTargetsWithTransform(
+            xcodeDescriptions,
+            targetGraph,
+            Optional.empty(),
+            ImmutableSet.of(AppleLibraryDescription.class),
+            ImmutableList.of(testLibraryTargetNode.get()),
+            RecursiveDependenciesMode.LINKING,
+            input -> input,
+            buildTarget -> {
+              Optional<TargetNode<AppleLibraryDescriptionArg>> depTargetNode =
+                  TargetNodes.castArg(
+                      targetGraph.get(buildTarget), AppleLibraryDescriptionArg.class);
+              if (!depTargetNode.isPresent()) {
+                return false;
+              }
+              AppleLibraryDescriptionArg arg = depTargetNode.get().getConstructorArg();
+              return dependsOnXCTest(arg, resolver)
+                  && targetNodeContainsSwiftSourceCode(depTargetNode.get());
+            })
+        .isEmpty();
+  }
+
+  private static boolean dependsOnXCTest(
+      AppleLibraryDescriptionArg arg, SourcePathResolverAdapter resolver) {
+    for (FrameworkPath path : arg.getFrameworks()) {
+      if (path.getFileName(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath())
+          .endsWith("XCTest.framework")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static void addFirstLevelDependencyBundlesToBundleParts(
       SortedSet<BuildRule> dependencies,
       ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
@@ -1754,7 +1893,8 @@ public class AppleDescriptions {
                             graphBuilder,
                             projectFilesystem,
                             shouldCacheFileHashes,
-                            true),
+                            true,
+                            Optional.empty()),
                         codeSignOnCopy));
               }
             });
