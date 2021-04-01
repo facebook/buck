@@ -42,4 +42,22 @@ public class AndroidInstrumentationTestIntegrationTest extends AbiCompilationMod
     workspace.runBuckCommand("build", testTarget, "--keep-going").assertFailure();
     workspace.runBuckCommand("test", testTarget, "--keep-going").assertFailure();
   }
+
+  @Test
+  public void testRuntimeDepResolving() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_instrumentation_test_integration_test", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    setWorkspaceCompilationMode(workspace);
+
+    workspace.enableDirCache();
+    workspace.runBuckBuild("//:test_with_runtime_dep").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:runtime_dep");
+
+    workspace.runBuckCommand("clean", "--keep-cache");
+    workspace.runBuckBuild("//:test_with_runtime_dep").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:runtime_dep");
+  }
 }

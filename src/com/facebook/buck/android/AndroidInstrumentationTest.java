@@ -28,9 +28,11 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -57,6 +59,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -547,7 +550,13 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     Stream.Builder<BuildTarget> builder = Stream.builder();
     builder.add(apk.getBuildTarget());
     getApkUnderTest(apk).map(HasInstallableApk::getBuildTarget).ifPresent(builder::add);
-    return builder.build();
+
+    ImmutableSortedSet.Builder<BuildRule> runtime_deps = ImmutableSortedSet.naturalOrder();
+    for (Arg part : env.values()) {
+      runtime_deps.addAll(BuildableSupport.getDepsCollection(part, buildRuleResolver));
+    }
+    return Stream.concat(
+        builder.build(), runtime_deps.build().stream().map(BuildRule::getBuildTarget));
   }
 
   /** @return the test apk */

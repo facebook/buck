@@ -41,3 +41,39 @@ android_instrumentation_test(
     name = "test",
     apk = ":test_apk",
 )
+
+android_binary(
+    name = "app",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/app:app",
+    ],
+)
+
+android_instrumentation_apk(
+    name = "good_apk",
+    apk = ":app",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/app:app",
+    ],
+)
+
+export_file(
+    name = "runtime_dep",
+    src = "runtime_dep.txt",
+    out = "runtime_dep.txt",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_instrumentation_test(
+    name = "test_with_runtime_dep",
+    apk = ":good_apk",
+    env = {"EXT_DEP_FILE": "$(location :runtime_dep)"},
+)
