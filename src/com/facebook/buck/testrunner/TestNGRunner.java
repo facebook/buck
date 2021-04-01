@@ -51,7 +51,7 @@ import org.testng.reporters.JUnitReportReporter;
 import org.testng.reporters.SuiteHTMLReporter;
 import org.testng.reporters.XMLReporter;
 
-/** Class that runs a set of TestNG tests and writes the results to a directory. */
+/** Class that runs a set of TestNG tests and outputs the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
 
   @Override
