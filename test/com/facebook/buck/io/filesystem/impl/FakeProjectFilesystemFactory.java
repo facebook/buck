@@ -33,7 +33,7 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
       boolean buckOutIncludeTargetConfigHash) {
-    return new FakeProjectFilesystem(root);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root.getPath());
   }
 
   @Override
@@ -42,18 +42,18 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
       AbsPath root,
       Config config,
       boolean buckOutIncludeTargetConfigHash) {
-    return new FakeProjectFilesystem(root);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root.getPath());
   }
 
   @Override
   public ProjectFilesystem createProjectFilesystem(
       CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash) {
-    return new FakeProjectFilesystem(root);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), root.getPath());
   }
 
   @Override
   public ProjectFilesystem createOrThrow(
       CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash) {
-    return new FakeProjectFilesystem(path);
+    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), path.getPath());
   }
 }

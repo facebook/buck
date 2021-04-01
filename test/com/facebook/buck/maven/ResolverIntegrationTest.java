@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -114,7 +115,8 @@ public class ResolverIntegrationTest {
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
     localRepo = temp.newFolder();
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(buckRepoRoot);
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), buckRepoRoot);
     BuckConfig buckConfig = FakeBuckConfig.empty();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);

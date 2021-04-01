@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -78,7 +79,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpDir.getRoot());
 
     // Create a build target to use when building the symlink tree.
     buildTarget = BuildTargetFactory.newInstance("//test:test");

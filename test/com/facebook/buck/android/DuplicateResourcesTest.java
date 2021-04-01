@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -97,7 +98,7 @@ public class DuplicateResourcesTest {
    */
   @Before
   public void makeRules() {
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
 
     mainResTarget = BuildTargetFactory.newInstance("//main_app:res");
     directDepResTarget = BuildTargetFactory.newInstance("//direct_dep:res");

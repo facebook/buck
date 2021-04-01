@@ -193,8 +193,7 @@ public class JavaCDWorkerToolMain {
     try (IsolatedExecutionContext executionContext =
         IsolatedExecutionContext.of(
             eventBus, console, platform, processExecutor, ruleCellRoot, actionId, clock)) {
-      stepExecutionResult =
-          IsolatedStepsRunner.executeWithDefaultExceptionHandling(isolatedSteps, executionContext);
+      stepExecutionResult = IsolatedStepsRunner.execute(isolatedSteps, executionContext);
     }
 
     int exitCode = stepExecutionResult.getExitCode();

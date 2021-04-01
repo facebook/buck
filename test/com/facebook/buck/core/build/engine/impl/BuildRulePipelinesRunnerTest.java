@@ -457,7 +457,7 @@ public class BuildRulePipelinesRunnerTest {
     }
 
     @Override
-    public boolean supportsCompilationDaemon() {
+    public boolean doNotCreateState() {
       return false;
     }
   }

@@ -36,53 +36,32 @@ public class IsolatedStepsRunner {
 
   /**
    * Executes the given {@link IsolatedStep} instances with the given {@link
-   * IsolatedExecutionContext} and throws {@link StepFailedException} if it occurred during the
-   * execution of any steps.
+   * IsolatedExecutionContext}.
    */
   public static StepExecutionResult execute(
-      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext)
-      throws StepFailedException {
+      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
     try {
       for (IsolatedStep step : steps) {
         runStep(executionContext, step);
         rethrowIgnoredInterruptedException(step);
       }
       return StepExecutionResults.SUCCESS;
+    } catch (StepFailedException e) {
+      executionContext.logError(e, "Failed to execute steps");
     } catch (InterruptedException e) {
       executionContext.logError(e, "Received interrupt");
     }
     return StepExecutionResults.ERROR;
   }
 
-  /**
-   * Executes the given {@link IsolatedStep} instances with the given {@link
-   * IsolatedExecutionContext} and handles {@link StepFailedException} (log it with an error level).
-   *
-   * <p>The difference from this method and {@link #execute} is that this method logs and do not
-   * propagate {@link StepFailedException} in case it occurred.
-   */
-  public static StepExecutionResult executeWithDefaultExceptionHandling(
-      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
-    try {
-      return execute(steps, executionContext);
-    } catch (StepFailedException e) {
-      executionContext.logError(e, "Failed to execute steps");
-
-      return StepExecutionResult.builder()
-          .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
-          .setCause(e)
-          .build();
-    }
-  }
-
   private static void runStep(IsolatedExecutionContext context, IsolatedStep step)
       throws InterruptedException, StepFailedException {
-    String stepDescription = step.getIsolatedStepDescription(context);
     if (context.getVerbosity().shouldPrintCommand()) {
-      context.getStdErr().println(stepDescription);
+      context.getStdErr().println(step.getIsolatedStepDescription(context));
     }
 
-    StepEvent.Started started = StepEvent.started(step.getShortName(), stepDescription);
+    StepEvent.Started started =
+        StepEvent.started(step.getShortName(), step.getIsolatedStepDescription(context));
     IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
     isolatedEventBus.post(started);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
@@ -90,20 +69,14 @@ public class IsolatedStepsRunner {
       executionResult = step.executeIsolatedStep(context);
     } catch (IOException | RuntimeException e) {
       throw StepFailedException.createForFailingStepWithException(
-          step, descriptionForStep(step, context), e);
+          step, step.getIsolatedStepDescription(context), e);
     } finally {
       isolatedEventBus.post(StepEvent.finished(started, executionResult.getExitCode()));
     }
     if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingStepWithExitCode(
-          step, stepDescription, true, executionResult);
+          step, step.getIsolatedStepDescription(context), true, executionResult);
     }
-  }
-
-  private static String descriptionForStep(IsolatedStep step, IsolatedExecutionContext context) {
-    return context.getVerbosity().shouldPrintCommand()
-        ? step.getIsolatedStepDescription(context)
-        : step.getShortName();
   }
 
   private static void rethrowIgnoredInterruptedException(IsolatedStep step)

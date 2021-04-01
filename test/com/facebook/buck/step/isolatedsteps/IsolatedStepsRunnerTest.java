@@ -17,16 +17,12 @@
 package com.facebook.buck.step.isolatedsteps;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
@@ -43,7 +39,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -63,8 +58,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,7 +80,8 @@ public class IsolatedStepsRunnerTest {
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem = new FakeProjectFilesystem(temporaryFolder.getRoot());
+    projectFilesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), temporaryFolder.getRoot());
     downwardApiFile = temporaryFolder.newFile("tmp").toFile();
   }
 
@@ -129,24 +125,36 @@ public class IsolatedStepsRunnerTest {
   }
 
   @Test
-  public void logsErrorIfExecuteWithDefaultExceptionHandlingAndStepExecutionFails()
-      throws Exception {
-    IsolatedStep isolatedStep = createFailedStep();
+  public void logsErrorIfStepExecutionFails() throws Exception {
+    IsolatedStep isolatedStep =
+        new IsolatedStep() {
+          @Override
+          public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
+            return StepExecutionResults.ERROR;
+          }
+
+          @Override
+          public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+            return "test_description";
+          }
+
+          @Override
+          public String getShortName() {
+            return "test_short_name";
+          }
+        };
     ImmutableList<IsolatedStep> step = ImmutableList.of(isolatedStep);
     IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
 
-    StepExecutionResult result =
-        IsolatedStepsRunner.executeWithDefaultExceptionHandling(step, context);
+    StepExecutionResult result = IsolatedStepsRunner.execute(step, context);
 
-    assertThat(result.getExitCode(), is(StepExecutionResults.ERROR.getExitCode()));
-    Optional<Exception> cause = result.getCause();
-    assertThat(cause.isPresent(), is(true));
-    assertThat(
-        cause.get().getMessage(),
-        is(
-            "Command failed with exit code 1."
-                + System.lineSeparator()
-                + "  When running <failed_step_description>."));
+    assertThat(result, equalTo(StepExecutionResults.ERROR));
+    String expected =
+        "Failed to execute steps"
+            + System.lineSeparator()
+            + "com.facebook.buck.step.StepFailedException: Command failed with exit code 1."
+            + System.lineSeparator()
+            + "  When running <test_description>.";
 
     DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
     InputStream inputStream = new FileInputStream(downwardApiFile);
@@ -160,70 +168,7 @@ public class IsolatedStepsRunnerTest {
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
-
-    assertThat(
-        actualConsoleEvent.getMessage(),
-        containsString(
-            "Failed to execute steps"
-                + System.lineSeparator()
-                + "com.facebook.buck.step.StepFailedException: Command failed with exit code 1."
-                + System.lineSeparator()
-                + "  When running <failed_step_description>."));
-  }
-
-  @Test
-  public void propagatesExceptionIfStepExecutionFails() throws Exception {
-    IsolatedStep isolatedStep = createFailedStep();
-    ImmutableList<IsolatedStep> step = ImmutableList.of(isolatedStep);
-    IsolatedExecutionContext context = createContext(projectFilesystem.getRootPath());
-
-    StepFailedException stepFailedException =
-        assertThrows(StepFailedException.class, () -> IsolatedStepsRunner.execute(step, context));
-
-    assertThat(stepFailedException, notNullValue());
-
-    assertThat(stepFailedException.getStep(), is(isolatedStep));
-
-    assertThat(
-        stepFailedException.getExitCode().getAsInt(), is(StepExecutionResults.ERROR.getExitCode()));
-
-    assertThat(
-        stepFailedException.getMessage(),
-        is(
-            "Command failed with exit code 1."
-                + System.lineSeparator()
-                + "  When running <failed_step_description>."));
-
-    DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
-    InputStream inputStream = new FileInputStream(downwardApiFile);
-
-    assertEventIdsAreEqual(
-        getAndAssertStepEvent(
-            isolatedStep, StepEvent.StepStatus.STARTED, protocol, inputStream, context),
-        getAndAssertStepEvent(
-            isolatedStep, StepEvent.StepStatus.FINISHED, protocol, inputStream, context));
-
-    EventTypeMessage.EventType eventType = protocol.readEventType(inputStream);
-    assertThat(eventType, nullValue());
-  }
-
-  private IsolatedStep createFailedStep() {
-    return new IsolatedStep() {
-      @Override
-      public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
-        return StepExecutionResults.ERROR;
-      }
-
-      @Override
-      public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-        return "failed_step_description";
-      }
-
-      @Override
-      public String getShortName() {
-        return "failed_step_short_name";
-      }
-    };
+    assertThat(actualConsoleEvent.getMessage(), Matchers.containsStringIgnoringCase(expected));
   }
 
   @Test
@@ -269,7 +214,7 @@ public class IsolatedStepsRunnerTest {
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
-    assertThat(actualConsoleEvent.getMessage(), containsString(expected));
+    assertThat(actualConsoleEvent.getMessage(), Matchers.containsStringIgnoringCase(expected));
   }
 
   private IsolatedExecutionContext createContext(AbsPath root) throws Exception {

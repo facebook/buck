@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -240,7 +241,8 @@ public class ExportFileTest {
   @Test
   public void modifyingTheContentsOfTheFileChangesTheRuleKey() throws Exception {
     Path root = Files.createTempDirectory("root");
-    FakeProjectFilesystem filesystem = new FakeProjectFilesystem(AbsPath.of(root));
+    FakeProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(root));
     Path temp = Paths.get("example_file");
 
     FileHashLoader hashCache =

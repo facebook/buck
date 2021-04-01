@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -72,7 +73,7 @@ public class ConfiguredQueryTargetsAndOutputsMacroExpanderTest {
   @Before
   public void setUp() {
     cache = new HashMapWithStats<>();
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     coercer =
         new DefaultTypeCoercerFactory().typeCoercerForType(TypeToken.of(StringWithMacros.class));

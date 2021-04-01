@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
@@ -79,7 +80,7 @@ public class EdenProjectFilesystemDelegateTest {
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem = new FakeProjectFilesystem(tmp.getRoot());
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     watchman =
         watchmanFactory.build(

@@ -16,53 +16,14 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.javacd.model.RelPathMapEntry;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /** {@link RelPath} to protobuf serializer */
 public class RelPathSerializer {
 
   private RelPathSerializer() {}
-
-  /** Deserializes list of {@link RelPathMapEntry} into a map of resources */
-  public static ImmutableMap<RelPath, RelPath> toResourceMap(
-      List<RelPathMapEntry> resourcesMapList) {
-    ImmutableMap.Builder<RelPath, RelPath> builder =
-        ImmutableMap.builderWithExpectedSize(resourcesMapList.size());
-    for (RelPathMapEntry entry : resourcesMapList) {
-      builder.put(
-          RelPathSerializer.deserialize(entry.getKey()),
-          RelPathSerializer.deserialize(entry.getValue()));
-    }
-    return builder.build();
-  }
-
-  /**
-   * Deserializes map of cell to path mappings into a map of map where key is deserialized into
-   * {@link CanonicalCellName}
-   */
-  public static ImmutableMap<CanonicalCellName, RelPath> toCellToPathMapping(
-      Map<String, com.facebook.buck.javacd.model.RelPath> cellToPathMappings) {
-    ImmutableMap.Builder<CanonicalCellName, RelPath> builder =
-        ImmutableMap.builderWithExpectedSize(cellToPathMappings.size());
-    cellToPathMappings.forEach(
-        (key, value) ->
-            builder.put(toCanonicalCellName(key), RelPathSerializer.deserialize(value)));
-    return builder.build();
-  }
-
-  private static CanonicalCellName toCanonicalCellName(String cellName) {
-    if (cellName.isEmpty()) {
-      return CanonicalCellName.rootCell();
-    }
-    return CanonicalCellName.of(Optional.of(cellName));
-  }
 
   /**
    * Deserializes list of {@link com.facebook.buck.javacd.model.RelPath} into a sorted set of {@link
