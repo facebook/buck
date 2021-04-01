@@ -11,12 +11,15 @@ java_library(
         ":java-api",
         ":java-impl",
         ":jdom",
-        ":openapi",
-        ":picocontainer",
         ":platform-api",
         ":platform-impl",
+        ":platform-util-ui",
+        ":platform-core-ui",
+        ":platform-ide-util-io",
+        ":platform-concurrency",
         ":serviceMessages",
         ":util",
+        ":trove4j",
         # IntelliJ will provide these, too...
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
@@ -59,16 +62,6 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
-    name = "openapi",
-    binary_jar = "openapi.jar",
-)
-
-prebuilt_jar(
-    name = "picocontainer",
-    binary_jar = "picocontainer-1.2.jar",
-)
-
-prebuilt_jar(
     name = "platform-api",
     binary_jar = "platform-api.jar",
 )
@@ -79,11 +72,36 @@ prebuilt_jar(
 )
 
 prebuilt_jar(
+    name = "platform-util-ui",
+    binary_jar = "platform-util-ui.jar",
+)
+
+prebuilt_jar(
+    name = "platform-core-ui",
+    binary_jar = "platform-core-ui.jar",
+)
+
+prebuilt_jar(
+    name = "platform-ide-util-io",
+    binary_jar = "platform-ide-util-io.jar",
+)
+
+prebuilt_jar(
+    name = "platform-concurrency",
+    binary_jar = "platform-concurrency.jar",
+)
+
+prebuilt_jar(
     name = "serviceMessages",
-    binary_jar = "serviceMessages.jar",
+    binary_jar = "serviceMessages-2019.1.4.jar",
 )
 
 prebuilt_jar(
     name = "util",
     binary_jar = "util.jar",
+)
+
+prebuilt_jar(
+    name = "trove4j",
+    binary_jar = "trove4j.jar",
 )

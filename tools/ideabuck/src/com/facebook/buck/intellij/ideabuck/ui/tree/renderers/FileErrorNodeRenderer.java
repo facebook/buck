@@ -31,14 +31,14 @@ public class FileErrorNodeRenderer implements TreeNodeRenderer {
     JBLabel result =
         new JBLabel(
             ((BuckFileErrorNode) value).getText(),
-            AllIcons.Ide.Warning_notifications,
+            AllIcons.General.NotificationWarning,
             SwingConstants.HORIZONTAL);
 
     BuckFileErrorNode buckNode = (BuckFileErrorNode) value;
     for (int i = 0; i < buckNode.getChildCount(); i++) {
       BuckTextNode childNode = (BuckTextNode) buckNode.getChildAt(i);
       if (childNode.getTextType() == BuckTextNode.TextType.ERROR) {
-        result.setIcon(AllIcons.Ide.Error);
+        result.setIcon(AllIcons.General.Error);
         result.setForeground(Color.RED);
         break;
       }

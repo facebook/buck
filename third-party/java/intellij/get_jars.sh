@@ -16,11 +16,13 @@ INTELLIJ_LIBS_TO_COPY=(
   java-api.jar
   java-impl.jar
   jdom.jar
-  openapi.jar
-  picocontainer-1.2.jar
   platform-api.jar
-  platform-impl.jar
-  serviceMessages.jar
+  platform-core-ui.jar
+  platform-util-ui.jar
+  platform-ide-util-io.jar
+  platform-concurrency.jar
+  serviceMessages-2019.1.4.jar
+  trove4j.jar
   util.jar
 )
 INTELLIJ_LIBS_TO_STUB=(
@@ -50,47 +52,92 @@ EOF
 copy_or_stub_jars() {
   if [ "$#" -lt 3 ]; then
     >&2 echo "ERROR:  copy_or_stub_jars() requires parameters: SOURCE_DIR, # of LIBS_TO_COPY, LIBS_TO_COPY..., # of LIBS_TO_STUB, LIBS_TO_STUB..."
-    SHOULD_FAIL=true
+    echo "Aborting."
+    exit 1
   fi
 
-  SHOULD_FAIL=false
   SOURCE_DIR=$1; shift
   NUM_LIBS_TO_COPY=$1; shift
   LIBS_TO_COPY=("${@:1:$NUM_LIBS_TO_COPY}"); shift $NUM_LIBS_TO_COPY
   NUM_LIBS_TO_STUB=$1; shift
   LIBS_TO_STUB=("${@:1:$NUM_LIBS_TO_STUB}")
-  LIBS=("${LIBS_TO_COPY[@]}" "${LIBS_TO_STUB[@]}")
 
-  for lib in "${LIBS[@]}"; do
-    if ! [[ -e "$SOURCE_DIR/$lib" ]]; then
-      >&2 echo "ERROR:  Can't find required library $lib in $SOURCE_DIR"
-      SHOULD_FAIL=true
-    fi
+  # Get the list of available jar files
+  IFS=$'\n'
+  LIST_OF_JARS_AVAILABLE=($(find "${SOURCE_DIR}" -name "*.jar"))
+  echo "Found ${#LIST_OF_JARS_AVAILABLE[@]} jars in $SOURCE_DIR"
+
+
+  LIBS_FOUND=()
+  for lib in "${LIBS_TO_COPY[@]}"; do
+      FOUND_JAR=false
+
+      for jarfilepath in "${LIST_OF_JARS_AVAILABLE[@]}"; do
+        if [[ $(basename $jarfilepath) == $lib ]]; then
+          FOUND_JAR=true
+          LIBS_FOUND+=("${jarfilepath}")
+          echo "--> $lib - $jarfilepath"
+          break
+        fi
+      done
+
+      if ! $FOUND_JAR ; then
+          >&2 echo "ERROR:  Can't find required library $lib in $SOURCE_DIR"
+      fi
   done
-  if $SHOULD_FAIL ; then
+
+  echo "Found ${#LIBS_FOUND[@]}/${#LIBS_TO_COPY[@]} LIBS_TO_COPY"
+
+  if [ ${#LIBS_FOUND[@]} -ne ${#LIBS_TO_COPY[@]} ]; then
     echo "Aborting."
     exit 1
   fi
 
-  for lib in "${LIBS_TO_COPY[@]}"; do
-    echo "Copying $lib..."
-    cp "$SOURCE_DIR/$lib" "$DEST_DIR/$lib"
-  done
+
+  LIBS_TO_STUB_FOUND=()
   for lib in "${LIBS_TO_STUB[@]}"; do
+      FOUND_JAR=false
+
+      for jarfilepath in "${LIST_OF_JARS_AVAILABLE[@]}"; do
+        if [[ $(basename $jarfilepath) == $lib ]]; then
+          FOUND_JAR=true
+          LIBS_TO_STUB_FOUND+=("${jarfilepath}")
+          echo "--> $lib - $jarfilepath"
+          break
+        fi
+      done
+
+      if ! $FOUND_JAR ; then
+          >&2 echo "ERROR:  Can't find required library $lib in $SOURCE_DIR"
+      fi
+  done
+
+  echo "Found ${#LIBS_TO_STUB_FOUND[@]}/${#LIBS_TO_STUB[@]} LIBS_TO_STUB"
+
+  if [ ${#LIBS_TO_STUB_FOUND[@]} -ne ${#LIBS_TO_STUB[@]} ]; then
+    echo "Aborting."
+    exit 1
+  fi
+
+  for libjarpath in "${LIBS_FOUND[@]}"; do
+    lib=$(basename $libjarpath)
+    echo "Copying $lib..."
+    cp "$libjarpath" "$DEST_DIR/$lib"
+  done
+
+  for libjarpath in "${LIBS_TO_STUB_FOUND[@]}"; do
+    lib=$(basename $libjarpath)
     if [[ -e "$DEST_DIR/$lib" ]]; then
-      printf "Removing previous $lib...  "
+      echo "Removing previous $lib...  "
       rm "$DEST_DIR/$lib"
     fi
     echo "Stubbing $lib..."
-    if ! (cd "$DEST_DIR" && 2>/dev/null buck run //src/com/facebook/buck/jvm/java/abi:api-stubber "$SOURCE_DIR/$lib" "$DEST_DIR/$lib") ; then
+    if ! (cd "$DEST_DIR" && 2>/dev/null buck run //src/com/facebook/buck/jvm/java/abi:api-stubber "$libjarpath" "$DEST_DIR/$lib") ; then
       echo "ERROR:  Failed to make stubbed copy of $lib"
-      SHOULD_FAIL=true
+      echo "Aborting."
+      exit 1
     fi
   done
-  if $SHOULD_FAIL ; then
-    echo "Aborting."
-    exit 1
-  fi
 }
 
 if [[ "$1" == -h ]] || [[ "$1" == --help ]] || [[ "$1" == help ]]; then
@@ -106,7 +153,7 @@ SRC_DIR="$1"
 # If src unspecified on OSX, and the usual location exists, ask to use it
 if [[ -z "$SRC_DIR" ]]; then
   if [[ "$OSTYPE" == darwin* ]]; then
-    DEFAULT_LOCATION="/Applications/IntelliJ IDEA CE.app/Contents/lib"
+    DEFAULT_LOCATION="/Applications/IntelliJ IDEA CE.app/Contents/"
     if [[ -d "$DEFAULT_LOCATION" ]]; then
       read -r -p "Copy from IntelliJ installation at '$DEFAULT_LOCATION'? [Y/n] " response
       if [[ -z "$response" ]] || [[ "$response" =~ ^[Yy] ]]; then
@@ -129,7 +176,7 @@ copy_or_stub_jars "$SRC_DIR" \
     ${#INTELLIJ_LIBS_TO_COPY[@]} ${INTELLIJ_LIBS_TO_COPY[@]} \
     ${#INTELLIJ_LIBS_TO_STUB[@]} ${INTELLIJ_LIBS_TO_STUB[@]}
 
-ANDROID_SRC_DIR="$SRC_DIR/../plugins/android/lib"
+ANDROID_SRC_DIR="$SRC_DIR/plugins/android/lib"
 printf "Copying IntelliJ Android jars from %q\n" "$ANDROID_SRC_DIR"
 copy_or_stub_jars "$ANDROID_SRC_DIR" \
     ${#ANDROID_LIBS_TO_COPY[@]} ${ANDROID_LIBS_TO_COPY[@]} \
