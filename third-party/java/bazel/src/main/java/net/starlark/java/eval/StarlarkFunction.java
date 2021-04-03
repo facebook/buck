@@ -167,6 +167,13 @@ public final class StarlarkFunction extends StarlarkCallable {
     // numPositionalParams is the number of non-kwonly parameters.
     int numPositionalParams = nparams - rfn.numKeywordOnlyParams();
 
+    if (sig.namedNames.length == 0 && !sig.hasStar && !sig.hasStarStar) {
+      if (!rfn.hasVarargs() && !rfn.hasKwargs() && rfn.numKeywordOnlyParams() == 0 && nparams == sig.numPositionals) {
+        // positional-only invocation
+        return new StarlarkFunctionLinkedPos(sig, this);
+      }
+    }
+
     int[] paramFromArg = new int[nparams];
     Arrays.fill(paramFromArg, Integer.MIN_VALUE);
     IntArrayBuilder argToStar = new IntArrayBuilder();

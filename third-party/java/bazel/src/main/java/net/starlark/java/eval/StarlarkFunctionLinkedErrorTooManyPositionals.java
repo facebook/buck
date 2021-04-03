@@ -3,19 +3,15 @@ package net.starlark.java.eval;
 import javax.annotation.Nullable;
 
 /** Special function which throws too many positionals error on invocation. */
-class StarlarkFunctionLinkedErrorTooManyPositionals extends StarlarkCallableLinked {
+class StarlarkFunctionLinkedErrorTooManyPositionals extends StarlarkFunctionLinkedBase {
   public StarlarkFunctionLinkedErrorTooManyPositionals(StarlarkFunction fn, StarlarkCallableLinkSig linkSig) {
     super(linkSig, fn);
   }
 
-  private StarlarkFunction fn() {
-    return (StarlarkFunction) orig;
-  }
-
   @Override
-  public Object callLinked(StarlarkThread thread, Object[] args,
+  protected void processArgs(Mutability mu, Object[] args,
       @Nullable Sequence<?> starArgs,
-      @Nullable Dict<?, ?> starStarArgs) throws EvalException, InterruptedException {
+      @Nullable Dict<Object, Object> starStarArgs, Object[] locals) throws EvalException {
     throw error(args, starArgs);
   }
 
