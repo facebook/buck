@@ -22,6 +22,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.FormatMethod;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.invoke.CallSite;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.time.Duration;
@@ -649,6 +650,23 @@ public final class Starlark {
     thread.push(fn);
     try {
       return fn.linkAndCall(linkSig, thread, args, varargs, kwargs);
+    } catch (UncheckedEvalException ex) {
+      throw ex; // already wrapped
+    } catch (RuntimeException | StackOverflowError ex) {
+      throw new UncheckedEvalException(ex, thread.getCallStack());
+    } catch (EvalException ex) {
+      // If this exception was newly thrown, set its stack.
+      throw ex.ensureStack(thread);
+    } finally{
+      thread.pop();
+    }
+  }
+
+  static Object linkAndCallCs(StarlarkThread thread, StarlarkCallable fn, BcDynCallSite callSite, Object[] args, @Nullable Sequence<?> varargs, @Nullable Dict<?, ?> kwargs)
+      throws EvalException, InterruptedException {
+    thread.push(fn);
+    try {
+      return callSite.call(fn, thread, args, varargs, kwargs);
     } catch (UncheckedEvalException ex) {
       throw ex; // already wrapped
     } catch (RuntimeException | StackOverflowError ex) {

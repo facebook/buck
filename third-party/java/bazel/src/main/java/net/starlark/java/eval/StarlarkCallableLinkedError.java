@@ -8,12 +8,11 @@ import javax.annotation.Nullable;
  * This implementation is used when callable is known to throw exception
  * unconditionally on call, but we shouldn't call exceptions at link time. */
 public class StarlarkCallableLinkedError extends StarlarkCallableLinked {
-  private final StarlarkCallable orig;
+
   private final String error;
 
   public StarlarkCallableLinkedError(StarlarkCallable orig, StarlarkCallableLinkSig linkSig, String error) {
     super(linkSig, orig);
-    this.orig = orig;
     this.error = error;
   }
 

@@ -538,7 +538,7 @@ class BcEval {
     fr.setLocation(lparenLocation);
 
     StarlarkCallable fn = Starlark.callable(fr.thread, getSlot(nextOperand()));
-    StarlarkCallableLinkSig linkSig = (StarlarkCallableLinkSig) compiled.objects[nextOperand()];
+    BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
     Object[] args = nextNSlots();
     Object star = getSlotOrNull(nextOperand());
     Object starStar = getSlotOrNull(nextOperand());
@@ -559,7 +559,7 @@ class BcEval {
       }
     }
 
-    Object result = Starlark.linkAndCall(fr.thread, fn, linkSig, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = Starlark.linkAndCallCs(fr.thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
 
     setSlot(nextOperand(), result);
   }

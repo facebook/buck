@@ -1267,7 +1267,7 @@ class Bc {
       args[i++] = allocObject(callExpression.getLparenLocation());
       args[i++] = function.slot;
 
-      args[i++] = allocObject(linkSig);
+      args[i++] = allocObject(new BcDynCallSite(linkSig));
       args[i++] = regArgs.size();
       for (Argument arg : regArgs) {
         args[i++] = compileExpression(arg.getValue()).slot;

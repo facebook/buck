@@ -130,7 +130,7 @@ class BcInstr {
         BcInstrOperand.OBJECT,
         // Function
         BcInstrOperand.IN_SLOT,
-        // StarlarkCallableLinkSig
+        // BcDynCallSite
         BcInstrOperand.OBJECT,
         // Positional arguments followed by named parameters
         BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
