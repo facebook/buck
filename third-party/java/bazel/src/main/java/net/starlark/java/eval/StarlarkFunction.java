@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.spelling.SpellChecker;
@@ -151,8 +149,18 @@ public final class StarlarkFunction extends StarlarkCallable {
     return linkCall(linkSig).callLinked(thread, args, starArgs, starStarArgs);
   }
 
+  private StarlarkCallableLinked linkCache;
+
   @Override
   public StarlarkCallableLinked linkCall(StarlarkCallableLinkSig sig) {
+    StarlarkCallableLinked nanoCache = this.linkCache;
+    if (nanoCache != null && nanoCache.linkSig == sig) {
+      return nanoCache;
+    }
+    return this.linkCache = linkCallImpl(sig);
+  }
+
+  private StarlarkCallableLinked linkCallImpl(StarlarkCallableLinkSig sig) {
     // nparams is the number of ordinary parameters.
     int nparams = rfn.numNonStarParams();
 
