@@ -644,6 +644,23 @@ public final class Starlark {
     }
   }
 
+  static Object linkAndCall(StarlarkThread thread, StarlarkCallable fn, StarlarkCallableLinkSig linkSig, Object[] args, @Nullable Sequence<?> varargs, @Nullable Dict<?, ?> kwargs)
+      throws EvalException, InterruptedException {
+    thread.push(fn);
+    try {
+      return fn.linkAndCall(linkSig, thread, args, varargs, kwargs);
+    } catch (UncheckedEvalException ex) {
+      throw ex; // already wrapped
+    } catch (RuntimeException | StackOverflowError ex) {
+      throw new UncheckedEvalException(ex, thread.getCallStack());
+    } catch (EvalException ex) {
+      // If this exception was newly thrown, set its stack.
+      throw ex.ensureStack(thread);
+    } finally{
+      thread.pop();
+    }
+  }
+
   /**
    * An UncheckedEvalException decorates an unchecked exception with its Starlark stack, to help
    * maintainers locate problematic source expressions. The original exception can be retrieved

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
@@ -69,11 +70,53 @@ public final class BuiltinFunction extends StarlarkCallable {
     this.desc = desc;
   }
 
+  private static class Linked extends StarlarkCallableLinked {
+    protected Linked(StarlarkCallableLinkSig linkSig, BuiltinFunction builtinFunction) {
+      super(linkSig, builtinFunction);
+    }
+
+    @Override
+    public Object callLinked(StarlarkThread thread, Object[] args,
+        @Nullable Sequence<?> starArgs, @Nullable Dict<?, ?> starStarArgs)
+        throws EvalException, InterruptedException {
+      BuiltinFunction builtinFunction = (BuiltinFunction) orig;
+      return builtinFunction.linkAndCall(linkSig, thread, args, starArgs, starStarArgs);
+    }
+  }
+
   @Override
   public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
+    // fast track
+    if (named.length == 0) {
+      return linkAndCall(
+          StarlarkCallableLinkSig.of(positional.length, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false),
+          thread, positional, null, null);
+    }
+
+    String[] names = ArraysForStarlark.newStringArray(named.length >> 1);
+    Object[] args = Arrays.copyOf(positional, positional.length + (names.length >> 1));
+
+    for (int i = 0; i < names.length; i++) {
+      names[i] = (String) named[i * 2]; // safe
+      args[i + positional.length] = named[i * 2 + 1];
+    }
+    return linkAndCall(
+        StarlarkCallableLinkSig.of(positional.length, names, false, false),
+        thread, args, null, null);
+  }
+
+  @Override
+  public StarlarkCallableLinked linkCall(StarlarkCallableLinkSig linkSig) {
+    return new Linked(linkSig, this);
+  }
+
+  @Override
+  public Object linkAndCall(StarlarkCallableLinkSig linkSig,
+      StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
     MethodDescriptor desc = getMethodDescriptor(thread.getSemantics());
-    Object[] vector = getArgumentVector(thread, desc, positional, named);
+    Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
     return desc.call(
         obj instanceof String ? StringModule.INSTANCE : obj, vector, thread.mutability());
   }
@@ -125,10 +168,8 @@ public final class BuiltinFunction extends StarlarkCallable {
    * StarlarkMethod-annotated Java method.
    *
    * @param thread the Starlark thread for the call
-   * @param loc the location of the call expression, or BUILTIN for calls from Java
    * @param desc descriptor for the StarlarkMethod-annotated method
-   * @param positional a list of positional arguments
-   * @param named a list of named arguments, as alternating Strings/Objects. May contain dups.
+   * @param linkSig
    * @return the array of arguments which may be passed to {@link MethodDescriptor#call}
    * @throws EvalException if the given set of arguments are invalid for the given method. For
    *     example, if any arguments are of unexpected type, or not all mandatory parameters are
@@ -137,8 +178,9 @@ public final class BuiltinFunction extends StarlarkCallable {
   private Object[] getArgumentVector(
       StarlarkThread thread,
       MethodDescriptor desc, // intentionally shadows this.desc
-      Object[] positional,
-      Object[] named)
+      StarlarkCallableLinkSig linkSig, Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs)
       throws EvalException {
 
     // Overview of steps:
@@ -156,9 +198,11 @@ public final class BuiltinFunction extends StarlarkCallable {
     ParamDescriptor[] parameters = desc.getParameters();
 
     // fast track
-    if (desc.isCanReusePositionalWithoutChecks() && positional.length == parameters.length && named.length == 0) {
-      return positional;
+    if (desc.isCanReusePositionalWithoutChecks() && linkSig.namedNames.length == 0 && args.length == parameters.length && starArgs == null && starStarArgs == null) {
+      return args;
     }
+
+    int numPositionals = linkSig.numPositionals + (starArgs != null ? starArgs.size() : 0);
 
     // Allocate argument vector.
     int n = parameters.length;
@@ -181,7 +225,7 @@ public final class BuiltinFunction extends StarlarkCallable {
       // because their true receiver is StringModule.INSTANCE.
       vector[paramIndex++] = obj;
     }
-    for (; argIndex < positional.length && paramIndex < parameters.length; paramIndex++) {
+    for (; argIndex < numPositionals && paramIndex < parameters.length; paramIndex++) {
       ParamDescriptor param = parameters[paramIndex];
       if (!param.isPositional()) {
         break;
@@ -194,7 +238,10 @@ public final class BuiltinFunction extends StarlarkCallable {
         continue;
       }
 
-      Object value = positional[argIndex++];
+      Object value =
+          argIndex < linkSig.numPositionals
+              ? args[argIndex++]
+              : starArgs.get(argIndex++ - linkSig.numPositionals);
       checkParamValue(param, value);
       vector[paramIndex] = value;
     }
@@ -202,89 +249,41 @@ public final class BuiltinFunction extends StarlarkCallable {
     // *args
     Tuple varargs = null;
     if (desc.acceptsExtraArgs()) {
-      varargs = Tuple.wrap(Arrays.copyOfRange(positional, argIndex, positional.length));
-    } else if (argIndex < positional.length) {
+      Object[] varargsArray = ArraysForStarlark.newObjectArray(numPositionals - argIndex);
+      int i = 0;
+      while (argIndex < numPositionals) {
+        varargsArray[i++] = argIndex < linkSig.numPositionals
+            ? args[argIndex] : starArgs.get(argIndex - linkSig.numPositionals);
+        ++argIndex;
+      }
+      Preconditions.checkState(i == varargsArray.length);
+      varargs = Tuple.wrap(varargsArray);
+    } else if (argIndex < numPositionals) {
       if (argIndex == 0) {
         throw Starlark.errorf("%s() got unexpected positional argument", methodName);
       } else {
         throw Starlark.errorf(
             "%s() accepts no more than %d positional argument%s but got %d",
-            methodName, argIndex, plural(argIndex), positional.length);
+            methodName, argIndex, plural(argIndex), numPositionals);
       }
     }
 
     // named arguments
     LinkedHashMap<String, Object> kwargs = desc.acceptsExtraKwargs() ? new LinkedHashMap<>() : null;
-    for (int i = 0; i < named.length; i += 2) {
-      String name = (String) named[i]; // safe
-      Object value = named[i + 1];
-
-      // look up parameter
-      int index = desc.getParameterIndex(name);
-      // unknown parameter?
-      if (index < 0) {
-        // spill to **kwargs
-        if (kwargs == null) {
-          List<String> allNames =
-              Arrays.stream(parameters)
-                  .map(ParamDescriptor::getName)
-                  .collect(ImmutableList.toImmutableList());
-          throw Starlark.errorf(
-              "%s() got unexpected keyword argument '%s'%s",
-              methodName, name, SpellChecker.didYouMean(name, allNames));
+    for (int i = 0; i < linkSig.namedNames.length; ++i) {
+      String name = linkSig.namedNames[i];
+      Object value = args[linkSig.numPositionals + i];
+      handleNamedArg(thread, desc, vector, kwargs, name, value);
+    }
+    if (starStarArgs != null) {
+      for (Map.Entry<?, ?> entry : starStarArgs.contents.entrySet()) {
+        if (!(entry.getKey() instanceof String)) {
+          throw new EvalException("TODO: better message");
         }
-
-        // duplicate named argument?
-        if (kwargs.put(name, value) != null) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", methodName, name);
-        }
-        continue;
+        String name = (String) entry.getKey();
+        Object value = entry.getValue();
+        handleNamedArg(thread, desc, vector, kwargs, name, value);
       }
-      ParamDescriptor param = parameters[index];
-
-      // positional-only param?
-      if (!param.isNamed()) {
-        // spill to **kwargs
-        if (kwargs == null) {
-          throw Starlark.errorf(
-              "%s() got named argument for positional-only parameter '%s'", methodName, name);
-        }
-
-        // duplicate named argument?
-        if (kwargs.put(name, value) != null) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", methodName, name);
-        }
-        continue;
-      }
-
-      // disabled?
-      String flag = param.disabledByFlag();
-      if (flag != null) {
-        // spill to **kwargs
-        if (kwargs == null) {
-          throw Starlark.errorf(
-              "in call to %s(), parameter '%s' is %s",
-              methodName, param.getName(), disabled(flag, thread.getSemantics()));
-        }
-
-        // duplicate named argument?
-        if (kwargs.put(name, value) != null) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", methodName, name);
-        }
-        continue;
-      }
-
-      checkParamValue(param, value);
-
-      // duplicate?
-      if (vector[index] != null) {
-        throw Starlark.errorf("%s() got multiple values for argument '%s'", methodName, name);
-      }
-
-      vector[index] = value;
     }
 
     // Set default values for missing parameters,
@@ -340,6 +339,79 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
 
     return vector;
+  }
+
+  private void handleNamedArg(StarlarkThread thread, MethodDescriptor desc,
+      final Object[] vector, final LinkedHashMap<String, Object> kwargs, final String name, final Object value)
+      throws EvalException {
+    ParamDescriptor[] parameters = desc.getParameters();;
+
+    // look up parameter
+    int index = desc.getParameterIndex(name);
+    // unknown parameter?
+    if (index < 0) {
+      // spill to **kwargs
+      if (kwargs == null) {
+        List<String> allNames =
+            Arrays.stream(parameters)
+                .map(ParamDescriptor::getName)
+                .collect(ImmutableList.toImmutableList());
+        throw Starlark.errorf(
+            "%s() got unexpected keyword argument '%s'%s",
+            methodName, name, SpellChecker.didYouMean(name, allNames));
+      }
+
+      // duplicate named argument?
+      if (kwargs.put(name, value) != null) {
+        throw Starlark.errorf(
+            "%s() got multiple values for keyword argument '%s'", methodName, name);
+      }
+      return;
+    }
+    ParamDescriptor param = parameters[index];
+
+    // positional-only param?
+    if (!param.isNamed()) {
+      // spill to **kwargs
+      if (kwargs == null) {
+        throw Starlark.errorf(
+            "%s() got named argument for positional-only parameter '%s'", methodName, name);
+      }
+
+      // duplicate named argument?
+      if (kwargs.put(name, value) != null) {
+        throw Starlark.errorf(
+            "%s() got multiple values for keyword argument '%s'", methodName, name);
+      }
+      return;
+    }
+
+    // disabled?
+    String flag = param.disabledByFlag();
+    if (flag != null) {
+      // spill to **kwargs
+      if (kwargs == null) {
+        throw Starlark.errorf(
+            "in call to %s(), parameter '%s' is %s",
+            methodName, param.getName(), disabled(flag, thread.getSemantics()));
+      }
+
+      // duplicate named argument?
+      if (kwargs.put(name, value) != null) {
+        throw Starlark.errorf(
+            "%s() got multiple values for keyword argument '%s'", methodName, name);
+      }
+      return;
+    }
+
+    checkParamValue(param, value);
+
+    // duplicate?
+    if (vector[index] != null) {
+      throw Starlark.errorf("%s() got multiple values for argument '%s'", methodName, name);
+    }
+
+    vector[index] = value;
   }
 
   private static String plural(int n) {

@@ -52,6 +52,10 @@ public class StarlarkCallableLinkSig {
     return interner.intern(new StarlarkCallableLinkSig(numPositionals, namedNames, hasStar, hasStarStar));
   }
 
+  public static StarlarkCallableLinkSig positional(int count) {
+    return of(count, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false);
+  }
+
   @Override
   public int hashCode() {
     return hashCode;
@@ -74,5 +78,10 @@ public class StarlarkCallableLinkSig {
         && this.hasStar == that.hasStar
         && this.hasStarStar == that.hasStarStar
         && Arrays.equals(this.namedNames, that.namedNames);
+  }
+
+  @Override
+  public String toString() {
+    return numPositionals + " " + String.join(",", namedNames) + (hasStar ? " *" : "") + (hasStarStar ? " **" : "");
   }
 }

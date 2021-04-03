@@ -559,9 +559,7 @@ class BcEval {
       }
     }
 
-    StarlarkCallableLinked raw = fn.linkCall(linkSig);
-
-    Object result = Starlark.callLinked(fr.thread, raw, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = Starlark.linkAndCall(fr.thread, fn, linkSig, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
 
     setSlot(nextOperand(), result);
   }

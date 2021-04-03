@@ -16,6 +16,7 @@ package net.starlark.java.eval;
 
 import com.google.common.collect.Maps;
 import java.util.LinkedHashMap;
+import javax.annotation.Nullable;
 import net.starlark.java.syntax.Location;
 
 /**
@@ -102,5 +103,13 @@ public abstract class StarlarkCallable extends StarlarkValue {
   {
     // Default slow implementation.
     return new StarlarkCallableLinkedToFastcall(this, linkSig);
+  }
+
+  public Object linkAndCall(StarlarkCallableLinkSig linkSig,
+      StarlarkThread thread,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
+    return linkCall(linkSig).callLinked(thread, args, starArgs, starStarArgs);
   }
 }

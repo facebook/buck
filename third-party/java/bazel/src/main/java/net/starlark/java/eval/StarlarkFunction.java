@@ -145,6 +145,13 @@ public final class StarlarkFunction extends StarlarkCallable {
   }
 
   @Override
+  public Object linkAndCall(StarlarkCallableLinkSig linkSig,
+      StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
+    return linkCall(linkSig).callLinked(thread, args, starArgs, starStarArgs);
+  }
+
+  @Override
   public StarlarkCallableLinked linkCall(StarlarkCallableLinkSig sig) {
     // nparams is the number of ordinary parameters.
     int nparams = rfn.numNonStarParams();

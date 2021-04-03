@@ -14,4 +14,8 @@ class ArraysForStarlark {
   static Object[] newObjectArray(int length) {
     return length != 0 ? new Object[length] : EMPTY_OBJECT_ARRAY;
   }
+
+  static String[] newStringArray(int length) {
+    return length != 0 ? new String[length] : EMPTY_STRING_ARRAY;
+  }
 }
