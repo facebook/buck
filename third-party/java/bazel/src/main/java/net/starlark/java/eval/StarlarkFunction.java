@@ -13,13 +13,14 @@
 // limitations under the License.
 package net.starlark.java.eval;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.spelling.SpellChecker;
@@ -48,13 +49,12 @@ public final class StarlarkFunction extends StarlarkCallable {
   // Indices correspond to the subsequence of parameters after the initial
   // required parameters and before *args/**kwargs.
   // Contain MANDATORY for the required keyword-only parameters.
-  private final Tuple defaultValues;
+  final Tuple defaultValues;
 
   // Cells (shared locals) of enclosing functions.
   // Indexed by Resolver.Binding(FREE).index values.
   private final Tuple freevars;
 
-  @VisibleForTesting
   final Bc.Compiled compiled;
 
   StarlarkFunction(
@@ -102,8 +102,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     if (i < 0 || i >= rfn.getParameters().size()) {
       throw new IndexOutOfBoundsException();
     }
-    int nparams =
-        rfn.getParameters().size() - (rfn.hasKwargs() ? 1 : 0) - (rfn.hasVarargs() ? 1 : 0);
+    int nparams = rfn.numNonStarParams();
     int prefix = nparams - defaultValues.size();
     if (i < prefix) {
       return null; // implicit prefix of mandatory parameters
@@ -145,6 +144,80 @@ public final class StarlarkFunction extends StarlarkCallable {
     return rfn.getLocation();
   }
 
+  @Override
+  public StarlarkCallableLinked linkCall(StarlarkCallableLinkSig sig) {
+    // nparams is the number of ordinary parameters.
+    int nparams = rfn.numNonStarParams();
+
+    // numPositionalParams is the number of non-kwonly parameters.
+    int numPositionalParams = nparams - rfn.numKeywordOnlyParams();
+
+    int[] paramFromArg = new int[nparams];
+    Arrays.fill(paramFromArg, Integer.MIN_VALUE);
+    IntArrayBuilder argToStar = new IntArrayBuilder();
+    IntArrayBuilder argToStarStar = new IntArrayBuilder();
+    ArrayList<String> argToStarStarName = new ArrayList<>();
+
+    List<String> unexpected = null;
+
+    for (int argIndex = 0; argIndex < sig.numPositionals; ++argIndex) {
+      if (argIndex < numPositionalParams) {
+        paramFromArg[argIndex] = argIndex;
+      } else if (rfn.hasVarargs()) {
+        argToStar.add(argIndex);
+      } else {
+        return new StarlarkFunctionLinkedErrorTooManyPositionals(this, sig);
+      }
+    }
+
+    for (int i = 0, namedLength = sig.namedNames.length; i < namedLength; i++) {
+      int argIndex = sig.numPositionals + i;
+      String argName = sig.namedNames[i];
+      int paramIndex = rfn.getParameterNames().indexOf(argName);
+      if (paramIndex >= 0 && paramIndex < nparams) {
+        // duplicate named param
+        if (paramFromArg[paramIndex] == Integer.MIN_VALUE) {
+          paramFromArg[paramIndex] = argIndex;
+        } else {
+          return new StarlarkCallableLinkedError(this, sig, String.format(
+              "%s() got multiple values for parameter '%s'",
+              getName(),
+              argName
+          ));
+        }
+      } else if (rfn.hasKwargs()) {
+        argToStarStar.add(argIndex);
+        argToStarStarName.add(argName);
+      } else {
+        if (unexpected == null) {
+          unexpected = new ArrayList<>();
+        }
+        unexpected.add(argName);
+      }
+    }
+
+    if (unexpected != null) {
+      // Give a spelling hint if there is exactly one.
+      // More than that suggests the wrong function was called.
+      return new StarlarkCallableLinkedError(this, sig, String.format(
+          "%s() got unexpected keyword argument%s: %s%s",
+          getName(),
+          plural(unexpected.size()),
+          Joiner.on(", ").join(unexpected),
+          unexpected.size() == 1
+              ? SpellChecker.didYouMean(unexpected.get(0), rfn.getParameterNames().subList(0, nparams))
+              : ""));
+    }
+
+    return new StarlarkFunctionLinked(
+        this,
+        paramFromArg,
+        argToStar.buildArray(),
+        argToStarStar.buildArray(),
+        argToStarStarName.toArray(ArraysForStarlark.EMPTY_STRING_ARRAY),
+        sig);
+  }
+
   /**
    * Returns the name of the function, or "lambda" if anonymous. Implicit functions (those not
    * created by a def statement), may have names such as "<toplevel>" or "<expr>".
@@ -178,24 +251,26 @@ public final class StarlarkFunction extends StarlarkCallable {
   @Override
   public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
-    if (!thread.isRecursionAllowed() && thread.isRecursiveCall(this)) {
-      throw Starlark.errorf("function '%s' called recursively", getName());
+
+    // This is mostly dead code, fastcall is not invoked by the interpterer,
+    // only by users? or by `sorted` builtin.
+    // Still do the fast track optimization to be on the safe size.
+    if (named.length == 0) {
+      StarlarkCallableLinkSig linkSig = StarlarkCallableLinkSig.of(
+          positional.length, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false);
+
+      return linkCall(linkSig).callLinked(thread, positional, null, null);
+    } else {
+      String[] names = new String[named.length / 2];
+      Object[] allArgs = Arrays.copyOf(positional, positional.length + named.length / 2);
+      for (int i = 0; i != names.length; ++i) {
+        names[i] = (String) named[i * 2];
+        allArgs[positional.length + i] = named[i * 2 + 1];
+      }
+      StarlarkCallableLinkSig linkSig = StarlarkCallableLinkSig.of(
+          positional.length, names, false, false);
+      return linkCall(linkSig).callLinked(thread, allArgs, null, null);
     }
-
-    StarlarkThread.Frame fr = thread.frame(0);
-    fr.locals = new Object[compiled.slotCount];
-
-    // Compute the effective parameter values
-    // and update the corresponding variables.
-    processArgs(thread.mutability(), positional, named, fr.locals);
-
-    // Spill indicated locals to cells.
-    for (int index : rfn.getCellIndices()) {
-      fr.locals[index] = new Cell(fr.locals[index]);
-    }
-
-//    return Eval.execFunctionBody(fr, rfn.getBody());
-    return BcEval.eval(fr, rfn, compiled);
   }
 
   Cell getFreeVar(int index) {
@@ -214,171 +289,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     printer.append(">");
   }
 
-  // Checks the positional and named arguments to ensure they match the signature. It returns a new
-  // array of effective parameter values corresponding to the parameters of the signature. Newly
-  // allocated values (e.g. a **kwargs dict) use the Mutability mu.
-  //
-  // If the function has optional parameters, their default values are supplied by getDefaultValue.
-  private void processArgs(Mutability mu, Object[] positional, Object[] named, Object[] arguments)
-      throws EvalException {
-
-    // This is the general schema of a function:
-    //
-    //   def f(p1, p2=dp2, p3=dp3, *args, k1, k2=dk2, k3, **kwargs)
-    //
-    // The p parameters are non-kwonly, and may be specified positionally.
-    // The k parameters are kwonly, and must be specified by name.
-    // The defaults tuple is (dp2, dp3, MANDATORY, dk2, MANDATORY).
-    // The missing prefix (p1) is assumed to be all MANDATORY.
-    //
-    // Arguments are processed as follows:
-    // - positional arguments are bound to a prefix of [p1, p2, p3].
-    // - surplus positional arguments are bound to *args.
-    // - keyword arguments are bound to any of {p1, p2, p3, k1, k2, k3};
-    //   duplicate bindings are rejected.
-    // - surplus keyword arguments are bound to **kwargs.
-    // - defaults are bound to each parameter from p2 to k3 if no value was set.
-    //   default values come from the tuple above.
-    //   It is an error if the defaults tuple entry for an unset parameter is MANDATORY.
-
-    ImmutableList<String> names = rfn.getParameterNames();
-
-    // nparams is the number of ordinary parameters.
-    int nparams =
-        rfn.getParameters().size() - (rfn.hasKwargs() ? 1 : 0) - (rfn.hasVarargs() ? 1 : 0);
-
-    // numPositionalParams is the number of non-kwonly parameters.
-    int numPositionalParams = nparams - rfn.numKeywordOnlyParams();
-
-    // Too many positional args?
-    int n = positional.length;
-    if (n > numPositionalParams) {
-      if (!rfn.hasVarargs()) {
-        if (numPositionalParams > 0) {
-          throw Starlark.errorf(
-              "%s() accepts no more than %d positional argument%s but got %d",
-              getName(), numPositionalParams, plural(numPositionalParams), n);
-        } else {
-          throw Starlark.errorf(
-              "%s() does not accept positional arguments, but got %d", getName(), n);
-        }
-      }
-      n = numPositionalParams;
-    }
-    // Inv: n is number of positional arguments that are not surplus.
-
-    // Bind positional arguments to non-kwonly parameters.
-    for (int i = 0; i < n; i++) {
-      arguments[i] = positional[i];
-    }
-
-    // Bind surplus positional arguments to *args parameter.
-    if (rfn.hasVarargs()) {
-      arguments[nparams] = Tuple.wrap(Arrays.copyOfRange(positional, n, positional.length));
-    }
-
-    List<String> unexpected = null;
-
-    // named arguments
-    LinkedHashMap<String, Object> kwargs = null;
-    if (rfn.hasKwargs()) {
-      kwargs = new LinkedHashMap<>();
-      // Note we update wrapped map after `dict` is created.
-      // This is generally wrong, but we know what we are doing.
-      arguments[rfn.getParameters().size() - 1] = Dict.wrap(mu, kwargs);
-    }
-    for (int i = 0; i < named.length; i += 2) {
-      String keyword = (String) named[i]; // safe
-      Object value = named[i + 1];
-      int pos = names.indexOf(keyword); // the list should be short, so linear scan is OK.
-      if (0 <= pos && pos < nparams) {
-        // keyword is the name of a named parameter
-        if (arguments[pos] != null) {
-          throw Starlark.errorf("%s() got multiple values for parameter '%s'", getName(), keyword);
-        }
-        arguments[pos] = value;
-
-      } else if (kwargs != null) {
-        // residual keyword argument
-        int sz = kwargs.size();
-        kwargs.put(keyword, value);
-        if (kwargs.size() == sz) {
-          throw Starlark.errorf(
-              "%s() got multiple values for keyword argument '%s'", getName(), keyword);
-        }
-
-      } else {
-        // unexpected keyword argument
-        if (unexpected == null) {
-          unexpected = new ArrayList<>();
-        }
-        unexpected.add(keyword);
-      }
-    }
-    if (unexpected != null) {
-      // Give a spelling hint if there is exactly one.
-      // More than that suggests the wrong function was called.
-      throw Starlark.errorf(
-          "%s() got unexpected keyword argument%s: %s%s",
-          getName(),
-          plural(unexpected.size()),
-          Joiner.on(", ").join(unexpected),
-          unexpected.size() == 1
-              ? SpellChecker.didYouMean(unexpected.get(0), names.subList(0, nparams))
-              : "");
-    }
-
-    // Apply defaults and report errors for missing required arguments.
-    int m = nparams - defaultValues.size(); // first default
-    List<String> missingPositional = null;
-    List<String> missingKwonly = null;
-    for (int i = n; i < nparams; i++) {
-      // provided?
-      if (arguments[i] != null) {
-        continue;
-      }
-
-      // optional?
-      if (i >= m) {
-        Object dflt = defaultValues.get(i - m);
-        if (dflt != MANDATORY) {
-          arguments[i] = dflt;
-          continue;
-        }
-      }
-
-      // missing
-      if (i < numPositionalParams) {
-        if (missingPositional == null) {
-          missingPositional = new ArrayList<>();
-        }
-        missingPositional.add(names.get(i));
-      } else {
-        if (missingKwonly == null) {
-          missingKwonly = new ArrayList<>();
-        }
-        missingKwonly.add(names.get(i));
-      }
-    }
-    if (missingPositional != null) {
-      throw Starlark.errorf(
-          "%s() missing %d required positional argument%s: %s",
-          getName(),
-          missingPositional.size(),
-          plural(missingPositional.size()),
-          Joiner.on(", ").join(missingPositional));
-    }
-    if (missingKwonly != null) {
-      throw Starlark.errorf(
-          "%s() missing %d required keyword-only argument%s: %s",
-          getName(),
-          missingKwonly.size(),
-          plural(missingKwonly.size()),
-          Joiner.on(", ").join(missingKwonly));
-    }
-  }
-
-  private static String plural(int n) {
+  static String plural(int n) {
     return n == 1 ? "" : "s";
   }
 

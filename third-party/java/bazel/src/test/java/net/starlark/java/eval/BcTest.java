@@ -2,10 +2,8 @@ package net.starlark.java.eval;
 
 import static org.junit.Assert.*;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import javax.annotation.Nullable;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
 import org.junit.Assert;
@@ -102,5 +100,25 @@ public class BcTest {
     assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
     assertEquals(BcSlot.constValue(0), ret.args[0]);
     assertEquals(StarlarkInt.of(23), f.compiled.constSlots[0]);
+  }
+
+  @Test
+  public void callLinked() throws Exception {
+    String program = "" //
+        + "def g(x, y, *a, **kw):\n"
+        + "  pass\n"
+        + "def f():\n"
+        + "  return g(1, b=2, *[], **{})\n"
+        + "f";
+    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
+        ParserInput.fromString(program, "f.star"),
+        FileOptions.DEFAULT,
+        Module.create(),
+        new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
+    ImmutableList<BcInstr.Decoded> callInstrs = f.compiled.instructions().stream()
+        .filter(d -> d.opcode == BcInstr.Opcode.CALL || d.opcode == BcInstr.Opcode.CALL_LINKED)
+        .collect(ImmutableList.toImmutableList());
+    assertEquals(1, callInstrs.size());
+    assertEquals(BcInstr.Opcode.CALL_LINKED, callInstrs.get(0).opcode);
   }
 }

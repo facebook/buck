@@ -29,7 +29,8 @@ class BcInstr {
   public static final int INDEX = DOT + 1;
   public static final int SLICE = INDEX + 1;
   public static final int CALL = SLICE + 1;
-  public static final int RETURN = CALL + 1;
+  public static final int CALL_LINKED = CALL + 1;
+  public static final int RETURN = CALL_LINKED + 1;
   public static final int NEW_FUNCTION = RETURN + 1;
   public static final int FOR_INIT = NEW_FUNCTION + 1;
   public static final int CONTINUE = FOR_INIT + 1;
@@ -129,17 +130,31 @@ class BcInstr {
         BcInstrOperand.OBJECT,
         // Function
         BcInstrOperand.IN_SLOT,
-        // Positional arguments
+        // StarlarkCallableLinkSig
+        BcInstrOperand.OBJECT,
+        // Positional arguments followed by named parameters
         BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
-        // Named arguments
-        BcInstrOperand.lengthDelimited(
-            BcInstrOperand.fixed(BcInstrOperand.STRING, BcInstrOperand.IN_SLOT)),
         // *args
         BcInstrOperand.IN_SLOT,
         // **kwargs
         BcInstrOperand.IN_SLOT,
         // Where to store result
         BcInstrOperand.OUT_SLOT),
+    CALL_LINKED(
+        BcInstr.CALL_LINKED,
+        // prematerialized LParen location
+        BcInstrOperand.OBJECT,
+        // StarlarkCallableLinked
+        BcInstrOperand.OBJECT,
+        // Positional args followed by named args, no keys
+        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
+        // *args
+        BcInstrOperand.IN_SLOT,
+        // **kwargs
+        BcInstrOperand.IN_SLOT,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT
+    ),
     /** {@code return a0} */
     RETURN(BcInstr.RETURN, BcInstrOperand.IN_SLOT),
     /** Create a new function. */

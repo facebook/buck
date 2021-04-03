@@ -96,7 +96,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   // TODO(adonovan): for dicts that are born frozen, use ImmutableMap, which is also
   // insertion-ordered and has smaller Entries (singly linked, no hash).
-  private final LinkedHashMap<K, V> contents;
+  final LinkedHashMap<K, V> contents;
   private int iteratorCount; // number of active iterators (unused once frozen)
 
   /** Final except for {@link #unsafeShallowFreeze}; must not be modified any other way. */

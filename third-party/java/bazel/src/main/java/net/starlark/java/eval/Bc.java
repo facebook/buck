@@ -564,8 +564,7 @@ class Bc {
       // it will be constructed by the code emitted by the compiler).
       // As an optimization, we omit the prefix of MANDATORY parameters.
 
-      int nparams =
-          rfn.getParameters().size() - (rfn.hasKwargs() ? 1 : 0) - (rfn.hasVarargs() ? 1 : 0);
+      int nparams = rfn.numNonStarParams();
 
       int ndefaults = 0;
       ImmutableList<Parameter> parameters = rfn.getParameters();
@@ -1171,52 +1170,114 @@ class Bc {
       return new CompileExpressionResult(result, null);
     }
 
-    private CompileExpressionResult compileCall(CallExpression callExpression, int result) {
+    private CompileExpressionResult compileCallLinked(
+        StarlarkCallable callable, StarlarkCallableLinkSig linkSig,
+        CallExpression callExpression, int result) {
+
+      Argument.Star star = null;
+      Argument.StarStar starStar = null;
+      int p = callExpression.getArguments().size();
+      if (p > 0 && callExpression.getArguments().get(p - 1) instanceof Argument.StarStar) {
+        starStar = (Argument.StarStar) callExpression.getArguments().get(--p);
+      }
+      if (p > 0 && callExpression.getArguments().get(p - 1) instanceof Argument.Star) {
+        star = (Argument.Star) callExpression.getArguments().get(--p);
+      }
+      ImmutableList<Argument> regArgs = callExpression.getArguments().subList(0, p);
+
+      StarlarkCallableLinked fn = callable.linkCall(linkSig);
+
+      int nargs = 2; // lparen, fn
+      nargs += 1 + regArgs.size();
+      nargs += 3; // star, star-star, result
+      int[] args = new int[nargs];
+      int i = 0;
+      args[i++] = allocObject(callExpression.getLparenLocation());
+      args[i++] = allocObject(fn);
+
+      args[i++] = regArgs.size();
+      for (Argument argument : regArgs) {
+        args[i++] = compileExpression(argument.getValue()).slot;
+      }
+
+      if (star != null) {
+        args[i++] = compileExpression(star.getValue()).slot;
+      } else {
+        args[i++] = BcSlot.NULL_FLAG;
+      }
+      if (starStar != null) {
+        args[i++] = compileExpression(starStar.getValue()).slot;
+      } else {
+        args[i++] = BcSlot.NULL_FLAG;
+      }
+
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
       }
 
-      ArrayList<Argument.Positional> positionals = new ArrayList<>();
-      ArrayList<Argument.Keyword> nameds = new ArrayList<>();
+      args[i++] = result;
+      Preconditions.checkState(i == args.length);
+      write(BcInstr.Opcode.CALL_LINKED, callExpression, args);
+      return new CompileExpressionResult(result, null);
+    }
+
+    private CompileExpressionResult compileCall(CallExpression callExpression, int result) {
+      SavedState saved = save();
+
+      ArrayList<String> argNames = new ArrayList<>();
+      ArrayList<Argument> regArgs = new ArrayList<>();
       Argument.Star star = null;
       Argument.StarStar starStar = null;
       for (Argument argument : callExpression.getArguments()) {
         if (argument instanceof Argument.Positional) {
-          positionals.add((Argument.Positional) argument);
+          regArgs.add(argument);
         } else if (argument instanceof Argument.Keyword) {
-          nameds.add((Argument.Keyword) argument);
+          argNames.add(argument.getName());
+          regArgs.add(argument);
         } else if (argument instanceof Argument.Star) {
+          Preconditions.checkState(star == null);
           star = (Argument.Star) argument;
         } else if (argument instanceof Argument.StarStar) {
+          Preconditions.checkState(starStar == null);
           starStar = (Argument.StarStar) argument;
         } else {
           throw new IllegalStateException();
         }
       }
-      int numCallArgs = 2; // lparen + fn
-      numCallArgs += 1 + positionals.size();
-      numCallArgs += 1 + (2 * nameds.size());
-      numCallArgs += 3; // star, star-star, result
-      int[] args = new int[numCallArgs];
 
-      int i = 0;
-      args[i++] = allocObject(callExpression.getLparenLocation());
       CompileExpressionResult function = compileExpression(callExpression.getFunction());
 
+      StarlarkCallableLinkSig linkSig = StarlarkCallableLinkSig.of(
+          regArgs.size() - argNames.size(),
+          argNames.toArray(ArraysForStarlark.EMPTY_STRING_ARRAY),
+          star != null,
+          starStar != null);
+
+      if (function.value instanceof StarlarkCallable) {
+        saved.reset();
+        return compileCallLinked((StarlarkCallable) function.value, linkSig, callExpression, result);
+      }
+
+      int numCallArgs = 3; // lparen + fn + argNames
+      numCallArgs += 1 + regArgs.size();
+      numCallArgs += 3; // star, star-star, result
+      int[] args = new int[numCallArgs];
+      int i = 0;
+
+      args[i++] = allocObject(callExpression.getLparenLocation());
       args[i++] = function.slot;
 
-      args[i++] = positionals.size();
-      for (Argument.Positional positional : positionals) {
-        args[i++] = compileExpression(positional.getValue()).slot;
-      }
-      args[i++] = nameds.size();
-      for (Argument.Keyword named : nameds) {
-        args[i++] = allocString(named.getName());
-        args[i++] = compileExpression(named.getValue()).slot;
+      args[i++] = allocObject(linkSig);
+      args[i++] = regArgs.size();
+      for (Argument arg : regArgs) {
+        args[i++] = compileExpression(arg.getValue()).slot;
       }
       args[i++] = star != null ? compileExpression(star.getValue()).slot : BcSlot.NULL_FLAG;
       args[i++] = starStar != null ? compileExpression(starStar.getValue()).slot : BcSlot.NULL_FLAG;
 
+      if (result == BcSlot.ANY_FLAG) {
+        result = allocSlot();
+      }
       args[i++] = result;
 
       Preconditions.checkState(i == args.length);

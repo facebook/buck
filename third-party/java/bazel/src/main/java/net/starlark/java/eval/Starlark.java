@@ -593,6 +593,25 @@ public final class Starlark {
   public static Object fastcall(
       StarlarkThread thread, Object fn, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
+    StarlarkCallable callable = callable(thread, fn);
+
+    thread.push(callable);
+    try {
+      return callable.fastcall(thread, positional, named);
+    } catch (UncheckedEvalException ex) {
+      throw ex; // already wrapped
+    } catch (RuntimeException | StackOverflowError ex) {
+      throw new UncheckedEvalException(ex, thread.getCallStack());
+    } catch (EvalException ex) {
+      // If this exception was newly thrown, set its stack.
+      throw ex.ensureStack(thread);
+    } finally {
+      thread.pop();
+    }
+  }
+
+  static StarlarkCallable callable(StarlarkThread thread, Object fn)
+      throws EvalException {
     StarlarkCallable callable;
     if (fn instanceof StarlarkCallable) {
       callable = (StarlarkCallable) fn;
@@ -605,10 +624,14 @@ public final class Starlark {
       }
       callable = new BuiltinFunction(fn, desc.getName(), desc);
     }
+    return callable;
+  }
 
-    thread.push(callable);
+  static Object callLinked(StarlarkThread thread, StarlarkCallableLinked fn, Object[] args, @Nullable Sequence<?> varargs, @Nullable Dict<?, ?> kwargs)
+      throws EvalException, InterruptedException {
+    thread.push(fn.orig);
     try {
-      return callable.fastcall(thread, positional, named);
+      return fn.callLinked(thread, args, varargs, kwargs);
     } catch (UncheckedEvalException ex) {
       throw ex; // already wrapped
     } catch (RuntimeException | StackOverflowError ex) {

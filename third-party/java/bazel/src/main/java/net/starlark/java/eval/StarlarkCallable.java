@@ -96,4 +96,11 @@ public abstract class StarlarkCallable extends StarlarkValue {
   public Location getLocation() {
     return Location.BUILTIN;
   }
+
+  /** Perform partial linking of this callable when it's know how it will be called. */
+  public StarlarkCallableLinked linkCall(StarlarkCallableLinkSig linkSig)
+  {
+    // Default slow implementation.
+    return new StarlarkCallableLinkedToFastcall(this, linkSig);
+  }
 }

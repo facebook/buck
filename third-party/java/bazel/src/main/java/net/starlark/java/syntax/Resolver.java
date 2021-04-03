@@ -129,8 +129,6 @@ public final class Resolver extends NodeVisitor {
     private final Location location;
     private final ImmutableList<Parameter> params;
     private final ImmutableList<Statement> body;
-    private final boolean hasVarargs;
-    private final boolean hasKwargs;
     private final int numKeywordOnlyParams;
     private final ImmutableList<String> parameterNames;
     private final boolean isToplevel;
@@ -139,13 +137,16 @@ public final class Resolver extends NodeVisitor {
     private final ImmutableList<Binding> freevars;
     private final ImmutableList<String> globals; // TODO(adonovan): move to Program.
 
+    private final int varargsIndex;
+    private final int kwargsIndex;
+
+    private final int numNonStarParams;
+
     private Function(
         String name,
         Location loc,
         ImmutableList<Parameter> params,
         ImmutableList<Statement> body,
-        boolean hasVarargs,
-        boolean hasKwargs,
         int numKeywordOnlyParams,
         List<Binding> locals,
         List<Binding> freevars,
@@ -154,8 +155,6 @@ public final class Resolver extends NodeVisitor {
       this.location = loc;
       this.params = params;
       this.body = body;
-      this.hasVarargs = hasVarargs;
-      this.hasKwargs = hasKwargs;
       this.numKeywordOnlyParams = numKeywordOnlyParams;
 
       ImmutableList.Builder<String> names = ImmutableList.builderWithExpectedSize(params.size());
@@ -183,6 +182,22 @@ public final class Resolver extends NodeVisitor {
           cellIndices[j++] = i;
         }
       }
+
+      int varargsIndex = -1;
+      int kwargsIndex = -1;
+      for (int i = 0, paramsSize = params.size(); i < paramsSize; i++) {
+        Parameter param = params.get(i);
+        if (param instanceof Parameter.Star) {
+          varargsIndex = i;
+        }
+        if (param instanceof Parameter.StarStar) {
+          kwargsIndex = i;
+        }
+      }
+      this.varargsIndex = varargsIndex;
+      this.kwargsIndex = kwargsIndex;
+
+      this.numNonStarParams = params.size() - (varargsIndex >= 0 ? 1 : 0) - (kwargsIndex >= 0 ? 1 : 0);
     }
 
     /**
@@ -251,12 +266,22 @@ public final class Resolver extends NodeVisitor {
 
     /** Reports whether the function has an {@code *args} parameter. */
     public boolean hasVarargs() {
-      return hasVarargs;
+      return varargsIndex >= 0;
     }
 
     /** Reports whether the function has a {@code **kwargs} parameter. */
     public boolean hasKwargs() {
-      return hasKwargs;
+      return kwargsIndex >= 0;
+    }
+
+    /** Index of varargs argument or -1. */
+    public int getVarargsIndex() {
+      return varargsIndex;
+    }
+
+    /** Index of kwargs argument or -1. */
+    public int getKwargsIndex() {
+      return kwargsIndex;
     }
 
     /**
@@ -265,6 +290,11 @@ public final class Resolver extends NodeVisitor {
      */
     public int numKeywordOnlyParams() {
       return numKeywordOnlyParams;
+    }
+
+    /** Number of params exclusing *args and **kwargs. */
+    public int numNonStarParams() {
+      return numNonStarParams;
     }
 
     /** Returns the names of the parameters. Order is as for {@link #getParameters}. */
@@ -850,8 +880,6 @@ public final class Resolver extends NodeVisitor {
         loc,
         params.build(),
         body,
-        star != null && star.getIdentifier() != null,
-        starStar != null,
         numKeywordOnlyParams,
         frame,
         freevars,
@@ -1055,8 +1083,6 @@ public final class Resolver extends NodeVisitor {
             file.getStartLocation(),
             /*params=*/ ImmutableList.of(),
             /*body=*/ stmts,
-            /*hasVarargs=*/ false,
-            /*hasKwargs=*/ false,
             /*numKeywordOnlyParams=*/ 0,
             frame,
             /*freevars=*/ ImmutableList.of(),
@@ -1088,8 +1114,6 @@ public final class Resolver extends NodeVisitor {
         expr.getStartLocation(),
         /*params=*/ ImmutableList.of(),
         ImmutableList.of(ReturnStatement.make(expr)),
-        /*hasVarargs=*/ false,
-        /*hasKwargs=*/ false,
         /*numKeywordOnlyParams=*/ 0,
         frame,
         /*freevars=*/ ImmutableList.of(),

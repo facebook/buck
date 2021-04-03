@@ -1,7 +1,6 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import net.starlark.java.syntax.*;
 
 import javax.annotation.Nullable;
@@ -109,6 +108,9 @@ class BcEval {
             break;
           case BcInstr.CALL:
             call();
+            break;
+          case BcInstr.CALL_LINKED:
+            callLinked();
             break;
           case BcInstr.RETURN:
             return returnInstr();
@@ -535,34 +537,18 @@ class BcEval {
     Location lparenLocation = (Location) compiled.objects[nextOperand()];
     fr.setLocation(lparenLocation);
 
-    Object fn = getSlot(nextOperand());
-    int npos = nextOperand();
-    Object[] pos = ArraysForStarlark.newObjectArray(npos);
-    for (int i = 0; i < npos; ++i) {
-      pos[i] = getSlot(nextOperand());
-    }
-    int nnamed = nextOperand();
-    Object[] named = ArraysForStarlark.newObjectArray(nnamed * 2);
-    for (int i = 0; i < nnamed; ++i) {
-      named[i * 2] = compiled.strings[nextOperand()];
-      named[i * 2 + 1] = getSlot(nextOperand());
-    }
+    StarlarkCallable fn = Starlark.callable(fr.thread, getSlot(nextOperand()));
+    StarlarkCallableLinkSig linkSig = (StarlarkCallableLinkSig) compiled.objects[nextOperand()];
+    Object[] args = nextNSlots();
     Object star = getSlotOrNull(nextOperand());
     Object starStar = getSlotOrNull(nextOperand());
 
     if (star != null) {
-      if (!(star instanceof StarlarkIterable)) {
+      if (!(star instanceof Sequence)) {
         throw new EvalException(
             currentCallStarLocation(),
             "argument after * must be an iterable, not " + Starlark.type(star));
       }
-      Iterable<?> iter = (Iterable<?>) star;
-
-      // TODO(adonovan): opt: if value.size is known, preallocate (and skip if empty).
-      ArrayList<Object> list = new ArrayList<>();
-      Collections.addAll(list, pos);
-      Iterables.addAll(list, iter);
-      pos = list.toArray();
     }
 
     if (starStar != null) {
@@ -571,22 +557,40 @@ class BcEval {
             currentCallStarStarLocation(),
             "argument after ** must be a dict, not " + Starlark.type(starStar));
       }
-      Dict<?, ?> dict = (Dict<?, ?>) starStar;
-
-      int j = named.length;
-      named = Arrays.copyOf(named, j + 2 * dict.size());
-      for (Map.Entry<?, ?> e : dict.contentsUnsafe().entrySet()) {
-        if (!(e.getKey() instanceof String)) {
-          throw new EvalException(
-              currentCallStarStarLocation(),
-              "keywords must be strings, not " + Starlark.type(e.getKey()));
-        }
-        named[j++] = e.getKey();
-        named[j++] = e.getValue();
-      }
     }
 
-    setSlot(nextOperand(), Starlark.fastcall(fr.thread, fn, pos, named));
+    StarlarkCallableLinked raw = fn.linkCall(linkSig);
+
+    Object result = Starlark.callLinked(fr.thread, raw, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+
+    setSlot(nextOperand(), result);
+  }
+
+  /** Call after successful link at compile time. */
+  private void callLinked() throws EvalException, InterruptedException {
+    fr.thread.checkInterrupt();
+
+    Location lparenLocation = (Location) compiled.objects[nextOperand()];
+    fr.setLocation(lparenLocation);
+
+    StarlarkCallableLinked fn = (StarlarkCallableLinked) compiled.objects[nextOperand()];
+
+    Object[] args = nextNSlots();
+
+    Object star = getSlotOrNull(nextOperand());
+    Object starStar = getSlotOrNull(nextOperand());
+
+    if (star != null && !(star instanceof Sequence<?>)) {
+      throw new EvalException(currentCallStarLocation(),
+          String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
+    }
+    if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
+      throw new EvalException(currentCallStarStarLocation(),
+          String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
+    }
+
+    Object result = Starlark.callLinked(fr.thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    setSlot(nextOperand(), result);
   }
 
   /** Not operator. */
