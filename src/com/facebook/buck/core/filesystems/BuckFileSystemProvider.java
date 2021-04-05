@@ -143,8 +143,15 @@ public class BuckFileSystemProvider extends FileSystemProvider {
   @Override
   public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter)
       throws IOException {
+    if (!(dir instanceof BuckUnixPath)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Directory %s must be BuckUnixPath, it is %s", dir, dir.getClass().getName()));
+    }
+    BuckUnixPath dirBuckUnixPath = (BuckUnixPath) dir;
+
     DirectoryStream<Path> defaultStream =
-        defaultProvider.newDirectoryStream(asDefault(dir), filter);
+        defaultProvider.newDirectoryStream(asDefault(dirBuckUnixPath), filter);
 
     // convert DirectoryStream<Path> to DirectoryStream<BuckUnixPath>
     return new DirectoryStream<Path>() {
@@ -164,7 +171,13 @@ public class BuckFileSystemProvider extends FileSystemProvider {
             if (next instanceof BuckUnixPath) {
               return next;
             }
-            return BuckUnixPath.of(fileSystem, next.toString());
+            // Speed-up `BuckUnixPath` construction: full `BuckUnixPath` construction
+            // involves a lot string interning which is not free.
+            // We assume that list of directory `foo/bar/baz`
+            // returns files like `foo/bar/baz/child`.
+            // This is a common sense, although there's no clear indication
+            // for that in the JDK javadocs.
+            return dirBuckUnixPath.resolve(next.getFileName().toString());
           }
         };
       }
