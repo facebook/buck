@@ -143,7 +143,6 @@ public class WatchmanBuildPackageComputation
       throws IOException, InterruptedException {
     Optional<ImmutableSet<String>> paths;
     try (WatchmanClient watchmanClient = watchman.createClient()) {
-      // TODO: Avoid costly per-glob sync cookies by reusing SyncCookieState instances.
       WatchmanGlobber globber =
           WatchmanGlobber.create(
               watchmanClient, getWatchRelativePath(basePath).toString(), watch.getWatchRoot());
