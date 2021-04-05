@@ -17,6 +17,7 @@
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.util.io.IoUtil;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import java.io.BufferedOutputStream;
@@ -42,8 +43,9 @@ public class ZipOutputStreams {
    * @param zipFile The file to write to.
    */
   public static CustomZipOutputStream newOutputStream(Path zipFile) throws IOException {
-    return newOutputStream(
-        new BufferedOutputStream(Files.newOutputStream(zipFile), FILE_BUFFER_SIZE));
+    return IoUtil.mapJustOpened(
+        Files.newOutputStream(zipFile),
+        s -> newOutputStream(new BufferedOutputStream(s, FILE_BUFFER_SIZE)));
   }
 
   /**
@@ -70,16 +72,17 @@ public class ZipOutputStreams {
    */
   public static CustomZipOutputStream newOutputStream(Path zipFile, HandleDuplicates mode)
       throws IOException {
-
-    return newOutputStream(
-        new BufferedOutputStream(Files.newOutputStream(zipFile), FILE_BUFFER_SIZE), mode);
+    return IoUtil.mapJustOpened(
+        Files.newOutputStream(zipFile),
+        s -> newOutputStream(new BufferedOutputStream(s, FILE_BUFFER_SIZE), mode));
   }
 
+  /** Open jar output stream. */
   public static CustomJarOutputStream newJarOutputStream(Path jarFile, HandleDuplicates mode)
       throws IOException {
-
-    return newJarOutputStream(
-        new BufferedOutputStream(Files.newOutputStream(jarFile), FILE_BUFFER_SIZE), mode);
+    return IoUtil.mapJustOpened(
+        Files.newOutputStream(jarFile),
+        s -> newJarOutputStream(new BufferedOutputStream(s, FILE_BUFFER_SIZE), mode));
   }
 
   /**

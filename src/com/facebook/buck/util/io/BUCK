@@ -1,0 +1,7 @@
+java_library(
+    name = "io",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
