@@ -46,8 +46,6 @@ import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -89,8 +87,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected final EventHandler eventHandler;
   protected final BuckGlobals buckGlobals;
 
-  private final Cache<AbsPath, Program> astCache;
-  private final Cache<AbsPath, ExtensionData> extensionDataCache;
+  private final ConcurrentHashMap<AbsPath, Program> astCache;
+  private final ConcurrentHashMap<AbsPath, ExtensionData> extensionDataCache;
   private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
@@ -100,8 +98,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     this.eventHandler = eventHandler;
     this.buckGlobals = buckGlobals;
 
-    this.astCache = CacheBuilder.newBuilder().build();
-    this.extensionDataCache = CacheBuilder.newBuilder().build();
+    this.astCache = new ConcurrentHashMap<>();
+    this.extensionDataCache = new ConcurrentHashMap<>();
 
     this.includesDataCache = new ConcurrentHashMap<>();
 
@@ -321,7 +319,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private Program parseSkylarkFile(
       AbsPath path, LoadStack loadStack, FileKind fileKind, Label label)
       throws BuildFileParseException, IOException {
-    Program result = astCache.getIfPresent(path);
+    Program result = astCache.get(path);
     if (result == null) {
       StarlarkFile starlarkFile;
       try {
@@ -612,7 +610,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     no such extension found.
    */
   private @Nullable ExtensionData lookupExtensionForImport(AbsPath path) {
-    return extensionDataCache.getIfPresent(path);
+    return extensionDataCache.get(path);
   }
 
   /**
@@ -651,7 +649,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // Record dependency for this load.
       load.addDependency(dependency);
       AbsPath extensionPath = getImportPath(dependency.getLabel(), dependency.getImport());
-      if (extensionDataCache.getIfPresent(extensionPath) == null) {
+      if (extensionDataCache.get(extensionPath) == null) {
         // Schedule dependency to be loaded if needed.
         haveUnsatisfiedDeps = true;
         queue.push(
