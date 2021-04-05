@@ -267,6 +267,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -671,13 +672,17 @@ public final class MainRunner {
       return result.get();
     }
 
+    ArrayList<AutoCloseable> closeAtFinally = new ArrayList<>();
+
     // If this command is not read only, acquire the command semaphore to become the only executing
     // read/write command. Early out will also help to not rotate log on each BUSY status which
     // happens in setupLogging().
     ImmutableList.Builder<String> previousCommandArgsBuilder = new ImmutableList.Builder<>();
-    try (CloseableWrapper<Unit> semaphore =
-        commandManager.getSemaphoreWrapper(
-            command, unexpandedCommandLineArgs, previousCommandArgsBuilder)) {
+    try {
+      CloseableWrapper<Unit> semaphore =
+          commandManager.getSemaphoreWrapper(
+              command, unexpandedCommandLineArgs, previousCommandArgsBuilder);
+      closeAtFinally.add(semaphore);
 
       Optional<ExitCode> busy = handleBusy(command, previousCommandArgsBuilder, semaphore);
       if (busy.isPresent()) {
@@ -1554,6 +1559,16 @@ public final class MainRunner {
 
           // TODO(buck_team): refactor eventListeners for RAII
           EventBusUtils.closeAndUnregisterListeners(printConsole, eventListeners, buildEventBus);
+        }
+      }
+    } finally {
+      while (!closeAtFinally.isEmpty()) {
+        // Destroy in the reverse order
+        AutoCloseable last = closeAtFinally.remove(closeAtFinally.size() - 1);
+        try {
+          last.close();
+        } catch (Exception e) {
+          LOG.error(e, "failed to close a resource");
         }
       }
     }
