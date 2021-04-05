@@ -60,7 +60,8 @@ public class SkylarkProjectBuildFileParserTestUtils {
     }
 
     @Override
-    public ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
+    public ExtensionData buildExtensionData(LocalExtensionLoadState load)
+        throws InterruptedException {
       ExtensionData result = super.buildExtensionData(load);
       buildCounts.compute(result.getPath(), (k, v) -> v == null ? 1 : v + 1);
       return result;

@@ -129,7 +129,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     // Only export requested symbols, and ensure that all requsted symbols are present.
     ExtensionData data =
-        loadExtension(
+        loadExtensionFromImport(
             ImmutableLoadImport.ofImpl(
                 containingLabel, implicitInclude.get().getLoadPath(), Location.BUILTIN),
             loadStack);
@@ -469,7 +469,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       try {
         extensions.put(
             skylarkImport.getImport(),
-            loadExtension(skylarkImport, loadStack.child(skylarkImport.getImportLocation())));
+            loadExtensionFromImport(
+                skylarkImport, loadStack.child(skylarkImport.getImportLocation())));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -507,7 +508,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * of a single extension/file.
    */
   @VisibleForTesting
-  class ExtensionLoadState {
+  static class LocalExtensionLoadState {
     // Extension key being loaded.
     private final LoadImport load;
     // Path for the extension.
@@ -519,7 +520,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // This extension AST.
     private @Nullable Program ast;
 
-    private ExtensionLoadState(LoadImport load, AbsPath extensionPath, LoadStack loadStack) {
+    private LocalExtensionLoadState(LoadImport load, AbsPath extensionPath, LoadStack loadStack) {
       this.load = load;
       this.path = extensionPath;
       this.loadStack = loadStack;
@@ -566,11 +567,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     public Label getLabel() {
       return load.getLabel();
     }
-
-    // Returns starlark import string for this extension load
-    public String getSkylarkImport() {
-      return load.getImport();
-    }
   }
 
   /*
@@ -616,10 +612,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   /**
    * Loads extensions abstract syntax tree if needed.
    *
-   * @param load {@link ExtensionLoadState} representing the extension being loaded.
+   * @param load {@link LocalExtensionLoadState} representing the extension being loaded.
    * @returns true if AST was loaded, false otherwise.
    */
-  private boolean maybeLoadAST(ExtensionLoadState load, LoadStack loadStack) throws IOException {
+  private boolean maybeLoadAST(LocalExtensionLoadState load, LoadStack loadStack)
+      throws IOException {
     if (load.haveAST()) {
       return false;
     }
@@ -631,12 +628,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * Updates extension load state with the list of its dependencies, and schedules any unsatisfied
    * dependencies to be loaded by adding those dependencies to the work queue.
    *
-   * @param load {@link ExtensionLoadState} representing extension currently loaded
+   * @param load {@link LocalExtensionLoadState} representing extension currently loaded
    * @param queue a work queue of extensions that still need to be loaded.
    * @return true if this extension has any unsatisfied dependencies
    */
   private boolean processExtensionDependencies(
-      ExtensionLoadState load, ArrayDeque<ExtensionLoadState> queue) {
+      LocalExtensionLoadState load, ArrayDeque<LocalExtensionLoadState> queue) {
     // Update this load state with the list of its dependencies.
     // Schedule missing dependencies to be loaded.
     boolean haveUnsatisfiedDeps = false;
@@ -653,7 +650,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         // Schedule dependency to be loaded if needed.
         haveUnsatisfiedDeps = true;
         queue.push(
-            new ExtensionLoadState(
+            new LocalExtensionLoadState(
                 dependency, extensionPath, load.loadStack.child(dependency.getImportLocation())));
       }
     }
@@ -661,25 +658,19 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /**
-   * Given fully loaded extension represented by {@link ExtensionLoadState}, evaluates extension and
-   * returns {@link ExtensionData}
+   * Given fully loaded extension represented by {@link LocalExtensionLoadState}, evaluates
+   * extension and returns {@link ExtensionData}
    *
-   * @param load {@link ExtensionLoadState} representing loaded extension
+   * @param load {@link LocalExtensionLoadState} representing loaded extension
    * @returns {@link ExtensionData} for this extions.
    */
   @VisibleForTesting
-  protected ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
+  protected ExtensionData buildExtensionData(LocalExtensionLoadState load)
+      throws InterruptedException {
     ImmutableMap<String, ExtensionData> dependencies =
         getDependenciesExtensionData(load.getLabel(), load.getDependencies());
     Module loadedExtension;
     try (Mutability mutability = Mutability.create("importing extension")) {
-      //      StarlarkThread.Builder envBuilder =
-      //          StarlarkThread.builder(mutability)
-      //              .setEventHandler(eventHandler)
-      //
-      // .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
-      //      envBuilder.setImportedExtensions(
-      //          Maps.transformValues(dependencies, ExtensionData::getExtension));
 
       // Create this extension.
       StarlarkThread extensionEnv =
@@ -687,7 +678,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       extensionEnv.setPrintHandler(new BuckStarlarkPrintHandler(eventHandler));
       extensionEnv.setLoader(Maps.transformValues(dependencies, ExtensionData::getExtension)::get);
 
-      // NOTE(nga): we do not collect accessed read_config calls from .bzl files
       ReadConfigContext readConfigContext = new ReadConfigContext(options.getRawConfig());
       readConfigContext.setup(extensionEnv);
 
@@ -764,16 +754,16 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *
    * @param loadImport an import label representing an extension to load.
    */
-  private ExtensionData loadExtension(LoadImport loadImport, LoadStack loadStack)
+  private ExtensionData loadExtensionFromImport(LoadImport loadImport, LoadStack loadStack)
       throws IOException, BuildFileParseException, InterruptedException {
 
     ExtensionData extension = null;
-    ArrayDeque<ExtensionLoadState> work = new ArrayDeque<>();
+    ArrayDeque<LocalExtensionLoadState> work = new ArrayDeque<>();
     AbsPath extensionPath = getImportPath(loadImport.getLabel(), loadImport.getImport());
-    work.push(new ExtensionLoadState(loadImport, extensionPath, loadStack));
+    work.push(new LocalExtensionLoadState(loadImport, extensionPath, loadStack));
 
     while (!work.isEmpty()) {
-      ExtensionLoadState load = work.peek();
+      LocalExtensionLoadState load = work.peek();
       extension = lookupExtensionForImport(load.getPath());
 
       if (extension != null) {
