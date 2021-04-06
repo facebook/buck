@@ -379,7 +379,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       outputStream.write((prefix + " ").getBytes(StandardCharsets.UTF_8));
       objectWriter.without(Feature.AUTO_CLOSE_TARGET).writeValue(outputStream, obj);
       outputStream.write(NEWLINE);
-      outputStream.flush();
     } catch (JsonProcessingException e) {
       LOG.warn("Failed to process json for event type: %s ", prefix);
     } catch (IOException e) {
