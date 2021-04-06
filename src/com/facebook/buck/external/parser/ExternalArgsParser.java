@@ -25,7 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Parser for args passed to {@link com.facebook.buck.external.main.ExternalActionsExecutable}.
+ * Parser for args passed to external actions main class.
  *
  * <p>Two args are expected:
  *
@@ -37,7 +37,9 @@ import java.io.InputStream;
 public class ExternalArgsParser {
   private static final int NUM_EXPECTED_ARGS = 1;
 
-  /** Returns the {@link ParsedArgs} from the args passed directly to ExternalActionsExecutable. */
+  /**
+   * Returns the {@link ParsedArgs} from the args passed directly to external actions main class.
+   */
   @SuppressWarnings("unchecked")
   public ParsedArgs parse(String[] args) {
     Preconditions.checkNotNull(args, "Expected %s arg. Received null args", NUM_EXPECTED_ARGS);

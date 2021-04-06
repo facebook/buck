@@ -25,7 +25,7 @@ java_library(
 
 java_binary(
     name = "external_actions_bin",
-    main_class = "com.facebook.buck.external.main.ExternalActionsExecutable",
+    main_class = "com.facebook.buck.external.main.ExternalActionsExecutableMain",
     visibility = ["PUBLIC"],
     deps = [":external_actions_lib"],
 )

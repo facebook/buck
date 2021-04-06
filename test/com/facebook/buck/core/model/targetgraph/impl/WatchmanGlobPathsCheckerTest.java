@@ -19,7 +19,6 @@ package com.facebook.buck.core.model.targetgraph.impl;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -55,7 +54,7 @@ public class WatchmanGlobPathsCheckerTest {
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    projectFilesystem = new FakeProjectFilesystem(tmp.getRoot());
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     root = tmp.getRoot();
     watchman =

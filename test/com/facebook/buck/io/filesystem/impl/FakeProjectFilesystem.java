@@ -232,7 +232,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
                     // Swallow. At least we tried, right?
                   }
                 }));
-    return new FakeProjectFilesystem(CanonicalCellName.rootCell(), tempDir);
+    return new FakeProjectFilesystem(tempDir);
   }
 
   public static ProjectFilesystem createJavaOnlyFilesystem() {
@@ -288,6 +288,14 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
   public FakeProjectFilesystem(CanonicalCellName cellName) {
     this(cellName, DEFAULT_ROOT);
+  }
+
+  public FakeProjectFilesystem(AbsPath root) {
+    this(CanonicalCellName.rootCell(), root);
+  }
+
+  public FakeProjectFilesystem(Path root) {
+    this(AbsPath.of(root));
   }
 
   public FakeProjectFilesystem(CanonicalCellName cellName, AbsPath root) {

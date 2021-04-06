@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -43,7 +42,7 @@ public class CxxSourceRuleFactoryHelper {
       Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, CxxBuckConfig cxxBuckConfig) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     return CxxSourceRuleFactory.of(
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), cellRoot),
+        new FakeProjectFilesystem(cellRoot),
         target,
         graphBuilder,
         graphBuilder.getSourcePathResolver(),
@@ -70,7 +69,7 @@ public class CxxSourceRuleFactoryHelper {
       PicType picType) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     return CxxSourceRuleFactory.of(
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), cellRoot),
+        new FakeProjectFilesystem(cellRoot),
         target,
         graphBuilder,
         graphBuilder.getSourcePathResolver(),

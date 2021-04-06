@@ -39,16 +39,24 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.BasePipeliningCommand;
+import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
+import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
 import com.facebook.buck.javacd.model.PipelineState;
+import com.facebook.buck.javacd.model.RelPathMapEntry;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
-import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultLibraryStepsBuilderBase;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -60,9 +68,13 @@ import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
+import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.protobuf.AbstractMessage;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -186,32 +198,187 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   @Override
-  public ImmutableList<Step> getPipelinedBuildSteps(
+  public LibraryPipeliningCommand getPipelinedCommand(
       BuildContext buildContext,
       ProjectFilesystem filesystem,
-      StateHolder<JavacPipelineState> stateHolder,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    CompilerOutputPaths compilerOutputPaths =
-        CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
-    RelPath classesDir = compilerOutputPaths.getClassesDir();
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    BuildTargetValue buildTargetValue = BuildTargetValue.withExtraParams(buildTarget, buckPaths);
+
+    CompilerOutputPathsValue compilerOutputPathsValue =
+        CompilerOutputPathsValue.of(buckPaths, buildTarget);
+    RelPath classesDir =
+        compilerOutputPathsValue.getByType(buildTargetValue.getType()).getClassesDir();
+
+    ImmutableMap<RelPath, RelPath> resourcesMap =
+        CopyResourcesStep.getResourcesMap(
+            buildContext,
+            filesystem,
+            classesDir.getPath(),
+            jarBuildStepsFactory.getResourcesParameters(),
+            buildTarget);
+
+    CellPathResolver cellPathResolver = buildContext.getCellPathResolver();
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+    AbsPath rootPath = filesystem.getRootPath();
+
+    ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
+        CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
+
+    FilesystemParams filesystemParams = FilesystemParamsUtils.of(filesystem);
+
+    UnusedDependenciesParams unusedDependenciesParams = null;
+    if (unusedDependenciesFinderFactory.isPresent()) {
+      RelPath depFile =
+          CompilerOutputPaths.getDepFilePath(
+              CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
+
+      UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
+      unusedDependenciesParams =
+          createUnusedDependenciesParams(
+              factory.convert(factory.deps, sourcePathResolver, rootPath),
+              factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
+              depFile,
+              factory);
+    }
+
+    RelPath rootOutput = outputPathResolver.resolvePath(rootOutputPath);
+    RelPath pathToClassHashes = outputPathResolver.resolvePath(pathToClassHashesOutputPath);
+    RelPath annotationsPath = outputPathResolver.resolvePath(annotationsOutputPath);
+    Optional<RelPath> pathToClasses =
+        jarBuildStepsFactory.getPathToClasses(buildContext, buildTarget, buckPaths);
+
+    return buildMessage(
+        buildTargetValue,
+        filesystemParams,
+        compilerOutputPathsValue,
+        resourcesMap,
+        cellToPathMappings,
+        unusedDependenciesParams,
+        rootOutput,
+        pathToClassHashes,
+        annotationsPath,
+        pathToClasses);
+  }
+
+  private LibraryPipeliningCommand buildMessage(
+      BuildTargetValue buildTargetValue,
+      FilesystemParams filesystemParams,
+      CompilerOutputPathsValue compilerOutputPathsValue,
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      @Nullable UnusedDependenciesParams unusedDependenciesParams,
+      RelPath rootOutput,
+      RelPath pathToClassHashes,
+      RelPath annotationsPath,
+      Optional<RelPath> pathToClasses) {
+    LibraryPipeliningCommand.Builder builder = LibraryPipeliningCommand.newBuilder();
+
+    BasePipeliningCommand.Builder basePipeliningCommandBuilder =
+        builder.getBasePipeliningCommandBuilder();
+
+    basePipeliningCommandBuilder
+        .setBuildTargetValue(BuildTargetValueSerializer.serialize(buildTargetValue))
+        .setFilesystemParams(filesystemParams)
+        .setOutputPathsValue(
+            CompilerOutputPathsValueSerializer.serialize(compilerOutputPathsValue));
+
+    resourcesMap.forEach(
+        (key, value) ->
+            basePipeliningCommandBuilder.addResourcesMap(
+                RelPathMapEntry.newBuilder()
+                    .setKey(RelPathSerializer.serialize(key))
+                    .setValue(RelPathSerializer.serialize(value))
+                    .build()));
+    cellToPathMappings.forEach(
+        (key, value) ->
+            basePipeliningCommandBuilder.putCellToPathMappings(
+                key.getName(), RelPathSerializer.serialize(value)));
+
+    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
+        builder.getLibraryJarBaseCommandBuilder();
+    libraryJarBaseCommandBuilder
+        .setRootOutput(RelPathSerializer.serialize(rootOutput))
+        .setPathToClassHashes(RelPathSerializer.serialize(pathToClassHashes))
+        .setAnnotationsPath(RelPathSerializer.serialize(annotationsPath));
+
+    pathToClasses
+        .map(RelPathSerializer::serialize)
+        .ifPresent(libraryJarBaseCommandBuilder::setPathToClasses);
+
+    if (unusedDependenciesParams != null) {
+      libraryJarBaseCommandBuilder.setUnusedDependenciesParams(unusedDependenciesParams);
+    }
+
+    return builder.build();
+  }
+
+  @Override
+  public ImmutableList<Step> getPipelinedBuildSteps(
+      StateHolder<JavacPipelineState> stateHolder, AbstractMessage command) {
+    Preconditions.checkState(command instanceof LibraryPipeliningCommand);
+    LibraryPipeliningCommand libraryPipeliningCommand = (LibraryPipeliningCommand) command;
+
+    BasePipeliningCommand basePipeliningCommand =
+        libraryPipeliningCommand.getBasePipeliningCommand();
+
+    FilesystemParams filesystemParams = basePipeliningCommand.getFilesystemParams();
+    CompilerOutputPathsValue compilerOutputPathsValue =
+        CompilerOutputPathsValueSerializer.deserialize(basePipeliningCommand.getOutputPathsValue());
+    BuildTargetValue buildTargetValue =
+        BuildTargetValueSerializer.deserialize(basePipeliningCommand.getBuildTargetValue());
+    ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
+        RelPathSerializer.toCellToPathMapping(basePipeliningCommand.getCellToPathMappingsMap());
 
     ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
 
-    jarBuildStepsFactory.addPipelinedBuildStepsForLibraryJar(
-        buildContext,
-        filesystem,
-        ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-        stateHolder,
-        outputPathResolver.resolvePath(pathToClassHashesOutputPath),
-        classesDir,
-        stepsBuilder);
+    ((BaseJavacToJarStepFactory) jarBuildStepsFactory.getConfiguredCompiler())
+        .createPipelinedCompileToJarStep(
+            filesystemParams,
+            cellToPathMappings,
+            buildTargetValue,
+            stateHolder.getState(),
+            compilerOutputPathsValue,
+            stepsBuilder,
+            path -> {},
+            RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
-    DefaultLibraryStepsBuilderBase<?> defaultLibraryStepsBuilderBase =
-        new DefaultLibraryStepsBuilderBase<>(jarBuildStepsFactory.getConfiguredCompiler());
-    maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
-        buildContext, filesystem, outputPathResolver, defaultLibraryStepsBuilderBase);
-    stepsBuilder.addAll(defaultLibraryStepsBuilderBase.buildIsolatedSteps());
+    LibraryJarBaseCommand libraryJarBaseCommand =
+        libraryPipeliningCommand.getLibraryJarBaseCommand();
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        FilesystemParamsUtils.getIgnoredPaths(filesystemParams),
+        stepsBuilder,
+        libraryJarBaseCommand.hasPathToClasses()
+            ? Optional.of(RelPathSerializer.deserialize(libraryJarBaseCommand.getPathToClasses()))
+            : Optional.empty(),
+        RelPathSerializer.deserialize(libraryJarBaseCommand.getPathToClassHashes()));
+
+    if (libraryJarBaseCommand.hasUnusedDependenciesParams()) {
+      UnusedDependenciesParams unusedDependenciesParams =
+          libraryJarBaseCommand.getUnusedDependenciesParams();
+
+      String buildozerPath = unusedDependenciesParams.getBuildozerPath();
+      stepsBuilder.add(
+          UnusedDependenciesFinder.of(
+              buildTargetValue.getFullyQualifiedName(),
+              unusedDependenciesParams.getDepsList(),
+              unusedDependenciesParams.getProvidedDepsList(),
+              unusedDependenciesParams.getExportedDepsList(),
+              unusedDependenciesParams.getUnusedDependenciesAction(),
+              buildozerPath.isEmpty() ? Optional.empty() : Optional.of(buildozerPath),
+              unusedDependenciesParams.getOnlyPrintCommands(),
+              cellToPathMappings,
+              RelPath.get(unusedDependenciesParams.getDepFile().getPath()),
+              unusedDependenciesParams.getDoUltralightChecking()));
+    }
+
+    RelPath rootOutput = RelPathSerializer.deserialize(libraryJarBaseCommand.getRootOutput());
+    RelPath pathToClassHashes =
+        RelPathSerializer.deserialize(libraryJarBaseCommand.getPathToClassHashes());
+    RelPath annotationsPath =
+        RelPathSerializer.deserialize(libraryJarBaseCommand.getAnnotationsPath());
+    stepsBuilder.add(new MakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath));
 
     return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
   }
@@ -349,7 +516,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return jarBuildStepsFactory.hasAnnotationProcessing();
   }
 
-  public boolean doNotCreateState() {
+  public boolean supportsCompilationDaemon() {
     return javaCDParams.pipeliningSupported();
   }
 }

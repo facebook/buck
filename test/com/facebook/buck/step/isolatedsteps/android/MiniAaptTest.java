@@ -28,7 +28,6 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -94,7 +93,7 @@ public class MiniAaptTest {
 
   @Before
   public void setUp() {
-    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpFolder.getRoot());
+    filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
   }
 
   @Test

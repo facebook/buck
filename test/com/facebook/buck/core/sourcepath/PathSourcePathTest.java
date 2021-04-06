@@ -20,7 +20,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -58,8 +57,7 @@ public class PathSourcePathTest {
   @Test
   public void testComparisonAndHashcode() {
     Path root = Paths.get("root").toAbsolutePath();
-    ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), root);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(root);
     Path relativePath1 = Paths.get("some/relative/path1");
     Path relativePath2 = Paths.get("some/relative/path2");
     PathSourcePath clonedPathA1 = PathSourcePath.of(projectFilesystem, relativePath1);

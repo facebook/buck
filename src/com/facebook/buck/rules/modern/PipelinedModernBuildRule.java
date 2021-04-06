@@ -26,12 +26,14 @@ import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.AbstractMessage;
 import java.nio.file.Path;
 
 /** A ModernBuildRule that @SupportsPipelining. */
 public abstract class PipelinedModernBuildRule<
         State extends RulePipelineState, T extends PipelinedBuildable<State>>
     extends ModernBuildRule<T> implements SupportsPipelining<State> {
+
   protected PipelinedModernBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -47,23 +49,30 @@ public abstract class PipelinedModernBuildRule<
     recordOutputs(outputsBuilder::add);
     ImmutableList<Path> outputs = outputsBuilder.build();
     outputs.forEach(buildableContext::recordArtifact);
+
     OutputPathResolver outputPathResolver = getOutputPathResolver();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     ModernBuildRule.getSetupStepsForBuildable(
         context,
-        getProjectFilesystem(),
+        projectFilesystem,
         outputs,
         stepsBuilder,
         outputPathResolver,
         getExcludedOutputPathsFromAutomaticSetup());
-    stepsBuilder.addAll(
-        getBuildable()
-            .getPipelinedBuildSteps(
-                context,
-                getProjectFilesystem(),
-                stateHolder,
-                outputPathResolver,
-                getBuildCellPathFactory(context, getProjectFilesystem(), outputPathResolver)));
+
+    PipelinedBuildable<State> buildable = getBuildable();
+
+    AbstractMessage pipelinedCommand =
+        buildable.getPipelinedCommand(
+            context,
+            projectFilesystem,
+            outputPathResolver,
+            getBuildCellPathFactory(context, projectFilesystem, outputPathResolver));
+    ImmutableList<Step> steps = buildable.getPipelinedBuildSteps(stateHolder, pipelinedCommand);
+
+    stepsBuilder.addAll(steps);
     return stepsBuilder.build();
   }
 }

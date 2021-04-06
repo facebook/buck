@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -35,8 +37,13 @@ import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.javacd.model.BasePipeliningCommand;
+import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.PipelineState;
+import com.facebook.buck.javacd.model.RelPathMapEntry;
+import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
@@ -45,6 +52,9 @@ import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -55,7 +65,10 @@ import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.rules.modern.impl.ModernBuildableSupport;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -162,26 +175,95 @@ public class CalculateSourceAbi
     }
 
     @Override
-    public ImmutableList<Step> getPipelinedBuildSteps(
+    public BasePipeliningCommand getPipelinedCommand(
         BuildContext buildContext,
         ProjectFilesystem filesystem,
-        StateHolder<JavacPipelineState> stateHolder,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      CompilerOutputPaths compilerOutputPaths =
-          CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
-      RelPath classesDir = compilerOutputPaths.getClassesDir();
+
+      BuckPaths buckPaths = filesystem.getBuckPaths();
+      BuildTargetValue buildTargetValue = BuildTargetValue.withExtraParams(buildTarget, buckPaths);
+
+      CompilerOutputPathsValue compilerOutputPathsValue =
+          CompilerOutputPathsValue.of(buckPaths, buildTarget);
+      RelPath classesDir =
+          compilerOutputPathsValue.getByType(buildTargetValue.getType()).getClassesDir();
+
+      ImmutableMap<RelPath, RelPath> resourcesMap =
+          CopyResourcesStep.getResourcesMap(
+              buildContext,
+              filesystem,
+              classesDir.getPath(),
+              jarBuildStepsFactory.getResourcesParameters(),
+              buildTarget);
+
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
+          CellPathResolverUtils.getCellToPathMappings(
+              filesystem.getRootPath(), buildContext.getCellPathResolver());
+
+      FilesystemParams filesystemParams = FilesystemParamsUtils.of(filesystem);
+
+      return buildMessage(
+          buildTargetValue,
+          filesystemParams,
+          compilerOutputPathsValue,
+          resourcesMap,
+          cellToPathMappings);
+    }
+
+    private BasePipeliningCommand buildMessage(
+        BuildTargetValue buildTargetValue,
+        FilesystemParams filesystemParams,
+        CompilerOutputPathsValue compilerOutputPathsValue,
+        ImmutableMap<RelPath, RelPath> resourcesMap,
+        ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
+      BasePipeliningCommand.Builder builder = BasePipeliningCommand.newBuilder();
+      builder
+          .setBuildTargetValue(BuildTargetValueSerializer.serialize(buildTargetValue))
+          .setFilesystemParams(filesystemParams)
+          .setOutputPathsValue(
+              CompilerOutputPathsValueSerializer.serialize(compilerOutputPathsValue));
+
+      resourcesMap.forEach(
+          (key, value) ->
+              builder.addResourcesMap(
+                  RelPathMapEntry.newBuilder()
+                      .setKey(RelPathSerializer.serialize(key))
+                      .setValue(RelPathSerializer.serialize(value))
+                      .build()));
+      cellToPathMappings.forEach(
+          (key, value) ->
+              builder.putCellToPathMappings(key.getName(), RelPathSerializer.serialize(value)));
+
+      return builder.build();
+    }
+
+    @Override
+    public ImmutableList<Step> getPipelinedBuildSteps(
+        StateHolder<JavacPipelineState> stateHolder, AbstractMessage command) {
+      Preconditions.checkState(command instanceof BasePipeliningCommand);
+      BasePipeliningCommand basePipeliningCommand = (BasePipeliningCommand) command;
+
+      FilesystemParams filesystemParams = basePipeliningCommand.getFilesystemParams();
+      CompilerOutputPathsValue compilerOutputPathsValue =
+          CompilerOutputPathsValueSerializer.deserialize(
+              basePipeliningCommand.getOutputPathsValue());
+      BuildTargetValue buildTargetValue =
+          BuildTargetValueSerializer.deserialize(basePipeliningCommand.getBuildTargetValue());
 
       ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
 
-      jarBuildStepsFactory.addPipelinedBuildStepsForAbiJar(
-          buildTarget,
-          buildContext,
-          filesystem,
-          ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
-          classesDir,
-          stateHolder,
-          stepsBuilder);
+      ((BaseJavacToJarStepFactory) jarBuildStepsFactory.getConfiguredCompiler())
+          .createPipelinedCompileToJarStep(
+              filesystemParams,
+              RelPathSerializer.toCellToPathMapping(
+                  basePipeliningCommand.getCellToPathMappingsMap()),
+              buildTargetValue,
+              stateHolder.getState(),
+              compilerOutputPathsValue,
+              stepsBuilder,
+              path -> {},
+              RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
       return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
     }
@@ -203,7 +285,7 @@ public class CalculateSourceAbi
                   filesystem, javacdBinaryPathSourcePathSupplier.get()));
     }
 
-    public boolean doNotCreateState() {
+    public boolean supportsCompilationDaemon() {
       return javaCDParams.pipeliningSupported();
     }
   }
@@ -285,7 +367,7 @@ public class CalculateSourceAbi
   }
 
   @Override
-  public boolean doNotCreateState() {
-    return getBuildable().doNotCreateState();
+  public boolean supportsCompilationDaemon() {
+    return getBuildable().supportsCompilationDaemon();
   }
 }

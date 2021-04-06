@@ -19,10 +19,7 @@ package com.facebook.buck.external.model;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 
-/**
- * Data class representing args passed to {@link
- * com.facebook.buck.external.main.ExternalActionsExecutable}.
- */
+/** Data class representing args passed to external actions main class. */
 @BuckStyleValue
 public abstract class ParsedArgs {
   public abstract Class<? extends ExternalAction> getExternalActionClass();

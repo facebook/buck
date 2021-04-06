@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -72,8 +71,7 @@ public class IjProjectWriterTest {
   public void testOutputDir() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path tmp = Files.createTempDirectory("IjProjectWriterTest");
-    FakeProjectFilesystem outFilesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp);
+    FakeProjectFilesystem outFilesystem = new FakeProjectFilesystem(tmp);
     getWriterForModuleGraph1(filesystem, outFilesystem).write();
     assertFalse(filesystem.exists(MODULES_XML));
     assertFalse(filesystem.exists(WORKSPACE_XML));

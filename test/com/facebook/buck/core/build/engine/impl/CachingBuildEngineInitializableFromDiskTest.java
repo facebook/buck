@@ -179,7 +179,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     }
 
     @Override
-    public boolean doNotCreateState() {
+    public boolean supportsCompilationDaemon() {
       return false;
     }
   }

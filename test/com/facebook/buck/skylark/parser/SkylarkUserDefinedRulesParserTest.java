@@ -24,7 +24,6 @@ import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -72,7 +71,7 @@ public class SkylarkUserDefinedRulesParserTest {
   private void setupWorkspace(String scenario) throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp.getRoot());
     workspace.setUp();
-    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
+    projectFilesystem = new FakeProjectFilesystem(tmp.getRoot());
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
