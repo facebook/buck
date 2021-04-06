@@ -789,6 +789,7 @@ public final class MainRunner {
               clientEnvironment,
               new EventBusEventConsole(buildEventBus),
               clock);
+      closeAtFinally.add(watchman);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);

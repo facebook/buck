@@ -20,19 +20,21 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 
 /** Contains the configuration for a Watchman client as well as the ability to create a client. */
-public abstract class Watchman {
+public abstract class Watchman implements Closeable {
 
   private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
   private final ImmutableMap<String, String> clockIdsByWatchRoot;
   private final Optional<Path> transportPath;
   private final String version;
+  private final PooledWatchmanClient pooledClient;
 
   public Watchman(
       ImmutableMap<AbsPath, ProjectWatch> projectWatches,
@@ -45,6 +47,7 @@ public abstract class Watchman {
     this.clockIdsByWatchRoot = clockIdsByWatchRoot;
     this.transportPath = transportPath;
     this.version = version;
+    this.pooledClient = new PooledWatchmanClient(this::createReconnectingClient);
   }
 
   /** Build. */
@@ -101,5 +104,15 @@ public abstract class Watchman {
    */
   public WatchmanClient createReconnectingClient() throws IOException {
     return new ReconnectingWatchmanClient(this::createClient);
+  }
+
+  /** Get a thread-safe pooled watchman client. */
+  public PooledWatchmanClient getPooledClient() {
+    return pooledClient;
+  }
+
+  @Override
+  public void close() throws IOException {
+    pooledClient.closePool();
   }
 }

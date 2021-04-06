@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * Watchman interface.
  *
- * <p>This class is NOT thread-safe.
+ * <p>Note not all implementations are thread-safe.
  */
 public interface WatchmanClient extends AutoCloseable {
   /** Marker for query timeout. */
