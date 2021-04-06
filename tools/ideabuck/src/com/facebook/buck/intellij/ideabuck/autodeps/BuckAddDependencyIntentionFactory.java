@@ -78,7 +78,7 @@ public class BuckAddDependencyIntentionFactory {
     CommonAddDependencyDataWrapper wrapper =
         createCommonAddDependencyDataWrapper(
             reference, psiClass, addImportAction, project, buckTargetLocator, projectFileIndex);
-    if (wrapper == null) {
+    if (wrapper == null || importSourceFile == null) {
       return null;
     }
     VirtualFile importBuildFile =
