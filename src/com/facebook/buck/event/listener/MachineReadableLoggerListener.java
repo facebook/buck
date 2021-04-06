@@ -75,6 +75,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -385,7 +386,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Override
   public synchronized void close() {
-    executor.submit(() -> closeImpl());
+    try {
+      executor.submit(() -> closeImpl());
+    } catch (RejectedExecutionException e) {
+      // ignore: someone else has closed the executor
+      return;
+    }
+    executor.shutdown();
 
     MachineReadableLoggerListenerCloseArgs args =
         ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
