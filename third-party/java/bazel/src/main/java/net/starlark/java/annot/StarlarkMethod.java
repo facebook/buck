@@ -171,6 +171,17 @@ public @interface StarlarkMethod {
   boolean trustReturnsValid() default false;
 
   /**
+   * When true, Starlark may speculatively invoke the function at bytecode generation time.
+   *
+   * To be safe, the function must:
+   * <ul>
+   *   <li>Be pure</li>
+   *   <li>Return immutable object (for example, {@code list} function is not safe)</li>
+   * </ul>
+   */
+  boolean speculativeSafe() default false;
+
+  /**
    * If true, the StarlarkThread will be passed as an argument of the annotated function. (Thus, the
    * annotated method signature must contain StarlarkThread as a parameter. See the interface-level
    * javadoc for details.)

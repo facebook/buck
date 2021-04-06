@@ -244,7 +244,8 @@ class MethodLibrary {
               + "<pre class=\"language-python\">tuple([1, 2]) == (1, 2)\n"
               + "tuple((2, 3, 2)) == (2, 3, 2)\n"
               + "tuple({5: \"a\", 2: \"b\", 4: \"c\"}) == (5, 2, 4)</pre>",
-      parameters = {@Param(name = "x", defaultValue = "()", doc = "The object to convert.")})
+      parameters = {@Param(name = "x", defaultValue = "()", doc = "The object to convert.")},
+      speculativeSafe = true)
   public Tuple tuple(StarlarkIterable<?> x) throws EvalException {
     if (x instanceof Tuple) {
       return (Tuple) x;
@@ -270,7 +271,8 @@ class MethodLibrary {
       doc =
           "Returns the length of a string, sequence (such as a list or tuple), dict, or other"
               + " iterable.",
-      parameters = {@Param(name = "x", doc = "The value whose length to report.")})
+      parameters = {@Param(name = "x", doc = "The value whose length to report.")},
+      speculativeSafe = true)
   public int len(Object x) throws EvalException {
     int len = Starlark.len(x);
     if (len < 0) {
@@ -285,7 +287,8 @@ class MethodLibrary {
           "Converts any object to string. This is useful for debugging."
               + "<pre class=\"language-python\">str(\"ab\") == \"ab\"\n"
               + "str(8) == \"8\"</pre>",
-      parameters = {@Param(name = "x", doc = "The object to convert.")})
+      parameters = {@Param(name = "x", doc = "The object to convert.")},
+      speculativeSafe = true)
   public String str(Object x) throws EvalException {
     return Starlark.str(x);
   }
@@ -295,7 +298,8 @@ class MethodLibrary {
       doc =
           "Converts any object to a string representation. This is useful for debugging.<br>"
               + "<pre class=\"language-python\">repr(\"ab\") == '\"ab\"'</pre>",
-      parameters = {@Param(name = "x", doc = "The object to convert.")})
+      parameters = {@Param(name = "x", doc = "The object to convert.")},
+      speculativeSafe = true)
   public String repr(Object x) {
     return Starlark.repr(x);
   }
@@ -308,7 +312,8 @@ class MethodLibrary {
               + "</code>, an empty string (<code>\"\"</code>), the number <code>0</code>, or an "
               + "empty collection (e.g. <code>()</code>, <code>[]</code>). "
               + "Otherwise, it returns <code>True</code>.",
-      parameters = {@Param(name = "x", defaultValue = "False", doc = "The variable to convert.")})
+      parameters = {@Param(name = "x", defaultValue = "False", doc = "The variable to convert.")},
+      speculativeSafe = true)
   public boolean bool(Object x) throws EvalException {
     return Starlark.truth(x);
   }
@@ -332,7 +337,8 @@ class MethodLibrary {
               + " 0.0.",
       parameters = {
         @Param(name = "x", doc = "The value to convert.", defaultValue = "unbound"),
-      })
+      },
+      speculativeSafe = true)
   public StarlarkFloat floatForStarlark(Object x) throws EvalException {
     if (x instanceof String) {
       String s = (String) x;
@@ -447,7 +453,8 @@ class MethodLibrary {
                     + "integer literal. This parameter must not be supplied if the value is not a "
                     + "string.",
             named = true)
-      })
+      },
+      speculativeSafe = true)
   public StarlarkInt intForStarlark(Object x, Object baseO) throws EvalException {
     if (x instanceof String) {
       int base = baseO == Starlark.UNBOUND ? 10 : Starlark.toInt(baseO, "base");
@@ -535,7 +542,8 @@ class MethodLibrary {
       // Deterministic hashing is important for the consistency of builds, hence why we
       // promise a specific algorithm. This is in contrast to Java (Object.hashCode()) and
       // Python, which promise stable hashing only within a given execution of the program.
-      parameters = {@Param(name = "value", doc = "String value to hash.")})
+      parameters = {@Param(name = "value", doc = "String value to hash.")},
+      speculativeSafe = true)
   public int hash(String value) throws EvalException {
     return value.hashCode();
   }
@@ -569,9 +577,9 @@ class MethodLibrary {
             name = "step",
             defaultValue = "1",
             doc = "The increment (default is 1). It may be negative.")
-      })
-  public Sequence<StarlarkInt> range(
-      StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI)
+      },
+      speculativeSafe = true)
+  public Sequence<StarlarkInt> range(StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI)
       throws EvalException {
     int start;
     int stop;
@@ -751,7 +759,8 @@ class MethodLibrary {
               + "<pre class=\"language-python\">"
               + "if type(x) == type([]):  # if x is a list"
               + "</pre>",
-      parameters = {@Param(name = "x", doc = "The object to check type of.")})
+      parameters = {@Param(name = "x", doc = "The object to check type of.")},
+      speculativeSafe = true)
   public String type(Object object) {
     // There is no 'type' type in Starlark, so we return a string with the type name.
     return Starlark.type(object);
