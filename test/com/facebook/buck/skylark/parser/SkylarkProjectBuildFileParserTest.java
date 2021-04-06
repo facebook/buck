@@ -547,18 +547,6 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void doesNotReadSameBuildFileMultipleTimes() throws Exception {
-    // Verifies BUILD file is accessed for IO and AST construction only once.
-    AbsPath buildFile = projectFilesystem.resolve("BUCK");
-    Files.write(buildFile.getPath(), Collections.singletonList("_var = 'hello'"));
-
-    RecordingParser recordingParser = new RecordingParser(parser);
-    recordingParser.getManifest(buildFile);
-    recordingParser.getIncludedFiles(buildFile);
-    assertThat(recordingParser.readCounts, equalTo(recordingParser.expectedCounts(buildFile, 1)));
-  }
-
-  @Test
   public void canHandleSameExtensionLoadedMultipleTimesFromAnotherExtension() throws Exception {
     // Verifies we can handle the case when the same extension is loaded multiple times from another
     // extension.

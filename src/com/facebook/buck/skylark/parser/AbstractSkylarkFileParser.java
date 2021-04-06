@@ -43,6 +43,7 @@ import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
+import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -87,8 +88,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected final EventHandler eventHandler;
   protected final BuckGlobals buckGlobals;
 
-  private final ConcurrentHashMap<AbsPath, Program> astCache;
-  private final ConcurrentHashMap<AbsPath, ExtensionData> extensionDataCache;
+  private final ConcurrentHashMap<AbsPath, Either<Program, ExtensionData>> extensionCache;
   private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
@@ -98,8 +98,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     this.eventHandler = eventHandler;
     this.buckGlobals = buckGlobals;
 
-    this.astCache = new ConcurrentHashMap<>();
-    this.extensionDataCache = new ConcurrentHashMap<>();
+    this.extensionCache = new ConcurrentHashMap<>();
 
     this.includesDataCache = new ConcurrentHashMap<>();
 
@@ -319,49 +318,46 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private Program parseSkylarkFile(
       AbsPath path, LoadStack loadStack, FileKind fileKind, Label label)
       throws BuildFileParseException, IOException {
-    Program result = astCache.get(path);
-    if (result == null) {
-      StarlarkFile starlarkFile;
-      try {
-        starlarkFile = readSkylarkAST(path);
-      } catch (NoSuchFileException e) {
-        throw BuildFileParseException.createForUnknownParseError(
-            loadStack.toDependencyStack(), "%s cannot be loaded because it does not exist", path);
-      }
-      if (!starlarkFile.errors().isEmpty()) {
-        throw BuildFileParseException.createForUnknownParseError(
-            loadStack.toDependencyStack(), "Cannot parse %s", path);
-      }
-
-      Event.replayEventsOn(eventHandler, starlarkFile.errors());
-
-      if (!starlarkFile.errors().isEmpty()) {
-        throw BuildFileParseException.createForUnknownParseError(
-            loadStack.toDependencyStack(), "Cannot parse %s", path);
-      }
-
-      if (fileKind != FileKind.BZL) {
-        if (!StarlarkBuckFileSyntax.checkBuildSyntax(starlarkFile, eventHandler)) {
-          throw BuildFileParseException.createForUnknownParseError(
-              loadStack.toDependencyStack(), "Cannot parse %s", path);
-        }
-      }
-
-      try {
-        result = Program.compileFile(starlarkFile, makeModule(fileKind, label));
-      } catch (SyntaxError.Exception e) {
-        Event.replayEventsOn(eventHandler, starlarkFile.errors());
-        throw BuildFileParseException.createForUnknownParseError(
-            loadStack.toDependencyStack(), "Cannot parse %s", path);
-      }
-
-      if (!starlarkFile.errors().isEmpty()) {
-        throw BuildFileParseException.createForUnknownParseError(
-            loadStack.toDependencyStack(), "Cannot parse %s", path);
-      }
-
-      astCache.put(path, result);
+    StarlarkFile starlarkFile;
+    try {
+      starlarkFile = readSkylarkAST(path);
+    } catch (NoSuchFileException e) {
+      throw BuildFileParseException.createForUnknownParseError(
+          loadStack.toDependencyStack(), "%s cannot be loaded because it does not exist", path);
     }
+    if (!starlarkFile.errors().isEmpty()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          loadStack.toDependencyStack(), "Cannot parse %s", path);
+    }
+
+    Event.replayEventsOn(eventHandler, starlarkFile.errors());
+
+    if (!starlarkFile.errors().isEmpty()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          loadStack.toDependencyStack(), "Cannot parse %s", path);
+    }
+
+    if (fileKind != FileKind.BZL) {
+      if (!StarlarkBuckFileSyntax.checkBuildSyntax(starlarkFile, eventHandler)) {
+        throw BuildFileParseException.createForUnknownParseError(
+            loadStack.toDependencyStack(), "Cannot parse %s", path);
+      }
+    }
+
+    Program result;
+    try {
+      result = Program.compileFile(starlarkFile, makeModule(fileKind, label));
+    } catch (SyntaxError.Exception e) {
+      Event.replayEventsOn(eventHandler, starlarkFile.errors());
+      throw BuildFileParseException.createForUnknownParseError(
+          loadStack.toDependencyStack(), "Cannot parse %s", path);
+    }
+
+    if (!starlarkFile.errors().isEmpty()) {
+      throw BuildFileParseException.createForUnknownParseError(
+          loadStack.toDependencyStack(), "Cannot parse %s", path);
+    }
+
     return result;
   }
 
@@ -606,22 +602,48 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     no such extension found.
    */
   private @Nullable ExtensionData lookupExtensionForImport(AbsPath path) {
-    return extensionDataCache.get(path);
+    Either<Program, ExtensionData> either = extensionCache.get(path);
+    return either != null && either.isRight() ? either.getRight() : null;
+  }
+  /**
+   * Retrieves extension data from the cache, and returns a copy suitable for the specified skylark
+   * import string.
+   *
+   * @param path a path for the extension to lookup
+   * @return {@link ExtensionData} suitable for the requested extension and importString, or null if
+   *     no such extension found.
+   */
+  private Either<Program, ExtensionData> lookupExtensionForImportOrLoadProgram(
+      AbsPath path, LoadStack loadStack, Label extensionLabel) throws IOException {
+    Either<Program, ExtensionData> either = extensionCache.get(path);
+    if (either != null) {
+      return either;
+    }
+
+    Program program = parseSkylarkFile(path, loadStack, FileKind.BZL, extensionLabel);
+    either = Either.ofLeft(program);
+    Either<Program, ExtensionData> prev = extensionCache.putIfAbsent(path, either);
+    if (prev != null) {
+      return prev;
+    } else {
+      return either;
+    }
   }
 
-  /**
-   * Loads extensions abstract syntax tree if needed.
-   *
-   * @param load {@link LocalExtensionLoadState} representing the extension being loaded.
-   * @returns true if AST was loaded, false otherwise.
-   */
-  private boolean maybeLoadAST(LocalExtensionLoadState load, LoadStack loadStack)
-      throws IOException {
-    if (load.haveAST()) {
-      return false;
-    }
-    load.setAST(parseSkylarkFile(load.getPath(), loadStack, FileKind.BZL, load.getLabel()));
-    return true;
+  /** Store extension in cache and return actually stored extension. */
+  private ExtensionData cacheExtension(AbsPath path, ExtensionData extensionData) {
+    return extensionCache
+        .compute(
+            path,
+            (k, oldValue) -> {
+              if (oldValue != null && oldValue.isRight()) {
+                // Someone else stored the extension.
+                return oldValue;
+              } else {
+                return Either.ofRight(extensionData);
+              }
+            })
+        .getRight();
   }
 
   /**
@@ -646,7 +668,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // Record dependency for this load.
       load.addDependency(dependency);
       AbsPath extensionPath = getImportPath(dependency.getLabel(), dependency.getImport());
-      if (extensionDataCache.get(extensionPath) == null) {
+      if (lookupExtensionForImport(extensionPath) == null) {
         // Schedule dependency to be loaded if needed.
         haveUnsatisfiedDeps = true;
         queue.push(
@@ -764,7 +786,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     while (!work.isEmpty()) {
       LocalExtensionLoadState load = work.peek();
-      extension = lookupExtensionForImport(load.getPath());
+      Either<Program, ExtensionData> either =
+          lookupExtensionForImportOrLoadProgram(load.getPath(), load.loadStack, load.getLabel());
+      extension = either.getRightOption().orElse(null);
 
       if (extension != null) {
         // It's possible that some lower level dependencies already loaded
@@ -774,7 +798,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       }
 
       // Load BuildFileAST if needed.
-      boolean astLoaded = maybeLoadAST(load, load.loadStack);
+      boolean astLoaded;
+      if (load.haveAST()) {
+        astLoaded = false;
+      } else {
+        load.setAST(either.getLeft());
+        astLoaded = true;
+      }
       boolean haveUnsatisfiedDeps = astLoaded && processExtensionDependencies(load, work);
 
       // NB: If we have unsatisfied dependencies, we don't do anything;
@@ -785,7 +815,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         // We are done with this load; build it and cache it.
         work.removeFirst();
         extension = buildExtensionData(load);
-        extensionDataCache.put(load.getPath(), extension);
+        extension = cacheExtension(load.getPath(), extension);
       }
     }
 
@@ -878,7 +908,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     abstract Location getImportLocation();
 
-    /** Returns a label of current import file. */
+    /** Returns a label of file being imported. */
     @Value.Derived
     Label getLabel() {
       try {
