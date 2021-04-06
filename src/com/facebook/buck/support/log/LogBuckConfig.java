@@ -61,6 +61,12 @@ public abstract class LogBuckConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
+  public boolean isMachineReadableLoggerSyncOnClose() {
+    return getDelegate()
+        .getBooleanValue(LOG_SECTION, "machine_readable_logger_sync_on_close", false);
+  }
+
+  @Value.Lazy
   public boolean isBuckConfigLocalWarningEnabled() {
     return getDelegate().getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
   }

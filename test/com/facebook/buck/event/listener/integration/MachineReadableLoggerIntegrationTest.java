@@ -39,6 +39,8 @@ public class MachineReadableLoggerIntegrationTest {
   public void testOutputForParsingAndInvocationEvents() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.addBuckConfigLocalOption("log", "machine_readable_logger_sync_on_close", true);
+
     workspace.setUp();
     workspace.runBuckBuild("--just-build", "//:bar", "//:foo").assertSuccess();
 

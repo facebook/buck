@@ -100,6 +100,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final Path logDirectoryPath;
   private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
+  private final boolean syncOnClose;
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHitAttempts =
@@ -129,7 +130,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       Path logDirectoryPath,
       BuildId buildId,
       TaskManagerCommandScope managerScope,
-      LogStreamFactory logStreamFactory)
+      LogStreamFactory logStreamFactory,
+      boolean syncOnClose)
       throws IOException {
     this.info = info;
     this.filesystem = filesystem;
@@ -139,6 +141,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
     this.managerScope = managerScope;
+    this.syncOnClose = syncOnClose;
 
     for (ArtifactCacheMode mode : cacheModes) {
       cacheModeHits.put(mode, new AtomicInteger(0));
@@ -393,6 +396,15 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       return;
     }
     executor.shutdown();
+
+    // Note this flag is off by default, and set only in tests
+    if (syncOnClose) {
+      try {
+        executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
 
     MachineReadableLoggerListenerCloseArgs args =
         ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
