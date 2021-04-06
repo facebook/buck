@@ -122,13 +122,11 @@ public class HybridGlobberFactory implements GlobberFactory {
   }
 
   @Override
-  public void close() throws IOException {
-    watchmanClient.close();
-  }
+  public void close() throws IOException {}
 
   public static HybridGlobberFactory using(Watchman watchman, java.nio.file.Path projectRoot)
       throws IOException {
     return new HybridGlobberFactory(
-        watchman.createReconnectingClient(), projectRoot, watchman.getProjectWatches());
+        watchman.getPooledClient(), projectRoot, watchman.getProjectWatches());
   }
 }
