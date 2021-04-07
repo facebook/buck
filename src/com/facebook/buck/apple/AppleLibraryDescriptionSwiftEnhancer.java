@@ -94,7 +94,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         preprocessor,
         preprocessorFlags,
         underlyingModule.isPresent(),
-        getSwiftTargetTruple(args, swiftPlatform));
+        getSwiftTargetTruple(args, swiftPlatform),
+        applePlatform.getAppleSdk());
   }
 
   private static Optional<AppleCompilerTargetTriple> getSwiftTargetTruple(
@@ -166,6 +167,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     SwiftPlatform swiftPlatform = applePlatform.getSwiftPlatform().get();
 
     return SwiftLibraryDescription.createSwiftCompilationDatabaseRule(
+        applePlatform,
         platform,
         swiftPlatform,
         swiftBuckConfig,

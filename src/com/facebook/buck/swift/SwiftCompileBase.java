@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -139,6 +140,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean addXCTestImportPaths;
 
+  @AddToRuleKey private final String appleSdkVersion;
+
   // The following fields do not have to be part of the rulekey, all the other must.
 
   private BuildableSupport.DepsSupplier depsSupplier;
@@ -176,7 +179,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean importUnderlyingModule,
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
-      boolean addXCTestImportPaths) {
+      boolean addXCTestImportPaths,
+      AppleSdk appleSdk) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -232,6 +236,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
+    this.appleSdkVersion = appleSdk.getVersion();
     performChecks(buildTarget);
   }
 
@@ -297,6 +302,11 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
             .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
     compilerArgs.add(
+        // The target SDK version is the version of the SDK we are building against.
+        // This is different to the -target triple which specifies the deployment
+        // target to use for code generation.
+        "-target-sdk-version",
+        appleSdkVersion,
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",

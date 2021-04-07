@@ -277,7 +277,8 @@ public class FakeAppleRuleDescriptions {
 
   public static SwiftLibraryDescription createSwiftLibraryDescription(BuckConfig buckConfig) {
     return new SwiftLibraryDescription(
-        createTestToolchainProviderForSwiftPlatform(DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
+        createTestToolchainProviderForSwiftPlatform(
+            DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN, DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN),
         CxxPlatformUtils.DEFAULT_CONFIG,
         new SwiftBuckConfig(buckConfig),
         CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
@@ -392,13 +393,17 @@ public class FakeAppleRuleDescriptions {
           LIBRARY_DESCRIPTION);
 
   private static ToolchainProvider createTestToolchainProviderForSwiftPlatform(
-      FlavorDomain<UnresolvedSwiftPlatform> swiftFlavorDomain) {
+      FlavorDomain<UnresolvedSwiftPlatform> swiftFlavorDomain,
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain) {
     return new ToolchainProviderBuilder()
         .withToolchain(
             SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.of(swiftFlavorDomain))
         .withToolchain(
             CxxPlatformsProvider.DEFAULT_NAME,
             CxxPlatformsProvider.of(DEFAULT_PLATFORM, DEFAULT_APPLE_FLAVOR_DOMAIN))
+        .withToolchain(
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            AppleCxxPlatformsProvider.of(appleCxxPlatformFlavorDomain))
         .build();
   }
 

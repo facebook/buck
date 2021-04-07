@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -72,7 +73,8 @@ public class SwiftCompile extends SwiftCompileBase {
       boolean importUnderlyingModule,
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
-      boolean addXCTestImportPaths) {
+      boolean addXCTestImportPaths,
+      AppleSdk appleSdk) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -97,7 +99,8 @@ public class SwiftCompile extends SwiftCompileBase {
         importUnderlyingModule,
         withDownwardApi,
         hasPrefixSerializedDebugInfo,
-        addXCTestImportPaths);
+        addXCTestImportPaths,
+        appleSdk);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
   }

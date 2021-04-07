@@ -17,6 +17,10 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.apple.toolchain.AppleSdk;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -215,6 +219,14 @@ public class SwiftLibraryDescription
     FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain =
         getSwiftPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
 
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
+        toolchainProvider
+            .getByName(
+                AppleCxxPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                AppleCxxPlatformsProvider.class)
+            .getUnresolvedAppleCxxPlatforms();
+
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
@@ -222,6 +234,8 @@ public class SwiftLibraryDescription
       // TODO(cjhopman): This doesn't properly handle parse time deps...
       CxxPlatform cxxPlatform =
           platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
+      AppleCxxPlatform appleCxxPlatform =
+          appleCxxPlatformFlavorDomain.getRequiredValue(buildTarget).resolve(graphBuilder);
       Optional<SwiftPlatform> swiftPlatform =
           swiftPlatformFlavorDomain.getRequiredValue(buildTarget).resolve(graphBuilder);
       if (!swiftPlatform.isPresent()) {
@@ -323,7 +337,8 @@ public class SwiftLibraryDescription
           false,
           downwardApiConfig.isEnabledForApple(),
           swiftPlatform.get().getPrefixSerializedDebugInfo(),
-          swiftBuckConfig.getAddXctestImportPaths());
+          swiftBuckConfig.getAddXctestImportPaths(),
+          appleCxxPlatform.getAppleSdk());
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -456,6 +471,7 @@ public class SwiftLibraryDescription
 
   /** Returns a rule which writes a list of compilation Swift commands to a JSON file. */
   public static SwiftCompilationDatabase createSwiftCompilationDatabaseRule(
+      AppleCxxPlatform appleCxxPlatform,
       CxxPlatform cxxPlatform,
       SwiftPlatform swiftPlatform,
       SwiftBuckConfig swiftBuckConfig,
@@ -495,7 +511,8 @@ public class SwiftLibraryDescription
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple(),
         swiftPlatform.getPrefixSerializedDebugInfo(),
-        swiftBuckConfig.getAddXctestImportPaths());
+        swiftBuckConfig.getAddXctestImportPaths(),
+        appleCxxPlatform.getAppleSdk());
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -539,7 +556,8 @@ public class SwiftLibraryDescription
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
-      Optional<AppleCompilerTargetTriple> swiftTarget) {
+      Optional<AppleCompilerTargetTriple> swiftTarget,
+      AppleSdk appleSdk) {
     return new SwiftCompile(
         swiftBuckConfig,
         buildTarget,
@@ -565,7 +583,8 @@ public class SwiftLibraryDescription
         importUnderlyingModule,
         downwardApiConfig.isEnabledForApple(),
         swiftPlatform.getPrefixSerializedDebugInfo(),
-        swiftBuckConfig.getAddXctestImportPaths());
+        swiftBuckConfig.getAddXctestImportPaths(),
+        appleSdk);
   }
 
   public static String getModuleName(
