@@ -142,26 +142,25 @@ public class WatchmanBuildPackageComputation
   private ImmutableSet<String> glob(Path basePath, String pattern)
       throws IOException, InterruptedException {
     Optional<ImmutableSet<String>> paths;
-    try (WatchmanClient watchmanClient = watchman.createClient()) {
-      WatchmanGlobber globber =
-          WatchmanGlobber.create(
-              watchmanClient, getWatchRelativePath(basePath).toString(), watch.getWatchRoot());
-      LOG.info("Globber with basepath %s, pattern: %s", basePath, pattern);
+    WatchmanClient watchmanClient = watchman.getPooledClient();
+    WatchmanGlobber globber =
+        WatchmanGlobber.create(
+            watchmanClient, getWatchRelativePath(basePath).toString(), watch.getWatchRoot());
+    LOG.info("Globber with basepath %s, pattern: %s", basePath, pattern);
 
-      paths =
-          globber.run(
-              ImmutableList.of(pattern),
-              filesystemView.toWatchmanQuery(ImmutableSet.copyOf(Capability.values())).stream()
-                  .filter(ps -> ps.startsWith(basePath.toString()))
-                  .map(ps -> ps.substring(basePath.toString().length()))
-                  .collect(ImmutableSet.toImmutableSet()),
-              EnumSet.of(
-                  WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
-                  WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
-              timeOut.toNanos(),
-              WARN_TIMEOUT_NANOS);
-      LOG.info("Globber with basepath %s, pattern: %s result: %s", basePath, pattern, paths);
-    }
+    paths =
+        globber.run(
+            ImmutableList.of(pattern),
+            filesystemView.toWatchmanQuery(ImmutableSet.copyOf(Capability.values())).stream()
+                .filter(ps -> ps.startsWith(basePath.toString()))
+                .map(ps -> ps.substring(basePath.toString().length()))
+                .collect(ImmutableSet.toImmutableSet()),
+            EnumSet.of(
+                WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
+                WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+            timeOut.toNanos(),
+            WARN_TIMEOUT_NANOS);
+    LOG.info("Globber with basepath %s, pattern: %s result: %s", basePath, pattern, paths);
     if (!paths.isPresent()) {
       // TODO: If globber.run returns null, it will first write an error to the console claiming
       // that Watchman is being disabled. This isn't necessarily true; Watchman might still be used
