@@ -35,6 +35,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.BaseJarCommand;
@@ -68,7 +69,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -80,6 +80,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -98,6 +99,7 @@ public class JavaCDIntegrationTest {
   private static final Path TEST_RESOURCES_BASE =
       TestDataHelper.getTestDataDirectory(JavaCDIntegrationTest.class).resolve("javacd");
 
+  private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
 
@@ -110,21 +112,32 @@ public class JavaCDIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Rule public Timeout globalTestTimeout = Timeout.seconds(30);
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(60);
 
   @BeforeClass
   public static void beforeClass() throws Exception {
     // override WindowsHandleFactory with a test one
+    initialWindowsHandleFactory = WindowsNamedPipeFactory.windowsHandleFactory;
     WindowsNamedPipeFactory.windowsHandleFactory = TEST_WINDOWS_HANDLE_FACTORY;
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    WindowsNamedPipeFactory.windowsHandleFactory = initialWindowsHandleFactory;
+  }
+
+  @After
+  public void afterTest() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
+    }
   }
 
   @Before
   public void setUp() throws Exception {
     URL url = getBinaryURL();
     testBinary = temporaryFolder.getRoot().getPath().resolve("javacd.jar");
-    try (FileOutputStream stream = new FileOutputStream(testBinary.toFile())) {
-      stream.write(Resources.toByteArray(url));
-    }
+    Files.write(testBinary, Resources.toByteArray(url));
 
     eventBusForTests = BuckEventBusForTests.newInstance();
     eventBusListener = new BuckEventBusForTests.CapturingEventListener();
@@ -241,8 +254,6 @@ public class JavaCDIntegrationTest {
         Arrays.asList(simplePerfEvents.get(0), simplePerfEvents.get(1)),
         containsInAnyOrder(
             buildTargetStartedEvent.toLogMessage(), javacStartedEvent.toLogMessage()));
-
-    verifyAllWindowsHandlesAreClosed();
   }
 
   @Test
@@ -306,8 +317,6 @@ public class JavaCDIntegrationTest {
     String consoleEvent = Iterables.getOnlyElement(consoleEventLogMessages);
     assertThat(consoleEvent, containsString("Failed to execute steps"));
     assertThat(consoleEvent, containsString("h@shC0de()"));
-
-    verifyAllWindowsHandlesAreClosed();
   }
 
   private BuildJavaCommand createBuildCommand(String target, String baseDirectory) {
@@ -521,12 +530,6 @@ public class JavaCDIntegrationTest {
         "-jar",
         testBinary.toString(),
         "-Dfile.encoding=" + UTF_8.name());
-  }
-
-  private void verifyAllWindowsHandlesAreClosed() {
-    if (Platform.detect() == Platform.WINDOWS) {
-      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
-    }
   }
 
   private void waitTillEventsProcessed() throws InterruptedException {

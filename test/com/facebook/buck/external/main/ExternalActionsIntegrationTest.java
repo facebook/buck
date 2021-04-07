@@ -38,6 +38,7 @@ import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.external.parser.ExternalArgsParser;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
@@ -71,6 +72,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.LogRecord;
 import java.util.stream.Collectors;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -105,24 +107,36 @@ public class ExternalActionsIntegrationTest {
   public TestLogSink logEventLogSink =
       new TestLogSink(FakeBuckEventWritingAction.LogEventStep.class.getName());
 
+  private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
 
-  @Rule public Timeout globalTestTimeout = Timeout.seconds(30);
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(60);
 
   @BeforeClass
-  public static void beforeClass() {
+  public static void beforeClass() throws Exception {
     // override WindowsHandleFactory with a test one
+    initialWindowsHandleFactory = WindowsNamedPipeFactory.windowsHandleFactory;
     WindowsNamedPipeFactory.windowsHandleFactory = TEST_WINDOWS_HANDLE_FACTORY;
+  }
+
+  @AfterClass
+  public static void afterClass() throws Exception {
+    WindowsNamedPipeFactory.windowsHandleFactory = initialWindowsHandleFactory;
+  }
+
+  @After
+  public void afterTest() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
+    }
   }
 
   @Before
   public void setUp() throws Exception {
     URL url = getBinaryURL();
     testBinary = temporaryFolder.getRoot().getPath().resolve("external_action.jar");
-    try (FileOutputStream stream = new FileOutputStream(testBinary.toFile())) {
-      stream.write(Resources.toByteArray(url));
-    }
+    Files.write(testBinary, Resources.toByteArray(url));
 
     buildableCommandFile = temporaryFolder.newFile("buildable_command").toFile();
     ProcessExecutor defaultExecutor = new DefaultProcessExecutor(new TestConsole());
@@ -211,7 +225,6 @@ public class ExternalActionsIntegrationTest {
     ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
 
     assertThat(result.getExitCode(), equalTo(0));
-    verifyAllWindowsHandlesAreClosed();
 
     StepEvent.Started expectedStepStartEvent =
         StepEvent.started("console_event_step", "console event: sneaky");
@@ -260,12 +273,6 @@ public class ExternalActionsIntegrationTest {
   private void waitTillEventsProcessed() throws InterruptedException {
     ExecutorServiceUtils.waitTillAllTasksCompleted(
         (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL);
-  }
-
-  private void verifyAllWindowsHandlesAreClosed() {
-    if (Platform.detect() == Platform.WINDOWS) {
-      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
-    }
   }
 
   @Test

@@ -63,6 +63,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
+import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.ConsoleParams;
@@ -102,6 +103,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -115,7 +117,7 @@ public class DownwardApiProcessExecutorTest {
   private static final Logger LOG = Logger.get(DownwardApiProcessExecutorTest.class);
 
   private static final Logger EVENT_HANDLER_LOGGER = BaseNamedPipeEventHandler.LOGGER;
-  private static Level EVENT_HANDLER_LOGGER_INITIAL_LEVEL;
+  private static Level eventHandlerLoggerInitialLevel;
 
   private static final String TEST_LOGGER_NAME = "crazy.tool.name";
   private static final ConsoleParams CONSOLE_PARAMS =
@@ -123,24 +125,34 @@ public class DownwardApiProcessExecutorTest {
   private static final String TEST_COMMAND = "test_command";
   private static final String TEST_ACTION_ID = "test_action_id";
 
+  private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
 
   @BeforeClass
   public static void beforeClass() {
     // store the initial log level in the variable
-    EVENT_HANDLER_LOGGER_INITIAL_LEVEL = EVENT_HANDLER_LOGGER.getLevel();
+    eventHandlerLoggerInitialLevel = EVENT_HANDLER_LOGGER.getLevel();
     // add ability to check all level of logs from class under the test.
     EVENT_HANDLER_LOGGER.setLevel(Level.ALL);
 
     // override WindowsHandleFactory with a test one
+    initialWindowsHandleFactory = WindowsNamedPipeFactory.windowsHandleFactory;
     WindowsNamedPipeFactory.windowsHandleFactory = TEST_WINDOWS_HANDLE_FACTORY;
   }
 
   @AfterClass
   public static void afterClass() {
     // set the initial log level back
-    EVENT_HANDLER_LOGGER.setLevel(EVENT_HANDLER_LOGGER_INITIAL_LEVEL);
+    EVENT_HANDLER_LOGGER.setLevel(eventHandlerLoggerInitialLevel);
+    WindowsNamedPipeFactory.windowsHandleFactory = initialWindowsHandleFactory;
+  }
+
+  @After
+  public void afterTest() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
+    }
   }
 
   @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
@@ -214,13 +226,6 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
-    verifyAllWindowsHandlesAreClosed();
-  }
-
-  private void verifyAllWindowsHandlesAreClosed() {
-    if (Platform.detect() == Platform.WINDOWS) {
-      TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
-    }
   }
 
   @Test
@@ -254,7 +259,6 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
-    verifyAllWindowsHandlesAreClosed();
 
     waitTillEventsProcessed();
     Map<Integer, BuckEvent> events = listener.events;
@@ -368,7 +372,6 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
-    verifyAllWindowsHandlesAreClosed();
 
     assertThat(
         "Did not find log message about unexpected protocol",
@@ -412,7 +415,6 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
-    verifyAllWindowsHandlesAreClosed();
 
     List<LogRecord> records = executorLogSink.getRecords();
     assertThat(
@@ -448,7 +450,6 @@ public class DownwardApiProcessExecutorTest {
     assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
     assertNotNull("Named pipe has not been created!", namedPipe);
     assertTrue("Named pipe has to be closed.", namedPipe.isClosed());
-    verifyAllWindowsHandlesAreClosed();
 
     assertThat(
         executorLogSink.getRecords(),
@@ -493,7 +494,6 @@ public class DownwardApiProcessExecutorTest {
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
-    verifyAllWindowsHandlesAreClosed();
 
     waitTillEventsProcessed();
     assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));
