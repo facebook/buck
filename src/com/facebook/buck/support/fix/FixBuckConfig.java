@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 import org.stringtemplate.v4.ST;
@@ -47,8 +46,6 @@ public abstract class FixBuckConfig implements ConfigView<BuckConfig> {
   private static final String FIX_SCRIPT_MESSAGE_FIELD = "fix_script_message";
   // Use for testing because changing system properties can get messy.
   private static final String LEGACY_FIX_SCRIPT = "legacy_fix_script";
-  private static final String AUTOFIX_ENABLED_FIELD = "autofix_enabled";
-  private static final String AUTOFIX_COMMANDS_FIELD = "autofix_commands";
 
   private static final String DEFAULT_FIX_SCRIPT_MESSAGE =
       String.format(
@@ -92,27 +89,6 @@ public abstract class FixBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getRawValue(FIX_SECTION, FIX_SCRIPT_MESSAGE_FIELD)
         .orElse(DEFAULT_FIX_SCRIPT_MESSAGE);
-  }
-
-  /** When running `buck fix` automatically on command failure is enabled */
-  public AutofixEnabled getAutofixEnabled() {
-    return getDelegate()
-        .getEnum(FIX_SECTION, AUTOFIX_ENABLED_FIELD, AutofixEnabled.class)
-        .orElse(AutofixEnabled.NEVER);
-  }
-
-  /** List of commands that autofix is enabled for */
-  public List<String> getAutofixCommands() {
-    return getDelegate().getListWithoutComments(FIX_SECTION, AUTOFIX_COMMANDS_FIELD, ',');
-  }
-
-  /** Whether or not to run `buck fix` automatically */
-  public boolean shouldRunAutofix(boolean isInteractive, String subcommand) {
-    AutofixEnabled autofixEnabled = getAutofixEnabled();
-    boolean basedOnInteractive =
-        (autofixEnabled == AutofixEnabled.ALWAYS
-            || (isInteractive && autofixEnabled == AutofixEnabled.INTERACTIVE));
-    return basedOnInteractive && getAutofixCommands().contains(subcommand);
   }
 
   /** Determine whether to show a custom message when `buck fix` is invoked */

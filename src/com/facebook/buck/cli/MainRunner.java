@@ -172,8 +172,6 @@ import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
 import com.facebook.buck.support.cli.config.CliConfig;
-import com.facebook.buck.support.fix.BuckFixSpec;
-import com.facebook.buck.support.fix.FixBuckConfig;
 import com.facebook.buck.support.jvm.GCNotificationEventEmitter;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.support.state.BuckGlobalState;
@@ -1017,7 +1015,6 @@ public final class MainRunner {
             GlobalStateManager.singleton().getThreadToCommandRegister();
 
         Optional<CommandEvent.Started> startedEvent = Optional.empty();
-        Optional<Exception> exceptionForFix = Optional.empty();
         Path simpleConsoleLog =
             invocationInfo
                 .getLogDirectoryPath()
@@ -1501,8 +1498,6 @@ public final class MainRunner {
                     parserAndCaches.getVersionedTargetGraphCache().getCacheStats()));
           }
         } catch (Exception e) {
-          // Capture the exception for use by autofix below.
-          exceptionForFix = Optional.of(e);
           // Process the exception early. The outermost runMainThenExit will also process any
           // exception propagated up to it, but exception processing does logging and it's useful to
           // get that as soon as possible.
@@ -1512,21 +1507,6 @@ public final class MainRunner {
           // it, or there's some other problem with it.
           exitCode = exceptionProcessor.processException(e);
         } finally {
-          if (exitCode != ExitCode.SUCCESS) {
-            // TODO(pjameson): Why is this here and not at the outermost error handling (i.e. why
-            // isn't it in the exception processor?).
-            handleAutoFix(
-                filesystem,
-                printConsole,
-                clientEnvironment,
-                command,
-                buckConfig,
-                buildId,
-                exitCode,
-                exceptionForFix,
-                invocationInfo);
-          }
-
           if (startedEvent.isPresent()) {
             if (exitCode == ExitCode.SIGNAL_INTERRUPT) {
               buildEventBus.post(CommandEvent.interrupted(startedEvent.get(), exitCode));
@@ -1846,55 +1826,6 @@ public final class MainRunner {
       }
     }
     return false;
-  }
-
-  private void handleAutoFix(
-      ProjectFilesystem filesystem,
-      Console console,
-      ImmutableMap<String, String> environment,
-      BuckCommand command,
-      BuckConfig buckConfig,
-      BuildId buildId,
-      ExitCode exitCode,
-      Optional<Exception> exceptionForFix,
-      InvocationInfo invocationInfo) {
-    if (!(command.subcommand instanceof AbstractCommand)) {
-      return;
-    }
-    AbstractCommand subcommand = (AbstractCommand) command.subcommand;
-    FixBuckConfig config = buckConfig.getView(FixBuckConfig.class);
-
-    FixCommandHandler fixCommandHandler =
-        new FixCommandHandler(
-            filesystem,
-            console,
-            environment,
-            config,
-            subcommand.getCommandArgsFile(),
-            invocationInfo);
-
-    if (!config.shouldRunAutofix(
-        console.getAnsi().isAnsiTerminal(), command.getDeclaredSubCommandName())) {
-      LOG.info("Auto fixing is not enabled for command %s", command.getDeclaredSubCommandName());
-      return;
-    }
-
-    Optional<BuckFixSpec> fixSpec =
-        fixCommandHandler.writeFixSpec(buildId, exitCode, exceptionForFix);
-
-    // Only log here so that we still return with the correct top level exit code
-    try {
-      if (fixSpec.isPresent()) {
-        fixCommandHandler.run(fixSpec.get());
-      } else {
-        LOG.warn("Failed to run autofix because fix spec is missing");
-      }
-    } catch (IOException e) {
-      console.printErrorText(
-          "Failed to write fix script information to %s", subcommand.getCommandArgsFile());
-    } catch (FixCommandHandler.FixCommandHandlerException e) {
-      console.printErrorText("Error running auto-fix: %s", e.getMessage());
-    }
   }
 
   private void warnAboutConfigFileOverrides(AbsPath root, CliConfig cliConfig) throws IOException {
