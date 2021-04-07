@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.command.config.ConfigIgnoredByDaemon;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
@@ -50,10 +51,13 @@ import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -284,7 +288,76 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     return new ConcurrentProjectBuildFileParser(parserSupplier);
   }
 
-  private static SkylarkProjectBuildFileParser newSkylarkParser(
+  private static class StarlarkParserMapValue {
+    private final Cell cell;
+    private final KnownUserDefinedRuleTypes knownUserDefinedRuleTypes;
+    private final BuckEventBus eventBus;
+    private final ProjectBuildFileParserOptions buildFileParserOptions;
+    private final SkylarkGlobHandler skylarkGlobHandler;
+    private final SkylarkProjectBuildFileParser parser;
+
+    public StarlarkParserMapValue(
+        Cell cell,
+        KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
+        BuckEventBus eventBus,
+        ProjectBuildFileParserOptions buildFileParserOptions,
+        SkylarkGlobHandler skylarkGlobHandler,
+        SkylarkProjectBuildFileParser parser) {
+      this.cell = cell;
+      this.knownUserDefinedRuleTypes = knownUserDefinedRuleTypes;
+      this.eventBus = eventBus;
+      this.buildFileParserOptions = buildFileParserOptions;
+      this.skylarkGlobHandler = skylarkGlobHandler;
+      this.parser = parser;
+    }
+  }
+
+  /**
+   * Only create one Starlark parser per cell. Parser factory is not meant to do that, but
+   * untangling hybrid+python+starlark parser is not trivial.
+   */
+  private final ConcurrentHashMap<CanonicalCellName, StarlarkParserMapValue> starlarkParserByCell =
+      new ConcurrentHashMap<>();
+
+  private SkylarkProjectBuildFileParser newSkylarkParser(
+      Cell cell,
+      TypeCoercerFactory typeCoercerFactory,
+      KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
+      BuckEventBus eventBus,
+      ProjectBuildFileParserOptions buildFileParserOptions,
+      SkylarkGlobHandler skylarkGlobHandler) {
+    StarlarkParserMapValue starlarkParserMapValue =
+        starlarkParserByCell.computeIfAbsent(
+            cell.getCanonicalName(),
+            k -> {
+              return new StarlarkParserMapValue(
+                  cell,
+                  knownUserDefinedRuleTypes,
+                  eventBus,
+                  buildFileParserOptions,
+                  skylarkGlobHandler,
+                  newSkylarkParserUncached(
+                      cell,
+                      typeCoercerFactory,
+                      knownUserDefinedRuleTypes,
+                      eventBus,
+                      buildFileParserOptions,
+                      skylarkGlobHandler));
+            });
+
+    // Assert cached value was created using the same parameter,
+    // i.e. we were caching correctly.
+    Preconditions.checkState(starlarkParserMapValue.cell == cell);
+    Preconditions.checkState(
+        starlarkParserMapValue.knownUserDefinedRuleTypes == knownUserDefinedRuleTypes);
+    Preconditions.checkState(starlarkParserMapValue.eventBus == eventBus);
+    Preconditions.checkState(
+        Objects.equals(starlarkParserMapValue.buildFileParserOptions, buildFileParserOptions));
+    Preconditions.checkState(starlarkParserMapValue.skylarkGlobHandler == skylarkGlobHandler);
+    return starlarkParserMapValue.parser;
+  }
+
+  private SkylarkProjectBuildFileParser newSkylarkParserUncached(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
       KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
