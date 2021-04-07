@@ -1566,6 +1566,9 @@ public final class MainRunner {
       while (!closeAtFinally.isEmpty()) {
         // Destroy in the reverse order
         AutoCloseable last = closeAtFinally.remove(closeAtFinally.size() - 1);
+        if (last == null) {
+          continue;
+        }
         try {
           last.close();
         } catch (Exception e) {
