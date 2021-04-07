@@ -19,9 +19,11 @@ package com.facebook.buck.external.main;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -43,6 +45,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.testutil.integration.EnvironmentSanitizer;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -57,6 +60,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
@@ -71,8 +75,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class ExternalActionsIntegrationTest {
+
+  private static final String PACKAGE_NAME =
+      ExternalActionsIntegrationTest.class.getPackage().getName().replace('.', '/');
+  private static final String TEST_BINARY_NAME = "external_actions_bin_for_tests";
+  private static final String EXTERNAL_ACTIONS_BINARY_TARGET =
+      "//test/" + PACKAGE_NAME + ":" + TEST_BINARY_NAME;
 
   private static final String TEST_ACTION_ID = "test_action_id";
   private static final ConsoleParams CONSOLE_PARAMS =
@@ -97,14 +108,22 @@ public class ExternalActionsIntegrationTest {
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
 
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(30);
+
   @BeforeClass
-  public static void beforeClass() throws Exception {
+  public static void beforeClass() {
     // override WindowsHandleFactory with a test one
     WindowsNamedPipeFactory.windowsHandleFactory = TEST_WINDOWS_HANDLE_FACTORY;
   }
 
   @Before
   public void setUp() throws Exception {
+    URL url = getBinaryURL();
+    testBinary = temporaryFolder.getRoot().getPath().resolve("external_action.jar");
+    try (FileOutputStream stream = new FileOutputStream(testBinary.toFile())) {
+      stream.write(Resources.toByteArray(url));
+    }
+
     buildableCommandFile = temporaryFolder.newFile("buildable_command").toFile();
     ProcessExecutor defaultExecutor = new DefaultProcessExecutor(new TestConsole());
     eventBusForTests = BuckEventBusForTests.newInstance();
@@ -118,13 +137,32 @@ public class ExternalActionsIntegrationTest {
             eventBusForTests.isolated(),
             TEST_ACTION_ID,
             FakeClock.doNotCare());
+  }
 
-    String packageName = getClass().getPackage().getName().replace('.', '/');
-    URL binary = Resources.getResource(packageName + "/external_actions_bin_for_tests.jar");
-    testBinary = temporaryFolder.getRoot().getPath().resolve("external_action.jar");
-    try (FileOutputStream stream = new FileOutputStream(testBinary.toFile())) {
-      stream.write(Resources.toByteArray(binary));
+  private URL getBinaryURL() throws InterruptedException, IOException {
+    URL url =
+        ExternalActionsIntegrationTest.class.getResource(
+            "/" + PACKAGE_NAME + "/" + TEST_BINARY_NAME + ".jar");
+    if (url != null) {
+      return url;
     }
+
+    // in case you are running tests locally from IDE
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result result =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.ofCommand(
+                "buck", "build", "--show-full-output", EXTERNAL_ACTIONS_BINARY_TARGET));
+    assertThat(
+        String.format(
+            "Exit code is not 0. StdOut: %s %n StdErr: %s", result.getStdout(), result.getStderr()),
+        result.getExitCode(),
+        equalTo(0));
+    Optional<String> stdout = result.getStdout();
+    assertThat(stdout.isPresent(), is(true));
+    String outputPath = stdout.get().trim().split(" ")[1];
+    assertThat(outputPath, not(emptyOrNullString()));
+    return new File(outputPath).toURI().toURL();
   }
 
   @After
