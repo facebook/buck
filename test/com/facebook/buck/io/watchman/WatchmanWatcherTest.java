@@ -608,7 +608,7 @@ public class WatchmanWatcherTest {
     WatchmanWatcher watcher =
         new WatchmanWatcher(
             eventBus,
-            () -> client,
+            client,
             10000,
             ImmutableMap.of(
                 FAKE_ROOT, FAKE_QUERY,
@@ -722,7 +722,7 @@ public class WatchmanWatcherTest {
       String sinceCursor) {
     return new WatchmanWatcher(
         eventBus,
-        () -> watchmanClient,
+        watchmanClient,
         timeoutMillis,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
         ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)),

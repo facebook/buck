@@ -77,18 +77,12 @@ public class WatchmanWatcher {
   private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final EventBus fileChangeEventBus;
-  private final WatchmanClientFactory watchmanClientFactory;
+  private final WatchmanClient watchmanClient;
   private final ImmutableMap<AbsPath, WatchmanWatcherQuery> queries;
   private final Map<AbsPath, WatchmanCursor> cursors;
   private final int numThreads;
 
   private final long timeoutMillis;
-
-  /** Factory for creating new instances of {@link WatchmanClient}. */
-  interface WatchmanClientFactory {
-    /** @return a new client that the caller is responsible for closing. */
-    WatchmanClient newInstance() throws IOException;
-  }
 
   public WatchmanWatcher(
       Watchman watchman,
@@ -98,7 +92,7 @@ public class WatchmanWatcher {
       int numThreads) {
     this(
         fileChangeEventBus,
-        watchman::createClient,
+        watchman.getPooledClient(),
         DEFAULT_TIMEOUT_MILLIS,
         createQueries(watchman.getProjectWatches(), ignorePaths, watchman.getCapabilities()),
         cursors,
@@ -108,13 +102,13 @@ public class WatchmanWatcher {
   @VisibleForTesting
   WatchmanWatcher(
       EventBus fileChangeEventBus,
-      WatchmanClientFactory watchmanClientFactory,
+      WatchmanClient watchmanClient,
       long timeoutMillis,
       ImmutableMap<AbsPath, WatchmanWatcherQuery> queries,
       Map<AbsPath, WatchmanCursor> cursors,
       int numThreads) {
     this.fileChangeEventBus = fileChangeEventBus;
-    this.watchmanClientFactory = watchmanClientFactory;
+    this.watchmanClient = watchmanClient;
     this.timeoutMillis = timeoutMillis;
     this.queries = queries;
     this.cursors = cursors;
@@ -200,12 +194,11 @@ public class WatchmanWatcher {
               WatchmanCursor cursor = cursors.get(cellPath);
               if (query != null && cursor != null) {
                 try (SimplePerfEvent.Scope perfEvent =
-                        SimplePerfEvent.scope(
-                            buckEventBus.isolated(),
-                            SimplePerfEvent.PerfEventTitle.of("check_watchman"),
-                            "cell",
-                            cellPath);
-                    WatchmanClient client = watchmanClientFactory.newInstance()) {
+                    SimplePerfEvent.scope(
+                        buckEventBus.isolated(),
+                        SimplePerfEvent.PerfEventTitle.of("check_watchman"),
+                        "cell",
+                        cellPath)) {
                   // Include the cellPath in the finished event so it can be matched with the begin
                   // event.
                   perfEvent.appendFinishedInfo("cell", cellPath);
@@ -213,7 +206,7 @@ public class WatchmanWatcher {
                       buckEventBus,
                       freshInstanceAction,
                       cellPath,
-                      client,
+                      watchmanClient,
                       query,
                       cursor,
                       filesHaveChanged,
