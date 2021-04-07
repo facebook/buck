@@ -124,8 +124,7 @@ public class HybridGlobberFactory implements GlobberFactory {
   @Override
   public void close() throws IOException {}
 
-  public static HybridGlobberFactory using(Watchman watchman, java.nio.file.Path projectRoot)
-      throws IOException {
+  public static HybridGlobberFactory using(Watchman watchman, java.nio.file.Path projectRoot) {
     return new HybridGlobberFactory(
         watchman.getPooledClient(), projectRoot, watchman.getProjectWatches());
   }

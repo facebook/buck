@@ -52,7 +52,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -292,13 +291,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       BuckEventBus eventBus,
       ProjectBuildFileParserOptions buildFileParserOptions,
       SkylarkGlobHandler skylarkGlobHandler) {
-    GlobberFactory globberFactory;
-    try {
-      globberFactory = getSkylarkGlobberFactory(buildFileParserOptions, skylarkGlobHandler);
-    } catch (IOException e) {
-      throw new RuntimeException(
-          "Watchman glob handler was requested, but Watchman client cannot be created", e);
-    }
+    GlobberFactory globberFactory =
+        getSkylarkGlobberFactory(buildFileParserOptions, skylarkGlobHandler);
 
     BuckGlobals buckGlobals =
         BuckGlobals.of(
@@ -336,8 +330,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   }
 
   private static GlobberFactory getSkylarkGlobberFactory(
-      ProjectBuildFileParserOptions buildFileParserOptions, SkylarkGlobHandler skylarkGlobHandler)
-      throws IOException {
+      ProjectBuildFileParserOptions buildFileParserOptions, SkylarkGlobHandler skylarkGlobHandler) {
     return skylarkGlobHandler == SkylarkGlobHandler.JAVA
             || buildFileParserOptions.getWatchman() == WatchmanFactory.NULL_WATCHMAN
         ? NativeGlobber.Factory.INSTANCE
