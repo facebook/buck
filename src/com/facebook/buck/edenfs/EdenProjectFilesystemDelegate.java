@@ -257,36 +257,33 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     EdenWatchman edenWatchman = edenWatchmanDelayInit.getEdenWatchman();
     Watchman watchman = edenWatchman.getWatchman();
     Path watchRootPath = edenWatchman.getWatchmanRootPath();
-    try (WatchmanClient watchmanClient = watchman.createClient()) {
-      WatchmanGlobber globber =
-          WatchmanGlobber.create(watchmanClient, "", watchRootPath.toString());
-      String pathString = watchRootPath.relativize(path.getPath()).toString();
-      Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
-          globber.runWithExtraFields(
-              Collections.singleton(pathString),
-              ImmutableSet.of(),
-              EnumSet.of(WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
-              DEFAULT_TIMEOUT_NANOS,
-              DEFAULT_WARN_TIMEOUT_NANOS,
-              ImmutableList.of("name", WATCHMAN_CONTENT_SHA1_FIELD));
-      if (ret.isPresent() && ret.get().containsKey(pathString)) {
-        @Nullable
-        Object sha1Ret =
-            ret.get().get(pathString).getAttributeMap().get(WATCHMAN_CONTENT_SHA1_FIELD);
-        if (sha1Ret != null && sha1Ret instanceof String) {
-          String sha1 = (String) sha1Ret;
-          return Optional.of(Sha1HashCode.of(sha1));
-        } else {
-          // Watchman could not resolve some cases, i.e. symlink, fallback to xattr
-          if (sha1Ret instanceof Map) {
-            @Nullable Object error = ((Map<String, Object>) sha1Ret).get("error");
-            if (error != null) {
-              LOG.debug("Failed to query watchman SHA1, error message: %s", (String) error);
-            }
+    WatchmanClient watchmanClient = watchman.getPooledClient();
+    WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", watchRootPath.toString());
+    String pathString = watchRootPath.relativize(path.getPath()).toString();
+    Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
+        globber.runWithExtraFields(
+            Collections.singleton(pathString),
+            ImmutableSet.of(),
+            EnumSet.of(WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
+            DEFAULT_TIMEOUT_NANOS,
+            DEFAULT_WARN_TIMEOUT_NANOS,
+            ImmutableList.of("name", WATCHMAN_CONTENT_SHA1_FIELD));
+    if (ret.isPresent() && ret.get().containsKey(pathString)) {
+      @Nullable
+      Object sha1Ret = ret.get().get(pathString).getAttributeMap().get(WATCHMAN_CONTENT_SHA1_FIELD);
+      if (sha1Ret != null && sha1Ret instanceof String) {
+        String sha1 = (String) sha1Ret;
+        return Optional.of(Sha1HashCode.of(sha1));
+      } else {
+        // Watchman could not resolve some cases, i.e. symlink, fallback to xattr
+        if (sha1Ret instanceof Map) {
+          @Nullable Object error = ((Map<String, Object>) sha1Ret).get("error");
+          if (error != null) {
+            LOG.debug("Failed to query watchman SHA1, error message: %s", (String) error);
           }
-          LOG.debug("Failed to query watchman SHA1 for path %s, Fallback to XAttr", path);
-          return computeSha1ViaXAttr(path);
         }
+        LOG.debug("Failed to query watchman SHA1 for path %s, Fallback to XAttr", path);
+        return computeSha1ViaXAttr(path);
       }
     }
     return Optional.empty();
