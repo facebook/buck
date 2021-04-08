@@ -56,9 +56,6 @@ import java.io.OutputStream;
  */
 public class ExternalActionsExecutableMain {
 
-  // TODO: msemko : remove after fixing issues
-  private static final boolean REPORT_FAILURE_TO_BUCK = false;
-
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
   private static final DownwardProtocolType DOWNWARD_PROTOCOL_TYPE = DownwardProtocolType.BINARY;
   private static final DownwardProtocol DOWNWARD_PROTOCOL =
@@ -82,13 +79,7 @@ public class ExternalActionsExecutableMain {
 
       StepExecutionResult stepExecutionResult =
           executeSteps(args, parsedEnvVars, console, outputStream);
-      boolean ok = stepExecutionResult.isSuccess();
-      if (!REPORT_FAILURE_TO_BUCK) {
-        // TODO : msemko remove this override
-        ok = true;
-      }
-
-      if (!ok) {
+      if (!stepExecutionResult.isSuccess()) {
         handleExceptionAndTerminate(actionId, console, getErrorMessage(stepExecutionResult));
       }
     } catch (Exception e) {
