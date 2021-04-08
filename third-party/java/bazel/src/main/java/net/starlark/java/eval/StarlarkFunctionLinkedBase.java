@@ -34,7 +34,7 @@ abstract class StarlarkFunctionLinkedBase extends StarlarkCallableLinked {
       fr.locals[index] = new StarlarkFunction.Cell(fr.locals[index]);
     }
 
-    return BcEval.eval(fr, fn.rfn, fn.compiled);
+    return BcEval.eval(fr, fn);
   }
 
   protected abstract void processArgs(

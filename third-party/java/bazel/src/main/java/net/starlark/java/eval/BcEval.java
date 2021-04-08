@@ -12,7 +12,7 @@ class BcEval {
   private static final TokenKind[] TOKENS = TokenKind.values();
 
   private final StarlarkThread.Frame fr;
-  private final Resolver.Function rfn;
+  private final StarlarkFunction fn;
   private final Bc.Compiled compiled;
 
   /** Registers. */
@@ -37,20 +37,20 @@ class BcEval {
   /** Instruction pointer while decoding operands */
   private int ip = 0;
 
-  private BcEval(StarlarkThread.Frame fr, Resolver.Function rfn, Bc.Compiled compiled) {
+  private BcEval(StarlarkThread.Frame fr, StarlarkFunction fn) {
     this.fr = fr;
 
-    this.rfn = rfn;
-    this.compiled = compiled;
+    this.fn = fn;
+    this.compiled = fn.compiled;
     this.slots = fr.locals;
-    this.loops = new Object[compiled.loopDepth * 2];
-    this.text = compiled.text;
+    this.loops = new Object[fn.compiled.loopDepth * 2];
+    this.text = fn.compiled.text;
   }
 
   /** Public API. */
-  public static Object eval(StarlarkThread.Frame fr, Resolver.Function rfn, Bc.Compiled compiled)
+  public static Object eval(StarlarkThread.Frame fr, StarlarkFunction fn)
       throws InterruptedException, EvalException {
-    return new BcEval(fr, rfn, compiled).eval();
+    return new BcEval(fr, fn).eval();
   }
 
   private Object eval() throws EvalException, InterruptedException {
@@ -215,13 +215,9 @@ class BcEval {
     }
   }
 
-  private StarlarkFunction fn() {
-    return (StarlarkFunction) fr.fn;
-  }
-
   private void throwLocalNotFound(int index) throws EvalException {
-    if (index < rfn.getLocals().size()) {
-      Resolver.Binding binding = rfn.getLocals().get(index);
+    if (index < fn.rfn.getLocals().size()) {
+      Resolver.Binding binding = fn.rfn.getLocals().get(index);
       fr.setErrorLocation(fr.getLocation());
       throw referencedBeforeAssignment(binding.getScope(), binding.getName());
     } else {
@@ -232,18 +228,18 @@ class BcEval {
   }
 
   private Object getGlobal(int index) throws EvalException {
-    Object value = fn().getModule().getGlobalByIndex(index);
+    Object value = fn.getModule().getGlobalByIndex(index);
     if (value == null) {
-      String name = fn().getModule().getGlobalNameByIndexSlow(index);
+      String name = fn.getModule().getGlobalNameByIndexSlow(index);
       throw referencedBeforeAssignment(Resolver.Scope.GLOBAL, name);
     }
     return value;
   }
 
   private Object getFree(int index) throws EvalException {
-    Object value = fn().getFreeVar(index).x;
+    Object value = fn.getFreeVar(index).x;
     if (value == null) {
-      String name = rfn.getFreeVars().get(index).getName();
+      String name = fn.rfn.getFreeVars().get(index).getName();
       throw referencedBeforeAssignment(Resolver.Scope.FREE, name);
     }
     return value;
@@ -252,7 +248,7 @@ class BcEval {
   private Object getCell(int index) throws EvalException {
     Object value = ((StarlarkFunction.Cell) fr.locals[index]).x;
     if (value == null) {
-      String name = rfn.getLocals().get(index).getName();
+      String name = fn.rfn.getLocals().get(index).getName();
       throw referencedBeforeAssignment(Resolver.Scope.FREE, name);
     }
     return value;
@@ -284,10 +280,10 @@ class BcEval {
     int globalVarIndex = nextOperand();
     int nameConstantIndex = nextOperand();
     boolean postAssignHook = nextOperand() != 0;
-    fn().getModule().setGlobalByIndex(globalVarIndex, value);
+    fn.getModule().setGlobalByIndex(globalVarIndex, value);
     if (postAssignHook) {
       if (fr.thread.postAssignHook != null) {
-        if (fn().isToplevel()) {
+        if (fn.isToplevel()) {
           String name = compiled.strings[nameConstantIndex];
           fr.thread.postAssignHook.assign(name, value);
         }
