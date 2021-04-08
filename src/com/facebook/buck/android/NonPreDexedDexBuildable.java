@@ -887,7 +887,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     // images.
     EnumSet<DxStep.Option> dxOptions =
         shouldProguard
-            ? EnumSet.of(DxStep.Option.NO_LOCALS)
+            ? EnumSet.noneOf(DxStep.Option.class)
             : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
     Path selectedPrimaryDexPath = primaryDexPath;
     if (reorderClassesIntraDex) {

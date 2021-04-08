@@ -52,25 +52,14 @@ import javax.annotation.Nullable;
 
 public class DxStep extends IsolatedStep {
 
-  /** Options to pass to {@code dx}. */
+  /** Options to pass to {@code d8}. */
   public enum Option {
-    /** Specify the {@code --no-optimize} flag when running {@code dx}. */
+    /** Specify the {@code --debug} flag. Otherwise --release is specified */
     NO_OPTIMIZE,
 
     /** Force the dexer to emit jumbo string references */
     FORCE_JUMBO,
 
-    /**
-     * See if the {@code buck.dx} property was specified, and if so, use the executable that that
-     * points to instead of the {@code dx} in the user's Android SDK.
-     */
-    USE_CUSTOM_DX_IF_AVAILABLE,
-
-    /** Execute DX in-process instead of fork/execing. This only works with custom dx. */
-    RUN_IN_PROCESS,
-
-    /** Run DX with the --no-locals flag. */
-    NO_LOCALS,
     /** Disable java 8 desugaring when running D8 dexing tool. */
     NO_DESUGAR,
     ;
@@ -196,10 +185,6 @@ public class DxStep extends IsolatedStep {
     this.bucketId = bucketId;
     this.minSdkVersion = minSdkVersion;
 
-    Preconditions.checkArgument(
-        !options.contains(Option.RUN_IN_PROCESS)
-            || options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
-        "In-process dexing is only supported with custom DX");
     Preconditions.checkArgument(dexTool.equals(D8));
   }
 

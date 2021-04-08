@@ -306,8 +306,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
-    EnumSet<DxStep.Option> dxOptions =
-        EnumSet.of(DxStep.Option.RUN_IN_PROCESS, DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE);
+    EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(

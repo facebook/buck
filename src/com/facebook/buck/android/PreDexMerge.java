@@ -54,11 +54,7 @@ public abstract class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraD
 
   /** Options to use with {@link DxStep} when merging pre-dexed files. */
   static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS =
-      EnumSet.of(
-          DxStep.Option.USE_CUSTOM_DX_IF_AVAILABLE,
-          DxStep.Option.RUN_IN_PROCESS,
-          DxStep.Option.NO_DESUGAR,
-          DxStep.Option.NO_OPTIMIZE);
+      EnumSet.of(DxStep.Option.NO_DESUGAR, DxStep.Option.NO_OPTIMIZE);
 
   @AddToRuleKey final String dexTool;
 
