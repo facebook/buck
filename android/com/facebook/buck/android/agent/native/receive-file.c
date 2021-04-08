@@ -32,8 +32,8 @@
 
 // Return 0 on success
 static int parse_args(int num_args, char** args, uint16_t* out_port) {
-  if (num_args != 1) {
-    fprintf(stderr, "usage: multi-receive-file PORT\n");
+  if (num_args != 2) {
+    fprintf(stderr, "usage: multi-receive-file PORT IS_ZSTD_COMPRESSION_ENABLED\n");
     return -1;
   }
 
@@ -47,6 +47,13 @@ static int parse_args(int num_args, char** args, uint16_t* out_port) {
   }
 
   *out_port = (uint16_t)port;
+
+  const char* is_zstd_compression_enabled = args[1];
+  if (strcmp(is_zstd_compression_enabled, "true") == 0) {
+    fprintf(stderr, "Zstd compression is not supported for the native agent!\n");
+    return -1;
+  }
+
   return 0;
 }
 

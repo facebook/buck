@@ -8,3 +8,14 @@ prebuilt_jar(
         "PUBLIC",
     ],
 )
+
+android_prebuilt_aar(
+    name = "zstd-jni-android",
+    aar = "zstd-jni-1.4.0-1.aar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

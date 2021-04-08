@@ -17,6 +17,7 @@
 package com.facebook.buck.android.agent;
 
 import com.facebook.buck.android.agent.util.AgentUtil;
+import com.github.luben.zstd.ZstdInputStream;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -254,19 +255,27 @@ public class AgentMain {
   }
 
   private static void doMultiReceiveFile(List<String> userArgs) throws IOException {
-    if (userArgs.size() != 1) {
-      throw new IllegalArgumentException("usage: multi-receive-file PORT");
+    if (userArgs.size() != 2) {
+      throw new IllegalArgumentException(
+          "usage: multi-receive-file PORT IS_ZSTD_COMPRESSION_ENABLED");
     }
 
     int port = Integer.parseInt(userArgs.get(0));
+    boolean isZstdCompressionEnabled = userArgs.get(1).toLowerCase().equals("true");
+
     BufferedInputStream connection = acceptAuthenticConnectionFromClient(port);
     // TODO: Maybe don't leak connection.
-    multiReceiveFileFromStream(connection);
+    multiReceiveFileFromStream(connection, isZstdCompressionEnabled);
   }
 
-  private static void multiReceiveFileFromStream(BufferedInputStream stream) throws IOException {
+  private static void multiReceiveFileFromStream(
+      BufferedInputStream stream, boolean isZstdCompressionEnabled) throws IOException {
+    InputStream inputStream = stream;
+    if (isZstdCompressionEnabled) {
+      inputStream = new ZstdInputStream(stream);
+    }
     while (true) {
-      String header = readLine(stream);
+      String header = readLine(inputStream);
       int space = header.indexOf(' ');
       if (space == -1) {
         throw new IllegalStateException("No space in metadata line.");
@@ -287,7 +296,7 @@ public class AgentMain {
         break;
       }
 
-      doRawReceiveFile(new File(fileName), size, stream);
+      doRawReceiveFile(new File(fileName), size, inputStream);
     }
   }
 

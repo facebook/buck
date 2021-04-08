@@ -885,6 +885,8 @@ public class RealAndroidDevice implements AndroidDevice {
             + agent.get().getAgentCommand()
             + "multi-receive-file "
             + agentPort
+            + " "
+            + "false"
             + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 

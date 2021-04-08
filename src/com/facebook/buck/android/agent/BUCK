@@ -11,6 +11,7 @@ android_library(
     deps = [
         # Do not add other deps here.  The agent should remain very small.
         "//src/com/facebook/buck/android/agent/util:util",
+        "//third-party/java/zstd-jni:zstd-jni-android",
     ],
 )
 
