@@ -216,8 +216,8 @@ class BcEval {
   }
 
   private void throwLocalNotFound(int index) throws EvalException {
-    if (index < fn.locals.size()) {
-      Resolver.Binding binding = fn.locals.get(index);
+    if (index < fn.compiled.getLocals().size()) {
+      Resolver.Binding binding = fn.compiled.getLocals().get(index);
       fr.setErrorLocation(fr.getLocation());
       throw referencedBeforeAssignment(binding.getScope(), binding.getName());
     } else {
@@ -239,7 +239,7 @@ class BcEval {
   private Object getFree(int index) throws EvalException {
     Object value = fn.getFreeVar(index).x;
     if (value == null) {
-      String name = fn.freeVarBindings.get(index).getName();
+      String name = fn.compiled.getFreeVars().get(index).getName();
       throw referencedBeforeAssignment(Resolver.Scope.FREE, name);
     }
     return value;
@@ -248,7 +248,7 @@ class BcEval {
   private Object getCell(int index) throws EvalException {
     Object value = ((StarlarkFunction.Cell) fr.locals[index]).x;
     if (value == null) {
-      String name = fn.locals.get(index).getName();
+      String name = fn.compiled.getLocals().get(index).getName();
       throw referencedBeforeAssignment(Resolver.Scope.FREE, name);
     }
     return value;

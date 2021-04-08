@@ -40,9 +40,7 @@ public final class StarlarkFunction extends StarlarkCallable {
   final int numKeywordOnlyParams;
   final int varargsIndex;
   final int kwargsIndex;
-  final ImmutableList<Resolver.Binding> locals;
   final int[] cellIndices;
-  final ImmutableList<Resolver.Binding> freeVarBindings;
   private final Location location;
 
   private final Module module; // a function closes over its defining module
@@ -82,9 +80,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     this.numKeywordOnlyParams = rfn.numKeywordOnlyParams();
     this.varargsIndex = rfn.getVarargsIndex();
     this.kwargsIndex = rfn.getKwargsIndex();
-    this.locals = rfn.getLocals();
     this.cellIndices = rfn.getCellIndices();
-    this.freeVarBindings = rfn.getFreeVars();
     this.location = rfn.getLocation();
 
     this.module = module;

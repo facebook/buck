@@ -221,6 +221,10 @@ public final class Resolver extends NodeVisitor {
       return locals;
     }
 
+    public ImmutableList<String> getLocalNames() {
+      return locals.stream().map(Binding::getName).collect(ImmutableList.toImmutableList());
+    }
+
     /**
      * Returns the indices within {@code getLocals()} of the "cells", that is, local variables of
      * thus function that are shared with nested functions. The caller must not modify the result.
@@ -246,6 +250,10 @@ public final class Resolver extends NodeVisitor {
      */
     public ImmutableList<Binding> getFreeVars() {
       return freevars;
+    }
+
+    public ImmutableList<String> getFreeVarNames() {
+      return freevars.stream().map(Binding::getName).collect(ImmutableList.toImmutableList());
     }
 
     /** Returns the location of the function's identifier. */

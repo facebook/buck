@@ -187,13 +187,13 @@ public final class StarlarkThread {
       // TODO(adonovan): provide a more efficient API.
       ImmutableMap.Builder<String, Object> env = ImmutableMap.builder();
       if (fn instanceof StarlarkFunction) {
-        for (int i = 0; i < ((StarlarkFunction) fn).locals.size(); i++) {
+        for (int i = 0; i < ((StarlarkFunction) fn).compiled.getLocals().size(); i++) {
           Object local = locals[i];
           if (local != null) {
             if (local instanceof StarlarkFunction.Cell) {
               local = ((StarlarkFunction.Cell) local).x;
             }
-            env.put(((StarlarkFunction) fn).locals.get(i).getName(), local);
+            env.put(((StarlarkFunction) fn).compiled.getLocals().get(i).getName(), local);
           }
         }
       }

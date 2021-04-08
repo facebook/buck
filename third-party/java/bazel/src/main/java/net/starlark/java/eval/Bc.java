@@ -3,7 +3,6 @@ package net.starlark.java.eval;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -80,7 +79,8 @@ class Bc {
   public static class Compiled {
 
     /** Original function. This is used only for debugging here. */
-    private final Resolver.Function rfn;
+    private final ImmutableList<Resolver.Binding> locals;
+    private final ImmutableList<Resolver.Binding> freeVars;
     private final Module module;
     /** Strings references by the bytecode. */
     public final String[] strings;
@@ -111,7 +111,8 @@ class Bc {
         Object[] constSlots,
         int loopDepth,
         BcInstrToLoc instrToLoc) {
-      this.rfn = rfn;
+      this.locals = rfn.getLocals();
+      this.freeVars = rfn.getFreeVars();
       this.module = module;
       this.strings = strings;
       this.objects = objects;
@@ -122,14 +123,36 @@ class Bc {
       this.instrToLoc = instrToLoc;
     }
 
+    public ImmutableList<Resolver.Binding> getLocals() {
+      return locals;
+    }
+
+    public ImmutableList<Resolver.Binding> getFreeVars() {
+      return freeVars;
+    }
+
     @Override
     public String toString() {
-      return toStringImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn, module),
+      return toStringImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(
+              getLocalNames(),
+              module.getGlobalNamesSlow(),
+              getFreeVarNames()),
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
 
+    private ImmutableList<String> getFreeVarNames() {
+      return freeVars.stream().map(Resolver.Binding::getName).collect(ImmutableList.toImmutableList());
+    }
+
+    private ImmutableList<String> getLocalNames() {
+      return locals.stream().map(Resolver.Binding::getName).collect(ImmutableList.toImmutableList());
+    }
+
     ImmutableList<String> toStringInstructions() {
-      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(rfn, module),
+      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(
+                getLocalNames(),
+                module.getGlobalNamesSlow(),
+                getFreeVarNames()),
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
 
@@ -173,12 +196,11 @@ class Bc {
           + instrOpcodeAt(ip)
               .operands
               .codeSize(
-                  rfn,
                   module,
                   text,
                   Arrays.asList(strings),
                   Arrays.asList(constSlots),
-                  ip + BcInstr.INSTR_HEADER_LEN);
+                  ip + BcInstr.INSTR_HEADER_LEN, getLocalNames(), getFreeVarNames());
     }
 
     public ImmutableList<BcInstr.Decoded> instructions() {
@@ -455,9 +477,9 @@ class Bc {
       if (ASSERTIONS) {
         int expectedArgCount =
             opcode.operands.codeSize(
-                rfn,
                 module,
-                text, strings.values, constSlots.values, prevIp + BcInstr.INSTR_HEADER_LEN);
+                text, strings.values, constSlots.values, prevIp + BcInstr.INSTR_HEADER_LEN,
+                rfn.getLocalNames(), rfn.getFreeVarNames());
         Preconditions.checkState(
             expectedArgCount == args.length,
             "incorrect signature for %s: expected %s, actual %s",

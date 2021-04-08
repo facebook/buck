@@ -2,7 +2,6 @@ package net.starlark.java.eval;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import net.starlark.java.syntax.Resolver;
 import net.starlark.java.syntax.TokenKind;
 
 /**
@@ -79,9 +78,14 @@ class BcInstrOperand {
      * <p>For example, length-delimited operand may return the different number of ints depending on
      * the actual bytecode.
      */
-    int codeSize(Resolver.Function rfn, Module module, int[] text, List<String> strings, List<Object> constantRegs, int offset) {
+    int codeSize(Module module, int[] text, List<String> strings,
+        List<Object> constantRegs, int offset, ImmutableList<String> fnLocalNames,
+        ImmutableList<String> fnFreeVarNames) {
       OpcodeVisitor visitor = new OpcodeVisitor(text, strings, constantRegs, offset,
-          new OpcodeVisitorFunctionContext(rfn, module));
+          new OpcodeVisitorFunctionContext(
+              fnLocalNames,
+              module.getGlobalNamesSlow(),
+              fnFreeVarNames));
       visit(visitor);
       return visitor.ip - offset;
     }
@@ -110,13 +114,6 @@ class BcInstrOperand {
       this.locals = locals;
       this.globals = globals;
       this.freeVars = freeVars;
-    }
-
-    public OpcodeVisitorFunctionContext(Resolver.Function rfn, Module module) {
-      this(
-          rfn.getLocals().stream().map(Resolver.Binding::getName).collect(ImmutableList.toImmutableList()),
-          module.getGlobalNamesSlow(),
-          rfn.getFreeVars().stream().map(Resolver.Binding::getName).collect(ImmutableList.toImmutableList()));
     }
   }
 
