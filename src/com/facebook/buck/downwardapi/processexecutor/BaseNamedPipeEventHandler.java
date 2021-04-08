@@ -114,16 +114,16 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private void run() {
     String namedPipeName = namedPipe.getName();
     try (InputStream inputStream = namedPipe.getInputStream()) {
-      LOGGER.info("Trying to establish downward protocol for pipe %s", namedPipeName);
+      LOGGER.debug("Trying to establish downward protocol for pipe %s", namedPipeName);
       if (downwardProtocol == null) {
         downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
-        LOGGER.info(
+        LOGGER.debug(
             "Starting to read events from named pipe %s with protocol %s",
             namedPipeName, downwardProtocol.getProtocolName());
       }
 
       processEvents(namedPipeName, inputStream);
-      LOGGER.info(
+      LOGGER.debug(
           "Finishing reader thread for pipe: %s; interrupted = %s",
           namedPipeName, Thread.currentThread().isInterrupted());
     } catch (PipeNotConnectedException e) {
@@ -149,12 +149,12 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
                 downwardProtocol.readEvent(inputStream, eventType),
                 "message with event type:" + eventType + " is missing");
         if (eventType.equals(EventType.END_EVENT)) {
-          LOGGER.info("Received end event for named pipe %s", namedPipeName);
+          LOGGER.debug("Received end event for named pipe %s", namedPipeName);
           break;
         }
         DownwardApiProcessExecutor.HANDLER_THREAD_POOL.execute(
             () -> {
-              LOGGER.debug(
+              LOGGER.verbose(
                   "Processing event of type %s in the thread: %s",
                   eventType, Thread.currentThread().getName());
               processEvent(eventType, event);
@@ -194,7 +194,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     try {
       namedPipeServer.prepareToClose(done);
     } catch (IOException e) {
-      LOGGER.error(e, "Failed to prepare to close named pipe.");
+      LOGGER.warn(e, "Failed to prepare to close named pipe.");
     }
   }
 

@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /**
- * Wrapper around {@lint ProcessExecutor.Result} that stores extra fields related to
- * {@DownwardApiProcessExecutor} that could be used in tests.
+ * Wrapper around {@lint ProcessExecutor.Result} that stores extra fields related to {@link
+ * DownwardApiProcessExecutor} that could be used in tests.
  */
 class DownwardApiExecutionResult extends ProcessExecutor.Result {
 

@@ -323,7 +323,7 @@ public class DownwardApiProcessExecutorTest {
         "Did not find debug log message about processing on a handler thread pool",
         executorLogSink.getRecords(),
         hasItem(
-            new LogRecordMatcher(Level.FINE) {
+            new LogRecordMatcher(Level.FINER) {
 
               @Override
               protected boolean marchesLogRecord(LogRecord logRecord) {
