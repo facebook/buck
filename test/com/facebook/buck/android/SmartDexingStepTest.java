@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -32,7 +33,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,6 +58,9 @@ import org.junit.rules.TemporaryFolder;
 public class SmartDexingStepTest {
   @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
+  private AndroidPlatformTarget androidPlatformTarget =
+      AndroidTestUtils.createAndroidPlatformTarget();
+
   /** Tests whether pseudo rule cache detection is working properly. */
   @Test
   public void testDxPseudoRuleCaching() throws Exception {
@@ -78,7 +81,7 @@ public class SmartDexingStepTest {
     Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
     DxPseudoRule rule =
         new DxPseudoRule(
-            AndroidTestUtils.createAndroidPlatformTarget(),
+            androidPlatformTarget,
             FakeBuildContext.NOOP_CONTEXT,
             filesystem,
             ImmutableMap.of(testIn.toPath(), actualHashCode),
@@ -87,12 +90,10 @@ public class SmartDexingStepTest {
             outputHashFile,
             EnumSet.of(DxStep.Option.NO_OPTIMIZE),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
-            Optional.empty(),
-            DxStep.DX,
+            DxStep.D8,
             null,
             false,
-            Optional.empty(),
-            false);
+            Optional.empty());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -117,7 +118,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
@@ -125,26 +126,20 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false,
-        Optional.empty(),
-        false);
+        Optional.empty());
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            Joiner.on(" ")
-                .join(
-                    "(cd",
-                    rootPath,
-                    "&&",
-                    Paths.get("/usr/bin/dx"),
-                    "--dex --output",
-                    filesystem.resolve("classes.dex.tmp.jar"),
-                    filesystem.resolve("foo.dex.jar"),
-                    filesystem.resolve("bar.dex.jar") + ")"),
+            String.format(
+                "d8 --output %s --release --lib %s %s %s",
+                filesystem.resolve("classes.dex.tmp.jar"),
+                androidPlatformTarget.getAndroidJar(),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar")),
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
@@ -165,7 +160,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
@@ -173,26 +168,20 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         9,
-        Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false,
-        Optional.empty(),
-        false);
+        Optional.empty());
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
         ImmutableList.of(
-            Joiner.on(" ")
-                .join(
-                    "(cd",
-                    rootPath,
-                    "&&",
-                    Paths.get("/usr/bin/dx"),
-                    "--dex --output",
-                    filesystem.resolve("classes.dex.tmp.jar"),
-                    filesystem.resolve("foo.dex.jar"),
-                    filesystem.resolve("bar.dex.jar") + ")"),
+            String.format(
+                "d8 --output %s --release --lib %s %s %s",
+                filesystem.resolve("classes.dex.tmp.jar"),
+                androidPlatformTarget.getAndroidJar(),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar")),
             "repack classes.dex.tmp.jar in classes.dex.jar",
             "rm -f " + filesystem.resolve("classes.dex.tmp.jar"),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
@@ -212,7 +201,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
@@ -220,24 +209,18 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false,
-        Optional.empty(),
-        false);
+        Optional.empty());
 
     assertEquals(
-        Joiner.on(" ")
-            .join(
-                "(cd",
-                rootPath,
-                "&&",
-                Paths.get("/usr/bin/dx"),
-                "--dex --output",
-                filesystem.resolve("classes.dex"),
-                filesystem.resolve("foo.dex.jar"),
-                filesystem.resolve("bar.dex.jar") + ")"),
+        String.format(
+            "d8 --output %s --release --lib %s %s %s",
+            filesystem.resolve("classes.dex"),
+            androidPlatformTarget.getAndroidJar(),
+            filesystem.resolve("foo.dex.jar"),
+            filesystem.resolve("bar.dex.jar")),
         Iterables.getOnlyElement(steps.build())
             .getDescription(TestExecutionContext.newBuilder().build()));
   }
@@ -253,7 +236,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
@@ -261,26 +244,18 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        Optional.empty(),
         DxStep.D8,
         null,
         false,
-        Optional.of(28),
-        false);
+        Optional.of(28));
 
     assertEquals(
-        Joiner.on(" ")
-            .join(
-                "(cd",
-                filesystem.getRootPath(),
-                "&&",
-                Paths.get("/usr/bin/dx"),
-                "--dex",
-                "--min-sdk-version 28",
-                "--output",
-                filesystem.resolve("classes.dex"),
-                filesystem.resolve("foo.dex.jar"),
-                filesystem.resolve("bar.dex.jar") + ")"),
+        String.format(
+            "d8 --min-api 28 --output %s --release --lib %s %s %s",
+            filesystem.resolve("classes.dex"),
+            androidPlatformTarget.getAndroidJar(),
+            filesystem.resolve("foo.dex.jar"),
+            filesystem.resolve("bar.dex.jar")),
         Iterables.getOnlyElement(steps.build())
             .getDescription(TestExecutionContext.newBuilder().build()));
   }
@@ -296,7 +271,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
@@ -304,26 +279,20 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false,
-        /* min-sdk-version */ Optional.of(28),
-        false);
+        /* min-sdk-version */ Optional.of(28));
 
     MoreAsserts.assertSteps(
         "Wrong steps",
         ImmutableList.of(
-            Joiner.on(" ")
-                .join(
-                    "(cd",
-                    filesystem.getRootPath(),
-                    "&&",
-                    Paths.get("/usr/bin/dx"),
-                    "--dex --min-sdk-version 28 --output",
-                    filesystem.resolve("classes.dex.jar"),
-                    filesystem.resolve("foo.dex.jar"),
-                    filesystem.resolve("bar.dex.jar") + ")"),
+            String.format(
+                "d8 --min-api 28 --output %s --release --lib %s %s %s",
+                filesystem.resolve("classes.dex.jar"),
+                androidPlatformTarget.getAndroidJar(),
+                filesystem.resolve("foo.dex.jar"),
+                filesystem.resolve("bar.dex.jar")),
             "dex_meta dexPath:classes.dex.jar dexMetaPath:classes.dex.jar.meta",
             "zip-scrub " + filesystem.resolve("classes.dex.jar")),
         steps.build(),
@@ -342,7 +311,7 @@ public class SmartDexingStepTest {
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         steps,
         FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
         filesystem,
@@ -350,15 +319,13 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false,
-        /* min-sdk-version */ Optional.of(28),
-        false);
+        /* min-sdk-version */ Optional.of(28));
 
     String description = steps.build().get(0).getDescription(TestExecutionContext.newInstance());
-    assertThat(description, Matchers.containsString("--min-sdk-version 28"));
+    assertThat(description, Matchers.containsString("--min-api 28"));
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -371,7 +338,7 @@ public class SmartDexingStepTest {
     Path outputPath = Paths.get("classes.flex");
     EnumSet<DxStep.Option> dxOptions = EnumSet.noneOf(DxStep.Option.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
-        AndroidTestUtils.createAndroidPlatformTarget(),
+        androidPlatformTarget,
         new ImmutableList.Builder<>(),
         FakeBuildContext.NOOP_CONTEXT,
         filesystem,
@@ -379,11 +346,9 @@ public class SmartDexingStepTest {
         outputPath,
         dxOptions,
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        Optional.empty(),
-        DxStep.DX,
+        DxStep.D8,
         null,
         false,
-        Optional.empty(),
-        false);
+        Optional.empty());
   }
 }

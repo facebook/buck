@@ -54,7 +54,6 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     ResourcesConfig resourcesConfig = buckConfig.getView(ResourcesConfig.class);
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
-    DxConfig dxConfig = new DxConfig(buckConfig);
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(buckConfig);
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
@@ -92,7 +91,6 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             androidInstallConfig,
             adbConfig,
             cxxBuckConfig,
-            dxConfig,
             downwardApiConfig,
             buildBuckConfig,
             toolchainProvider,
@@ -107,7 +105,6 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             androidBuckConfig,
             buckConfig,
             cxxBuckConfig,
-            dxConfig,
             downwardApiConfig,
             buildBuckConfig,
             toolchainProvider,
@@ -118,7 +115,6 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaCDBuckConfig,
             proGuardConfig,
             cxxBuckConfig,
-            dxConfig,
             toolchainProvider,
             androidBuckConfig,
             downwardApiConfig,

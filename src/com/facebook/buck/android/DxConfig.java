@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.config.BuckConfig;
-import java.util.Optional;
 import java.util.OptionalInt;
 
 public class DxConfig {
@@ -26,11 +25,6 @@ public class DxConfig {
 
   public DxConfig(BuckConfig delegate) {
     this.delegate = delegate;
-  }
-
-  /** @return The upper heap size limit for out of process dx if specified. */
-  public Optional<String> getDxMaxHeapSize() {
-    return delegate.getValue("dx", "max_heap_size");
   }
 
   /**

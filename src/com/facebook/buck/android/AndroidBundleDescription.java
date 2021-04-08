@@ -91,7 +91,6 @@ public class AndroidBundleDescription
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
   private final AdbConfig adbConfig;
   private final ToolchainProvider toolchainProvider;
@@ -105,7 +104,6 @@ public class AndroidBundleDescription
       AndroidBuckConfig androidBuckConfig,
       BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
-      DxConfig dxConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider,
@@ -120,7 +118,6 @@ public class AndroidBundleDescription
     this.androidBuckConfig = androidBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.dxConfig = dxConfig;
     this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
     this.adbConfig = buckConfig.getView(AdbConfig.class);
     this.toolchainProvider = toolchainProvider;
@@ -187,7 +184,6 @@ public class AndroidBundleDescription
             javaCDBuckConfig,
             androidBuckConfig,
             cxxBuckConfig,
-            dxConfig,
             proGuardConfig,
             downwardApiConfig,
             buildBuckConfig,

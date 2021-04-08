@@ -128,7 +128,6 @@ public class AndroidInstrumentationApkTest {
                     DEFAULT_JAVACD_CONFIG,
                     new ProGuardConfig(FakeBuckConfig.empty()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
-                    new DxConfig(FakeBuckConfig.empty()),
                     toolchainProvider,
                     new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
                     DEFAULT_DOWNWARD_API_CONFIG,

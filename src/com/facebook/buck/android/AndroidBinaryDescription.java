@@ -93,7 +93,6 @@ public class AndroidBinaryDescription
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
   private final AdbConfig adbConfig;
   private final DownwardApiConfig downwardApiConfig;
@@ -110,7 +109,6 @@ public class AndroidBinaryDescription
       AndroidInstallConfig androidInstallConfig,
       AdbConfig adbConfig,
       CxxBuckConfig cxxBuckConfig,
-      DxConfig dxConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider,
@@ -123,7 +121,6 @@ public class AndroidBinaryDescription
     this.androidBuckConfig = androidBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.dxConfig = dxConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.buildBuckConfig = buildBuckConfig;
     this.androidInstallConfig = androidInstallConfig;
@@ -191,7 +188,6 @@ public class AndroidBinaryDescription
             javaCDBuckConfig,
             androidBuckConfig,
             cxxBuckConfig,
-            dxConfig,
             proGuardConfig,
             downwardApiConfig,
             buildBuckConfig,

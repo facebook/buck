@@ -26,25 +26,18 @@ import com.android.tools.r8.utils.AbortException;
 import com.android.tools.r8.utils.InternalOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
-import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -57,7 +50,8 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public class DxStep extends IsolatedShellStep {
+public class DxStep extends IsolatedStep {
+
   /** Options to pass to {@code dx}. */
   public enum Option {
     /** Specify the {@code --no-optimize} flag when running {@code dx}. */
@@ -88,17 +82,7 @@ public class DxStep extends IsolatedShellStep {
   public static final int DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE = 3;
 
   /** Available tools to create dex files * */
-  public static final String DX = "dx";
-
   public static final String D8 = "d8";
-
-  /**
-   * this is nothing more than a heuristic based on looking around for ARG_MAX values. a proper way
-   * might be to determine this value from the OS somehow (like sysconf(_SC_ARG_MAX)), but I haven't
-   * found an easy way to do it from java. This particular value is based on Windows'
-   * CreateProcess() limit of 32768 *characters*, which seems to be the smallest.
-   */
-  private static final int ARG_MAX = 32768;
 
   // TODO: Refactor project file system out of DxStep to make it a fully conforming isolated step
   private final ProjectFilesystem filesystem;
@@ -109,7 +93,6 @@ public class DxStep extends IsolatedShellStep {
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
-  private final Optional<String> maxHeapSize;
   private final String dexTool;
   private final boolean intermediate;
   // used to differentiate different dexing buckets (if any)
@@ -121,24 +104,19 @@ public class DxStep extends IsolatedShellStep {
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go.
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
-   *     files, or a directory of .class files.
    */
   public DxStep(
       ProjectFilesystem filesystem,
-      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
-      Iterable<Path> filesToDex,
-      boolean withDownwardApi) {
+      Iterable<Path> filesToDex) {
     this(
         filesystem,
-        cellPath,
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
-        D8,
-        withDownwardApi);
+        D8);
   }
 
   /**
@@ -150,24 +128,12 @@ public class DxStep extends IsolatedShellStep {
    */
   public DxStep(
       ProjectFilesystem filesystem,
-      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
-      String dexTool,
-      boolean withDownwardApi) {
-    this(
-        filesystem,
-        cellPath,
-        androidPlatformTarget,
-        outputDexFile,
-        filesToDex,
-        options,
-        Optional.empty(),
-        dexTool,
-        false,
-        withDownwardApi);
+      String dexTool) {
+    this(filesystem, androidPlatformTarget, outputDexFile, filesToDex, options, dexTool, false);
   }
 
   /**
@@ -175,34 +141,27 @@ public class DxStep extends IsolatedShellStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
-   * @param maxHeapSize The max heap size used for out of process dex.
    * @param dexTool the tool used to perform dexing.
    */
   public DxStep(
       ProjectFilesystem filesystem,
-      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
-      Optional<String> maxHeapSize,
       String dexTool,
-      boolean intermediate,
-      boolean withDownwardApi) {
+      boolean intermediate) {
     this(
         filesystem,
-        cellPath,
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
         options,
-        maxHeapSize,
         dexTool,
         intermediate,
         null,
         Optional.empty(),
-        Optional.empty() /* minSdkVersion */,
-        withDownwardApi);
+        Optional.empty() /* minSdkVersion */);
   }
 
   /**
@@ -210,33 +169,28 @@ public class DxStep extends IsolatedShellStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
-   * @param maxHeapSize The max heap size used for out of process dex.
    * @param dexTool the tool used to perform dexing.
    * @param classpathFiles specifies classpath for interface static and default methods desugaring.
    * @param minSdkVersion
    */
   public DxStep(
       ProjectFilesystem filesystem,
-      RelPath cellPath,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
-      Optional<String> maxHeapSize,
       String dexTool,
       boolean intermediate,
       @Nullable Collection<Path> classpathFiles,
       Optional<String> bucketId,
-      Optional<Integer> minSdkVersion,
-      boolean withDownwardApi) {
-    super(filesystem.getRootPath(), cellPath, withDownwardApi);
+      Optional<Integer> minSdkVersion) {
+    super();
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
     this.classpathFiles = classpathFiles;
     this.outputDexFile = filesystem.resolve(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
-    this.maxHeapSize = maxHeapSize;
     this.dexTool = dexTool;
     this.intermediate = intermediate;
     this.bucketId = bucketId;
@@ -246,221 +200,90 @@ public class DxStep extends IsolatedShellStep {
         !options.contains(Option.RUN_IN_PROCESS)
             || options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE),
         "In-process dexing is only supported with custom DX");
-    Preconditions.checkArgument(
-        !intermediate || dexTool.equals(D8), "Intermediate dexing is only supported with D8");
-  }
-
-  @Override
-  protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
-    CharsCountingStringList commandArgs = new CharsCountingStringList(10 + filesToDex.size());
-
-    // TODO: Support D8 for out of process dexing by respecting dexTool here
-    String dx = androidPlatformTarget.getDxExecutable().toString();
-
-    if (dexTool.equals(D8)) {
-      // FIXME: We use the dx description for this rule, even if d8 is in use.
-      context.postEvent(
-          ConsoleEvent.fine("Using %s instead of D8. D8 can only be used in-process.", dx));
-    }
-
-    if (options.contains(Option.USE_CUSTOM_DX_IF_AVAILABLE)) {
-      String customDx = Strings.emptyToNull(System.getProperty("buck.dx"));
-      dx = customDx != null ? customDx : dx;
-    }
-
-    commandArgs.add(dx);
-
-    // Add the Xmx override, but not for in-process dexing, since the dexer won't understand it.
-    // Also, if DX works in-process, it probably wouldn't need an enlarged Xmx.
-    if (maxHeapSize.isPresent() && !options.contains(Option.RUN_IN_PROCESS)) {
-      commandArgs.add(String.format("-JXmx%s", maxHeapSize.get()));
-    }
-
-    commandArgs.add("--dex");
-
-    // --statistics flag, if appropriate.
-    if (context.getVerbosity().shouldPrintSelectCommandOutput()) {
-      commandArgs.add("--statistics");
-    }
-
-    if (options.contains(Option.NO_OPTIMIZE)) {
-      commandArgs.add("--no-optimize");
-    }
-
-    if (options.contains(Option.FORCE_JUMBO)) {
-      commandArgs.add("--force-jumbo");
-    }
-
-    // --no-locals flag, if appropriate.
-    if (options.contains(Option.NO_LOCALS)) {
-      commandArgs.add("--no-locals");
-    }
-
-    // verbose flag, if appropriate.
-    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
-      commandArgs.add("--verbose");
-    }
-
-    // min api flag if known
-    minSdkVersion.ifPresent(
-        minApi -> {
-          commandArgs.add("--min-sdk-version");
-          commandArgs.add(Integer.toString(minApi));
-        });
-
-    commandArgs.add("--output");
-    commandArgs.add(filesystem.resolve(outputDexFile).toString());
-
-    final int splitPoint = commandArgs.size();
-
-    for (Path fileToDex : filesToDex) {
-      // TODO: Does this need to also resolve directory entries as below when using D8?
-      commandArgs.add(filesystem.resolve(fileToDex).toString());
-    }
-
-    ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
-    if (!isRunningInProc()
-        && splitPoint < commandArgs.size()
-        && isOverArgMax(commandArgs.getCharCount(), commandArgs.size())) {
-      builder.addAll(commandArgs.subList(0, splitPoint));
-      String inputListFile;
-      try {
-        inputListFile =
-            writeFileToDexArgsToFile(commandArgs.subList(splitPoint, commandArgs.size()));
-      } catch (IOException e) {
-        throw new RuntimeException("failed to create argument list file", e);
-      }
-      builder.add("--input-list");
-      builder.add(inputListFile);
-    } else {
-      builder.addAll(commandArgs);
-    }
-
-    return builder.build();
+    Preconditions.checkArgument(dexTool.equals(D8));
   }
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    if (isRunningInProc()) {
-      return StepExecutionResult.of(executeInProcess(context));
-    } else {
-      return super.executeIsolatedStep(context);
-    }
+    return StepExecutionResult.of(executeInProcess(context));
   }
 
   private int executeInProcess(IsolatedExecutionContext context) throws IOException {
-    if (D8.equals(dexTool)) {
+    Preconditions.checkState(D8.equals(dexTool));
 
-      D8DiagnosticsHandler diagnosticsHandler = new D8DiagnosticsHandler();
-
-      try {
-        Set<Path> inputs = new HashSet<>();
-        for (Path rawFile : filesToDex) {
-          Path toDex = filesystem.resolve(rawFile);
-          if (Files.isRegularFile(toDex)) {
-            inputs.add(toDex);
-          } else {
-            Files.walk(toDex).filter(path -> path.toFile().isFile()).forEach(inputs::add);
-          }
-        }
-
-        // D8 only outputs to dex if the output path is a directory. So we output to a temporary dir
-        // and move it over to the final location
-        boolean outputToDex = outputDexFile.getFileName().toString().endsWith(".dex");
-        Path output = outputToDex ? Files.createTempDirectory("buck-d8") : outputDexFile;
-
-        D8Command.Builder builder =
-            D8Command.builder(diagnosticsHandler)
-                .addProgramFiles(inputs)
-                .setIntermediate(intermediate)
-                .addLibraryFiles(androidPlatformTarget.getAndroidJar())
-                .setMode(
-                    options.contains(Option.NO_OPTIMIZE)
-                        ? CompilationMode.DEBUG
-                        : CompilationMode.RELEASE)
-                .setOutput(output, OutputMode.DexIndexed)
-                .setDisableDesugaring(options.contains(Option.NO_DESUGAR))
-                .setInternalOptionsModifier(
-                    (InternalOptions opt) -> {
-                      opt.testing.forceJumboStringProcessing = options.contains(Option.FORCE_JUMBO);
-                    });
-
-        bucketId.ifPresent(builder::setBucketId);
-        minSdkVersion.ifPresent(builder::setMinApiLevel);
-
-        if (classpathFiles != null && !classpathFiles.isEmpty()) {
-          // classpathFiles is needed only for D8 java 8 desugar
-          ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
-          for (Path classpathFile : classpathFiles) {
-            absolutePaths.add(filesystem.getPathForRelativeExistingPath(classpathFile));
-          }
-          builder.addClasspathFiles(absolutePaths.build());
-        }
-        D8Command d8Command = builder.build();
-        com.android.tools.r8.D8.run(d8Command);
-
-        if (outputToDex) {
-          File[] outputs = output.toFile().listFiles();
-          if (outputs != null && (outputs.length > 0)) {
-            Files.move(outputs[0].toPath(), outputDexFile, StandardCopyOption.REPLACE_EXISTING);
-          }
-        }
-
-        resourcesReferencedInCode = d8Command.getDexItemFactory().computeReferencedResources();
-        return SUCCESS_EXIT_CODE;
-      } catch (CompilationFailedException e) {
-        if (isOverloadedDexException(e)) {
-          context.getConsole().printErrorText(e.getMessage());
-          if (e.getCause().getMessage().contains("# methods")) {
-            return DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE;
-          } else if (e.getCause().getMessage().contains("# fields")) {
-            return DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE;
-          }
-          throw new IOException(e);
+    D8DiagnosticsHandler diagnosticsHandler = new D8DiagnosticsHandler();
+    try {
+      Set<Path> inputs = new HashSet<>();
+      for (Path rawFile : filesToDex) {
+        Path toDex = filesystem.resolve(rawFile);
+        if (Files.isRegularFile(toDex)) {
+          inputs.add(toDex);
         } else {
-          postCompilationFailureToConsole(context, diagnosticsHandler);
-          throw new IOException(e);
+          Files.walk(toDex).filter(path -> path.toFile().isFile()).forEach(inputs::add);
         }
-      } catch (IOException e) {
+      }
+
+      // D8 only outputs to dex if the output path is a directory. So we output to a temporary dir
+      // and move it over to the final location
+      boolean outputToDex = outputDexFile.getFileName().toString().endsWith(".dex");
+      Path output = outputToDex ? Files.createTempDirectory("buck-d8") : outputDexFile;
+
+      D8Command.Builder builder =
+          D8Command.builder(diagnosticsHandler)
+              .addProgramFiles(inputs)
+              .setIntermediate(intermediate)
+              .addLibraryFiles(androidPlatformTarget.getAndroidJar())
+              .setMode(
+                  options.contains(Option.NO_OPTIMIZE)
+                      ? CompilationMode.DEBUG
+                      : CompilationMode.RELEASE)
+              .setOutput(output, OutputMode.DexIndexed)
+              .setDisableDesugaring(options.contains(Option.NO_DESUGAR))
+              .setInternalOptionsModifier(
+                  (InternalOptions opt) -> {
+                    opt.testing.forceJumboStringProcessing = options.contains(Option.FORCE_JUMBO);
+                  });
+
+      bucketId.ifPresent(builder::setBucketId);
+      minSdkVersion.ifPresent(builder::setMinApiLevel);
+
+      if (classpathFiles != null && !classpathFiles.isEmpty()) {
+        // classpathFiles is needed only for D8 java 8 desugar
+        ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
+        for (Path classpathFile : classpathFiles) {
+          absolutePaths.add(filesystem.getPathForRelativeExistingPath(classpathFile));
+        }
+        builder.addClasspathFiles(absolutePaths.build());
+      }
+      D8Command d8Command = builder.build();
+      com.android.tools.r8.D8.run(d8Command);
+
+      if (outputToDex) {
+        File[] outputs = output.toFile().listFiles();
+        if (outputs != null && (outputs.length > 0)) {
+          Files.move(outputs[0].toPath(), outputDexFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+      }
+
+      resourcesReferencedInCode = d8Command.getDexItemFactory().computeReferencedResources();
+      return SUCCESS_EXIT_CODE;
+    } catch (CompilationFailedException e) {
+      if (isOverloadedDexException(e)) {
+        context.getConsole().printErrorText(e.getMessage());
+        if (e.getCause().getMessage().contains("# methods")) {
+          return DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE;
+        } else if (e.getCause().getMessage().contains("# fields")) {
+          return DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE;
+        }
+        throw new IOException(e);
+      } else {
         postCompilationFailureToConsole(context, diagnosticsHandler);
-        throw e;
+        throw new IOException(e);
       }
-    } else if (DX.equals(dexTool)) {
-      ImmutableList<String> argv = getShellCommandInternal(context);
-
-      // The first arguments should be ".../dx --dex" ("...\dx.bat --dex on Windows).  Strip them
-      // off
-      // because we bypass the dispatcher and go straight to the dexer.
-      Preconditions.checkState(
-          argv.get(0).endsWith(File.separator + "dx") || argv.get(0).endsWith("\\dx.bat"));
-      Preconditions.checkState(argv.get(1).equals("--dex"));
-      ImmutableList<String> args = argv.subList(2, argv.size());
-
-      ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-      PrintStream stderrStream = new PrintStream(stderr);
-      try {
-        com.android.dx.command.dexer.DxContext dxContext =
-            new com.android.dx.command.dexer.DxContext(context.getStdOut(), stderrStream);
-        com.android.dx.command.dexer.Main.Arguments arguments =
-            new com.android.dx.command.dexer.Main.Arguments();
-        com.android.dx.command.dexer.Main dexer = new com.android.dx.command.dexer.Main(dxContext);
-        arguments.parseCommandLine(args.toArray(new String[0]), dxContext);
-        int returncode = dexer.run(arguments);
-        String stdErrOutput = stderr.toString();
-        if (!stdErrOutput.isEmpty()) {
-          context.postEvent(ConsoleEvent.warning("%s", stdErrOutput));
-        }
-        if (returncode == 0) {
-          resourcesReferencedInCode = dexer.getReferencedResourceNames();
-        }
-        return returncode;
-      } catch (IOException e) {
-        e.printStackTrace(context.getStdErr());
-        return FAILURE_EXIT_CODE;
-      }
-    } else {
-      return FAILURE_EXIT_CODE;
+    } catch (IOException e) {
+      postCompilationFailureToConsole(context, diagnosticsHandler);
+      throw e;
     }
   }
 
@@ -481,18 +304,47 @@ public class DxStep extends IsolatedShellStep {
   }
 
   @Override
-  public boolean shouldPrintStderr(Verbosity verbosity) {
-    return verbosity.shouldPrintSelectCommandOutput();
-  }
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
+    ImmutableList.Builder<String> commandArgs =
+        ImmutableList.builderWithExpectedSize(10 + filesToDex.size());
 
-  @Override
-  public boolean shouldPrintStdout(Verbosity verbosity) {
-    return verbosity.shouldPrintSelectCommandOutput();
+    commandArgs.add("d8");
+
+    minSdkVersion.ifPresent(
+        minApi -> {
+          commandArgs.add("--min-api");
+          commandArgs.add(Integer.toString(minApi));
+        });
+
+    commandArgs.add("--output");
+    commandArgs.add(filesystem.resolve(outputDexFile).toString());
+
+    commandArgs.add(options.contains(Option.NO_OPTIMIZE) ? "--debug" : "--release");
+
+    commandArgs.add("--lib").add(androidPlatformTarget.getAndroidJar().toString());
+
+    if (options.contains(Option.NO_DESUGAR)) {
+      commandArgs.add("--no-desugaring");
+    }
+
+    if (options.contains(Option.FORCE_JUMBO)) {
+      commandArgs.add("--force-jumbo");
+    }
+
+    if (intermediate) {
+      commandArgs.add("--intermediate");
+    }
+
+    for (Path fileToDex : filesToDex) {
+      commandArgs.add(filesystem.resolve(fileToDex).toString());
+    }
+
+    return Joiner.on(" ").join(commandArgs.build());
   }
 
   @Override
   public String getShortName() {
-    return dexTool;
+    return "d8";
   }
 
   /**
@@ -503,27 +355,6 @@ public class DxStep extends IsolatedShellStep {
   @Nullable
   Collection<String> getResourcesReferencedInCode() {
     return resourcesReferencedInCode;
-  }
-
-  private boolean isOverArgMax(int charsCount, int argsCount) {
-    return charsCount * 2 + argsCount - 1 >= ARG_MAX;
-  }
-
-  private boolean isRunningInProc() {
-    // D8 runs in process only
-    return options.contains(Option.RUN_IN_PROCESS) || D8.equals(dexTool);
-  }
-
-  private String writeFileToDexArgsToFile(List<String> items) throws IOException {
-    Path path = filesystem.createTempFile("dx_input_list", "");
-    try (BufferedWriter writer =
-        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(path.toFile())))) {
-      for (String item : items) {
-        writer.write(item);
-        writer.write("\n");
-      }
-    }
-    return path.toAbsolutePath().toString();
   }
 
   private static class D8DiagnosticsHandler implements DiagnosticsHandler {
@@ -537,27 +368,6 @@ public class DxStep extends IsolatedShellStep {
 
     @Override
     public void info(Diagnostic info) {}
-  }
-
-  private static class CharsCountingStringList extends ArrayList<String> {
-    private int mCharCounter = 0;
-
-    public CharsCountingStringList(int initialSize) {
-      super(initialSize);
-    }
-
-    @Override
-    public boolean add(@Nullable String e) {
-      if (e == null) {
-        throw new NullPointerException("argument may not be null");
-      }
-      mCharCounter += e.length();
-      return super.add(e);
-    }
-
-    public int getCharCount() {
-      return mCharCounter;
-    }
   }
 
   public Path getOutputDexFile() {

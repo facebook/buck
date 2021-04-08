@@ -16,40 +16,26 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.util.Verbosity.COMMANDS_AND_SPECIAL_OUTPUT;
-import static org.junit.Assert.assertTrue;
-
 import com.facebook.buck.android.DxStep.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
-import com.facebook.buck.cli.VerbosityParser;
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.Verbosity;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
 public class DxStepTest {
-
-  private static final String BASE_DX_PREFIX = Paths.get("/usr/bin/dx").toString();
-
-  private static final String EXPECTED_DX_PREFIX = Paths.get("/usr/bin/dx") + " --dex";
 
   private static final Path SAMPLE_OUTPUT_PATH =
       Paths.get(".").toAbsolutePath().normalize().resolve("buck-out/gen/classes.dex");
@@ -66,32 +52,30 @@ public class DxStepTest {
 
   @Test
   public void testDxCommandNoOptimizeNoJumbo() throws IOException {
-    // Context with --verbose 2.
-    try (StepExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
 
       DxStep dx =
           new DxStep(
               filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(Option.NO_OPTIMIZE),
-              DxStep.DX,
-              false);
+              DxStep.D8);
 
       String expected =
           String.format(
-              "%s --no-optimize --output %s %s",
-              EXPECTED_DX_PREFIX,
+              "d8 --output %s --debug --lib %s %s",
               SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
-          "--no-optimize should be present, but --force-jumbo should not.",
+              androidPlatformTarget.getAndroidJar(),
+              Joiner.on(' ')
+                  .join(
+                      SAMPLE_FILES_TO_DEX.stream()
+                          .map(filesystem::resolve)
+                          .collect(Collectors.toList())));
+      MoreAsserts.assertSteps(
+          "--debug should be present, but --force-jumbo should not.",
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
@@ -100,30 +84,23 @@ public class DxStepTest {
 
   @Test
   public void testDxCommandOptimizeNoJumbo() throws IOException {
-    // Context with --verbose 2.
-    try (StepExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
-
       DxStep dx =
-          new DxStep(
-              filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX,
-              false);
+          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
-              "%s --output %s %s",
-              EXPECTED_DX_PREFIX,
+              "d8 --output %s --release --lib %s %s",
               SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
-          "Neither --no-optimize nor --force-jumbo should be present.",
+              androidPlatformTarget.getAndroidJar(),
+              Joiner.on(' ')
+                  .join(
+                      SAMPLE_FILES_TO_DEX.stream()
+                          .map(filesystem::resolve)
+                          .collect(Collectors.toList())));
+      MoreAsserts.assertSteps(
+          "Neither --debug nor --force-jumbo should be present.",
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
@@ -132,144 +109,29 @@ public class DxStepTest {
 
   @Test
   public void testDxCommandNoOptimizeForceJumbo() throws IOException {
-    // Context with --verbose 2.
-    try (StepExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
-
       DxStep dx =
           new DxStep(
               filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO),
-              DxStep.DX,
-              false);
+              DxStep.D8);
 
       String expected =
           String.format(
-              "%s --no-optimize --force-jumbo --output %s %s",
-              EXPECTED_DX_PREFIX,
+              "d8 --output %s --debug --lib %s --force-jumbo %s",
               SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
-          "Both --no-optimize and --force-jumbo should be present.",
-          ImmutableList.of(expected),
-          ImmutableList.of(dx),
-          context);
-    }
-  }
-
-  @Test
-  public void testVerbose3AddsStatisticsFlag() throws IOException {
-    // Context with --verbose 3.
-    try (StepExecutionContext context =
-        createExecutionContext(COMMANDS_AND_SPECIAL_OUTPUT.ordinal())) {
-      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
-
-      DxStep dx =
-          new DxStep(
-              filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX,
-              false);
-
-      String expected =
-          String.format(
-              "%s --statistics --output %s %s",
-              EXPECTED_DX_PREFIX,
-              SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
-          "Ensure that the --statistics flag is present.",
-          ImmutableList.of(expected),
-          ImmutableList.of(dx),
-          context);
-
-      assertTrue(
-          "Should print stdout to show statistics.", dx.shouldPrintStdout(context.getVerbosity()));
-      assertTrue(
-          "Should print stderr to show statistics.", dx.shouldPrintStderr(context.getVerbosity()));
-    }
-  }
-
-  @Test
-  public void testVerbose10AddsVerboseFlagToDx() throws IOException {
-    // Context with --verbose 10.
-    try (StepExecutionContext context = createExecutionContext(10)) {
-      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
-
-      DxStep dx =
-          new DxStep(
-              filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX,
-              false);
-
-      String expected =
-          String.format(
-              "%s --statistics --verbose --output %s %s",
-              EXPECTED_DX_PREFIX,
-              SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
-          "Ensure that the --statistics flag is present.",
-          ImmutableList.of(expected),
-          ImmutableList.of(dx),
-          context);
-
-      assertTrue(
-          "Should print stdout since `dx --verbose` is enabled.",
-          dx.shouldPrintStdout(context.getVerbosity()));
-      assertTrue(
-          "Should print stdout since `dx --verbose` is enabled.",
-          dx.shouldPrintStderr(context.getVerbosity()));
-    }
-  }
-
-  @Test
-  public void testOverridenMaxHeapSize() throws IOException {
-    try (StepExecutionContext context = createExecutionContext(2)) {
-      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
-
-      DxStep dx =
-          new DxStep(
-              filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
-              androidPlatformTarget,
-              SAMPLE_OUTPUT_PATH,
-              SAMPLE_FILES_TO_DEX,
-              EnumSet.noneOf(DxStep.Option.class),
-              Optional.of("2g"),
-              DxStep.DX,
-              false,
-              false);
-
-      String expected =
-          String.format(
-              "%s -JXmx2g --dex --output %s %s",
-              BASE_DX_PREFIX,
-              SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
-          "Ensure that the -JXmx flag is present.",
+              androidPlatformTarget.getAndroidJar(),
+              Joiner.on(' ')
+                  .join(
+                      SAMPLE_FILES_TO_DEX.stream()
+                          .map(filesystem::resolve)
+                          .collect(Collectors.toList())));
+      MoreAsserts.assertSteps(
+          "Both --debug and --force-jumbo should be present.",
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
@@ -278,45 +140,37 @@ public class DxStepTest {
 
   @Test
   public void testMinSdkVersion() throws IOException {
-    try (StepExecutionContext context = createExecutionContext(2)) {
+    try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      AbsPath rootPath = filesystem.getRootPath();
-      BuildContext buildContext =
-          FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
 
       DxStep dx =
           new DxStep(
               filesystem,
-              ProjectFilesystemUtils.relativize(rootPath, buildContext.getBuildCellRootPath()),
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(DxStep.Option.class),
-              Optional.empty(),
-              DxStep.DX,
+              DxStep.D8,
               false,
               ImmutableSet.of(),
               Optional.empty(),
-              Optional.of(28),
-              false);
+              Optional.of(28));
 
       String expected =
           String.format(
-              "%s --dex --min-sdk-version 28 --output %s %s",
-              BASE_DX_PREFIX,
+              "d8 --min-api 28 --output %s --release --lib %s %s",
               SAMPLE_OUTPUT_PATH,
-              Joiner.on(' ').join(Iterables.transform(SAMPLE_FILES_TO_DEX, filesystem::resolve)));
-      MoreAsserts.assertIsolatedShellCommands(
+              androidPlatformTarget.getAndroidJar(),
+              Joiner.on(' ')
+                  .join(
+                      SAMPLE_FILES_TO_DEX.stream()
+                          .map(filesystem::resolve)
+                          .collect(Collectors.toList())));
+      MoreAsserts.assertSteps(
           "Ensure that the --min-sdk-version flag is present.",
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);
     }
-  }
-
-  private StepExecutionContext createExecutionContext(int verbosityLevel) {
-    Verbosity verbosity = VerbosityParser.getVerbosityForLevel(verbosityLevel);
-    TestConsole console = new TestConsole(verbosity);
-    return TestExecutionContext.newBuilder().setConsole(console).build();
   }
 }

@@ -93,9 +93,8 @@ import java.util.stream.Collectors;
 
 public class AndroidBinaryGraphEnhancer {
 
-  static final Flavor DEX_FLAVOR = InternalFlavor.of("dex");
   static final Flavor D8_FLAVOR = InternalFlavor.of("d8");
-  private static final Flavor DEX_MERGE_SPLIT_FLAVOR = InternalFlavor.of("split_dex_merge");
+  static final Flavor DEX_MERGE_SPLIT_FLAVOR = InternalFlavor.of("split_dex_merge");
   private static final Flavor DEX_MERGE_SINGLE_FLAVOR = InternalFlavor.of("single_dex_merge");
   private static final Flavor TRIM_UBER_R_DOT_JAVA_FLAVOR =
       InternalFlavor.of("trim_uber_r_dot_java");
@@ -150,7 +149,6 @@ public class AndroidBinaryGraphEnhancer {
   private final APKModuleGraph apkModuleGraph;
   private final Optional<BuildTarget> nativeLibraryProguardConfigGenerator;
   private final ListeningExecutorService dxExecutorService;
-  private final DxConfig dxConfig;
   private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
@@ -221,7 +219,6 @@ public class AndroidBinaryGraphEnhancer {
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
       APKModuleGraph apkModuleGraph,
-      DxConfig dxConfig,
       String dexTool,
       Optional<Arg> postFilterResourcesCmd,
       NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
@@ -325,7 +322,6 @@ public class AndroidBinaryGraphEnhancer {
             buildBuckConfig.areExternalActionsEnabled(),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
     this.apkModuleGraph = apkModuleGraph;
-    this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.dexTool = dexTool;
@@ -822,10 +818,8 @@ public class AndroidBinaryGraphEnhancer {
         dexes,
         dxExecutorService,
         xzCompressionLevel,
-        dxConfig.getDxMaxHeapSize(),
         group,
-        secondaryDexWeightLimit,
-        downwardApiConfig.isEnabledForAndroid());
+        secondaryDexWeightLimit);
   }
 
   /**
@@ -951,9 +945,7 @@ public class AndroidBinaryGraphEnhancer {
             apkModuleGraph,
             dexGroupRules,
             dxExecutorService,
-            xzCompressionLevel,
-            dxConfig.getDxMaxHeapSize(),
-            downwardApiConfig.isEnabledForAndroid());
+            xzCompressionLevel);
     graphBuilder.addToIndex(superDexMergeRule);
 
     return superDexMergeRule;
@@ -1127,9 +1119,7 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private static Flavor getDexFlavor(String dexTool) {
-    if (DxStep.D8.equals(dexTool)) {
-      return D8_FLAVOR;
-    }
-    return DEX_FLAVOR;
+    Preconditions.checkArgument(DxStep.D8.equals(dexTool));
+    return D8_FLAVOR;
   }
 }

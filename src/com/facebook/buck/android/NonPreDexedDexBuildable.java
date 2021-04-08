@@ -911,7 +911,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             dxOptions,
             dxExecutorService,
             xzCompressionLevel,
-            dxMaxHeapSize,
             dexTool,
             desugarInterfaceMethods,
             true,
@@ -922,8 +921,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                             buildContext.getSourcePathResolver().getAbsolutePath(input).getPath())
                     .collect(ImmutableSet.toImmutableSet())),
             getBuildTarget(),
-            minSdkVersion,
-            withDownwardApi);
+            minSdkVersion);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

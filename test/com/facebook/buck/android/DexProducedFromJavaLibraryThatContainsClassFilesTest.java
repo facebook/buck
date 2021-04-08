@@ -55,7 +55,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import org.junit.Test;
 
@@ -88,13 +87,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     RelPath dexOutput =
         BuildTargetPaths.getGenPath(
             filesystem.getBuckPaths(),
-            javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
+            javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR),
             "%s/dex.jar");
     createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
 
     AndroidPlatformTarget androidPlatformTarget = AndroidTestUtils.createAndroidPlatformTarget();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance("//foo:bar")
+            .withFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule, false);
@@ -105,13 +106,15 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     String expectedDxCommand =
         String.format(
-            "%s --dex --no-optimize --force-jumbo --output %s %s",
-            Paths.get("/usr/bin/dx"), filesystem.resolve(dexOutput), filesystem.resolve(jarOutput));
+            "d8 --output %s --debug --lib %s --no-desugaring --force-jumbo --intermediate %s",
+            filesystem.resolve(dexOutput),
+            androidPlatformTarget.getAndroidJar(),
+            filesystem.resolve(jarOutput));
     MoreAsserts.assertSteps(
         "Generate bar.dex.jar.",
         ImmutableList.of(
             "estimate_dex_weight",
-            "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
+            expectedDxCommand,
             String.format("zip-scrub %s", filesystem.resolve(dexOutput)),
             "record_dx_success"),
         steps,
@@ -155,7 +158,9 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance("//foo:bar")
+            .withFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR);
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             buildTarget,

@@ -72,7 +72,6 @@ public class AndroidInstrumentationApkDescription
   private final JavaCDBuckConfig javaCDBuckConfig;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final DxConfig dxConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
@@ -84,7 +83,6 @@ public class AndroidInstrumentationApkDescription
       JavaCDBuckConfig javaCDBuckConfig,
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
-      DxConfig dxConfig,
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
@@ -93,7 +91,6 @@ public class AndroidInstrumentationApkDescription
     this.javaCDBuckConfig = javaCDBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.dxConfig = dxConfig;
     this.toolchainProvider = toolchainProvider;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.androidBuckConfig = androidBuckConfig;
@@ -274,7 +271,6 @@ public class AndroidInstrumentationApkDescription
             apkUnderTest.getManifestEntries(),
             cxxBuckConfig,
             new APKModuleGraph(context.getTargetGraph(), buildTarget),
-            dxConfig,
             dexTool,
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,

@@ -124,9 +124,7 @@ public class AndroidBinaryFilesInfoTest {
           apkModuleGraph,
           null,
           MoreExecutors.newDirectExecutorService(),
-          XzStep.DEFAULT_COMPRESSION_LEVEL,
-          Optional.empty(),
-          false);
+          XzStep.DEFAULT_COMPRESSION_LEVEL);
     }
 
     @Override

@@ -77,8 +77,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
   private final ImmutableCollection<PreDexSplitDexGroup> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
   private final int xzCompressionLevel;
-  private final Optional<String> dxMaxHeapSize;
-  @AddToRuleKey private final boolean withDownwardApi;
 
   public PreDexSplitDexMerge(
       BuildTarget buildTarget,
@@ -90,17 +88,13 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       APKModuleGraph apkModuleGraph,
       ImmutableCollection<PreDexSplitDexGroup> preDexDeps,
       ListeningExecutorService dxExecutorService,
-      int xzCompressionLevel,
-      Optional<String> dxMaxHeapSize,
-      boolean withDownwardApi) {
+      int xzCompressionLevel) {
     super(buildTarget, projectFilesystem, params, androidPlatformTarget, dexTool);
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.preDexDeps = preDexDeps;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.dxMaxHeapSize = dxMaxHeapSize;
-    this.withDownwardApi = withDownwardApi;
   }
 
   private ImmutableMap<Path, Sha1HashCode> resolvePrimaryDexInputHashPaths() {
@@ -169,14 +163,12 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             DX_MERGE_OPTIONS,
             dxExecutorService,
             xzCompressionLevel,
-            dxMaxHeapSize,
             dexTool,
             false,
             false,
             Optional.empty(),
             getBuildTarget(),
-            Optional.empty() /* minSdkVersion */,
-            withDownwardApi));
+            Optional.empty() /* minSdkVersion */));
 
     ImmutableSet.Builder<APKModule> modulesWithDexesBuilder = ImmutableSet.builder();
     for (PreDexSplitDexGroup partialDex : preDexDeps) {

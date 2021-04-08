@@ -38,7 +38,6 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -131,7 +130,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ruleFinder,
         androidPlatformTarget,
         javaLibrary,
-        DxStep.DX,
+        DxStep.D8,
         1,
         ImmutableSortedSet.of(),
         withDownwardApi);
@@ -221,19 +220,15 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         dx =
             new DxStep(
                 filesystem,
-                ProjectFilesystemUtils.relativize(
-                    filesystem.getRootPath(), buildContext.getBuildCellRootPath()),
                 androidPlatformTarget,
                 pathToDex.getPath(),
                 Collections.singleton(pathToOutputFile.getPath()),
                 options,
-                Optional.empty(),
                 dexTool,
                 dexTool.equals(DxStep.D8),
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
-                Optional.empty() /* minSdkVersion */,
-                withDownwardApi);
+                Optional.empty() /* minSdkVersion */);
         steps.add(dx);
 
         // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making

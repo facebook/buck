@@ -1098,7 +1098,6 @@ public class AndroidBinaryGraphEnhancerTest {
         /* manifestEntries */ ManifestEntries.empty(),
         CxxPlatformUtils.DEFAULT_CONFIG,
         new APKModuleGraph(TargetGraph.EMPTY, args.getTarget(), Optional.empty()),
-        new DxConfig(FakeBuckConfig.empty()),
         args.getDexTool(),
         Optional.empty(),
         defaultNonPredexedArgs(),

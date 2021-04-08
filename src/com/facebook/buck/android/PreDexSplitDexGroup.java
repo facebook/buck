@@ -87,7 +87,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   public final Collection<DexProducedFromJavaLibrary> preDexDeps;
   private final ListeningExecutorService dxExecutorService;
   @AddToRuleKey private final int xzCompressionLevel;
-  @AddToRuleKey private final Optional<String> dxMaxHeapSize;
 
   @AddToRuleKey final String dexTool;
   @AddToRuleKey final AndroidPlatformTarget androidPlatformTarget;
@@ -102,8 +101,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableList<SourcePath> preDexInputs;
 
-  @AddToRuleKey private final boolean withDownwardApi;
-
   public PreDexSplitDexGroup(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -116,10 +113,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       Collection<DexProducedFromJavaLibrary> preDexDeps,
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
-      Optional<String> dxMaxHeapSize,
       Optional<Integer> groupIndex,
-      int secondaryDexWeightLimit,
-      boolean withDownwardApi) {
+      int secondaryDexWeightLimit) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.dexTool = dexTool;
@@ -127,7 +122,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     this.apkModuleGraph = apkModuleGraph;
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.dxMaxHeapSize = dxMaxHeapSize;
     this.apkModule = apkModule;
     this.preDexDeps = preDexDeps;
     this.groupIndex = groupIndex;
@@ -137,7 +131,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             .map(DexProducedFromJavaLibrary::getSourcePathToDex)
             .collect(ImmutableList.toImmutableList());
     this.secondaryDexWeightLimit = secondaryDexWeightLimit;
-    this.withDownwardApi = withDownwardApi;
   }
 
   public List<DexWithClasses> getDexWithClasses() {
@@ -270,14 +263,12 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             PreDexMerge.DX_MERGE_OPTIONS,
             dxExecutorService,
             xzCompressionLevel,
-            dxMaxHeapSize,
             dexTool,
             false,
             false,
             Optional.empty(),
             getBuildTarget(),
-            Optional.empty() /* minSdkVersion */,
-            withDownwardApi));
+            Optional.empty() /* minSdkVersion */));
 
     steps.add(
         new AbstractExecutionStep("write_metadata_txt") {

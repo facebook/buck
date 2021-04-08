@@ -74,7 +74,6 @@ public class AndroidBinaryBuilder
             new AndroidInstallConfig(buckConfig),
             buckConfig.getView(AdbConfig.class),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new DxConfig(buckConfig),
             DEFAULT_DOWNWARD_API_CONFIG,
             DEFAULT_EXTERNAL_ACTIONS_CONFIG,
             createToolchainProviderForAndroidBinary(),

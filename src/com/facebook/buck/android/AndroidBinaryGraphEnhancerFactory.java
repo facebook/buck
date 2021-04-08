@@ -61,7 +61,6 @@ public class AndroidBinaryGraphEnhancerFactory {
       JavaCDBuckConfig javaCDBuckConfig,
       AndroidBuckConfig androidBuckConfig,
       CxxBuckConfig cxxBuckConfig,
-      DxConfig dxConfig,
       ProGuardConfig proGuardConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig,
@@ -143,7 +142,6 @@ public class AndroidBinaryGraphEnhancerFactory {
             .setDexReorderToolFile(args.getDexReorderToolFile())
             .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
             .setDxExecutorService(dxExecutorService)
-            .setDxMaxHeapSize(dxConfig.getDxMaxHeapSize())
             .setOptimizationPasses(args.getOptimizationPasses())
             .setProguardJvmArgs(args.getProguardJvmArgs())
             .setSkipProguard(args.isSkipProguard())
@@ -219,7 +217,6 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getManifestEntries(),
         cxxBuckConfig,
         apkModuleGraph,
-        dxConfig,
         args.getDexTool(),
         getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellPathResolver),
         nonPreDexedDexBuildableArgs,

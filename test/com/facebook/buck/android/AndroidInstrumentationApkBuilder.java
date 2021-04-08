@@ -52,7 +52,6 @@ public class AndroidInstrumentationApkBuilder
             DEFAULT_JAVACD_CONFIG,
             new ProGuardConfig(FakeBuckConfig.empty()),
             new CxxBuckConfig(FakeBuckConfig.empty()),
-            new DxConfig(FakeBuckConfig.empty()),
             createToolchainProviderForAndroidInstrumentationApk(),
             new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
             DEFAULT_DOWNWARD_API_CONFIG,
