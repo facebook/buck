@@ -24,6 +24,7 @@ import net.starlark.java.syntax.DictExpression;
 import net.starlark.java.syntax.DotExpression;
 import net.starlark.java.syntax.Expression;
 import net.starlark.java.syntax.ExpressionStatement;
+import net.starlark.java.syntax.FileLocations;
 import net.starlark.java.syntax.FloatLiteral;
 import net.starlark.java.syntax.FlowStatement;
 import net.starlark.java.syntax.ForStatement;
@@ -94,11 +95,11 @@ class Bc {
     /** Max depths of for loops. */
     public final int loopDepth;
     /**
-     * Instruction pointer to a node.
+     * Instruction pointer to a location offset.
      *
      * <p>Key is a beginning of an instruction.
      */
-    public final ImmutableMap<Integer, Node> instrToNode;
+    public final BcInstrToLoc instrToLoc;
 
     private Compiled(
         Resolver.Function rfn,
@@ -109,7 +110,7 @@ class Bc {
         int slotCount,
         Object[] constSlots,
         int loopDepth,
-        ImmutableMap<Integer, Node> instrToNode) {
+        BcInstrToLoc instrToLoc) {
       this.rfn = rfn;
       this.module = module;
       this.strings = strings;
@@ -118,7 +119,7 @@ class Bc {
       this.slotCount = slotCount;
       this.constSlots = constSlots;
       this.loopDepth = loopDepth;
-      this.instrToNode = instrToNode;
+      this.instrToLoc = instrToLoc;
     }
 
     @Override
@@ -194,28 +195,7 @@ class Bc {
     }
 
     public Location locationAt(int ip) {
-      Node node = nodeAt(ip);
-      Location loc;
-      if (node instanceof BinaryOperatorExpression) {
-        loc = ((BinaryOperatorExpression) node).getOperatorLocation();
-      } else if (node instanceof IndexExpression) {
-        loc = ((IndexExpression) node).getLbracketLocation();
-      } else if (node instanceof SliceExpression) {
-        loc = ((SliceExpression) node).getLbracketLocation();
-      } else if (node instanceof DotExpression) {
-        loc = ((DotExpression) node).getDotLocation();
-      } else if (node instanceof AssignmentStatement) {
-        loc = ((AssignmentStatement) node).getOperatorLocation();
-      } else {
-        loc = node.getStartLocation();
-      }
-      return loc;
-    }
-
-    public Node nodeAt(int ip) {
-      Node node = instrToNode.get(ip);
-      Preconditions.checkState(node != null, "Node is not defined at " + ip);
-      return node;
+      return instrToLoc.locationAt(ip);
     }
 
     @Nullable
@@ -325,6 +305,7 @@ class Bc {
    * The compiler implementation.
    */
   private static class Compiler {
+    private final FileLocations fileLocations;
     private final int nlocals;
     private final StarlarkThread thread;
     @javax.annotation.Nonnull
@@ -355,11 +336,13 @@ class Bc {
     /** Max depth of for loops. */
     private int maxLoopDepth = 0;
 
-    /** Alternating instr, node */
-    private ArrayList<Object> instrToNode = new ArrayList<>();
+    /** Alternating instr, file locations offset */
+    private BcInstrToLoc.Builder instrToLoc;
 
     private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, int[] globalIndex,
         Tuple freevars) {
+      this.fileLocations = rfn.getFileLocations();
+      this.instrToLoc = new BcInstrToLoc.Builder(rfn.getFileLocations());
       this.thread = thread;
       this.rfn = rfn;
       this.nlocals = rfn.getLocals().size();
@@ -383,10 +366,7 @@ class Bc {
         Preconditions.checkState(ip >= savedIp);
 
         slots = savedSlotCount;
-        while (!instrToNode.isEmpty() && ((int) instrToNode.get(instrToNode.size() - 2) >= savedIp)) {
-          instrToNode.remove(instrToNode.size() - 1);
-          instrToNode.remove(instrToNode.size() - 1);
-        }
+        instrToLoc.reset(savedIp);
         ip = savedIp;
         constSlots.reset(constCount);
         strings.reset(stringCount);
@@ -438,10 +418,28 @@ class Bc {
       return r;
     }
 
+    private int nodeToLocOffset(Node node) {
+      Preconditions.checkState(node.getLocs() == fileLocations,
+          "node does not share the same file locations as the rest of the function");
+      Location loc;
+      if (node instanceof BinaryOperatorExpression) {
+        return ((BinaryOperatorExpression) node).getOpOffset();
+      } else if (node instanceof IndexExpression) {
+        return ((IndexExpression) node).getLbracketOffset();
+      } else if (node instanceof SliceExpression) {
+        return ((SliceExpression) node).getLbracketOffset();
+      } else if (node instanceof DotExpression) {
+        return ((DotExpression) node).getDotOffset();
+      } else if (node instanceof AssignmentStatement) {
+        return ((AssignmentStatement) node).getOpOffset();
+      } else {
+        return node.getStartOffset();
+      }
+    }
+
     /** Write complete opcode with validation. */
     private void write(BcInstr.Opcode opcode, Node node, int... args) {
-      instrToNode.add(ip);
-      instrToNode.add(node);
+      instrToLoc.add(ip, nodeToLocOffset(node));
 
       int prevIp = ip;
 
@@ -1515,11 +1513,6 @@ class Bc {
     }
 
     Compiled finish() {
-      ImmutableMap.Builder<Integer, Node> instrToNode = ImmutableMap.builder();
-      for (int i = 0; i != this.instrToNode.size(); i += 2) {
-        instrToNode.put((int) this.instrToNode.get(i), (Node) this.instrToNode.get(i + 1));
-      }
-
       return new Compiled(
           rfn,
           module,
@@ -1529,7 +1522,7 @@ class Bc {
           maxSlots,
           constSlots.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
           maxLoopDepth,
-          instrToNode.build());
+          instrToLoc.build());
     }
   }
 

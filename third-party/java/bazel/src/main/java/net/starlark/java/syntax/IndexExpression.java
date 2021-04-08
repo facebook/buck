@@ -56,6 +56,10 @@ public final class IndexExpression extends Expression {
     return rbracketOffset + 1;
   }
 
+  public int getLbracketOffset() {
+    return lbracketOffset;
+  }
+
   public Location getLbracketLocation() {
     return locs.getLocation(lbracketOffset);
   }

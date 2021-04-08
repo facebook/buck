@@ -125,6 +125,7 @@ public final class Resolver extends NodeVisitor {
   /** A Resolver.Function records information about a resolved function. */
   public static final class Function {
 
+    private final FileLocations fileLocations;
     private final String name;
     private final Location location;
     private final ImmutableList<Parameter> params;
@@ -143,6 +144,7 @@ public final class Resolver extends NodeVisitor {
     private final int numNonStarParams;
 
     private Function(
+        FileLocations fileLocations,
         String name,
         Location loc,
         ImmutableList<Parameter> params,
@@ -151,6 +153,7 @@ public final class Resolver extends NodeVisitor {
         List<Binding> locals,
         List<Binding> freevars,
         List<String> globals) {
+      this.fileLocations = fileLocations;
       this.name = name;
       this.location = loc;
       this.params = params;
@@ -198,6 +201,10 @@ public final class Resolver extends NodeVisitor {
       this.kwargsIndex = kwargsIndex;
 
       this.numNonStarParams = params.size() - (varargsIndex >= 0 ? 1 : 0) - (kwargsIndex >= 0 ? 1 : 0);
+    }
+
+    public FileLocations getFileLocations() {
+      return fileLocations;
     }
 
     /**
@@ -876,6 +883,7 @@ public final class Resolver extends NodeVisitor {
     popLocalBlock();
 
     return new Function(
+        syntax.getLocs(),
         name,
         loc,
         params.build(),
@@ -1079,6 +1087,7 @@ public final class Resolver extends NodeVisitor {
     // Annotate with resolved information about the toplevel function.
     file.setResolvedFunction(
         new Function(
+            file.getLocs(),
             "<toplevel>",
             file.getStartLocation(),
             /*params=*/ ImmutableList.of(),
@@ -1110,6 +1119,7 @@ public final class Resolver extends NodeVisitor {
 
     // Return no-arg function that computes the expression.
     return new Function(
+        expr.getLocs(),
         "<expr>",
         expr.getStartLocation(),
         /*params=*/ ImmutableList.of(),

@@ -53,6 +53,10 @@ public final class AssignmentStatement extends Statement {
     return op;
   }
 
+  public int getOpOffset() {
+    return opOffset;
+  }
+
   /** Returns the location of the assignment operator. */
   public Location getOperatorLocation() {
     return locs.getLocation(opOffset);

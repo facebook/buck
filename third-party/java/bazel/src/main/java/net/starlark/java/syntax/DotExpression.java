@@ -45,6 +45,10 @@ public final class DotExpression extends Expression {
     return field.getEndOffset();
   }
 
+  public int getDotOffset() {
+    return dotOffset;
+  }
+
   public Location getDotLocation() {
     return locs.getLocation(dotOffset);
   }

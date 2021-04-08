@@ -63,6 +63,10 @@ public final class BinaryOperatorExpression extends Expression {
     return op;
   }
 
+  public int getOpOffset() {
+    return opOffset;
+  }
+
   public Location getOperatorLocation() {
     return locs.getLocation(opOffset);
   }
