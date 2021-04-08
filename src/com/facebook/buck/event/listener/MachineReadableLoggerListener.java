@@ -387,14 +387,17 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Override
-  public synchronized void close() {
-    try {
-      executor.submit(() -> closeImpl());
-    } catch (RejectedExecutionException e) {
-      // ignore: someone else has closed the executor
-      return;
+  public void close() {
+    synchronized (this) {
+      try {
+        executor.submit(() -> closeImpl());
+      } catch (RejectedExecutionException e) {
+        // ignore: someone else has closed the executor
+        return;
+      }
+      executor.shutdown();
     }
-    executor.shutdown();
+    // Must release lock here otherwise `closeImpl` won't start
 
     // Note this flag is off by default, and set only in tests
     if (syncOnClose) {
@@ -405,23 +408,25 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       }
     }
 
-    MachineReadableLoggerListenerCloseArgs args =
-        ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
-            executor,
-            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
-            chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)
-                ? chromeTraceConfig.getTraceUploadUri()
-                : Optional.empty(),
-            logDirectoryPath,
-            logFilePath,
-            buildId);
+    synchronized (this) {
+      MachineReadableLoggerListenerCloseArgs args =
+          ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
+              executor,
+              info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
+              chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)
+                  ? chromeTraceConfig.getTraceUploadUri()
+                  : Optional.empty(),
+              logDirectoryPath,
+              logFilePath,
+              buildId);
 
-    BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
-        BackgroundTask.of(
-            "MachineReadableLoggerListener_close",
-            new MachineReadableLoggerListenerCloseAction(),
-            args);
-    managerScope.schedule(task);
+      BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
+          BackgroundTask.of(
+              "MachineReadableLoggerListener_close",
+              new MachineReadableLoggerListenerCloseAction(),
+              args);
+      managerScope.schedule(task);
+    }
   }
 
   private synchronized void closeImpl() {
