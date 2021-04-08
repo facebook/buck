@@ -184,7 +184,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "          is_x86_64=True|False,\n"
               + "      ),\n"
               + "  )</pre>\n",
-      documented = true)
+      documented = true,
+      speculativeSafe = true)
   public Info hostInfo() {
     return HostInfo.HOST_INFO;
   }

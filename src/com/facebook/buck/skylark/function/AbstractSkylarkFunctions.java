@@ -80,7 +80,8 @@ public abstract class AbstractSkylarkFunctions {
       },
       documented = false, // this is an API that we should remove once select is available
       allowReturnNones = true,
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      speculativeSafe = true)
   public Object readConfig(String section, String field, Object defaultValue, StarlarkThread env)
       throws EvalException {
     ReadConfigContext configContext = ReadConfigContext.getContext(env);
