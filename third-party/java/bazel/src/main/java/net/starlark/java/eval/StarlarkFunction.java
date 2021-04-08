@@ -56,6 +56,7 @@ public final class StarlarkFunction extends StarlarkCallable {
   final Bc.Compiled compiled;
 
   StarlarkFunction(
+      StarlarkThread thread,
       Resolver.Function rfn,
       Module module,
       int[] globalIndex,
@@ -67,7 +68,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     this.defaultValues = defaultValues;
     this.freevars = freevars;
 
-    this.compiled = Bc.compileFunction(rfn, module, globalIndex, freevars);
+    this.compiled = Bc.compileFunction(thread, rfn, module, globalIndex, freevars);
   }
 
   // Sets a global variable, given its index in this function's compiled Program.

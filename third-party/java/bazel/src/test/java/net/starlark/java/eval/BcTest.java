@@ -121,4 +121,22 @@ public class BcTest {
     assertEquals(1, callInstrs.size());
     assertEquals(BcInstr.Opcode.CALL_LINKED, callInstrs.get(0).opcode);
   }
+
+  @Test
+  public void typeStringCallInlined() throws Exception {
+    String program = "" //
+        + "def f():\n"
+        + "  return type('some random string')\n"
+        + "f";
+    StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+    Module module = Module.create();
+    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
+        ParserInput.fromString(program, "f.star"),
+        FileOptions.DEFAULT, module,
+        thread);
+    BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
+    assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
+    assertEquals(BcSlot.constValue(0), ret.args[0]);
+    assertEquals("string", f.compiled.constSlots[0]);
+  }
 }

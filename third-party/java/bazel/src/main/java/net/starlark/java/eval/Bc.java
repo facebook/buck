@@ -311,6 +311,7 @@ class Bc {
    */
   private static class Compiler {
     private final int nlocals;
+    private final StarlarkThread thread;
     @javax.annotation.Nonnull
     private final Resolver.Function rfn;
     private final Module module;
@@ -342,8 +343,9 @@ class Bc {
     /** Alternating instr, node */
     private ArrayList<Object> instrToNode = new ArrayList<>();
 
-    private Compiler(Resolver.Function rfn, Module module, int[] globalIndex,
+    private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, int[] globalIndex,
         Tuple freevars) {
+      this.thread = thread;
       this.rfn = rfn;
       this.nlocals = rfn.getLocals().size();
       this.module = module;
@@ -1173,6 +1175,7 @@ class Bc {
     private CompileExpressionResult compileCallLinked(
         StarlarkCallable callable, StarlarkCallableLinkSig linkSig,
         CallExpression callExpression, int result) {
+      SavedState saved = save();
 
       Argument.Star star = null;
       Argument.StarStar starStar = null;
@@ -1187,6 +1190,8 @@ class Bc {
 
       StarlarkCallableLinked fn = callable.linkCall(linkSig);
 
+      ArrayList<Object> argObjects = new ArrayList<>(regArgs.size());
+
       int nargs = 2; // lparen, fn
       nargs += 1 + regArgs.size();
       nargs += 3; // star, star-star, result
@@ -1197,18 +1202,41 @@ class Bc {
 
       args[i++] = regArgs.size();
       for (Argument argument : regArgs) {
-        args[i++] = compileExpression(argument.getValue()).slot;
+        CompileExpressionResult argCompileResult = compileExpression(argument.getValue());
+        args[i++] = argCompileResult.slot;
+        if (argObjects != null && argCompileResult.value != null && Starlark.isImmutable(argCompileResult.value)) {
+          argObjects.add(argCompileResult.value);
+        } else {
+          argObjects = null;
+        }
       }
 
       if (star != null) {
         args[i++] = compileExpression(star.getValue()).slot;
+        argObjects = null;
       } else {
         args[i++] = BcSlot.NULL_FLAG;
       }
       if (starStar != null) {
         args[i++] = compileExpression(starStar.getValue()).slot;
+        argObjects = null;
       } else {
         args[i++] = BcSlot.NULL_FLAG;
+      }
+
+      boolean functionIsSpeculativeSafe = callable instanceof BuiltinFunction
+          && ((BuiltinFunction) callable).isSpeculativeSafe();
+      if (functionIsSpeculativeSafe && argObjects != null && !linkSig.hasStars()) {
+        try {
+          Object specCallResult = callable
+              .linkAndCall(linkSig, thread, argObjects.toArray(), null, null);
+          if (Starlark.isImmutable(specCallResult)) {
+            saved.reset();
+            return compileConstantTo(callExpression, specCallResult, result);
+          }
+        } catch (EvalException | InterruptedException e) {
+          // ignore
+        }
       }
 
       if (result == BcSlot.ANY_FLAG) {
@@ -1262,6 +1290,7 @@ class Bc {
       numCallArgs += 1 + regArgs.size();
       numCallArgs += 3; // star, star-star, result
       int[] args = new int[numCallArgs];
+
       int i = 0;
 
       args[i++] = allocObject(callExpression.getLparenLocation());
@@ -1270,10 +1299,19 @@ class Bc {
       args[i++] = allocObject(new BcDynCallSite(linkSig));
       args[i++] = regArgs.size();
       for (Argument arg : regArgs) {
-        args[i++] = compileExpression(arg.getValue()).slot;
+        CompileExpressionResult argCompileResult = compileExpression(arg.getValue());
+        args[i++] = argCompileResult.slot;
       }
-      args[i++] = star != null ? compileExpression(star.getValue()).slot : BcSlot.NULL_FLAG;
-      args[i++] = starStar != null ? compileExpression(starStar.getValue()).slot : BcSlot.NULL_FLAG;
+      if (star != null) {
+        args[i++] = compileExpression(star.getValue()).slot;
+      } else {
+        args[i++] = BcSlot.NULL_FLAG;
+      }
+      if (starStar != null) {
+        args[i++] = compileExpression(starStar.getValue()).slot;
+      } else {
+        args[i++] = BcSlot.NULL_FLAG;
+      }
 
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
@@ -1377,9 +1415,9 @@ class Bc {
     }
   }
 
-  public static Compiled compileFunction(Resolver.Function rfn, Module module, int[] globalIndex,
+  public static Compiled compileFunction(StarlarkThread thread, Resolver.Function rfn, Module module, int[] globalIndex,
       Tuple freevars) {
-    Compiler compiler = new Compiler(rfn, module, globalIndex, freevars);
+    Compiler compiler = new Compiler(thread, rfn, module, globalIndex, freevars);
     compiler.compileStatements(rfn.getBody(), true);
     return compiler.finish();
   }

@@ -25,6 +25,11 @@ public class StarlarkCallableLinkSig {
     this.hashCode = Objects.hash(numPositionals, Arrays.hashCode(namedNames), hasStar, hasStarStar);
   }
 
+  /** Signature has star or star-star argument. */
+  boolean hasStars() {
+    return hasStar || hasStarStar;
+  }
+
   private static final Interner<StarlarkCallableLinkSig> interner = Interners.newWeakInterner();
 
   private static StarlarkCallableLinkSig[] initPosOnly() {

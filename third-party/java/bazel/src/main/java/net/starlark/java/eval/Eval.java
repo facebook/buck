@@ -175,7 +175,7 @@ final class Eval {
     // since both were compiled from the same Program.
     StarlarkFunction fn = fn(fr);
     return new StarlarkFunction(
-        rfn, fn.getModule(), fn.globalIndex, defaults, Tuple.wrap(freevars));
+        fr.thread, rfn, fn.getModule(), fn.globalIndex, defaults, Tuple.wrap(freevars));
   }
 
   private static TokenKind execIf(StarlarkThread.Frame fr, IfStatement node)

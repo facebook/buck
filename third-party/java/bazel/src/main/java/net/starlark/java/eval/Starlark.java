@@ -943,6 +943,7 @@ public final class Starlark {
 
     StarlarkFunction toplevel =
         new StarlarkFunction(
+            thread,
             rfn,
             module,
             globalIndex,
@@ -963,7 +964,7 @@ public final class Starlark {
   public static Object eval(
       ParserInput input, FileOptions options, Module module, StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
-    StarlarkFunction fn = newExprFunction(input, options, module);
+    StarlarkFunction fn = newExprFunction(thread, input, options, module);
     return Starlark.fastcall(thread, fn, ArraysForStarlark.EMPTY_OBJECT_ARRAY,
         ArraysForStarlark.EMPTY_OBJECT_ARRAY);
   }
@@ -988,13 +989,14 @@ public final class Starlark {
    * @throws SyntaxError.Exception if there were scanner, parser, or resolver errors.
    */
   public static StarlarkFunction newExprFunction(
-      ParserInput input, FileOptions options, Module module) throws SyntaxError.Exception {
+      StarlarkThread thread, ParserInput input, FileOptions options,
+      Module module) throws SyntaxError.Exception {
     Expression expr = Expression.parse(input, options);
     Program prog = Program.compileExpr(expr, module, options);
     Resolver.Function rfn = prog.getResolvedFunction();
     int[] globalIndex = module.getIndicesOfGlobals(rfn.getGlobals()); // see execFileProgram
     return new StarlarkFunction(
-        rfn, module, globalIndex, /*defaultValues=*/ Tuple.empty(), /*freevars=*/ Tuple.empty());
+        thread, rfn, module, globalIndex, /*defaultValues=*/ Tuple.empty(), /*freevars=*/ Tuple.empty());
   }
 
   /**

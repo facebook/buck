@@ -454,4 +454,8 @@ public final class BuiltinFunction extends StarlarkCallable {
           flag.substring(1)); // remove [+-] prefix
     }
   }
+
+  public boolean isSpeculativeSafe() {
+    return desc != null && desc.isSpeculativeSafe();
+  }
 }

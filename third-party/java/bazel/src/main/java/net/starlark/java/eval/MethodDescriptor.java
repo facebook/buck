@@ -48,6 +48,7 @@ final class MethodDescriptor {
   private final boolean useStarlarkSemantics;
   /** Can reuse fastcall positional arguments if parameter count matches. */
   private final boolean canReusePositionalWithoutChecks;
+  private final boolean speculativeSafe;
 
   private enum HowToHandleReturn {
     NULL_TO_NONE, // any Starlark value; null -> None
@@ -86,6 +87,7 @@ final class MethodDescriptor {
     this.allowReturnNones = allowReturnNones;
     this.useStarlarkThread = useStarlarkThread;
     this.useStarlarkSemantics = useStarlarkSemantics;
+    this.speculativeSafe = annotation.speculativeSafe();
 
     Class<?> ret = method.getReturnType();
     if (ret == void.class || ret == boolean.class) {
@@ -301,6 +303,10 @@ final class MethodDescriptor {
   /** @see StarlarkMethod#selfCall() */
   boolean isSelfCall() {
     return selfCall;
+  }
+
+  public boolean isSpeculativeSafe() {
+    return speculativeSafe;
   }
 
   /** Descriptor behavior depends on semantics. */
