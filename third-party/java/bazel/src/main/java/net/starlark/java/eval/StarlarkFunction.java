@@ -354,4 +354,9 @@ public final class StarlarkFunction extends StarlarkCallable {
       this.x = x;
     }
   }
+
+  @Nullable
+  Object returnsConst() {
+    return compiled.returnConst();
+  }
 }

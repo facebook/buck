@@ -217,6 +217,21 @@ class Bc {
       Preconditions.checkState(node != null, "Node is not defined at " + ip);
       return node;
     }
+
+    @Nullable
+    public Object returnConst() {
+      if (text.length == 0) {
+        return Starlark.NONE;
+      }
+      if (text[0] != BcInstr.RETURN) {
+        return null;
+      }
+      int slot = text[1];
+      if ((slot & BcSlot.MASK) != BcSlot.CONST_FLAG) {
+        return null;
+      }
+      return constSlots[slot & ~BcSlot.MASK];
+    }
   }
 
   /** Current for block in the compiler; used to compile break and continue statements. */
@@ -1267,6 +1282,27 @@ class Bc {
           }
         } catch (EvalException | InterruptedException e) {
           // ignore
+        }
+      }
+
+      // Only inline no-argument calls to no-parameter functions, otherwise
+      // it's quite hard to correctly detect that function call won't fail at runtime.
+      // Consider this example:
+      // ```
+      // def bar(a):
+      //   # This function could be inlinable as constant
+      //   return None
+      // def foo():
+      //   # If this call inlined as constant,
+      //   # we need to report `x` accessed before initialization
+      //   bar(x)
+      //   x = 1
+      // ```
+      if (callable instanceof StarlarkFunction && linkSig == StarlarkCallableLinkSig.positional(0)) {
+        Object constResult = ((StarlarkFunction) callable).returnsConst();
+        if (constResult != null && ((StarlarkFunction) callable).getParameterNames().isEmpty()) {
+          saved.reset();
+          return compileConstantTo(callExpression, constResult, result);
         }
       }
 

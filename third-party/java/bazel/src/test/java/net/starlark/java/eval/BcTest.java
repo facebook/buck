@@ -106,7 +106,7 @@ public class BcTest {
   public void callLinked() throws Exception {
     String program = "" //
         + "def g(x, y, *a, **kw):\n"
-        + "  pass\n"
+        + "  print(1)\n"
         + "def f():\n"
         + "  return g(1, b=2, *[], **{})\n"
         + "f";
@@ -138,5 +138,22 @@ public class BcTest {
     assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
     assertEquals(BcSlot.constValue(0), ret.args[0]);
     assertEquals("string", f.compiled.constSlots[0]);
+  }
+
+  @Test
+  public void callsInlined() throws Exception {
+    String program = ""
+        + "def g():\n"
+        + "  return type('xx') == 'string' or [1, 2]\n"
+        + "def f():\n"
+        + "  return g()\n"
+        + "f";
+    StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+    Module module = Module.create();
+    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
+        ParserInput.fromString(program, "f.star"),
+        FileOptions.DEFAULT, module,
+        thread);
+    assertEquals(true, f.compiled.returnConst());
   }
 }
