@@ -1421,12 +1421,27 @@ class Bc {
 
     private CompileExpressionResult compileBinaryOperatorNonShortCicrcuiting(
         BinaryOperatorExpression expression, int result) {
+      SavedState saved = save();
+
+      CompileExpressionResult x = compileExpression(expression.getX());
+      CompileExpressionResult y = compileExpression(expression.getY());
+
+      if (expression.getOperator() == TokenKind.EQUALS_EQUALS || expression.getOperator() == TokenKind.NOT_EQUALS) {
+        if (x.value != null
+            && y.value != null
+            && Starlark.isImmutable(x.value)
+            && Starlark.isImmutable(y.value)) {
+          saved.reset();
+          boolean constResult =
+              x.value.equals(y.value) == (expression.getOperator() == TokenKind.EQUALS_EQUALS);
+          return compileConstantTo(expression, constResult, result);
+        }
+      }
+
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
       }
 
-      CompileExpressionResult x = compileExpression(expression.getX());
-      CompileExpressionResult y = compileExpression(expression.getY());
       switch (expression.getOperator()) {
         case EQUALS_EQUALS:
           write(BcInstr.Opcode.EQ, expression, x.slot, y.slot, result);
