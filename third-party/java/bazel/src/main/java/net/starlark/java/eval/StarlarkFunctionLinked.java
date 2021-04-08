@@ -40,17 +40,17 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
 
   /** Self-test, only call when assertions enabled. */
   private void assertions() {
-    int nParams = fn().rfn.numNonStarParams();
+    int nParams = fn().numNonStarParams;
 
     Preconditions.checkState(paramFromArg.length == nParams);
     Preconditions.checkArgument(argToStarStar.length == argToStarStarName.length);
 
     if (argToStar.length != 0) {
-      Preconditions.checkState(fn().rfn.hasVarargs(),
+      Preconditions.checkState(fn().hasVarargs(),
           "argToStar array can be non-empty only when function accept varargs");
     }
     if (argToStarStar.length != 0) {
-      Preconditions.checkState(fn().rfn.hasKwargs(),
+      Preconditions.checkState(fn().hasKwargs(),
           "argToStarStar array can be non-empty only when function accepts kwargs");
     }
 
@@ -93,12 +93,12 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     // Subset of `starStarArgs`, keys which were used in params
     BoundsKeys boundsKeys = null;
 
-    int numParamsWithoutDefault = fn.rfn.numNonStarParams() - fn.defaultValues.size();
-    int numPositionalParams = fn.rfn.numNonStarParams() - fn.rfn.numKeywordOnlyParams();
+    int numParamsWithoutDefault = fn.numNonStarParams - fn.defaultValues.size();
+    int numPositionalParams = fn.numNonStarParams - fn.numKeywordOnlyParams;
 
     MissingParams missing = null;
 
-    ImmutableList<String> names = fn.rfn.getParameterNames();
+    ImmutableList<String> names = fn.getParameterNames();
 
     for (int paramIndex = 0; paramIndex < paramFromArg.length; ++paramIndex) {
       if (paramFromArg[paramIndex] >= 0) {
@@ -147,7 +147,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
 
     // now all regular params handled, processing *args and **kwargs
 
-    if (fn.rfn.getVarargsIndex() >= 0) {
+    if (fn.varargsIndex >= 0) {
       // there's *args
       int newArgsSize = argToStar.length + (starArgs != null ? starArgs.size() - starArgsPos : 0);
       Object[] newArgs = ArraysForStarlark.newObjectArray(newArgsSize);
@@ -160,7 +160,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
         ++starArgsPos;
       }
       Preconditions.checkState(k == newArgsSize);
-      locals[fn.rfn.getVarargsIndex()] = Tuple.wrap(newArgs);
+      locals[fn.varargsIndex] = Tuple.wrap(newArgs);
     } else {
       // there's no *args
       if (starArgsPos < starArgsSize) {
@@ -169,7 +169,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
       }
     }
 
-    if (fn.rfn.getKwargsIndex() >= 0) {
+    if (fn.kwargsIndex >= 0) {
       // there's **kwargs
       LinkedHashMap<String, Object> newKwargs =
           new LinkedHashMap<>(
@@ -196,7 +196,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
           }
         }
       }
-      locals[fn.rfn.getKwargsIndex()] = Dict.wrap(mu, newKwargs);
+      locals[fn.kwargsIndex] = Dict.wrap(mu, newKwargs);
     } else {
       // there's no **kwargs
       if (starStarArgs != null && starStarArgs.size() != BoundsKeys.size(boundsKeys)) {
@@ -215,7 +215,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
           continue;
         }
       }
-      if (fn().rfn.getParameterNames().contains(keyString)) {
+      if (fn().getParameterNames().contains(keyString)) {
         return Starlark.errorf("%s() got multiple values for parameter '%s'", fn().getName(), keyString);
       } else {
         return Starlark.errorf("%s() got unexpected keyword argument: %s", fn().getName(), keyString);

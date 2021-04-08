@@ -187,13 +187,13 @@ public final class StarlarkThread {
       // TODO(adonovan): provide a more efficient API.
       ImmutableMap.Builder<String, Object> env = ImmutableMap.builder();
       if (fn instanceof StarlarkFunction) {
-        for (int i = 0; i < ((StarlarkFunction) fn).rfn.getLocals().size(); i++) {
+        for (int i = 0; i < ((StarlarkFunction) fn).locals.size(); i++) {
           Object local = locals[i];
           if (local != null) {
             if (local instanceof StarlarkFunction.Cell) {
               local = ((StarlarkFunction.Cell) local).x;
             }
-            env.put(((StarlarkFunction) fn).rfn.getLocals().get(i).getName(), local);
+            env.put(((StarlarkFunction) fn).locals.get(i).getName(), local);
           }
         }
       }
@@ -351,7 +351,9 @@ public final class StarlarkThread {
       Frame fr = callstack.get(i);
       // We compare code, not closure values, otherwise one can defeat the
       // check by writing the Y combinator.
-      if (fr.fn instanceof StarlarkFunction && ((StarlarkFunction) fr.fn).rfn.equals(fn.rfn)) {
+      // We use identity comparison of location because rfn object is lost,
+      // and location pointer is a good enough function identifier.
+      if (fr.fn instanceof StarlarkFunction && fr.fn.getLocation() == fn.getLocation()) {
         return true;
       }
     }

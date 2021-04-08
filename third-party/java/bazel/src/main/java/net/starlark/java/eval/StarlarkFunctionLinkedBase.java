@@ -30,7 +30,7 @@ abstract class StarlarkFunctionLinkedBase extends StarlarkCallableLinked {
     processArgs(thread.mutability(), args, starArgs, (Dict<Object, Object>) starStarArgs, fr.locals);
 
     // Spill indicated locals to cells.
-    for (int index : fn.rfn.getCellIndices()) {
+    for (int index : fn.cellIndices) {
       fr.locals[index] = new StarlarkFunction.Cell(fr.locals[index]);
     }
 

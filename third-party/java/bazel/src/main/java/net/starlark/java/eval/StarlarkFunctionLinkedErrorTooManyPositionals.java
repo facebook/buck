@@ -17,10 +17,10 @@ class StarlarkFunctionLinkedErrorTooManyPositionals extends StarlarkFunctionLink
 
   EvalException error(Object[] args, Sequence<?> starArgs) {
     // nparams is the number of ordinary parameters.
-    int nparams = fn().rfn.numNonStarParams();
+    int nparams = fn().numNonStarParams;
 
     // numPositionalParams is the number of non-kwonly parameters.
-    int numPositionalParams = nparams - fn().rfn.numKeywordOnlyParams();
+    int numPositionalParams = nparams - fn().numKeywordOnlyParams;
 
     int numPositionalArgs = args.length - linkSig.namedNames.length + (starArgs != null ? starArgs.size() : 0);
 

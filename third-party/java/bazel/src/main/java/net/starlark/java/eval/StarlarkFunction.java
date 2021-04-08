@@ -17,17 +17,12 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.spelling.SpellChecker;
-import net.starlark.java.syntax.Expression;
-import net.starlark.java.syntax.ExpressionStatement;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.Resolver;
-import net.starlark.java.syntax.Statement;
-import net.starlark.java.syntax.StringLiteral;
 
 /** A StarlarkFunction is a function value created by a Starlark {@code def} statement. */
 @StarlarkBuiltin(
@@ -36,7 +31,20 @@ import net.starlark.java.syntax.StringLiteral;
     doc = "The type of functions declared in Starlark.")
 public final class StarlarkFunction extends StarlarkCallable {
 
-  final Resolver.Function rfn;
+  private final String name;
+  private final boolean isTopLevel;
+  private final ImmutableList<String> parameterNames;
+  private final boolean hasVarargs;
+  private final boolean hasKwargs;
+  final int numNonStarParams;
+  final int numKeywordOnlyParams;
+  final int varargsIndex;
+  final int kwargsIndex;
+  final ImmutableList<Resolver.Binding> locals;
+  final int[] cellIndices;
+  final ImmutableList<Resolver.Binding> freeVarBindings;
+  private final Location location;
+
   private final Module module; // a function closes over its defining module
 
   // Index in Module.globals of ith Program global (Resolver.Binding(GLOBAL).index).
@@ -62,7 +70,23 @@ public final class StarlarkFunction extends StarlarkCallable {
       int[] globalIndex,
       Tuple defaultValues,
       Tuple freevars) {
-    this.rfn = rfn;
+
+    // Here we copy `rfn` fields to this fields
+    // to release memory allocated for AST.
+    this.name = rfn.getName();
+    this.isTopLevel = rfn.isToplevel();
+    this.parameterNames = rfn.getParameterNames();
+    this.hasVarargs = rfn.hasVarargs();
+    this.hasKwargs = rfn.hasKwargs();
+    this.numNonStarParams = rfn.numNonStarParams();
+    this.numKeywordOnlyParams = rfn.numKeywordOnlyParams();
+    this.varargsIndex = rfn.getVarargsIndex();
+    this.kwargsIndex = rfn.getKwargsIndex();
+    this.locals = rfn.getLocals();
+    this.cellIndices = rfn.getCellIndices();
+    this.freeVarBindings = rfn.getFreeVars();
+    this.location = rfn.getLocation();
+
     this.module = module;
     this.globalIndex = globalIndex;
     this.defaultValues = defaultValues;
@@ -83,7 +107,7 @@ public final class StarlarkFunction extends StarlarkCallable {
   }
 
   boolean isToplevel() {
-    return rfn.isToplevel();
+    return isTopLevel;
   }
 
   // TODO(adonovan): many functions would be simpler if
@@ -98,10 +122,7 @@ public final class StarlarkFunction extends StarlarkCallable {
    */
   @Nullable
   public Object getDefaultValue(int i) {
-    if (i < 0 || i >= rfn.getParameters().size()) {
-      throw new IndexOutOfBoundsException();
-    }
-    int nparams = rfn.numNonStarParams();
+    int nparams = numNonStarParams;
     int prefix = nparams - defaultValues.size();
     if (i < prefix) {
       return null; // implicit prefix of mandatory parameters
@@ -118,7 +139,7 @@ public final class StarlarkFunction extends StarlarkCallable {
    * **kwargs} parameters, if any, are always last.
    */
   public ImmutableList<String> getParameterNames() {
-    return rfn.getParameterNames();
+    return parameterNames;
   }
 
   /**
@@ -126,7 +147,7 @@ public final class StarlarkFunction extends StarlarkCallable {
    * f(*args)}.
    */
   public boolean hasVarargs() {
-    return rfn.hasVarargs();
+    return hasVarargs;
   }
 
   /**
@@ -134,13 +155,13 @@ public final class StarlarkFunction extends StarlarkCallable {
    * f(**kwargs)}.
    */
   public boolean hasKwargs() {
-    return rfn.hasKwargs();
+    return hasKwargs;
   }
 
   /** Returns the location of the function's defining identifier. */
   @Override
   public Location getLocation() {
-    return rfn.getLocation();
+    return location;
   }
 
   @Override
@@ -163,13 +184,13 @@ public final class StarlarkFunction extends StarlarkCallable {
 
   private StarlarkCallableLinked linkCallImpl(StarlarkCallableLinkSig sig) {
     // nparams is the number of ordinary parameters.
-    int nparams = rfn.numNonStarParams();
+    int nparams = numNonStarParams;
 
     // numPositionalParams is the number of non-kwonly parameters.
-    int numPositionalParams = nparams - rfn.numKeywordOnlyParams();
+    int numPositionalParams = nparams - numKeywordOnlyParams;
 
     if (sig.namedNames.length == 0 && !sig.hasStar && !sig.hasStarStar) {
-      if (!rfn.hasVarargs() && !rfn.hasKwargs() && rfn.numKeywordOnlyParams() == 0 && nparams == sig.numPositionals) {
+      if (!hasVarargs && !hasKwargs && numKeywordOnlyParams == 0 && nparams == sig.numPositionals) {
         // positional-only invocation
         return new StarlarkFunctionLinkedPos(sig, this);
       }
@@ -186,7 +207,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     for (int argIndex = 0; argIndex < sig.numPositionals; ++argIndex) {
       if (argIndex < numPositionalParams) {
         paramFromArg[argIndex] = argIndex;
-      } else if (rfn.hasVarargs()) {
+      } else if (hasVarargs) {
         argToStar.add(argIndex);
       } else {
         return new StarlarkFunctionLinkedErrorTooManyPositionals(this, sig);
@@ -196,7 +217,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     for (int i = 0, namedLength = sig.namedNames.length; i < namedLength; i++) {
       int argIndex = sig.numPositionals + i;
       String argName = sig.namedNames[i];
-      int paramIndex = rfn.getParameterNames().indexOf(argName);
+      int paramIndex = parameterNames.indexOf(argName);
       if (paramIndex >= 0 && paramIndex < nparams) {
         // duplicate named param
         if (paramFromArg[paramIndex] == Integer.MIN_VALUE) {
@@ -208,7 +229,7 @@ public final class StarlarkFunction extends StarlarkCallable {
               argName
           ));
         }
-      } else if (rfn.hasKwargs()) {
+      } else if (hasKwargs) {
         argToStarStar.add(argIndex);
         argToStarStarName.add(argName);
       } else {
@@ -228,7 +249,7 @@ public final class StarlarkFunction extends StarlarkCallable {
           plural(unexpected.size()),
           Joiner.on(", ").join(unexpected),
           unexpected.size() == 1
-              ? SpellChecker.didYouMean(unexpected.get(0), rfn.getParameterNames().subList(0, nparams))
+              ? SpellChecker.didYouMean(unexpected.get(0), parameterNames.subList(0, nparams))
               : ""));
     }
 
@@ -247,24 +268,7 @@ public final class StarlarkFunction extends StarlarkCallable {
    */
   @Override
   public String getName() {
-    return rfn.getName();
-  }
-
-  /** Returns the value denoted by the function's doc string literal, or null if absent. */
-  @Nullable
-  public String getDocumentation() {
-    if (rfn.getBody().isEmpty()) {
-      return null;
-    }
-    Statement first = rfn.getBody().get(0);
-    if (!(first instanceof ExpressionStatement)) {
-      return null;
-    }
-    Expression expr = ((ExpressionStatement) first).getExpression();
-    if (!(expr instanceof StringLiteral)) {
-      return null;
-    }
-    return ((StringLiteral) expr).getValue();
+    return name;
   }
 
   public Module getModule() {
