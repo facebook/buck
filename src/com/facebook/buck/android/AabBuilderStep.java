@@ -445,10 +445,14 @@ public class AabBuilderStep implements Step {
         if (isEntryPackageable(entry)) {
 
           String location = resolveFileInModule(entry);
+          String destination = Paths.get(location).resolve(entry.getName()).toString();
+          if (entry.isDirectory()) {
+            destination += "/";
+          }
           addFile(
               builder,
               convertZipEntryToFile(zipFile, entry).toPath(),
-              Paths.get(location).resolve(entry.getName()).toString(),
+              destination,
               addedFiles,
               addedSourceFiles,
               context);
