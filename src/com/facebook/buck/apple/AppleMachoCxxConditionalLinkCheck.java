@@ -36,8 +36,10 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Implements the logic to determine whether linking can be skipped if the linked dylibs changed in
@@ -354,9 +356,11 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
       return StepExecutionResults.SUCCESS;
     }
 
-    // Check whether all files except dylibs have the same hashes
-
-    if (sourcePaths.size() != relinkInfo.getLinkerInputFileToHash().size()) {
+    // Deduplicate the source paths holding the same infile relative paths
+    // We apply the same dedup logic here as in `AppleMachoConditionalLinkWriteInfo`,
+    // otherwise relinking will always happen when we need to deduplicate source paths.
+    ImmutableMap<SourcePath, SourcePath> dedupedSourcePaths = deduplicateSourcePaths(sourcePaths);
+    if (dedupedSourcePaths.size() != relinkInfo.getLinkerInputFileToHash().size()) {
       return StepExecutionResults.SUCCESS;
     }
 
@@ -366,7 +370,7 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
 
     ImmutableList.Builder<RelPath> changedDylibPaths = ImmutableList.builder();
 
-    for (Map.Entry<SourcePath, SourcePath> fileToHashEntry : sourcePaths.entrySet()) {
+    for (Map.Entry<SourcePath, SourcePath> fileToHashEntry : dedupedSourcePaths.entrySet()) {
       RelPath inputFilePath =
           filesystem.relativize(sourcePathResolver.getAbsolutePath(fileToHashEntry.getKey()));
       String inputFilePathString = inputFilePath.toString();
@@ -424,6 +428,25 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     }
 
     return StepExecutionResults.SUCCESS;
+  }
+
+  private ImmutableMap<SourcePath, SourcePath> deduplicateSourcePaths(
+      ImmutableMap<SourcePath, SourcePath> sourcePaths) {
+    Set<RelPath> inputFilePaths = new HashSet<>();
+    ImmutableMap.Builder<SourcePath, SourcePath> dedupedSourcePathsBuilder = ImmutableMap.builder();
+
+    for (Map.Entry<SourcePath, SourcePath> fileToHashEntry : sourcePaths.entrySet()) {
+      RelPath inputFilePath =
+          filesystem.relativize(sourcePathResolver.getAbsolutePath(fileToHashEntry.getKey()));
+
+      if (inputFilePaths.contains(inputFilePath)) {
+        continue;
+      }
+
+      inputFilePaths.add(inputFilePath);
+      dedupedSourcePathsBuilder.put(fileToHashEntry.getKey(), fileToHashEntry.getValue());
+    }
+    return dedupedSourcePathsBuilder.build();
   }
 
   private static AppleCxxConditionalLinkInfo createRelinkInfoWithLatestHashes(
