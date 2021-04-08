@@ -39,13 +39,14 @@ import net.starlark.java.eval.NoneType;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkCallable;
 import net.starlark.java.eval.StarlarkThread;
+import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.eval.Tuple;
 
 /**
  * Abstract class containing function definitions shared by {@link SkylarkBuildModule} and {@link
  * SkylarkPackageModule}.
  */
-public abstract class AbstractSkylarkFunctions {
+public abstract class AbstractSkylarkFunctions extends StarlarkValue {
 
   /**
    * Exposes a {@code read_config} for Skylark parser.
