@@ -128,7 +128,6 @@ public class RustTestDescription
                         rustPlatform,
                         args.getCrate(),
                         args.getEdition(),
-                        args.getFeatures(),
                         flagsAndEnv.getSecond(), // rustc environment
                         flagsAndEnv.getFirst(), // rustc flags
                         linkerFlags,

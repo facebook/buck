@@ -589,7 +589,6 @@ public class RustCompileUtils {
       RustPlatform rustPlatform,
       Optional<String> crateName,
       Optional<String> edition,
-      ImmutableSortedSet<String> features,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableList<Arg> rustcFlags,
       ImmutableList<Arg> linkerFlags,
@@ -602,13 +601,6 @@ public class RustCompileUtils {
       CrateType crateType,
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases) {
-    ImmutableList.Builder<Arg> rustcArgs = ImmutableList.builder();
-
-    RustCompileUtils.addFeatures(buildTarget, features, rustcArgs);
-
-    RustCompileUtils.addTargetTripleForFlavor(rustPlatform.getFlavor(), rustcArgs);
-    rustcArgs.addAll(rustcFlags);
-
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
     linkerArgs.addAll(linkerFlags);
 
@@ -705,7 +697,7 @@ public class RustCompileUtils {
                         rustBuckConfig,
                         downwardApiConfig,
                         environment,
-                        rustcArgs.build(),
+                        rustcFlags,
                         linkerArgs.build(),
                         /* linkerInputs */ ImmutableList.of(),
                         crateType,
