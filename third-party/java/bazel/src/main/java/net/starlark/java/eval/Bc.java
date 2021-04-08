@@ -614,21 +614,38 @@ class Bc {
     }
 
     private void compileIfStatement(IfStatement ifStatement) {
+      SavedState saved = save();
+
       Expression condExpr = ifStatement.getCondition();
 
-      int cond;
+      CompileExpressionResult cond;
       BcInstr.Opcode elseBrOpcode;
+      boolean negate;
       if (condExpr instanceof UnaryOperatorExpression
           && ((UnaryOperatorExpression) condExpr).getOperator() == TokenKind.NOT) {
         // special case `if not cond: ...` micro-optimization
-        cond = compileExpression(((UnaryOperatorExpression) condExpr).getX()).slot;
+        cond = compileExpression(((UnaryOperatorExpression) condExpr).getX());
         elseBrOpcode = BcInstr.Opcode.IF_BR;
+        negate = true;
       } else {
-        cond = compileExpression(condExpr).slot;
+        cond = compileExpression(condExpr);
         elseBrOpcode = BcInstr.Opcode.IF_NOT_BR;
+        negate = false;
       }
 
-      int elseBlock = writeForwardCondJump(elseBrOpcode, ifStatement, cond);
+      if (cond.value != null && isTruthImmutable(cond.value)) {
+        saved.reset();
+        if (Starlark.truth(cond.value) != negate) {
+          compileStatements(ifStatement.getThenBlock(), false);
+        } else {
+          if (ifStatement.getElseBlock() != null) {
+            compileStatements(ifStatement.getElseBlock(), false);
+          }
+        }
+        return;
+      }
+
+      int elseBlock = writeForwardCondJump(elseBrOpcode, ifStatement, cond.slot);
       compileStatements(ifStatement.getThenBlock(), false);
       if (ifStatement.getElseBlock() != null) {
         int end = writeForwardJump(ifStatement);
