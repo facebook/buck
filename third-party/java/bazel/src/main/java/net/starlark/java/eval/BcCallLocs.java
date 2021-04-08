@@ -8,15 +8,14 @@ import net.starlark.java.syntax.Location;
 
 /** Locations of call expression. */
 class BcCallLocs {
-  private final FileLocations fileLocations;
+
   private final Location lparentLocation;
   private final int starOffset;
   private final int starStarOffset;
 
-   private BcCallLocs(FileLocations fileLocations, Location lparentLocation, int starOffset,
+   private BcCallLocs(Location lparentLocation, int starOffset,
        int starStarOffset) {
-    this.fileLocations = fileLocations;
-    this.lparentLocation = lparentLocation;
+     this.lparentLocation = lparentLocation;
     this.starOffset = starOffset;
     this.starStarOffset = starStarOffset;
   }
@@ -26,19 +25,19 @@ class BcCallLocs {
     Argument.StarStar starStarArgument = callExpression.getStarStarArgument();
     int starOffset = starArgument != null ? starArgument.getStartOffset() : -1;
     int starStarOffset = starStarArgument != null ? starStarArgument.getStartOffset() : -1;
-    return new BcCallLocs(callExpression.getLocs(), callExpression.getLparenLocation(), starOffset, starStarOffset);
+    return new BcCallLocs(callExpression.getLparenLocation(), starOffset, starStarOffset);
   }
 
   Location getLparentLocation() {
     return lparentLocation;
   }
 
-  Location starLocation() {
+  Location starLocation(FileLocations fileLocations) {
     Preconditions.checkState(starOffset >= 0);
     return fileLocations.getLocation(starOffset);
   }
 
-  Location starStarLocation() {
+  Location starStarLocation(FileLocations fileLocations) {
     Preconditions.checkState(starStarOffset >= 0);
     return fileLocations.getLocation(starStarOffset);
   }

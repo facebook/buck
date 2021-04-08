@@ -514,7 +514,7 @@ class BcEval {
     if (star != null) {
       if (!(star instanceof Sequence)) {
         throw new EvalException(
-            locs.starLocation(),
+            locs.starLocation(compiled.getFileLocations()),
             "argument after * must be an iterable, not " + Starlark.type(star));
       }
     }
@@ -522,7 +522,7 @@ class BcEval {
     if (starStar != null) {
       if (!(starStar instanceof Dict)) {
         throw new EvalException(
-            locs.starStarLocation(),
+            locs.starStarLocation(compiled.getFileLocations()),
             "argument after ** must be a dict, not " + Starlark.type(starStar));
       }
     }
@@ -547,11 +547,13 @@ class BcEval {
     Object starStar = getSlotOrNull(nextOperand());
 
     if (star != null && !(star instanceof Sequence<?>)) {
-      throw new EvalException(locs.starLocation(),
+      throw new EvalException(
+          locs.starLocation(compiled.getFileLocations()),
           String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
     }
     if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
-      throw new EvalException(locs.starStarLocation(),
+      throw new EvalException(
+          locs.starStarLocation(compiled.getFileLocations()),
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }
 

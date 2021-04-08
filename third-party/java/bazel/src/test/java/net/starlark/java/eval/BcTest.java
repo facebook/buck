@@ -20,8 +20,8 @@ public class BcTest {
         1 | BcSlot.LOCAL_FLAG,
     };
     assertEquals(
-        "0: RETURN rl$1:bar; 2: EOF",
-        Bc.Compiled.toStringImpl(code, fnCtx, ImmutableList.of(), ImmutableList.of()));
+        "def test; 0: RETURN rl$1:bar; 2: EOF",
+        Bc.Compiled.toStringImpl("test", code, fnCtx, ImmutableList.of(), ImmutableList.of()));
   }
 
   @Test

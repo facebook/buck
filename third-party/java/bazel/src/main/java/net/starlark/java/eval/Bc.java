@@ -78,6 +78,11 @@ class Bc {
   /** Function body as a bytecode block. */
   public static class Compiled {
 
+    /** For debugging. */
+    private final String name;
+    /** For errors. */
+    private final FileLocations fileLocations;
+
     /** Original function. This is used only for debugging here. */
     private final ImmutableList<Resolver.Binding> locals;
     private final ImmutableList<Resolver.Binding> freeVars;
@@ -111,6 +116,8 @@ class Bc {
         Object[] constSlots,
         int loopDepth,
         BcInstrToLoc instrToLoc) {
+      this.name = rfn.getName();
+      this.fileLocations = rfn.getFileLocations();
       this.locals = rfn.getLocals();
       this.freeVars = rfn.getFreeVars();
       this.module = module;
@@ -131,9 +138,13 @@ class Bc {
       return freeVars;
     }
 
+    public FileLocations getFileLocations() {
+      return fileLocations;
+    }
+
     @Override
     public String toString() {
-      return toStringImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(
+      return toStringImpl(name, text, new BcInstrOperand.OpcodeVisitorFunctionContext(
               getLocalNames(),
               module.getGlobalNamesSlow(),
               getFreeVarNames()),
@@ -157,9 +168,9 @@ class Bc {
     }
 
     @VisibleForTesting
-    static String toStringImpl(int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
+    static String toStringImpl(String name, int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
         List<String> strings, List<Object> constants) {
-      return String.join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants));
+      return "def " + name + "; " + String.join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants));
     }
 
     private static ImmutableList<String> toStringInstructionsImpl(int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
