@@ -51,6 +51,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.fs.XzStep;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
@@ -205,6 +206,7 @@ public class AndroidInstrumentationApkDescription
             AndroidPlatformTarget.class);
 
     String dexTool = args.getDexTool();
+    Preconditions.checkState(dexTool.equals(DxStep.D8));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
@@ -229,7 +231,7 @@ public class AndroidInstrumentationApkDescription
             PackageType.INSTRUMENTED,
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ DxStep.D8.equals(dexTool),
+            /* shouldPreDex */ true,
             DexSplitMode.NO_SPLIT,
             buildTargetsToExclude.build(),
             resourcesToExclude,
