@@ -1156,13 +1156,44 @@ class Bc {
       return new CompileExpressionResult(result, null);
     }
 
+    /**
+     * Is truth property of this object will never change.
+     *
+     * For example, truth of any tuple is immutable. Truth of list
+     * is immutable only if the list is immutable.
+     */
+    private static boolean isTruthImmutable(Object o) {
+      if (Starlark.isImmutable(o)) {
+        return true;
+      }
+      // Structure and Tuple may have mutable content,
+      // but their truth is immutable.
+      if (o instanceof Structure || o instanceof Tuple) {
+        return true;
+      }
+      return false;
+    }
+
     private CompileExpressionResult compileConditional(ConditionalExpression conditionalExpression, int result) {
+      SavedState saved = save();
+
+      CompileExpressionResult cond = compileExpression(
+          conditionalExpression.getCondition());
+      if (cond.value != null && isTruthImmutable(cond.value)) {
+        saved.reset();
+        if (Starlark.truth(cond.value)) {
+          return compileExpressionTo(conditionalExpression.getThenCase(), result);
+        } else {
+          return compileExpressionTo(conditionalExpression.getElseCase(), result);
+        }
+      }
+
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
       }
 
-      int cond = compileExpression(conditionalExpression.getCondition()).slot;
-      int thenAddr = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR, conditionalExpression, cond);
+      int thenAddr = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR, conditionalExpression,
+          cond.slot);
       compileExpressionTo(conditionalExpression.getThenCase(), result);
       int end = writeForwardJump(conditionalExpression);
       patchForwardJump(thenAddr);
@@ -1326,10 +1357,18 @@ class Bc {
     }
 
     private CompileExpressionResult compileUnaryOperator(UnaryOperatorExpression expression, int result) {
+      SavedState saved = save();
+
+      CompileExpressionResult value = compileExpression(expression.getX());
+
+      if (expression.getOperator() == TokenKind.NOT && value.value != null && isTruthImmutable(value.value)) {
+        saved.reset();
+        return compileConstantTo(expression, !Starlark.truth(value.value), result);
+      }
+
       if (result == BcSlot.ANY_FLAG) {
         result = allocSlot();
       }
-      CompileExpressionResult value = compileExpression(expression.getX());
       if (expression.getOperator() == TokenKind.NOT) {
         write(BcInstr.Opcode.NOT, expression, value.slot, result);
       } else {
@@ -1348,19 +1387,30 @@ class Bc {
         case AND:
         case OR:
           {
-            if (result == BcSlot.ANY_FLAG) {
-              result = allocSlot();
-            }
 
             BcInstr.Opcode opcode =
                 expression.getOperator() == TokenKind.AND ? BcInstr.Opcode.IF_NOT_BR : BcInstr.Opcode.IF_BR;
 
-            int lhs = compileExpression(expression.getX()).slot;
-            int elseMark = writeForwardCondJump(opcode, expression, lhs);
+            SavedState saved = save();
+            CompileExpressionResult lhs = compileExpression(expression.getX());
+            if (lhs.value != null && isTruthImmutable(lhs.value)) {
+              saved.reset();
+              if (Starlark.truth(lhs.value) != (expression.getOperator() == TokenKind.AND)) {
+                return compileConstantTo(expression, lhs.value, result);
+              } else {
+                return compileExpressionTo(expression.getY(), result);
+              }
+            }
+
+            if (result == BcSlot.ANY_FLAG) {
+              result = allocSlot();
+            }
+
+            int elseMark = writeForwardCondJump(opcode, expression, lhs.slot);
             compileExpressionTo(expression.getY(), result);
             int end = writeForwardJump(expression);
             patchForwardJump(elseMark);
-            cp(expression, lhs, result);
+            cp(expression, lhs.slot, result);
             patchForwardJump(end);
             return new CompileExpressionResult(result, null);
           }
