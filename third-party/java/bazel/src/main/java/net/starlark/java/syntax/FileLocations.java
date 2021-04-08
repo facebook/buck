@@ -23,7 +23,7 @@ import javax.annotation.concurrent.Immutable;
  * index such that {@code 0 <= offset <= size}. A Location is a (file, line, column) triple.
  */
 @Immutable
-final class FileLocations {
+public final class FileLocations {
 
   private final int[] linestart; // maps line number (line >= 1) to char offset
   private final String file;
@@ -66,7 +66,7 @@ final class FileLocations {
     }
   }
 
-  Location getLocation(int offset) {
+  public Location getLocation(int offset) {
     int line = getLineAt(offset);
     int column = offset - linestart[line] + 1;
     return new Location(file, line, column);

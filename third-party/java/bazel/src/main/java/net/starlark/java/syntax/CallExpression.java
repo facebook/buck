@@ -16,6 +16,7 @@ package net.starlark.java.syntax;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
 
 /** Syntax node for a function call expression. */
 public final class CallExpression extends Expression {
@@ -61,6 +62,33 @@ public final class CallExpression extends Expression {
   /** Returns the function arguments. */
   public ImmutableList<Argument> getArguments() {
     return arguments;
+  }
+
+  /** Star argument. */
+  @Nullable
+  public Argument.Star getStarArgument() {
+    int i = arguments.size();
+    if (i > 0 && arguments.get(i - 1) instanceof Argument.StarStar) {
+      --i;
+    }
+    if (i > 0 && arguments.get(i - 1) instanceof Argument.Star) {
+      return (Argument.Star) arguments.get(i - 1);
+    }
+    return null;
+  }
+
+  /** Star-star argument. */
+  @Nullable
+  public Argument.StarStar getStarStarArgument() {
+    if (arguments.isEmpty()) {
+      return null;
+    }
+    Argument lastArg = arguments.get(arguments.size() - 1);
+    if (lastArg instanceof Argument.StarStar) {
+      return (Argument.StarStar) lastArg;
+    } else {
+      return null;
+    }
   }
 
   @Override

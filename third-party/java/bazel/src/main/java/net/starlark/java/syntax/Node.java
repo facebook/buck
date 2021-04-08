@@ -125,4 +125,8 @@ public abstract class Node {
    * @param visitor the {@link NodeVisitor} instance to dispatch to.
    */
   public abstract void accept(NodeVisitor visitor);
+
+  public FileLocations getLocs() {
+    return locs;
+  }
 }

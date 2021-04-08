@@ -498,40 +498,12 @@ class BcEval {
     setSlot(nextOperand(), Starlark.slice(fr.thread.mutability(), object, start, stop, step));
   }
 
-  private CallExpression currentCallExpression() {
-    return (CallExpression) compiled.nodeAt(currentIp);
-  }
-
-  private Location currentCallStarLocation() {
-    CallExpression callExpression = currentCallExpression();
-    return callExpression.getArguments().stream()
-        .filter(a -> a instanceof Argument.Star)
-        .map(a -> a.getStartLocation())
-        .findFirst()
-        .orElseGet(() -> {
-          // Not really needed, but better be safe
-          return callExpression.getStartLocation();
-        });
-  }
-
-  private Location currentCallStarStarLocation() {
-    CallExpression callExpression = currentCallExpression();
-    return callExpression.getArguments().stream()
-        .filter(a -> a instanceof Argument.StarStar)
-        .map(a -> a.getStartLocation())
-        .findFirst()
-        .orElseGet(() -> {
-          // Not really needed, but better be safe
-          return callExpression.getStartLocation();
-        });
-  }
-
   /** Call operator. */
   private void call() throws EvalException, InterruptedException {
     fr.thread.checkInterrupt();
 
-    Location lparenLocation = (Location) compiled.objects[nextOperand()];
-    fr.setLocation(lparenLocation);
+    BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
+    fr.setLocation(locs.getLparentLocation());
 
     StarlarkCallable fn = Starlark.callable(fr.thread, getSlot(nextOperand()));
     BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
@@ -542,7 +514,7 @@ class BcEval {
     if (star != null) {
       if (!(star instanceof Sequence)) {
         throw new EvalException(
-            currentCallStarLocation(),
+            locs.starLocation(),
             "argument after * must be an iterable, not " + Starlark.type(star));
       }
     }
@@ -550,7 +522,7 @@ class BcEval {
     if (starStar != null) {
       if (!(starStar instanceof Dict)) {
         throw new EvalException(
-            currentCallStarStarLocation(),
+            locs.starStarLocation(),
             "argument after ** must be a dict, not " + Starlark.type(starStar));
       }
     }
@@ -564,8 +536,8 @@ class BcEval {
   private void callLinked() throws EvalException, InterruptedException {
     fr.thread.checkInterrupt();
 
-    Location lparenLocation = (Location) compiled.objects[nextOperand()];
-    fr.setLocation(lparenLocation);
+    BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
+    fr.setLocation(locs.getLparentLocation());
 
     StarlarkCallableLinked fn = (StarlarkCallableLinked) compiled.objects[nextOperand()];
 
@@ -575,11 +547,11 @@ class BcEval {
     Object starStar = getSlotOrNull(nextOperand());
 
     if (star != null && !(star instanceof Sequence<?>)) {
-      throw new EvalException(currentCallStarLocation(),
+      throw new EvalException(locs.starLocation(),
           String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
     }
     if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
-      throw new EvalException(currentCallStarStarLocation(),
+      throw new EvalException(locs.starStarLocation(),
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }
 

@@ -126,7 +126,7 @@ class BcInstr {
     /** Generic call invocation. */
     CALL(
         BcInstr.CALL,
-        // prematerialized LParen location
+        // BcCallLocs
         BcInstrOperand.OBJECT,
         // Function
         BcInstrOperand.IN_SLOT,
@@ -142,7 +142,7 @@ class BcInstr {
         BcInstrOperand.OUT_SLOT),
     CALL_LINKED(
         BcInstr.CALL_LINKED,
-        // prematerialized LParen location
+        // BcCallLocs
         BcInstrOperand.OBJECT,
         // StarlarkCallableLinked
         BcInstrOperand.OBJECT,

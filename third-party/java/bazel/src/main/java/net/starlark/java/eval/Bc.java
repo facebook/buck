@@ -1260,7 +1260,7 @@ class Bc {
       nargs += 3; // star, star-star, result
       int[] args = new int[nargs];
       int i = 0;
-      args[i++] = allocObject(callExpression.getLparenLocation());
+      args[i++] = allocObject(BcCallLocs.forExpression(callExpression));
       args[i++] = allocObject(fn);
 
       args[i++] = regArgs.size();
@@ -1377,7 +1377,7 @@ class Bc {
 
       int i = 0;
 
-      args[i++] = allocObject(callExpression.getLparenLocation());
+      args[i++] = allocObject(BcCallLocs.forExpression(callExpression));
       args[i++] = function.slot;
 
       args[i++] = allocObject(new BcDynCallSite(linkSig));
