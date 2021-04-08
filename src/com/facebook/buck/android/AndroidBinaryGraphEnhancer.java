@@ -879,12 +879,12 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableMultimap<APKModule, DexProducedFromJavaLibrary> dexFilesToMerge =
           moduleDexesBuilder.build();
       for (APKModule module : dexFilesToMerge.keySet()) {
-        String moduleName = module.isRootModule() ? "secondary" : module.getName();
+        String moduleName = module.isRootModule() ? "" : module.getName() + "_";
         dexGroupsBuilder.add(
             createPreDexGroupRule(
                 module,
                 dexFilesToMerge.get(module),
-                InternalFlavor.of(moduleName + "_dexes"),
+                InternalFlavor.of(moduleName + "pre_dex_group"),
                 Optional.empty()));
       }
     } else {
@@ -895,8 +895,8 @@ public class AndroidBinaryGraphEnhancer {
       ImmutableList.Builder<PreDexSplitDexGroup> groupsBuilder = ImmutableList.builder();
       for (APKModule module : dexGroupMap.keySet()) {
         int i = 1;
-        String moduleName = module.isRootModule() ? "secondary" : module.getName();
-        String ruleNameFormat = moduleName + "_dexes_%d";
+        String moduleName = module.isRootModule() ? "" : module.getName() + "_";
+        String ruleNameFormat = moduleName + "pre_dex_group_%d";
         for (List<DexProducedFromJavaLibrary> dexes : dexGroupMap.get(module)) {
           groupsBuilder.add(
               createPreDexGroupRule(

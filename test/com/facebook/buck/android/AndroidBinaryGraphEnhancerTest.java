@@ -27,6 +27,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
@@ -619,7 +620,7 @@ public class AndroidBinaryGraphEnhancerTest {
     assertEquals(splitDexMergeRule, splitDexMergeEnhancerRule);
 
     BuildTarget dexGroupBuildTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes");
+        BuildTargetFactory.newInstance("//java/com/example:apk#pre_dex_group");
     BuildRule dexGroupRule = graphBuilder.getRule(dexGroupBuildTarget);
     assertThat(splitDexMergeRule.getBuildDeps(), hasItem(dexGroupRule));
     assertThat(
@@ -758,9 +759,9 @@ public class AndroidBinaryGraphEnhancerTest {
     assertEquals(splitDexMergeRule, splitDexMergeEnhancerRule);
 
     BuildTarget dexGroup1BuildTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes_1");
+        BuildTargetFactory.newInstance("//java/com/example:apk#pre_dex_group_1");
     BuildTarget dexGroup2BuildTarget =
-        BuildTargetFactory.newInstance("//java/com/example:apk#secondary_dexes_2");
+        BuildTargetFactory.newInstance("//java/com/example:apk#pre_dex_group_2");
     BuildRule dexGroup1Rule = graphBuilder.getRule(dexGroup1BuildTarget);
     BuildRule dexGroup2Rule = graphBuilder.getRule(dexGroup2BuildTarget);
     assertThat(splitDexMergeRule.getBuildDeps(), hasItem(dexGroup1Rule));
@@ -787,7 +788,7 @@ public class AndroidBinaryGraphEnhancerTest {
         contains(dexGroup1BuildTarget, dexGroup2BuildTarget));
     assertThat(
         Iterables.transform(splitDexMergeRule.getBuildDeps(), BuildRule::getBuildTarget),
-        contains(rDotJavaDexTarget, dexGroup1BuildTarget, dexGroup2BuildTarget));
+        containsInAnyOrder(rDotJavaDexTarget, dexGroup1BuildTarget, dexGroup2BuildTarget));
   }
 
   @Test

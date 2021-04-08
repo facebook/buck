@@ -572,7 +572,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     workspace.runBuckBuild(RES_GROUPS_TARGET).assertSuccess();
     BuildTarget dexTarget =
         BuildTargetFactory.newInstance(
-            "//apps/multidex:app_with_resources_and_groups#secondary_dexes_1");
+            "//apps/multidex:app_with_resources_and_groups#pre_dex_group_1");
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path resourcesFile =
         BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), dexTarget, "%s")
