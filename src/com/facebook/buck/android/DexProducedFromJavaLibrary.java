@@ -20,7 +20,7 @@ import static com.facebook.buck.android.DexProducedFromJavaLibrary.MetadataResou
 import static com.facebook.buck.android.DexProducedFromJavaLibrary.MetadataResource.REFERENCED_RESOURCES;
 import static com.facebook.buck.android.DexProducedFromJavaLibrary.MetadataResource.WEIGHT_ESTIMATE;
 
-import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.android.D8Step.Option;
 import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -130,7 +130,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ruleFinder,
         androidPlatformTarget,
         javaLibrary,
-        DxStep.D8,
+        D8Step.D8,
         1,
         ImmutableSortedSet.of(),
         withDownwardApi);
@@ -197,7 +197,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       boolean hasClassesToDx = !classNamesToHashes.isEmpty();
       Supplier<Integer> weightEstimate;
 
-      @Nullable DxStep dx;
+      @Nullable D8Step dx;
 
       RelPath pathToDex = outputPathResolver.resolvePath(outputDex);
       if (hasClassesToDx) {
@@ -208,20 +208,20 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
         // To be conservative, use --force-jumbo for these intermediate .dex files so that they can
         // be merged into a final classes.dex that uses jumbo instructions.
-        EnumSet<DxStep.Option> options =
-            EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO);
+        EnumSet<D8Step.Option> options =
+            EnumSet.of(D8Step.Option.NO_OPTIMIZE, D8Step.Option.FORCE_JUMBO);
         if (!desugarEnabled) {
           options.add(Option.NO_DESUGAR);
         }
         dx =
-            new DxStep(
+            new D8Step(
                 filesystem,
                 androidPlatformTarget,
                 pathToDex.getPath(),
                 Collections.singleton(pathToOutputFile.getPath()),
                 options,
                 dexTool,
-                dexTool.equals(DxStep.D8),
+                dexTool.equals(D8Step.D8),
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
                 Optional.empty() /* minSdkVersion */);

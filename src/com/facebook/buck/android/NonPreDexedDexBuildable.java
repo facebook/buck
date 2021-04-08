@@ -885,10 +885,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     // directly apply to the internal threading/parallelization details of various build commands
     // being executed.  For example, aapt is internally threaded by default when preprocessing
     // images.
-    EnumSet<DxStep.Option> dxOptions =
+    EnumSet<D8Step.Option> dxOptions =
         shouldProguard
-            ? EnumSet.noneOf(DxStep.Option.class)
-            : EnumSet.of(DxStep.Option.NO_OPTIMIZE);
+            ? EnumSet.noneOf(D8Step.Option.class)
+            : EnumSet.of(D8Step.Option.NO_OPTIMIZE);
     Path selectedPrimaryDexPath = primaryDexPath;
     if (reorderClassesIntraDex) {
       String primaryDexFileName = primaryDexPath.getFileName().toString();

@@ -58,23 +58,23 @@ public class DexOverflowError {
 
   private final ProjectFilesystem filesystem;
   private final OverflowType type;
-  private final DxStep dxStep;
+  private final D8Step d8Step;
 
-  public DexOverflowError(ProjectFilesystem filesystem, OverflowType type, DxStep dxStep) {
+  public DexOverflowError(ProjectFilesystem filesystem, OverflowType type, D8Step d8Step) {
     this.filesystem = filesystem;
     this.type = type;
-    this.dxStep = dxStep;
+    this.d8Step = d8Step;
   }
 
   /**
    * Determine the dex overflow type for a failed dexing step, if the step failed due to dex limits
    */
   public static Optional<OverflowType> checkOverflow(StepFailedException exception) {
-    if (exception.getStep() instanceof DxStep) {
-      int exitCode = exception.getExitCode().orElse(DxStep.FAILURE_EXIT_CODE);
-      if (exitCode == DxStep.DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE) {
+    if (exception.getStep() instanceof D8Step) {
+      int exitCode = exception.getExitCode().orElse(D8Step.FAILURE_EXIT_CODE);
+      if (exitCode == D8Step.DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE) {
         return Optional.of(OverflowType.FIELD);
-      } else if (exitCode == DxStep.DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE) {
+      } else if (exitCode == D8Step.DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE) {
         return Optional.of(OverflowType.METHOD);
       }
     }
@@ -86,7 +86,7 @@ public class DexOverflowError {
     ImmutableMap<String, Integer> dexInputDetails = null;
     try {
       ImmutableMap.Builder<String, Integer> dexInputsBuilder = ImmutableMap.builder();
-      for (Path dexFile : dxStep.getFilesToDex()) {
+      for (Path dexFile : d8Step.getFilesToDex()) {
         String dexFileName = dexFile.toString();
         if (dexFileName.endsWith(".jar") || dexFileName.endsWith(".dex")) {
           dexInputsBuilder.put(dexFileName, countRefs(type, filesystem.resolve(dexFileName)));
@@ -99,7 +99,7 @@ public class DexOverflowError {
     }
 
     StringBuilder builder = new StringBuilder();
-    boolean primaryDexOverflow = dxStep.getOutputDexFile().endsWith("classes.dex");
+    boolean primaryDexOverflow = d8Step.getOutputDexFile().endsWith("classes.dex");
     String overflowName = type.name().toLowerCase();
     if (primaryDexOverflow) {
       builder.append(String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName));
@@ -109,7 +109,7 @@ public class DexOverflowError {
         builder.append(SECONDARY_DEX_OVERFLOW_PREDEX_REMEDIATION);
       }
     }
-    builder.append(String.format("\nOutput dex file: %s\n", dxStep.getOutputDexFile()));
+    builder.append(String.format("\nOutput dex file: %s\n", d8Step.getOutputDexFile()));
     if (dexInputDetails != null && !dexInputDetails.isEmpty()) {
       builder.append(
           String.format(

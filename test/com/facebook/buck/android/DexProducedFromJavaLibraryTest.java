@@ -94,21 +94,21 @@ public class DexProducedFromJavaLibraryTest {
             graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
             javaBarRule,
-            DxStep.D8,
+            D8Step.D8,
             1,
             ImmutableSortedSet.of(javaLibRule.getSourcePathToOutput()),
             false);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
-    DxStep dxStep = null;
+    D8Step d8Step = null;
     for (Step step : steps) {
-      if (step instanceof DxStep) {
-        dxStep = (DxStep) step;
+      if (step instanceof D8Step) {
+        d8Step = (D8Step) step;
         break;
       }
     }
-    assertNotNull(dxStep);
+    assertNotNull(d8Step);
     assertThat(
-        dxStep.classpathFiles,
+        d8Step.classpathFiles,
         Matchers.hasItem(
             context
                 .getSourcePathResolver()

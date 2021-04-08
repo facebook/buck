@@ -52,9 +52,9 @@ import javax.annotation.Nullable;
 public abstract class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasDexFiles {
 
-  /** Options to use with {@link DxStep} when merging pre-dexed files. */
-  static final EnumSet<DxStep.Option> DX_MERGE_OPTIONS =
-      EnumSet.of(DxStep.Option.NO_DESUGAR, DxStep.Option.NO_OPTIMIZE);
+  /** Options to use with {@link D8Step} when merging pre-dexed files. */
+  static final EnumSet<D8Step.Option> DX_MERGE_OPTIONS =
+      EnumSet.of(D8Step.Option.NO_DESUGAR, D8Step.Option.NO_OPTIMIZE);
 
   @AddToRuleKey final String dexTool;
 

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.android.D8Step.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -94,7 +94,7 @@ public class SmartDexingStep implements Step {
   private final Optional<Path> secondaryOutputDir;
   private final DexInputHashesProvider dexInputHashesProvider;
   private final Path successDir;
-  private final EnumSet<DxStep.Option> dxOptions;
+  private final EnumSet<D8Step.Option> dxOptions;
   private final ListeningExecutorService executorService;
   private final int xzCompressionLevel;
   private final String dexTool;
@@ -194,7 +194,7 @@ public class SmartDexingStep implements Step {
       Optional<DexOverflowError.OverflowType> overflowType = DexOverflowError.checkOverflow(e);
       if (overflowType.isPresent()) {
         DexOverflowError error =
-            new DexOverflowError(filesystem, overflowType.get(), (DxStep) e.getStep());
+            new DexOverflowError(filesystem, overflowType.get(), (D8Step) e.getStep());
         context.getConsole().printErrorText(error.getErrorMessage());
       } else {
         context.logError(e, "There was an error in smart dexing step.");
@@ -517,7 +517,7 @@ public class SmartDexingStep implements Step {
     if (DexStore.XZ.matchesPath(outputPath)) {
       Path tempDexJarOutput = fileSystem.getPath(output.replaceAll("\\.jar\\.xz$", ".tmp.jar"));
       steps.add(
-          new DxStep(
+          new D8Step(
               filesystem,
               androidPlatformTarget,
               tempDexJarOutput,
@@ -557,7 +557,7 @@ public class SmartDexingStep implements Step {
       Path tempDexJarOutput =
           fileSystem.getPath(output.replaceAll("\\.jar\\.xzs\\.tmp~$", ".tmp.jar"));
       steps.add(
-          new DxStep(
+          new D8Step(
               filesystem,
               androidPlatformTarget,
               tempDexJarOutput,
@@ -590,7 +590,7 @@ public class SmartDexingStep implements Step {
         || DexStore.RAW.matchesPath(outputPath)
         || output.endsWith("classes.dex")) {
       steps.add(
-          new DxStep(
+          new D8Step(
               filesystem,
               androidPlatformTarget,
               outputPath,

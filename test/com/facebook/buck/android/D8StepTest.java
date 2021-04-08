@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.DxStep.Option;
+import com.facebook.buck.android.D8Step.Option;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DxStepTest {
+public class D8StepTest {
 
   private static final Path SAMPLE_OUTPUT_PATH =
       Paths.get(".").toAbsolutePath().normalize().resolve("buck-out/gen/classes.dex");
@@ -55,14 +55,14 @@ public class DxStepTest {
     try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx =
-          new DxStep(
+      D8Step dx =
+          new D8Step(
               filesystem,
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(Option.NO_OPTIMIZE),
-              DxStep.D8);
+              D8Step.D8);
 
       String expected =
           String.format(
@@ -86,8 +86,8 @@ public class DxStepTest {
   public void testDxCommandOptimizeNoJumbo() throws IOException {
     try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+      D8Step dx =
+          new D8Step(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
 
       String expected =
           String.format(
@@ -111,14 +111,14 @@ public class DxStepTest {
   public void testDxCommandNoOptimizeForceJumbo() throws IOException {
     try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-      DxStep dx =
-          new DxStep(
+      D8Step dx =
+          new D8Step(
               filesystem,
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO),
-              DxStep.D8);
+              EnumSet.of(D8Step.Option.NO_OPTIMIZE, D8Step.Option.FORCE_JUMBO),
+              D8Step.D8);
 
       String expected =
           String.format(
@@ -143,14 +143,14 @@ public class DxStepTest {
     try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-      DxStep dx =
-          new DxStep(
+      D8Step dx =
+          new D8Step(
               filesystem,
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.noneOf(DxStep.Option.class),
-              DxStep.D8,
+              EnumSet.noneOf(D8Step.Option.class),
+              D8Step.D8,
               false,
               ImmutableSet.of(),
               Optional.empty(),

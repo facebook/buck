@@ -88,7 +88,7 @@ public class PreDexSingleDexMerge extends PreDexMerge {
 
     // This will combine the pre-dexed files and the R.class files into a single classes.dex file.
     steps.add(
-        new DxStep(
+        new D8Step(
             getProjectFilesystem(),
             androidPlatformTarget,
             primaryDexPath,

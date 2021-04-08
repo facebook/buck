@@ -1004,7 +1004,7 @@ public class AndroidBinaryGraphEnhancer {
               javaLibrary.getBuildTarget().withAppendedFlavors(getDexFlavor(dexTool)),
               preDexTarget -> {
                 ImmutableSortedSet<SourcePath> desugarDeps =
-                    dexTool.equals(DxStep.D8)
+                    dexTool.equals(D8Step.D8)
                             && javaLibrary.isDesugarEnabled()
                             && javaLibrary.isInterfaceMethodsDesugarEnabled()
                         ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
@@ -1119,7 +1119,7 @@ public class AndroidBinaryGraphEnhancer {
   }
 
   private static Flavor getDexFlavor(String dexTool) {
-    Preconditions.checkArgument(DxStep.D8.equals(dexTool));
+    Preconditions.checkArgument(D8Step.D8.equals(dexTool));
     return D8_FLAVOR;
   }
 }

@@ -155,7 +155,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
-                .setDexTool(DxStep.D8)
+                .setDexTool(D8Step.D8)
                 .build());
 
     BuildTarget aaptPackageResourcesTarget =
@@ -287,7 +287,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
-                .setDexTool(DxStep.D8)
+                .setDexTool(D8Step.D8)
                 .build());
 
     BuildTarget aaptPackageResourcesTarget =
@@ -1031,7 +1031,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     @Value.Default
     String getDexTool() {
-      return DxStep.D8;
+      return D8Step.D8;
     }
   }
 

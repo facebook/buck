@@ -50,7 +50,8 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-public class DxStep extends IsolatedStep {
+/** Runs d8. */
+public class D8Step extends IsolatedStep {
 
   /** Options to pass to {@code d8}. */
   public enum Option {
@@ -94,7 +95,7 @@ public class DxStep extends IsolatedStep {
    * @param outputDexFile path to the file where the generated classes.dex should go.
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    */
-  public DxStep(
+  public D8Step(
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
@@ -104,7 +105,7 @@ public class DxStep extends IsolatedStep {
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
-        EnumSet.noneOf(DxStep.Option.class),
+        EnumSet.noneOf(D8Step.Option.class),
         D8);
   }
 
@@ -115,7 +116,7 @@ public class DxStep extends IsolatedStep {
    * @param options to pass to {@code dx}.
    * @param dexTool the tool used to perform dexing.
    */
-  public DxStep(
+  public D8Step(
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
@@ -132,7 +133,7 @@ public class DxStep extends IsolatedStep {
    * @param options to pass to {@code dx}.
    * @param dexTool the tool used to perform dexing.
    */
-  public DxStep(
+  public D8Step(
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
@@ -162,7 +163,7 @@ public class DxStep extends IsolatedStep {
    * @param classpathFiles specifies classpath for interface static and default methods desugaring.
    * @param minSdkVersion
    */
-  public DxStep(
+  public D8Step(
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,

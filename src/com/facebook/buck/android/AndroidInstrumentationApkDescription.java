@@ -203,7 +203,7 @@ public class AndroidInstrumentationApkDescription
             AndroidPlatformTarget.class);
 
     String dexTool = args.getDexTool();
-    Preconditions.checkState(dexTool.equals(DxStep.D8));
+    Preconditions.checkState(dexTool.equals(D8Step.D8));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
@@ -352,7 +352,7 @@ public class AndroidInstrumentationApkDescription
 
     @Value.Default
     default String getDexTool() {
-      return DxStep.D8;
+      return D8Step.D8;
     }
   }
 }
