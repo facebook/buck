@@ -27,7 +27,9 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.VersionStringComparator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,7 +86,8 @@ public class AppleSdkDiscovery {
       Optional<Path> developerDir,
       ImmutableList<Path> extraDirs,
       ImmutableMap<String, AppleToolchain> xcodeToolchains,
-      AppleConfig appleConfig)
+      AppleConfig appleConfig,
+      ProjectFilesystem projectFilesystem)
       throws IOException {
     Optional<AppleToolchain> defaultToolchain =
         Optional.ofNullable(xcodeToolchains.get(DEFAULT_TOOLCHAIN_ID));
@@ -148,6 +151,7 @@ public class AppleSdkDiscovery {
                     xcodePathsBuilder
                         .setDeveloperPath(developerDir)
                         .setPlatformPath(platformDir)
+                        .setPlatformSourcePath(PathSourcePath.of(projectFilesystem, platformDir))
                         .setSdkPath(sdkDir)
                         .build();
                 appleSdkPathsBuilder.put(sdk, xcodePaths);

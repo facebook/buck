@@ -32,6 +32,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.CxxBinaryFactory;
@@ -150,6 +151,10 @@ public class FakeAppleRuleDescriptions {
           .setDeveloperPath(FAKE_PROJECT_FILESYSTEM.getPath("."))
           .addToolchainPaths(FAKE_PROJECT_FILESYSTEM.getPath("Toolchains/XcodeDefault.xctoolchain"))
           .setPlatformPath(FAKE_PROJECT_FILESYSTEM.getPath("Platforms/MacOSX.platform"))
+          .setPlatformSourcePath(
+              PathSourcePath.of(
+                  FAKE_PROJECT_FILESYSTEM,
+                  FAKE_PROJECT_FILESYSTEM.getPath("Platforms/MacOSX.platform")))
           .setSdkPath(
               FAKE_PROJECT_FILESYSTEM.getPath(
                   "Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"))
@@ -160,6 +165,10 @@ public class FakeAppleRuleDescriptions {
           .setDeveloperPath(FAKE_PROJECT_FILESYSTEM.getPath("."))
           .addToolchainPaths(FAKE_PROJECT_FILESYSTEM.getPath("Toolchains/XcodeDefault.xctoolchain"))
           .setPlatformPath(FAKE_PROJECT_FILESYSTEM.getPath("Platforms/iPhoneOS.platform"))
+          .setPlatformSourcePath(
+              PathSourcePath.of(
+                  FAKE_PROJECT_FILESYSTEM,
+                  FAKE_PROJECT_FILESYSTEM.getPath("Platforms/iPhoneOS.platform")))
           .setSdkPath(
               FAKE_PROJECT_FILESYSTEM.getPath(
                   "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))

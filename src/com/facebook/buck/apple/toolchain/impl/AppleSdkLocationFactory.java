@@ -70,7 +70,8 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
               appleDeveloperDir,
               appleConfig.getExtraPlatformPaths(),
               appleToolchainProvider.getAppleToolchains(),
-              appleConfig);
+              appleConfig,
+              context.getFilesystem());
       return Optional.of(AppleSdkLocation.of(appleSdkPaths));
     } catch (IOException e) {
       throw new ToolchainInstantiationException(

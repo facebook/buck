@@ -37,6 +37,7 @@ import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,10 +69,12 @@ public class SwiftNativeLinkableGroupTest {
             .setVersion("8.0")
             .setToolchains(ImmutableList.of())
             .build();
+    Path iphonePlatformPath = developerDir.resolve("Platforms/iPhoneOS.platform").getPath();
     iphoneSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir.getPath())
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform").getPath())
+            .setPlatformPath(iphonePlatformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(iphonePlatformPath))
             .setSdkPath(
                 developerDir
                     .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
@@ -84,10 +87,12 @@ public class SwiftNativeLinkableGroupTest {
             .setVersion("10.14")
             .setToolchains(ImmutableList.of())
             .build();
+    Path macosxPlatformPath = developerDir.resolve("Platforms/MacOSX.platform").getPath();
     macosxSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir.getPath())
-            .setPlatformPath(developerDir.resolve("Platforms/MacOSX.platform").getPath())
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(macosxPlatformPath))
             .setSdkPath(
                 developerDir
                     .resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14sdk")

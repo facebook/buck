@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.toolchain;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -45,11 +46,18 @@ public abstract class AppleSdkPaths {
   /**
    * Absolute path to tools and files which depend on a particular platform.
    *
+   * <p>Warning: This path might not exist during analysis phase if it is created as a part of Apple
+   * toolchain (if it is a result of a genrule) and is not just pointing at the installed Xcode
+   * distribution.
+   *
    * <p>Example:
    *
    * <p>{@code /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform}
    */
   public abstract Path getPlatformPath();
+
+  /** Source path to tools and files which depend on a particular platform. */
+  public abstract SourcePath getPlatformSourcePath();
 
   /**
    * Absolute path to tools and files which depend on a particular SDK on a particular platform.

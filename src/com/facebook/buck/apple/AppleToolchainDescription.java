@@ -122,6 +122,7 @@ public class AppleToolchainDescription
         AppleSdkPaths.builder()
             .setSdkPath(sdkPath.getPath())
             .setPlatformPath(platformPath.getPath())
+            .setPlatformSourcePath(args.getPlatformPath())
             .setToolchainPaths(ImmutableList.of())
             .setDeveloperPath(developerPath)
             .build();

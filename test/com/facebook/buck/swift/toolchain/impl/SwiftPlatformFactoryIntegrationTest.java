@@ -34,6 +34,7 @@ import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,10 +63,12 @@ public class SwiftPlatformFactoryIntegrationTest {
   }
 
   private AppleSdkPaths createAppleSdkPaths(AbsPath developerDir, AbsPath... toolchainPaths) {
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform").getPath();
     AppleSdkPaths.Builder appleSdkPathsBuilder =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir.getPath())
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform").getPath())
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir
                     .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")

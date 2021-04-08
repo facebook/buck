@@ -29,6 +29,8 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -75,7 +77,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem());
 
     assertEquals(0, sdks.size());
   }
@@ -113,18 +116,23 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
+    Path macosxPlatformPath = root.resolve("MacOSX.platform");
+    SourcePath macosxPlatformSourcePath =
+        PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath);
     AppleSdkPaths macosxReleasePaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(path)
             .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(macosxPlatformSourcePath)
             .setSdkPath(root.resolve("MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
     AppleSdkPaths macosxDebugPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(path)
             .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(macosxPlatformSourcePath)
             .setSdkPath(root.resolve("MacOSX.platform/Developer/SDKs/MacOSX-Debug10.9.sdk"))
             .build();
 
@@ -139,7 +147,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 
@@ -168,11 +177,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
+    Path macosxPlatformPath = root.resolve("MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(path)
             .addToolchainPaths(path.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -187,7 +199,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 
@@ -211,11 +224,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
+    Path macosxPlatformPath = root.resolve("Platforms/MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -230,7 +246,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(path),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 
@@ -249,7 +266,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem());
 
     assertEquals(2, sdks.size());
   }
@@ -285,11 +303,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
+    Path macosxPlatformPath = root.resolve("Platforms/MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(actualSdkPath)
             .build();
 
@@ -304,7 +325,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem());
 
     assertThat(discoveredSdks, equalTo(expected));
   }
@@ -327,11 +349,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path macosxPlatformPath = root.resolve("Platforms/MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -343,11 +368,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path iphonePlatformPath = root.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths iphoneos80Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(iphonePlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), iphonePlatformPath))
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build();
 
@@ -359,11 +387,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path iphonesimulatorPlatformPath = root.resolve("Platforms/iPhoneSimulator.platform");
     AppleSdkPaths iphonesimulator80Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneSimulator.platform"))
+            .setPlatformPath(iphonesimulatorPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), iphonesimulatorPlatformPath))
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
@@ -377,11 +408,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("armv7k", "arm64_32")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path watchosPlatformPath = root.resolve("Platforms/WatchOS.platform");
     AppleSdkPaths watchos20Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/WatchOS.platform"))
+            .setPlatformPath(watchosPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), watchosPlatformPath))
             .setSdkPath(root.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk"))
             .build();
 
@@ -393,11 +427,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path watchsimulatorPlatformPath = root.resolve("Platforms/WatchSimulator.platform");
     AppleSdkPaths watchsimulator20Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/WatchSimulator.platform"))
+            .setPlatformPath(watchsimulatorPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), watchsimulatorPlatformPath))
             .setSdkPath(
                 root.resolve("Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk"))
             .build();
@@ -410,11 +447,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path appletvosPlatformPath = root.resolve("Platforms/AppleTVOS.platform");
     AppleSdkPaths appletvos91Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/AppleTVOS.platform"))
+            .setPlatformPath(appletvosPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), appletvosPlatformPath))
             .setSdkPath(root.resolve("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS.sdk"))
             .build();
 
@@ -426,11 +466,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("arm64", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path appletvsimulatorPlatformPath = root.resolve("Platforms/AppleTVSimulator.platform");
     AppleSdkPaths appletvsimulator91Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/AppleTVSimulator.platform"))
+            .setPlatformPath(appletvsimulatorPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), appletvsimulatorPlatformPath))
             .setSdkPath(
                 root.resolve(
                     "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator.sdk"))
@@ -462,7 +505,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 
@@ -480,7 +524,8 @@ public class AppleSdkDiscoveryTest {
                 Optional.of(root),
                 ImmutableList.of(),
                 toolchains,
-                FakeBuckConfig.empty().getView(AppleConfig.class))
+                FakeBuckConfig.empty().getView(AppleConfig.class),
+                workspace.getProjectFileSystem())
             .entrySet(),
         empty());
   }
@@ -502,11 +547,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path macosxPlatformPath = root.resolve("Platforms/MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -518,11 +566,15 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("armv7", "arm64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path iphoneosPlatformPath = root.resolve("Platforms/iPhoneOS.platform");
+    PathSourcePath iphoneosPlatformSourcePath =
+        PathSourcePath.of(workspace.getProjectFileSystem(), iphoneosPlatformPath);
     AppleSdkPaths iphoneos80Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(iphoneosPlatformPath)
+            .setPlatformSourcePath(iphoneosPlatformSourcePath)
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
 
@@ -534,11 +586,15 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("arm64", "i386", "x86_64")
             .addToolchains(getDefaultToolchain(root))
             .build();
+    Path iphonesimulatorPlatformPath = root.resolve("Platforms/iPhoneSimulator.platform");
+    PathSourcePath iphonesimulatorPlatformSourcePath =
+        PathSourcePath.of(workspace.getProjectFileSystem(), iphonesimulatorPlatformPath);
     AppleSdkPaths iphonesimulator80Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneSimulator.platform"))
+            .setPlatformPath(iphonesimulatorPlatformPath)
+            .setPlatformSourcePath(iphonesimulatorPlatformSourcePath)
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
@@ -556,7 +612,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(iphoneosPlatformPath)
+            .setPlatformSourcePath(iphoneosPlatformSourcePath)
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build();
 
@@ -572,7 +629,8 @@ public class AppleSdkDiscoveryTest {
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneSimulator.platform"))
+            .setPlatformPath(iphonesimulatorPlatformPath)
+            .setPlatformSourcePath(iphonesimulatorPlatformSourcePath)
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
@@ -598,7 +656,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 
@@ -626,11 +685,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(toolchains.values())
             .build();
+    Path macosxPlatformPath = root.resolve("Platforms/MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(actualSdkPath)
             .build();
 
@@ -645,7 +707,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 
@@ -677,7 +740,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem());
 
     // if both symlinks were to be visited, exception would have been thrown during discovery
     assertThat(actual.size(), is(2));
@@ -704,7 +768,8 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.empty().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class),
+            workspace.getProjectFileSystem());
 
     assertThat(actual.size(), is(0));
   }
@@ -751,11 +816,14 @@ public class AppleSdkDiscoveryTest {
             .addArchitectures("i386", "x86_64", "arm64")
             .addAllToolchains(ImmutableList.of(overrideToolchain1, overrideToolchain2))
             .build();
+    Path macosxPlatformPath = root.resolve("Platforms/MacOSX.platform");
     AppleSdkPaths macosx109Paths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve(toolchainPath1), root.resolve(toolchainPath2))
-            .setPlatformPath(root.resolve("Platforms/MacOSX.platform"))
+            .setPlatformPath(macosxPlatformPath)
+            .setPlatformSourcePath(
+                PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
             .build();
 
@@ -776,7 +844,11 @@ public class AppleSdkDiscoveryTest {
 
     assertThat(
         AppleSdkDiscovery.discoverAppleSdkPaths(
-            Optional.of(root), ImmutableList.of(root), allToolchains, fakeAppleConfig),
+            Optional.of(root),
+            ImmutableList.of(root),
+            allToolchains,
+            fakeAppleConfig,
+            workspace.getProjectFileSystem()),
         equalTo(expected));
   }
 

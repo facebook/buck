@@ -105,7 +105,8 @@ public class AppleCxxPlatformsProviderFactoryTest {
             appleDeveloperDir,
             ImmutableList.of(root),
             appleToolchains,
-            buckConfig.getView(AppleConfig.class));
+            buckConfig.getView(AppleConfig.class),
+            projectFilesystem);
 
     assumeThat(appleSdkPaths, is(not(anEmptyMap())));
 

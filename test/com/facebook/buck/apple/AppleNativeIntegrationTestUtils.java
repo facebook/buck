@@ -51,7 +51,11 @@ public class AppleNativeIntegrationTestUtils {
           AppleToolchainDiscovery.discoverAppleToolchains(
               appleDeveloperDirectory, appleConfig.getExtraToolchainPaths());
       return AppleSdkDiscovery.discoverAppleSdkPaths(
-          appleDeveloperDirectory, appleConfig.getExtraPlatformPaths(), toolchains, appleConfig);
+          appleDeveloperDirectory,
+          appleConfig.getExtraPlatformPaths(),
+          toolchains,
+          appleConfig,
+          new FakeProjectFilesystem());
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

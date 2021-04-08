@@ -163,11 +163,13 @@ public class AppleCxxPlatformsTest {
   }
 
   private AppleCxxPlatform buildAppleCxxPlatformWithConfig(BuckConfig buckConfig) {
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
@@ -331,11 +333,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void watchOSSdkPathsBuiltFromDirectory() {
+    Path platformPath = developerDir.resolve("Platforms/WatchOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/WatchOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"))
             .build();
@@ -442,11 +446,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void appleTVOSSdkPathsBuiltFromDirectory() {
+    Path platformPath = developerDir.resolve("Platforms/AppleTVOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/AppleTVOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"))
@@ -569,11 +575,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void invalidFlavorCharactersInSdkAreEscaped() {
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
@@ -620,11 +628,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void cxxToolParamsReadFromBuckConfig() {
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
@@ -690,11 +700,13 @@ public class AppleCxxPlatformsTest {
   public void pathNotFoundThrows() {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(containsString("Cannot find tool"));
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
             .build();
@@ -728,11 +740,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void iphoneOSSimulatorPlatformSetsLinkerFlags() {
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
@@ -788,11 +802,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void watchOSSimulatorPlatformSetsLinkerFlags() {
+    Path platformPath = developerDir.resolve("Platforms/WatchSimulator.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/WatchSimulator.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator2.0.sdk"))
@@ -848,11 +864,13 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void appleTVOSSimulatorPlatformSetsLinkerFlags() {
+    Path platformPath = developerDir.resolve("Platforms/AppleTVSimulator.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/AppleTVSimulator.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator9.1.sdk"))
@@ -1014,11 +1032,13 @@ public class AppleCxxPlatformsTest {
   }
 
   private AppleCxxPlatform buildAppleCxxPlatform(Path root, BuckConfig config) {
+    Path platformPath = root.resolve("Platforms/iPhoneOS.platform");
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(root)
             .addToolchainPaths(root.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(root.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
             .build();
@@ -1376,6 +1396,7 @@ public class AppleCxxPlatformsTest {
             .build();
     knownPaths.forEach(this::touchFile);
     BuckConfig buckConfig = FakeBuckConfig.empty();
+    Path platformPath = developerDir.resolve("Platforms/iPhoneOS.platform");
     return AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
@@ -1384,7 +1405,8 @@ public class AppleCxxPlatformsTest {
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
             .addToolchainPaths(developerDir.resolve("Toolchains/XcodeDefault.xctoolchain"))
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setPlatformPath(platformPath)
+            .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
             .build(),

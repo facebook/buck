@@ -27,6 +27,7 @@ import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
@@ -54,6 +55,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.common.SourcePathSupport;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -1019,7 +1021,7 @@ public class AppleDescriptions {
     if (shouldEmbedXctest) {
       addXctestLibrariesToBundleParts(
           bundlePartsReadyToCopy,
-          appleCxxPlatform.getAppleSdkPaths().getPlatformPath(),
+          appleCxxPlatform.getAppleSdkPaths(),
           buildTarget,
           graphBuilder,
           projectFilesystem,
@@ -1704,15 +1706,39 @@ public class AppleDescriptions {
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
+  private static SourcePath getApplePlatformRelativeSourcePath(
+      Path platformPath,
+      SourcePath platformSourcePath,
+      Path relativePath,
+      ProjectFilesystem projectFilesystem) {
+    Optional<Path> maybePlatformRelativePath =
+        projectFilesystem.getPathRelativeToProjectRoot(platformPath);
+    if (platformSourcePath instanceof BuildTargetSourcePath) {
+      if (!maybePlatformRelativePath.isPresent()) {
+        throw new IllegalStateException(
+            "Expected Apple platform path to be relative when there is a corresponding build target for it.");
+      }
+      BuildTarget platformBuildTarget = ((BuildTargetSourcePath) platformSourcePath).getTarget();
+      return ExplicitBuildTargetSourcePath.of(
+          platformBuildTarget, maybePlatformRelativePath.get().resolve(relativePath));
+    } else {
+      return PathSourcePath.of(projectFilesystem, platformPath.resolve(relativePath));
+    }
+  }
+
   private static void addXctestLibrariesToBundleParts(
       ImmutableList.Builder<AppleBundlePart> bundlePartsBuilder,
-      Path platformPath,
+      AppleSdkPaths sdkPaths,
       BuildTarget bundleTarget,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       boolean incrementalBundlingEnabled,
       boolean shouldCacheFileHashes,
       boolean hasSwiftXCTestDependencies) {
+
+    Path platformPath = sdkPaths.getPlatformPath();
+    SourcePath platformSourcePath = sdkPaths.getPlatformSourcePath();
+
     // We have to be careful to provide consistent hash paths for incremental bundling. If the
     // platform dir is outside of the repo (ie an Xcode toolchain) then substitute the hash path
     // for one based at /PLATFORM_DIR to ensure cache alignment across users.
@@ -1723,7 +1749,9 @@ public class AppleDescriptions {
 
     Path xctestPlatformPath = Paths.get("Developer/Library/Frameworks/XCTest.framework");
     SourcePath xctestFrameworkPath =
-        PathSourcePath.of(projectFilesystem, platformPath.resolve(xctestPlatformPath));
+        getApplePlatformRelativeSourcePath(
+            platformPath, platformSourcePath, xctestPlatformPath, projectFilesystem);
+
     bundlePartsBuilder.add(
         DirectoryAppleBundlePart.of(
             xctestFrameworkPath,
@@ -1748,7 +1776,8 @@ public class AppleDescriptions {
     Path xctestSwiftSupportPlatformPath =
         Paths.get("Developer/usr/lib/libXCTestSwiftSupport.dylib");
     SourcePath xctestSwiftSupportPath =
-        PathSourcePath.of(projectFilesystem, platformPath.resolve(xctestSwiftSupportPlatformPath));
+        getApplePlatformRelativeSourcePath(
+            platformPath, platformSourcePath, xctestSwiftSupportPlatformPath, projectFilesystem);
     bundlePartsBuilder.add(
         FileAppleBundlePart.of(
             xctestSwiftSupportPath,
