@@ -181,26 +181,21 @@ class Bc {
     private static ImmutableList<String> toStringInstructionsImpl(int[] text, BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
         List<String> strings, List<Object> constants) {
       ImmutableList.Builder<String> ret = ImmutableList.builder();
-      int ip = 0;
-      while (ip != text.length) {
+      BcParser parser = new BcParser(text);
+      while (!parser.eof()) {
         StringBuilder sb = new StringBuilder();
-        sb.append(ip).append(": ");
-        BcInstr.Opcode opcode = BcInstr.Opcode.fromInt(text[ip++]);
+        sb.append(parser.getIp()).append(": ");
+        BcInstr.Opcode opcode = parser.nextOpcode();
         sb.append(opcode);
-        int[] updateIp = new int[] {ip};
         String argsString =
             opcode.operands.toStringAndCount(
-                updateIp, text, strings, constants, fnCtx);
+                parser, strings, constants, fnCtx);
 
-        Verify.verify(updateIp[0] == opcode.operands.operandEnd(text, ip),
-            "toStringAndCount must update ip consistently with operandEnd");
-
-        ip = updateIp[0];
         sb.append(" ").append(argsString);
         ret.add(sb.toString());
       }
       // It's useful to know the final address in case someone wants to jump to that address
-      ret.add(ip + ": EOF");
+      ret.add(parser.getIp() + ": EOF");
       return ret.build();
     }
 

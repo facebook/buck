@@ -8,16 +8,18 @@ import net.starlark.java.syntax.Resolver;
 import net.starlark.java.syntax.TokenKind;
 
 class BcVisitor {
-  private final int[] text;
+  private final BcParser parser;
   private final List<String> strings;
   private final List<Object> constantRegs;
   private final List<Object> objects;
+  private final Bc.Compiled bc;
 
   public BcVisitor(Bc.Compiled bc) {
-    this.text = bc.text;
+    this.parser = new BcParser(bc.text);
     this.strings = Arrays.asList(bc.strings);
     this.constantRegs = Arrays.asList(bc.constSlots);
     this.objects = Arrays.asList(bc.objects);
+    this.bc = bc;
   }
 
   private boolean stop = false;
@@ -28,150 +30,147 @@ class BcVisitor {
   }
 
   void visit() {
-    int ip = 0;
-    while (ip != text.length && !stop) {
-      BcInstr.Opcode opcode = BcInstr.Opcode.fromInt(text[ip++]);
-      int argsLength = opcode.operands.codeSize(text, ip);
-      visitInstr(opcode, ip, argsLength);
-      ip += argsLength;
+    while (!parser.eof() && !stop) {
+      BcInstr.Opcode opcode = parser.nextOpcode();
+      visitInstr(opcode, parser);
     }
   }
 
-  protected void visitInstr(BcInstr.Opcode opcode, int ip, int argsLength) {
-    int ipEnd = ip + argsLength;
+  protected void visitInstr(BcInstr.Opcode opcode, BcParser parser) {
+    int expectedIpEnd = parser.getIp() + opcode.operands.codeSize(bc.text, parser.getIp());
     switch (opcode) {
       case CP:
-        visitCp(text[ip++], text[ip++]);
+        visitCp(parser.nextInt(), parser.nextInt());
         break;
       case EQ:
-        visitEq(text[ip++], text[ip++], text[ip++]);
+        visitEq(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case NOT_EQ:
-        visitNotEq(text[ip++], text[ip++], text[ip++]);
+        visitNotEq(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case NOT:
-        visitNot(text[ip++], text[ip++]);
+        visitNot(parser.nextInt(), parser.nextInt());
         break;
       case UNARY:
-        visitUnary(text[ip++], TokenKind.values()[text[ip++]], text[ip++]);
+        visitUnary(parser.nextInt(), TokenKind.values()[parser.nextInt()], parser.nextInt());
         break;
       case BR:
-        visitBr(text[ip++]);
+        visitBr(parser.nextInt());
         break;
       case IF_BR:
-        visitIfBr(text[ip++], text[ip++]);
+        visitIfBr(parser.nextInt(), parser.nextInt());
         break;
       case IF_NOT_BR:
-        visitIfNotBr(text[ip++], text[ip++]);
+        visitIfNotBr(parser.nextInt(), parser.nextInt());
         break;
       case BINARY:
-        visitBinary(text[ip++], text[ip++], TokenKind.values()[text[ip++]], text[ip++]);
+        visitBinary(parser.nextInt(), parser.nextInt(), TokenKind.values()[parser.nextInt()], parser.nextInt());
         break;
       case BINARY_IN_PLACE:
-        visitBinaryInPlace(text[ip++], text[ip++], TokenKind.values()[text[ip++]], text[ip++]);
+        visitBinaryInPlace(parser.nextInt(), parser.nextInt(), TokenKind.values()[parser.nextInt()], parser.nextInt());
         break;
       case SET_GLOBAL:
-        visitSetGlobal(text[ip++], text[ip++], strings.get(text[ip++]), text[ip++]);
+        visitSetGlobal(parser.nextInt(), parser.nextInt(), strings.get(parser.nextInt()), parser.nextInt());
         break;
       case SET_CELL:
-        visitSetCell(text[ip++], text[ip++]);
+        visitSetCell(parser.nextInt(), parser.nextInt());
         break;
       case DOT:
-        visitDot(text[ip++], strings.get(text[ip++]), text[ip++]);
+        visitDot(parser.nextInt(), strings.get(parser.nextInt()), parser.nextInt());
         break;
       case INDEX:
-        visitIndex(text[ip++], text[ip++], text[ip++]);
+        visitIndex(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case SLICE:
-        visitSlice(text[ip++], text[ip++], text[ip++], text[ip++], text[ip++]);
+        visitSlice(parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case CALL: {
-        BcCallLocs callLocs = (BcCallLocs) objects.get(text[ip++]);
-        int fn = text[ip++];
-        BcDynCallSite callSite = (BcDynCallSite) objects.get(text[ip++]);
-        int fnArgsOffset = ip;
-        ip += 1 + text[ip];
-        int fnStar = text[ip++];
-        int fnStarStar = text[ip++];
-        int out = text[ip++];
+        BcCallLocs callLocs = (BcCallLocs) objects.get(parser.nextInt());
+        int fn = parser.nextInt();
+        BcDynCallSite callSite = (BcDynCallSite) objects.get(parser.nextInt());
+        int fnArgsOffset = parser.getIp();
+        parser.skipNArgs();
+        int fnStar = parser.nextInt();
+        int fnStarStar = parser.nextInt();
+        int out = parser.nextInt();
         visitCall(callLocs, fn, callSite, fnArgsOffset, fnStar, fnStarStar, out);
         break;
       }
       case CALL_LINKED: {
-        BcCallLocs callLocs = (BcCallLocs) objects.get(text[ip++]);
-        StarlarkCallableLinked callableLinked = (StarlarkCallableLinked) objects.get(text[ip++]);
-        int fnArgsOffset = ip;
-        ip += 1 + text[ip];
-        int fnStar = text[ip++];
-        int fnStarStar = text[ip++];
-        int out = text[ip++];
+        BcCallLocs callLocs = (BcCallLocs) objects.get(parser.nextInt());
+        StarlarkCallableLinked callableLinked = (StarlarkCallableLinked) objects.get(parser.nextInt());
+        int fnArgsOffset = parser.getIp();
+        parser.skipNArgs();
+        int fnStar = parser.nextInt();
+        int fnStarStar = parser.nextInt();
+        int out = parser.nextInt();
         visitCallLinked(callLocs, callableLinked, fnArgsOffset, fnStar, fnStarStar, out);
         break;
       }
       case RETURN:
-        visitReturn(text[ip++]);
+        visitReturn(parser.nextInt());
         break;
       case NEW_FUNCTION: {
-        Resolver.Function rfn = (Resolver.Function) objects.get(text[ip++]);
-        int defaultValues = ip;
-        ip += 1 + text[ip];
-        int out = text[ip++];
+        Resolver.Function rfn = (Resolver.Function) objects.get(parser.nextInt());
+        int defaultValues = parser.getIp();
+        parser.skipNArgs();
+        int out = parser.nextInt();
         visitNewFunction(rfn, defaultValues, out);
         break;
       }
       case FOR_INIT:
-        visitForInit(text[ip++], text[ip++], text[ip++]);
+        visitForInit(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case CONTINUE:
-        visitContinue(text[ip++], text[ip++], text[ip++]);
+        visitContinue(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case BREAK:
-        visitBreak(text[ip++]);
+        visitBreak(parser.nextInt());
         break;
       case LIST: {
-        int args = ip;
-        ip += 1 + text[ip];
-        int out = text[ip++];
+        int args = parser.getIp();
+        parser.skipNArgs();
+        int out = parser.nextInt();
         visitList(args, out);
         break;
       }
       case TUPLE: {
-        int args = ip;
-        ip += 1 + text[ip];
-        int out = text[ip++];
+        int args = parser.getIp();
+        parser.skipNArgs();
+        int out = parser.nextInt();
         visitTuple(args, out);
         break;
       }
       case DICT: {
-        int args = ip;
-        ip += 1 + 2 * text[ip];
-        int out = text[ip++];
+        int args = parser.getIp();
+        parser.skipNPairs();
+        int out = parser.nextInt();
         visitDict(args, out);
         break;
       }
       case LIST_APPEND:
-        visitListAppend(text[ip++], text[ip++]);
+        visitListAppend(parser.nextInt(), parser.nextInt());
         break;
       case SET_INDEX:
-        visitSetIndex(text[ip++], text[ip++], text[ip++]);
+        visitSetIndex(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case UNPACK: {
-        int in = text[ip++];
-        int out = ip;
-        ip += 1 + text[ip];
+        int in = parser.nextInt();
+        int out = parser.getIp();
+        parser.skipNArgs();
         visitUnpack(in, out);
         break;
       }
       case LOAD_STMT:
-        visitLoadStmt((LoadStatement) objects.get(text[ip++]));
+        visitLoadStmt((LoadStatement) objects.get(parser.nextInt()));
         break;
       case EVAL_EXCEPTION:
-        visitEvalException(strings.get(text[ip++]));
+        visitEvalException(strings.get(parser.nextInt()));
         break;
       default:
         throw new AssertionError("unknown opcode: " + opcode);
     }
-    Verify.verify(ip == ipEnd, "instruction %s decoded incorrectly", opcode);
+    Verify.verify(parser.getIp() == expectedIpEnd, "instruction %s decoded incorrectly", opcode);
   }
 
   protected void unimplemented() {}
@@ -236,21 +235,27 @@ class BcVisitor {
   }
 
   private void visitNIns(int ip) {
-    for (int i = 0; i != text[ip]; ++i) {
-      visitIn(text[ip + i]);
+    BcParser parser = new BcParser(this.parser.getText(), ip);
+    int n = parser.nextInt();
+    for (int i = 0; i != n; ++i) {
+      visitIn(parser.nextInt());
     }
   }
 
   private void visitNInPairs(int ip) {
-    for (int i = 0; i != text[ip]; ++i) {
-      visitIn(text[ip + i * 2]);
-      visitIn(text[ip + i * 2 + 1]);
+    BcParser parser = new BcParser(this.parser.getText(), ip);
+    int n = parser.nextInt();
+    for (int i = 0; i != n; ++i) {
+      visitIn(parser.nextInt());
+      visitIn(parser.nextInt());
     }
   }
 
   private void visitNOuts(int ip) {
-    for (int i = 0; i != text[ip]; ++i) {
-      visitOut(text[ip + i]);
+    BcParser parser = new BcParser(this.parser.getText(), ip);
+    int n = parser.nextInt();
+    for (int i = 0; i != n; ++i) {
+      visitOut(parser.nextInt());
     }
   }
 
