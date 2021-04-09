@@ -37,7 +37,7 @@ public class BcTest {
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
     BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
     assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
-    assertEquals(BcSlot.constValue(0), ret.args[0]);
+    assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals(StarlarkInt.of(17), f.compiled.constSlots[0]);
   }
 
@@ -61,7 +61,7 @@ public class BcTest {
         thread);
     BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
     assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
-    assertEquals(BcSlot.constValue(0), ret.args[0]);
+    assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals(StarlarkInt.of(19), f.compiled.constSlots[0]);
   }
 
@@ -98,7 +98,7 @@ public class BcTest {
         thread);
     BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
     assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
-    assertEquals(BcSlot.constValue(0), ret.args[0]);
+    assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals(StarlarkInt.of(23), f.compiled.constSlots[0]);
   }
 
@@ -136,7 +136,7 @@ public class BcTest {
         thread);
     BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
     assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
-    assertEquals(BcSlot.constValue(0), ret.args[0]);
+    assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals("string", f.compiled.constSlots[0]);
   }
 

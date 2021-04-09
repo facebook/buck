@@ -1,6 +1,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import net.starlark.java.syntax.TokenKind;
 
 /** Utility to parse bytecode. */
 class BcParser {
@@ -50,5 +51,9 @@ class BcParser {
 
   BcInstr.Opcode nextOpcode() {
     return BcInstr.Opcode.fromInt(nextInt());
+  }
+
+  TokenKind nextTokenKind() {
+    return TokenKind.values()[nextInt()];
   }
 }

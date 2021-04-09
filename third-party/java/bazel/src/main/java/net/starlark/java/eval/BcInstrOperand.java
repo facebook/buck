@@ -1,7 +1,9 @@
 package net.starlark.java.eval;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 import net.starlark.java.syntax.TokenKind;
 
 /**
@@ -102,6 +104,11 @@ class BcInstrOperand {
       print(printer);
       return printer.sb.toString();
     }
+
+    abstract static class Decoded {
+    }
+
+    abstract Decoded decode(BcParser parser);
   }
 
   static class OpcodePrinterFunctionContext {
@@ -149,21 +156,47 @@ class BcInstrOperand {
     }
   }
 
-  private static class NumberOperand extends OneWordOperand {
+  static class NumberOperand extends OneWordOperand {
     @Override
     public void print(OpcodePrinter visitor) {
       visitor.append(Integer.toString(visitor.parser.nextInt()));
     }
+
+    static class Decoded extends Operands.Decoded {
+      final int value;
+
+      Decoded(int value) {
+        this.value = value;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextInt());
+    }
   }
 
-  private static class StringOperand extends OneWordOperand {
+  static class StringOperand extends OneWordOperand {
     @Override
     public void print(OpcodePrinter visitor) {
       visitor.append(visitor.strings.get(visitor.parser.nextInt()));
     }
+
+    static class Decoded extends Operands.Decoded {
+      final int index;
+
+      Decoded(int index) {
+        this.index = index;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextInt());
+    }
   }
 
-  private static class Register extends OneWordOperand {
+  static class Register extends OneWordOperand {
     /** r or w, for read or write */
     private final String label;
 
@@ -210,16 +243,42 @@ class BcInstrOperand {
       }
       visitor.sb.append(label).append(valueToPrint);
     }
+
+    static class Decoded extends Operands.Decoded {
+      final int register;
+
+      public Decoded(int register) {
+        this.register = register;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextInt());
+    }
   }
 
-  private static class KindArg extends OneWordOperand {
+  static class KindArg extends OneWordOperand {
     @Override
     public void print(OpcodePrinter visitor) {
       visitor.sb.append(TokenKind.values()[visitor.parser.nextInt()]);
     }
+
+    static class Decoded extends Operands.Decoded {
+      final TokenKind tokenKind;
+
+      public Decoded(TokenKind tokenKind) {
+        this.tokenKind = tokenKind;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextTokenKind());
+    }
   }
 
-  private static class AddrArg extends OneWordOperand {
+  static class AddrArg extends OneWordOperand {
     private final String label;
 
     private AddrArg(String label) {
@@ -230,16 +289,42 @@ class BcInstrOperand {
     public void print(OpcodePrinter visitor) {
       visitor.append(label + "=&" + visitor.parser.nextInt());
     }
+
+    static class Decoded extends Operands.Decoded {
+      private final int addr;
+
+      public Decoded(int addr) {
+        this.addr = addr;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextInt());
+    }
   }
 
-  private static class ObjectArg extends OneWordOperand {
+  static class ObjectArg extends OneWordOperand {
     @Override
     public void print(OpcodePrinter visitor) {
       visitor.append("o" + visitor.parser.nextInt());
     }
+
+    static class Decoded extends Operands.Decoded {
+      private final int index;
+
+      public Decoded(int index) {
+        this.index = index;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextInt());
+    }
   }
 
-  private static class FixedOperandsOpcode extends Operands {
+  static class FixedOperandsOpcode extends Operands {
     private final Operands[] operands;
 
     private FixedOperandsOpcode(Operands[] operands) {
@@ -265,9 +350,24 @@ class BcInstrOperand {
         operand.consume(parser);
       }
     }
+
+    static class Decoded extends Operands.Decoded {
+      final ImmutableList<Operands.Decoded> operands;
+
+      Decoded(
+          ImmutableList<Operands.Decoded> operands) {
+        this.operands = operands;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(Arrays.stream(operands).map(o -> o.decode(parser))
+          .collect(ImmutableList.toImmutableList()));
+    }
   }
 
-  private static class LengthDelimited extends Operands {
+  static class LengthDelimited extends Operands {
     private final Operands element;
 
     private LengthDelimited(Operands element) {
@@ -293,6 +393,22 @@ class BcInstrOperand {
       for (int i = 0; i != size; ++i) {
         element.consume(parser);
       }
+    }
+    
+    static class Decoded extends Operands.Decoded {
+      private final ImmutableList<Operands.Decoded> elements;
+
+      Decoded(
+          ImmutableList<Operands.Decoded> elements) {
+        this.elements = elements;
+      }
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(IntStream.range(0, parser.nextInt())
+          .mapToObj(i -> element.decode(parser))
+          .collect(ImmutableList.toImmutableList()));
     }
   }
 }

@@ -269,9 +269,9 @@ class BcInstr {
   /** Partially-decoded instruction. Used in tests. */
   static class Decoded {
     final Opcode opcode;
-    final int[] args;
+    final BcInstrOperand.Operands.Decoded args;
 
-    Decoded(Opcode opcode, int[] args) {
+    Decoded(Opcode opcode, BcInstrOperand.Operands.Decoded args) {
       this.opcode = opcode;
       this.args = args;
     }

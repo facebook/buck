@@ -212,15 +212,13 @@ class Bc {
               .codeSize(text, ip + BcInstr.INSTR_HEADER_LEN);
     }
 
-    public ImmutableList<BcInstr.Decoded> instructions() {
+    @VisibleForTesting
+    ImmutableList<BcInstr.Decoded> instructions() {
       ImmutableList.Builder<BcInstr.Decoded> instructions = ImmutableList.builder();
-      int ip = 0;
-      while (ip != text.length) {
-        BcInstr.Opcode opcode = instrOpcodeAt(ip);
-        int len = instrLenAt(ip);
-        instructions.add(new BcInstr.Decoded(
-            opcode, Arrays.copyOfRange(text, ip + BcInstr.INSTR_HEADER_LEN, ip + len)));
-        ip += len;
+      BcParser parser = new BcParser(text);
+      while (!parser.eof()) {
+        BcInstr.Opcode opcode = parser.nextOpcode();
+        instructions.add(new BcInstr.Decoded(opcode, opcode.operands.decode(parser)));
       }
       return instructions.build();
     }
