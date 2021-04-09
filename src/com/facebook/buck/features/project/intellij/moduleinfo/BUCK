@@ -1,16 +1,14 @@
 load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 
 java_library_with_plugins(
-    name = "targetinfo",
+    name = "moduleinfo",
     srcs = glob(
         ["*.java"],
         exclude = ["LookupTool.java"],
     ),
-    provided_deps = [
-        "//third-party/java/gson:gson",
-    ],
+    provided_deps = ["//third-party/java/guava:guava"],
     tests = [
-        "//test/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
+        "//test/com/facebook/buck/features/project/intellij/moduleinfo:moduleinfo",
     ],
     visibility = ["PUBLIC"],
 )
@@ -19,14 +17,15 @@ java_library_with_plugins(
     name = "lookuptool-lib",
     srcs = ["LookupTool.java"],
     deps = [
-        ":targetinfo",
+        ":moduleinfo",
     ],
 )
 
 java_binary(
     name = "lookuptool",
-    main_class = "com.facebook.buck.features.project.intellij.targetinfo.LookupTool",
+    main_class = "com.facebook.buck.features.project.intellij.moduleinfo.LookupTool",
     deps = [
         ":lookuptool-lib",
+        "//third-party/java/guava:guava",
     ],
 )

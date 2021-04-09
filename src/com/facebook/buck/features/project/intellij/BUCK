@@ -4,7 +4,10 @@ buck_module(
     name = "intellij",
     srcs = glob(
         ["**/*.java"],
-        exclude = ["targetinfo/**"],
+        exclude = [
+            "targetinfo/**",
+            "moduleinfo/**",
+        ],
     ),
     module_deps = [
         "//src/com/facebook/buck/features/python:module",
@@ -77,6 +80,7 @@ buck_module(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/features/project/intellij/moduleinfo:moduleinfo",
         "//src/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
     ],
 )

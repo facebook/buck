@@ -74,6 +74,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "buck_out_path_for_generated_files",
             "default_min_android_sdk_version",
             "flatten_android_generated_files_path_with_hash",
+            "generate_module_info_binary_index",
             "keep_module_files_in_module_dirs",
             "kotlin_java_runtime_library_template_path",
             "max_library_name_length_before_truncate",

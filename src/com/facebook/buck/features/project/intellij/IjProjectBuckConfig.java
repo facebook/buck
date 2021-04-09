@@ -159,6 +159,9 @@ public class IjProjectBuckConfig {
         .setGeneratingBinaryTargetInfoEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_binary_target_info", false))
+        .setGeneratingModuleInfoBinaryIndexEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_module_info_binary_index", false))
         .setOutputUrl(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "project_compiler_output_url"))
         .setExtraCompilerOutputModulesPath(

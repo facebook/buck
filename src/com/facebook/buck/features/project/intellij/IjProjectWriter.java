@@ -52,6 +52,7 @@ public class IjProjectWriter {
   private final ProjectFilesystem outFilesystem;
   private final IjProjectPaths projectPaths;
   private final BuckOutPathConverter buckOutPathConverter;
+  private final ModuleInfoManager moduleInfoManager;
 
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
@@ -69,6 +70,7 @@ public class IjProjectWriter {
     this.cleaner = cleaner;
     this.outFilesystem = outFilesystem;
     this.buckOutPathConverter = buckOutPathConverter;
+    this.moduleInfoManager = new ModuleInfoManager(projectConfig);
   }
 
   /** Write entire project to disk */
@@ -83,7 +85,7 @@ public class IjProjectWriter {
         .forEach(
             module -> {
               try {
-                writeModule(module, projectDataPreparer.getContentRoots(module));
+                writeModule(module);
               } catch (IOException exception) {
                 throw new RuntimeException(exception);
               }
@@ -102,12 +104,13 @@ public class IjProjectWriter {
 
     writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
     writeWorkspace();
+    moduleInfoManager.write();
   }
 
-  private boolean writeModule(IjModule module, ImmutableList<ContentRoot> contentRoots)
-      throws IOException {
+  private boolean writeModule(IjModule module) throws IOException {
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
+    ImmutableList<ContentRoot> contentRoots = projectDataPreparer.getContentRoots(module);
     ImmutableSet<IjSourceFolder> generatedFolders =
         projectDataPreparer.getGeneratedSourceFolders(module);
     Map<String, Object> androidProperties = projectDataPreparer.getAndroidProperties(module);
@@ -125,13 +128,13 @@ public class IjProjectWriter {
     }
 
     moduleContents.add("contentRoots", contentRoots);
-    moduleContents.add(
-        "dependencies",
+    ImmutableSet<IjDependencyListBuilder.DependencyEntry> dependencies =
         projectDataPreparer.getDependencies(
             module,
             projectConfig.isModuleLibraryEnabled()
                 ? library -> this.prepareLibraryToBeWritten(library, module)
-                : null));
+                : null);
+    moduleContents.add("dependencies", dependencies);
     moduleContents.add("generatedSourceFolders", generatedFolders);
     moduleContents.add("androidFacet", androidProperties);
     moduleContents.add("sdk", module.getModuleType().getSdkName(projectConfig).orElse(null));
@@ -148,6 +151,8 @@ public class IjProjectWriter {
             .map((dir) -> getUrl(projectPaths.getModuleQualifiedPath(dir, module)))
             .orElse(null));
 
+    moduleInfoManager.addModuleInfo(
+        module.getName(), projectPaths.getModuleDir(module).toString(), dependencies, contentRoots);
     return writeTemplate(moduleContents, projectPaths.getModuleImlFilePath(module, projectConfig));
   }
 
@@ -270,15 +275,14 @@ public class IjProjectWriter {
    */
   public void update() throws IOException {
     outFilesystem.mkdirs(getIdeaConfigDir());
+
     projectDataPreparer
         .getModulesToBeWritten()
         .parallelStream()
         .forEach(
             module -> {
               try {
-                ImmutableList<ContentRoot> contentRoots =
-                    projectDataPreparer.getContentRoots(module);
-                writeModule(module, contentRoots);
+                writeModule(module);
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }
@@ -295,6 +299,7 @@ public class IjProjectWriter {
               }
             });
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
+    moduleInfoManager.update();
   }
 
   /** Update the modules.xml file with any new modules from the given set */

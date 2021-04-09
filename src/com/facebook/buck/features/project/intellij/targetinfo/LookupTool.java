@@ -24,7 +24,7 @@ import java.nio.file.Path;
 public class LookupTool {
   public static void main(String[] args) throws Exception {
     if (args.length < 2) {
-      System.err.println("Usage: LookupTool <key> <path>");
+      System.err.println("Usage: lookuptool <key> <path>");
       System.exit(1);
     }
 

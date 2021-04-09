@@ -107,6 +107,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isGeneratingBinaryTargetInfoEnabled();
 
+  public abstract boolean isGeneratingModuleInfoBinaryIndexEnabled();
+
   public abstract Optional<String> getOutputUrl();
 
   public abstract Optional<Path> getExtraCompilerOutputModulesPath();

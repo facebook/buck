@@ -22,7 +22,7 @@ import java.nio.file.Path;
 /** A path which contains a set of sources we wish to present to IntelliJ. */
 public abstract class InclusiveFolder extends IjFolder {
 
-  private static final String FOLDER_IJ_NAME = "sourceFolder";
+  public static final String FOLDER_IJ_NAME = "sourceFolder";
 
   InclusiveFolder(Path path, boolean wantsPackagePrefix, ImmutableSortedSet<Path> inputs) {
     super(path, wantsPackagePrefix, inputs);

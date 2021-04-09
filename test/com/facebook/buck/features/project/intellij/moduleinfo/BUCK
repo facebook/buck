@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "moduleinfo",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/features/project/intellij/moduleinfo:moduleinfo",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
