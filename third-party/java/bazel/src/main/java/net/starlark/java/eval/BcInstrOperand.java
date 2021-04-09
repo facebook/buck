@@ -70,7 +70,16 @@ class BcInstrOperand {
     private Operands() {}
 
     /** This is low level operation, do not use directly. */
-    abstract void visit(OpcodeVisitor visitor);
+    abstract void print(OpcodePrinter visitor);
+
+    /**
+     * Given the offset of the operand, return the position after the operand.
+     * In another words, determine operand code size.
+     *
+     * <p>For example, length-delimited operand may return the different number of ints depending on
+     * the actual bytecode.
+     */
+    protected abstract int operandEnd(int[] text, int offset);
 
     /**
      * Get the number of integers occupied by this operands object at the given bytecode offset.
@@ -78,36 +87,29 @@ class BcInstrOperand {
      * <p>For example, length-delimited operand may return the different number of ints depending on
      * the actual bytecode.
      */
-    int codeSize(Module module, int[] text, List<String> strings,
-        List<Object> constantRegs, int offset, ImmutableList<String> fnLocalNames,
-        ImmutableList<String> fnFreeVarNames) {
-      OpcodeVisitor visitor = new OpcodeVisitor(text, strings, constantRegs, offset,
-          new OpcodeVisitorFunctionContext(
-              fnLocalNames,
-              module.getGlobalNamesSlow(),
-              fnFreeVarNames));
-      visit(visitor);
-      return visitor.ip - offset;
+    int codeSize(int[] text, int offset) {
+      int endOffset = operandEnd(text, offset);
+      return endOffset - offset;
     }
 
     /** Get both instruction count for this operand and the string representation. */
     String toStringAndCount(
         int[] offsetInOut, int[] text, List<String> strings,
-        List<Object> constantRegs, OpcodeVisitorFunctionContext fnCtx) {
-      OpcodeVisitor visitor = new OpcodeVisitor(text, strings, constantRegs, offsetInOut[0],
-          fnCtx);
-      visit(visitor);
-      offsetInOut[0] = visitor.ip;
-      return visitor.sb.toString();
+        List<Object> constantRegs, OpcodePrinterFunctionContext fnCtx) {
+      OpcodePrinter printer =
+          new OpcodePrinter(text, strings, constantRegs, offsetInOut[0], fnCtx);
+      print(printer);
+      offsetInOut[0] = printer.ip;
+      return printer.sb.toString();
     }
   }
 
-  static class OpcodeVisitorFunctionContext {
+  static class OpcodePrinterFunctionContext {
     private final ImmutableList<String> locals;
     private final ImmutableList<String> globals;
     private final ImmutableList<String> freeVars;
 
-    public OpcodeVisitorFunctionContext(
+    public OpcodePrinterFunctionContext(
         ImmutableList<String> locals,
         ImmutableList<String> globals,
         ImmutableList<String> freeVars) {
@@ -118,17 +120,17 @@ class BcInstrOperand {
   }
 
   /** This class is package-private only because it is referenced from {@link Operands}. */
-  private static class OpcodeVisitor {
+  private static class OpcodePrinter {
 
     private final int[] text;
     private final List<String> strings;
     private final List<Object> constantRegs;
-    private final OpcodeVisitorFunctionContext fnCtx;
+    private final OpcodePrinterFunctionContext fnCtx;
     private int ip;
     private StringBuilder sb = new StringBuilder();
 
-    private OpcodeVisitor(int[] text,
-        List<String> strings, List<Object> constantRegs, int ip, OpcodeVisitorFunctionContext fnCtx) {
+    private OpcodePrinter(int[] text,
+        List<String> strings, List<Object> constantRegs, int ip, OpcodePrinterFunctionContext fnCtx) {
       this.fnCtx = fnCtx;
       this.text = text;
       this.strings = strings;
@@ -145,21 +147,29 @@ class BcInstrOperand {
     }
   }
 
-  private static class NumberOperand extends Operands {
+  /** One word operand (e. g. register). */
+  private static abstract class OneWordOperand extends Operands {
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    protected final int operandEnd(int[] text, int offset) {
+      return offset + 1;
+    }
+  }
+
+  private static class NumberOperand extends OneWordOperand {
+    @Override
+    public void print(OpcodePrinter visitor) {
       visitor.append(Integer.toString(visitor.nextOperand()));
     }
   }
 
-  private static class StringOperand extends Operands {
+  private static class StringOperand extends OneWordOperand {
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       visitor.append(visitor.strings.get(visitor.nextOperand()));
     }
   }
 
-  private static class Register extends Operands {
+  private static class Register extends OneWordOperand {
     /** r or w, for read or write */
     private final String label;
 
@@ -168,7 +178,7 @@ class BcInstrOperand {
     }
 
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       int reg = visitor.nextOperand();
       Object valueToPrint;
       int flag = reg & BcSlot.MASK;
@@ -208,14 +218,14 @@ class BcInstrOperand {
     }
   }
 
-  private static class KindArg extends Operands {
+  private static class KindArg extends OneWordOperand {
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       visitor.sb.append(TokenKind.values()[visitor.nextOperand()]);
     }
   }
 
-  private static class AddrArg extends Operands {
+  private static class AddrArg extends OneWordOperand {
     private final String label;
 
     private AddrArg(String label) {
@@ -223,14 +233,14 @@ class BcInstrOperand {
     }
 
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       visitor.append(label + "=&" + visitor.nextOperand());
     }
   }
 
-  private static class ObjectArg extends Operands {
+  private static class ObjectArg extends OneWordOperand {
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       visitor.append("o" + visitor.nextOperand());
     }
   }
@@ -243,16 +253,24 @@ class BcInstrOperand {
     }
 
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       visitor.append("(");
       for (int i = 0; i < operands.length; i++) {
         if (i != 0) {
           visitor.sb.append(" ");
         }
         Operands operand = operands[i];
-        operand.visit(visitor);
+        operand.print(visitor);
       }
       visitor.append(")");
+    }
+
+    @Override
+    protected int operandEnd(int[] text, int offset) {
+      for (Operands operand : operands) {
+        offset = operand.operandEnd(text, offset);
+      }
+      return offset;
     }
   }
 
@@ -264,16 +282,25 @@ class BcInstrOperand {
     }
 
     @Override
-    public void visit(OpcodeVisitor visitor) {
+    public void print(OpcodePrinter visitor) {
       visitor.append("[");
       int size = visitor.nextOperand();
       for (int i = 0; i != size; ++i) {
         if (i != 0) {
           visitor.append(" ");
         }
-        element.visit(visitor);
+        element.print(visitor);
       }
       visitor.append("]");
+    }
+
+    @Override
+    protected int operandEnd(int[] text, int offset) {
+      int size = text[offset++];
+      for (int i = 0; i != size; ++i) {
+        offset = element.operandEnd(text, offset);
+      }
+      return offset;
     }
   }
 }

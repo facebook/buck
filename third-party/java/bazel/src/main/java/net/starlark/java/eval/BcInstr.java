@@ -258,6 +258,12 @@ class BcInstr {
           String.format("wrong index for %s: expected %s, actual %s", name(), ordinal(), opcode));
       this.operands = operands;
     }
+
+    private static Opcode[] values = values();
+
+    static Opcode fromInt(int opcode) {
+      return values[opcode];
+    }
   }
 
   /** Partially-decoded instruction. Used in tests. */

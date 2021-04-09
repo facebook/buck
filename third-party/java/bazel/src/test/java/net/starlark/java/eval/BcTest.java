@@ -12,7 +12,7 @@ import org.junit.Test;
 public class BcTest {
   @Test
   public void compiledToString() {
-    BcInstrOperand.OpcodeVisitorFunctionContext fnCtx = new BcInstrOperand.OpcodeVisitorFunctionContext(
+    BcInstrOperand.OpcodePrinterFunctionContext fnCtx = new BcInstrOperand.OpcodePrinterFunctionContext(
         ImmutableList.of("foo", "bar"), ImmutableList.of(), ImmutableList.of()
     );
     int[] code = {

@@ -2,6 +2,7 @@ package net.starlark.java.eval;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 
 import java.math.BigInteger;
@@ -144,7 +145,7 @@ class Bc {
 
     @Override
     public String toString() {
-      return toStringImpl(name, text, new BcInstrOperand.OpcodeVisitorFunctionContext(
+      return toStringImpl(name, text, new BcInstrOperand.OpcodePrinterFunctionContext(
               getLocalNames(),
               module.getGlobalNamesSlow(),
               getFreeVarNames()),
@@ -160,7 +161,7 @@ class Bc {
     }
 
     ImmutableList<String> toStringInstructions() {
-      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodeVisitorFunctionContext(
+      return toStringInstructionsImpl(text, new BcInstrOperand.OpcodePrinterFunctionContext(
                 getLocalNames(),
                 module.getGlobalNamesSlow(),
                 getFreeVarNames()),
@@ -168,25 +169,28 @@ class Bc {
     }
 
     @VisibleForTesting
-    static String toStringImpl(String name, int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
+    static String toStringImpl(String name, int[] text, BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
         List<String> strings, List<Object> constants) {
       return "def " + name + "; " + String.join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants));
     }
 
-    private static ImmutableList<String> toStringInstructionsImpl(int[] text, BcInstrOperand.OpcodeVisitorFunctionContext fnCtx,
+    private static ImmutableList<String> toStringInstructionsImpl(int[] text, BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
         List<String> strings, List<Object> constants) {
       ImmutableList.Builder<String> ret = ImmutableList.builder();
       int ip = 0;
       while (ip != text.length) {
         StringBuilder sb = new StringBuilder();
         sb.append(ip).append(": ");
-        int opcode1 = text[ip++];
-        BcInstr.Opcode opcode = BcInstr.Opcode.values()[opcode1];
+        BcInstr.Opcode opcode = BcInstr.Opcode.fromInt(text[ip++]);
         sb.append(opcode);
         int[] updateIp = new int[] {ip};
         String argsString =
             opcode.operands.toStringAndCount(
                 updateIp, text, strings, constants, fnCtx);
+
+        Verify.verify(updateIp[0] == opcode.operands.operandEnd(text, ip),
+            "toStringAndCount must update ip consistently with operandEnd");
+
         ip = updateIp[0];
         sb.append(" ").append(argsString);
         ret.add(sb.toString());
@@ -206,12 +210,7 @@ class Bc {
       return BcInstr.INSTR_HEADER_LEN
           + instrOpcodeAt(ip)
               .operands
-              .codeSize(
-                  module,
-                  text,
-                  Arrays.asList(strings),
-                  Arrays.asList(constSlots),
-                  ip + BcInstr.INSTR_HEADER_LEN, getLocalNames(), getFreeVarNames());
+              .codeSize(text, ip + BcInstr.INSTR_HEADER_LEN);
     }
 
     public ImmutableList<BcInstr.Decoded> instructions() {
@@ -488,9 +487,7 @@ class Bc {
       if (ASSERTIONS) {
         int expectedArgCount =
             opcode.operands.codeSize(
-                module,
-                text, strings.values, constSlots.values, prevIp + BcInstr.INSTR_HEADER_LEN,
-                rfn.getLocalNames(), rfn.getFreeVarNames());
+                text, prevIp + BcInstr.INSTR_HEADER_LEN);
         Preconditions.checkState(
             expectedArgCount == args.length,
             "incorrect signature for %s: expected %s, actual %s",
