@@ -129,6 +129,10 @@ class Bc {
       this.constSlots = constSlots;
       this.loopDepth = loopDepth;
       this.instrToLoc = instrToLoc;
+
+      if (ASSERTIONS) {
+        new BcVisitor(this).visit();
+      }
     }
 
     public ImmutableList<Resolver.Binding> getLocals() {
@@ -498,15 +502,14 @@ class Bc {
     }
 
     private void cp(Node node, int from, int to) {
-
       // Sanity check preconditions
 
-      Preconditions.checkArgument(BcSlot.isValidSourceSlot(from));
+      BcSlot.checkValidSourceSlot(from);
       if ((from & BcSlot.MASK) == BcSlot.LOCAL_FLAG) {
         Preconditions.checkArgument((from & ~BcSlot.MASK) < slots);
       }
 
-      Preconditions.checkArgument((to & BcSlot.MASK) == BcSlot.LOCAL_FLAG);
+      BcSlot.checkLocal(to);
       Preconditions.checkArgument((to & ~BcSlot.MASK) < slots);
 
       // This optimizes away assignment `x = x`
@@ -992,7 +995,7 @@ class Bc {
       private final Object value;
 
       private CompileExpressionResult(int slot, @Nullable Object value) {
-        Preconditions.checkArgument(BcSlot.isValidSourceSlot(slot));
+        BcSlot.checkValidSourceSlot(slot);
         this.slot = slot;
         this.value = value;
         if (Bc.ASSERTIONS) {

@@ -1,5 +1,8 @@
 package net.starlark.java.eval;
 
+import com.google.common.base.Verify;
+import com.google.common.base.VerifyException;
+
 /** Bytecode instruction slot operands. */
 class BcSlot {
   /** Operand type mask. */
@@ -40,16 +43,20 @@ class BcSlot {
     return index | CONST_FLAG;
   }
 
-  static boolean isValidSourceSlot(int slot) {
+  static void checkLocal(int slot) {
+    Verify.verify((slot & MASK) == LOCAL_FLAG);
+  }
+
+  static void checkValidSourceSlot(int slot) {
     switch (slot & MASK) {
       case LOCAL_FLAG:
       case GLOBAL_FLAG:
       case CELL_FLAG:
       case FREE_FLAG:
       case CONST_FLAG:
-        return true;
+        return;
       default:
-        return false;
+        throw new VerifyException(String.format("invalid source slot: %s (mask %x)", slot, slot & MASK));
     }
   }
 
