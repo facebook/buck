@@ -311,7 +311,7 @@ class BcInstrOperand {
     }
 
     static class Decoded extends Operands.Decoded {
-      private final int index;
+      final int index;
 
       public Decoded(int index) {
         this.index = index;

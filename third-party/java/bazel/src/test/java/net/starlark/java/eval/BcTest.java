@@ -141,6 +141,24 @@ public class BcTest {
   }
 
   @Test
+  public void strFormat() throws Exception {
+    String program = "" //
+        + "def f(x): return 'a{}b'.format(x)\n"
+        + "f";
+    StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+    Module module = Module.create();
+    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
+        ParserInput.fromString(program, "f.star"),
+        FileOptions.DEFAULT, module,
+        thread);
+    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
+    assertEquals("" + f.compiled, 2, instructions.size());
+    assertEquals(BcInstr.Opcode.CALL_LINKED, instructions.get(0).opcode);
+    StarlarkCallableLinked format = (StarlarkCallableLinked) f.compiled.objects[instructions.get(0).getArgObject(1)];
+    assertEquals("format", format.orig.getName());
+  }
+
+  @Test
   public void callsInlined() throws Exception {
     String program = ""
         + "def g():\n"

@@ -30,6 +30,9 @@ public abstract class Structure extends StarlarkValue {
    * <p>The set of names for which {@code getValue} returns non-null should match {@code
    * getFieldNames} if possible.
    *
+   * <p>Note current interpreter/optimizer relies on the fact that this operation
+   * produces the same result for given structure/field pair during the structure lifetime.
+   *
    * @throws EvalException if a user-visible error occurs (other than non-existent field).
    */
   // TODO(adonovan): rename "getField".
@@ -76,7 +79,7 @@ public abstract class Structure extends StarlarkValue {
    * @throws EvalException if the update failed because this value is immutable, does not support
    *     field update, or update of that particular field, or because the value was inappropriate.
    */
-  public void setField(String field, Object value) throws EvalException {
+  public final void setField(String field, Object value) throws EvalException {
     throw Starlark.errorf("%s value does not support field assignment", Starlark.type(this));
   }
 }

@@ -176,14 +176,6 @@ public final class ScriptTest {
   }
 
   @StarlarkMethod(
-      name = "mutablestruct",
-      documented = false,
-      extraKeywords = @Param(name = "kwargs"))
-  public Struct mutablestruct(Dict<String, Object> kwargs) throws EvalException {
-    return new MutableStruct(kwargs);
-  }
-
-  @StarlarkMethod(
       name = "freeze",
       doc = "Shallow-freezes the operand. With no argument, freezes the thread.",
       parameters = {@Param(name = "x", defaultValue = "unbound")},
@@ -382,21 +374,6 @@ public final class ScriptTest {
   private static class ImmutableStruct extends Struct {
     ImmutableStruct(ImmutableMap<String, Object> fields) {
       super(fields);
-    }
-  }
-
-  @StarlarkBuiltin(name = "mutablestruct")
-  private static class MutableStruct extends Struct {
-    MutableStruct(Dict<String, Object> fields) {
-      super(fields);
-    }
-
-    @Override
-    public void setField(String field, Object value) throws EvalException {
-      if (value.equals("bad")) {
-        throw Starlark.errorf("bad field value");
-      }
-      ((Dict<String, Object>) fields).putEntry(field, value);
     }
   }
 }

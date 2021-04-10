@@ -900,6 +900,7 @@ class Bc {
 
     /** Compile a constant, return a register containing the constant. */
     private CompileExpressionResult compileConstant(Object constant) {
+      Starlark.checkValid(constant);
       int slot = constSlots.index(constant) | BcSlot.CONST_FLAG;
       return new CompileExpressionResult(slot, constant);
     }
@@ -1035,14 +1036,19 @@ class Bc {
 
       CompileExpressionResult object = compileExpression(dotExpression.getObject());
 
-      if (object.value instanceof Structure) {
+      if (object.value != null) {
         try {
-          // TODO(nga): this invocation is generally incorrect, but
-          //    * all structs in Buck are pure
-          //    * in Buck we only use default semantics
-          Object attrValue = Starlark
-              .getattr(Mutability.IMMUTABLE, StarlarkSemantics.DEFAULT, object.value,
-                  dotExpression.getField().getName(), null);
+          // This code is correct because for all known objects
+          // `getattr` produces the same instance for given `attr`.
+          // When it is no longer the case, we can add something like
+          // `ImmutableStructure` interface.
+          Object attrValue =
+              Starlark.getattr(
+                  Mutability.IMMUTABLE,
+                  thread.getSemantics(),
+                  object.value,
+                  dotExpression.getField().getName(),
+                  null);
           if (attrValue != null) {
             saved.reset();
             return compileConstantTo(dotExpression, attrValue, result);

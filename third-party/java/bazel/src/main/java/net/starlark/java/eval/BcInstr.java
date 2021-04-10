@@ -275,5 +275,15 @@ class BcInstr {
       this.opcode = opcode;
       this.args = args;
     }
+
+    BcInstrOperand.Operands.Decoded getArg(int i) {
+      BcInstrOperand.FixedOperandsOpcode.Decoded args = (BcInstrOperand.FixedOperandsOpcode.Decoded) this.args;
+      return args.operands.get(i);
+    }
+
+    int getArgObject(int i) {
+      BcInstrOperand.Operands.Decoded arg = getArg(i);
+      return ((BcInstrOperand.ObjectArg.Decoded) arg).index;
+    }
   }
 }
