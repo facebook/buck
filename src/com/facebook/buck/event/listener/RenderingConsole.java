@@ -21,6 +21,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -28,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -109,12 +110,10 @@ public class RenderingConsole {
    * Logs the provided lines to stderr. When rendering, this will be queued until the next rendered
    * frame.
    */
-  public void logLines(Collection<String> lines) {
+  public void logLines(List<String> lines) {
     if (!isRendering) {
       // If rendering isn't configured, just log the lines directly.
-      for (String line : lines) {
-        console.getStdErr().getRawStream().println(line);
-      }
+      console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(lines));
     } else {
       pendingLogLines.addAll(lines);
     }
