@@ -89,7 +89,6 @@ filegroup(
     name = "plugin-xml",
     srcs = [
         "resources/META-INF/plugin.xml",
-        "resources/META-INF/plugin-android.xml",
         "resources/META-INF/plugin-core.xml",
         "resources/META-INF/plugin-kotlin.xml",
     ],

@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.configurations;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.LocatableConfigurationBase;
+import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
@@ -78,6 +79,8 @@ public abstract class AbstractConfiguration<T extends AbstractConfiguration.Data
   protected abstract String getNamePrefix();
 
   protected abstract T createData();
+
+  public abstract boolean canRun(ProgramRunner<?> programRunner, String executorId);
 
   public static class Data {
     public String targets = "";

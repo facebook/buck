@@ -21,6 +21,7 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -54,6 +55,11 @@ public class BuckTestConfiguration extends AbstractConfiguration<BuckTestConfigu
   @Override
   protected TestData createData() {
     return new TestData();
+  }
+
+  @Override
+  public boolean canRun(ProgramRunner<?> programRunner, String executorId) {
+    return programRunner instanceof BuckProgramRunner;
   }
 
   public static class TestData extends AbstractConfiguration.Data {

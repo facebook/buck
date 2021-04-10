@@ -20,7 +20,9 @@ import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
@@ -54,6 +56,12 @@ public class BuckRunConfiguration extends AbstractConfiguration<BuckRunConfigura
   @Override
   protected RunData createData() {
     return new RunData();
+  }
+
+  @Override
+  public boolean canRun(ProgramRunner<?> programRunner, String executorId) {
+    return programRunner instanceof BuckProgramRunner
+        && executorId.equals(DefaultRunExecutor.EXECUTOR_ID);
   }
 
   public static class RunData extends AbstractConfiguration.Data {}
