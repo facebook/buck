@@ -153,8 +153,14 @@ public final class MoreStrings {
     return resultBuilder.toString();
   }
 
-  public static ImmutableList<String> lines(String data) throws IOException {
-    return CharSource.wrap(data).readLines();
+  /** Split string into lines. */
+  public static ImmutableList<String> lines(String data) {
+    try {
+      return CharSource.wrap(data).readLines();
+    } catch (IOException e) {
+      // unreachable
+      throw new RuntimeException(e);
+    }
   }
 
   /** Compare two strings lexicographically. */
