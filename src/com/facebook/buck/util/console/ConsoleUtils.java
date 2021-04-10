@@ -38,18 +38,21 @@ public class ConsoleUtils {
       return ImmutableList.of();
     }
 
-    String formattedLine = "";
     Level logEventLevel = consoleEvent.getLevel();
     if (consoleEvent.containsAnsiEscapeCodes() || logEventLevel.equals(Level.INFO)) {
-      formattedLine = message;
+      return MoreStrings.lines(message);
     } else {
       if (logEventLevel.equals(Level.WARNING)) {
-        formattedLine = ansi.asWarningText(message);
+        return MoreStrings.lines(message).stream()
+            .map(ansi::asWarningText)
+            .collect(ImmutableList.toImmutableList());
       } else if (logEventLevel.equals(Level.SEVERE)) {
-        formattedLine = ansi.asHighlightedFailureText(message);
+        return MoreStrings.lines(message).stream()
+            .map(ansi::asHighlightedFailureText)
+            .collect(ImmutableList.toImmutableList());
+      } else {
+        return ImmutableList.of();
       }
     }
-
-    return MoreStrings.lines(formattedLine);
   }
 }

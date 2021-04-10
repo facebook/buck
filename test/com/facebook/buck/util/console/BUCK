@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "console",
+    deps = [
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/console:console",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
