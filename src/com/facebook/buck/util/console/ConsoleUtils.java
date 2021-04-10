@@ -50,9 +50,6 @@ public class ConsoleUtils {
       }
     }
 
-    if (formattedLine.isEmpty()) {
-      return ImmutableList.of();
-    }
     return MoreStrings.lines(formattedLine);
   }
 }

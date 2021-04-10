@@ -155,6 +155,9 @@ public final class MoreStrings {
 
   /** Split string into lines. */
   public static ImmutableList<String> lines(String data) {
+    if (data.isEmpty()) {
+      return ImmutableList.of();
+    }
     try {
       return CharSource.wrap(data).readLines();
     } catch (IOException e) {
