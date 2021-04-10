@@ -6,6 +6,7 @@ java_library(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/string:string",
         "//third-party/java/guava:guava",
     ],
 )

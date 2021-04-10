@@ -19,7 +19,7 @@ package com.facebook.buck.util.console;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.Ansi;
-import com.google.common.base.Splitter;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import java.util.logging.Level;
 
@@ -53,6 +53,6 @@ public class ConsoleUtils {
     if (formattedLine.isEmpty()) {
       return ImmutableList.of();
     }
-    return ImmutableList.copyOf(Splitter.on(System.lineSeparator()).split(formattedLine));
+    return MoreStrings.lines(formattedLine);
   }
 }
