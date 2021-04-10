@@ -50,6 +50,26 @@ public final class MoreStrings {
     return String.join(System.lineSeparator(), lines);
   }
 
+  /**
+   * Joins the lines passed in with the platform line separator.
+   *
+   * @param lines the lines that need to be joined.
+   * @return String, containing the joined lines using the platform line separator as delimiter.
+   */
+  public static String linesToTextWithTrailingNewline(List<String> lines) {
+    if (lines.isEmpty()) {
+      return "";
+    }
+    if (lines.size() == 1) {
+      return lines.get(0) + System.lineSeparator();
+    }
+    StringBuilder sb = new StringBuilder();
+    for (String line : lines) {
+      sb.append(line).append(System.lineSeparator());
+    }
+    return sb.toString();
+  }
+
   public static boolean isEmpty(CharSequence sequence) {
     return sequence.length() == 0;
   }

@@ -19,6 +19,7 @@ package com.facebook.buck.util.console;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.PrintStream;
@@ -44,7 +45,7 @@ public class ConsoleBuckEventListener implements BuckEventListener {
 
     if (console.getVerbosity().shouldPrintStandardInformation()) {
       PrintStream rawStream = console.getStdErr().getRawStream();
-      lines.forEach(rawStream::println);
+      rawStream.print(MoreStrings.linesToTextWithTrailingNewline(lines));
     }
   }
 }

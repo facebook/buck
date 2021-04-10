@@ -162,4 +162,14 @@ public class MoreStringsTest {
       }
     }
   }
+
+  @Test
+  public void linesToTextWithTrailingNewline() {
+    assertEquals("", MoreStrings.linesToTextWithTrailingNewline(ImmutableList.of()));
+    assertEquals(
+        System.lineSeparator(), MoreStrings.linesToTextWithTrailingNewline(ImmutableList.of("")));
+    assertEquals(
+        "a" + System.lineSeparator() + System.lineSeparator(),
+        MoreStrings.linesToTextWithTrailingNewline(ImmutableList.of("a", "")));
+  }
 }
