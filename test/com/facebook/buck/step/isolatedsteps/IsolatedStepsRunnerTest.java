@@ -55,7 +55,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Duration;
 import java.io.File;
 import java.io.FileInputStream;
@@ -280,8 +279,6 @@ public class IsolatedStepsRunnerTest {
             new FileOutputStream(downwardApiFile),
             FakeClock.of(
                 startExecutionMillis + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
-            MoreExecutors.newDirectExecutorService(),
-            DefaultIsolatedEventBus.DEFAULT_SHUTDOWN_TIMEOUT_MS,
             startExecutionMillis,
             DownwardProtocolType.BINARY.getDownwardProtocol());
     Console console = new Console(VERBOSITY_FOR_TEST, System.out, System.err, ANSI_FOR_TEST);

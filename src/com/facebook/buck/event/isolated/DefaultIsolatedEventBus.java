@@ -32,19 +32,14 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.utils.EventBusUtils;
-import com.facebook.buck.util.Threads;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.Duration;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.Instant;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Event bus that writes directly to its associated output stream. Only handles events associated
@@ -53,42 +48,27 @@ import java.util.concurrent.TimeUnit;
 public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private static final Logger LOG = Logger.get(DefaultIsolatedEventBus.class);
-  private static final String THREAD_NAME = "DefaultIsolatedEventBus";
-  public static final int DEFAULT_SHUTDOWN_TIMEOUT_MS = 15_000;
 
   private final BuildId buildId;
   private final OutputStream outputStream;
   private final Clock clock;
-  private final ListeningExecutorService executorService;
-  private final int shutdownTimeoutMillis;
   private final long startExecutionEpochMillis;
   private final DownwardProtocol downwardProtocol;
 
   public DefaultIsolatedEventBus(
       BuildId buildId, OutputStream outputStream, Clock clock, DownwardProtocol downwardProtocol) {
-    this(
-        buildId,
-        outputStream,
-        clock,
-        MoreExecutors.listeningDecorator(MostExecutors.newSingleThreadExecutor(THREAD_NAME)),
-        DEFAULT_SHUTDOWN_TIMEOUT_MS,
-        clock.currentTimeMillis(),
-        downwardProtocol);
+    this(buildId, outputStream, clock, clock.currentTimeMillis(), downwardProtocol);
   }
 
   public DefaultIsolatedEventBus(
       BuildId buildId,
       OutputStream outputStream,
       Clock clock,
-      ListeningExecutorService executorService,
-      int shutdownTimeoutMillis,
       long startExecutionEpochMillis,
       DownwardProtocol downwardProtocol) {
     this.buildId = buildId;
     this.outputStream = outputStream;
     this.clock = clock;
-    this.executorService = executorService;
-    this.shutdownTimeoutMillis = shutdownTimeoutMillis;
     this.startExecutionEpochMillis = startExecutionEpochMillis;
     this.downwardProtocol = downwardProtocol;
   }
@@ -186,14 +166,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
-  public void close() {
-    executorService.shutdown();
-    try {
-      executorService.awaitTermination(shutdownTimeoutMillis, TimeUnit.MILLISECONDS);
-    } catch (InterruptedException e) {
-      Threads.interruptCurrentThread();
-    }
-  }
+  public void close() {}
 
   private void timestamp(BuckEvent event, long threadId) {
     event.configure(

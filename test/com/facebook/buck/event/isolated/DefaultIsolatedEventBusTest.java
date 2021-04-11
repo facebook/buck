@@ -18,8 +18,6 @@ package com.facebook.buck.event.isolated;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
@@ -35,8 +33,6 @@ import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.Duration;
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +54,6 @@ public class DefaultIsolatedEventBusTest {
   private static final DownwardProtocol DOWNWARD_PROTOCOL =
       DownwardProtocolType.BINARY.getDownwardProtocol();
 
-  private static final int TIMEOUT_MILLIS = 500;
   private static final long NOW_MILLIS =
       Instant.parse("2020-12-15T12:13:14.123456789Z").toEpochMilli();
   private static final int CLOCK_SHIFT_IN_SECONDS = 4242;
@@ -66,7 +61,6 @@ public class DefaultIsolatedEventBusTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public final ExpectedException exception = ExpectedException.none();
 
-  private ListeningExecutorService executorService;
   private OutputStream outputStream;
   private InputStream inputStream;
   private DefaultIsolatedEventBus testEventBus;
@@ -76,14 +70,11 @@ public class DefaultIsolatedEventBusTest {
     File tempFile = temporaryFolder.newFile("tmp_file").toFile();
     outputStream = new FileOutputStream(tempFile);
     inputStream = new FileInputStream(tempFile);
-    executorService = MoreExecutors.newDirectExecutorService();
     testEventBus =
         new DefaultIsolatedEventBus(
             BuckEventBusForTests.BUILD_ID_FOR_TEST,
             outputStream,
             FakeClock.of(NOW_MILLIS + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
-            executorService,
-            TIMEOUT_MILLIS,
             NOW_MILLIS,
             DownwardProtocolType.BINARY.getDownwardProtocol());
   }
@@ -182,12 +173,5 @@ public class DefaultIsolatedEventBusTest {
     assertThat(actualFinishEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedFinishEvent));
 
     assertThat(actualStartEvent.getEventId(), equalTo(actualFinishEvent.getEventId()));
-  }
-
-  @Test
-  public void closeShutsDownExecutor() {
-    assertFalse(executorService.isShutdown());
-    testEventBus.close();
-    assertTrue(executorService.isShutdown());
   }
 }
