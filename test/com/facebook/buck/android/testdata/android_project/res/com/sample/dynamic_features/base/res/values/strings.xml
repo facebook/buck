@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+    <string name='app_name'>Dynamic Features App</string>
+    <string name="title_initial_install">Initial Installed module title</string>
+    <string name="title_java">On-demand java module title</string>
+    <string name="title_kotlin">On-demand kotlin module title</string>
+    <string name="title_native">On-demand native module title</string>
+</resources>

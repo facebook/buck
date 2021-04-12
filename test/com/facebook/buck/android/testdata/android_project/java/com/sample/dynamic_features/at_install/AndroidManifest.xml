@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android'
+          xmlns:dist="http://schemas.android.com/apk/distribution"
+          package='com.example'
+          android:versionCode="1"
+          android:versionName="1.0">
+
+    <application>
+        <activity
+            android:exported='true'
+            android:name='com.sample.dynamic_features.at_install.AtInstallFeatureActivity'/>
+    </application>
+
+    <!-- Configure at-install delivery -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_initial_install">
+        <dist:delivery>
+            <dist:install-time/>
+        </dist:delivery>
+        <dist:fusing dist:include="true"/>
+    </dist:module>
+
+</manifest>

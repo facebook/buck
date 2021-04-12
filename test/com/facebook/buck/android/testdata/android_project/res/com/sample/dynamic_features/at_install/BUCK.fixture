@@ -1,0 +1,10 @@
+android_resource(
+    name = "initialInstall",
+    package = "com.sample.initialInstall",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

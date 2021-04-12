@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+    <string name='on_demand_native_text'>String from native on-demand module</string>
+</resources>

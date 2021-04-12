@@ -1,0 +1,38 @@
+android_bundle(
+    name = "app_dynamic_features",
+    # Configurations needed for dynamic features: Start
+    application_module_configs = {
+        "kotlin": ["//kotlin/com/sample/dynamic_features/on_demand:src_release"],
+        "java": ["//java/com/sample/dynamic_features/conditional:src_release"],
+        "native": ["//native/dynamic_features/on_demand:src_release"],
+        "initialInstall": ["//java/com/sample/dynamic_features/at_install:src_release"],
+    },
+    application_modules_with_manifest = {
+        "kotlin",
+        "java",
+        "native",
+        "initialInstall"
+    },
+    module_manifest_skeleton = "ModuleManifest.xml",
+    use_dynamic_feature = True,
+    use_split_dex = True,
+    # Configurations needed for dynamic features: End
+    bundle_config_file = "bundle-config.json",
+    cpu_filters = [
+        "x86",
+    ],
+    keystore = "//keystores:debug",
+    manifest_skeleton = "AndroidManifest.xml",
+    package_type = "debug",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    deps = [
+        "//java/com/sample/app:app",
+        "//res/com/sample/dynamic_features/base:base",
+        "//kotlin/com/sample/dynamic_features/on_demand:src_release",
+        "//java/com/sample/dynamic_features/conditional:src_release",
+        "//native/dynamic_features/on_demand:src_release",
+        "//java/com/sample/dynamic_features/at_install:src_release",
+    ],
+)
