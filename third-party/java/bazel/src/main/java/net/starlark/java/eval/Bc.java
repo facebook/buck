@@ -862,11 +862,10 @@ class Bc {
         Identifier lhs = (Identifier) assignmentStatement.getLHS();
         CompileExpressionResult value = compileGet(lhs);
         int temp = allocSlot();
-        cp(lhs, value.slot, temp);
         write(
             BcInstr.Opcode.BINARY_IN_PLACE,
             assignmentStatement,
-            temp,
+            value.slot,
             rhs,
             assignmentStatement.getOperator().ordinal(),
             temp);
