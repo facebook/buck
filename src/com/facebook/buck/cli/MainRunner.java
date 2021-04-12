@@ -2066,6 +2066,8 @@ public final class MainRunner {
         filesystem.mkdirs(filesystem.getBuckPaths().getCurrentVersionFile().getParent());
         filesystem.writeContentsToPath(
             ruleKeyConfiguration.getCoreKey(), filesystem.getBuckPaths().getCurrentVersionFile());
+        filesystem.mkdirs(filesystem.getBuckPaths().getGenDir());
+        filesystem.mkdirs(filesystem.getBuckPaths().getScratchDir());
       }
     } else {
       previousBuckCoreKey = "";
