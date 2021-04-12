@@ -855,21 +855,26 @@ class Bc {
       write(BcInstr.Opcode.EVAL_EXCEPTION, node, allocString(message));
     }
 
+    private void compileAgumentedAssignmentToIdentifier(AssignmentStatement assignmentStatement) {
+      Identifier lhs = (Identifier) assignmentStatement.getLHS();
+
+      int rhs = compileExpression(assignmentStatement.getRHS()).slot;
+      CompileExpressionResult value = compileGet(lhs);
+      int temp = allocSlot();
+      write(
+          BcInstr.Opcode.BINARY_IN_PLACE,
+          assignmentStatement,
+          value.slot,
+          rhs,
+          assignmentStatement.getOperator().ordinal(),
+          temp);
+      compileSet(temp, lhs, false);
+    }
+
     private void compileAgumentedAssignment(AssignmentStatement assignmentStatement) {
       Preconditions.checkState(assignmentStatement.getOperator() != null);
       if (assignmentStatement.getLHS() instanceof Identifier) {
-        int rhs = compileExpression(assignmentStatement.getRHS()).slot;
-        Identifier lhs = (Identifier) assignmentStatement.getLHS();
-        CompileExpressionResult value = compileGet(lhs);
-        int temp = allocSlot();
-        write(
-            BcInstr.Opcode.BINARY_IN_PLACE,
-            assignmentStatement,
-            value.slot,
-            rhs,
-            assignmentStatement.getOperator().ordinal(),
-            temp);
-        compileSet(temp, lhs, false);
+        compileAgumentedAssignmentToIdentifier(assignmentStatement);
       } else if (assignmentStatement.getLHS() instanceof IndexExpression) {
         IndexExpression indexExpression = (IndexExpression) assignmentStatement.getLHS();
 
