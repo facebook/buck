@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ConsoleLock;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.string.MoreStrings;
@@ -157,24 +158,22 @@ public class RenderingConsole {
     // We don't log immediately so we avoid locking the console handler to avoid deadlocks.
     boolean stderrDirty;
     boolean stdoutDirty;
-    // TODO(cjhopman): This synchronization is likely useless.
-    synchronized (console.getStdErr()) {
-      synchronized (console.getStdOut()) {
-        // If another source has written to stderr, stop rendering with the SuperConsole.
-        // We need to do this to keep our updates consistent. We don't do this with stdout
-        // because we don't use it directly except in a couple of cases, where the
-        // synchronization in DirtyPrintStreamDecorator should be sufficient
 
-        // TODO(cjhopman): We should probably only stop rendering the super lines and continue
-        // rendering log lines.
-        stderrDirty = console.getStdErr().isDirty();
-        stdoutDirty = console.getStdOut().isDirty();
-        if (stderrDirty || stdoutDirty) {
-          stopRenderScheduler();
-        } else if (shouldRender) {
-          String fullFrame = renderFullFrame(logLines.build(), lines, previousNumLinesPrinted);
-          console.getStdErr().getRawStream().print(fullFrame);
-        }
+    synchronized (ConsoleLock.lock) {
+      // If another source has written to stderr, stop rendering with the SuperConsole.
+      // We need to do this to keep our updates consistent. We don't do this with stdout
+      // because we don't use it directly except in a couple of cases, where the
+      // synchronization in DirtyPrintStreamDecorator should be sufficient
+
+      // TODO(cjhopman): We should probably only stop rendering the super lines and continue
+      //   rendering log lines.
+      stderrDirty = console.getStdErr().isDirty();
+      stdoutDirty = console.getStdOut().isDirty();
+      if (stderrDirty || stdoutDirty) {
+        stopRenderScheduler();
+      } else if (shouldRender) {
+        String fullFrame = renderFullFrame(logLines.build(), lines, previousNumLinesPrinted);
+        console.getStdErr().getRawStream().print(fullFrame);
       }
     }
     if (stderrDirty) {

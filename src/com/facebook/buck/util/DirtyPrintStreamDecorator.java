@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Locale;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 
 /**
  * Decorator of PrintStreams that tracks whether or not that stream has been written to. This is
@@ -30,8 +29,7 @@ import javax.annotation.concurrent.GuardedBy;
 public class DirtyPrintStreamDecorator extends PrintStream {
   private final PrintStream delegate;
 
-  @GuardedBy("delegate")
-  private volatile boolean dirty;
+  private boolean dirty;
 
   public DirtyPrintStreamDecorator(PrintStream delegate) {
     super(delegate);
@@ -39,21 +37,22 @@ public class DirtyPrintStreamDecorator extends PrintStream {
     this.dirty = false;
   }
 
+  /** Raw stream is incompatible with super console. Use carefully. */
   public PrintStream getRawStream() {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       return delegate;
     }
   }
 
   public boolean isDirty() {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       return dirty;
     }
   }
 
   @Override
   public void flush() {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.flush();
     }
@@ -61,7 +60,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void close() {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.close();
     }
@@ -69,7 +68,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void write(int b) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.write(b);
     }
@@ -77,7 +76,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void write(byte[] b) throws IOException {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.write(b);
     }
@@ -85,7 +84,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void write(byte[] buf, int off, int len) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.write(buf, off, len);
     }
@@ -93,7 +92,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(boolean b) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(b);
     }
@@ -101,7 +100,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(char c) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(c);
     }
@@ -109,7 +108,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(int i) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(i);
     }
@@ -117,7 +116,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(long l) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(l);
     }
@@ -125,7 +124,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(float f) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(f);
     }
@@ -133,7 +132,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(double d) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(d);
     }
@@ -141,7 +140,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(char[] s) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(s);
     }
@@ -149,7 +148,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(@Nullable String s) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(s);
     }
@@ -157,7 +156,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void print(Object obj) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.print(obj);
     }
@@ -165,7 +164,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println() {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println();
     }
@@ -173,7 +172,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(boolean x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -181,7 +180,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(char x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -189,7 +188,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(int x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -197,7 +196,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(long x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -205,7 +204,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(float x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -213,7 +212,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(double x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -221,7 +220,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(char[] x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -229,7 +228,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(String x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -237,7 +236,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public void println(Object x) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.println(x);
     }
@@ -245,7 +244,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream printf(String format, Object... args) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.printf(format, args);
     }
@@ -254,7 +253,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream printf(Locale l, String format, Object... args) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.printf(l, format, args);
     }
@@ -263,7 +262,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream format(String format, Object... args) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.format(format, args);
     }
@@ -272,7 +271,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream format(Locale l, String format, Object... args) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.format(l, format, args);
     }
@@ -281,7 +280,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream append(CharSequence csq) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.append(csq);
     }
@@ -290,7 +289,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream append(CharSequence csq, int start, int end) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.append(csq, start, end);
     }
@@ -299,7 +298,7 @@ public class DirtyPrintStreamDecorator extends PrintStream {
 
   @Override
   public PrintStream append(char c) {
-    synchronized (delegate) {
+    synchronized (ConsoleLock.lock) {
       dirty = true;
       delegate.append(c);
     }

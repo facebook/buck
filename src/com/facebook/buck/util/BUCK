@@ -48,6 +48,7 @@ PROCESS_EXECUTOR_SRCS = [
     "BgProcessKiller.java",
     "CapturingPrintStream.java",
     "Console.java",
+    "ConsoleLock.java",
     "ConsoleParams.java",
     "ContextualProcessExecutor.java",
     "DefaultProcessExecutor.java",
