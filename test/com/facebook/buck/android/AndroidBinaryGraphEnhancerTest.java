@@ -1121,7 +1121,6 @@ public class AndroidBinaryGraphEnhancerTest {
         .setDexReorderDataDumpFile(FakeSourcePath.of(""))
         .setDexReorderToolFile(FakeSourcePath.of(""))
         .setDxExecutorService(MoreExecutors.newDirectExecutorService())
-        .setDxMaxHeapSize("")
         .setJavaRuntimeLauncher(new FakeTool())
         .setOptimizationPasses(0)
         .setProguardMaxHeapSize("")

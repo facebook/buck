@@ -187,7 +187,6 @@ public class AndroidInstrumentationApkDescription
             .setDexReorderToolFile(Optional.empty())
             .setDexReorderDataDumpFile(Optional.empty())
             .setDxExecutorService(dxExecutorService)
-            .setDxMaxHeapSize(Optional.empty())
             .setOptimizationPasses(apkUnderTest.getOptimizationPasses())
             .setProguardJvmArgs(apkUnderTest.getProguardJvmArgs())
             .setSkipProguard(apkUnderTest.getSkipProguard())

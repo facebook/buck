@@ -94,7 +94,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final Optional<SourcePath> dexReorderDataDumpFile;
   @AddToRuleKey private final Optional<SourcePath> dexReorderToolFile;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
-  @AddToRuleKey private final Optional<String> dxMaxHeapSize;
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
   @AddToRuleKey
@@ -143,8 +142,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
     ListeningExecutorService getDxExecutorService();
 
-    Optional<String> getDxMaxHeapSize();
-
     ProGuardObfuscateStep.SdkProguardType getSdkProguardConfig();
 
     int getOptimizationPasses();
@@ -190,7 +187,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     this.dexReorderToolFile = args.getDexReorderToolFile();
     this.dexSplitMode = dexSplitMode;
     this.dxExecutorService = args.getDxExecutorService();
-    this.dxMaxHeapSize = args.getDxMaxHeapSize();
     this.javaRuntimeLauncher = args.getJavaRuntimeLauncher();
     this.moduleMappedClasspathEntriesToDex = moduleMappedClasspathEntriesToDex;
     this.optimizationPasses = args.getOptimizationPasses();
