@@ -81,6 +81,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private static final String DSYMUTIL_EXTRA_FLAGS = "dsymutil_extra_flags";
   private static final String VERIFY_DSYM = "verify_dsym";
+  private static final String DWARFDUMP_FAILS_DSYM_VERIFICATION =
+      "dwarfdump_fails_dsym_verification";
 
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
   private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
@@ -653,6 +655,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getVerifyDsym() {
     return delegate.getBooleanValue(APPLE_SECTION, VERIFY_DSYM, false);
+  }
+
+  /**
+   * @return Whether to fail the build if dSYM verification was requested but the `dwarfdump` tool
+   *     is missing.
+   */
+  public boolean getDwarfdumpFailsDsymVerification() {
+    return delegate.getBooleanValue(APPLE_SECTION, DWARFDUMP_FAILS_DSYM_VERIFICATION, true);
   }
 
   public boolean getEmbedXctestInTestBundles() {

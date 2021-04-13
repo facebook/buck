@@ -220,6 +220,7 @@ public class AppleBundleDescription
         maybeProvidedDebugFormat.get(),
         appleConfig.getDsymutilExtraFlags(),
         appleConfig.getVerifyDsym(),
+        appleConfig.getDwarfdumpFailsDsymVerification(),
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),

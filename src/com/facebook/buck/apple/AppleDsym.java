@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -63,6 +64,8 @@ import java.util.stream.Stream;
 public class AppleDsym extends AbstractBuildRule
     implements HasPostBuildSteps, SupportsInputBasedRuleKey {
 
+  private static final Logger LOG = Logger.get(AppleDsym.class);
+
   public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-dsym");
   public static final String DSYM_DWARF_FILE_FOLDER = "Contents/Resources/DWARF/";
 
@@ -73,6 +76,7 @@ public class AppleDsym extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<Tool> dwarfdump;
   @AddToRuleKey private final boolean verifyDsym;
+  @AddToRuleKey private final boolean dwarfdumpFailsDsymVerification;
 
   @AddToRuleKey private final SourcePath unstrippedBinarySourcePath;
 
@@ -95,6 +99,7 @@ public class AppleDsym extends AbstractBuildRule
       Tool dsymutil,
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
+      boolean dwarfdumpFailsDsymVerification,
       Optional<Tool> dwarfdump,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
@@ -104,13 +109,11 @@ public class AppleDsym extends AbstractBuildRule
       boolean isCacheable,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
-    Preconditions.checkArgument(
-        !verifyDsym || dwarfdump.isPresent(),
-        "Requested verification of dSYM but missing dwarfdump tool");
     this.dsymutil = dsymutil;
     this.dsymutilExtraFlags = dsymutilExtraFlags;
     this.dwarfdump = dwarfdump;
     this.verifyDsym = verifyDsym;
+    this.dwarfdumpFailsDsymVerification = dwarfdumpFailsDsymVerification;
     this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.additionalSymbolDeps = additionalSymbolDeps;
@@ -199,44 +202,26 @@ public class AppleDsym extends AbstractBuildRule
 
     Path dwarfFilePath = dwarfFileFolder.resolve(unstrippedBinaryPath.getFileName());
 
-    if (verifyDsym && dwarfdump.isPresent()) {
-      RelPath warningsOutputPath =
-          BuildTargetPaths.getScratchPath(
-              getProjectFilesystem(), this.getBuildTarget(), "%s_dwarfdump_warnings.txt");
-      steps.add(
-          new AppleDsymExtractPapertrailStep(
-              getProjectFilesystem(),
-              dwarfdump.get().getEnvironment(context.getSourcePathResolver()),
-              dwarfdump.get().getCommandPrefix(context.getSourcePathResolver()),
-              dwarfFilePath,
-              warningsOutputPath.getPath(),
-              cellPath,
-              withDownwardApi));
-
-      steps.add(
-          new AbstractExecutionStep("verify-dsym") {
-            @Override
-            public StepExecutionResult execute(StepExecutionContext context)
-                throws IOException, InterruptedException {
-              AbsPath warningsPath = getProjectFilesystem().resolve(warningsOutputPath);
-              try (Stream<String> stream = Files.lines(warningsPath.getPath())) {
-                Optional<String> lineWithObjectError =
-                    stream
-                        .filter(
-                            l ->
-                                l.contains("unable to open object file: No such file or directory"))
-                        .findFirst();
-                if (lineWithObjectError.isPresent()) {
-                  // Unfortunately, the warnings that dsymutil stores do not the object file names,
-                  // so there's nothing else useful we can print
-                  throw new HumanReadableException(
-                      "dSYM verification failed, missing object files when looking up N_OSO entries");
-                }
-              }
-
-              return StepExecutionResults.SUCCESS;
-            }
-          });
+    if (verifyDsym) {
+      if (dwarfdump.isPresent()) {
+        addVerificationSteps(
+            context,
+            getBuildTarget(),
+            getProjectFilesystem(),
+            steps,
+            cellPath,
+            dwarfFilePath,
+            dwarfdump.get(),
+            withDownwardApi);
+      } else {
+        if (dwarfdumpFailsDsymVerification) {
+          throw new HumanReadableException(
+              "dSYM verification requested but missing dwarfdump tool");
+        } else {
+          LOG.warn(
+              "dSYM verification requested but missing dwarfdump tool, skipping check and allowing build to continue...");
+        }
+      }
     }
 
     steps.add(
@@ -246,6 +231,54 @@ public class AppleDsym extends AbstractBuildRule
             dwarfFileFolder.resolve(getDwarfFilenameForDsymTarget(getBuildTarget()))));
 
     return steps.build();
+  }
+
+  private static void addVerificationSteps(
+      BuildContext context,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList.Builder<Step> steps,
+      RelPath cellPath,
+      Path dwarfFilePath,
+      Tool dwarfdump,
+      boolean withDownwardApi) {
+    RelPath warningsOutputPath =
+        BuildTargetPaths.getScratchPath(
+            projectFilesystem, buildTarget, "%s_dwarfdump_warnings.txt");
+    steps.add(
+        new AppleDsymExtractPapertrailStep(
+            projectFilesystem,
+            dwarfdump.getEnvironment(context.getSourcePathResolver()),
+            dwarfdump.getCommandPrefix(context.getSourcePathResolver()),
+            dwarfFilePath,
+            warningsOutputPath.getPath(),
+            cellPath,
+            withDownwardApi));
+
+    steps.add(
+        new AbstractExecutionStep("verify-dsym") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context)
+              throws IOException, InterruptedException {
+            AbsPath warningsPath = projectFilesystem.resolve(warningsOutputPath);
+            try (Stream<String> stream = Files.lines(warningsPath.getPath())) {
+              Optional<String> lineWithObjectError =
+                  stream
+                      .filter(
+                          l -> l.contains("unable to open object file: No such file or directory"))
+                      .findFirst();
+              if (lineWithObjectError.isPresent()) {
+                // Unfortunately, the warnings that dsymutil stores do not the object file
+                // names,
+                // so there's nothing else useful we can print
+                throw new HumanReadableException(
+                    "dSYM verification failed, missing object files when looking up N_OSO entries");
+              }
+            }
+
+            return StepExecutionResults.SUCCESS;
+          }
+        });
   }
 
   @Override

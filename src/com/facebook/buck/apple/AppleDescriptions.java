@@ -645,6 +645,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
+      boolean dwarfdumpFailsDsymVerification,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
       boolean shouldCacheStrips,
@@ -681,6 +682,7 @@ public class AppleDescriptions {
                           appleCxxPlatforms,
                           dsymutilExtraFlags,
                           verifyDsym,
+                          dwarfdumpFailsDsymVerification,
                           shouldCacheStrips,
                           withDownwardApi);
                   return AppleDebuggableBinary.createWithDsym(
@@ -702,6 +704,7 @@ public class AppleDescriptions {
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
+      boolean dwarfdumpFailsDsymVerification,
       boolean isCacheable,
       boolean withDownwardApi) {
     return (AppleDsym)
@@ -729,6 +732,7 @@ public class AppleDescriptions {
                   appleCxxPlatform.getDsymutil(),
                   dsymutilExtraFlags,
                   verifyDsym,
+                  dwarfdumpFailsDsymVerification,
                   appleCxxPlatform.getDwarfdump(),
                   appleCxxPlatform.getLldb(),
                   unstrippedBinaryRule.getSourcePathToOutput(),
@@ -766,6 +770,7 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
+      boolean dwarfdumpFailsDsymVerification,
       boolean dryRunCodeSigning,
       boolean cacheable,
       boolean verifyResources,
@@ -948,6 +953,7 @@ public class AppleDescriptions {
               debugFormat,
               dsymutilExtraFlags,
               verifyDsym,
+              dwarfdumpFailsDsymVerification,
               cxxPlatformsProvider,
               appleCxxPlatforms,
               cacheStrips,

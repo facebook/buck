@@ -528,6 +528,7 @@ public class AppleLibraryDescription
         debugFormat,
         appleConfig.getDsymutilExtraFlags(),
         appleConfig.getVerifyDsym(),
+        appleConfig.getDwarfdumpFailsDsymVerification(),
         appleConfig.useDryRunCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
@@ -637,6 +638,7 @@ public class AppleLibraryDescription
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
         appleConfig.getDsymutilExtraFlags(),
         appleConfig.getVerifyDsym(),
+        appleConfig.getDwarfdumpFailsDsymVerification(),
         cxxPlatformsProvider,
         AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
             toolchainProvider, buildTarget.getTargetConfiguration()),
