@@ -150,6 +150,7 @@ public class D8StepTest {
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(D8Step.Option.class),
+              Optional.empty(),
               D8Step.D8,
               false,
               ImmutableSet.of(),
@@ -159,6 +160,45 @@ public class D8StepTest {
       String expected =
           String.format(
               "d8 --min-api 28 --output %s --release --lib %s %s",
+              SAMPLE_OUTPUT_PATH,
+              androidPlatformTarget.getAndroidJar(),
+              Joiner.on(' ')
+                  .join(
+                      SAMPLE_FILES_TO_DEX.stream()
+                          .map(filesystem::resolve)
+                          .collect(Collectors.toList())));
+      MoreAsserts.assertSteps(
+          "Ensure that the --min-sdk-version flag is present.",
+          ImmutableList.of(expected),
+          ImmutableList.of(dx),
+          context);
+    }
+  }
+
+  @Test
+  public void testMainDexList() throws IOException {
+    try (StepExecutionContext context = TestExecutionContext.newInstance()) {
+      ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+      Path mainDexFilePath = Paths.get("/some/main/dex/file");
+
+      D8Step dx =
+          new D8Step(
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.noneOf(D8Step.Option.class),
+              Optional.of(mainDexFilePath),
+              D8Step.D8,
+              false,
+              ImmutableSet.of(),
+              Optional.empty(),
+              Optional.empty());
+
+      String expected =
+          String.format(
+              "d8 --main-dex-list %s --output %s --release --lib %s %s",
+              mainDexFilePath,
               SAMPLE_OUTPUT_PATH,
               androidPlatformTarget.getAndroidJar(),
               Joiner.on(' ')

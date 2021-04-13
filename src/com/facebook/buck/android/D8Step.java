@@ -83,6 +83,7 @@ public class D8Step extends IsolatedStep {
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
   private final Set<Option> options;
+  private final Optional<Path> primaryDexClassNamesPath;
   private final String dexTool;
   private final boolean intermediate;
   // used to differentiate different dexing buckets (if any)
@@ -147,6 +148,7 @@ public class D8Step extends IsolatedStep {
         outputDexFile,
         filesToDex,
         options,
+        Optional.empty(),
         dexTool,
         intermediate,
         null,
@@ -159,6 +161,7 @@ public class D8Step extends IsolatedStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
+   * @param primaryDexClassNamesPath
    * @param dexTool the tool used to perform dexing.
    * @param classpathFiles specifies classpath for interface static and default methods desugaring.
    * @param minSdkVersion
@@ -169,6 +172,7 @@ public class D8Step extends IsolatedStep {
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
+      Optional<Path> primaryDexClassNamesPath,
       String dexTool,
       boolean intermediate,
       @Nullable Collection<Path> classpathFiles,
@@ -181,6 +185,7 @@ public class D8Step extends IsolatedStep {
     this.outputDexFile = filesystem.resolve(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
+    this.primaryDexClassNamesPath = primaryDexClassNamesPath;
     this.dexTool = dexTool;
     this.intermediate = intermediate;
     this.bucketId = bucketId;
@@ -233,6 +238,7 @@ public class D8Step extends IsolatedStep {
 
       bucketId.ifPresent(builder::setBucketId);
       minSdkVersion.ifPresent(builder::setMinApiLevel);
+      primaryDexClassNamesPath.ifPresent(builder::addMainDexListFiles);
 
       if (classpathFiles != null && !classpathFiles.isEmpty()) {
         // classpathFiles is needed only for D8 java 8 desugar
@@ -300,6 +306,12 @@ public class D8Step extends IsolatedStep {
         minApi -> {
           commandArgs.add("--min-api");
           commandArgs.add(Integer.toString(minApi));
+        });
+
+    primaryDexClassNamesPath.ifPresent(
+        path -> {
+          commandArgs.add("--main-dex-list");
+          commandArgs.add(path.toString());
         });
 
     commandArgs.add("--output");

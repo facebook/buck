@@ -220,6 +220,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 pathToDex.getPath(),
                 Collections.singleton(pathToOutputFile.getPath()),
                 options,
+                Optional.empty(),
                 dexTool,
                 dexTool.equals(D8Step.D8),
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
