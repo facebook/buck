@@ -50,6 +50,11 @@ public class ModuleInfoBinaryIndex {
     this.path = ideaConfigDir.resolve(NAME);
   }
 
+  /** The path to the binary index file */
+  public Path getStoragePath() {
+    return path;
+  }
+
   /** Write all moduleInfos into a file */
   public void write(Collection<ModuleInfo> moduleInfos) throws IOException {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();

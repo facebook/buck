@@ -41,11 +41,13 @@ public final class ModuleInfoManager {
   private final IjProjectConfig projectConfig;
   private final Queue<ModuleInfo> moduleInfoQueue = new ConcurrentLinkedQueue<>();
   private final ModuleInfoBinaryIndex moduleInfoBinaryIndex;
+  private final IJProjectCleaner cleaner;
 
-  public ModuleInfoManager(IjProjectConfig projectConfig) {
+  public ModuleInfoManager(IjProjectConfig projectConfig, IJProjectCleaner cleaner) {
     this.projectConfig = projectConfig;
     this.moduleInfoBinaryIndex =
         new ModuleInfoBinaryIndex(projectConfig.getProjectPaths().getIdeaConfigDir());
+    this.cleaner = cleaner;
   }
 
   /** Add a {@link ModuleInfo} to be written */
@@ -63,6 +65,7 @@ public final class ModuleInfoManager {
   public void write() throws IOException {
     if (projectConfig.isGeneratingModuleInfoBinaryIndexEnabled()) {
       moduleInfoBinaryIndex.write(moduleInfoQueue);
+      cleaner.doNotDelete(moduleInfoBinaryIndex.getStoragePath());
     }
   }
 
@@ -70,6 +73,7 @@ public final class ModuleInfoManager {
   public void update() throws IOException {
     if (projectConfig.isGeneratingModuleInfoBinaryIndexEnabled()) {
       moduleInfoBinaryIndex.update(moduleInfoQueue);
+      cleaner.doNotDelete(moduleInfoBinaryIndex.getStoragePath());
     }
   }
 

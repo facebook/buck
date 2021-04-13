@@ -70,7 +70,7 @@ public class IjProjectWriter {
     this.cleaner = cleaner;
     this.outFilesystem = outFilesystem;
     this.buckOutPathConverter = buckOutPathConverter;
-    this.moduleInfoManager = new ModuleInfoManager(projectConfig);
+    this.moduleInfoManager = new ModuleInfoManager(projectConfig, cleaner);
   }
 
   /** Write entire project to disk */
