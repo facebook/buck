@@ -789,7 +789,9 @@ public class AppleDescriptions {
       boolean bundleInputBasedRulekeyEnabled,
       boolean shouldCacheFileHashes,
       boolean parallelCodeSignOnCopyEnabled,
-      boolean shouldEmbedXctest) {
+      boolean shouldEmbedXctest,
+      boolean doNotEmbedHostAppInTestBundle,
+      Optional<AppleTestDescription.TestHostInfo> testHostInfo) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -1016,7 +1018,9 @@ public class AppleDescriptions {
         graphBuilder,
         projectFilesystem,
         incrementalBundlingEnabled,
-        shouldCacheFileHashes);
+        shouldCacheFileHashes,
+        doNotEmbedHostAppInTestBundle,
+        testHostInfo);
 
     if (shouldEmbedXctest) {
       addXctestLibrariesToBundleParts(
@@ -1852,7 +1856,9 @@ public class AppleDescriptions {
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       boolean incrementalBundlingEnabled,
-      boolean shouldCacheFileHashes) {
+      boolean shouldCacheFileHashes,
+      boolean doNotEmbedHostAppInTestBundle,
+      Optional<AppleTestDescription.TestHostInfo> testHostInfo) {
     // We only care about the direct layer of dependencies. ExtensionBundles inside ExtensionBundles
     // do not get pulled in to the top-level Bundle.
     dependencies.stream()
@@ -1880,6 +1886,18 @@ public class AppleDescriptions {
                   destination = AppleBundleDestination.WATCHAPP;
                 } else if (appleBundle.getIsLegacyWatchApp()) {
                   destination = AppleBundleDestination.RESOURCES;
+                } else if (doNotEmbedHostAppInTestBundle
+                    && testHostInfo.isPresent()
+                    && testHostInfo
+                        .get()
+                        .getTestHostApp()
+                        .getBuildTarget()
+                        .withFlavors()
+                        .equals(appleBundle.getBuildTarget().withFlavors())) {
+                  // If this is an app test bundle with host app, there is no need to put the host
+                  // app in its PlugIns folder. App test bundle are supposed to loaded by host app
+                  // at test run time, and its dependency on host app will be resolved at that time.
+                  return;
                 } else {
                   destination = AppleBundleDestination.PLUGINS;
                 }

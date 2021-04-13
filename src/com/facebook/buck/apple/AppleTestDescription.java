@@ -288,20 +288,19 @@ public class AppleTestDescription
               .resolve(graphBuilder);
     }
 
-    Optional<TestHostInfo> testHostWithTargetApp = Optional.empty();
-    if (args.getTestHostApp().isPresent()) {
-      testHostWithTargetApp =
-          Optional.of(
-              createTestHostInfo(
-                  buildTarget,
-                  args.getIsUiTest(),
-                  graphBuilder,
-                  args.getTestHostApp().get(),
-                  args.getUiTestTargetApp(),
-                  debugFormat,
-                  libraryFlavors,
-                  cxxPlatforms));
-    }
+    Optional<TestHostInfo> testHostWithTargetApp =
+        args.getTestHostApp().isPresent()
+            ? Optional.of(
+                createTestHostInfo(
+                    buildTarget,
+                    args.getIsUiTest(),
+                    graphBuilder,
+                    args.getTestHostApp().get(),
+                    args.getUiTestTargetApp(),
+                    debugFormat,
+                    libraryFlavors,
+                    cxxPlatforms))
+            : Optional.empty();
 
     BuildTarget libraryTarget =
         buildTarget
@@ -391,7 +390,9 @@ public class AppleTestDescription
                         appleConfig.getBundleInputBasedRulekeyEnabled(),
                         appleConfig.getIncrementalHashCacheEnabled(),
                         appleConfig.getParallelCodeSignOnCopyEnabled(),
-                        appleConfig.getEmbedXctestInTestBundles()));
+                        appleConfig.getEmbedXctestInTestBundles(),
+                        appleConfig.getDoNotEmbedHostAppInTestBundle(),
+                        testHostWithTargetApp));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);

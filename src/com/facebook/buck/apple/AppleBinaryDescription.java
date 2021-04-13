@@ -430,7 +430,9 @@ public class AppleBinaryDescription
         appleConfig.getBundleInputBasedRulekeyEnabled(),
         appleConfig.getIncrementalHashCacheEnabled(),
         appleConfig.getParallelCodeSignOnCopyEnabled(),
-        false);
+        false,
+        false,
+        Optional.empty());
   }
 
   private BuildRule createBinary(

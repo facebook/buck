@@ -639,6 +639,30 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testDoNotEmbedHostAppInTestBundle() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_host_app", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "do_not_embed_host_app_in_test_bundle", "true");
+    BuildTarget target = workspace.newBuildTarget("//:AppTest");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    RelPath testBundlePath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+    assertTrue(filesystem.exists(testBundlePath.resolve("AppTest.xctest/AppTest")));
+    assertFalse(
+        filesystem.exists(testBundlePath.resolve("AppTest.xctest/PlugIns/TestHostApp.app")));
+  }
+
+  @Test
   public void skipsRunButBuildsTargetsForLegacyXCUITests() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_xcuitest", tmp);

@@ -551,7 +551,9 @@ public class AppleLibraryDescription
         appleConfig.getBundleInputBasedRulekeyEnabled(),
         appleConfig.getIncrementalHashCacheEnabled(),
         appleConfig.getParallelCodeSignOnCopyEnabled(),
-        false);
+        false,
+        false,
+        Optional.empty());
   }
 
   /**

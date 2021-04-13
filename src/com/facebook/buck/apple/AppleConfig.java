@@ -113,6 +113,9 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   private static final String EMBED_XCTEST_IN_TEST_BUNDLES = "embed_xctest_in_test_bundles";
 
+  private static final String DO_NOT_EMBED_HOST_APP_IN_TEST_BUNDLE =
+      "do_not_embed_host_app_in_test_bundle";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -654,6 +657,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getEmbedXctestInTestBundles() {
     return delegate.getBooleanValue(APPLE_SECTION, EMBED_XCTEST_IN_TEST_BUNDLES, false);
+  }
+
+  public boolean getDoNotEmbedHostAppInTestBundle() {
+    return delegate.getBooleanValue(APPLE_SECTION, DO_NOT_EMBED_HOST_APP_IN_TEST_BUNDLE, false);
   }
 
   @BuckStyleValue
