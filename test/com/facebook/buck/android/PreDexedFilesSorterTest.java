@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -176,6 +177,40 @@ public class PreDexedFilesSorterTest {
     for (DexWithClasses dexWithClasses : extraResult.metadataTxtDexEntries.values()) {
       assertThat(dexWithClasses.getClassNames().asList().get(0), Matchers.endsWith("/Canary"));
     }
+  }
+
+  @Test
+  public void testDexesWithSomePrimaryMatches() throws IOException {
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PreDexedFilesSorter sorter =
+        new PreDexedFilesSorter(
+            ImmutableList.of(
+                createFakeDexWithClasses(
+                    filesystem,
+                    Paths.get("somedex").resolve("somedex1.dex"),
+                    ImmutableSet.of(
+                        "primary.primary1.class",
+                        "primary.primary2.class",
+                        "secondary.secondary.class"),
+                    STANDARD_DEX_FILE_ESTIMATE)),
+            ImmutableSet.of(PRIMARY_DEX_PATTERN),
+            moduleGraph,
+            moduleGraph.getRootAPKModule(),
+            tempDir.newFolder(moduleGraph.getRootAPKModule().getName(), "scratch").toPath(),
+            DEX_WEIGHT_LIMIT,
+            DexStore.JAR,
+            tempDir.newFolder(moduleGraph.getRootAPKModule().getName(), "secondary").toPath(),
+            Optional.empty());
+
+    PreDexedFilesSorter.Result result =
+        sorter.sortIntoPrimaryAndSecondaryDexes(filesystem, ImmutableList.builder());
+    assertThat(result.primaryDexInputs, Matchers.hasSize(1));
+    List<String> primaryDexClassNames =
+        ((PreDexedFilesSorter.PrimaryDexInput) result.primaryDexInputs.toArray()[0]).classNames;
+    assertThat(
+        primaryDexClassNames,
+        Matchers.containsInAnyOrder("primary.primary1.class", "primary.primary2.class"));
+    assertThat(result.secondaryOutputToInputs.entries(), Matchers.empty());
   }
 
   private ImmutableMap<String, PreDexedFilesSorter.Result> generatePreDexSorterResults(

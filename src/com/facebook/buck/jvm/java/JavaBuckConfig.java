@@ -343,6 +343,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_ENABLED, false);
   }
 
+  public boolean isPreDexPerClassPrimaryDexMatching() {
+    return delegate.getBooleanValue(SECTION, "is_pre_dex_per_class_primary_dex_matching", false);
+  }
+
   public enum SourceAbiVerificationMode {
     /** Don't verify ABI jars. */
     OFF,

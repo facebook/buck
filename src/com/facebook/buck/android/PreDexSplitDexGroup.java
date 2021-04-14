@@ -101,6 +101,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableList<SourcePath> preDexInputs;
 
+  @AddToRuleKey private final boolean isPerClassPrimaryDexMatching;
+
   public PreDexSplitDexGroup(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -114,7 +116,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
       Optional<Integer> groupIndex,
-      int secondaryDexWeightLimit) {
+      int secondaryDexWeightLimit,
+      boolean isPerClassPrimaryDexMatching) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.dexTool = dexTool;
@@ -131,6 +134,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             .map(DexProducedFromJavaLibrary::getSourcePathToDex)
             .collect(ImmutableList.toImmutableList());
     this.secondaryDexWeightLimit = secondaryDexWeightLimit;
+    this.isPerClassPrimaryDexMatching = isPerClassPrimaryDexMatching;
   }
 
   public List<DexWithClasses> getDexWithClasses() {
@@ -153,6 +157,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
     Path primaryDexDir = getPrimaryDexRoot();
     Path primaryDexInputHashesPath = getPrimaryDexInputHashesPath();
+    Path primaryDexClassNamesPath = getPrimaryDexClassNamesPath();
     Path secondaryDexDir = getSecondaryDexRoot();
     Path outputHashDir = getOutputHashDirectory();
     Path metadataTxtPath = getMetadataTxtPath();
@@ -174,6 +179,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
     buildableContext.recordArtifact(primaryDexDir);
     buildableContext.recordArtifact(primaryDexInputHashesPath);
+    buildableContext.recordArtifact(primaryDexClassNamesPath);
     buildableContext.recordArtifact(secondaryDexDir);
     buildableContext.recordArtifact(outputHashDir);
     buildableContext.recordArtifact(metadataTxtPath);
@@ -215,9 +221,27 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
                 context.getBuildCellRootPath(), filesystem, primaryDexDir)));
 
     result.primaryDexInputs.forEach(
-        (key, value) -> {
-          Path input = sourcePathResolverAdapter.getRelativePath(filesystem, value).getPath();
-          steps.add(CopyStep.forFile(input, primaryDexDir.resolve(key)));
+        (primaryDexInput) -> {
+          Path input =
+              sourcePathResolverAdapter
+                  .getRelativePath(filesystem, primaryDexInput.sourcePath)
+                  .getPath();
+          steps.add(CopyStep.forFile(input, primaryDexDir.resolve(primaryDexInput.jarName)));
+        });
+
+    steps.add(
+        new AbstractExecutionStep("maybe_write_primary_dex_class_names") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+            ImmutableList.Builder<String> classNames = ImmutableList.builder();
+            if (isPerClassPrimaryDexMatching) {
+              result.primaryDexInputs.forEach(
+                  primaryDexInput -> classNames.addAll(primaryDexInput.classNames));
+            }
+
+            writePrimaryDexClassNames(primaryDexClassNamesPath, classNames.build());
+            return StepExecutionResults.SUCCESS;
+          }
         });
 
     steps.add(
@@ -318,6 +342,11 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         .resolve("primary_dex_input_hashes.txt");
   }
 
+  public Path getPrimaryDexClassNamesPath() {
+    return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
+        .resolve("primary_dex_class_names.txt");
+  }
+
   Path getSecondaryDexRoot() {
     return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
         .resolve("secondary");
@@ -374,13 +403,20 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
-    return new BuildOutput(readPrimaryDexInputMetadata(), readReferencedResources());
+    return new BuildOutput(
+        readPrimaryDexInputMetadata(), readReferencedResources(), readPrimaryDexClassNames());
   }
 
   private ImmutablePrimaryDexInputMetadata readPrimaryDexInputMetadata() throws IOException {
     return ObjectMappers.readValue(
         getProjectFilesystem().readFileIfItExists(getPrimaryDexInputHashesPath()).get(),
         new TypeReference<ImmutablePrimaryDexInputMetadata>() {});
+  }
+
+  private List<String> readPrimaryDexClassNames() throws IOException {
+    return ObjectMappers.readValue(
+        getProjectFilesystem().readFileIfItExists(getPrimaryDexClassNamesPath()).get(),
+        new TypeReference<List<String>>() {});
   }
 
   private ImmutableList<String> readReferencedResources() throws IOException {
@@ -395,6 +431,12 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       Path outputPath, ImmutablePrimaryDexInputMetadata primaryDexInputs) throws IOException {
     getProjectFilesystem()
         .writeContentsToPath(ObjectMappers.WRITER.writeValueAsString(primaryDexInputs), outputPath);
+  }
+
+  private void writePrimaryDexClassNames(Path outputPath, List<String> classNames)
+      throws IOException {
+    getProjectFilesystem()
+        .writeContentsToPath(ObjectMappers.WRITER.writeValueAsString(classNames), outputPath);
   }
 
   private void writeReferencedResources(Path outputPath, ImmutableList<String> referencedResources)
@@ -413,16 +455,23 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   static class BuildOutput {
     final ImmutablePrimaryDexInputMetadata primaryDexInputMetadata;
     final ImmutableList<String> referencedResources;
+    final List<String> primaryDexClassNames;
 
     BuildOutput(
         ImmutablePrimaryDexInputMetadata primaryDexInputMetadata,
-        ImmutableList<String> referencedResources) {
+        ImmutableList<String> referencedResources,
+        List<String> primaryDexClassNames) {
       this.primaryDexInputMetadata = primaryDexInputMetadata;
       this.referencedResources = referencedResources;
+      this.primaryDexClassNames = primaryDexClassNames;
     }
   }
 
   public ImmutablePrimaryDexInputMetadata getPrimaryDexInputMetadata() {
     return buildOutputInitializer.getBuildOutput().primaryDexInputMetadata;
+  }
+
+  public List<String> getPrimaryDexClassNames() {
+    return buildOutputInitializer.getBuildOutput().primaryDexClassNames;
   }
 }

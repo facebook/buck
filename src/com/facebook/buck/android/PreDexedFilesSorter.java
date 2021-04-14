@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hasher;
@@ -50,9 +51,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /** Responsible for bucketing pre-dexed objects into primary and secondary dex files. */
@@ -111,9 +115,10 @@ public class PreDexedFilesSorter {
 
     // Bucket each DexWithClasses into the appropriate dex file.
     for (DexWithClasses dexWithClasses : sortedDexFilesToMerge) {
-      if (module.equals(apkModuleGraph.getRootAPKModule()) && mustBeInPrimaryDex(dexWithClasses)) {
+      List<String> primaryDexClasses = getPrimaryDexClasses(dexWithClasses);
+      if (module.equals(apkModuleGraph.getRootAPKModule()) && !primaryDexClasses.isEmpty()) {
         // Case 1: Entry must be in the primary dex.
-        storeContents.addPrimaryDex(dexWithClasses);
+        storeContents.addPrimaryDex(dexWithClasses, primaryDexClasses);
       } else {
         storeContents.addDex(dexWithClasses);
       }
@@ -121,19 +126,20 @@ public class PreDexedFilesSorter {
     return storeContents.getResult();
   }
 
-  private boolean mustBeInPrimaryDex(DexWithClasses dexWithClasses) {
+  private List<String> getPrimaryDexClasses(DexWithClasses dexWithClasses) {
+    ImmutableList.Builder<String> primaryDexClasses = ImmutableList.builder();
     for (String className : dexWithClasses.getClassNames()) {
       if (primaryDexFilter.matches(className)) {
-        return true;
+        primaryDexClasses.add(className);
       }
     }
-    return false;
+    return primaryDexClasses.build();
   }
 
   public class DexStoreContents {
     private List<List<DexWithClasses>> secondaryDexesContents = new ArrayList<>();
     private int primaryDexSize;
-    private List<DexWithClasses> primaryDexContents;
+    private Map<DexWithClasses, List<String>> primaryDexContents;
     private int currentSecondaryDexSize;
     private List<DexWithClasses> currentSecondaryDexContents;
 
@@ -150,12 +156,12 @@ public class PreDexedFilesSorter {
       currentSecondaryDexSize = 0;
       currentSecondaryDexContents = new ArrayList<>();
       primaryDexSize = 0;
-      primaryDexContents = new ArrayList<>();
+      primaryDexContents = new HashMap<>();
     }
 
-    public void addPrimaryDex(DexWithClasses dexWithClasses) {
+    public void addPrimaryDex(DexWithClasses dexWithClasses, List<String> classNames) {
       primaryDexSize += dexWithClasses.getWeightEstimate();
-      primaryDexContents.add(dexWithClasses);
+      primaryDexContents.put(dexWithClasses, classNames);
       primaryDexInputMetadata.put(
           getJarName(dexWithClasses),
           ImmutableDexMetadata.ofImpl(
@@ -212,8 +218,17 @@ public class PreDexedFilesSorter {
         secondaryOutputToInputs.putAll(pathToSecondaryDex, dexContentPaths);
       }
 
-      ImmutableMap.Builder<String, SourcePath> builder = ImmutableMap.builder();
-      primaryDexContents.forEach(dex -> builder.put(getJarName(dex), dex.getSourcePathToDexFile()));
+      ImmutableSortedSet.Builder<PrimaryDexInput> builder =
+          ImmutableSortedSet.orderedBy(Comparator.comparing(PrimaryDexInput::getJarName));
+      primaryDexContents
+          .entrySet()
+          .forEach(
+              contents ->
+                  builder.add(
+                      new PrimaryDexInput(
+                          getJarName(contents.getKey()),
+                          contents.getKey().getSourcePathToDexFile(),
+                          contents.getValue())));
 
       return new Result(
           builder.build(),
@@ -313,14 +328,14 @@ public class PreDexedFilesSorter {
   }
 
   public static class Result {
-    public final Map<String, SourcePath> primaryDexInputs;
+    public final Set<PrimaryDexInput> primaryDexInputs;
     public final Multimap<Path, SourcePath> secondaryOutputToInputs;
     public final Map<Path, DexWithClasses> metadataTxtDexEntries;
     public final ImmutablePrimaryDexInputMetadata primaryDexInputMetadata;
     public final ImmutableMap<SourcePath, Sha1HashCode> secondaryDexInputHashes;
 
     public Result(
-        Map<String, SourcePath> primaryDexInputs,
+        Set<PrimaryDexInput> primaryDexInputs,
         Multimap<Path, SourcePath> secondaryOutputToInputs,
         Map<Path, DexWithClasses> metadataTxtDexEntries,
         ImmutablePrimaryDexInputMetadata primaryDexInputMetadata,
@@ -330,6 +345,27 @@ public class PreDexedFilesSorter {
       this.metadataTxtDexEntries = metadataTxtDexEntries;
       this.primaryDexInputMetadata = primaryDexInputMetadata;
       this.secondaryDexInputHashes = secondaryDexInputHashes;
+    }
+  }
+
+  /**
+   * Class containing information about a single input to the primary dex creation. Consists of a
+   * jarName, the source path to the jar, and the list of classes from the jar that should actually
+   * be put into the primary dex. Other classes in the jar will go into a secondary dex.
+   */
+  public static class PrimaryDexInput {
+    public final String jarName;
+    public final SourcePath sourcePath;
+    public final List<String> classNames;
+
+    public PrimaryDexInput(String jarName, SourcePath sourcePath, List<String> classNames) {
+      this.jarName = jarName;
+      this.sourcePath = sourcePath;
+      this.classNames = classNames;
+    }
+
+    public String getJarName() {
+      return jarName;
     }
   }
 }
