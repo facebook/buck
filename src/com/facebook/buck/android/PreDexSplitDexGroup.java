@@ -273,6 +273,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             filesystem,
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.of(secondaryDexDir),
             Optional.of(
                 Suppliers.ofInstance(

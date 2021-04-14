@@ -900,6 +900,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             getProjectFilesystem(),
             Optional.of(selectedPrimaryDexPath),
             Optional.of(primaryInputsToDex),
+            Optional.empty(),
             secondaryDexDir,
             secondaryOutputToInputs,
             hashInputJarsToDexStep,

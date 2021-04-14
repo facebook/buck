@@ -89,6 +89,55 @@ public class SmartDexingStepTest {
             outputFile.toPath(),
             outputHashFile,
             EnumSet.of(D8Step.Option.NO_OPTIMIZE),
+            Optional.empty(),
+            XzStep.DEFAULT_COMPRESSION_LEVEL,
+            D8Step.D8,
+            null,
+            false,
+            Optional.empty());
+    assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
+
+    // Write the real hash into the output hash file and ensure that checkIsCached now
+    // yields true.
+    String actualHash = rule.hashInputs();
+    assertFalse(actualHash.isEmpty());
+    Files.write(actualHash, outputHashFile.toFile(), StandardCharsets.UTF_8);
+
+    assertTrue("Matching input hash should be considered cached", rule.checkIsCached());
+  }
+
+  /** Tests whether pseudo rule cache detection is working properly with primary class names. */
+  @Test
+  public void testDxPseudoRuleCachingWithPrimaryClassNamesFiles() throws Exception {
+    File testIn = new File(tmpDir.getRoot(), "testIn");
+    try (ZipOutputStream zipOut =
+        new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(testIn)))) {
+      zipOut.putNextEntry(new ZipEntry("foobar"));
+      zipOut.write(new byte[] {0});
+    }
+
+    File outputFile = tmpDir.newFile("out.dex");
+    Path outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash").toPath();
+    Files.write("dummy", outputHashFile.toFile(), StandardCharsets.UTF_8);
+
+    Path primaryDexClassNames = new File(tmpDir.getRoot(), "primary_dex_class_names.txt").toPath();
+    Files.write("some_name", primaryDexClassNames.toFile(), StandardCharsets.UTF_8);
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
+
+    Sha1HashCode actualHashCode = Sha1HashCode.of(Strings.repeat("a", 40));
+    DxPseudoRule rule =
+        new DxPseudoRule(
+            androidPlatformTarget,
+            FakeBuildContext.NOOP_CONTEXT,
+            filesystem,
+            ImmutableMap.of(testIn.toPath(), actualHashCode),
+            ImmutableSet.of(testIn.toPath()),
+            outputFile.toPath(),
+            outputHashFile,
+            EnumSet.of(D8Step.Option.NO_OPTIMIZE),
+            Optional.of(primaryDexClassNames),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             D8Step.D8,
             null,
@@ -125,6 +174,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         D8Step.D8,
         null,
@@ -167,6 +217,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         9,
         D8Step.D8,
         null,
@@ -208,6 +259,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         D8Step.D8,
         null,
@@ -243,6 +295,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         D8Step.D8,
         null,
@@ -278,6 +331,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         D8Step.D8,
         null,
@@ -317,6 +371,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         D8Step.D8,
         null,
@@ -344,6 +399,7 @@ public class SmartDexingStepTest {
         filesToDex,
         outputPath,
         dxOptions,
+        Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         D8Step.D8,
         null,

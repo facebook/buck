@@ -158,6 +158,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             Optional.of(this::getPrimaryDexInputs),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             this::resolvePrimaryDexInputHashPaths,
             paths.successDir,
             DX_MERGE_OPTIONS,

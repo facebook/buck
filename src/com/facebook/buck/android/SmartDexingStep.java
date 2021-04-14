@@ -90,6 +90,7 @@ public class SmartDexingStep implements Step {
   private final BuildContext buildContext;
   private final ProjectFilesystem filesystem;
   private final boolean desugarInterfaceMethods;
+  private final Optional<Path> primaryDexClassNamesPath;
   private final Supplier<Multimap<Path, Path>> outputToInputsSupplier;
   private final Optional<Path> secondaryOutputDir;
   private final DexInputHashesProvider dexInputHashesProvider;
@@ -122,6 +123,7 @@ public class SmartDexingStep implements Step {
       ProjectFilesystem filesystem,
       Optional<Path> primaryOutputPath,
       Optional<Supplier<Set<Path>>> primaryInputsToDex,
+      Optional<Path> primaryDexClassNamesPath,
       Optional<Path> secondaryOutputDir,
       Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
@@ -151,6 +153,7 @@ public class SmartDexingStep implements Step {
               }
               return map.build();
             });
+    this.primaryDexClassNamesPath = primaryDexClassNamesPath;
     this.secondaryOutputDir = secondaryOutputDir;
     this.dexInputHashesProvider = dexInputHashesProvider;
     this.successDir = successDir;
@@ -349,6 +352,7 @@ public class SmartDexingStep implements Step {
                     outputInputsPair.getKey(),
                     successDir.resolve(outputInputsPair.getKey().getFileName()),
                     dxOptions,
+                    primaryDexClassNamesPath,
                     xzCompressionLevel,
                     dexTool,
                     desugarInterfaceMethods
@@ -388,6 +392,7 @@ public class SmartDexingStep implements Step {
     private final Path outputPath;
     private final Path outputHashPath;
     private final EnumSet<Option> dxOptions;
+    private final Optional<Path> primaryDexClassNamesPath;
     @Nullable private String newInputsHash;
     private final int xzCompressionLevel;
     private final String dexTool;
@@ -404,6 +409,7 @@ public class SmartDexingStep implements Step {
         Path outputPath,
         Path outputHashPath,
         EnumSet<Option> dxOptions,
+        Optional<Path> primaryDexClassNamesPath,
         int xzCompressionLevel,
         String dexTool,
         @Nullable Collection<Path> classpathFiles,
@@ -417,6 +423,7 @@ public class SmartDexingStep implements Step {
       this.outputPath = outputPath;
       this.outputHashPath = outputHashPath;
       this.dxOptions = dxOptions;
+      this.primaryDexClassNamesPath = primaryDexClassNamesPath;
       this.xzCompressionLevel = xzCompressionLevel;
       this.dexTool = dexTool;
       this.classpathFiles = classpathFiles;
@@ -444,6 +451,16 @@ public class SmartDexingStep implements Step {
         Sha1HashCode hash = Objects.requireNonNull(dexInputHashes.get(src));
         hash.update(hasher);
       }
+
+      primaryDexClassNamesPath.ifPresent(
+          path -> {
+            try {
+              filesystem.computeSha1(path).update(hasher);
+            } catch (IOException e) {
+              throw new RuntimeException("Cannot calculate Sha1 for: " + path);
+            }
+          });
+
       return hasher.hash().toString();
     }
 
@@ -470,6 +487,7 @@ public class SmartDexingStep implements Step {
           srcs,
           outputPath,
           dxOptions,
+          primaryDexClassNamesPath,
           xzCompressionLevel,
           dexTool,
           classpathFiles,
@@ -494,6 +512,7 @@ public class SmartDexingStep implements Step {
       Collection<Path> filesToDex,
       Path outputPath,
       EnumSet<Option> dxOptions,
+      Optional<Path> primaryDexClassNamesPath,
       int xzCompressionLevel,
       String dexTool,
       @Nullable Collection<Path> classpathFiles,
@@ -523,7 +542,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               filesToDex,
               dxOptions,
-              Optional.empty(),
+              primaryDexClassNamesPath,
               dexTool,
               false,
               classpathFiles,
@@ -564,7 +583,7 @@ public class SmartDexingStep implements Step {
               tempDexJarOutput,
               filesToDex,
               dxOptions,
-              Optional.empty(),
+              primaryDexClassNamesPath,
               dexTool,
               false,
               classpathFiles,
@@ -590,7 +609,8 @@ public class SmartDexingStep implements Step {
               outputPath.resolveSibling(outputPath.getFileName() + ".meta")));
     } else if (DexStore.JAR.matchesPath(outputPath)
         || DexStore.RAW.matchesPath(outputPath)
-        || output.endsWith("classes.dex")) {
+        || output.endsWith("classes.dex")
+        || primaryDexClassNamesPath.isPresent()) {
       steps.add(
           new D8Step(
               filesystem,
@@ -598,7 +618,7 @@ public class SmartDexingStep implements Step {
               outputPath,
               filesToDex,
               dxOptions,
-              Optional.empty(),
+              primaryDexClassNamesPath,
               dexTool,
               false,
               classpathFiles,
