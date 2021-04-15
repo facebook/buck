@@ -35,12 +35,8 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -133,16 +129,6 @@ class DaemonicCellState {
   @GuardedBy("cachesLock")
   private final ConcurrentHashMap<AbsPath, Set<AbsPath>> packageFileDependents;
 
-  /**
-   * Contains environment variables used during parsing of a particular build file.
-   *
-   * <p>The purpose of this map is to invalidate build file manifest if the values of environment
-   * variables used during parsing of a build file that produced that build file manifest have
-   * changed.
-   */
-  @GuardedBy("cachesLock")
-  private final ConcurrentHashMap<AbsPath, ImmutableMap<String, Optional<String>>> buildFileEnv;
-
   /** Used as an unbounded cache to stored build file manifests by build file path. */
   @GuardedBy("cachesLock")
   private final ConcurrentMapCache<AbsPath, BuildFileManifest> allBuildFileManifests;
@@ -213,7 +199,6 @@ class DaemonicCellState {
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = new ConcurrentHashMap<>();
     this.packageFileDependents = new ConcurrentHashMap<>();
-    this.buildFileEnv = new ConcurrentHashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allPackageFileManifests = new ConcurrentMapCache<>(parsingThreads);
     this.allRawNodeTargets = Collections.newSetFromMap(new ConcurrentHashMap<>());
@@ -242,8 +227,7 @@ class DaemonicCellState {
   BuildFileManifest putBuildFileManifestIfNotPresent(
       AbsPath buildFile,
       BuildFileManifest buildFileManifest,
-      ImmutableSet<AbsPath> dependentsOfEveryNode,
-      ImmutableMap<String, Optional<String>> env) {
+      ImmutableSet<AbsPath> dependentsOfEveryNode) {
     try (AutoCloseableLock readLock = cachesLock.readLock()) {
       BuildFileManifest updated =
           allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
@@ -252,7 +236,6 @@ class DaemonicCellState {
             UnflavoredBuildTargetFactory.createFromRawNode(
                 cellRoot.getPath(), cellCanonicalName, node, buildFile.getPath()));
       }
-      buildFileEnv.put(buildFile, env);
       if (updated == buildFileManifest) {
         // We now know all the nodes. They all implicitly depend on everything in
         // the "dependentsOfEveryNode" set.
@@ -273,13 +256,11 @@ class DaemonicCellState {
   PackageFileManifest putPackageFileManifestIfNotPresent(
       AbsPath packageFile,
       PackageFileManifest packageFileManifest,
-      ImmutableSet<AbsPath> packageDependents,
-      ImmutableMap<String, Optional<String>> env) {
+      ImmutableSet<AbsPath> packageDependents) {
     try (AutoCloseableLock readLock = cachesLock.readLock()) {
       PackageFileManifest updated =
           allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
       if (updated == packageFileManifest) {
-        buildFileEnv.put(packageFile, env);
         // The package file will depend on all dependents and we keep a reverse mapping to know
         // which package files to invalidate if a dependent changes.
         for (AbsPath dependent : packageDependents) {
@@ -374,7 +355,6 @@ class DaemonicCellState {
         // Package files do not invalidate the build file (as the build file does not need to be
         // re-parsed). This means the dependents of the package remain intact.
         buildFileDependents.remove(path);
-        buildFileEnv.remove(path);
       }
 
       // We may have been given a file that package files depends on. Iteratively invalidate those
@@ -400,31 +380,6 @@ class DaemonicCellState {
 
       return invalidatedRawNodes;
     }
-  }
-
-  Optional<MapDifference<String, String>> invalidateIfEnvHasChanged(Cell cell, AbsPath buildFile) {
-    // Invalidate if env vars have changed.
-    ImmutableMap<String, Optional<String>> usedEnv = buildFileEnv.get(buildFile);
-    if (usedEnv == null) {
-      this.cell.set(cell);
-      return Optional.empty();
-    }
-    for (Map.Entry<String, Optional<String>> ent : usedEnv.entrySet()) {
-      Optional<String> value =
-          Optional.ofNullable(cell.getBuckConfig().getEnvironment().get(ent.getKey()));
-      if (!value.equals(ent.getValue())) {
-        LOG.verbose("invalidating for env change: %s (%s != %s)", buildFile, value, ent.getValue());
-        invalidatePath(buildFile, true);
-        this.cell.set(cell);
-        return Optional.of(
-            Maps.difference(
-                value.map(v -> ImmutableMap.of(ent.getKey(), v)).orElse(ImmutableMap.of()),
-                ent.getValue()
-                    .map(v -> ImmutableMap.of(ent.getKey(), v))
-                    .orElse(ImmutableMap.of())));
-      }
-    }
-    return Optional.empty();
   }
 
   /** @return {@code true} if the given path has dependencies that are present in the given set. */

@@ -92,8 +92,7 @@ public class DaemonicCellStateTest {
                     ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(
                         ImmutableMap.of("name", target.getShortName()))))),
-        ImmutableSet.of(),
-        ImmutableMap.of());
+        ImmutableSet.of());
   }
 
   @Before
@@ -181,8 +180,7 @@ public class DaemonicCellStateTest {
                     ImmutableList.of(),
                     ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "target"))))),
-        ImmutableSet.of(),
-        ImmutableMap.of());
+        ImmutableSet.of());
     assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath, true));
     assertEquals(
         "Cell-named target should still be invalidated",
@@ -196,8 +194,7 @@ public class DaemonicCellStateTest {
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     PackageFileManifest cachedManifest =
-        state.putPackageFileManifestIfNotPresent(
-            packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
+        state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
 
     assertSame(cachedManifest, manifest);
 
@@ -209,8 +206,7 @@ public class DaemonicCellStateTest {
             ImmutableList.of());
 
     cachedManifest =
-        state.putPackageFileManifestIfNotPresent(
-            packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
+        state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
 
     assertNotSame(secondaryManifest, cachedManifest);
   }
@@ -224,8 +220,7 @@ public class DaemonicCellStateTest {
     assertFalse(lookupManifest.isPresent());
 
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
-    state.putPackageFileManifestIfNotPresent(
-        packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
+    state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertSame(lookupManifest.get(), manifest);
   }
@@ -235,8 +230,7 @@ public class DaemonicCellStateTest {
     AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
-    state.putPackageFileManifestIfNotPresent(
-        packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
+    state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
@@ -259,8 +253,7 @@ public class DaemonicCellStateTest {
 
     AbsPath dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
 
-    state.putPackageFileManifestIfNotPresent(
-        packageFile, manifest, ImmutableSet.of(dependentFile), ImmutableMap.of());
+    state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of(dependentFile));
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());

@@ -33,7 +33,6 @@ import com.facebook.buck.counters.Counter;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
@@ -54,7 +53,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.MapDifference;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
@@ -119,11 +117,6 @@ public class DaemonicParserState {
     public Optional<T> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      AbsPath buildFile =
-          cell.getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFileUnsafe(
-                  cell, type.convertToUnconfiguredBuildTargetView(target));
-      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
       DaemonicCellState.Cache<K, T> state = getCache(cell);
       if (state == null) {
@@ -148,11 +141,6 @@ public class DaemonicParserState {
           cell.getBuckConfigView(ParserConfig.class)
               .getAbsolutePathToBuildFileUnsafe(
                   cell, type.convertToUnconfiguredBuildTargetView(target));
-      Preconditions.checkState(
-          !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus),
-          "Unexpected invalidation due to config/env change for %s %s",
-          cell.getRoot(),
-          target);
 
       if (targetIsConfiguration) {
         configurationBuildFiles.add(buildFile);
@@ -182,7 +170,6 @@ public class DaemonicParserState {
     public Optional<BuildFileManifest> lookupComputedNode(
         Cell cell, AbsPath buildFile, BuckEventBus eventBus) throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
@@ -226,8 +213,7 @@ public class DaemonicParserState {
       }
 
       return getOrCreateCellState(cell)
-          .putBuildFileManifestIfNotPresent(
-              buildFile, manifest, dependentsOfEveryNode.build(), ImmutableMap.of());
+          .putBuildFileManifestIfNotPresent(buildFile, manifest, dependentsOfEveryNode.build());
     }
   }
 
@@ -239,7 +225,6 @@ public class DaemonicParserState {
     public Optional<PackageFileManifest> lookupComputedNode(
         Cell cell, AbsPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      invalidateIfBuckConfigOrEnvHasChanged(cell, packageFile, eventBus);
 
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
@@ -270,8 +255,7 @@ public class DaemonicParserState {
       parentPackageFile.ifPresent(path -> packageDependents.add(path));
 
       return getOrCreateCellState(cell)
-          .putPackageFileManifestIfNotPresent(
-              packageFile, manifest, packageDependents.build(), ImmutableMap.of());
+          .putPackageFileManifestIfNotPresent(packageFile, manifest, packageDependents.build());
     }
   }
 
@@ -628,42 +612,6 @@ public class DaemonicParserState {
 
   public static boolean isPathCreateOrDeleteEvent(WatchmanPathEvent event) {
     return event.getKind() == Kind.CREATE || event.getKind() == Kind.DELETE;
-  }
-
-  private boolean invalidateIfBuckConfigOrEnvHasChanged(
-      Cell cell, AbsPath buildFile, BuckEventBus eventBus) {
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
-      DaemonicCellState state = cellToDaemonicState.get(cell.getCanonicalName());
-      if (state == null) {
-        return false;
-      }
-
-      // Keep track of any invalidations.
-      boolean hasInvalidated = false;
-
-      // Currently, if `.buckconfig` settings change, we restart the entire daemon, meaning checking
-      // for `.buckconfig`-based invalidations is redundant. (see
-      // {@link com.facebook.buck.cli.DaemonLifecycleManager#getDaemon} for where we restart the
-      // daemon and {@link com.facebook.buck.config.BuckConfig's static initializer for the
-      // whitelist of fields.
-
-      // Invalidate based on env vars.
-      Optional<MapDifference<String, String>> envDiff =
-          state.invalidateIfEnvHasChanged(cell, buildFile);
-      if (envDiff.isPresent()) {
-        hasInvalidated = true;
-        MapDifference<String, String> diff = envDiff.get();
-        LOG.info("Invalidating cache on environment change (%s)", diff);
-        Set<String> environmentChanges = new HashSet<>();
-        environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
-        environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());
-        environmentChanges.addAll(diff.entriesDiffering().keySet());
-        cacheInvalidatedByEnvironmentVariableChangeCounter.addAll(environmentChanges);
-        eventBus.post(ParsingEvent.environmentalChange(environmentChanges.toString()));
-      }
-
-      return hasInvalidated;
-    }
   }
 
   private boolean invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
