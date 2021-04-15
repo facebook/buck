@@ -83,6 +83,26 @@ if native_libs_preload is not None:
         for l in native_libs_preload.split(":")
     )
 
+module_call = "runpy._run_module_as_main({main_module!r}, False)".format(
+    main_module=main_module
+)
+
+# Allow users to run the main module under pdb. Encode the call into the
+# startup script, because pdb does not support the -c argument we use to invoke
+# our startup wrapper.
+#
+# Note: use pop to avoid leaking the environment variable to the child process.
+if os.environ.pop("PYTHONDEBUGWITHPDB", None):
+    # Note: indentation of this block of code is important as it gets included
+    # in the bigger block below.
+    module_call = """
+    from pdb import Pdb
+    pdb = Pdb()
+    pdb.runcall(runpy._run_module_as_main, {main_module!r}, False)
+""".format(
+        main_module=main_module,
+    )
+
 # Note: this full block of code will be included as the argument to Python,
 # and will be the first thing that shows up in the process arguments as displayed
 # by programs like ps and top.
@@ -125,7 +145,7 @@ def __run():
             setenv(k, v)
 
     restoreenv({env_vals!r})
-    runpy._run_module_as_main({main_module!r}, False)
+    {module_call}
 
 __run()
 """.format(
@@ -134,6 +154,7 @@ __run()
     env_vals=env_vals_to_restore,
     main_module=main_module,
     this_file=__file__,
+    module_call=module_call,
 )
 
 args = [sys.executable, "<PYTHON_INTERPRETER_FLAGS>", "-c", STARTUP]
