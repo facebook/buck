@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -147,7 +146,6 @@ public class EventReportingProjectBuildFileParserTest {
             ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
-            Optional.empty(),
             ImmutableList.of(),
             ImmutableList.of());
     assertSame(allRulesAndMetadata, parser.getManifest(somePath));

@@ -36,7 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import org.easymock.EasyMock;
 import org.junit.Before;
 import org.junit.Test;
@@ -122,7 +121,6 @@ public class TargetCountVerificationParserDecoratorTest {
         TwoArraysImmutableHashMap.copyOf(rawTargets),
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
-        Optional.empty(),
         ImmutableList.of(),
         ImmutableList.of());
   }

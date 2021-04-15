@@ -24,7 +24,6 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 
 /** Describes the content of a build file, which includes defined targets and their metadata. */
 @BuckStyleValue
@@ -38,9 +37,6 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   @Override
   public abstract ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
 
-  @Override
-  public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
-
   /** @return A list of the glob operations performed with their results. */
   public abstract ImmutableList<GlobSpecWithResult> getGlobManifest();
 
@@ -51,9 +47,8 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
       TwoArraysImmutableHashMap<String, RawTargetNode> targets,
       ImmutableSet<String> includes,
       ImmutableMap<String, Object> configs,
-      Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<GlobSpecWithResult> globManifest,
       ImmutableList<ParsingError> errors) {
-    return ImmutableBuildFileManifest.ofImpl(targets, includes, configs, env, globManifest, errors);
+    return ImmutableBuildFileManifest.ofImpl(targets, includes, configs, globManifest, errors);
   }
 }

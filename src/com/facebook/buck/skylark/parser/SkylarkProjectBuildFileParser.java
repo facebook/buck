@@ -162,7 +162,6 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
           parseResult.getLoadedPaths(),
           (ImmutableMap<String, Object>)
               (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
-          Optional.empty(),
           parseResult.getGlobManifestWithResult(),
           ImmutableList.of());
     } finally {

@@ -197,7 +197,7 @@ public class DaemonicCellStateTest {
 
     PackageFileManifest cachedManifest =
         state.putPackageFileManifestIfNotPresent(
-            packageFile, manifest, ImmutableSet.of(), manifest.getEnv().orElse(ImmutableMap.of()));
+            packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
 
     assertSame(cachedManifest, manifest);
 
@@ -206,12 +206,11 @@ public class DaemonicCellStateTest {
             PackageMetadata.EMPTY_SINGLETON,
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
-            Optional.empty(),
             ImmutableList.of());
 
     cachedManifest =
         state.putPackageFileManifestIfNotPresent(
-            packageFile, manifest, ImmutableSet.of(), manifest.getEnv().orElse(ImmutableMap.of()));
+            packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
 
     assertNotSame(secondaryManifest, cachedManifest);
   }
@@ -226,7 +225,7 @@ public class DaemonicCellStateTest {
 
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
     state.putPackageFileManifestIfNotPresent(
-        packageFile, manifest, ImmutableSet.of(), manifest.getEnv().orElse(ImmutableMap.of()));
+        packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertSame(lookupManifest.get(), manifest);
   }
@@ -237,7 +236,7 @@ public class DaemonicCellStateTest {
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     state.putPackageFileManifestIfNotPresent(
-        packageFile, manifest, ImmutableSet.of(), manifest.getEnv().orElse(ImmutableMap.of()));
+        packageFile, manifest, ImmutableSet.of(), ImmutableMap.of());
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
@@ -261,10 +260,7 @@ public class DaemonicCellStateTest {
     AbsPath dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
 
     state.putPackageFileManifestIfNotPresent(
-        packageFile,
-        manifest,
-        ImmutableSet.of(dependentFile),
-        manifest.getEnv().orElse(ImmutableMap.of()));
+        packageFile, manifest, ImmutableSet.of(dependentFile), ImmutableMap.of());
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());

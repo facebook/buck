@@ -1111,8 +1111,6 @@ public class SkylarkProjectBuildFileParserTest {
         Matchers.containsInAnyOrder("BUCK", "build_rules.bzl"));
     Map<String, Object> configs = buildFileManifest.getReadConfigurationOptionsForTest();
     assertThat(configs, equalTo(ImmutableMap.of()));
-    Optional<ImmutableMap<String, Optional<String>>> env = buildFileManifest.getEnv();
-    assertFalse(env.isPresent());
   }
 
   @Test

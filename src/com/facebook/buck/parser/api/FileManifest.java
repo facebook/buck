@@ -20,7 +20,6 @@ import com.facebook.buck.parser.exceptions.ParsingError;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 
 /** The {@link FileManifest} output as a result of parsing a file with a {@link FileParser}. */
 public interface FileManifest {
@@ -34,9 +33,6 @@ public interface FileManifest {
    *     BUCK file, but not from included bzl files.
    */
   ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
-
-  /** @return an optional map from environment variable to a value read during parsing (if any). */
-  Optional<ImmutableMap<String, Optional<String>>> getEnv();
 
   /**
    * @return A list of fatal errors occurred during parsing a file, i.e. errors that might render

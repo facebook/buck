@@ -487,7 +487,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
             TwoArraysImmutableHashMap.of(),
             ImmutableSet.of(),
             ImmutableMap.of(),
-            Optional.empty(),
             ImmutableList.of(),
             ImmutableList.of());
       }
@@ -522,7 +521,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         ImmutableMap.copyOf(
             Objects.requireNonNull(
                 (Map<String, Object>) values.get(values.size() - 1).get(MetaRules.CONFIGS))),
-        Optional.of(ImmutableMap.of()),
         ImmutableList.of(),
         ImmutableList.of());
   }

@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /** Parses build file to {@link BuildFileManifest} structure */
 public class BuildPackagePathToBuildFileManifestComputation
@@ -84,7 +83,6 @@ public class BuildPackagePathToBuildFileManifestComputation
           TwoArraysImmutableHashMap.of(),
           ImmutableSet.of(),
           ImmutableMap.of(),
-          Optional.empty(),
           ImmutableList.of(),
           ImmutableList.of(ParsingError.from(ex)));
     }

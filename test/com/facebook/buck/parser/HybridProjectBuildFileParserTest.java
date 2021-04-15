@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Files;
-import java.util.Optional;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
@@ -50,7 +49,6 @@ public class HybridProjectBuildFileParserTest {
           TwoArraysImmutableHashMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
-          Optional.empty(),
           ImmutableList.of(),
           ImmutableList.of());
 

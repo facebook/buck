@@ -22,7 +22,6 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 
 public class BuildFileManifestFactory {
 
@@ -33,7 +32,6 @@ public class BuildFileManifestFactory {
         targets,
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
-        Optional.empty(),
         ImmutableList.of(),
         ImmutableList.of());
   }
@@ -42,10 +40,9 @@ public class BuildFileManifestFactory {
       ImmutableMap<String, RawTargetNode> targets,
       ImmutableSortedSet<String> includes,
       ImmutableMap<String, Object> configs,
-      Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<GlobSpecWithResult> globManifest,
       ImmutableList<ParsingError> errors) {
     return BuildFileManifest.of(
-        TwoArraysImmutableHashMap.copyOf(targets), includes, configs, env, globManifest, errors);
+        TwoArraysImmutableHashMap.copyOf(targets), includes, configs, globManifest, errors);
   }
 }

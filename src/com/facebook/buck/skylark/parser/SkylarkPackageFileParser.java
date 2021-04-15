@@ -114,7 +114,6 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
           parseResult.getLoadedPaths(),
           (ImmutableMap<String, Object>)
               (ImmutableMap<String, ? extends Object>) parseResult.getReadConfigurationOptions(),
-          Optional.empty(),
           ImmutableList.of());
     } finally {
       LOG.verbose("Finished parsing package file %s", packageFile);

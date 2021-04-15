@@ -44,7 +44,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -64,7 +63,6 @@ public class ProjectBuildFileParserPoolTest {
           TwoArraysImmutableHashMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),
-          Optional.empty(),
           ImmutableList.of(),
           ImmutableList.of());
 

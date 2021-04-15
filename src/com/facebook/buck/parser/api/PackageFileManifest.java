@@ -22,7 +22,6 @@ import com.facebook.buck.parser.exceptions.ParsingError;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 
 /**
  * Describes the content of a package file, which includes a package definition and their metadata.
@@ -36,7 +35,6 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
           PackageMetadata.EMPTY_SINGLETON,
           ImmutableSet.of(),
           ImmutableMap.of(),
-          Optional.empty(),
           ImmutableList.of());
 
   /** Contains the package defined in the build file. */
@@ -49,17 +47,13 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
   public abstract ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
 
   @Override
-  public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();
-
-  @Override
   public abstract ImmutableList<ParsingError> getErrors();
 
   public static PackageFileManifest of(
       PackageMetadata getPackage,
       ImmutableSet<String> includes,
       ImmutableMap<String, Object> configs,
-      Optional<ImmutableMap<String, Optional<String>>> env,
       ImmutableList<ParsingError> errors) {
-    return ImmutablePackageFileManifest.ofImpl(getPackage, includes, configs, env, errors);
+    return ImmutablePackageFileManifest.ofImpl(getPackage, includes, configs, errors);
   }
 }

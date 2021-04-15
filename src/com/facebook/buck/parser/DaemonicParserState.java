@@ -227,10 +227,7 @@ public class DaemonicParserState {
 
       return getOrCreateCellState(cell)
           .putBuildFileManifestIfNotPresent(
-              buildFile,
-              manifest,
-              dependentsOfEveryNode.build(),
-              manifest.getEnv().orElse(ImmutableMap.of()));
+              buildFile, manifest, dependentsOfEveryNode.build(), ImmutableMap.of());
     }
   }
 
@@ -274,10 +271,7 @@ public class DaemonicParserState {
 
       return getOrCreateCellState(cell)
           .putPackageFileManifestIfNotPresent(
-              packageFile,
-              manifest,
-              packageDependents.build(),
-              manifest.getEnv().orElse(ImmutableMap.of()));
+              packageFile, manifest, packageDependents.build(), ImmutableMap.of());
     }
   }
 

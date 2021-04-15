@@ -148,7 +148,6 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
                     TwoArraysImmutableHashMap.copyOf(rawAttributes2))),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
-            Optional.empty(),
             ImmutableList.of(),
             ImmutableList.of());
 
