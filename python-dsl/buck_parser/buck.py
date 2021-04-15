@@ -1924,9 +1924,6 @@ class BuildFileProcessor(object):
         # Add in tracked used config settings as a special meta rule.
         values.append({"__configs": build_env.used_configs})
 
-        # Add in used environment variables as a special meta rule.
-        values.append({"__env": {}})
-
         diagnostics.extend(build_env.diagnostics)
 
         return values

@@ -31,7 +31,5 @@ public class MetaRules {
 
   public static final String CONFIGS = "__configs";
 
-  public static final String ENV = "__env";
-
   private MetaRules() {}
 }

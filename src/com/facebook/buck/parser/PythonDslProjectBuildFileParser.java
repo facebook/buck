@@ -515,19 +515,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private BuildFileManifest toBuildFileManifest(
       ImmutableList<TwoArraysImmutableHashMap<String, Object>> values) {
     return BuildFileManifest.of(
-        indexTargetsByName(values.subList(0, values.size() - 3).asList()),
+        indexTargetsByName(values.subList(0, values.size() - 2).asList()),
         ImmutableSet.copyOf(
             Objects.requireNonNull(
-                (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
+                (List<String>) values.get(values.size() - 2).get(MetaRules.INCLUDES))),
         ImmutableMap.copyOf(
             Objects.requireNonNull(
-                (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS))),
-        Optional.of(
-            ImmutableMap.copyOf(
-                Maps.transformValues(
-                    Objects.requireNonNull(
-                        (Map<String, String>) values.get(values.size() - 1).get(MetaRules.ENV)),
-                    Optional::ofNullable))),
+                (Map<String, Object>) values.get(values.size() - 1).get(MetaRules.CONFIGS))),
+        Optional.of(ImmutableMap.of()),
         ImmutableList.of(),
         ImmutableList.of());
   }

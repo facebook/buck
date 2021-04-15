@@ -562,7 +562,6 @@ public class PythonDslProjectBuildFileParserTest {
                           .addAll(targets)
                           .add(ImmutableMap.of(MetaRules.INCLUDES, ImmutableList.of()))
                           .add(ImmutableMap.of(MetaRules.CONFIGS, ImmutableMap.of()))
-                          .add(ImmutableMap.of(MetaRules.ENV, ImmutableMap.of()))
                           .build(),
                       Optional.of(ImmutableList.of()),
                       Optional.empty()),
@@ -578,7 +577,7 @@ public class PythonDslProjectBuildFileParserTest {
               params ->
                   fakeProcessWithJsonOutput(
                       0,
-                      ImmutableList.of(MetaRules.INCLUDES, MetaRules.CONFIGS, MetaRules.ENV),
+                      ImmutableList.of(MetaRules.INCLUDES, MetaRules.CONFIGS),
                       Optional.empty(),
                       Optional.empty()),
               new TestConsole()),
