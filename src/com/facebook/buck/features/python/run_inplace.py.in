@@ -93,14 +93,26 @@ module_call = "runpy._run_module_as_main({main_module!r}, False)".format(
 #
 # Note: use pop to avoid leaking the environment variable to the child process.
 if os.environ.pop("PYTHONDEBUGWITHPDB", None):
+    # Support passing initial commands to pdb. We cannot pass the -c argument
+    # to pdb. Instead, allow users to pass initial commands through the
+    # PYTHONPDBINITIALCOMMANDS env var, separated by the | character.
+    initial_commands = []
+    if "PYTHONPDBINITIALCOMMANDS" in os.environ:
+        # Note: use pop to avoid leaking the environment variable to the child
+        # process.
+        initial_commands_string = os.environ.pop("PYTHONPDBINITIALCOMMANDS", None)
+        initial_commands = initial_commands_string.split("|")
+
     # Note: indentation of this block of code is important as it gets included
     # in the bigger block below.
     module_call = """
     from pdb import Pdb
     pdb = Pdb()
+    pdb.rcLines.extend({initial_commands!r})
     pdb.runcall(runpy._run_module_as_main, {main_module!r}, False)
 """.format(
         main_module=main_module,
+        initial_commands=initial_commands,
     )
 
 # Note: this full block of code will be included as the argument to Python,
