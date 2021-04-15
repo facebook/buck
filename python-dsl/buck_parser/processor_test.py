@@ -70,47 +70,6 @@ def get_config_from_results(results):
     return extract_from_results("__configs", results)
 
 
-def get_env_from_results(results):
-    return extract_from_results("__env", results)
-
-
-def setenv(varname, value=None):
-    if value is None:
-        os.environ.pop(varname, None)
-    else:
-        os.environ[varname] = value
-
-
-@contextlib.contextmanager
-def with_env(varname, value=None):
-    saved = os.environ.get(varname)
-    setenv(varname, value)
-    try:
-        yield
-    finally:
-        setenv(varname, saved)
-
-
-@contextlib.contextmanager
-def with_envs_py2(envs):
-    with contextlib.nested(*[with_env(n, v) for n, v in iteritems(envs)]):
-        yield
-
-
-@contextlib.contextmanager
-def with_envs_py3(envs):
-    with contextlib.ExitStack() as stack:
-        for n, v in iteritems(envs):
-            stack.enter_context(with_env(n, v))
-        yield
-
-
-if sys.version_info[0] == 2:
-    with_envs = with_envs_py2
-else:
-    with_envs = with_envs_py3
-
-
 class ProjectFile(object):
     def __init__(self, root, path, contents):
         # type: (str, str, Sequence[str]) -> None
@@ -1171,11 +1130,10 @@ class BuckTest(unittest.TestCase):
             ),
         )
         self.write_files(build_file)
-        with with_envs({"TEST1": "foo"}):
-            build_file_processor = self.create_build_file_processor()
-            build_file_processor.process(
-                build_file.root, build_file.prefix, build_file.path, [], None
-            )
+        build_file_processor = self.create_build_file_processor()
+        build_file_processor.process(
+            build_file.root, build_file.prefix, build_file.path, [], None
+        )
 
     def test_safe_modules_block_unsafe_functions(self):
         """

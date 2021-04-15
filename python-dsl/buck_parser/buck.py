@@ -133,11 +133,6 @@ class AbstractContext(object):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def used_env_vars(self):
-        # type: () -> Dict[str, str]
-        raise NotImplementedError()
-
-    @abc.abstractproperty
     def diagnostics(self):
         # type: () -> List[Diagnostic]
         raise NotImplementedError()
@@ -161,7 +156,6 @@ class AbstractContext(object):
         self.includes.update(other.includes)
         self.diagnostics.extend(other.diagnostics)
         self.used_configs.update(other.used_configs)
-        self.used_env_vars.update(other.used_env_vars)
         self.user_rules.update(other.user_rules)
 
 
@@ -188,7 +182,6 @@ class BuildFileContext(AbstractContext):
         self.globals = {}
         self._includes = set()
         self._used_configs = collections.defaultdict(dict)
-        self._used_env_vars = {}
         self._diagnostics = []
         self._user_rules = set()
         self.rules = {}
@@ -217,10 +210,6 @@ class BuildFileContext(AbstractContext):
         return self._used_configs
 
     @property
-    def used_env_vars(self):
-        return self._used_env_vars
-
-    @property
     def diagnostics(self):
         return self._diagnostics
 
@@ -245,7 +234,6 @@ class IncludeContext(AbstractContext):
         self.globals = {}
         self._includes = set()
         self._used_configs = collections.defaultdict(dict)
-        self._used_env_vars = {}
         self._diagnostics = []
         self._user_rules = set()
 
@@ -256,10 +244,6 @@ class IncludeContext(AbstractContext):
     @property
     def used_configs(self):
         return self._used_configs
-
-    @property
-    def used_env_vars(self):
-        return self._used_env_vars
 
     @property
     def diagnostics(self):
@@ -1245,58 +1229,6 @@ class BuildFileProcessor(object):
             + ["glob", "host_info", "read_config", "implicit_package_symbol"],
         )
 
-    def _wrap_env_var_read(self, read, real):
-        """
-        Return wrapper around function that reads an environment variable so
-        that the read is recorded.
-        """
-
-        @functools.wraps(real)
-        def wrapper(_inner_self, varname, *arg, **kwargs):
-            self._record_env_var(varname, read(varname))
-            return real(_inner_self, varname, *arg, **kwargs)
-
-        # Save the real function for restoration.
-        wrapper._real = real
-
-        return wrapper
-
-    @contextlib.contextmanager
-    def _with_env_interceptor(self, read, obj, *attrs):
-        """
-        Wrap a function, found at `obj.attr`, that reads an environment
-        variable in a new function which records the env var read.
-        """
-
-        orig = []
-        for attr in attrs:
-            real = getattr(obj, attr)
-            wrapped = self._wrap_env_var_read(read, real)
-            setattr(obj, attr, wrapped)
-            orig.append((attr, real))
-        try:
-            yield
-        finally:
-            for attr, real in orig:
-                setattr(obj, attr, real)
-
-    @contextlib.contextmanager
-    def with_env_interceptors(self):
-        """
-        Install environment variable read interceptors into all known ways that
-        a build file can access the environment.
-        """
-
-        # Use a copy of the env to provide a function to get at the low-level
-        # environment.  The wrappers will use this when recording the env var.
-        read = dict(os.environ).get
-
-        # Install interceptors into the main ways a user can read the env.
-        with self._with_env_interceptor(
-            read, os.environ.__class__, "__contains__", "__getitem__", "get"
-        ):
-            yield
-
     @staticmethod
     def _merge_explicit_globals(src, dst, whitelist=None, whitelist_mapping=None):
         # type: (types.ModuleType, Dict[str, Any], Tuple[str], Dict[str, str]) -> None
@@ -1561,21 +1493,6 @@ class BuildFileProcessor(object):
             search_base=search_base,
             build_env=build_env,
         )
-
-    def _record_env_var(self, name, value):
-        # type: (str, Any) -> None
-        """
-        Record a read of an environment variable.
-
-        This method is meant to wrap methods in `os.environ` when called from
-        any files or includes that we process.
-        """
-
-        # Grab the current build context from the top of the stack.
-        build_env = self._current_build_env
-
-        # Lookup the value and record it in this build file's context.
-        build_env.used_env_vars[name] = value
 
     def _called_from_project_file(self):
         # type: () -> bool
@@ -2008,7 +1925,7 @@ class BuildFileProcessor(object):
         values.append({"__configs": build_env.used_configs})
 
         # Add in used environment variables as a special meta rule.
-        values.append({"__env": build_env.used_env_vars})
+        values.append({"__env": {}})
 
         diagnostics.extend(build_env.diagnostics)
 
@@ -2361,51 +2278,46 @@ def main():
 
     # Process the build files with the env var interceptors and builtins
     # installed.
-    with build_file_processor.with_env_interceptors():
-        with build_file_processor.with_builtins(builtins.__dict__):
-            processed_build_file = []
+    with build_file_processor.with_builtins(builtins.__dict__):
+        processed_build_file = []
 
-            profiler = None
-            if options.profile:
-                profiler = Profiler(True)
-                profiler.start()
-                Tracer.enable()
+        profiler = None
+        if options.profile:
+            profiler = Profiler(True)
+            profiler.start()
+            Tracer.enable()
 
-            for build_file in args:
-                query = {
-                    "buildFile": build_file,
-                    "watchRoot": project_root,
-                    "projectPrefix": project_root,
-                }
+        for build_file in args:
+            query = {
+                "buildFile": build_file,
+                "watchRoot": project_root,
+                "projectPrefix": project_root,
+            }
+            duration = process_with_diagnostics(query, build_file_processor, to_parent)
+            processed_build_file.append({"buildFile": build_file, "duration": duration})
+
+        # From https://docs.python.org/2/using/cmdline.html :
+        #
+        # Note that there is internal buffering in file.readlines()
+        # and File Objects (for line in sys.stdin) which is not
+        # influenced by this option. To work around this, you will
+        # want to use file.readline() inside a while 1: loop.
+        for line in wait_and_read_build_file_query():
+            if line == "":
+                break
+            build_file_query = json.loads(line)
+            if build_file_query.get("command") == "report_profile":
+                report_profile(options, to_parent, processed_build_file, profiler)
+            else:
                 duration = process_with_diagnostics(
-                    query, build_file_processor, to_parent
+                    build_file_query, build_file_processor, to_parent
                 )
                 processed_build_file.append(
-                    {"buildFile": build_file, "duration": duration}
+                    {
+                        "buildFile": build_file_query["buildFile"],
+                        "duration": duration,
+                    }
                 )
-
-            # From https://docs.python.org/2/using/cmdline.html :
-            #
-            # Note that there is internal buffering in file.readlines()
-            # and File Objects (for line in sys.stdin) which is not
-            # influenced by this option. To work around this, you will
-            # want to use file.readline() inside a while 1: loop.
-            for line in wait_and_read_build_file_query():
-                if line == "":
-                    break
-                build_file_query = json.loads(line)
-                if build_file_query.get("command") == "report_profile":
-                    report_profile(options, to_parent, processed_build_file, profiler)
-                else:
-                    duration = process_with_diagnostics(
-                        build_file_query, build_file_processor, to_parent
-                    )
-                    processed_build_file.append(
-                        {
-                            "buildFile": build_file_query["buildFile"],
-                            "duration": duration,
-                        }
-                    )
 
     if options.quiet:
         sys.excepthook = orig_excepthook
