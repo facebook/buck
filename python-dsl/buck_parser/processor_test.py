@@ -1152,32 +1152,6 @@ class BuckTest(unittest.TestCase):
                 build_file.root, build_file.prefix, build_file.path, [], None
             )
 
-    def test_os_getenv(self):
-        """
-        Verify that calling `os.getenv()` records the environment variable.
-        """
-
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                "import os",
-                'assert os.getenv("TEST1") == "foo"',
-                'assert os.getenv("TEST2") is None',
-                'assert os.getenv("TEST3", "default") == "default"',
-            ),
-        )
-        self.write_file(build_file)
-        with with_envs({"TEST1": "foo", "TEST2": None, "TEST3": None}):
-            build_file_processor = self.create_build_file_processor()
-            with build_file_processor.with_env_interceptors():
-                result = build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, [], None
-                )
-        self.assertEquals(
-            get_env_from_results(result), {"TEST1": "foo", "TEST2": None, "TEST3": None}
-        )
-
     def test_safe_modules_allow_safe_functions(self):
         """
         Test that 'import os.path' allows access to safe 'os' functions,
