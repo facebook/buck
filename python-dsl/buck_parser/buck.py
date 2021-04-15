@@ -1084,7 +1084,7 @@ class BuildFileProcessor(object):
     """
 
     SAFE_MODULES_CONFIG = {
-        "os": ["environ", "getenv", "path", "sep", "pathsep", "linesep"],
+        "os": ["getenv", "path", "sep", "pathsep", "linesep"],
         "os.path": [
             "basename",
             "commonprefix",

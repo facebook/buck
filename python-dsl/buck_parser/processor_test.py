@@ -1178,38 +1178,6 @@ class BuckTest(unittest.TestCase):
             get_env_from_results(result), {"TEST1": "foo", "TEST2": None, "TEST3": None}
         )
 
-    def test_os_environ(self):
-        """
-        Verify that accessing environemtn variables via `os.environ` records
-        the environment variables.
-        """
-
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                "import os",
-                'assert os.environ["TEST1"] == "foo"',
-                'assert os.environ.get("TEST2") is None',
-                'assert os.environ.get("TEST3", "default") == "default"',
-                'assert "TEST4" in os.environ',
-                'assert "TEST5" not in os.environ',
-            ),
-        )
-        self.write_file(build_file)
-        with with_envs(
-            {"TEST1": "foo", "TEST2": None, "TEST3": None, "TEST4": "", "TEST5": None}
-        ):
-            build_file_processor = self.create_build_file_processor()
-            with build_file_processor.with_env_interceptors():
-                result = build_file_processor.process(
-                    build_file.root, build_file.prefix, build_file.path, [], None
-                )
-        self.assertEquals(
-            get_env_from_results(result),
-            {"TEST1": "foo", "TEST2": None, "TEST3": None, "TEST4": "", "TEST5": None},
-        )
-
     def test_safe_modules_allow_safe_functions(self):
         """
         Test that 'import os.path' allows access to safe 'os' functions,
@@ -1225,7 +1193,6 @@ class BuckTest(unittest.TestCase):
                 "import pipes",
                 'assert(os.path.split("a/b/c") == ("a/b", "c"))',
                 'assert(split("a/b/c") == ("a/b", "c"))',
-                'assert os.environ["TEST1"] == "foo"',
                 'assert pipes.quote("foo; bar") == "\'foo; bar\'"',
             ),
         )
