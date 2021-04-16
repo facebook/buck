@@ -23,6 +23,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -177,6 +178,10 @@ public class D8StepTest {
 
   @Test
   public void testMainDexList() throws IOException {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return;
+    }
+
     try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
       Path mainDexFilePath = Paths.get("/some/main/dex/file");
@@ -207,7 +212,7 @@ public class D8StepTest {
                           .map(filesystem::resolve)
                           .collect(Collectors.toList())));
       MoreAsserts.assertSteps(
-          "Ensure that the --min-sdk-version flag is present.",
+          "Ensure that the --main-dex-list flag is present.",
           ImmutableList.of(expected),
           ImmutableList.of(dx),
           context);

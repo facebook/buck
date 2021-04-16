@@ -185,7 +185,7 @@ public class D8Step extends IsolatedStep {
     this.outputDexFile = filesystem.resolve(outputDexFile);
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
-    this.primaryDexClassNamesPath = primaryDexClassNamesPath;
+    this.primaryDexClassNamesPath = primaryDexClassNamesPath.map(filesystem::resolve);
     this.dexTool = dexTool;
     this.intermediate = intermediate;
     this.bucketId = bucketId;
