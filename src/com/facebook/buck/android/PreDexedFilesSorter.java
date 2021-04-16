@@ -136,6 +136,77 @@ public class PreDexedFilesSorter {
     return primaryDexClasses.build();
   }
 
+  /** @see CanaryFactory#create(String, String) */
+  static DexWithClasses createCanary(
+      ProjectFilesystem filesystem,
+      DexStore dexStore,
+      APKModule apkModule,
+      Optional<Integer> groupIndex,
+      int index,
+      Path canaryDirectory,
+      ImmutableList.Builder<Step> steps) {
+    String canaryIndex = dexStore.index(groupIndex, index);
+    if (!groupIndex.isPresent()) {
+      canaryIndex = String.format("%02d", index);
+    }
+    FileLike fileLike = CanaryFactory.create(apkModule.getCanaryClassName(), canaryIndex);
+    String canaryDirName = String.format("canary_%s_%d", apkModule.getCanaryClassName(), index);
+    Path scratchDirectoryForCanaryClass = canaryDirectory.resolve(canaryDirName);
+
+    // Strip the .class suffix to get the class name for the DexWithClasses object.
+    String relativePathToClassFile = fileLike.getRelativePath();
+    Preconditions.checkState(relativePathToClassFile.endsWith(".class"));
+    String className = relativePathToClassFile.replaceFirst("\\.class$", "");
+
+    // Write out the .class file.
+    steps.add(
+        new AbstractExecutionStep("write_canary_class") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+            Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
+            try (InputStream inputStream = fileLike.getInput()) {
+              filesystem.createParentDirs(classFile);
+              filesystem.copyToPath(inputStream, classFile);
+            }
+            return StepExecutionResults.SUCCESS;
+          }
+        });
+
+    return new DexWithClasses() {
+      @Override
+      public int getWeightEstimate() {
+        // Because we do not know the units being used for DEX size estimation and the canary
+        // should be very small, assume the size is zero.
+        return 0;
+      }
+
+      @Nullable
+      @Override
+      public BuildTarget getSourceBuildTarget() {
+        return null;
+      }
+
+      @Override
+      public SourcePath getSourcePathToDexFile() {
+        return PathSourcePath.of(filesystem, scratchDirectoryForCanaryClass);
+      }
+
+      @Override
+      public ImmutableSet<String> getClassNames() {
+        return ImmutableSet.of(className);
+      }
+
+      @Override
+      public Sha1HashCode getClassesHash() {
+        // The only thing unique to canary classes is the index,
+        // which is captured by canaryDirName.
+        Hasher hasher = Hashing.sha1().newHasher();
+        hasher.putString(canaryDirName, StandardCharsets.UTF_8);
+        return Sha1HashCode.fromHashCode(hasher.hash());
+      }
+    };
+  }
+
   public class DexStoreContents {
     private List<List<DexWithClasses>> secondaryDexesContents = new ArrayList<>();
     private int primaryDexSize;
@@ -186,7 +257,13 @@ public class PreDexedFilesSorter {
       if (currentSecondaryDexContents.isEmpty()) {
         DexWithClasses canary =
             createCanary(
-                filesystem, module.getCanaryClassName(), secondaryDexesContents.size() + 1, steps);
+                filesystem,
+                dexStore,
+                module,
+                groupIndex,
+                secondaryDexesContents.size() + 1,
+                canaryDirectory,
+                steps);
         currentSecondaryDexSize += canary.getWeightEstimate();
         currentSecondaryDexContents.add(canary);
 
@@ -236,74 +313,6 @@ public class PreDexedFilesSorter {
           metadataTxtEntries.build(),
           ImmutablePrimaryDexInputMetadata.ofImpl(primaryDexSize, primaryDexInputMetadata.build()),
           secondaryDexInputsHashes.build());
-    }
-
-    /** @see CanaryFactory#create(String, String) */
-    private DexWithClasses createCanary(
-        ProjectFilesystem filesystem,
-        String storeName,
-        int index,
-        ImmutableList.Builder<Step> steps) {
-      String canaryIndex = dexStore.index(groupIndex, index);
-      if (!groupIndex.isPresent()) {
-        canaryIndex = String.format("%02d", index);
-      }
-      FileLike fileLike = CanaryFactory.create(storeName, canaryIndex);
-      String canaryDirName = String.format("canary_%s_%d", storeName, index);
-      Path scratchDirectoryForCanaryClass = canaryDirectory.resolve(canaryDirName);
-
-      // Strip the .class suffix to get the class name for the DexWithClasses object.
-      String relativePathToClassFile = fileLike.getRelativePath();
-      Preconditions.checkState(relativePathToClassFile.endsWith(".class"));
-      String className = relativePathToClassFile.replaceFirst("\\.class$", "");
-
-      // Write out the .class file.
-      steps.add(
-          new AbstractExecutionStep("write_canary_class") {
-            @Override
-            public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-              Path classFile = scratchDirectoryForCanaryClass.resolve(relativePathToClassFile);
-              try (InputStream inputStream = fileLike.getInput()) {
-                filesystem.createParentDirs(classFile);
-                filesystem.copyToPath(inputStream, classFile);
-              }
-              return StepExecutionResults.SUCCESS;
-            }
-          });
-
-      return new DexWithClasses() {
-        @Override
-        public int getWeightEstimate() {
-          // Because we do not know the units being used for DEX size estimation and the canary
-          // should be very small, assume the size is zero.
-          return 0;
-        }
-
-        @Nullable
-        @Override
-        public BuildTarget getSourceBuildTarget() {
-          return null;
-        }
-
-        @Override
-        public SourcePath getSourcePathToDexFile() {
-          return PathSourcePath.of(filesystem, scratchDirectoryForCanaryClass);
-        }
-
-        @Override
-        public ImmutableSet<String> getClassNames() {
-          return ImmutableSet.of(className);
-        }
-
-        @Override
-        public Sha1HashCode getClassesHash() {
-          // The only thing unique to canary classes is the index,
-          // which is captured by canaryDirName.
-          Hasher hasher = Hashing.sha1().newHasher();
-          hasher.putString(canaryDirName, StandardCharsets.UTF_8);
-          return Sha1HashCode.fromHashCode(hasher.hash());
-        }
-      };
     }
   }
 
