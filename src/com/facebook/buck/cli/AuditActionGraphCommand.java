@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -105,7 +106,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
                           params
                               .getBuckConfig()
                               .getView(ParserConfig.class)
-                              .getDefaultFlavorsMode()),
+                              .getDefaultFlavorsMode())
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCells().getRootCell(),
                       params.getClientWorkingDir(),
