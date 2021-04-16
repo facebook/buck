@@ -616,6 +616,14 @@ public class AppleBinaryDescription
       return false;
     }
     FlavorSet flavors = buildTarget.getFlavors();
+    // TODO(T82004478): Move both contains into the later return when the
+    // temporal flag is removed.
+    if (appleConfig.getEnableAllWatchSimulatorFlavors()
+        && (flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_X86_64_FLAVOR)
+            || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_ARM64_FLAVOR))) {
+      return true;
+    }
+
     return (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_OS_64_32_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR)
