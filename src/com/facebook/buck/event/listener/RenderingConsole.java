@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -99,6 +101,21 @@ public class RenderingConsole {
     this.delegate = delegate;
   }
 
+  private void writePendingLogLines() {
+    ArrayList<String> lines = new ArrayList<>();
+    String line;
+    while ((line = pendingLogLines.poll()) != null) {
+      lines.add(line);
+    }
+    if (lines.isEmpty()) {
+      return;
+    }
+
+    Collections.reverse(lines);
+
+    console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(lines));
+  }
+
   /**
    * Logs the provided lines to stderr. When rendering, this will be queued until the next rendered
    * frame.
@@ -112,11 +129,22 @@ public class RenderingConsole {
    * frame.
    */
   public void logLines(List<String> lines) {
+    if (lines.isEmpty()) {
+      return;
+    }
+
     if (!isRendering) {
       // If rendering isn't configured, just log the lines directly.
       console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(lines));
     } else {
       pendingLogLines.addAll(lines);
+
+      // There's a race between stopping rendering scheduler
+      // and addition of lines to the pending queue above.
+      // To deal with this race, query `isRendering` again.
+      if (!isRendering) {
+        writePendingLogLines();
+      }
     }
   }
 
@@ -165,12 +193,11 @@ public class RenderingConsole {
       // because we don't use it directly except in a couple of cases, where the
       // synchronization in DirtyPrintStreamDecorator should be sufficient
 
-      // TODO(cjhopman): We should probably only stop rendering the super lines and continue
-      //   rendering log lines.
       stderrDirty = console.getStdErr().isDirty();
       stdoutDirty = console.getStdOut().isDirty();
       if (stderrDirty || stdoutDirty) {
         stopRenderScheduler();
+        writePendingLogLines();
       } else if (shouldRender) {
         String fullFrame = renderFullFrame(logLines.build(), lines, previousNumLinesPrinted);
         console.getStdErr().getRawStream().print(fullFrame);
