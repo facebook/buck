@@ -271,7 +271,7 @@ public class RenderingConsole {
     isRendering = true;
     TimeUnit timeUnit = TimeUnit.MILLISECONDS;
     LOG.debug("Starting render scheduler (interval %d ms)", timeUnit.toMillis(renderInterval));
-    renderScheduler.scheduleAtFixedRate(
+    renderScheduler.scheduleWithFixedDelay(
         () -> {
           try {
             render();
