@@ -77,7 +77,7 @@ public abstract class ProjectBuildFileParserOptions {
 
   @Value.Default
   public Watchman getWatchman() {
-    return WatchmanFactory.NULL_WATCHMAN;
+    return new WatchmanFactory.NullWatchman("default watchman for ProjectBuildFileParserOptions");
   }
 
   @Value.Default

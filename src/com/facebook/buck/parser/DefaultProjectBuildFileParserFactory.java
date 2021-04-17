@@ -405,7 +405,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private static GlobberFactory getSkylarkGlobberFactory(
       ProjectBuildFileParserOptions buildFileParserOptions, SkylarkGlobHandler skylarkGlobHandler) {
     return skylarkGlobHandler == SkylarkGlobHandler.JAVA
-            || buildFileParserOptions.getWatchman() == WatchmanFactory.NULL_WATCHMAN
+            || buildFileParserOptions.getWatchman() instanceof WatchmanFactory.NullWatchman
         ? NativeGlobber.Factory.INSTANCE
         : HybridGlobberFactory.using(
             buildFileParserOptions.getWatchman(),

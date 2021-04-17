@@ -144,7 +144,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
             filesystem.getRootPath(), ImmutableList.of()));
 
     new WatchmanBuildPackageComputation(
-        "BUCK", filesystem.asView(), WatchmanFactory.NULL_WATCHMAN, WATCHMAN_TIME_OUT);
+        "BUCK", filesystem.asView(), new WatchmanFactory.NullWatchman("test"), WATCHMAN_TIME_OUT);
   }
 
   @Test

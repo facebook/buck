@@ -118,7 +118,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   public static void setWatchmanIfEdenProjectFileSystemDelegate(
       ProjectFilesystem filesystem, Watchman watchman) {
     if (filesystem instanceof DefaultProjectFilesystem
-        && !WatchmanFactory.NULL_WATCHMAN.equals(watchman)) {
+        && !(watchman instanceof WatchmanFactory.NullWatchman)) {
       DefaultProjectFilesystem defaultProjectFilesystem = (DefaultProjectFilesystem) filesystem;
       if (defaultProjectFilesystem.getDelegate() instanceof EdenProjectFilesystemDelegate) {
         EdenProjectFilesystemDelegate edenProjectFilesystemDelegate =

@@ -128,7 +128,7 @@ public class ConfiguredQueryEnvironmentTest {
             new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-            WatchmanFactory.NULL_WATCHMAN,
+            new WatchmanFactory.NullWatchman("test"),
             eventBus,
             buildTargetViewFactory,
             UnconfiguredTargetConfiguration.INSTANCE);

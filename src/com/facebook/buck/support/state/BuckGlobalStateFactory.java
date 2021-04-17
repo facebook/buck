@@ -183,7 +183,7 @@ public class BuckGlobalStateFactory {
         cursor,
         knownRuleTypesProvider,
         clock,
-        watchman != WatchmanFactory.NULL_WATCHMAN);
+        !(watchman instanceof WatchmanFactory.NullWatchman));
   }
 
   /** Create a number of instances of {@link DirectoryListCache}, one per each cell */

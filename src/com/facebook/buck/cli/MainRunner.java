@@ -2149,10 +2149,12 @@ public final class MainRunner {
           parserConfig.getWatchmanQueryTimeoutMs());
 
     } else {
-      watchman = WatchmanFactory.NULL_WATCHMAN;
-      LOG.debug(
-          "Not using Watchman, daemon mode: %s, glob handler: %s",
-          daemonMode.isDaemon(), parserConfig.getGlobHandler());
+      String reason =
+          String.format(
+              "Not using Watchman, daemon mode: %s, glob handler: %s",
+              daemonMode.isDaemon(), parserConfig.getGlobHandler());
+      watchman = new WatchmanFactory.NullWatchman(reason);
+      LOG.debug(reason);
     }
     return watchman;
   }

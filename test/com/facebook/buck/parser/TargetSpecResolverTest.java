@@ -119,7 +119,7 @@ public class TargetSpecResolverTest {
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
-            WatchmanFactory.NULL_WATCHMAN,
+            new WatchmanFactory.NullWatchman("test"),
             eventBus,
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);

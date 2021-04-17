@@ -615,7 +615,7 @@ public class ParsePipelineTest {
               projectBuildFileParserPool,
               executorService,
               eventBus,
-              WatchmanFactory.NULL_WATCHMAN);
+              new WatchmanFactory.NullWatchman("test"));
 
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
           new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
@@ -640,7 +640,7 @@ public class ParsePipelineTest {
               packageFileParserPool,
               executorService,
               eventBus,
-              WatchmanFactory.NULL_WATCHMAN);
+              new WatchmanFactory.NullWatchman("test"));
 
       PerBuildStateCache perStateBuildCache = new PerBuildStateCache(NUM_THREADS);
 

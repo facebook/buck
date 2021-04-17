@@ -17,6 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.console.TestEventConsole;
@@ -100,7 +101,7 @@ public class WatchmanFactoryTest {
             Optional.empty(),
             Optional.empty());
 
-    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+    assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
 
   @Test
@@ -127,7 +128,7 @@ public class WatchmanFactoryTest {
             Optional.empty(),
             Optional.empty());
 
-    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+    assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
 
   @Test
@@ -168,7 +169,7 @@ public class WatchmanFactoryTest {
             Optional.empty(),
             Optional.empty());
 
-    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+    assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
 
   @Test
@@ -218,7 +219,7 @@ public class WatchmanFactoryTest {
             Optional.empty(),
             Optional.empty());
 
-    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+    assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
 
   @Test
@@ -268,7 +269,7 @@ public class WatchmanFactoryTest {
             Optional.of(TimeUnit.SECONDS.toMillis(5)),
             Optional.empty());
 
-    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+    assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
 
   @Test
@@ -318,7 +319,7 @@ public class WatchmanFactoryTest {
             Optional.of(TimeUnit.SECONDS.toMillis(5)),
             Optional.empty());
 
-    assertEquals(WatchmanFactory.NULL_WATCHMAN, watchman);
+    assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
 
   @Test

@@ -355,7 +355,7 @@ public class ProjectBuildFileParserPoolTest {
           pool.getManifest(
               BuckEventBusForTests.newInstance(),
               cell,
-              WatchmanFactory.NULL_WATCHMAN,
+              new WatchmanFactory.NullWatchman("test"),
               AbsPath.of(Paths.get("BUCK").toAbsolutePath()),
               executorService));
     }

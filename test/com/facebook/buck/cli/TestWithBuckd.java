@@ -67,7 +67,7 @@ public class TestWithBuckd extends ExternalResource {
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
-    assumeFalse(watchman == WatchmanFactory.NULL_WATCHMAN);
+    assumeFalse(watchman == new WatchmanFactory.NullWatchman("test"));
   }
 
   private static ImmutableMap<String, String> getWatchmanEnv() {

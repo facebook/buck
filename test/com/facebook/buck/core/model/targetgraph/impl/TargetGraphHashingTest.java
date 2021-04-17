@@ -116,7 +116,7 @@ public class TargetGraphHashingTest {
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), new ExecutableFinder()),
-                WatchmanFactory.NULL_WATCHMAN,
+                new WatchmanFactory.NullWatchman("test"),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)

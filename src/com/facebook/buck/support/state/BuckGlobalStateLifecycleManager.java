@@ -130,7 +130,7 @@ public class BuckGlobalStateLifecycleManager {
         buckGlobalState == null ? LifecycleStatus.NEW : LifecycleStatus.REUSED;
 
     // If Watchman failed to start, drop all caches
-    if (buckGlobalState != null && watchman == WatchmanFactory.NULL_WATCHMAN) {
+    if (buckGlobalState != null && watchman instanceof WatchmanFactory.NullWatchman) {
       // TODO(buck_team): make Watchman a requirement
       LOG.info("Restarting daemon state because watchman failed to start");
       lifecycleStatus = LifecycleStatus.INVALIDATED_NO_WATCHMAN;
@@ -140,7 +140,7 @@ public class BuckGlobalStateLifecycleManager {
     // If the state was previously created without Watchman, but now Watchman becomes available,
     // drop all caches. Ideally, Watchman should be a requirement.
     if (buckGlobalState != null
-        && watchman != WatchmanFactory.NULL_WATCHMAN
+        && !(watchman instanceof WatchmanFactory.NullWatchman)
         && !buckGlobalState.getUsesWatchman()) {
       LOG.info("Restarting daemon state because watchman was restarted");
       lifecycleStatus = LifecycleStatus.INVALIDATED_WATCHMAN_RESTARTED;

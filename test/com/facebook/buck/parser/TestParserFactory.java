@@ -57,7 +57,7 @@ public class TestParserFactory {
             new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
-            WatchmanFactory.NULL_WATCHMAN,
+            new WatchmanFactory.NullWatchman("test"),
             eventBus,
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE),

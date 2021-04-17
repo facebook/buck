@@ -122,7 +122,7 @@ public class QueryCommandTest {
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     cell.getRootCell().getBuckConfig(), new ExecutableFinder()),
-                WatchmanFactory.NULL_WATCHMAN,
+                new WatchmanFactory.NullWatchman("test"),
                 eventBus,
                 buildTargetViewFactory,
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

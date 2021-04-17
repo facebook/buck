@@ -223,7 +223,7 @@ public class ParserWithConfigurableAttributesTest {
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
-                WatchmanFactory.NULL_WATCHMAN,
+                new WatchmanFactory.NullWatchman("test"),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
@@ -2547,7 +2547,7 @@ public class ParserWithConfigurableAttributesTest {
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
-                WatchmanFactory.NULL_WATCHMAN,
+                new WatchmanFactory.NullWatchman("test"),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)

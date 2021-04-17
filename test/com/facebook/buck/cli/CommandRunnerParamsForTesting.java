@@ -153,7 +153,7 @@ public class CommandRunnerParamsForTesting {
         BuckGlobalStateFactory.create(
             cells,
             knownRuleTypesProvider,
-            WatchmanFactory.NULL_WATCHMAN,
+            new WatchmanFactory.NullWatchman("test"),
             Optional.empty(),
             buildTargetViewFactory,
             new TargetConfigurationSerializerForTests(cellPathResolver),
@@ -167,7 +167,7 @@ public class CommandRunnerParamsForTesting {
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cells,
-        WatchmanFactory.NULL_WATCHMAN,
+        new WatchmanFactory.NullWatchman("test"),
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),

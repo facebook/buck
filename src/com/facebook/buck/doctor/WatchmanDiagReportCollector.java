@@ -66,7 +66,7 @@ public class WatchmanDiagReportCollector {
       ExecutableFinder executableFinder,
       ImmutableMap<String, String> environment) {
 
-    boolean watchmanEverUsed = watchman != WatchmanFactory.NULL_WATCHMAN;
+    boolean watchmanEverUsed = !(watchman instanceof WatchmanFactory.NullWatchman);
     if (!watchmanEverUsed) {
       return Optional.empty();
     }

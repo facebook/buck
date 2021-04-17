@@ -50,18 +50,31 @@ import javax.annotation.Nullable;
 public class WatchmanFactory {
 
   public static final String NULL_CLOCK = "c:0:0";
-  public static final Watchman NULL_WATCHMAN =
-      new Watchman(
+
+  /**
+   * Watchman implementation which always returns error.
+   *
+   * <p>Used when watchman cannot be initialized, and in tests.
+   */
+  public static class NullWatchman extends Watchman {
+    private final String reason;
+
+    public NullWatchman(String reason) {
+      super(
           /* projectWatches */ ImmutableMap.of(),
           /* capabilities */ ImmutableSet.of(),
           /* clockIds */ ImmutableMap.of(),
           /* transportPath */ Optional.empty(),
-          /* version */ "") {
-        @Override
-        public WatchmanClient createClient() throws IOException {
-          throw new IOException("NULL_WATCHMAN cannot create a WatchmanClient.");
-        }
-      };
+          /* version */ "");
+      this.reason = reason;
+    }
+
+    @Override
+    public WatchmanClient createClient() throws IOException {
+      throw new IOException("NullWatchman cannot create a WatchmanClient: " + reason);
+    }
+  }
+
   static final ImmutableSet<String> REQUIRED_CAPABILITIES = ImmutableSet.of("cmd-watch-project");
   static final ImmutableMap<String, Capability> ALL_CAPABILITIES =
       ImmutableMap.<String, Capability>builder()
@@ -86,7 +99,7 @@ public class WatchmanFactory {
   interface InitialWatchmanClientFactory {
     /**
      * This is used to create a {@link WatchmanClient} after the socket path to Watchman has been
-     * found. This client will be passed to {@link #getWatchman} to create a {@link Watchman} object
+     * found. This client will be passed to {@link NullWatchman} to create a {@link Watchman} object
      * that reflects the capabilities, clock ids, etc. of the Watchman instance that is running
      * locally.
      */
@@ -318,7 +331,7 @@ public class WatchmanFactory {
     // Unavailable watchman is an important event,
     // so print that to the console, not just log it.
     console.err(reason);
-    return NULL_WATCHMAN;
+    return new NullWatchman(reason);
   }
 
   @VisibleForTesting
