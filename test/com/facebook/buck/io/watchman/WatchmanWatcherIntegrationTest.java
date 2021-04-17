@@ -19,8 +19,9 @@ package com.facebook.buck.io.watchman;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -54,6 +55,7 @@ import org.junit.Test;
 public class WatchmanWatcherIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TestWithBuckd initWatchman = new TestWithBuckd(tmp);
 
   private Watchman watchman;
   private EventBus eventBus;
@@ -61,9 +63,6 @@ public class WatchmanWatcherIntegrationTest {
 
   @Before
   public void setUp() throws InterruptedException, IOException {
-    // Create an empty watchman config file.
-    Files.write(tmp.getRoot().resolve(".watchmanconfig").getPath(), new byte[0]);
-
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     watchman =
         watchmanFactory.build(
@@ -73,7 +72,7 @@ public class WatchmanWatcherIntegrationTest {
             new DefaultClock(),
             Optional.empty(),
             Optional.empty());
-    assumeTrue(watchman.getTransportPath().isPresent());
+    assertTrue(watchman.getTransportPath().isPresent());
 
     eventBus = new EventBus();
     watchmanEventCollector = new WatchmanEventCollector();
