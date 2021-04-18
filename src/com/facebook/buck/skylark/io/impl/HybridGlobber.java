@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.io.impl;
 
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -42,8 +43,12 @@ public class HybridGlobber implements Globber {
       throws IOException, InterruptedException {
     checkPatternsForError(include);
     checkPatternsForError(exclude);
-    Optional<ImmutableSet<String>> watchmanResult =
-        watchmanGlobber.run(include, exclude, excludeDirectories);
+    Optional<ImmutableSet<String>> watchmanResult;
+    try {
+      watchmanResult = watchmanGlobber.run(include, exclude, excludeDirectories);
+    } catch (WatchmanQueryFailedException e) {
+      throw new IOException(e);
+    }
     if (watchmanResult.isPresent()) {
       return watchmanResult.get();
     }

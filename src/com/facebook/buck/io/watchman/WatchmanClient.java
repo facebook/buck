@@ -34,7 +34,7 @@ public interface WatchmanClient extends AutoCloseable {
   /** Perform the query. */
   Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
-      throws IOException, InterruptedException;
+      throws IOException, InterruptedException, WatchmanQueryFailedException;
 
   @Override
   void close() throws IOException;

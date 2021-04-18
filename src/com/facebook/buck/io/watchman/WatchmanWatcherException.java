@@ -20,4 +20,8 @@ public class WatchmanWatcherException extends RuntimeException {
   public WatchmanWatcherException(String message) {
     super(message);
   }
+
+  public WatchmanWatcherException(Throwable cause) {
+    super(cause);
+  }
 }

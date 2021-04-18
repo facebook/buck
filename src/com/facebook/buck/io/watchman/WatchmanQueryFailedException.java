@@ -16,8 +16,6 @@
 
 package com.facebook.buck.io.watchman;
 
-import java.io.IOException;
-
 /**
  * Watchman returned an error response.
  *
@@ -25,7 +23,7 @@ import java.io.IOException;
  * href="https://facebook.github.io/watchman/docs/socket-interface.html#reporting-errors-and-warnings">response
  * contained an error</a>.
  */
-public class WatchmanQueryFailedException extends IOException {
+public class WatchmanQueryFailedException extends Exception {
 
   private final String watchmanErrorMessage;
 

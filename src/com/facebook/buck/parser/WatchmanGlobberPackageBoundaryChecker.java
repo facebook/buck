@@ -26,6 +26,7 @@ import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.facebook.buck.util.types.Pair;
@@ -241,7 +242,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
    */
   private ImmutableSet<ForwardRelativePath> filterFolderPaths(
       Set<ForwardRelativePath> paths, ProjectFilesystem projectFilesystem)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
     Path watchmanRootPath = Paths.get(watch.getWatchRoot());
 
@@ -273,7 +274,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       Collection<String> patterns,
       ProjectFilesystem projectFilesystem,
       EnumSet<WatchmanGlobber.Option> options)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (patterns.isEmpty()) {
       return Optional.empty();
     }

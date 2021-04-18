@@ -28,7 +28,8 @@ import java.util.Optional;
 
 public class WatchmanTestUtils {
   /** Sync all watchman roots. */
-  public static void sync(Watchman watchman) throws IOException, InterruptedException {
+  public static void sync(Watchman watchman)
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     try (WatchmanClient client = watchman.createClient()) {
       for (AbsPath root : watchman.getProjectWatches().keySet()) {
         assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());

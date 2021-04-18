@@ -274,7 +274,7 @@ public class EdenProjectFilesystemDelegateTest {
   }
 
   @Test
-  public void computeSha1ViaWatchman() throws IOException, InterruptedException {
+  public void computeSha1ViaWatchman() throws Exception {
     ProjectFilesystemDelegate delegate =
         new DefaultProjectFilesystemDelegate(tmp.getRoot(), Optional.empty());
     Path path = tmp.newFile("foo").getPath();
@@ -327,8 +327,7 @@ public class EdenProjectFilesystemDelegateTest {
   }
 
   @Test
-  public void computeSha1ViaWatchmanForSymlink()
-      throws TException, IOException, InterruptedException {
+  public void computeSha1ViaWatchmanForSymlink() throws Exception {
     ProjectFilesystemDelegate delegate =
         new DefaultProjectFilesystemDelegate(tmp.getRoot(), Optional.empty());
     EdenMount mount = createMock(EdenMount.class);

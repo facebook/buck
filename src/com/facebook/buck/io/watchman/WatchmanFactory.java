@@ -246,12 +246,18 @@ public class WatchmanFactory {
     Preconditions.checkArgument(clockSyncTimeoutMillis > 0, "Clock sync timeout must be positive");
 
     long versionQueryStartTimeNanos = clock.nanoTime();
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        client.queryWithTimeout(
-            endTimeNanos - versionQueryStartTimeNanos,
-            WARN_TIMEOUT_NANOS,
-            WatchmanQuery.version(
-                REQUIRED_CAPABILITIES.asList(), ALL_CAPABILITIES.keySet().asList()));
+    Either<Map<String, Object>, WatchmanClient.Timeout> result;
+    try {
+      result =
+          client.queryWithTimeout(
+              endTimeNanos - versionQueryStartTimeNanos,
+              WARN_TIMEOUT_NANOS,
+              WatchmanQuery.version(
+                  REQUIRED_CAPABILITIES.asList(), ALL_CAPABILITIES.keySet().asList()));
+    } catch (WatchmanQueryFailedException e) {
+      return returnNullWatchman(
+          console, "Could not get version from watchman, disabling watchman", e);
+    }
 
     LOG.info(
         "Took %d ms to query capabilities %s",
@@ -293,14 +299,19 @@ public class WatchmanFactory {
 
     ImmutableMap.Builder<String, String> clockIdsBuilder = ImmutableMap.builder();
     for (String watchRoot : watchRoots) {
-      Optional<String> clockId =
-          queryClock(
-              client,
-              watchRoot,
-              capabilities,
-              clock,
-              endTimeNanos - clock.nanoTime(),
-              clockSyncTimeoutMillis);
+      Optional<String> clockId;
+      try {
+        clockId =
+            queryClock(
+                client,
+                watchRoot,
+                capabilities,
+                clock,
+                endTimeNanos - clock.nanoTime(),
+                clockSyncTimeoutMillis);
+      } catch (WatchmanQueryFailedException e) {
+        return returnNullWatchman(console, "clock query failed, disabling Watchman", e);
+      }
       if (clockId.isPresent()) {
         clockIdsBuilder.put(watchRoot, clockId.get());
       } else {
@@ -351,11 +362,6 @@ public class WatchmanFactory {
   @SuppressWarnings("unchecked")
   private static boolean extractCapabilities(
       Map<String, ?> versionResponse, ImmutableSet.Builder<Capability> capabilitiesBuilder) {
-    if (versionResponse.containsKey("error")) {
-      LOG.warn("Error in watchman output: %s", versionResponse.get("error"));
-      return false;
-    }
-
     if (versionResponse.containsKey("warning")) {
       LOG.warn("Warning in watchman output: %s", versionResponse.get("warning"));
       // Warnings are not fatal. Don't panic.
@@ -400,9 +406,15 @@ public class WatchmanFactory {
     LOG.info("Adding watchman root: %s", rootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
-        watchmanClient.queryWithTimeout(
-            timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(rootPath.toString()));
+    Either<Map<String, Object>, WatchmanClient.Timeout> result;
+    try {
+      result =
+          watchmanClient.queryWithTimeout(
+              timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(rootPath.toString()));
+    } catch (WatchmanQueryFailedException e) {
+      LOG.warn(e, "Error in watchman output");
+      return Optional.empty();
+    }
 
     LOG.info(
         "Took %d ms to add root %s",
@@ -413,10 +425,6 @@ public class WatchmanFactory {
     }
 
     Map<String, ?> map = result.getLeft();
-    if (map.containsKey("error")) {
-      LOG.warn("Error in watchman output: %s", map.get("error"));
-      return Optional.empty();
-    }
 
     if (map.containsKey("warning")) {
       LOG.warn("Warning in watchman output: %s", map.get("warning"));
@@ -449,7 +457,7 @@ public class WatchmanFactory {
       Clock clock,
       long timeoutNanos,
       int syncTimeoutMilis)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     Preconditions.checkState(
         capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT),
         "watchman capabilities must include %s, which is available in watchman since 3.9",

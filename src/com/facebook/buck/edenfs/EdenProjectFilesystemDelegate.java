@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -233,7 +234,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     Optional<Sha1HashCode> sha1 = Optional.empty();
     try {
       sha1 = glob(path);
-    } catch (IOException | InterruptedException e) {
+    } catch (IOException | InterruptedException | WatchmanQueryFailedException e) {
       LOG.info(e, "Failed when fetching SHA-1 for %s", path);
       if (retryWithRealPathIfEdenError) {
         AbsPath realPath = path.toRealPath();
@@ -247,13 +248,15 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   @VisibleForTesting
-  Optional<Sha1HashCode> globOnPath(Path path) throws IOException, InterruptedException {
+  Optional<Sha1HashCode> globOnPath(Path path)
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     AbsPath fileToHash = getPathForRelativePath(path);
     return glob(fileToHash);
   }
 
   @SuppressWarnings("unchecked")
-  private Optional<Sha1HashCode> glob(AbsPath path) throws IOException, InterruptedException {
+  private Optional<Sha1HashCode> glob(AbsPath path)
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     EdenWatchman edenWatchman = edenWatchmanDelayInit.getEdenWatchman();
     Watchman watchman = edenWatchman.getWatchman();
     Path watchRootPath = edenWatchman.getWatchmanRootPath();

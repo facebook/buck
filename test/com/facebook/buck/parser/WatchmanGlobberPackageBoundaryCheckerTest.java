@@ -30,6 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
@@ -71,7 +72,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
 
   @Test
   public void testEnforceFailsWhenPathReferencesParentDirectory()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a");
     Files.createDirectories(a.getPath());
@@ -90,7 +91,8 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
   }
 
   @Test
-  public void testEnforceSkippedWhenNotConfigured() throws IOException, InterruptedException {
+  public void testEnforceSkippedWhenNotConfigured()
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a");
     Files.createDirectories(a.getPath());
@@ -113,7 +115,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
 
   @Test
   public void testEnforceFailsWhenPathDoNotBelongsToAPackage()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a/b");
     Files.createDirectories(a.getPath());
@@ -133,7 +135,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
 
   @Test
   public void testEnforceFailsWhenAncestorNotEqualsToBasePath()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a/b");
     Files.createDirectories(a.getPath());
@@ -165,7 +167,8 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
   }
 
   @Test
-  public void testEnforceSucceed() throws IOException, InterruptedException {
+  public void testEnforceSucceed()
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a/b");
     Files.createDirectories(a.getPath());
@@ -181,7 +184,8 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
   }
 
   @Test
-  public void testEnforceSucceedWithFolder() throws IOException, InterruptedException {
+  public void testEnforceSucceedWithFolder()
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a/b");
     Files.createDirectories(a.getPath());
@@ -196,7 +200,8 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
   }
 
   @Test
-  public void testEnforceSucceedWithFolderAndFile() throws IOException, InterruptedException {
+  public void testEnforceSucceedWithFolderAndFile()
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a/b");
     Files.createDirectories(a.getPath());
@@ -213,7 +218,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
 
   @Test
   public void testEnforceSucceedWithMultipleLevelFolders()
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     PackageBoundaryChecker boundaryChecker = new WatchmanGlobberPackageBoundaryChecker(watchman);
     AbsPath a = tmp.getRoot().resolve("a/b/c/d");
     Files.createDirectories(a.getPath());

@@ -61,7 +61,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (!running.compareAndSet(false, true)) {
       throw new IllegalStateException("WatchmanTransportClient is single-threaded");
     }
@@ -74,13 +74,22 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
   private Either<Map<String, Object>, Timeout> queryListWithTimeoutAndWarning(
       long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
-      throws IOException, InterruptedException {
+      throws IOException, WatchmanQueryFailedException, InterruptedException {
     ListenableFuture<Map<String, Object>> future =
         listeningExecutorService.submit(() -> sendWatchmanQuery(query.toProtocolArgs()));
     try {
       long startTimeNanos = clock.nanoTime();
       Either<Map<String, Object>, Timeout> result =
           waitForQueryNotifyingUserIfSlow(future, timeoutNanos, warnTimeoutNanos, query);
+
+      if (result.isLeft()) {
+        Object error = result.getLeft().get("error");
+        if (error != null) {
+          throw new WatchmanQueryFailedException(
+              String.format("watchman query %s failed: %s", query.queryDesc(), error));
+        }
+      }
+
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
       return result;

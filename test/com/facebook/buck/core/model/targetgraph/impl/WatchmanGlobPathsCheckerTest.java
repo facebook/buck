@@ -33,7 +33,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -83,7 +82,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassesWithExistingPath() throws IOException, InterruptedException {
+  public void testCheckPathsPassesWithExistingPath() throws Exception {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
@@ -96,7 +95,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassesWithExistingFiles() throws IOException, InterruptedException {
+  public void testCheckPathsPassesWithExistingFiles() throws Exception {
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
@@ -110,7 +109,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassesWithExistingDirectory() throws IOException, InterruptedException {
+  public void testCheckPathsPassesWithExistingDirectory() throws Exception {
 
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFolder("b");
@@ -124,7 +123,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithExistingDirectory() throws IOException, InterruptedException {
+  public void testCheckPathsFailedWithExistingDirectory() throws Exception {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'b'");
@@ -141,7 +140,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithExistingFiles() throws IOException, InterruptedException {
+  public void testCheckPathsFailedWithExistingFiles() throws Exception {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'b'");
@@ -158,7 +157,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithCaseSensitive() throws IOException, InterruptedException {
+  public void testCheckPathsFailedWithCaseSensitive() throws Exception {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'b'");
@@ -175,7 +174,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsPassWithSymlink() throws IOException, InterruptedException {
+  public void testCheckPathsPassWithSymlink() throws Exception {
     PathsChecker checker = new WatchmanPathsChecker(watchman, false);
     tmp.newFile("b");
 
@@ -190,7 +189,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testCheckPathsFailedWithMultipleFiles() throws IOException, InterruptedException {
+  public void testCheckPathsFailedWithMultipleFiles() throws Exception {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
         "//:a references non-existing or incorrect type of file or directory 'd'");
@@ -209,8 +208,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testFallbackCheckPathsFailedWithExistingFiles()
-      throws IOException, InterruptedException {
+  public void testFallbackCheckPathsFailedWithExistingFiles() throws Exception {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("In //:a expected directory: b");
 
@@ -227,8 +225,7 @@ public class WatchmanGlobPathsCheckerTest {
   }
 
   @Test
-  public void testFallbackCheckPathsFailedWithMultipleFiles()
-      throws IOException, InterruptedException {
+  public void testFallbackCheckPathsFailedWithMultipleFiles() throws Exception {
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage("//:a references non-existing file or directory 'd'");
 

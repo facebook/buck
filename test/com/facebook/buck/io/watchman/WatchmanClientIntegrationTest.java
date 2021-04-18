@@ -81,7 +81,7 @@ public class WatchmanClientIntegrationTest {
   }
 
   @Test
-  public void testWatchmanGlob() throws InterruptedException, IOException {
+  public void testWatchmanGlob() throws Exception {
     WatchmanClient client =
         WatchmanFactory.createWatchmanClient(
             watchmanDaemon.getTransportPath(), new TestEventConsole(), new DefaultClock());

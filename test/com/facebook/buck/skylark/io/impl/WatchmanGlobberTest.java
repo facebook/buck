@@ -84,7 +84,7 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testGlobFindsIncludes() throws IOException, InterruptedException {
+  public void testGlobFindsIncludes() throws Exception {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
     tmp.newFile("bar.jpg");
@@ -97,7 +97,7 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testGlobExcludedElementsAreNotReturned() throws IOException, InterruptedException {
+  public void testGlobExcludedElementsAreNotReturned() throws Exception {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
     tmp.newFile("bar.jpg");
@@ -330,24 +330,21 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void throwsIfWatchmanReturnsError() throws IOException, InterruptedException {
+  public void throwsIfWatchmanReturnsError()
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     WatchmanClient client =
         new WatchmanClient() {
           @Override
           public Either<Map<String, Object>, Timeout> queryWithTimeout(
-              long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
+              long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+              throws WatchmanQueryFailedException {
             LOG.info("Processing query: %s", query);
             if (query instanceof WatchmanQuery.Query) {
-              return Either.ofLeft(
-                  ImmutableMap.of(
-                      "version",
-                      "4.9.4",
-                      "error",
-                      String.format(
-                          "RootResolveError: unable to resolve root %s: directory %s not watched",
-                          ((WatchmanQuery.Query) query).getPath(),
-                          ((WatchmanQuery.Query) query).getPath())));
-
+              throw new WatchmanQueryFailedException(
+                  String.format(
+                      "RootResolveError: unable to resolve root %s: directory %s not watched",
+                      ((WatchmanQuery.Query) query).getPath(),
+                      ((WatchmanQuery.Query) query).getPath()));
             } else {
               throw new RuntimeException("Watchman query not implemented");
             }
@@ -372,7 +369,7 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testGlobberRunWithExtraFields() throws IOException, InterruptedException {
+  public void testGlobberRunWithExtraFields() throws Exception {
     tmp.newFile("foo.txt");
 
     WatchmanTestUtils.sync(watchman);
@@ -396,7 +393,7 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testGlobberWildcardRunWithExtraFields() throws IOException, InterruptedException {
+  public void testGlobberWildcardRunWithExtraFields() throws Exception {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
 
@@ -423,7 +420,7 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testGlobberRunWithExtraFieldsNoMatch() throws IOException, InterruptedException {
+  public void testGlobberRunWithExtraFieldsNoMatch() throws Exception {
     tmp.newFile("foo.txt");
 
     WatchmanTestUtils.sync(watchman);
@@ -441,8 +438,7 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testGlobberRunWithExtraFieldsButStillNameOnly()
-      throws IOException, InterruptedException {
+  public void testGlobberRunWithExtraFieldsButStillNameOnly() throws Exception {
     tmp.newFile("foo.txt");
 
     WatchmanTestUtils.sync(watchman);

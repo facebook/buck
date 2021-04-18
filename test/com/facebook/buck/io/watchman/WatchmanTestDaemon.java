@@ -150,7 +150,7 @@ public class WatchmanTestDaemon implements Closeable {
             client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, WatchmanQuery.getPid());
         return response.isLeft();
       }
-    } catch (IOException e) {
+    } catch (IOException | WatchmanQueryFailedException e) {
       LOG.warn(e, "Watchman is not ready");
       return false;
     }

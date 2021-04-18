@@ -44,7 +44,7 @@ class PooledWatchmanClient implements WatchmanClient {
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     Preconditions.checkState(!closed, "closed");
     WatchmanClient client = pool.poll();
 

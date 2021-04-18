@@ -21,6 +21,7 @@ import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQuery;
+import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.util.environment.Platform;
@@ -70,7 +71,7 @@ public class HybridGlobberFactory implements GlobberFactory {
    * @throws InterruptedException
    */
   public Either<WatchProjectResult, WatchmanClient.Timeout> getWatchmanRelativizedFinalPath(
-      AbsPath filePath) throws IOException, InterruptedException {
+      AbsPath filePath) throws IOException, InterruptedException, WatchmanQueryFailedException {
     return watchmanClient
         .queryWithTimeout(
             TIMEOUT_NANOS, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(filePath.toString()))
@@ -111,7 +112,7 @@ public class HybridGlobberFactory implements GlobberFactory {
             watchRoot = result.watchRoot;
             relativeRoot = result.relativePath;
           }
-        } catch (IOException | InterruptedException e1) {
+        } catch (IOException | InterruptedException | WatchmanQueryFailedException e1) {
           throw e;
         }
       }

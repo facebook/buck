@@ -43,7 +43,7 @@ public class FakeWatchmanClient implements WatchmanClient {
   @Override
   public Either<Map<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
-      throws InterruptedException, IOException {
+      throws InterruptedException, IOException, WatchmanQueryFailedException {
     Map<String, Object> result = queryResults.get(query);
     if (result == null) {
       throw new RuntimeException(
@@ -60,6 +60,10 @@ public class FakeWatchmanClient implements WatchmanClient {
       } else {
         throw new RuntimeException("Invalid exception");
       }
+    }
+    Object error = result.get("error");
+    if (error != null) {
+      throw new WatchmanQueryFailedException(error.toString());
     }
     return Either.ofLeft(result);
   }

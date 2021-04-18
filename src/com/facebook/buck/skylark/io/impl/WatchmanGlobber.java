@@ -155,7 +155,7 @@ public class WatchmanGlobber {
    */
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     return run(
         include,
         exclude,
@@ -166,14 +166,14 @@ public class WatchmanGlobber {
 
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, Option option)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     return run(
         include, exclude, EnumSet.of(option), DEFAULT_TIMEOUT_NANOS, DEFAULT_WARN_TIMEOUT_NANOS);
   }
 
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     return run(include, exclude, options, DEFAULT_TIMEOUT_NANOS, DEFAULT_WARN_TIMEOUT_NANOS);
   }
 
@@ -193,7 +193,7 @@ public class WatchmanGlobber {
       EnumSet<Option> options,
       long timeoutNanos,
       long warnTimeNanos)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     Either<Map<String, Object>, WatchmanClient.Timeout> result =
         performWatchmanQuery(
             timeoutNanos, warnTimeNanos, include, exclude, options, NAME_ONLY_FIELD);
@@ -201,10 +201,6 @@ public class WatchmanGlobber {
       return Optional.empty();
     }
 
-    @Nullable Object error = result.getLeft().get("error");
-    if (error != null) {
-      throw new WatchmanQueryFailedException(error.toString());
-    }
     @SuppressWarnings("unchecked")
     List<String> files = (List<String>) result.getLeft().get("files");
     return Optional.of(ImmutableSet.copyOf(files));
@@ -217,7 +213,7 @@ public class WatchmanGlobber {
       Collection<String> exclude,
       EnumSet<Option> options,
       ImmutableList<String> fields)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
 
     WatchmanQuery.Query query =
         WatchmanQuery.query(
@@ -268,7 +264,7 @@ public class WatchmanGlobber {
       long timeoutNanos,
       long warnTimeNanos,
       ImmutableList<String> fields)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     Preconditions.checkArgument(!fields.isEmpty());
 
     if (fields.equals(NAME_ONLY_FIELD)) {
@@ -294,10 +290,6 @@ public class WatchmanGlobber {
       return Optional.empty();
     }
 
-    @Nullable Object error = result.getLeft().get("error");
-    if (error != null) {
-      throw new WatchmanQueryFailedException(error.toString());
-    }
     @SuppressWarnings("unchecked")
     List<Map<String, ?>> resultEntries = (List<Map<String, ?>>) result.getLeft().get("files");
     ImmutableMap<String, WatchmanFileAttributes> resultMap =

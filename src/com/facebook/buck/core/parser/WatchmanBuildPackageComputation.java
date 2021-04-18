@@ -108,7 +108,7 @@ public class WatchmanBuildPackageComputation
   @Override
   public BuildPackagePaths transform(
       BuildTargetPatternToBuildPackagePathKey key, ComputationEnvironment env)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     BuildTargetPattern targetPattern = key.getPattern();
     Path basePath =
         targetPattern
@@ -130,7 +130,7 @@ public class WatchmanBuildPackageComputation
   }
 
   private ImmutableSet<String> findBuildFiles(Path basePath, boolean recursive)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     LOG.info("Finding build files for %s, recursive: %s", basePath, recursive);
     String pattern = escapeGlobPattern(buildFileName);
     if (recursive) {
@@ -140,7 +140,7 @@ public class WatchmanBuildPackageComputation
   }
 
   private ImmutableSet<String> glob(Path basePath, String pattern)
-      throws IOException, InterruptedException {
+      throws IOException, InterruptedException, WatchmanQueryFailedException {
     Optional<ImmutableSet<String>> paths;
     WatchmanClient watchmanClient = watchman.getPooledClient();
     WatchmanGlobber globber =

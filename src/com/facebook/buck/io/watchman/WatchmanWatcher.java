@@ -263,6 +263,15 @@ public class WatchmanWatcher {
                 TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
                 DEFAULT_WARN_TIMEOUT_NANOS,
                 query.toQuery(cursor.get()));
+      } catch (WatchmanQueryFailedException e1) {
+        // This message is not de-duplicated via WatchmanDiagnostic.
+        WatchmanWatcherException e = new WatchmanWatcherException(e1);
+        LOG.debug(e, "Error in Watchman output. Posting an overflow event to flush the caches");
+        postWatchEvent(
+            buckEventBus,
+            ImmutableWatchmanOverflowEvent.ofImpl(
+                cellPath, "Watchman error occurred: " + e.getMessage()));
+        throw e;
       }
 
       try (SimplePerfEvent.Scope ignored =
@@ -283,17 +292,6 @@ public class WatchmanWatcher {
         }
 
         Map<String, ? extends Object> response = queryResponse.getLeft();
-        String error = (String) response.get("error");
-        if (error != null) {
-          // This message is not de-duplicated via WatchmanDiagnostic.
-          WatchmanWatcherException e = new WatchmanWatcherException(error);
-          LOG.debug(e, "Error in Watchman output. Posting an overflow event to flush the caches");
-          postWatchEvent(
-              buckEventBus,
-              ImmutableWatchmanOverflowEvent.ofImpl(
-                  cellPath, "Watchman error occurred: " + e.getMessage()));
-          throw e;
-        }
 
         if (cursor.get().startsWith("c:")) {
           // Update the clockId
