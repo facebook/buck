@@ -1096,7 +1096,6 @@ class BuildFileProcessor(object):
         watchman_client,
         watchman_glob_stat_results,
         watchman_use_glob_generator,
-        project_import_whitelist=None,
         implicit_includes=None,
         extra_funcs=None,
         configs=None,
@@ -1106,8 +1105,6 @@ class BuildFileProcessor(object):
         warn_about_deprecated_syntax=True,
         enable_user_defined_rules=False,
     ):
-        if project_import_whitelist is None:
-            project_import_whitelist = []
         if implicit_includes is None:
             implicit_includes = []
         if extra_funcs is None:
@@ -1159,7 +1156,7 @@ class BuildFileProcessor(object):
             [] if self._disable_implicit_native_rules else self._native_functions,
         )
         self._import_whitelist_manager = ImportWhitelistManager(
-            import_whitelist=self._create_import_whitelist(project_import_whitelist),
+            import_whitelist=self._create_import_whitelist(),
             safe_modules_config=self.SAFE_MODULES_CONFIG,
             path_predicate=lambda path: is_in_dir(path, self._project_root),
         )
@@ -1661,7 +1658,7 @@ class BuildFileProcessor(object):
             )
 
     @staticmethod
-    def _create_import_whitelist(project_import_whitelist):
+    def _create_import_whitelist():
         # type: (List[str]) -> Set[str]
         """
         Creates import whitelist by joining the global whitelist with the project specific one
@@ -1685,7 +1682,7 @@ class BuildFileProcessor(object):
             "copy_reg",
         ]
 
-        return set(global_whitelist + project_import_whitelist)
+        return set(global_whitelist)
 
     def _file_access_wrapper(self, real):
         """
@@ -2183,11 +2180,6 @@ def main():
         "--profile", action="store_true", help="Profile every buck file execution"
     )
     parser.add_option(
-        "--build_file_import_whitelist",
-        action="append",
-        dest="build_file_import_whitelist",
-    )
-    parser.add_option(
         "--disable_implicit_native_rules",
         action="store_true",
         help="Do not allow native rules in build files, only included ones",
@@ -2255,7 +2247,6 @@ def main():
         watchman_client,
         options.watchman_glob_stat_results,
         options.watchman_use_glob_generator,
-        project_import_whitelist=options.build_file_import_whitelist or [],
         implicit_includes=options.include or [],
         configs=configs,
         ignore_paths=ignore_paths,

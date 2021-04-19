@@ -96,7 +96,6 @@ class BuckTest(unittest.TestCase):
         self.cell_name = ""
         self.build_file_name = "BUCK"
         self.watchman_client = None
-        self.project_import_whitelist = None
 
     def tearDown(self):
         shutil.rmtree(self.project_root, True)
@@ -121,7 +120,6 @@ class BuckTest(unittest.TestCase):
             self.watchman_client,
             False,  # watchman_glob_stat_results
             False,  # watchman_use_glob_generator
-            self.project_import_whitelist,
             includes or [],
             **kwargs
         )
@@ -1066,29 +1064,6 @@ class BuckTest(unittest.TestCase):
                 [],
                 None,
             )
-
-    def test_import_whitelist(self):
-        """
-        Verify that modules whitelisted globally or in configs can be imported
-        with sandboxing enabled.
-        """
-        self.project_import_whitelist = ["sys", "subprocess"]
-        build_file = ProjectFile(
-            self.project_root,
-            path="BUCK",
-            contents=(
-                "import json",
-                "import functools",
-                "import re",
-                "import sys",
-                "import subprocess",
-            ),
-        )
-        self.write_files(build_file)
-        build_file_processor = self.create_build_file_processor()
-        build_file_processor.process(
-            build_file.root, build_file.prefix, build_file.path, [], None
-        )
 
     def test_allow_unsafe_import_allows_to_import(self):
         """
