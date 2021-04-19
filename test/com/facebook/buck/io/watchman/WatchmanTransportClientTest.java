@@ -16,13 +16,17 @@
 
 package com.facebook.buck.io.watchman;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.After;
 import org.junit.Assert;
@@ -75,5 +79,27 @@ public class WatchmanTransportClientTest {
                       ImmutableList.of("fgfg")));
             });
     Assert.assertTrue(exception.getMessage().contains("unknown field name 'fgfg'"));
+  }
+
+  @Test
+  public void syncTimeout() throws Exception {
+    Either<Map<String, Object>, WatchmanClient.Timeout> result =
+        watchmanTransportClient.queryWithTimeout(
+            60_000_000_000L,
+            60_000_000_000L,
+            WatchmanQuery.query(
+                    tmp.getRoot().toString(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(ImmutableList.of("*.txt")),
+                    ImmutableList.of())
+                .withSyncTimeout(1));
+
+    // If it is not timeout, we are extremely lucky to work on very fast filesystem.
+    // Unfortunately we cannot decrease timeout further to make watchman
+    // guaranteed to time out.
+    assumeTrue(result.isRight());
+
+    // Asserting client did not throw.
   }
 }

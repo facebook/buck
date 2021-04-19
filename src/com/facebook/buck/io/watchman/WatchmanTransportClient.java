@@ -85,6 +85,20 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       if (result.isLeft()) {
         Object error = result.getLeft().get("error");
         if (error != null) {
+          // Full error looks like this:
+          // ```
+          // 14QueryExecError: query failed: synchronization failed: syncToNow:
+          // timed out waiting for cookie file to be observed by watcher within 1 milliseconds:
+          // Operation timed out
+          // ```
+          // TODO(nga): watchman does not provide API to get some error code.
+          //   We should to rely on error code instead of substring matching.
+          //   This code will breaks is some file name contains
+          //   "Operation timed out" substring or if watchman changes error message.
+          if (error.toString().contains("timed out waiting for cookie")) {
+            return Either.ofRight(Timeout.INSTANCE);
+          }
+
           throw new WatchmanQueryFailedException(
               String.format("watchman query %s failed: %s", query.queryDesc(), error));
         }
