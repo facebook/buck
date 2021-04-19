@@ -154,7 +154,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(
                 cell.getBuckConfig().getView(ConfigIgnoredByDaemon.class).getRawConfigForParser())
-            .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .setImplicitNativeRulesState(parserConfig.getImplicitNativeRulesState())
             .setUserDefinedRulesState(parserConfig.getUserDefinedRulesState())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())

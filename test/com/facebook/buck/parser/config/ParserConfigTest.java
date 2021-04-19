@@ -188,14 +188,6 @@ public class ParserConfigTest {
   }
 
   @Test
-  public void testGetBuildFileImportWhitelist() throws IOException {
-    assertTrue(getDefaultConfig().getBuildFileImportWhitelist().isEmpty());
-
-    ParserConfig config = parseConfig("[project]\nbuild_file_import_whitelist = os, foo");
-    assertEquals(ImmutableList.of("os", "foo"), config.getBuildFileImportWhitelist());
-  }
-
-  @Test
   public void whenParserPythonPathIsNotSetDefaultIsUsed() {
     ParserConfig parserConfig = getDefaultConfig();
     assertEquals(

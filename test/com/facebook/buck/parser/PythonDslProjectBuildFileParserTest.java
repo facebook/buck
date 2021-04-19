@@ -729,9 +729,7 @@ public class PythonDslProjectBuildFileParserTest {
           .setBuildFileName(DEFAULT_BUILD_FILE_NAME)
           .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
           .setDescriptions(ruleTypes.getDescriptions())
-          .setBuildFileImportWhitelist(ImmutableList.of())
           .setUserDefinedRulesState(UserDefinedRulesState.ENABLED)
-          .setBuildFileImportWhitelist(ImmutableList.of())
           .build();
     }
   }

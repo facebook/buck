@@ -339,12 +339,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           "--watchman_query_timeout_ms", options.getWatchmanQueryTimeoutMs().get().toString());
     }
 
-    // Add the --build_file_import_whitelist flags.
-    for (String module : options.getBuildFileImportWhitelist()) {
-      argBuilder.add("--build_file_import_whitelist");
-      argBuilder.add(module);
-    }
-
     argBuilder.add("--project_root", options.getProjectRoot().toString());
 
     for (Map.Entry<String, AbsPath> entry : options.getCellRoots().entrySet()) {

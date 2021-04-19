@@ -258,11 +258,6 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public ImmutableList<String> getBuildFileImportWhitelist() {
-    return getDelegate().getListWithoutComments("project", "build_file_import_whitelist");
-  }
-
-  @Value.Lazy
   public Optional<String> getParserPythonInterpreterPath() {
     return getDelegate().getValue("parser", "python_interpreter");
   }

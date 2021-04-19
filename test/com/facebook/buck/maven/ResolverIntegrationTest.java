@@ -135,7 +135,6 @@ public class ResolverIntegrationTest {
                 .setBuildFileName(parserConfig.getBuildFileName())
                 .setDefaultIncludes(parserConfig.getDefaultIncludes())
                 .setDescriptions(descriptions)
-                .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
                 .build(),
             new DefaultTypeCoercerFactory(),
             ImmutableMap.of(),

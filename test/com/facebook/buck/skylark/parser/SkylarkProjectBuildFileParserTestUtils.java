@@ -31,7 +31,6 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -88,7 +87,6 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
         .setPerFeatureProviders(
             knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
-        .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
 

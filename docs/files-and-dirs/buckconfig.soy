@@ -4350,15 +4350,6 @@ buck project --config project.ide_force_kill=always
 
 {call buckconfig.entry}
   {param section: 'project' /}
-  {param name: 'build_file_import_whitelist' /}
-  {param example_value: 'math, Foo' /}
-  {param description}
-    A comma-separated list that configures which Python modules can be imported in build files.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'project' /}
   {param name: 'shared_libraries_in_bundles' /}
   {param example_value: 'false' /}
   {param description}

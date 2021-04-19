@@ -1002,7 +1002,6 @@ public class SkylarkProjectBuildFileParserTest {
                 knownRuleTypesProvider
                     .getNativeRuleTypes(cell.getRootCell())
                     .getPerFeatureProviders())
-            .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .setCellRoots(ImmutableMap.of("tp2", anotherCell))
             .build();

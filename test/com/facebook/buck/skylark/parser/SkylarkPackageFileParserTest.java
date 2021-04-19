@@ -83,7 +83,6 @@ public class SkylarkPackageFileParserTest {
                 ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
             .setDescriptions(ImmutableSet.of())
             .setPerFeatureProviders(ImmutableList.of())
-            .setBuildFileImportWhitelist(ImmutableList.of())
             .setPythonInterpreter("skylark")
             .build();
 

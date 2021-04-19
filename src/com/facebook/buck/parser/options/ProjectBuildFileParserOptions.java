@@ -87,8 +87,6 @@ public abstract class ProjectBuildFileParserOptions {
 
   public abstract Optional<Long> getWatchmanQueryTimeoutMs();
 
-  public abstract List<String> getBuildFileImportWhitelist();
-
   public abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
 
   @Value.Default
