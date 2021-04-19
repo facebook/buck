@@ -309,6 +309,78 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testPrimaryDexOnlyIncludesSpecifiedClasses() throws IOException {
+    Path apkPath =
+        workspace.buildAndReturnOutput(
+            "//apps/multidex:app_with_sample_class_in_primary",
+            "-c",
+            "java.is_pre_dex_per_class_primary_dex_matching=true");
+
+    String primaryDex = "classes.dex";
+    String standardSecondaryDex = "assets/secondary-program-dex-jars/secondary-1_1.dex.jar";
+    String secondaryDexFromPrimaryDexRejects =
+        "assets/secondary-program-dex-jars/secondary-3_1.dex.jar";
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists(primaryDex);
+    zipInspector.assertFileExists(standardSecondaryDex);
+    zipInspector.assertFileExists(secondaryDexFromPrimaryDexRejects);
+
+    DexInspector primaryDexInspector = new DexInspector(apkPath, primaryDex);
+    primaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample;");
+    primaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
+    primaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample3;");
+
+    DexInspector standardSecondaryDexInspector = new DexInspector(apkPath, standardSecondaryDex);
+    standardSecondaryDexInspector.assertTypeExists("Lcom/facebook/sample/Small;");
+
+    DexInspector secondaryDexFromPrimaryDexRejectsInspector =
+        new DexInspector(apkPath, secondaryDexFromPrimaryDexRejects);
+    secondaryDexFromPrimaryDexRejectsInspector.assertTypeDoesNotExist(
+        "Lcom/facebook/sample/Sample;");
+    secondaryDexFromPrimaryDexRejectsInspector.assertTypeExists("Lcom/facebook/sample/Sample2;");
+    secondaryDexFromPrimaryDexRejectsInspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
+
+    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of(), false);
+
+    // Build again with a different primary dex pattern
+    workspace.replaceFileContents(
+        "apps/multidex/BUCK", "# ADDED_IN_PRIMARY_CLASS_NAMES_TEST", "\"/Sample2^\"");
+    Path newApkPath =
+        workspace.buildAndReturnOutput(
+            "//apps/multidex:app_with_sample_class_in_primary",
+            "-c",
+            "java.is_pre_dex_per_class_primary_dex_matching=true");
+
+    String newPrimaryDex = "classes.dex";
+    String newStandardSecondaryDex = "assets/secondary-program-dex-jars/secondary-1_1.dex.jar";
+    String newSecondaryDexFromPrimaryDexRejects =
+        "assets/secondary-program-dex-jars/secondary-3_1.dex.jar";
+
+    ZipInspector newZipInspector = new ZipInspector(newApkPath);
+    newZipInspector.assertFileExists(newPrimaryDex);
+    newZipInspector.assertFileExists(newStandardSecondaryDex);
+    newZipInspector.assertFileExists(newSecondaryDexFromPrimaryDexRejects);
+
+    DexInspector newPrimaryDexInspector = new DexInspector(newApkPath, newPrimaryDex);
+    newPrimaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample;");
+    newPrimaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample2;");
+    newPrimaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample3;");
+
+    DexInspector newStandardSecondaryDexInspector =
+        new DexInspector(newApkPath, newStandardSecondaryDex);
+    newStandardSecondaryDexInspector.assertTypeExists("Lcom/facebook/sample/Small;");
+
+    DexInspector newSecondaryDexInspector =
+        new DexInspector(newApkPath, newSecondaryDexFromPrimaryDexRejects);
+    newSecondaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample;");
+    newSecondaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
+    newSecondaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
+
+    DexTestUtils.validateMetadata(newApkPath, ImmutableSet.of(), false);
+  }
+
+  @Test
   public void testNotAllJavaLibrariesFetched() throws IOException {
     String target = "//apps/multidex:app_with_deeper_deps";
     workspace.runBuckCommand("build", target).assertSuccess();
