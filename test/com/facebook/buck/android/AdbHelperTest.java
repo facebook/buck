@@ -101,7 +101,8 @@ public class AdbHelperTest {
         () -> executionContext,
         true,
         /* skipMetadataIfNoInstalls= */ false,
-        /* alwaysUseJavaAgent */ true);
+        /* alwaysUseJavaAgent */ true,
+        /* isZstdCompressionEnabled */ true);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -565,7 +566,8 @@ public class AdbHelperTest {
         () -> testContext,
         true,
         /* skipMetadataIfNoInstalls= */ false,
-        /* alwaysUseJavaAgent */ true) {
+        /* alwaysUseJavaAgent */ true,
+        /* isZstdCompressionEnabled */ true) {
       @Override
       AndroidDebugBridgeFacade createAdb() {
         return facade;
@@ -595,7 +597,8 @@ public class AdbHelperTest {
         () -> testContext,
         true,
         /* skipMetadataIfNoInstalls= */ false,
-        /* alwaysUseJavaAgent */ false);
+        /* alwaysUseJavaAgent */ false,
+        /* isZstdCompressionEnabled */ true);
   }
 
   private static AdbOptions createAdbOptions() {

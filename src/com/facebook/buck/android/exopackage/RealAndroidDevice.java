@@ -35,6 +35,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreSuppliers;
+import com.github.luben.zstd.ZstdOutputStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -42,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
+import com.google.common.io.CountingOutputStream;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -112,6 +114,7 @@ public class RealAndroidDevice implements AndroidDevice {
   private final Console console;
   private final Supplier<ExopackageAgent> agent;
   private final int agentPort;
+  private final boolean isZstdCompressionEnabled;
 
   public RealAndroidDevice(
       BuckEventBus eventBus,
@@ -119,7 +122,8 @@ public class RealAndroidDevice implements AndroidDevice {
       Console console,
       @Nullable Path agentApkPath,
       int agentPort,
-      boolean alwaysUseJavaAgent) {
+      boolean alwaysUseJavaAgent,
+      boolean isZstdCompressionEnabled) {
     this.eventBus = eventBus;
     this.device = device;
     this.console = console;
@@ -132,11 +136,12 @@ public class RealAndroidDevice implements AndroidDevice {
                     Objects.requireNonNull(agentApkPath, "Agent not configured for this device."),
                     alwaysUseJavaAgent));
     this.agentPort = agentPort;
+    this.isZstdCompressionEnabled = isZstdCompressionEnabled;
   }
 
   @VisibleForTesting
   public RealAndroidDevice(BuckEventBus buckEventBus, IDevice device, Console console) {
-    this(buckEventBus, device, console, null, -1, true);
+    this(buckEventBus, device, console, null, -1, true, true);
   }
 
   /**
@@ -876,17 +881,35 @@ public class RealAndroidDevice implements AndroidDevice {
     if (installPaths.isEmpty()) {
       return;
     }
+
+    // We only do zstd compression for the Java agent.
+    boolean doZstdCompression = this.isZstdCompressionEnabled && !agent.get().isUseNativeAgent();
     Closer closer = Closer.create();
     BuckInitiatedInstallReceiver receiver =
-        new BuckInitiatedInstallReceiver(closer, filesType, installPaths);
+        new BuckInitiatedInstallReceiver(closer, filesType, installPaths, doZstdCompression);
+
+    String javaLibraryPath;
+    if (doZstdCompression) {
+      List<String> abis = getDeviceAbis();
+      String nativePath = agent.get().getNativePath();
+      StringBuilder javaLibraryPathBuilder = new StringBuilder();
+      javaLibraryPathBuilder.append(nativePath);
+      for (String abi : abis) {
+        javaLibraryPathBuilder.append(":");
+        javaLibraryPathBuilder.append(nativePath).append("/").append(abi);
+      }
+      javaLibraryPath = javaLibraryPathBuilder.toString();
+    } else {
+      javaLibraryPath = null;
+    }
 
     String command =
         "umask 022 && "
-            + agent.get().getAgentCommand()
+            + agent.get().getAgentCommand(javaLibraryPath)
             + "multi-receive-file "
             + agentPort
             + " "
-            + "false"
+            + doZstdCompression
             + ECHO_COMMAND_SUFFIX;
     LOG.debug("Executing %s", command);
 
@@ -950,14 +973,17 @@ public class RealAndroidDevice implements AndroidDevice {
     private boolean wrotePayload;
     @Nullable private OutputStream outToDevice;
     private Optional<Exception> error;
+    private boolean doZstdCompression;
 
-    BuckInitiatedInstallReceiver(Closer closer, String filesType, Map<Path, Path> installPaths) {
+    BuckInitiatedInstallReceiver(
+        Closer closer, String filesType, Map<Path, Path> installPaths, boolean doZstdCompression) {
       this.closer = closer;
       this.filesType = filesType;
       this.installPaths = installPaths;
       this.startedPayload = false;
       this.wrotePayload = false;
       this.error = Optional.empty();
+      this.doZstdCompression = doZstdCompression;
     }
 
     @Override
@@ -988,7 +1014,19 @@ public class RealAndroidDevice implements AndroidDevice {
           wrotePayload = true;
           outToDevice.write(getOutput().substring(0, AgentUtil.TEXT_SECRET_KEY_SIZE).getBytes());
           LOG.verbose("Wrote key");
-          multiInstallFilesToStream(outToDevice, filesType, installPaths);
+          if (doZstdCompression) {
+            CountingOutputStream countingOutputStream = new CountingOutputStream(outToDevice);
+            ZstdOutputStream zstdOutputStream = new ZstdOutputStream(countingOutputStream);
+            zstdOutputStream.setCloseFrameOnFlush(true);
+            try {
+              multiInstallFilesToStream(zstdOutputStream, filesType, installPaths);
+              LOG.info("Size of compressed bytes is %,d", countingOutputStream.getCount());
+            } finally {
+              zstdOutputStream.close();
+            }
+          } else {
+            multiInstallFilesToStream(outToDevice, filesType, installPaths);
+          }
           LOG.verbose("Wrote files");
         }
       } catch (IOException e) {
@@ -1168,6 +1206,7 @@ public class RealAndroidDevice implements AndroidDevice {
         stream.write(headerPrefix);
         stream.write(restOfHeader);
         stream.write(bytes);
+        stream.flush();
         totalByteCount += bytes.length;
       }
     }

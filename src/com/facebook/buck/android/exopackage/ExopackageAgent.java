@@ -25,6 +25,7 @@ import com.google.common.base.Throwables;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 class ExopackageAgent {
   private static final Logger LOG = Logger.get(ExopackageInstaller.class);
@@ -66,11 +67,36 @@ class ExopackageAgent {
   }
 
   String getAgentCommand() {
+    return getAgentCommand(/* javaLibraryPath */ null);
+  }
+
+  /**
+   * @param javaLibraryPath The java library path that we want to use for the dalvikvm call. This is
+   *     required because dalvikvm doesn't set up the java library path to point to the relevant
+   *     directories within the APK.
+   */
+  String getAgentCommand(@Nullable String javaLibraryPath) {
     if (useNativeAgent) {
       return nativeAgentPath + "/libagent.so ";
     } else {
-      return "dalvikvm -classpath " + classPath + " com.facebook.buck.android.agent.AgentMain ";
+      if (javaLibraryPath != null) {
+        return "dalvikvm -Djava.library.path="
+            + javaLibraryPath
+            + " -classpath "
+            + classPath
+            + " com.facebook.buck.android.agent.AgentMain ";
+      } else {
+        return "dalvikvm -classpath " + classPath + " com.facebook.buck.android.agent.AgentMain ";
+      }
     }
+  }
+
+  String getNativePath() {
+    return nativeAgentPath;
+  }
+
+  boolean isUseNativeAgent() {
+    return useNativeAgent;
   }
 
   public String getMkDirCommand() {

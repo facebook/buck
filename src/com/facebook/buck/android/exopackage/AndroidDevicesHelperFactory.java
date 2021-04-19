@@ -41,6 +41,7 @@ public class AndroidDevicesHelperFactory {
         contextSupplier,
         adbConfig.getRestartAdbOnFailure(),
         adbConfig.getSkipInstallMetadata(),
-        adbConfig.getAlwaysUseJavaAgent());
+        adbConfig.getAlwaysUseJavaAgent(),
+        adbConfig.isZstdCompressionEnabled());
   }
 }

@@ -55,7 +55,8 @@ public class RealAndroidDeviceTest {
         TestConsole.createNullConsole(),
         null,
         -1,
-        true);
+        true,
+        /* isZstdCompressionEnabled */ true);
   }
 
   /** Verify that successful installation on device results in true. */

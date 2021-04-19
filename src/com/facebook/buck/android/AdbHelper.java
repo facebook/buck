@@ -115,6 +115,7 @@ public class AdbHelper implements AndroidDevicesHelper {
   private final Supplier<GetDevicesResult> devicesSupplier;
   private final boolean skipMetadataIfNoInstalls;
   private final boolean alwaysUseJavaAgent;
+  private final boolean isZstdCompressionEnabled;
 
   @Nullable private ListeningExecutorService executorService = null;
 
@@ -125,7 +126,8 @@ public class AdbHelper implements AndroidDevicesHelper {
       Supplier<ExecutionContext> contextSupplier,
       boolean restartAdbOnFailure,
       boolean skipMetadataIfNoInstalls,
-      boolean alwaysUseJavaAgent) {
+      boolean alwaysUseJavaAgent,
+      boolean isZstdCompressionEnabled) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.toolchainProvider = toolchainProvider;
@@ -134,6 +136,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.devicesSupplier = MoreSuppliers.memoize(this::getDevicesImpl);
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
+    this.isZstdCompressionEnabled = isZstdCompressionEnabled;
   }
 
   @VisibleForTesting
@@ -595,7 +598,8 @@ public class AdbHelper implements AndroidDevicesHelper {
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
         nextAgentPort.incrementAndGet(),
-        alwaysUseJavaAgent);
+        alwaysUseJavaAgent,
+        isZstdCompressionEnabled);
   }
 
   @VisibleForTesting

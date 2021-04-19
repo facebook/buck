@@ -50,12 +50,15 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue("adb", "skip_install_metadata", true);
   }
 
-  /**
-   * Whether to skip installing metadata when there are no files to install in a given category. If
-   * exo metadata is derived from the set of installed files, it's not necessary to reinstall.
-   */
+  /** Whether to always use the Java agent for exopackage installs. */
   @Value.Lazy
   public boolean getAlwaysUseJavaAgent() {
     return getDelegate().getBooleanValue("adb", "always_use_java_agent", false);
+  }
+
+  /** Whether to do zstd compression when installing files via exopackage. */
+  @Value.Lazy
+  public boolean isZstdCompressionEnabled() {
+    return getDelegate().getBooleanValue("adb", "is_zstd_compression_enabled", false);
   }
 }
