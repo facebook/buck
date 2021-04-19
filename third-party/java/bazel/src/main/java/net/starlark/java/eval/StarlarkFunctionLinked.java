@@ -3,10 +3,8 @@ package net.starlark.java.eval;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -132,12 +130,12 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
 
       // Collect all the missing parameters to report all of them at once.
       if (missing == null) {
-        missing = new MissingParams();
+        missing = new MissingParams(fn.getName());
       }
       if (paramIndex < numPositionalParams) {
-        missing.positional.add(names.get(paramIndex));
+        missing.addPositional(names.get(paramIndex));
       } else {
-        missing.named.add(names.get(paramIndex));
+        missing.addNamed(names.get(paramIndex));
       }
     }
 
@@ -228,23 +226,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
       Dict<Object, Object> starStarArgs,
       MissingParams missing) throws EvalException {
     throwIfKwargsKeysAreNotStrings(starStarArgs);
-    if (!missing.positional.isEmpty()) {
-      throw Starlark.errorf(
-          "%s() missing %d required positional argument%s: %s",
-          fn().getName(),
-          missing.positional.size(),
-          StarlarkFunction.plural(missing.positional.size()),
-          Joiner.on(", ").join(missing.positional));
-    }
-    if (!missing.named.isEmpty()) {
-      throw Starlark.errorf(
-          "%s() missing %d required keyword-only argument%s: %s",
-          fn().getName(),
-          missing.named.size(),
-          StarlarkFunction.plural(missing.named.size()),
-          Joiner.on(", ").join(missing.named));
-    }
-    throw new AssertionError();
+    throw missing.error();
   }
 
   private void throwIfKwargsKeysAreNotStrings(@Nullable Dict<?, ?> kwargs) throws EvalException {
@@ -299,8 +281,4 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     }
   }
 
-  private static class MissingParams {
-    private List<String> positional = new ArrayList<>();
-    private List<String> named = new ArrayList<>();
-  }
 }

@@ -1106,12 +1106,12 @@ public final class StarlarkEvaluationTest {
         .update("mock", new Mock())
         .setUp("")
         .testIfExactError(
-            "with_params() missing 1 required named argument: named", "mock.with_params(1, True)");
+            "with_params() missing 1 required keyword-only argument: named", "mock.with_params(1, True)");
     ev.new Scenario()
         .update("mock", new Mock())
         .setUp("")
         .testIfExactError(
-            "with_params() missing 1 required named argument: named",
+            "with_params() missing 1 required keyword-only argument: named",
             "mock.with_params(1, True, True)");
     ev.new Scenario()
         .update("mock", new Mock())

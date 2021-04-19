@@ -288,42 +288,26 @@ public final class BuiltinFunction extends StarlarkCallable {
 
     // Set default values for missing parameters,
     // and report any that are still missing.
-    List<String> missingPositional = null;
-    List<String> missingNamed = null;
+    MissingParams missing = null;
     for (int i = 0; i < parameters.length; i++) {
       if (vector[i] == null) {
         ParamDescriptor param = parameters[i];
         vector[i] = param.getDefaultValue();
         if (vector[i] == null) {
+          if (missing == null) {
+            missing = new MissingParams(getName());
+          }
           if (param.isPositional()) {
-            if (missingPositional == null) {
-              missingPositional = new ArrayList<>();
-            }
-            missingPositional.add(param.getName());
+            missing.addPositional(param.getName());
           } else {
-            if (missingNamed == null) {
-              missingNamed = new ArrayList<>();
-            }
-            missingNamed.add(param.getName());
+            missing.addNamed(param.getName());
           }
         }
       }
     }
-    if (missingPositional != null) {
-      throw Starlark.errorf(
-          "%s() missing %d required positional argument%s: %s",
-          methodName,
-          missingPositional.size(),
-          plural(missingPositional.size()),
-          Joiner.on(", ").join(missingPositional));
-    }
-    if (missingNamed != null) {
-      throw Starlark.errorf(
-          "%s() missing %d required named argument%s: %s",
-          methodName,
-          missingNamed.size(),
-          plural(missingNamed.size()),
-          Joiner.on(", ").join(missingNamed));
+
+    if (missing != null) {
+      throw missing.error();
     }
 
     // special parameters
