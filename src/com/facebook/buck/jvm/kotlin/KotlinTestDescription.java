@@ -196,7 +196,8 @@ public class KotlinTestDescription
             .getDelegate()
             .getView(TestBuckConfig.class)
             .useRelativePathsInClasspathFile(),
-        downwardApiConfig.isEnabledForTests());
+        downwardApiConfig.isEnabledForTests(),
+        javaBuckConfig.useDependencyOrderClasspathForTests());
   }
 
   @Override

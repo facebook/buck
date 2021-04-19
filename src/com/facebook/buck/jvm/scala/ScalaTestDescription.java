@@ -197,7 +197,8 @@ public class ScalaTestDescription
             .getDelegate()
             .getView(TestBuckConfig.class)
             .useRelativePathsInClasspathFile(),
-        downwardApiConfig.isEnabledForTests());
+        downwardApiConfig.isEnabledForTests(),
+        javaBuckConfig.useDependencyOrderClasspathForTests());
   }
 
   private UnresolvedCxxPlatform getCxxPlatform(TargetConfiguration toolchainTargetConfiguration) {

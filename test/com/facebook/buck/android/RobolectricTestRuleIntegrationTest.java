@@ -243,4 +243,16 @@ public class RobolectricTestRuleIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckTest("//java/com/sample/lib:test_with_no_resources").assertSuccess();
   }
+
+  @Test
+  public void testRobolectricTestWithDependencyOrderClasspath() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+
+    workspace.addBuckConfigLocalOption("java", "use_dependency_order_classpath_for_tests", "true");
+
+    workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
+  }
 }

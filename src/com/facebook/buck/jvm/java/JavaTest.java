@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -157,6 +158,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean useRelativePathsInClasspathFile;
   private final boolean withDownwardApi;
 
+  @AddToRuleKey private final boolean useDependencyOrderClasspath;
+
   public JavaTest(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -181,7 +184,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Level> stdErrLogLevel,
       ImmutableSet<SourcePath> resources,
       boolean useRelativePathsInClasspathFile,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean useDependencyOrderClasspath) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
     this.additionalClasspathEntriesProvider = additionalClasspathEntriesProvider;
@@ -205,6 +209,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.withDownwardApi = withDownwardApi;
     this.useRelativePathsInClasspathFile = useRelativePathsInClasspathFile;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
+    this.useDependencyOrderClasspath = useDependencyOrderClasspath;
   }
 
   @Override
@@ -652,9 +657,15 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *     when this test is executed
    */
   protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
+    ImmutableSet<SourcePath> transitiveClassPaths =
+        this.useDependencyOrderClasspath
+            ? JavaLibraryClasspathProvider.getDependencyOrderTransitiveClasspaths(
+                compiledTestsLibrary)
+            : compiledTestsLibrary.getTransitiveClasspaths();
+
     return ImmutableSet.<Path>builder()
         .addAll(
-            compiledTestsLibrary.getTransitiveClasspaths().stream()
+            transitiveClassPaths.stream()
                 .map(
                     sourcePath ->
                         buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())

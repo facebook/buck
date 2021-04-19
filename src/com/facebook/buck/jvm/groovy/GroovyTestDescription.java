@@ -185,7 +185,8 @@ public class GroovyTestDescription
             .getDelegate()
             .getView(TestBuckConfig.class)
             .useRelativePathsInClasspathFile(),
-        downwardApiConfig.isEnabledForTests());
+        downwardApiConfig.isEnabledForTests(),
+        javaBuckConfig.useDependencyOrderClasspathForTests());
   }
 
   @Override

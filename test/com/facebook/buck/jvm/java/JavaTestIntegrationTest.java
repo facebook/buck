@@ -608,4 +608,21 @@ public class JavaTestIntegrationTest {
             ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
     assertEquals(0, processResult.getExitCode());
   }
+
+  @Test
+  public void testSimpleWorkingJunitTest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_working", temp);
+    workspace.setUp();
+    workspace.runBuckCommand("test", "//:java_test_working").assertSuccess();
+  }
+
+  @Test
+  public void testSimpleWorkingJunitTestWithDependencyOrderClasspath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_working", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("java", "use_dependency_order_classpath_for_tests", "true");
+    workspace.runBuckCommand("test", "//:java_test_working").assertSuccess();
+  }
 }

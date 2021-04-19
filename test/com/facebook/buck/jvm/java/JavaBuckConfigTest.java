@@ -477,6 +477,39 @@ public class JavaBuckConfigTest {
     assertThat(config.getAbiGenerationMode(), equalTo(AbiGenerationMode.CLASS));
   }
 
+  @Test
+  public void useDependencyOrderClasspathForTestsDefault() {
+    JavaBuckConfig config = FakeBuckConfig.builder().build().getView(JavaBuckConfig.class);
+
+    assertFalse(config.useDependencyOrderClasspathForTests());
+  }
+
+  @Test
+  public void useDependencyOrderClasspathForTestsCanBeEnabled() {
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "java", ImmutableMap.of("use_dependency_order_classpath_for_tests", "true")))
+            .build()
+            .getView(JavaBuckConfig.class);
+
+    assertTrue(config.useDependencyOrderClasspathForTests());
+  }
+
+  @Test
+  public void useDependencyOrderClasspathForTestsCanBeDisabled() {
+    JavaBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "java", ImmutableMap.of("use_dependency_order_classpath_for_tests", "false")))
+            .build()
+            .getView(JavaBuckConfig.class);
+
+    assertFalse(config.useDependencyOrderClasspathForTests());
+  }
+
   private void assertOptionKeyAbsent(JavacOptions options, String key) {
     OptionAccumulator optionsConsumer = visitOptions(options);
     assertThat(optionsConsumer.keyVals, not(hasKey(key)));

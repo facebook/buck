@@ -347,6 +347,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, "is_pre_dex_per_class_primary_dex_matching", false);
   }
 
+  public boolean useDependencyOrderClasspathForTests() {
+    return delegate.getBoolean(SECTION, "use_dependency_order_classpath_for_tests").orElse(false);
+  }
+
   public enum SourceAbiVerificationMode {
     /** Don't verify ABI jars. */
     OFF,
