@@ -138,4 +138,51 @@ public class JavaLibraryClasspathProvider {
         });
     return builder.build();
   }
+
+  /**
+   * Get the transitive classpath for the library, in order of first order dependencies, second
+   * order dependencies, etc.
+   */
+  public static ImmutableSet<SourcePath> getDependencyOrderTransitiveClasspaths(JavaLibrary input) {
+    ImmutableSet.Builder<SourcePath> classpathDeps = ImmutableSet.builder();
+
+    AbstractBreadthFirstTraversal.traverse(
+        input,
+        (BuildRule rule) -> {
+          ImmutableSet.Builder<BuildRule> children = ImmutableSet.builder();
+          if (rule instanceof JavaLibrary) {
+            JavaLibrary javaLibrary = (JavaLibrary) rule;
+
+            // Only add ourselves to the classpath if there's a jar to be built or if we're a maven
+            // dep.
+            if (javaLibrary.getSourcePathToOutput() != null
+                || javaLibrary.getMavenCoords().isPresent()) {
+              classpathDeps.addAll(javaLibrary.getImmediateClasspaths());
+              // Or if there are exported dependencies, to be consistent with
+              // getTransitiveClasspaths.
+            } else if (javaLibrary instanceof ExportDependencies
+                && !((ExportDependencies) javaLibrary).getExportedDeps().isEmpty()) {
+              classpathDeps.addAll(javaLibrary.getImmediateClasspaths());
+            }
+
+            children.addAll(javaLibrary.getDepsForTransitiveClasspathEntries());
+          } else if (rule instanceof HasClasspathEntries) {
+            // If a rule has classpath entries, visit all its classpath deps. This handles
+            // non-JavaLibrary cases, which are rare, but happen.
+            //
+            // Use the existing method to get the transitive classpath deps. In practice we end up
+            // visiting all transitive deps of this rule as next order dependency.
+            //
+            // A future improvement would introduce a way to only get the direct classpath deps.
+            // This sounds like HasClasspathDeps and getDepsForTransitiveClasspathEntries(), but
+            // that interface is not implemented for all rules that expose (transitive) classpath
+            // entries. Auditing the existing implementations shows that many are actually
+            // implemented by calling getTransitiveClasspathDeps(), which is what the future
+            // improvement would try to avoid.
+            children.addAll(((HasClasspathEntries) rule).getTransitiveClasspathDeps());
+          }
+          return children.build();
+        });
+    return classpathDeps.build();
+  }
 }

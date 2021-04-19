@@ -214,18 +214,18 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   public void getTransitiveClasspaths() {
     JavaLibrary aLib = (JavaLibrary) a;
     assertEquals(
-        ImmutableSet.builder()
-            .add(getFullOutput(a))
-            .add(getFullOutput(c)) // a exports c
-            .add(getFullOutput(e)) // c exports e
+        ImmutableList.builder()
             .add(getFullOutput(h))
             .add(getFullOutput(f))
             .add(getFullOutput(g))
+            .add(getFullOutput(e)) // c exports e
+            .add(getFullOutput(c)) // a exports c
+            .add(getFullOutput(a))
             // b is non-java so b and d do not appear
             .build(),
         aLib.getTransitiveClasspaths().stream()
             .map(resolver::getAbsolutePath)
-            .collect(ImmutableSet.toImmutableSet()));
+            .collect(ImmutableList.toImmutableList()));
   }
 
   @Test
@@ -260,6 +260,24 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         "Does appear if no output jar but maven coordinate present.",
         ImmutableSet.of(z, c, e, f, g, h, mavenCoord),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(mavenCoord));
+  }
+
+  @Test
+  public void getDependencyOrderTransitiveClasspaths() {
+    JavaLibrary aLib = (JavaLibrary) a;
+    ImmutableSet<SourcePath> paths =
+        JavaLibraryClasspathProvider.getDependencyOrderTransitiveClasspaths(aLib);
+    assertEquals(
+        ImmutableList.builder()
+            .add(getFullOutput(e)) // c exports e
+            .add(getFullOutput(c)) // a exports c
+            .add(getFullOutput(a))
+            .add(getFullOutput(f))
+            .add(getFullOutput(g))
+            .add(getFullOutput(h))
+            // b is non-java so b and d do not appear
+            .build(),
+        paths.stream().map(resolver::getAbsolutePath).collect(ImmutableList.toImmutableList()));
   }
 
   @Test
