@@ -52,6 +52,9 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   private TargetNode<?> cNode;
   private TargetNode<?> dNode;
   private TargetNode<?> eNode;
+  private TargetNode<?> fNode;
+  private TargetNode<?> gNode;
+  private TargetNode<?> hNode;
   private TargetNode<?> zNode;
 
   private BuildRule a;
@@ -59,6 +62,9 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   private BuildRule c;
   private BuildRule d;
   private BuildRule e;
+  private BuildRule f;
+  private BuildRule g;
+  private BuildRule h;
   private BuildRule z;
   private SourcePathResolverAdapter resolver;
   private ProjectFilesystem filesystem;
@@ -85,7 +91,25 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             .setOut("b.out")
             .build();
 
-    eNode = makeRule("//foo:e", ImmutableSet.of("foo", "e.java"), ImmutableSet.of(), filesystem);
+    hNode = makeRule("//foo:h", ImmutableSet.of("foo", "h.java"), ImmutableSet.of(), filesystem);
+    gNode = makeRule("//foo:g", ImmutableSet.of("foo", "g.java"), ImmutableSet.of(), filesystem);
+
+    fNode =
+        makeRule(
+            "//foo:f",
+            ImmutableSet.of("foo", "f.java"),
+            ImmutableSet.of(hNode),
+            ImmutableSet.of(), // exported
+            null, // resources
+            filesystem);
+    eNode =
+        makeRule(
+            "//foo:e",
+            ImmutableSet.of("foo", "e.java"),
+            ImmutableSet.of(fNode, gNode),
+            ImmutableSet.of(), // exported
+            null, // resources
+            filesystem);
 
     // exported
     cNode =
@@ -111,7 +135,8 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             "//foo:z", ImmutableSet.of("foo", "a.java"), ImmutableSet.of(bNode, cNode), filesystem);
 
     TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
+        TargetGraphFactory.newInstance(
+            aNode, bNode, cNode, dNode, eNode, fNode, gNode, hNode, zNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     resolver = graphBuilder.getSourcePathResolver();
 
@@ -120,6 +145,9 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     c = graphBuilder.requireRule(cNode.getBuildTarget());
     d = graphBuilder.requireRule(dNode.getBuildTarget());
     e = graphBuilder.requireRule(eNode.getBuildTarget());
+    f = graphBuilder.requireRule(fNode.getBuildTarget());
+    g = graphBuilder.requireRule(gNode.getBuildTarget());
+    h = graphBuilder.requireRule(hNode.getBuildTarget());
     z = graphBuilder.requireRule(zNode.getBuildTarget());
   }
 
@@ -142,7 +170,13 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   @Test
   public void getClasspathFromLibraries() {
     assertEquals(
-        ImmutableSet.of(getFullOutput(a), getFullOutput(c), getFullOutput(e)),
+        ImmutableSet.of(
+            getFullOutput(a),
+            getFullOutput(c),
+            getFullOutput(e),
+            getFullOutput(f),
+            getFullOutput(g),
+            getFullOutput(h)),
         // b is non-java so b and d do not appear
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(
                 JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a)))
@@ -154,7 +188,10 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         ImmutableSet.of(
             getFullOutput(c),
             getFullOutput(e), // c exports e
-            getFullOutput(d)),
+            getFullOutput(d),
+            getFullOutput(f),
+            getFullOutput(g),
+            getFullOutput(h)),
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(
                 JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(c, d)))
             .stream()
@@ -165,11 +202,11 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   @Test
   public void getClasspathDeps() {
     assertEquals(
-        ImmutableSet.of(a, c, e),
+        ImmutableSet.of(a, c, e, f, g, h),
         JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(a)));
 
     assertEquals(
-        ImmutableSet.of(d, c, e),
+        ImmutableSet.of(d, c, e, f, g, h),
         JavaLibraryClasspathProvider.getClasspathDeps(ImmutableSet.of(d, c)));
   }
 
@@ -181,6 +218,9 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             .add(getFullOutput(a))
             .add(getFullOutput(c)) // a exports c
             .add(getFullOutput(e)) // c exports e
+            .add(getFullOutput(h))
+            .add(getFullOutput(f))
+            .add(getFullOutput(g))
             // b is non-java so b and d do not appear
             .build(),
         aLib.getTransitiveClasspaths().stream()
@@ -194,19 +234,20 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
         makeRule("//no:output", ImmutableSet.of(), ImmutableSet.of(zNode), filesystem);
 
     TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode, noOutputNode);
+        TargetGraphFactory.newInstance(
+            aNode, bNode, cNode, dNode, eNode, fNode, gNode, hNode, zNode, noOutputNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
 
     JavaLibrary noOutput = (JavaLibrary) graphBuilder.requireRule(noOutputNode.getBuildTarget());
 
     assertEquals(
         "root does not appear if output jar not present.",
-        ImmutableSet.of(c, e, z),
+        ImmutableSet.of(c, e, f, g, h, z),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(noOutput));
 
     assertEquals(
         "root does appear if output jar present.",
-        ImmutableSet.of(z, c, e),
+        ImmutableSet.of(z, c, e, f, g, h),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps((JavaLibrary) z));
 
     JavaLibrary mavenCoord =
@@ -217,7 +258,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
 
     assertEquals(
         "Does appear if no output jar but maven coordinate present.",
-        ImmutableSet.of(z, c, e, mavenCoord),
+        ImmutableSet.of(z, c, e, f, g, h, mavenCoord),
         JavaLibraryClasspathProvider.getTransitiveClasspathDeps(mavenCoord));
   }
 
@@ -232,7 +273,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
   public void getAllReachableJavaLibrariesFindsDepsOfGenrule() {
     assertThat(
         JavaLibraryClasspathProvider.getAllReachableJavaLibraries(ImmutableList.of(a)),
-        Matchers.containsInAnyOrder(a, d, c, e));
+        Matchers.containsInAnyOrder(a, d, c, e, f, g, h));
   }
 
   private AbsPath getFullOutput(BuildRule lib) {
