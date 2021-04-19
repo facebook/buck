@@ -255,4 +255,15 @@ public class RobolectricTestRuleIntegrationTest {
 
     workspace.runBuckTest("//java/com/sample/lib:test").assertSuccess();
   }
+
+  @Test
+  public void testRobolectricTestWithDependencyOrderClasspathAsRuleOption() throws IOException {
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    workspace
+        .runBuckTest("//java/com/sample/lib:test_with_dependency_order_classpath")
+        .assertSuccess();
+  }
 }

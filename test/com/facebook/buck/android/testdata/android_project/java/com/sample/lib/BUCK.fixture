@@ -147,3 +147,26 @@ robolectric_test(
         "buck//third-party/java/junit:junit",
     ],
 )
+
+robolectric_test(
+    name = "test_with_dependency_order_classpath",
+    srcs = ["BinaryResourcesTest.java"],
+    robolectric_manifest = "TestAndroidManifest.xml",
+    external_resources_paths = ["../../../../res/com/sample/navigation/res/navigation/some_navigation.xml"],
+    resources = ["some_file.txt"],
+    visibility = [
+        "PUBLIC",
+    ],
+    robolectric_runtime_dependency = "buck//third-party/java/robolectric:robolectric_dir",
+    use_dependency_order_classpath = True,
+    deps = [
+        "buck//third-party/java/asm:asm",
+        "buck//third-party/java/bouncycastle:bcprov",
+        "buck//third-party/java/guava:guava",
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)

@@ -7,3 +7,14 @@ java_test(
         "buck//third-party/java/junit:junit",
     ],
 )
+
+java_test(
+    name = "java_test_working_with_dependency_order_classpath",
+    srcs = [
+        "SimpleTest.java",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+    use_dependency_order_classpath = True,
+)

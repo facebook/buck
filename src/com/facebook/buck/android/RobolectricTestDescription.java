@@ -441,7 +441,8 @@ public class RobolectricTestDescription
             .getView(TestBuckConfig.class)
             .useRelativePathsInClasspathFile(),
         downwardApiConfig.isEnabledForTests(),
-        javaBuckConfig.useDependencyOrderClasspathForTests());
+        args.getUseDependencyOrderClasspath()
+            .orElse(javaBuckConfig.useDependencyOrderClasspathForTests()));
   }
 
   @Override

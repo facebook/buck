@@ -294,7 +294,8 @@ public class JavaTestDescription
             .getView(TestBuckConfig.class)
             .useRelativePathsInClasspathFile(),
         downwardApiConfig.isEnabledForTests(),
-        javaBuckConfig.useDependencyOrderClasspathForTests());
+        args.getUseDependencyOrderClasspath()
+            .orElse(javaBuckConfig.useDependencyOrderClasspathForTests()));
   }
 
   @Override
@@ -339,6 +340,8 @@ public class JavaTestDescription
     ImmutableMap<String, StringWithMacros> getEnv();
 
     Optional<Flavor> getDefaultCxxPlatform();
+
+    Optional<Boolean> getUseDependencyOrderClasspath();
   }
 
   @RuleArg
