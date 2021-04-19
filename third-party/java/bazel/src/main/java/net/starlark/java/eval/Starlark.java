@@ -22,7 +22,6 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.annotations.FormatMethod;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.invoke.CallSite;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.time.Duration;
@@ -913,7 +912,7 @@ public final class Starlark {
       Map<String, Object> predeclared,
       StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
-    Module module = Module.withPredeclared(thread.getSemantics(), predeclared);
+    Module module = Module.withPredeclared(predeclared);
     return execFile(input, options, module, thread);
   }
 
@@ -977,7 +976,7 @@ public final class Starlark {
       Map<String, Object> predeclared,
       StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
-    Module module = Module.withPredeclared(thread.getSemantics(), predeclared);
+    Module module = Module.withPredeclared(predeclared);
     return eval(input, options, module, thread);
   }
 

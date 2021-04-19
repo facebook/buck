@@ -159,7 +159,7 @@ public class GlobTest {
     // only "glob" function is neede from the module
     Starlark.addMethods(vars, SkylarkBuildModule.BUILD_MODULE);
 
-    Module module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, vars.build());
+    Module module = Module.withPredeclared(vars.build());
 
     StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
 

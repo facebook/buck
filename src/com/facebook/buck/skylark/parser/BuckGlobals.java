@@ -18,7 +18,6 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
-import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
@@ -95,8 +94,7 @@ public abstract class BuckGlobals {
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   Module makeBuckLoadContextGlobals() {
-    return Module.withPredeclared(
-        BuckStarlark.BUCK_STARLARK_SEMANTICS, getBuckLoadContextGlobals());
+    return Module.withPredeclared(getBuckLoadContextGlobals());
   }
 
   /** {@code BUCK} file initial contents. */
@@ -115,7 +113,7 @@ public abstract class BuckGlobals {
   /** Disable implicit native rules depending on configuration */
   Module makeBuckBuildFileContextGlobals() {
     ImmutableMap<String, Object> map = getMakeBuckBuildFileContextGlobals();
-    return Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, map);
+    return Module.withPredeclared(map);
   }
 
   /**

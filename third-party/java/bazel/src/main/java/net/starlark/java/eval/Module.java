@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.Resolver;
 
@@ -45,7 +44,7 @@ import net.starlark.java.syntax.Resolver;
  * records the module's build label (such as "//dir:file.bzl").
  *
  * <p>Use {@link #create} to create a {@link Module} with no predeclared bindings other than the
- * universal ones. Use {@link #withPredeclared(StarlarkSemantics, Map)} to create a module with the
+ * universal ones. Use {@link #withPredeclared(Map)} to create a module with the
  * predeclared environment specified by the map, using the semantics to determine whether any
  * FlagGuardedValues in the map are enabled or disabled.
  */
@@ -72,8 +71,8 @@ public final class Module implements Resolver.Module {
    * addition to the standard environment, {@link Starlark#UNIVERSE}.
    */
   public static Module withPredeclared(
-      StarlarkSemantics semantics, Map<String, Object> predeclared) {
-    return new Module(filter(predeclared, semantics));
+      Map<String, Object> predeclared) {
+    return new Module(filter(predeclared));
   }
 
   /**
@@ -105,17 +104,10 @@ public final class Module implements Resolver.Module {
    * it guards. Disabled FlagGuardedValues are left in place, and should be treated as unavailable.
    * The iteration order is unchanged.
    */
-  private static ImmutableMap<String, Object> filter(
-      Map<String, Object> predeclared, StarlarkSemantics semantics) {
+  private static ImmutableMap<String, Object> filter(Map<String, Object> predeclared) {
     ImmutableMap.Builder<String, Object> filtered = ImmutableMap.builder();
     for (Map.Entry<String, Object> bind : predeclared.entrySet()) {
       Object v = bind.getValue();
-      if (v instanceof FlagGuardedValue) {
-        FlagGuardedValue fv = (FlagGuardedValue) bind.getValue();
-        if (fv.isObjectAccessibleUsingSemantics(semantics)) {
-          v = fv.getObject();
-        }
-      }
       filtered.put(bind.getKey(), v);
     }
     return filtered.build();
@@ -182,10 +174,6 @@ public final class Module implements Resolver.Module {
     // predeclared?
     Object v = predeclared.get(name);
     if (v != null) {
-      if (v instanceof FlagGuardedValue) {
-        // Name is correctly spelled, but access is disabled by a flag.
-        throw new Undefined(((FlagGuardedValue) v).getErrorFromAttemptingAccess(name), null);
-      }
       return ResolvedName.PREDECLARED;
     }
 

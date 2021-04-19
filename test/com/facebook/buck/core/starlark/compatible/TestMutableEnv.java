@@ -37,7 +37,7 @@ public class TestMutableEnv implements AutoCloseable {
     builder.putAll(Starlark.UNIVERSE);
     builder.putAll(globals);
     builder.putAll(Starlark.UNIVERSE);
-    module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, globals);
+    module = Module.withPredeclared(globals);
     mutability = Mutability.create("testing");
     env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
   }

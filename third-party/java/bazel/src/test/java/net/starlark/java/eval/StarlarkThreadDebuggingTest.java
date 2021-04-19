@@ -87,7 +87,7 @@ public class StarlarkThreadDebuggingTest {
 
     // Set up global environment.
     Module module =
-        Module.withPredeclared(StarlarkSemantics.DEFAULT, ImmutableMap.of("a", 1, "b", 2, "f", f));
+        Module.withPredeclared(ImmutableMap.of("a", 1, "b", 2, "f", f));
 
     // Execute a small file that calls f.
     ParserInput input =
@@ -214,7 +214,7 @@ public class StarlarkThreadDebuggingTest {
   @Test
   public void testEvaluateVariableInScope() throws Exception {
     Module module =
-        Module.withPredeclared(StarlarkSemantics.DEFAULT, ImmutableMap.of("a", StarlarkInt.of(1)));
+        Module.withPredeclared(ImmutableMap.of("a", StarlarkInt.of(1)));
 
     StarlarkThread thread = newThread();
     Object a = Starlark.execFile(ParserInput.fromLines("a"), FileOptions.DEFAULT, module, thread);
@@ -240,7 +240,7 @@ public class StarlarkThreadDebuggingTest {
     StarlarkThread thread = newThread();
     Module module =
         Module.withPredeclared(
-            StarlarkSemantics.DEFAULT, /*predeclared=*/ ImmutableMap.of("a", "string"));
+            /*predeclared=*/ ImmutableMap.of("a", "string"));
 
     assertThat(
             Starlark.execFile(

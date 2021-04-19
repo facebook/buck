@@ -118,7 +118,7 @@ public final class EvaluationTest {
   private static void execWithInterrupt(
       ParserInput input, InterruptFunction interrupt, List<String> printEvents) throws Exception {
     Module module =
-        Module.withPredeclared(StarlarkSemantics.DEFAULT, ImmutableMap.of("interrupt", interrupt));
+        Module.withPredeclared(ImmutableMap.of("interrupt", interrupt));
     try (Mutability mu = Mutability.create("test")) {
       StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
       thread.setPrintHandler((_thread, msg) -> printEvents.add(msg));
@@ -139,7 +139,7 @@ public final class EvaluationTest {
       long run(int n) throws SyntaxError.Exception, EvalException, InterruptedException {
         Module module =
             Module.withPredeclared(
-                StarlarkSemantics.DEFAULT, ImmutableMap.of("n", StarlarkInt.of(n)));
+                ImmutableMap.of("n", StarlarkInt.of(n)));
         long steps0 = thread.getExecutedSteps();
         Starlark.execFile(input, FileOptions.DEFAULT, module, thread);
         return thread.getExecutedSteps() - steps0;

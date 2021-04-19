@@ -26,7 +26,6 @@ import org.junit.runners.Suite;
   MutabilityTest.class,
   PrinterTest.class,
   StarlarkEvaluationTest.class,
-  StarlarkFlagGuardingTest.class,
   StarlarkAnnotationsTest.class,
   StarlarkListTest.class,
   StarlarkMutableTest.class,

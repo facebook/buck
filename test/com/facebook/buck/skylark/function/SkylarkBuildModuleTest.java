@@ -108,7 +108,7 @@ public class SkylarkBuildModuleTest {
 
     StarlarkThread env = new StarlarkThread(mutability, BuckStarlark.BUCK_STARLARK_SEMANTICS);
 
-    Module module = Module.withPredeclared(BuckStarlark.BUCK_STARLARK_SEMANTICS, vars.build());
+    Module module = Module.withPredeclared(vars.build());
     new ParseContext(
             PackageContext.of(
                 NativeGlobber.create(root),

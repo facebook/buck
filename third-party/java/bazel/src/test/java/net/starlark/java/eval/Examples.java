@@ -69,7 +69,7 @@ final class Examples {
 
     // Create the module in which the expression is evaluated.
     // It may define additional predeclared environment bindings.
-    Module module = Module.withPredeclared(StarlarkSemantics.DEFAULT, env);
+    Module module = Module.withPredeclared(env);
 
     // Resolve, compile, and execute the expression.
     try (Mutability mu = Mutability.create(input.getFile())) {
@@ -101,7 +101,7 @@ final class Examples {
     // Execute the compiled program to populate a module.
     // The module's predeclared environment must match the
     // names provided during compilation.
-    Module module = Module.withPredeclared(StarlarkSemantics.DEFAULT, makeEnvironment());
+    Module module = Module.withPredeclared(makeEnvironment());
     try (Mutability mu = Mutability.create(prog.getFilename())) {
       StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
       Starlark.execFileProgram(prog, module, thread);
