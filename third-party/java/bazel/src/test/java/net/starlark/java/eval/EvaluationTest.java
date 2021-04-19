@@ -783,14 +783,11 @@ public final class EvaluationTest {
             .loadBindsGlobally(true)
             .build();
 
-    Module m1 = Module.create();
-    m1.setGlobal("x", "one");
-
     ParserInput input = ParserInput.fromLines("load('m1', 'x'); x = 'two'");
     Module m2 = Module.create();
     try (Mutability mu = Mutability.create("test")) {
       StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
-      thread.setLoader((name) -> m1);
+      thread.setLoader(name -> new LoadedModule.Simple(ImmutableMap.of("x", "one")));
       Starlark.execFile(input, options, m2, thread);
     }
     assertThat(m2.getGlobal("x")).isEqualTo("two");

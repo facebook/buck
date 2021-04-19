@@ -70,6 +70,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
+import net.starlark.java.eval.LoadedModule;
 import net.starlark.java.eval.Module;
 import net.starlark.java.eval.Mutability;
 import net.starlark.java.eval.Starlark;
@@ -132,11 +133,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             ImmutableLoadImport.ofImpl(
                 containingLabel, implicitInclude.get().getLoadPath(), Location.BUILTIN),
             loadStack);
-    Module symbols = data.getExtension();
+    LoadedModule symbols = data.getExtension();
     ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();
     Builder<String, Object> loaded = ImmutableMap.builderWithExpectedSize(expectedSymbols.size());
     for (Entry<String, String> kvp : expectedSymbols.entrySet()) {
-      Object symbol = symbols.getGlobals().get(kvp.getValue());
+      Object symbol = symbols.getGlobal(kvp.getValue());
       if (symbol == null) {
         throw BuildFileParseException.createForUnknownParseError(
             String.format(
@@ -691,7 +692,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throws InterruptedException {
     ImmutableMap<String, ExtensionData> dependencies =
         getDependenciesExtensionData(load.getLabel(), load.getDependencies());
-    Module loadedExtension;
+    BuckStarlarkLoadedModule loadedExtension;
     try (Mutability mutability = Mutability.create("importing extension")) {
 
       // Create this extension.
@@ -729,13 +730,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
           load.getLabel(),
           load.getParentLabel());
 
-      for (Entry<String, Object> entry : loadSymbolsContext.getLoadedSymbols().entrySet()) {
-        module.setGlobal(entry.getKey(), entry.getValue());
-      }
-
       extensionEnv.mutability().freeze();
 
-      loadedExtension = module;
+      loadedExtension = new BuckStarlarkLoadedModule(module, loadSymbolsContext.getLoadedSymbols());
     }
 
     return ImmutableExtensionData.ofImpl(

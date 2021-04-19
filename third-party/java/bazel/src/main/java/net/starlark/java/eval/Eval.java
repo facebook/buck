@@ -199,7 +199,7 @@ final class Eval {
 
     // Load module.
     String moduleName = node.getImport().getValue();
-    Module module = loader.load(moduleName);
+    LoadedModule module = loader.load(moduleName);
     if (module == null) {
       fr.setErrorLocation(node.getStartLocation());
       throw Starlark.errorf("module '%s' not found", moduleName);
@@ -215,7 +215,7 @@ final class Eval {
             "file '%s' does not contain symbol '%s'%s",
             moduleName,
             orig.getName(),
-            SpellChecker.didYouMean(orig.getName(), module.getGlobals().keySet()));
+            SpellChecker.didYouMean(orig.getName(), module.getGlobalNamesForSpelling()));
       }
 
       assignIdentifier(fr, binding.getLocalName(), value);

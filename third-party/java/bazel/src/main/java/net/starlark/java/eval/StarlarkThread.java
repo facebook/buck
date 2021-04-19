@@ -331,7 +331,7 @@ public final class StarlarkThread {
   @FunctionalInterface
   public interface Loader {
     @Nullable
-    Module load(String module);
+    LoadedModule load(String module);
   }
 
   /** Returns the loader for Starlark load statements. */

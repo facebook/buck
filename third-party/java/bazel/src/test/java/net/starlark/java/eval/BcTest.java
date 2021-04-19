@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
 import org.junit.Assert;
@@ -51,9 +52,7 @@ public class BcTest {
     StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
     thread.setLoader(module -> {
       assertEquals("imports.bzl", module);
-      Module result = Module.create();
-      result.setGlobal("x", StarlarkInt.of(19));
-      return result;
+      return new LoadedModule.Simple(ImmutableMap.of("x", StarlarkInt.of(19)));
     });
     StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
         ParserInput.fromString(program, "f.star"),

@@ -29,7 +29,7 @@ import net.starlark.java.eval.Module;
 @BuckStyleValue
 abstract class ExtensionData {
   /** @return an extension with its bindings */
-  public abstract Module getExtension();
+  public abstract BuckStarlarkLoadedModule getExtension();
 
   /** @return a path from which the extension was loaded from */
   public abstract AbsPath getPath();
