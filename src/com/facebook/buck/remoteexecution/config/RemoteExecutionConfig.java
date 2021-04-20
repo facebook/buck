@@ -304,7 +304,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
   }
 
   public String getUseCaseId() {
-    return getValue(USECASE_ID_KEY).orElse("");
+    return getValue(USECASE_ID_KEY).orElse("buck-default");
   }
 
   public String getDebugURLString(RESessionID reSessionID) {
