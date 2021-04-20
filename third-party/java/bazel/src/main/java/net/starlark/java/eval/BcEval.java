@@ -230,7 +230,7 @@ class BcEval {
   private Object getGlobal(int index) throws EvalException {
     Object value = fn.getModule().getGlobalByIndex(index);
     if (value == null) {
-      String name = fn.getModule().getGlobalNameByIndexSlow(index);
+      String name = fn.getModule().getResolverModule().getGlobalNameByIndexSlow(index);
       throw referencedBeforeAssignment(Resolver.Scope.GLOBAL, name);
     }
     return value;

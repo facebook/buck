@@ -15,6 +15,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,6 +24,7 @@ import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.SyntaxError;
 
 /** A value class for storing {@link Param} metadata to avoid using Java proxies. */

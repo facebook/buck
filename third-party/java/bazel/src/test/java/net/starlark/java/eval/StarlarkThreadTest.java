@@ -19,6 +19,7 @@ import static org.junit.Assert.assertThrows;
 
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
+import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.SyntaxError;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,7 +86,9 @@ public final class StarlarkThreadTest {
     Module module = Module.create();
     try (Mutability mu = Mutability.create("test")) {
       StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
-      Starlark.execFile(ParserInput.fromLines("True = 123"), FileOptions.DEFAULT, module, thread);
+      Starlark
+          .execFile(ParserInput.fromLines("True = 123"), FileOptions.DEFAULT, module,
+              thread);
     }
     assertThat(module.getGlobal("True")).isEqualTo(StarlarkInt.of(123));
   }

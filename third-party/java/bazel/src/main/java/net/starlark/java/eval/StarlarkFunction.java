@@ -45,10 +45,6 @@ public final class StarlarkFunction extends StarlarkCallable {
 
   private final Module module; // a function closes over its defining module
 
-  // Index in Module.globals of ith Program global (Resolver.Binding(GLOBAL).index).
-  // See explanation at Starlark.execFileProgram.
-  final int[] globalIndex;
-
   // Default values of optional parameters.
   // Indices correspond to the subsequence of parameters after the initial
   // required parameters and before *args/**kwargs.
@@ -65,7 +61,6 @@ public final class StarlarkFunction extends StarlarkCallable {
       StarlarkThread thread,
       Resolver.Function rfn,
       Module module,
-      int[] globalIndex,
       Tuple defaultValues,
       Tuple freevars) {
 
@@ -84,22 +79,10 @@ public final class StarlarkFunction extends StarlarkCallable {
     this.location = rfn.getLocation();
 
     this.module = module;
-    this.globalIndex = globalIndex;
     this.defaultValues = defaultValues;
     this.freevars = freevars;
 
-    this.compiled = Bc.compileFunction(thread, rfn, module, globalIndex, freevars);
-  }
-
-  // Sets a global variable, given its index in this function's compiled Program.
-  void setGlobal(int progIndex, Object value) {
-    module.setGlobalByIndex(globalIndex[progIndex], value);
-  }
-
-  // Gets the value of a global variable, given its index in this function's compiled Program.
-  @Nullable
-  Object getGlobal(int progIndex) {
-    return module.getGlobalByIndex(globalIndex[progIndex]);
+    this.compiled = Bc.compileFunction(thread, rfn, module, freevars);
   }
 
   boolean isToplevel() {

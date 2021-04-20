@@ -32,10 +32,10 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Function;
-import net.starlark.java.eval.Module;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkCallable;
 import net.starlark.java.eval.Structure;
+import net.starlark.java.syntax.ResolverModule;
 import org.immutables.value.Value.Lazy;
 
 /**
@@ -92,9 +92,9 @@ public abstract class BuckGlobals {
     return builder.build();
   }
 
-  /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
-  Module makeBuckLoadContextGlobals() {
-    return Module.withPredeclared(getBuckLoadContextGlobals());
+  /** Always disable implicit native imports in skylark rules, they should utilize native. */
+  ResolverModule makeBuckLoadContextGlobals() {
+    return new ResolverModule(getBuckLoadContextGlobals(), Starlark.UNIVERSE_OBJECTS);
   }
 
   /** {@code BUCK} file initial contents. */
@@ -110,10 +110,9 @@ public abstract class BuckGlobals {
     return builder.build();
   }
 
-  /** Disable implicit native rules depending on configuration */
-  Module makeBuckBuildFileContextGlobals() {
-    ImmutableMap<String, Object> map = getMakeBuckBuildFileContextGlobals();
-    return Module.withPredeclared(map);
+  /** Disable implicit native rules depending on configuration. */
+  ResolverModule makeBuckBuildFileContextGlobals() {
+    return new ResolverModule(getMakeBuckBuildFileContextGlobals(), Starlark.UNIVERSE_OBJECTS);
   }
 
   /**

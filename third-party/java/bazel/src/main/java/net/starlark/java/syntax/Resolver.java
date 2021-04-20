@@ -16,15 +16,18 @@ package net.starlark.java.syntax;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.FormatMethod;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import net.starlark.java.eval.Starlark;
 import net.starlark.java.spelling.SpellChecker;
 
 /**
@@ -125,6 +128,7 @@ public final class Resolver extends NodeVisitor {
   /** A Resolver.Function records information about a resolved function. */
   public static final class Function {
 
+    private final ResolverModule module;
     private final FileLocations fileLocations;
     private final String name;
     private final Location location;
@@ -144,6 +148,7 @@ public final class Resolver extends NodeVisitor {
     private final int numNonStarParams;
 
     private Function(
+        ResolverModule module,
         FileLocations fileLocations,
         String name,
         Location loc,
@@ -153,6 +158,7 @@ public final class Resolver extends NodeVisitor {
         List<Binding> locals,
         List<Binding> freevars,
         List<String> globals) {
+      this.module = module;
       this.fileLocations = fileLocations;
       this.name = name;
       this.location = loc;
@@ -201,6 +207,10 @@ public final class Resolver extends NodeVisitor {
       this.kwargsIndex = kwargsIndex;
 
       this.numNonStarParams = params.size() - (varargsIndex >= 0 ? 1 : 0) - (kwargsIndex >= 0 ? 1 : 0);
+    }
+
+    public ResolverModule getModule() {
+      return module;
     }
 
     public FileLocations getFileLocations() {
@@ -328,75 +338,6 @@ public final class Resolver extends NodeVisitor {
     }
   }
 
-  /**
-   * A Module is a static abstraction of a Starlark module (see {@link
-   * net.starlark.java.eval.Module})). It describes, for the resolver and compiler, the set of
-   * variable names that are predeclared, either by the interpreter (UNIVERSAL) or by the
-   * application (PREDECLARED), plus the set of pre-defined global names (which is typically empty,
-   * except in a REPL or EvaluationTestCase scenario).
-   */
-  public interface Module {
-
-    /** Name resolve result. */
-    class ResolvedName {
-      private final Scope scope;
-      private final int nameIndex;
-
-      private ResolvedName(Scope scope, int nameIndex) {
-        this.scope = scope;
-        this.nameIndex = nameIndex;
-      }
-
-      /** Binding is non-local and occurs outside any function or comprehension. */
-      public static final ResolvedName GLOBAL = new ResolvedName(Scope.GLOBAL, -1);
-      /** Binding is predeclared by the application (e.g. glob in Bazel). */
-      public static final ResolvedName PREDECLARED = new ResolvedName(Scope.PREDECLARED, -1);
-
-      /** Binding is predeclared by the core (e.g. None). */
-      public static ResolvedName universal(int nameIndex) {
-        Preconditions.checkArgument(nameIndex >= 0);
-        return new ResolvedName(Scope.UNIVERSAL, nameIndex);
-      }
-    }
-
-    /**
-     * Resolves a name to a GLOBAL, PREDECLARED, or UNIVERSAL binding.
-     *
-     * @throws Undefined if the name is not defined.
-     */
-    ResolvedName resolve(String name) throws Undefined;
-
-    /**
-     * An Undefined exception indicates a failure to resolve a top-level name. If {@code candidates}
-     * is non-null, it provides the set of accessible top-level names, which, along with local
-     * names, will be used as candidates for spelling suggestions.
-     */
-    final class Undefined extends Exception {
-      @Nullable private final Set<String> candidates;
-
-      public Undefined(String message, @Nullable Set<String> candidates) {
-        super(message);
-        this.candidates = candidates;
-      }
-    }
-  }
-
-  // A simple implementation of the Module for testing.
-  // It defines only the predeclared names---no "universal" names (e.g. None)
-  // or initially-defined globals (as happens in a REPL).
-  // Realistically, most clients will use an eval.Module.
-  // TODO(adonovan): move into test/ tree.
-  public static Module moduleWithPredeclared(String... names) {
-    ImmutableSet<String> predeclared = ImmutableSet.copyOf(names);
-    return (name) -> {
-      if (predeclared.contains(name)) {
-        return Module.ResolvedName.PREDECLARED;
-      }
-      throw new Resolver.Module.Undefined(
-          String.format("name '%s' is not defined", name), predeclared);
-    };
-  }
-
   private static class Block {
     @Nullable private final Block parent; // enclosing block, or null for tail of list
     @Nullable Node syntax; // Comprehension, DefStatement/LambdaExpression, StarlarkFile, or null
@@ -424,7 +365,7 @@ public final class Resolver extends NodeVisitor {
 
   private final List<SyntaxError> errors;
   private final FileOptions options;
-  private final Module module;
+  private final ResolverModule module;
   // List whose order defines the numbering of global variables in this program.
   private final List<String> globals = new ArrayList<>();
   // A cache of PREDECLARED, UNIVERSAL, and GLOBAL bindings queried from the module.
@@ -433,7 +374,7 @@ public final class Resolver extends NodeVisitor {
   private Block locals;
   private int loopCount;
 
-  private Resolver(List<SyntaxError> errors, Module module, FileOptions options) {
+  private Resolver(List<SyntaxError> errors, ResolverModule module, FileOptions options) {
     this.errors = errors;
     this.module = module;
     this.options = options;
@@ -558,10 +499,10 @@ public final class Resolver extends NodeVisitor {
     if (bind != null) {
       return bind;
     }
-    Module.ResolvedName resolvedName;
+    ResolverModule.ResolvedName resolvedName;
     try {
       resolvedName = module.resolve(name);
-    } catch (Resolver.Module.Undefined ex) {
+    } catch (ResolverModule.Undefined ex) {
       if (!Identifier.isValid(name)) {
         // If Identifier was created by Parser.makeErrorExpression, it
         // contains misparsed text. Ignore ex and report an appropriate error.
@@ -578,15 +519,15 @@ public final class Resolver extends NodeVisitor {
     }
     switch (resolvedName.scope) {
       case GLOBAL:
-        bind = new Binding(Scope.GLOBAL, globals.size(), id, options.allowToplevelRebinding());
+        bind = new Binding(Scope.GLOBAL, resolvedName.nameIndex, id, options.allowToplevelRebinding());
         // Accumulate globals in module.
         globals.add(name);
         break;
       case PREDECLARED:
-        bind = new Binding(resolvedName.scope, 0, id, false); // index not used
+        bind = new Binding(Scope.PREDECLARED, 0, id, false); // index not used
         break;
       case UNIVERSAL:
-        bind = new Binding(resolvedName.scope, resolvedName.nameIndex, id, false);
+        bind = new Binding(Scope.UNIVERSAL, resolvedName.nameIndex, id, false);
         break;
       default:
         throw new IllegalStateException("unreachable");
@@ -891,6 +832,7 @@ public final class Resolver extends NodeVisitor {
     popLocalBlock();
 
     return new Function(
+        module,
         syntax.getLocs(),
         name,
         loc,
@@ -953,7 +895,7 @@ public final class Resolver extends NodeVisitor {
       if (bind == null) {
         // New global binding: add to module and to toplevel cache.
         isNew = true;
-        bind = new Binding(Scope.GLOBAL, globals.size(), id, options.allowToplevelRebinding());
+        bind = new Binding(Scope.GLOBAL, module.getIndexOfGlobal(id.getName()), id, options.allowToplevelRebinding());
         globals.add(name);
         toplevel.put(name, bind);
 
@@ -1061,7 +1003,7 @@ public final class Resolver extends NodeVisitor {
    * defined by {@code module}. The StarlarkFile is mutated. Errors are appended to {@link
    * StarlarkFile#errors}.
    */
-  public static void resolveFile(StarlarkFile file, Module module) {
+  public static void resolveFile(StarlarkFile file, ResolverModule module) {
     Resolver r = new Resolver(file.errors, module, file.getOptions());
     ImmutableList<Statement> stmts = file.getStatements();
 
@@ -1095,6 +1037,7 @@ public final class Resolver extends NodeVisitor {
     // Annotate with resolved information about the toplevel function.
     file.setResolvedFunction(
         new Function(
+            module,
             file.getLocs(),
             "<toplevel>",
             file.getStartLocation(),
@@ -1111,7 +1054,7 @@ public final class Resolver extends NodeVisitor {
    * defined by {@code module}. This operation mutates the Expression. Syntax must be resolved
    * before it is evaluated.
    */
-  public static Function resolveExpr(Expression expr, Module module, FileOptions options)
+  public static Function resolveExpr(Expression expr, ResolverModule module, FileOptions options)
       throws SyntaxError.Exception {
     List<SyntaxError> errors = new ArrayList<>();
     Resolver r = new Resolver(errors, module, options);
@@ -1127,6 +1070,7 @@ public final class Resolver extends NodeVisitor {
 
     // Return no-arg function that computes the expression.
     return new Function(
+        module,
         expr.getLocs(),
         "<expr>",
         expr.getStartLocation(),

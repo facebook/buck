@@ -25,13 +25,16 @@ public final class Program {
   private final Resolver.Function body;
   private final ImmutableList<String> loads;
   private final ImmutableList<Location> loadLocations;
+  private final ResolverModule module;
 
   private Program(
-      Resolver.Function body, ImmutableList<String> loads, ImmutableList<Location> loadLocations) {
+      Resolver.Function body, ImmutableList<String> loads, ImmutableList<Location> loadLocations,
+      ResolverModule module) {
     // TODO(adonovan): compile here.
     this.body = body;
     this.loads = loads;
     this.loadLocations = loadLocations;
+    this.module = module;
   }
 
   // TODO(adonovan): eliminate once Eval no longer needs access to syntax.
@@ -54,6 +57,11 @@ public final class Program {
     return loadLocations.get(i);
   }
 
+  /** Module used for resolving. */
+  public ResolverModule getModule() {
+    return module;
+  }
+
   /**
    * Resolves a file syntax tree in the specified environment and compiles it to a Program. This
    * operation mutates the syntax tree, both by resolving identifiers and recording local variables,
@@ -62,7 +70,7 @@ public final class Program {
    * @throws SyntaxError.Exception in case of resolution error, or if the syntax tree already
    *     contained syntax scan/parse errors. Resolution errors are added to {@code file.errors()}.
    */
-  public static Program compileFile(StarlarkFile file, Resolver.Module env)
+  public static Program compileFile(StarlarkFile file, ResolverModule env)
       throws SyntaxError.Exception {
     Resolver.resolveFile(file, env);
     if (!file.ok()) {
@@ -81,7 +89,7 @@ public final class Program {
       }
     }
 
-    return new Program(file.getResolvedFunction(), loads.build(), loadLocations.build());
+    return new Program(file.getResolvedFunction(), loads.build(), loadLocations.build(), env);
   }
 
   /**
@@ -91,9 +99,13 @@ public final class Program {
    *
    * @throws SyntaxError.Exception in case of resolution error.
    */
-  public static Program compileExpr(Expression expr, Resolver.Module module, FileOptions options)
+  public static Program compileExpr(Expression expr, ResolverModule module, FileOptions options)
       throws SyntaxError.Exception {
     Resolver.Function body = Resolver.resolveExpr(expr, module, options);
-    return new Program(body, /*loads=*/ ImmutableList.of(), /*loadLocations=*/ ImmutableList.of());
+    return new Program(
+        body,
+        /*loads=*/ ImmutableList.of(),
+        /*loadLocations=*/ ImmutableList.of(),
+        module);
   }
 }

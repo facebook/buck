@@ -128,7 +128,8 @@ public class SkylarkBuildModuleTest {
     }
 
     try {
-      Program program = Program.compileFile(buildFileAst, module);
+      Program program = Program.compileFile(buildFileAst, module.getResolverModule());
+      module.allocateGlobalsAfterResolution();
       Starlark.execFileProgram(program, module, env);
       Assert.assertTrue(expectSuccess);
     } catch (EvalException e) {

@@ -2,7 +2,6 @@ package net.starlark.java.eval;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 
 import java.math.BigInteger;
@@ -151,7 +150,7 @@ class Bc {
     public String toString() {
       return toStringImpl(name, text, new BcInstrOperand.OpcodePrinterFunctionContext(
               getLocalNames(),
-              module.getGlobalNamesSlow(),
+              module.getResolverModule().getGlobalNamesSlow(),
               getFreeVarNames()),
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
@@ -167,7 +166,7 @@ class Bc {
     ImmutableList<String> toStringInstructions() {
       return toStringInstructionsImpl(text, new BcInstrOperand.OpcodePrinterFunctionContext(
                 getLocalNames(),
-                module.getGlobalNamesSlow(),
+                module.getResolverModule().getGlobalNamesSlow(),
                 getFreeVarNames()),
           Arrays.asList(strings), Arrays.asList(constSlots));
     }
@@ -340,7 +339,6 @@ class Bc {
     @javax.annotation.Nonnull
     private final Resolver.Function rfn;
     private final Module module;
-    private final int[] globalIndex;
     private final Tuple freevars;
     /** {@code 0..ip} of the array is bytecode. */
     private int[] text = ArraysForStarlark.EMPTY_INT_ARRAY;
@@ -368,15 +366,17 @@ class Bc {
     /** Alternating instr, file locations offset */
     private BcInstrToLoc.Builder instrToLoc;
 
-    private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, int[] globalIndex,
-        Tuple freevars) {
+    private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, Tuple freevars) {
+      Preconditions.checkArgument(rfn.getModule() == module.getResolverModule(),
+          "must compile function with the same module used to resolve function,"
+              + " otherwise global indices won't match");
+
       this.fileLocations = rfn.getFileLocations();
       this.instrToLoc = new BcInstrToLoc.Builder(rfn.getFileLocations());
       this.thread = thread;
       this.rfn = rfn;
       this.nlocals = rfn.getLocals().size();
       this.module = module;
-      this.globalIndex = globalIndex;
       this.freevars = freevars;
       this.slots = this.nlocals;
       this.maxSlots = slots;
@@ -827,12 +827,11 @@ class Bc {
           cp(identifier, rhs, binding.getIndex());
           return;
         case GLOBAL:
-          int globalVarIndex = this.globalIndex[binding.getIndex()];
           write(
               BcInstr.Opcode.SET_GLOBAL,
               identifier,
               rhs,
-              globalVarIndex,
+              binding.getIndex(),
               allocString(identifier.getName()),
               postAssignHook ? 1 : 0);
           return;
@@ -1097,7 +1096,7 @@ class Bc {
         case LOCAL:
           return new CompileExpressionResult(binding.getIndex() | BcSlot.LOCAL_FLAG, null);
         case GLOBAL:
-          int globalVarIndex = this.globalIndex[binding.getIndex()];
+          int globalVarIndex = binding.getIndex();
           if (!binding.isFirstReassignable()) {
             Object globalValue = module.getGlobalByIndex(globalVarIndex);
             if (globalValue != null) {
@@ -1123,7 +1122,7 @@ class Bc {
         case UNIVERSAL:
           return compileConstant(Starlark.UNIVERSE_OBJECTS.valueByIndex(binding.getIndex()));
         case PREDECLARED:
-          return compileConstant(module.getPredeclared(binding.getName()));
+          return compileConstant(module.getResolverModule().getPredeclared(binding.getName()));
         default:
           throw new IllegalStateException();
       }
@@ -1562,9 +1561,10 @@ class Bc {
     }
   }
 
-  public static Compiled compileFunction(StarlarkThread thread, Resolver.Function rfn, Module module, int[] globalIndex,
+  public static Compiled compileFunction(StarlarkThread thread, Resolver.Function rfn,
+      Module module,
       Tuple freevars) {
-    Compiler compiler = new Compiler(thread, rfn, module, globalIndex, freevars);
+    Compiler compiler = new Compiler(thread, rfn, module, freevars);
     compiler.compileStatements(rfn.getBody(), true);
     return compiler.finish();
   }

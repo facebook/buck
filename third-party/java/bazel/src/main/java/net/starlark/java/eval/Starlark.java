@@ -37,9 +37,11 @@ import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.spelling.SpellChecker;
 import net.starlark.java.syntax.Expression;
 import net.starlark.java.syntax.FileOptions;
+import net.starlark.java.syntax.ImportedScopeObjects;
 import net.starlark.java.syntax.ParserInput;
 import net.starlark.java.syntax.Program;
 import net.starlark.java.syntax.Resolver;
+import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.StarlarkFile;
 import net.starlark.java.syntax.SyntaxError;
 
@@ -98,7 +100,7 @@ public final class Starlark {
   /**
    * Universal bindings index.
    */
-  static final ImportedScopeObjects UNIVERSE_OBJECTS = ImportedScopeObjects.create(UNIVERSE);
+  public static final ImportedScopeObjects UNIVERSE_OBJECTS = ImportedScopeObjects.create(UNIVERSE);
 
   /**
    * Reports whether the argument is a legal Starlark value: a string, boolean, or StarlarkValue.
@@ -887,6 +889,16 @@ public final class Starlark {
     }
   }
 
+  public static class ExecFileResult {
+    public final Module module;
+    public final Object result;
+
+    public ExecFileResult(Module module, Object result) {
+      this.module = module;
+      this.result = result;
+    }
+  }
+
   /**
    * Parses the input as a file, resolves it in the specified module environment, compiles it, and
    * executes it in the specified thread. On success it returns None, unless the file's final
@@ -900,7 +912,8 @@ public final class Starlark {
       ParserInput input, FileOptions options, Module module, StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
     StarlarkFile file = StarlarkFile.parse(input, options);
-    Program prog = Program.compileFile(file, module);
+    Program prog = Program.compileFile(file, module.getResolverModule());
+    module.allocateGlobalsAfterResolution();
     return execFileProgram(prog, module, thread);
   }
 
@@ -909,7 +922,7 @@ public final class Starlark {
   public static Object execFile(
       ParserInput input,
       FileOptions options,
-      Map<String, Object> predeclared,
+      ImmutableMap<String, Object> predeclared,
       StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
     Module module = Module.withPredeclared(predeclared);
@@ -928,24 +941,11 @@ public final class Starlark {
       throws EvalException, InterruptedException {
     Resolver.Function rfn = prog.getResolvedFunction();
 
-    // A given Module may be passed to execFileProgram multiple times in sequence,
-    // for different compiled Programs. (This happens in the REPL, and in
-    // EvaluationTestCase scenarios. It is not true of the go.starlark.net
-    // implementation, and it complicates things significantly.
-    // It would be nice to stop doing that.)
-    //
-    // Therefore StarlarkFunctions from different Programs (files) but initializing
-    // the same Module need different mappings from the Program's numbering of
-    // globals to the Module's numbering of globals, and to access a global requires
-    // two array lookups.
-    int[] globalIndex = module.getIndicesOfGlobals(rfn.getGlobals());
-
     StarlarkFunction toplevel =
         new StarlarkFunction(
             thread,
             rfn,
             module,
-            globalIndex,
             /*defaultValues=*/ Tuple.empty(),
             /*freevars=*/ Tuple.empty());
     return Starlark.fastcall(thread, toplevel,
@@ -960,7 +960,7 @@ public final class Starlark {
    * @throws EvalException if there was a (dynamic) evaluation error.
    * @throws InterruptedException if the Java thread was interrupted during evaluation.
    */
-  public static Object eval(
+  static Object eval(
       ParserInput input, FileOptions options, Module module, StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
     StarlarkFunction fn = newExprFunction(thread, input, options, module);
@@ -973,7 +973,7 @@ public final class Starlark {
   public static Object eval(
       ParserInput input,
       FileOptions options,
-      Map<String, Object> predeclared,
+      ImmutableMap<String, Object> predeclared,
       StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
     Module module = Module.withPredeclared(predeclared);
@@ -991,11 +991,10 @@ public final class Starlark {
       StarlarkThread thread, ParserInput input, FileOptions options,
       Module module) throws SyntaxError.Exception {
     Expression expr = Expression.parse(input, options);
-    Program prog = Program.compileExpr(expr, module, options);
+    Program prog = Program.compileExpr(expr, module.getResolverModule(), options);
     Resolver.Function rfn = prog.getResolvedFunction();
-    int[] globalIndex = module.getIndicesOfGlobals(rfn.getGlobals()); // see execFileProgram
     return new StarlarkFunction(
-        thread, rfn, module, globalIndex, /*defaultValues=*/ Tuple.empty(), /*freevars=*/ Tuple.empty());
+        thread, rfn, module, /*defaultValues=*/ Tuple.empty(), /*freevars=*/ Tuple.empty());
   }
 
   /**

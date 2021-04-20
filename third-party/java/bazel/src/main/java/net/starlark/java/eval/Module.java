@@ -15,16 +15,12 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
-import net.starlark.java.syntax.Resolver;
+import net.starlark.java.syntax.ResolverModule;
 
 /**
  * A {@link Module} represents a Starlark module, a container of global variables populated by
@@ -48,40 +44,43 @@ import net.starlark.java.syntax.Resolver;
  * predeclared environment specified by the map, using the semantics to determine whether any
  * FlagGuardedValues in the map are enabled or disabled.
  */
-public final class Module implements Resolver.Module {
+public final class Module {
 
-  // The module's predeclared environment. Excludes UNIVERSE bindings.
-  private ImmutableMap<String, Object> predeclared;
+  private final ResolverModule resolverModule;
+  private Object[] globals;
 
-  // The module's global variables, in order of creation.
-  private final LinkedHashMap<String, Integer> globalIndex = new LinkedHashMap<>();
-  private Object[] globals = new Object[8];
+  public Module(ResolverModule resolverModule) {
+    this.resolverModule = resolverModule;
+    this.globals = new Object[resolverModule.globalIndexSize()];
+  }
 
-  // An optional piece of metadata associated with the module/file.
-  // May be set after construction (too obscure to burden the constructors).
-  // Its toString appears to Starlark in str(function): "<function f from ...>".
-  @Nullable private Object clientData;
-
-  private Module(ImmutableMap<String, Object> predeclared) {
-    this.predeclared = predeclared;
+  public static Module create() {
+    return withPredeclared(ImmutableMap.of());
   }
 
   /**
    * Constructs a Module with the specified predeclared bindings, filtered by the semantics, in
    * addition to the standard environment, {@link Starlark#UNIVERSE}.
    */
-  public static Module withPredeclared(
-      Map<String, Object> predeclared) {
-    return new Module(filter(predeclared));
+  public static Module withPredeclared(ImmutableMap<String, Object> predeclared) {
+    return new Module(new ResolverModule(predeclared, Starlark.UNIVERSE_OBJECTS));
   }
 
-  /**
-   * Creates a module with no predeclared bindings other than the standard environment, {@link
-   * Starlark#UNIVERSE}.
-   */
-  public static Module create() {
-    return new Module(/*predeclared=*/ ImmutableMap.of());
+  public ResolverModule getResolverModule() {
+    return resolverModule;
   }
+
+  /** Allocate globals if {@link ResolverModule} was modified after this object created. */
+  public void allocateGlobalsAfterResolution() {
+    if (globals.length < resolverModule.globalIndexSize()) {
+      globals = Arrays.copyOf(globals, resolverModule.globalIndexSize());
+    }
+  }
+
+  // An optional piece of metadata associated with the module/file.
+  // May be set after construction (too obscure to burden the constructors).
+  // Its toString appears to Starlark in str(function): "<function f from ...>".
+  @Nullable private Object clientData;
 
   /**
    * Returns the module (file) of the innermost enclosing Starlark function on the call stack, or
@@ -130,21 +129,6 @@ public final class Module implements Resolver.Module {
     return clientData;
   }
 
-  /** Returns the value of a predeclared (not universal) binding in this module. */
-  Object getPredeclared(String name) {
-    return predeclared.get(name);
-  }
-
-  /**
-   * Returns this module's additional predeclared bindings. (Excludes {@link Starlark#UNIVERSE}.)
-   *
-   * <p>The map reflects any semantics-based filtering of FlagGuardedValues done by {@link
-   * #withPredeclared}: enabled FlagGuardedValues are replaced by their underlying value.
-   */
-  public ImmutableMap<String, Object> getPredeclaredBindings() {
-    return predeclared;
-  }
-
   /**
    * Returns an immutable mapping containing the global variables of this module.
    *
@@ -152,9 +136,10 @@ public final class Module implements Resolver.Module {
    * and updates).
    */
   public ImmutableMap<String, Object> getGlobals() {
-    int n = globalIndex.size();
+    Map<String, Integer> index = resolverModule.getIndex();
+    int n = index.size();
     ImmutableMap.Builder<String, Object> m = ImmutableMap.builderWithExpectedSize(n);
-    for (Map.Entry<String, Integer> e : globalIndex.entrySet()) {
+    for (Map.Entry<String, Integer> e : index.entrySet()) {
       Object v = getGlobalByIndex(e.getValue());
       if (v != null) {
         m.put(e.getKey(), v);
@@ -163,40 +148,12 @@ public final class Module implements Resolver.Module {
     return m.build();
   }
 
-  /** Implements the resolver's module interface. */
-  @Override
-  public ResolvedName resolve(String name) throws Undefined {
-    // global?
-    if (globalIndex.containsKey(name)) {
-      return ResolvedName.GLOBAL;
-    }
-
-    // predeclared?
-    Object v = predeclared.get(name);
-    if (v != null) {
-      return ResolvedName.PREDECLARED;
-    }
-
-    // universal?
-    int universeIndex = Starlark.UNIVERSE_OBJECTS.indexByName(name);
-    if (universeIndex >= 0) {
-      return ResolvedName.universal(universeIndex);
-    }
-
-    // undefined
-    Set<String> candidates = new HashSet<>();
-    candidates.addAll(globalIndex.keySet());
-    candidates.addAll(predeclared.keySet());
-    candidates.addAll(Starlark.UNIVERSE.keySet());
-    throw new Undefined(String.format("name '%s' is not defined", name), candidates);
-  }
-
   /**
    * Returns the value of the specified global variable, or null if not bound. Does not look in the
    * predeclared environment.
    */
   public Object getGlobal(String name) {
-    Integer i = globalIndex.get(name);
+    Integer i = resolverModule.getIndexOfGlobalOrNull(name);
     return i != null ? globals[i] : null;
   }
 
@@ -205,7 +162,7 @@ public final class Module implements Resolver.Module {
    * getIndexOfGlobal}).
    */
   void setGlobalByIndex(int i, Object v) {
-    Preconditions.checkArgument(i < globalIndex.size());
+    Preconditions.checkArgument(i < resolverModule.globalIndexSize());
     this.globals[i] = v;
   }
 
@@ -215,42 +172,19 @@ public final class Module implements Resolver.Module {
    */
   @Nullable
   Object getGlobalByIndex(int i) {
-    Preconditions.checkArgument(i < globalIndex.size());
+    Preconditions.checkArgument(i < resolverModule.globalIndexSize());
     return this.globals[i];
-  }
-
-  /**
-   * Returns the index within this Module of a global variable, given its name, creating a new slot
-   * for it if needed. The numbering of globals used by these functions is not the same as the
-   * numbering within any compiled Program. Thus each StarlarkFunction must contain a secondary
-   * index mapping Program indices (from Binding.index) to Module indices.
-   */
-  int getIndexOfGlobal(String name) {
-    int i = globalIndex.size();
-    Integer prev = globalIndex.putIfAbsent(name, i);
-    if (prev != null) {
-      return prev;
-    }
-    if (i == globals.length) {
-      globals = Arrays.copyOf(globals, globals.length << 1); // grow by doubling
-    }
-    return i;
-  }
-
-  /** Returns a list of indices of a list of globals; {@see getIndexOfGlobal}. */
-  int[] getIndicesOfGlobals(List<String> globals) {
-    int n = globals.size();
-    int[] array = new int[n];
-    for (int i = 0; i < n; i++) {
-      array[i] = getIndexOfGlobal(globals.get(i));
-    }
-    return array;
   }
 
   /** Updates a global binding in the module environment. */
   public void setGlobal(String name, Object value) {
     Preconditions.checkNotNull(value, "Module.setGlobal(%s, null)", name);
-    setGlobalByIndex(getIndexOfGlobal(name), value);
+
+    int indexOfGlobal = resolverModule.getIndexOfGlobal(name);
+    if (globals.length <= indexOfGlobal) {
+      globals = Arrays.copyOf(globals, Math.max(indexOfGlobal + 1, globals.length << 1));
+    }
+    setGlobalByIndex(indexOfGlobal, value);
   }
 
   @Override
@@ -258,24 +192,4 @@ public final class Module implements Resolver.Module {
     return String.format("<module %s>", clientData == null ? "?" : clientData);
   }
 
-  /** O(N) */
-  String getGlobalNameByIndexSlow(int index) {
-    for (Map.Entry<String, Integer> e : globalIndex.entrySet()) {
-      if (e.getValue() == index) {
-        return e.getKey();
-      }
-    }
-    throw new IllegalStateException("wrong global index: " + index);
-  }
-
-  /** O(N) */
-  ImmutableList<String> getGlobalNamesSlow() {
-    String[] names = new String[globalIndex.size()];
-    for (Map.Entry<String, Integer> e : globalIndex.entrySet()) {
-      int index = e.getValue();
-      Preconditions.checkState(names[index] == null);
-      names[index] = e.getKey();
-    }
-    return ImmutableList.copyOf(names);
-  }
 }

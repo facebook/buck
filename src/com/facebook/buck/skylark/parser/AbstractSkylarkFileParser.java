@@ -78,6 +78,7 @@ import net.starlark.java.eval.StarlarkThread;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.ParserInput;
 import net.starlark.java.syntax.Program;
+import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.StarlarkFile;
 import net.starlark.java.syntax.SyntaxError;
 import org.immutables.value.Value;
@@ -163,8 +164,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         parseSkylarkFile(
             parseFile,
             LoadStack.top(Location.fromFile(parseFile.toString())),
-            getBuckOrPackage().fileKind,
-            containingLabel);
+            getBuckOrPackage().fileKind);
     Globber globber = getGlobber(parseFile);
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -181,7 +181,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               readConfigContext,
               implicitLoad.getExtensionData());
 
-      Module module = makeModule(getBuckOrPackage().fileKind, containingLabel);
+      Module module = new Module(buildFileAst.getModule());
+      BuckStarlarkModule.setClientData(module, containingLabel);
       exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
 
       ImmutableList.Builder<String> loadedPaths =
@@ -307,17 +308,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return file;
   }
 
-  private Module makeModule(FileKind fileKind, Label label) {
-    Module module =
-        fileKind == FileKind.BZL
-            ? buckGlobals.makeBuckLoadContextGlobals()
-            : buckGlobals.makeBuckBuildFileContextGlobals();
-    BuckStarlarkModule.setClientData(module, label);
-    return module;
+  private ResolverModule makeModule(FileKind fileKind) {
+    return fileKind == FileKind.BZL
+        ? buckGlobals.makeBuckLoadContextGlobals()
+        : buckGlobals.makeBuckBuildFileContextGlobals();
   }
 
-  private Program parseSkylarkFile(
-      AbsPath path, LoadStack loadStack, FileKind fileKind, Label label)
+  private Program parseSkylarkFile(AbsPath path, LoadStack loadStack, FileKind fileKind)
       throws BuildFileParseException, IOException {
     StarlarkFile starlarkFile;
     try {
@@ -347,7 +344,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     Program result;
     try {
-      result = Program.compileFile(starlarkFile, makeModule(fileKind, label));
+      ResolverModule module = makeModule(fileKind);
+      result = Program.compileFile(starlarkFile, module);
+      module.freeze();
     } catch (SyntaxError.Exception e) {
       Event.replayEventsOn(eventHandler, starlarkFile.errors());
       throw BuildFileParseException.createForUnknownParseError(
@@ -383,7 +382,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label label = loadImport.getLabel();
     AbsPath filePath = getImportPath(label, loadImport.getImport());
 
-    Program fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL, label);
+    Program fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(label, getImports(fileAst, label), loadStack);
 
@@ -615,13 +614,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     no such extension found.
    */
   private Either<Program, ExtensionData> lookupExtensionForImportOrLoadProgram(
-      AbsPath path, LoadStack loadStack, Label extensionLabel) throws IOException {
+      AbsPath path, LoadStack loadStack) throws IOException {
     Either<Program, ExtensionData> either = extensionCache.get(path);
     if (either != null) {
       return either;
     }
 
-    Program program = parseSkylarkFile(path, loadStack, FileKind.BZL, extensionLabel);
+    Program program = parseSkylarkFile(path, loadStack, FileKind.BZL);
     either = Either.ofLeft(program);
     Either<Program, ExtensionData> prev = extensionCache.putIfAbsent(path, either);
     if (prev != null) {
@@ -721,7 +720,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       Program ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
-      Module module = makeModule(FileKind.BZL, load.getLabel());
+      ResolverModule resolverModule = ast.getModule();
+      // Must be already frozen, but freeze again to be safe.
+      resolverModule.freeze();
+      Module module = new Module(resolverModule);
+      BuckStarlarkModule.setClientData(module, load.getLabel());
+      makeModule(FileKind.BZL);
       exec(
           ast,
           module,
@@ -784,7 +788,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     while (!work.isEmpty()) {
       LocalExtensionLoadState load = work.peek();
       Either<Program, ExtensionData> either =
-          lookupExtensionForImportOrLoadProgram(load.getPath(), load.loadStack, load.getLabel());
+          lookupExtensionForImportOrLoadProgram(load.getPath(), load.loadStack);
       extension = either.getRightOption().orElse(null);
 
       if (extension != null) {
@@ -874,7 +878,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath, containingLabel, LoadStack.EMPTY);
     Program buildFileAst =
-        parseSkylarkFile(parseFile, LoadStack.EMPTY, getBuckOrPackage().fileKind, containingLabel);
+        parseSkylarkFile(parseFile, LoadStack.EMPTY, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
 

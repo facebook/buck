@@ -133,7 +133,8 @@ public class ReadConfigTest {
     }
 
     try {
-      Program program = Program.compileFile(buildFileAst, module);
+      Program program = Program.compileFile(buildFileAst, module.getResolverModule());
+      module.allocateGlobalsAfterResolution();
       Starlark.execFileProgram(program, module, env);
     } catch (Exception e) {
       throw new RuntimeException(e);

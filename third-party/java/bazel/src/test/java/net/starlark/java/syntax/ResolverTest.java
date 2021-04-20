@@ -17,7 +17,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static net.starlark.java.syntax.LexerTest.assertContainsError;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import net.starlark.java.eval.Starlark;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -28,13 +32,24 @@ public class ResolverTest {
 
   private final FileOptions.Builder options = FileOptions.builder();
 
+  // A simple implementation of the Module for testing.
+  // It defines only the predeclared names---no "universal" names (e.g. None)
+  // or initially-defined globals (as happens in a REPL).
+  // Realistically, most clients will use an eval.Module.
+  // TODO(adonovan): move into test/ tree.
+  private static ResolverModule moduleWithPredeclared(String... names) {
+    ImmutableMap<String, Object> predeclared = Arrays.stream(names)
+        .collect(ImmutableMap.toImmutableMap(n -> n, n -> true));
+    return new ResolverModule(predeclared, Starlark.UNIVERSE_OBJECTS);
+  }
+
   // Resolves a file using the current options,
   // in an environment with a single predeclared name, pre.
   // Errors are recorded in file.errors().
   private StarlarkFile resolveFile(String... lines) throws SyntaxError.Exception {
     ParserInput input = ParserInput.fromLines(lines);
     StarlarkFile file = StarlarkFile.parse(input, options.build());
-    Resolver.resolveFile(file, Resolver.moduleWithPredeclared("pre"));
+    Resolver.resolveFile(file, moduleWithPredeclared("pre"));
     return file;
   }
 

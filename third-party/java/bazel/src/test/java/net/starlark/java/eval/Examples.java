@@ -19,9 +19,6 @@ import net.starlark.java.annot.Param;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
-import net.starlark.java.syntax.Program;
-import net.starlark.java.syntax.Resolver;
-import net.starlark.java.syntax.StarlarkFile;
 import net.starlark.java.syntax.SyntaxError;
 
 /**
@@ -76,37 +73,6 @@ final class Examples {
       StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
       return Starlark.eval(input, FileOptions.DEFAULT, module, thread);
     }
-  }
-
-  /**
-   * This advanced example reads, parses, and compiles a Starlark file to a Program, then later
-   * executes it.
-   */
-  Module compileThenExecute()
-      throws IOException, SyntaxError.Exception, EvalException, InterruptedException {
-    // Read and parse the named file.
-    ParserInput input = ParserInput.readFile("my/file.star");
-    StarlarkFile file = StarlarkFile.parse(input);
-
-    // Compile the program, with additional predeclared environment bindings.
-    // TODO(adonovan): supply Starlark.UNIVERSE somehow.
-    Program prog = Program.compileFile(file, Resolver.moduleWithPredeclared("zero", "square"));
-
-    // . . .
-
-    // TODO(adonovan): when supported, show how the compiled program can be
-    // saved and reloaded, to avoid repeating the cost of parsing and
-    // compilation.
-
-    // Execute the compiled program to populate a module.
-    // The module's predeclared environment must match the
-    // names provided during compilation.
-    Module module = Module.withPredeclared(makeEnvironment());
-    try (Mutability mu = Mutability.create(prog.getFilename())) {
-      StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
-      Starlark.execFileProgram(prog, module, thread);
-    }
-    return module;
   }
 
   /** This function shows how to construct a callable Starlark value from a Java method. */

@@ -1,4 +1,4 @@
-package net.starlark.java.eval;
+package net.starlark.java.syntax;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.stream.IntStream;
 
 /** Map from name to value with index by name. */
-class ImportedScopeObjects {
+public class ImportedScopeObjects {
 
   private final ImmutableMap<String, Object> byName;
   private final ImmutableList<Object> byIndex;
@@ -25,6 +25,8 @@ class ImportedScopeObjects {
     this.byIndex = byName.values().asList();
   }
 
+  static final ImportedScopeObjects EMPTY = new ImportedScopeObjects(ImmutableMap.of());
+
   /** Create a scope object from given value map by name. */
   public static ImportedScopeObjects create(ImmutableMap<String, Object> valuesByName) {
     return new ImportedScopeObjects(valuesByName);
@@ -39,5 +41,9 @@ class ImportedScopeObjects {
   /** Get a value by index. */
   public Object valueByIndex(int index) {
     return byIndex.get(index);
+  }
+
+  public ImmutableList<String> names() {
+    return indexByName.keySet().asList();
   }
 }
