@@ -847,12 +847,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  @SuppressWarnings("unused")
-  public void envVariableChange(ParsingEvent.EnvVariableChange event) {
-    printInfoDirectlyOnce("Action graph will be rebuilt because environment variables changed.");
-  }
-
-  @Subscribe
   public synchronized void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
     if (!stolenTargets.contains(event.getBuildTarget())) {
       eventsByTargets.put(event.getBuildTarget(), event);

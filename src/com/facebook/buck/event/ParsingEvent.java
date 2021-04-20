@@ -31,10 +31,6 @@ public class ParsingEvent extends AbstractBuckEvent implements BuckEvent {
     return new SymlinkInvalidation(path);
   }
 
-  public static EnvVariableChange environmentalChange(String diff) {
-    return new EnvVariableChange(diff);
-  }
-
   @Override
   protected String getValueString() {
     return eventName;
@@ -56,20 +52,6 @@ public class ParsingEvent extends AbstractBuckEvent implements BuckEvent {
 
     public String getPath() {
       return path;
-    }
-  }
-
-  public static class EnvVariableChange extends ParsingEvent {
-    @JsonView(JsonViews.MachineReadableLog.class)
-    private final String diff;
-
-    public EnvVariableChange(String diff) {
-      super(EventKey.unique(), "EnvVariableChange");
-      this.diff = diff;
-    }
-
-    public String getDiff() {
-      return diff;
     }
   }
 }

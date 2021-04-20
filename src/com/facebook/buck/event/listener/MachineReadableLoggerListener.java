@@ -337,11 +337,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void environmentalChange(ParsingEvent.EnvVariableChange event) {
-    writeToLog("EnvChange", event);
-  }
-
-  @Subscribe
   public synchronized void timePerfStatsEvent(PerfTimesEventListener.PerfTimesEvent event) {
     latestPerfTimesStats = event.getPerfTimesStats();
   }

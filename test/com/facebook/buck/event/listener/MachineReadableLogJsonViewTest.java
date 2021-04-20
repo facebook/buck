@@ -98,13 +98,10 @@ public class MachineReadableLogJsonViewTest {
   @Test
   public void testParsingEvents() throws Exception {
     ParsingEvent symlink = ParsingEvent.symlinkInvalidation("target");
-    ParsingEvent envChange = ParsingEvent.environmentalChange("diff");
 
     symlink.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
-    envChange.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
 
     assertJsonEquals("{%s,\"path\":\"target\"}", WRITER.writeValueAsString(symlink));
-    assertJsonEquals("{%s,\"diff\":\"diff\"}", WRITER.writeValueAsString(envChange));
   }
 
   @Test
