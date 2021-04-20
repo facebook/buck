@@ -789,12 +789,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     logEventDirectly(ConsoleEvent.severe(line));
   }
 
-  private void printInfoDirectlyOnce(String line) {
+  private void printDirectlyOnce(String line, Level level) {
     if (console.getVerbosity().isSilent()) {
       return;
     }
     if (!actionGraphCacheMessage.contains(line)) {
-      logEventDirectly(ConsoleEvent.info(line));
+      logEventDirectly(ConsoleEvent.create(level, line));
       actionGraphCacheMessage.add(line);
     }
   }
@@ -812,14 +812,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   @Subscribe
   public void watchmanOverflow(WatchmanStatusEvent.Overflow event) {
-    printInfoDirectlyOnce(
+    printDirectlyOnce(
         "In-memory caches invalidated because there was an issue with watchman:"
             + System.lineSeparator()
-            + event.getReason());
+            + event.getReason(),
+        Level.WARNING);
   }
 
   private void printFileAddedOrRemoved() {
-    printInfoDirectlyOnce("Action graph will be rebuilt because files have been added or removed.");
+    printDirectlyOnce(
+        "Action graph will be rebuilt because files have been added or removed.", Level.INFO);
   }
 
   @Subscribe
@@ -843,7 +845,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   @SuppressWarnings("unused")
   public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
-    printInfoDirectlyOnce("Action graph will be rebuilt because symlinks are used.");
+    printDirectlyOnce("Action graph will be rebuilt because symlinks are used.", Level.INFO);
   }
 
   @Subscribe
