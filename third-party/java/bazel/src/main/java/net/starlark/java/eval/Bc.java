@@ -780,7 +780,7 @@ class Bc {
       if (lhs instanceof Identifier) {
         Identifier lhsIdent = (Identifier) lhs;
         if (lhsIdent.getBinding().getScope() == Resolver.Scope.LOCAL && !postAssignHook) {
-          compileExpressionTo(assignmentStatement.getRHS(), lhsIdent.getBinding().getIndex() | BcSlot.LOCAL_FLAG);
+          compileExpressionTo(assignmentStatement.getRHS(), localIdentSlot(lhsIdent));
           return;
         }
       }
@@ -854,20 +854,41 @@ class Bc {
       write(BcInstr.Opcode.EVAL_EXCEPTION, node, allocString(message));
     }
 
+    private void writeBinaryInplace(Node node, int lhs, int rhs, TokenKind op, int lhsOut) {
+      write(
+          BcInstr.Opcode.BINARY_IN_PLACE,
+          node,
+          lhs,
+          rhs,
+          op.ordinal(),
+          lhsOut
+      );
+    }
+
     private void compileAgumentedAssignmentToIdentifier(AssignmentStatement assignmentStatement) {
       Identifier lhs = (Identifier) assignmentStatement.getLHS();
 
       int rhs = compileExpression(assignmentStatement.getRHS()).slot;
-      CompileExpressionResult value = compileGet(lhs);
-      int temp = allocSlot();
-      write(
-          BcInstr.Opcode.BINARY_IN_PLACE,
-          assignmentStatement,
-          value.slot,
-          rhs,
-          assignmentStatement.getOperator().ordinal(),
-          temp);
-      compileSet(temp, lhs, false);
+
+      if (lhs.getBinding().getScope() == Resolver.Scope.LOCAL) {
+        writeBinaryInplace(
+            assignmentStatement,
+            localIdentSlot(lhs),
+            rhs,
+            assignmentStatement.getOperator(),
+            localIdentSlot(lhs)
+        );
+      } else {
+        CompileExpressionResult value = compileGet(lhs);
+        int temp = allocSlot();
+        writeBinaryInplace(
+            assignmentStatement,
+            value.slot,
+            rhs,
+            assignmentStatement.getOperator(),
+            temp);
+        compileSet(temp, lhs, false);
+      }
     }
 
     private void compileAgumentedAssignment(AssignmentStatement assignmentStatement) {
@@ -1087,6 +1108,11 @@ class Bc {
       return new CompileExpressionResult(result, null);
     }
 
+    private int localIdentSlot(Identifier identifier) {
+      Preconditions.checkArgument(identifier.getBinding().getScope() == Resolver.Scope.LOCAL);
+      return BcSlot.local(identifier.getBinding().getIndex());
+    }
+
     private CompileExpressionResult compileGet(Identifier identifier) {
       Resolver.Binding binding = identifier.getBinding();
       if (binding == null) {
@@ -1094,7 +1120,7 @@ class Bc {
       }
       switch (binding.getScope()) {
         case LOCAL:
-          return new CompileExpressionResult(binding.getIndex() | BcSlot.LOCAL_FLAG, null);
+          return new CompileExpressionResult(localIdentSlot(identifier), null);
         case GLOBAL:
           int globalVarIndex = binding.getIndex();
           if (!binding.isFirstReassignable()) {
@@ -1129,6 +1155,8 @@ class Bc {
     }
 
     private CompileExpressionResult compileComprehension(Comprehension comprehension, int result) {
+      // Must explicitly use temporary variable, because comprehension expression
+      // may reference to the same slot we are about to write.
       int temp = allocSlot();
       if (comprehension.isDict()) {
         write(BcInstr.Opcode.DICT, comprehension.getBody(), 0, temp);
