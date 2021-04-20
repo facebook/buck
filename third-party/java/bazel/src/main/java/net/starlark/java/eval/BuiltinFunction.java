@@ -116,9 +116,18 @@ public final class BuiltinFunction extends StarlarkCallable {
       StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
       @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
     MethodDescriptor desc = getMethodDescriptor(thread.getSemantics());
+
+    long start = StarlarkRuntimeStats.ENABLED ? System.nanoTime() : 0;
+
     Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
-    return desc.call(
+    Object result = desc.call(
         obj instanceof String ? StringModule.INSTANCE : obj, vector, thread.mutability());
+
+    if (StarlarkRuntimeStats.ENABLED) {
+      StarlarkRuntimeStats.recordNativeCall(getName(), System.nanoTime() - start);
+    }
+
+    return result;
   }
 
   private MethodDescriptor getMethodDescriptor(StarlarkSemantics semantics) {

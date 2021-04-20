@@ -37,6 +37,9 @@ class BcEval {
   /** Instruction pointer while decoding operands */
   private int ip = 0;
 
+  /** Number of instructions executed in this function. */
+  private int localSteps = 0;
+
   private BcEval(StarlarkThread.Frame fr, StarlarkFunction fn) {
     this.fr = fr;
 
@@ -66,6 +69,12 @@ class BcEval {
         // * opcode
         // * operands which depend on opcode
         int opcode = text[ip++];
+
+        if (StarlarkRuntimeStats.ENABLED) {
+          StarlarkRuntimeStats.recordInst(opcode);
+          ++localSteps;
+        }
+
         switch (opcode) {
           case BcInstr.CP:
             cp();
@@ -169,6 +178,10 @@ class BcEval {
     } finally {
       while (loopDepth != 0) {
         popFor();
+      }
+
+      if (StarlarkRuntimeStats.ENABLED) {
+        StarlarkRuntimeStats.recordStarlarkCall(fn.getName(), localSteps);
       }
     }
     return Starlark.NONE;

@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import net.starlark.java.eval.StarlarkRuntimeStats;
 import net.starlark.java.syntax.Location;
 
 /**
@@ -227,8 +228,15 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
   }
 
+  private boolean closed = false;
+
   @Override
   public void close() {
+    if (!closed) {
+      closed = true;
+      StarlarkRuntimeStats.printStatsAndReset();
+    }
+
     try {
       globberFactory.close();
     } catch (Exception e) {
