@@ -813,7 +813,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void watchmanOverflow(WatchmanStatusEvent.Overflow event) {
     printInfoDirectlyOnce(
-        "Action graph will be rebuilt because there was an issue with watchman:"
+        "In-memory caches invalidated because there was an issue with watchman:"
             + System.lineSeparator()
             + event.getReason());
   }
