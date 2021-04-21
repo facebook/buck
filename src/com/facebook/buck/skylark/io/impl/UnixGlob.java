@@ -32,10 +32,8 @@ package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ForwardingListenableFuture;
@@ -52,7 +50,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,141 +97,13 @@ final class UnixGlob {
    *
    * @return list of segment arrays
    */
-  private static List<String[]> checkAndSplitPatterns(Collection<String> patterns) {
-    List<String[]> list = Lists.newArrayListWithCapacity(patterns.size());
+  private static ImmutableList<UnixGlobPattern> checkAndSplitPatterns(Collection<String> patterns) {
+    ImmutableList.Builder<UnixGlobPattern> list =
+        ImmutableList.builderWithExpectedSize(patterns.size());
     for (String pattern : patterns) {
-      String error = checkPatternForError(pattern);
-      if (error != null) {
-        throw new IllegalArgumentException(error + " (in glob pattern '" + pattern + "')");
-      }
-      Iterable<String> segments = Splitter.on('/').split(pattern);
-      list.add(Iterables.toArray(segments, String.class));
+      list.add(UnixGlobPattern.parse(pattern));
     }
-    return list;
-  }
-
-  /** @return whether or not {@code pattern} contains illegal characters */
-  static String checkPatternForError(String pattern) {
-    if (pattern.isEmpty()) {
-      return "pattern cannot be empty";
-    }
-    if (pattern.charAt(0) == '/') {
-      return "pattern cannot be absolute";
-    }
-    Iterable<String> segments = Splitter.on('/').split(pattern);
-    for (String segment : segments) {
-      if (segment.isEmpty()) {
-        return "empty segment not permitted";
-      }
-      if (segment.equals(".") || segment.equals("..")) {
-        return "segment '" + segment + "' not permitted";
-      }
-      if (segment.contains("**") && !segment.equals("**")) {
-        return "recursive wildcard must be its own segment";
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Returns whether {@code str} matches the glob pattern {@code pattern}. This method may use the
-   * {@code patternCache} to speed up the matching process.
-   *
-   * @param pattern a glob pattern
-   * @param str the string to match
-   * @param patternCache a cache from patterns to compiled Pattern objects, or {@code null} to skip
-   *     caching
-   */
-  private static boolean matches(String pattern, String str, Map<String, Pattern> patternCache) {
-    if (pattern.length() == 0 || str.length() == 0) {
-      return false;
-    }
-
-    // If a filename starts with '.', this char must be matched explicitly.
-    if (str.charAt(0) == '.' && pattern.charAt(0) != '.') {
-      return false;
-    }
-
-    // Common case: **
-    if (pattern.equals("**")) {
-      return true;
-    }
-
-    // Common case: *
-    if (pattern.equals("*")) {
-      return true;
-    }
-
-    // Common case: *.xyz
-    if (pattern.charAt(0) == '*' && pattern.lastIndexOf('*') == 0) {
-      return str.endsWith(pattern.substring(1));
-    }
-    // Common case: xyz*
-    int lastIndex = pattern.length() - 1;
-    // The first clause of this if statement is unnecessary, but is an
-    // optimization--charAt runs faster than indexOf.
-    if (pattern.charAt(lastIndex) == '*' && pattern.indexOf('*') == lastIndex) {
-      return str.startsWith(pattern.substring(0, lastIndex));
-    }
-
-    Pattern regex =
-        patternCache == null
-            ? makePatternFromWildcard(pattern)
-            : patternCache.computeIfAbsent(pattern, p -> makePatternFromWildcard(p));
-    return regex.matcher(str).matches();
-  }
-
-  /**
-   * Returns a regular expression implementing a matcher for "pattern", in which "*" and "?" are
-   * wildcards.
-   *
-   * <p>e.g. "foo*bar?.java" -> "foo.*bar.\\.java"
-   */
-  private static Pattern makePatternFromWildcard(String pattern) {
-    StringBuilder regexp = new StringBuilder();
-    for (int i = 0, len = pattern.length(); i < len; i++) {
-      char c = pattern.charAt(i);
-      switch (c) {
-        case '*':
-          int toIncrement = 0;
-          if (len > i + 1 && pattern.charAt(i + 1) == '*') {
-            // The pattern '**' is interpreted to match 0 or more directory separators, not 1 or
-            // more. We skip the next * and then find a trailing/leading '/' and get rid of it.
-            toIncrement = 1;
-            if (len > i + 2 && pattern.charAt(i + 2) == '/') {
-              // We have '**/' -- skip the '/'.
-              toIncrement = 2;
-            } else if (len == i + 2 && i > 0 && pattern.charAt(i - 1) == '/') {
-              // We have '/**' -- remove the '/'.
-              regexp.delete(regexp.length() - 1, regexp.length());
-            }
-          }
-          regexp.append(".*");
-          i += toIncrement;
-          break;
-        case '?':
-          regexp.append('.');
-          break;
-          // escape the regexp special characters that are allowed in wildcards
-        case '^':
-        case '$':
-        case '|':
-        case '+':
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case '\\':
-        case '.':
-          regexp.append('\\');
-          regexp.append(c);
-          break;
-        default:
-          regexp.append(c);
-          break;
-      }
-    }
-    return Pattern.compile(regexp.toString());
+    return list.build();
   }
 
   public static Builder forPath(AbsPath path) {
@@ -354,10 +223,6 @@ final class UnixGlob {
       }
     }
 
-    private static boolean isRecursivePattern(String pattern) {
-      return "**".equals(pattern);
-    }
-
     Future<List<AbsPath>> globAsync(
         AbsPath base, Collection<String> patterns, boolean excludeDirectories) {
 
@@ -371,7 +236,7 @@ final class UnixGlob {
         return Futures.immediateFuture(Collections.emptyList());
       }
 
-      List<String[]> splitPatterns = checkAndSplitPatterns(patterns);
+      ImmutableList<UnixGlobPattern> splitPatterns = checkAndSplitPatterns(patterns);
 
       // We do a dumb loop, even though it will likely duplicate logical work (note that the
       // physical filesystem operations are cached). In order to optimize, we would need to keep
@@ -379,13 +244,8 @@ final class UnixGlob {
       // glob [*/*.java, sub/*.java, */*.txt]).
       pendingOps.incrementAndGet();
       try {
-        for (String[] splitPattern : splitPatterns) {
-          int numRecursivePatterns = 0;
-          for (String pattern : splitPattern) {
-            if (isRecursivePattern(pattern)) {
-              ++numRecursivePatterns;
-            }
-          }
+        for (UnixGlobPattern splitPattern : splitPatterns) {
+          int numRecursivePatterns = splitPattern.numRecursivePatterns();
           GlobTaskContext context =
               numRecursivePatterns > 1
                   ? new RecursiveGlobTaskContext(splitPattern, excludeDirectories)
@@ -435,7 +295,7 @@ final class UnixGlob {
               return String.format(
                   "%s glob(include=[%s], exclude_directories=%s)",
                   base,
-                  "\"" + Joiner.on("\", \"").join(context.patternParts) + "\"",
+                  "\"" + Joiner.on("\", \"").join(context.pattern.getSegments()) + "\"",
                   context.excludeDirectories);
             }
           });
@@ -491,11 +351,11 @@ final class UnixGlob {
 
     /** A context for evaluating all the subtasks of a single top-level glob task. */
     private class GlobTaskContext {
-      private final String[] patternParts;
+      private final UnixGlobPattern pattern;
       private final boolean excludeDirectories;
 
-      GlobTaskContext(String[] patternParts, boolean excludeDirectories) {
-        this.patternParts = patternParts;
+      GlobTaskContext(UnixGlobPattern pattern, boolean excludeDirectories) {
+        this.pattern = pattern;
         this.excludeDirectories = excludeDirectories;
       }
 
@@ -541,7 +401,7 @@ final class UnixGlob {
 
       private final Set<GlobTask> visitedGlobSubTasks = Sets.newConcurrentHashSet();
 
-      private RecursiveGlobTaskContext(String[] patternParts, boolean excludeDirectories) {
+      private RecursiveGlobTaskContext(UnixGlobPattern patternParts, boolean excludeDirectories) {
         super(patternParts, excludeDirectories);
       }
 
@@ -572,7 +432,7 @@ final class UnixGlob {
     private void reallyGlob(AbsPath base, boolean baseIsDir, int idx, GlobTaskContext context)
         throws IOException {
 
-      if (idx == context.patternParts.length) { // Base case.
+      if (idx == context.pattern.getSegments().size()) { // Base case.
         if (!(context.excludeDirectories && baseIsDir)) {
           results.add(base);
         }
@@ -585,11 +445,11 @@ final class UnixGlob {
         return;
       }
 
-      String pattern = context.patternParts[idx];
+      String pattern = context.pattern.getSegments().get(idx);
 
       // ** is special: it can match nothing at all.
       // For example, x/** matches x, **/y matches y, and x/**/y matches x/y.
-      if (isRecursivePattern(pattern)) {
+      if (UnixGlobPattern.isRecursiveSegment(pattern)) {
         context.queueGlob(base, baseIsDir, idx + 1);
       }
 
@@ -612,7 +472,7 @@ final class UnixGlob {
         dents = list.collect(ImmutableList.toImmutableList());
       }
       for (Path child : dents) {
-        if (!matches(pattern, child.getFileName().toString(), cache)) {
+        if (!UnixGlobPattern.segmentMatches(pattern, child.getFileName().toString(), cache)) {
           continue;
         }
         BasicFileAttributes attributes = Files.readAttributes(child, BasicFileAttributes.class);
@@ -651,10 +511,11 @@ final class UnixGlob {
 
     private void processFileOrDirectory(
         AbsPath path, boolean isDir, int idx, GlobTaskContext context) {
-      boolean isRecursivePattern = isRecursivePattern(context.patternParts[idx]);
+      boolean isRecursivePattern =
+          UnixGlobPattern.isRecursiveSegment(context.pattern.getSegments().get(idx));
       if (isDir) {
         context.queueGlob(path, /* baseIsDir= */ true, idx + (isRecursivePattern ? 0 : 1));
-      } else if (idx + 1 == context.patternParts.length) {
+      } else if (idx + 1 == context.pattern.getSegments().size()) {
         results.add(path);
       }
     }

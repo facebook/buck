@@ -57,10 +57,7 @@ public class HybridGlobber implements Globber {
 
   private void checkPatternsForError(Collection<String> include) {
     for (String pattern : include) {
-      String error = UnixGlob.checkPatternForError(pattern);
-      if (error != null) {
-        throw new IllegalArgumentException(error + " (in glob pattern '" + pattern + "')");
-      }
+      UnixGlobPattern.parse(pattern);
     }
   }
 }
