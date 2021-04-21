@@ -22,7 +22,7 @@ public class BcTest {
     };
     assertEquals(
         "def test; 0: RETURN rl$1:bar; 2: EOF",
-        Bc.Compiled.toStringImpl("test", code, fnCtx, ImmutableList.of(), ImmutableList.of()));
+        BcCompiled.toStringImpl("test", code, fnCtx, ImmutableList.of(), ImmutableList.of()));
   }
 
   @Test

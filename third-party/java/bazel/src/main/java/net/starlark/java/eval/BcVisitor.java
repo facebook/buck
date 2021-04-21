@@ -12,9 +12,9 @@ class BcVisitor {
   private final List<String> strings;
   private final List<Object> constantRegs;
   private final List<Object> objects;
-  private final Bc.Compiled bc;
+  private final BcCompiled bc;
 
-  public BcVisitor(Bc.Compiled bc) {
+  public BcVisitor(BcCompiled bc) {
     this.parser = new BcParser(bc.text);
     this.strings = Arrays.asList(bc.strings);
     this.constantRegs = Arrays.asList(bc.constSlots);

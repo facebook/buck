@@ -13,7 +13,7 @@ class BcEval {
 
   private final StarlarkThread.Frame fr;
   private final StarlarkFunction fn;
-  private final Bc.Compiled compiled;
+  private final BcCompiled compiled;
 
   /** Registers. */
   private final Object[] slots;

@@ -55,7 +55,7 @@ public final class StarlarkFunction extends StarlarkCallable {
   // Indexed by Resolver.Binding(FREE).index values.
   private final Tuple freevars;
 
-  final Bc.Compiled compiled;
+  final BcCompiled compiled;
 
   StarlarkFunction(
       StarlarkThread thread,
