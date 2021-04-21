@@ -94,28 +94,27 @@ class Bc {
           rfn.getLocals(), rfn.getFreeVars());
     }
 
-    private int nodeToLocOffset(Node node) {
+    private BcWriter.LocOffset nodeToLocOffset(Node node) {
       Preconditions.checkState(node.getLocs() == fileLocations,
           "node does not share the same file locations as the rest of the function");
-      Location loc;
       if (node instanceof BinaryOperatorExpression) {
-        return ((BinaryOperatorExpression) node).getOpOffset();
+        return new BcWriter.LocOffset(((BinaryOperatorExpression) node).getOpOffset());
       } else if (node instanceof IndexExpression) {
-        return ((IndexExpression) node).getLbracketOffset();
+        return new BcWriter.LocOffset(((IndexExpression) node).getLbracketOffset());
       } else if (node instanceof SliceExpression) {
-        return ((SliceExpression) node).getLbracketOffset();
+        return new BcWriter.LocOffset(((SliceExpression) node).getLbracketOffset());
       } else if (node instanceof DotExpression) {
-        return ((DotExpression) node).getDotOffset();
+        return new BcWriter.LocOffset(((DotExpression) node).getDotOffset());
       } else if (node instanceof AssignmentStatement) {
-        return ((AssignmentStatement) node).getOpOffset();
+        return new BcWriter.LocOffset(((AssignmentStatement) node).getOpOffset());
       } else {
-        return node.getStartOffset();
+        return new BcWriter.LocOffset(node.getStartOffset());
       }
     }
 
     /** Write complete opcode with validation. */
     private void write(BcInstr.Opcode opcode, Node node, int... args) {
-      int locOffset = nodeToLocOffset(node);
+      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
       bcWriter.write(opcode, locOffset, args);
     }
 
@@ -143,7 +142,7 @@ class Bc {
      * address is known.
      */
     private int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
-      int locOffset = nodeToLocOffset(expression);
+      BcWriter.LocOffset locOffset = nodeToLocOffset(expression);
       return bcWriter.writeForwardCondJump(opcode, locOffset, cond);
     }
 
@@ -152,7 +151,7 @@ class Bc {
      * known.
      */
     private int writeForwardJump(Node expression) {
-      int locOffset = nodeToLocOffset(expression);
+      BcWriter.LocOffset locOffset = nodeToLocOffset(expression);
       return bcWriter.writeForwardJump(locOffset);
     }
 
@@ -312,12 +311,12 @@ class Bc {
     }
 
     private void compileContinue(Node node) {
-      int locOffset = nodeToLocOffset(node);
+      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
       bcWriter.writeContinue(locOffset);
     }
 
     private void compileBreak(Node node) {
-      int locOffset = nodeToLocOffset(node);
+      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
       bcWriter.writeBreak(locOffset);
     }
 
@@ -442,7 +441,7 @@ class Bc {
     private void compileThrowException(Node node, String message) {
       // All incorrect AST should be resolved by the resolver,
       // compile code to throw exception as a stopgap.
-      int locOffset = nodeToLocOffset(node);
+      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
       bcWriter.writeThrowException(locOffset, message);
     }
 

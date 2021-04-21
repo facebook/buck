@@ -107,11 +107,11 @@ class BcWriter {
     return this.constSlots.index(value) | BcSlot.CONST_FLAG;
   }
 
-  void writeThrowException(int locOffset, String message) {
+  void writeThrowException(LocOffset locOffset, String message) {
     write(BcInstr.Opcode.EVAL_EXCEPTION, locOffset, allocString(message));
   }
 
-  void writeContinue(int locOffset) {
+  void writeContinue(LocOffset locOffset) {
     if (fors.isEmpty()) {
       writeThrowException(locOffset, "continue statement must be inside a for loop");
     } else {
@@ -125,7 +125,7 @@ class BcWriter {
     }
   }
 
-  void writeBreak(int locOffset) {
+  void writeBreak(LocOffset locOffset) {
     if (fors.isEmpty()) {
       writeThrowException(locOffset, "break statement must be inside a for loop");
     } else {
@@ -134,7 +134,7 @@ class BcWriter {
     }
   }
 
-  void writeForInit(int collectionLocOffset, int collectionSlot, int nextValueSlot) {
+  void writeForInit(LocOffset collectionLocOffset, int collectionSlot, int nextValueSlot) {
     write(BcInstr.Opcode.FOR_INIT, collectionLocOffset, collectionSlot, nextValueSlot, FORWARD_JUMP_ADDR);
 
     int endToPatch = ip - 1;
@@ -215,7 +215,6 @@ class BcWriter {
       }
     }
 
-    @SuppressWarnings("unchecked")
     private Object makeKey(T value) {
       if (value instanceof StarlarkFloat) {
         return new StarlarkFloatWrapper((StarlarkFloat) value);
@@ -248,9 +247,18 @@ class BcWriter {
     }
   }
 
+  /** Newtype for offset within {@link #fileLocations}. */
+  static class LocOffset {
+    private final int offset;
+
+    LocOffset(int offset) {
+      this.offset = offset;
+    }
+  }
+
   /** Write complete opcode with validation. */
-  void write(BcInstr.Opcode opcode, int locOffset, int... args) {
-    instrToLoc.add(ip, locOffset);
+  void write(BcInstr.Opcode opcode, LocOffset locOffset, int... args) {
+    instrToLoc.add(ip, locOffset.offset);
 
     int prevIp = ip;
 
@@ -280,7 +288,7 @@ class BcWriter {
    * Write forward condition jump instruction. Return an address to be patched when the jump
    * address is known.
    */
-  int writeForwardCondJump(BcInstr.Opcode opcode, int locOffset, int cond) {
+  int writeForwardCondJump(BcInstr.Opcode opcode, LocOffset locOffset, int cond) {
     Preconditions.checkState(
         opcode == BcInstr.Opcode.IF_BR || opcode == BcInstr.Opcode.IF_NOT_BR);
     write(opcode, locOffset, cond, FORWARD_JUMP_ADDR);
@@ -291,7 +299,7 @@ class BcWriter {
    * Write unconditional forward jump. Return an address to be patched when the jump address is
    * known.
    */
-  int writeForwardJump(int locOffset) {
+  int writeForwardJump(LocOffset locOffset) {
     write(BcInstr.Opcode.BR, locOffset, FORWARD_JUMP_ADDR);
     return ip - 1;
   }
