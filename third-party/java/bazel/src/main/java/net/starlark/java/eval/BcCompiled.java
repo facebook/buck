@@ -58,7 +58,10 @@ class BcCompiled {
   final BcInstrToLoc instrToLoc;
 
   BcCompiled(
-      Resolver.Function rfn,
+      String name,
+      FileLocations fileLocations,
+      ImmutableList<Resolver.Binding> locals,
+      ImmutableList<Resolver.Binding> freeVars,
       Module module,
       String[] strings,
       Object[] objects,
@@ -67,10 +70,10 @@ class BcCompiled {
       Object[] constSlots,
       int loopDepth,
       BcInstrToLoc instrToLoc) {
-    this.name = rfn.getName();
-    this.fileLocations = rfn.getFileLocations();
-    this.locals = rfn.getLocals();
-    this.freeVars = rfn.getFreeVars();
+    this.name = name;
+    this.fileLocations = fileLocations;
+    this.locals = locals;
+    this.freeVars = freeVars;
     this.module = module;
     this.strings = strings;
     this.objects = objects;

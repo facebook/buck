@@ -5,10 +5,7 @@ import com.google.common.collect.ImmutableList;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.Argument;
@@ -74,129 +71,15 @@ class Bc {
     }
   }
 
-  /** Current for block in the compiler; used to compile break and continue statements. */
-  private static class CurrentFor {
-    /** Instruction pointer of the for statement body. */
-    private final int bodyIp;
-
-    /**
-     * Register which stores next iterator value. This register is updated by {@code FOR_INIT} and
-     * {@code CONTINUE} instructions.
-     */
-    private final int nextValueSlot;
-
-    /**
-     * Pointers to the pointers to the end of the for statement body; patched in the end of the for
-     * compilation.
-     */
-    private ArrayList<Integer> endsToPatch = new ArrayList<>();
-
-    private CurrentFor(int bodyIp, int nextValueSlot) {
-      this.bodyIp = bodyIp;
-      this.nextValueSlot = nextValueSlot;
-    }
-  }
-
-  /** Store values indexed by an integer. */
-  private static class IndexedList<T> {
-    private ArrayList<T> values = new ArrayList<>();
-    private HashMap<Object, Integer> index = new HashMap<>();
-
-    /** Be able to store 1 and 1.0 in index as distinct entries, while the objects are equal. */
-    private static class StarlarkFloatWrapper {
-      private final StarlarkFloat f;
-
-      public StarlarkFloatWrapper(StarlarkFloat f) {
-        this.f = f;
-      }
-
-      @Override
-      public boolean equals(Object o) {
-        if (this == o) {
-          return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-          return false;
-        }
-        StarlarkFloatWrapper that = (StarlarkFloatWrapper) o;
-        return f.equals(that.f);
-      }
-
-      @Override
-      public int hashCode() {
-        return Objects.hash(f);
-      }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Object makeKey(T value) {
-      if (value instanceof StarlarkFloat) {
-        return new StarlarkFloatWrapper((StarlarkFloat) value);
-      } else {
-        return value;
-      }
-    }
-
-    int index(T s) {
-      Preconditions.checkNotNull(s);
-      return index.computeIfAbsent(
-          makeKey(s),
-          k -> {
-            int r = values.size();
-            values.add(s);
-            return r;
-          });
-    }
-
-    public void reset(int constCount) {
-      while (values.size() != constCount) {
-        Object last = makeKey(values.get(values.size() - 1));
-        values.remove(values.size() - 1);
-        Preconditions.checkState(index.remove(last) != null);
-      }
-    }
-
-    public T[] toArray(T[] emptyArray) {
-      return values.toArray(emptyArray);
-    }
-  }
-
   /**
    * The compiler implementation.
    */
   private static class Compiler {
+    private final BcWriter bcWriter;
     private final FileLocations fileLocations;
-    private final int nlocals;
     private final StarlarkThread thread;
-    @javax.annotation.Nonnull
-    private final Resolver.Function rfn;
     private final Module module;
     private final Tuple freevars;
-    /** {@code 0..ip} of the array is bytecode. */
-    private int[] text = ArraysForStarlark.EMPTY_INT_ARRAY;
-    /** Current instruction pointer. */
-    private int ip = 0;
-    /** Number of currently allocated registers. */
-    private int slots;
-    /** Total number of registers needed to execute this function. */
-    private int maxSlots;
-
-    /** Starlark values as constant registers. */
-    private IndexedList<Object> constSlots = new IndexedList<>();
-
-    /** Strings referenced in currently built bytecode. */
-    private IndexedList<String> strings = new IndexedList<>();
-
-    /** Other untyped objects referenced in currently built bytecode. */
-    private ArrayList<Object> objects = new ArrayList<>();
-
-    /** The stack of for statements. */
-    private ArrayList<CurrentFor> fors = new ArrayList<>();
-    /** Max depth of for loops. */
-    private int maxLoopDepth = 0;
-
-    /** Alternating instr, file locations offset */
-    private BcInstrToLoc.Builder instrToLoc;
 
     private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, Tuple freevars) {
       Preconditions.checkArgument(rfn.getModule() == module.getResolverModule(),
@@ -204,79 +87,11 @@ class Bc {
               + " otherwise global indices won't match");
 
       this.fileLocations = rfn.getFileLocations();
-      this.instrToLoc = new BcInstrToLoc.Builder(rfn.getFileLocations());
       this.thread = thread;
-      this.rfn = rfn;
-      this.nlocals = rfn.getLocals().size();
       this.module = module;
       this.freevars = freevars;
-      this.slots = this.nlocals;
-      this.maxSlots = slots;
-    }
-
-    private class SavedState {
-      int savedSlotCount = slots;
-      int savedIp = ip;
-      int constCount = constSlots.values.size();
-      int stringCount = strings.values.size();
-      int objectCount = objects.size();
-
-      /** Restore previous compiler state. */
-      void reset() {
-        Preconditions.checkState(slots >= savedSlotCount);
-        Preconditions.checkState(ip >= savedIp);
-
-        slots = savedSlotCount;
-        instrToLoc.reset(savedIp);
-        ip = savedIp;
-        constSlots.reset(constCount);
-        strings.reset(stringCount);
-        while (objects.size() != objectCount) {
-          objects.remove(objects.size() - 1);
-        }
-      }
-    }
-
-    private SavedState save() {
-      return new SavedState();
-    }
-
-    /** Closest containing for statement. */
-    private CurrentFor currentFor() {
-      return fors.get(fors.size() - 1);
-    }
-
-    /** Allocate a register. */
-    private int allocSlot() {
-      int r = slots++;
-      maxSlots = Math.max(slots, maxSlots);
-      return r;
-    }
-
-    /**
-     * Deallocate all registers (except constant registers); done after each statement; since
-     * registered are not shared between statements, only local variables are.
-     */
-    private void decallocateAllSlots() {
-      slots = nlocals;
-    }
-
-    /**
-     * Store a string in a string pool, return an index of that string. Note these strings are
-     * special strings like variable or field names. These are not constant registers.
-     */
-    private int allocString(String s) {
-      return strings.index(s);
-    }
-
-    /**
-     * Store an arbitrary object in an object storage; the object store is not a const registers.
-     */
-    private int allocObject(Object o) {
-      Preconditions.checkNotNull(o);
-      int r = objects.size();
-      objects.add(o);
-      return r;
+      this.bcWriter = new BcWriter(fileLocations, module, rfn.getName(),
+          rfn.getLocals(), rfn.getFreeVars());
     }
 
     private int nodeToLocOffset(Node node) {
@@ -300,30 +115,8 @@ class Bc {
 
     /** Write complete opcode with validation. */
     private void write(BcInstr.Opcode opcode, Node node, int... args) {
-      instrToLoc.add(ip, nodeToLocOffset(node));
-
-      int prevIp = ip;
-
-      int instrLen = BcInstr.INSTR_HEADER_LEN + args.length;
-      if (ip + instrLen > text.length) {
-        text = Arrays.copyOf(text, Math.max(text.length * 2, ip + instrLen));
-      }
-
-      text[ip++] = opcode.ordinal();
-      System.arraycopy(args, 0, text, ip, args.length);
-      ip += args.length;
-
-      if (ASSERTIONS) {
-        int expectedArgCount =
-            opcode.operands.codeSize(
-                text, prevIp + BcInstr.INSTR_HEADER_LEN);
-        Preconditions.checkState(
-            expectedArgCount == args.length,
-            "incorrect signature for %s: expected %s, actual %s",
-            opcode,
-            expectedArgCount,
-            args.length);
-      }
+      int locOffset = nodeToLocOffset(node);
+      bcWriter.write(opcode, locOffset, args);
     }
 
     private void cp(Node node, int from, int to) {
@@ -331,11 +124,11 @@ class Bc {
 
       BcSlot.checkValidSourceSlot(from);
       if ((from & BcSlot.MASK) == BcSlot.LOCAL_FLAG) {
-        Preconditions.checkArgument((from & ~BcSlot.MASK) < slots);
+        Preconditions.checkArgument((from & ~BcSlot.MASK) < bcWriter.getSlots());
       }
 
       BcSlot.checkLocal(to);
-      Preconditions.checkArgument((to & ~BcSlot.MASK) < slots);
+      Preconditions.checkArgument((to & ~BcSlot.MASK) < bcWriter.getSlots());
 
       // This optimizes away assignment `x = x`
       if (from == to) {
@@ -345,18 +138,13 @@ class Bc {
       write(BcInstr.Opcode.CP, node, from, to);
     }
 
-    /** Marker address for yet unknown forward jump. */
-    private static final int FORWARD_JUMP_ADDR = -17;
-
     /**
      * Write forward condition jump instruction. Return an address to be patched when the jump
      * address is known.
      */
     private int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
-      Preconditions.checkState(
-          opcode == BcInstr.Opcode.IF_BR || opcode == BcInstr.Opcode.IF_NOT_BR);
-      write(opcode, expression, cond, FORWARD_JUMP_ADDR);
-      return ip - 1;
+      int locOffset = nodeToLocOffset(expression);
+      return bcWriter.writeForwardCondJump(opcode, locOffset, cond);
     }
 
     /**
@@ -364,14 +152,8 @@ class Bc {
      * known.
      */
     private int writeForwardJump(Node expression) {
-      write(BcInstr.Opcode.BR, expression, FORWARD_JUMP_ADDR);
-      return ip - 1;
-    }
-
-    /** Patch previously registered forward jump address. */
-    private void patchForwardJump(int ip) {
-      Preconditions.checkState(text[ip] == FORWARD_JUMP_ADDR);
-      text[ip] = this.ip;
+      int locOffset = nodeToLocOffset(expression);
+      return bcWriter.writeForwardJump(locOffset);
     }
 
     /** Compile. */
@@ -384,7 +166,7 @@ class Bc {
     private void compileStatement(Statement statement, boolean postAssignHook) {
       // No registers are shared across statements.
       // We could implement precise register tracking, but there is no need for that at the moment.
-      decallocateAllSlots();
+      bcWriter.decallocateAllSlots();
 
       if (statement instanceof ExpressionStatement) {
         // Likely doc comment, skip it
@@ -420,11 +202,11 @@ class Bc {
     }
 
     private void compileLoadStatement(LoadStatement loadStatement) {
-      write(BcInstr.Opcode.LOAD_STMT, loadStatement, allocObject(loadStatement));
+      write(BcInstr.Opcode.LOAD_STMT, loadStatement, bcWriter.allocObject(loadStatement));
     }
 
     private void compileDefStatement(DefStatement def) {
-      int result = allocSlot();
+      int result = bcWriter.allocSlot();
       compileNewFunction(def.getResolvedFunction(), def, result);
       compileSet(result, def.getIdentifier(), true);
     }
@@ -451,7 +233,7 @@ class Bc {
 
       int[] args = new int[3 + ndefaults];
       int i = 0;
-      args[i++] = allocObject(rfn);
+      args[i++] = bcWriter.allocObject(rfn);
       args[i++] = ndefaults;
 
       for (int p = 0; p < ndefaults; ++p) {
@@ -470,7 +252,7 @@ class Bc {
     }
 
     private void compileIfStatement(IfStatement ifStatement) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       Expression condExpr = ifStatement.getCondition();
 
@@ -505,11 +287,11 @@ class Bc {
       compileStatements(ifStatement.getThenBlock(), false);
       if (ifStatement.getElseBlock() != null) {
         int end = writeForwardJump(ifStatement);
-        patchForwardJump(elseBlock);
+        bcWriter.patchForwardJump(elseBlock);
         compileStatements(ifStatement.getElseBlock(), false);
-        patchForwardJump(end);
+        bcWriter.patchForwardJump(end);
       } else {
-        patchForwardJump(elseBlock);
+        bcWriter.patchForwardJump(elseBlock);
       }
     }
 
@@ -530,26 +312,13 @@ class Bc {
     }
 
     private void compileContinue(Node node) {
-      if (fors.isEmpty()) {
-        compileThrowException(node, "continue statement must be inside a for loop");
-      } else {
-        write(
-            BcInstr.Opcode.CONTINUE,
-            node,
-            currentFor().nextValueSlot,
-            currentFor().bodyIp,
-            FORWARD_JUMP_ADDR);
-        currentFor().endsToPatch.add(ip - 1);
-      }
+      int locOffset = nodeToLocOffset(node);
+      bcWriter.writeContinue(locOffset);
     }
 
     private void compileBreak(Node node) {
-      if (fors.isEmpty()) {
-        compileThrowException(node, "break statement must be inside a for loop");
-      } else {
-        write(BcInstr.Opcode.BREAK, node, FORWARD_JUMP_ADDR);
-        currentFor().endsToPatch.add(ip - 1);
-      }
+      int locOffset = nodeToLocOffset(node);
+      bcWriter.writeBreak(locOffset);
     }
 
     /** Callback invoked to compile the loop body. */
@@ -563,18 +332,11 @@ class Bc {
 
       // Register where we are storing the next iterator value.
       // This register is update by FOR_INIT and CONTINUE instructions.
-      int nextValueSlot = allocSlot();
+      int nextValueSlot = bcWriter.allocSlot();
 
-      write(BcInstr.Opcode.FOR_INIT, collection, iterable.slot, nextValueSlot, FORWARD_JUMP_ADDR);
-      int endToPatch = ip - 1;
+      bcWriter.writeForInit(nodeToLocOffset(collection), iterable.slot, nextValueSlot);
 
-      CurrentFor currentFor = new CurrentFor(ip, nextValueSlot);
-      fors.add(currentFor);
-      currentFor.endsToPatch.add(endToPatch);
-
-      compileAssignment(currentFor.nextValueSlot, vars, false);
-
-      maxLoopDepth = Math.max(fors.size(), maxLoopDepth);
+      compileAssignment(nextValueSlot, vars, false);
 
       body.compile();
 
@@ -582,10 +344,7 @@ class Bc {
       // Note: CONTINUE does unnecessary goto e in the end of iteration.
       compileContinue(collection);
 
-      for (int endsToPatch : currentFor.endsToPatch) {
-        patchForwardJump(endsToPatch);
-      }
-      fors.remove(fors.size() - 1);
+      bcWriter.writeForClose();
     }
 
     private void compileForStatement(ForStatement forStatement) {
@@ -638,7 +397,7 @@ class Bc {
 
     private void compileAssignmentToList(int rhs, ListExpression list, boolean postAssignHook) {
       int[] componentRegs =
-          IntStream.range(0, list.getElements().size()).map(i1 -> allocSlot()).toArray();
+          IntStream.range(0, list.getElements().size()).map(i1 -> bcWriter.allocSlot()).toArray();
 
       int[] args = new int[2 + list.getElements().size()];
       args[0] = rhs;
@@ -664,7 +423,7 @@ class Bc {
               identifier,
               rhs,
               binding.getIndex(),
-              allocString(identifier.getName()),
+              bcWriter.allocString(identifier.getName()),
               postAssignHook ? 1 : 0);
           return;
         case CELL:
@@ -683,7 +442,8 @@ class Bc {
     private void compileThrowException(Node node, String message) {
       // All incorrect AST should be resolved by the resolver,
       // compile code to throw exception as a stopgap.
-      write(BcInstr.Opcode.EVAL_EXCEPTION, node, allocString(message));
+      int locOffset = nodeToLocOffset(node);
+      bcWriter.writeThrowException(locOffset, message);
     }
 
     private void writeBinaryInplace(Node node, int lhs, int rhs, TokenKind op, int lhsOut) {
@@ -712,7 +472,7 @@ class Bc {
         );
       } else {
         CompileExpressionResult value = compileGet(lhs);
-        int temp = allocSlot();
+        int temp = bcWriter.allocSlot();
         writeBinaryInplace(
             assignmentStatement,
             value.slot,
@@ -733,7 +493,7 @@ class Bc {
         int object = compileExpression(indexExpression.getObject()).slot;
         int key = compileExpression(indexExpression.getKey()).slot;
         int rhs = compileExpression(assignmentStatement.getRHS()).slot;
-        int temp = allocSlot();
+        int temp = bcWriter.allocSlot();
         write(BcInstr.Opcode.INDEX, assignmentStatement, object, key, temp);
         write(
             BcInstr.Opcode.BINARY_IN_PLACE,
@@ -757,7 +517,7 @@ class Bc {
     /** Compile a constant, return a register containing the constant. */
     private CompileExpressionResult compileConstant(Object constant) {
       Starlark.checkValid(constant);
-      int slot = constSlots.index(constant) | BcSlot.CONST_FLAG;
+      int slot = bcWriter.allowConstSlot(constant);
       return new CompileExpressionResult(slot, constant);
     }
 
@@ -813,7 +573,7 @@ class Bc {
 
     private CompileExpressionResult compileLambda(LambdaExpression lambda, int result) {
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
       compileNewFunction(lambda.getResolvedFunction(), lambda, result);
       return new CompileExpressionResult(result, null);
@@ -879,7 +639,7 @@ class Bc {
 
     private CompileExpressionResult compileIndex(IndexExpression expression, int result) {
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
       int object = compileExpression(expression.getObject()).slot;
       int key = compileExpression(expression.getKey()).slot;
@@ -888,7 +648,7 @@ class Bc {
     }
 
     private CompileExpressionResult compileDot(DotExpression dotExpression, int result) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       CompileExpressionResult object = compileExpression(dotExpression.getObject());
 
@@ -915,13 +675,13 @@ class Bc {
       }
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
       write(
           BcInstr.Opcode.DOT,
           dotExpression,
           object.slot,
-          allocString(dotExpression.getField().getName()),
+          bcWriter.allocString(dotExpression.getField().getName()),
           result);
       return new CompileExpressionResult(result, null);
     }
@@ -934,7 +694,7 @@ class Bc {
       int step = slice.getStep() != null ? compileExpression(slice.getStep()).slot : BcSlot.NULL_FLAG;
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
       write(BcInstr.Opcode.SLICE, slice, object, start, stop, step, result);
       return new CompileExpressionResult(result, null);
@@ -989,7 +749,7 @@ class Bc {
     private CompileExpressionResult compileComprehension(Comprehension comprehension, int result) {
       // Must explicitly use temporary variable, because comprehension expression
       // may reference to the same slot we are about to write.
-      int temp = allocSlot();
+      int temp = bcWriter.allocSlot();
       if (comprehension.isDict()) {
         write(BcInstr.Opcode.DICT, comprehension.getBody(), 0, temp);
       } else {
@@ -1014,7 +774,7 @@ class Bc {
               // TODO: optimize if cond != null
               int end = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR, clause, cond.slot);
               compileClauses(index + 1);
-              patchForwardJump(end);
+              bcWriter.patchForwardJump(end);
             } else {
               throw new IllegalStateException("unknown compr clause: " + clause);
             }
@@ -1043,7 +803,7 @@ class Bc {
 
     private CompileExpressionResult compileDict(DictExpression dictExpression, int result) {
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
 
       int[] args = new int[1 + dictExpression.getEntries().size() * 2 + 1];
@@ -1063,7 +823,7 @@ class Bc {
 
     private CompileExpressionResult compileList(ListExpression listExpression, int result) {
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
 
       int[] args = new int[1 + listExpression.getElements().size() + 1];
@@ -1100,7 +860,7 @@ class Bc {
     }
 
     private CompileExpressionResult compileConditional(ConditionalExpression conditionalExpression, int result) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       CompileExpressionResult cond = compileExpression(
           conditionalExpression.getCondition());
@@ -1114,16 +874,16 @@ class Bc {
       }
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
 
       int thenAddr = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR, conditionalExpression,
           cond.slot);
       compileExpressionTo(conditionalExpression.getThenCase(), result);
       int end = writeForwardJump(conditionalExpression);
-      patchForwardJump(thenAddr);
+      bcWriter.patchForwardJump(thenAddr);
       compileExpressionTo(conditionalExpression.getElseCase(), result);
-      patchForwardJump(end);
+      bcWriter.patchForwardJump(end);
 
       return new CompileExpressionResult(result, null);
     }
@@ -1131,7 +891,7 @@ class Bc {
     private CompileExpressionResult compileCallLinked(
         StarlarkCallable callable, StarlarkCallableLinkSig linkSig,
         CallExpression callExpression, int result) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       Argument.Star star = null;
       Argument.StarStar starStar = null;
@@ -1153,8 +913,8 @@ class Bc {
       nargs += 3; // star, star-star, result
       int[] args = new int[nargs];
       int i = 0;
-      args[i++] = allocObject(BcCallLocs.forExpression(callExpression));
-      args[i++] = allocObject(fn);
+      args[i++] = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
+      args[i++] = bcWriter.allocObject(fn);
 
       args[i++] = regArgs.size();
       for (Argument argument : regArgs) {
@@ -1217,7 +977,7 @@ class Bc {
       }
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
 
       args[i++] = result;
@@ -1227,7 +987,7 @@ class Bc {
     }
 
     private CompileExpressionResult compileCall(CallExpression callExpression, int result) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       ArrayList<String> argNames = new ArrayList<>();
       ArrayList<Argument> regArgs = new ArrayList<>();
@@ -1270,10 +1030,10 @@ class Bc {
 
       int i = 0;
 
-      args[i++] = allocObject(BcCallLocs.forExpression(callExpression));
+      args[i++] = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
       args[i++] = function.slot;
 
-      args[i++] = allocObject(new BcDynCallSite(linkSig));
+      args[i++] = bcWriter.allocObject(new BcDynCallSite(linkSig));
       args[i++] = regArgs.size();
       for (Argument arg : regArgs) {
         CompileExpressionResult argCompileResult = compileExpression(arg.getValue());
@@ -1291,7 +1051,7 @@ class Bc {
       }
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
       args[i++] = result;
 
@@ -1303,7 +1063,7 @@ class Bc {
     }
 
     private CompileExpressionResult compileUnaryOperator(UnaryOperatorExpression expression, int result) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       CompileExpressionResult value = compileExpression(expression.getX());
 
@@ -1313,7 +1073,7 @@ class Bc {
       }
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
       if (expression.getOperator() == TokenKind.NOT) {
         write(BcInstr.Opcode.NOT, expression, value.slot, result);
@@ -1337,7 +1097,7 @@ class Bc {
             BcInstr.Opcode opcode =
                 expression.getOperator() == TokenKind.AND ? BcInstr.Opcode.IF_NOT_BR : BcInstr.Opcode.IF_BR;
 
-            SavedState saved = save();
+            BcWriter.SavedState saved = bcWriter.save();
             CompileExpressionResult lhs = compileExpression(expression.getX());
             if (lhs.value != null && isTruthImmutable(lhs.value)) {
               saved.reset();
@@ -1349,15 +1109,15 @@ class Bc {
             }
 
             if (result == BcSlot.ANY_FLAG) {
-              result = allocSlot();
+              result = bcWriter.allocSlot();
             }
 
             int elseMark = writeForwardCondJump(opcode, expression, lhs.slot);
             compileExpressionTo(expression.getY(), result);
             int end = writeForwardJump(expression);
-            patchForwardJump(elseMark);
+            bcWriter.patchForwardJump(elseMark);
             cp(expression, lhs.slot, result);
-            patchForwardJump(end);
+            bcWriter.patchForwardJump(end);
             return new CompileExpressionResult(result, null);
           }
         default:
@@ -1367,7 +1127,7 @@ class Bc {
 
     private CompileExpressionResult compileBinaryOperatorNonShortCicrcuiting(
         BinaryOperatorExpression expression, int result) {
-      SavedState saved = save();
+      BcWriter.SavedState saved = bcWriter.save();
 
       CompileExpressionResult x = compileExpression(expression.getX());
       CompileExpressionResult y = compileExpression(expression.getY());
@@ -1385,7 +1145,7 @@ class Bc {
       }
 
       if (result == BcSlot.ANY_FLAG) {
-        result = allocSlot();
+        result = bcWriter.allocSlot();
       }
 
       switch (expression.getOperator()) {
@@ -1408,16 +1168,7 @@ class Bc {
     }
 
     BcCompiled finish() {
-      return new BcCompiled(
-          rfn,
-          module,
-          strings.toArray(ArraysForStarlark.EMPTY_STRING_ARRAY),
-          objects.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
-          Arrays.copyOf(text, ip),
-          maxSlots,
-          constSlots.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
-          maxLoopDepth,
-          instrToLoc.build());
+      return bcWriter.finish();
     }
   }
 
