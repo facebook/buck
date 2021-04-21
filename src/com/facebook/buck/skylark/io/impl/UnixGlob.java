@@ -282,9 +282,7 @@ final class UnixGlob {
 
     /** Executes the glob. */
     public List<AbsPath> glob() throws IOException {
-      return globInternalUninterruptible(base, patterns, excludeDirectories, executor).stream()
-          .map(p -> AbsPath.of(base.getFileSystem().getPath(p.toString())))
-          .collect(ImmutableList.toImmutableList());
+      return globInternalUninterruptible(base, patterns, excludeDirectories, executor);
     }
   }
 
