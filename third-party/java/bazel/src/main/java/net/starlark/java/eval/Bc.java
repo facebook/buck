@@ -1157,6 +1157,17 @@ class Bc {
         }
       }
 
+      if (x.value instanceof String
+          && expression.getOperator() == TokenKind.PERCENT) {
+        String format = (String) x.value;
+        int percent = BcStrFormat.indexOfSinglePercentS(format);
+        // Check that format string has only one `%s` and no other `%`
+        if (percent >= 0) {
+          saved.reset();
+          return compileStringPercent(expression, result, format, percent);
+        }
+      }
+
       if (result == BcSlot.ANY_FLAG) {
         result = bcWriter.allocSlot();
       }
@@ -1178,6 +1189,27 @@ class Bc {
               result);
           return new CompileExpressionResult(result, null);
       }
+    }
+
+    private CompileExpressionResult compileStringPercent(BinaryOperatorExpression expression,
+        int result, String format, int percent) {
+      // compile again after reset
+      CompileExpressionResult y;
+      BcInstr.Opcode opcode;
+      if (expression.getY() instanceof ListExpression
+          && ((ListExpression) expression.getY()).isTuple()
+          && ((ListExpression) expression.getY()).getElements().size() == 1) {
+        y = compileExpression(((ListExpression) expression.getY()).getElements().get(0));
+        opcode = BcInstr.Opcode.PERCENT_S_ONE_TUPLE;
+      } else {
+        y = compileExpression(expression.getY());
+        opcode = BcInstr.Opcode.PERCENT_S_ONE;
+      }
+      if (result == BcSlot.ANY_FLAG) {
+        result = bcWriter.allocSlot();
+      }
+      write(opcode, expression, bcWriter.allocString(format), percent, y.slot, result);
+      return new CompileExpressionResult(result, null);
     }
 
     BcCompiled finish() {

@@ -97,6 +97,12 @@ class BcEval {
           case BcInstr.BINARY_IN_PLACE:
             binaryInPlace();
             break;
+          case BcInstr.PERCENT_S_ONE:
+            percentSOne();
+            break;
+          case BcInstr.PERCENT_S_ONE_TUPLE:
+            percentSOneTuple();
+            break;
           case BcInstr.BR:
             br();
             continue;
@@ -611,6 +617,70 @@ class BcEval {
     Object y = getSlot(nextOperand());
     TokenKind op = TOKENS[nextOperand()];
     setSlot(nextOperand(), Eval.inplaceBinaryOp(fr, op, x, y));
+  }
+
+  /** {@code "aaa%sbbb" % string} */
+  private String percentSOneImplStringArg(String format, int percent, String arg) {
+    StringBuilder sb = new StringBuilder(format.length() - 2 + arg.length());
+    sb.append(format, 0, percent);
+    sb.append(arg);
+    sb.append(format, percent + 2, format.length());
+    return sb.toString();
+  }
+
+  /** {@code "aaa%sbbb" % (arg,)} */
+  private String percentSOneImplObject(String format, int percent, Object arg) {
+    if (arg instanceof String) {
+      return percentSOneImplStringArg(format, percent, (String) arg);
+    } else {
+      Printer printer = new Printer();
+      printer.append(format, 0, percent);
+      printer.str(arg);
+      printer.append(format, percent + 2, format.length());
+      return printer.toString();
+    }
+  }
+
+  private void percentSOne() throws EvalException {
+    int formatIndex = nextOperand();
+    int percent = nextOperand();
+    int argIndex = nextOperand();
+    int out = nextOperand();
+
+    String format = compiled.strings[formatIndex];
+    Object arg = getSlot(argIndex);
+
+    String result;
+    if (arg instanceof String) {
+      result = percentSOneImplStringArg(format, percent, (String) arg);
+    } else if (arg instanceof Tuple) {
+      if (((Tuple) arg).size() == 1) {
+        Object item0 = ((Tuple) arg).get(0);
+        result = percentSOneImplObject(format, percent, item0);
+      } else {
+        // let it fail
+        Starlark.format(format, arg);
+        throw new IllegalStateException("unreachable");
+      }
+    } else {
+      result = percentSOneImplObject(format, percent, arg);
+    }
+
+    setSlot(out, result);
+  }
+
+  private void percentSOneTuple() throws EvalException {
+    int formatIndex = nextOperand();
+    int percent = nextOperand();
+    int argIndex = nextOperand();
+    int out = nextOperand();
+
+    String format = compiled.strings[formatIndex];
+    Object arg = getSlot(argIndex);
+
+    String result = percentSOneImplObject(format, percent, arg);
+
+    setSlot(out, result);
   }
 
   /** Equality. */

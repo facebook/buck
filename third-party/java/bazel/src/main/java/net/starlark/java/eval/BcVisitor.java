@@ -69,6 +69,12 @@ class BcVisitor {
       case BINARY_IN_PLACE:
         visitBinaryInPlace(parser.nextInt(), parser.nextInt(), TokenKind.values()[parser.nextInt()], parser.nextInt());
         break;
+      case PERCENT_S_ONE:
+        visitPercentSOne(parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
+      case PERCENT_S_ONE_TUPLE:
+        visitPercentSOneTuple(parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
       case SET_GLOBAL:
         visitSetGlobal(parser.nextInt(), parser.nextInt(), strings.get(parser.nextInt()), parser.nextInt());
         break;
@@ -309,6 +315,16 @@ class BcVisitor {
   protected void visitBinaryInPlace(int in0, int in1, TokenKind op, int out) {
     visitIn(in0);
     visitIn(in1);
+    visitOut(out);
+  }
+
+  protected void visitPercentSOne(int format, int percent, int in, int out) {
+    visitIn(in);
+    visitOut(out);
+  }
+
+  protected void visitPercentSOneTuple(int format, int percent, int in, int out) {
+    visitIn(in);
     visitOut(out);
   }
 
