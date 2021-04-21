@@ -670,6 +670,7 @@ public class APKModuleGraph implements AddsToRuleKey {
       Collections.sort(moduleCoverList);
       final String joinedModuleName = String.join("_", moduleCoverList);
       String moduleName = moduleCoverList.size() > 1 ? "s_" + joinedModuleName : joinedModuleName;
+      // there is a hard requirement that module names cannot exceed 50 chars.
       if (moduleCoverList.size() > 1 && moduleName.length() > 49) {
         moduleName = "s_" + String.valueOf(moduleName.hashCode() & 0x7FFFFFFF);
         if (hashedSharedModuleSet.contains(moduleName)) {
