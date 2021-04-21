@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.google.common.collect.ImmutableSet;
@@ -53,11 +53,13 @@ public class NativeGlobber implements Globber {
   public Set<String> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
       throws IOException {
-    ImmutableSet<String> includePaths =
+    ImmutableSet<ForwardRelativePath> includePaths =
         resolvePathsMatchingGlobPatterns(include, basePath, excludeDirectories);
-    ImmutableSet<String> excludePaths =
+    ImmutableSet<ForwardRelativePath> excludePaths =
         resolvePathsMatchingGlobPatterns(exclude, basePath, excludeDirectories);
-    return Sets.difference(includePaths, excludePaths);
+    return Sets.difference(includePaths, excludePaths).stream()
+        .map(ForwardRelativePath::toString)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**
@@ -68,12 +70,12 @@ public class NativeGlobber implements Globber {
    * @param excludeDirectories Flag indicating whether directories should be excluded from result.
    * @return The set of paths corresponding to requested patterns.
    */
-  private static ImmutableSet<String> resolvePathsMatchingGlobPatterns(
+  private static ImmutableSet<ForwardRelativePath> resolvePathsMatchingGlobPatterns(
       Collection<String> patterns, AbsPath basePath, boolean excludeDirectories)
       throws IOException {
     return UnixGlob.forPath(basePath).addPatterns(patterns)
         .setExcludeDirectories(excludeDirectories).glob().stream()
-        .map(includePath -> PathFormatter.pathWithUnixSeparators(basePath.relativize(includePath)))
+        .map(includePath -> ForwardRelativePath.ofRelPath(basePath.relativize(includePath)))
         .collect(ImmutableSet.toImmutableSet());
   }
 
