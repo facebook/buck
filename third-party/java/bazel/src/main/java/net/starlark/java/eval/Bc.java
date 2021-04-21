@@ -1138,15 +1138,22 @@ class Bc {
       CompileExpressionResult x = compileExpression(expression.getX());
       CompileExpressionResult y = compileExpression(expression.getY());
 
-      if (expression.getOperator() == TokenKind.EQUALS_EQUALS || expression.getOperator() == TokenKind.NOT_EQUALS) {
-        if (x.value != null
-            && y.value != null
-            && Starlark.isImmutable(x.value)
-            && Starlark.isImmutable(y.value)) {
-          saved.reset();
-          boolean constResult =
-              x.value.equals(y.value) == (expression.getOperator() == TokenKind.EQUALS_EQUALS);
-          return compileConstantTo(expression, constResult, result);
+      if (x.value != null
+          && y.value != null
+          && Starlark.isImmutable(x.value)
+          && Starlark.isImmutable(y.value)) {
+        try {
+          Object constResult = EvalUtils.binaryOp(
+              expression.getOperator(),
+              x.value, y.value, thread.getSemantics(), thread.mutability());
+          // For example, `[] + []` returns new list
+          // so we cannot compile it to constant if result is mutable.
+          if (Starlark.isImmutable(constResult)) {
+            saved.reset();
+            return compileConstantTo(expression, constResult, result);
+          }
+        } catch (EvalException e) {
+          // ignore
         }
       }
 
