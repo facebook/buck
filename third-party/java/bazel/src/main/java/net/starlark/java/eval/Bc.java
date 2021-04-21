@@ -329,13 +329,20 @@ class Bc {
     private void compileFor(Expression vars, Expression collection, ForBody body) {
       CompileExpressionResult iterable = compileExpression(collection);
 
+      // Most common loops are single var loops, we don't need to use temporary variables.
+      boolean assignStraightToLocal = vars instanceof Identifier
+          && ((Identifier) vars).getBinding().getScope() == Resolver.Scope.LOCAL;
+
       // Register where we are storing the next iterator value.
       // This register is update by FOR_INIT and CONTINUE instructions.
-      int nextValueSlot = bcWriter.allocSlot();
+      int nextValueSlot = assignStraightToLocal ?
+          localIdentSlot((Identifier) vars) : bcWriter.allocSlot();
 
       bcWriter.writeForInit(nodeToLocOffset(collection), iterable.slot, nextValueSlot);
 
-      compileAssignment(nextValueSlot, vars, false);
+      if (!assignStraightToLocal) {
+        compileAssignment(nextValueSlot, vars, false);
+      }
 
       body.compile();
 
