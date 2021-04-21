@@ -16,5 +16,6 @@ java_library(
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/core/path:path",
     ],
 )

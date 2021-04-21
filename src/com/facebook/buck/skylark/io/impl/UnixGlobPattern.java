@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.io.impl;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.util.Map;
@@ -182,5 +183,39 @@ public class UnixGlobPattern {
   @Override
   public String toString() {
     return pattern;
+  }
+
+  private boolean matchesFrom(
+      int segmentIndex,
+      ForwardRelativePath path,
+      int pathIndex,
+      @Nullable Map<String, Pattern> patternCache) {
+    if (segmentIndex == segments.size()) {
+      return pathIndex == path.getNameCount();
+    }
+    String segment = segments.get(segmentIndex);
+
+    if (isRecursiveSegment(segment)) {
+      if (matchesFrom(segmentIndex + 1, path, pathIndex, patternCache)) {
+        return true;
+      }
+      if (pathIndex == path.getNameCount()) {
+        return false;
+      }
+      return matchesFrom(segmentIndex, path, pathIndex + 1, patternCache);
+    }
+
+    if (pathIndex == path.getNameCount()) {
+      return false;
+    }
+    if (!segmentMatches(segment, path.getSegment(pathIndex), patternCache)) {
+      return false;
+    }
+    return matchesFrom(segmentIndex + 1, path, pathIndex + 1, patternCache);
+  }
+
+  /** Relative path matches pattern. */
+  public boolean matches(ForwardRelativePath path, @Nullable Map<String, Pattern> patternCache) {
+    return matchesFrom(0, path, 0, patternCache);
   }
 }
