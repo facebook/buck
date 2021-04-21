@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import org.immutables.value.Value;
 
 /** Exposes package information to Skylark functions. */
 @BuckStyleValue
@@ -40,6 +41,11 @@ public abstract class PackageContext {
   public abstract CanonicalCellName getCellName();
 
   public abstract ForwardRelativePath getBasePath();
+
+  @Value.Lazy
+  public String getBasePathString() {
+    return getBasePath().toString();
+  }
 
   /** @return The event handler for reporting events during package parsing. */
   public abstract EventHandler getEventHandler();
