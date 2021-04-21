@@ -48,7 +48,6 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftToolchainBuildRule;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.base.Verify;
@@ -142,14 +141,7 @@ public class AppleToolchainDescription
     Optional<SwiftPlatform> swiftPlatform =
         swiftToolchainRule
             .map(SwiftToolchainBuildRule.class::cast)
-            .map(
-                rule ->
-                    rule.getSwiftPlatform(
-                        swiftTarget,
-                        SwiftDescriptions.getDebugPrefixMap(
-                            sdkPaths.getSdkPath(),
-                            sdkPaths.getPlatformPath(),
-                            sdkPaths.getDeveloperPath())));
+            .map(rule -> rule.getSwiftPlatform(swiftTarget));
 
     Optional<Tool> dwarfdumpTool =
         args.getDwarfdump()
@@ -208,17 +200,8 @@ public class AppleToolchainDescription
     CxxPlatform currentCxxPlatform = cxxToolchainRule.getPlatformWithFlavor(flavor);
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder().from(currentCxxPlatform);
 
-    AbsPath sdkRootPath = pathResolver.getAbsolutePath(sdkRoot);
-    AbsPath platformRootPath = pathResolver.getAbsolutePath(platformRoot);
-    Optional<Path> developerRootPath =
-        developerRoot.map(sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath());
-
-    ImmutableBiMap.Builder<Path, String> sanitizerPathsBuilder = ImmutableBiMap.builder();
-    sanitizerPathsBuilder.put(sdkRootPath.getPath(), "/APPLE_SDKROOT");
-    sanitizerPathsBuilder.put(platformRootPath.getPath(), "/APPLE_PLATFORM_DIR");
-    developerRootPath.ifPresent(path -> sanitizerPathsBuilder.put(path, "/APPLE_DEVELOPER_DIR"));
     DebugPathSanitizer compilerDebugPathSanitizer =
-        new PrefixMapDebugPathSanitizer(".", sanitizerPathsBuilder.build());
+        new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
     cxxPlatformBuilder.setCompilerDebugPathSanitizer(compilerDebugPathSanitizer);
 
     ImmutableMap.Builder<String, String> macrosBuilder = ImmutableMap.builder();

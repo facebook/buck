@@ -62,8 +62,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   }
 
   /** Provides SwiftPlatform for given Swift target triple */
-  public SwiftPlatform getSwiftPlatform(
-      AppleCompilerTargetTriple swiftTarget, ImmutableBiMap<Path, String> debugPrefixMap) {
+  public SwiftPlatform getSwiftPlatform(AppleCompilerTargetTriple swiftTarget) {
     return SwiftPlatform.builder()
         .setSwiftc(swiftc)
         .setSwiftStdlibTool(swiftStdlibTool)
@@ -72,7 +71,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftRuntimePathsForLinking(runtimePathsForLinking)
         .setSwiftStaticRuntimePaths(staticRuntimePaths)
         .setSwiftSharedLibraryRunPaths(runtimeRunPaths)
-        .setDebugPrefixMap(debugPrefixMap)
+        .setDebugPrefixMap(ImmutableBiMap.of())
         .setPrefixSerializedDebugInfo(prefixSerializedDebugInfo)
         .build();
   }
