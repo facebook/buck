@@ -20,11 +20,13 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * A Java native glob function implementation that allows resolving file paths based on include
@@ -55,9 +57,17 @@ public class NativeGlobber implements Globber {
       throws IOException {
     ImmutableSet<ForwardRelativePath> includePaths =
         resolvePathsMatchingGlobPatterns(include, basePath, excludeDirectories);
-    ImmutableSet<ForwardRelativePath> excludePaths =
-        resolvePathsMatchingGlobPatterns(exclude, basePath, excludeDirectories);
-    return Sets.difference(includePaths, excludePaths).stream()
+    ImmutableList<UnixGlobPattern> excludePatterns =
+        exclude.stream().map(UnixGlobPattern::parse).collect(ImmutableList.toImmutableList());
+    HashMap<String, Pattern> patternCache = new HashMap<>();
+    return includePaths.stream()
+        .filter(
+            p ->
+                excludePatterns.stream()
+                    .noneMatch(
+                        pt -> {
+                          return pt.matches(p, patternCache);
+                        }))
         .map(ForwardRelativePath::toString)
         .collect(ImmutableSet.toImmutableSet());
   }
