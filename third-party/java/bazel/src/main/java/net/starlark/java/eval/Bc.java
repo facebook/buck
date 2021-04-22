@@ -828,16 +828,35 @@ class Bc {
     }
 
     private CompileExpressionResult compileList(ListExpression listExpression, int result) {
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
+      BcWriter.SavedState saved = bcWriter.save();
 
       int[] args = new int[1 + listExpression.getElements().size() + 1];
       int i = 0;
       args[i++] = listExpression.getElements().size();
-      for (Expression element : listExpression.getElements()) {
-        args[i++] = compileExpression(element).slot;
+      Object[] constants = ArraysForStarlark.newObjectArray(listExpression.getElements().size());
+      List<Expression> elements = listExpression.getElements();
+      for (int j = 0; j < elements.size(); j++) {
+        Expression element = elements.get(j);
+        CompileExpressionResult value = compileExpression(element);
+        args[i++] = value.slot;
+        if (constants != null && value.value != null) {
+          constants[j] = value.value;
+        } else {
+          constants = null;
+        }
       }
+
+      if (constants != null) {
+        if (listExpression.isTuple()) {
+          saved.reset();
+          return compileConstantTo(listExpression, Tuple.wrap(constants), result);
+        }
+      }
+
+      if (result == BcSlot.ANY_FLAG) {
+        result = bcWriter.allocSlot();
+      }
+
       args[i++] = result;
       Preconditions.checkState(i == args.length);
       write(
