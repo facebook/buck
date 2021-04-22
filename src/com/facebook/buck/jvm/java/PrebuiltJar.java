@@ -208,7 +208,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return getBuildDeps();
+    return getDeclaredDeps();
   }
 
   @Override

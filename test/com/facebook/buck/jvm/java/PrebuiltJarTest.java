@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -26,7 +27,9 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.Optional;
 import org.junit.Before;
@@ -39,13 +42,20 @@ public class PrebuiltJarTest {
 
   private PrebuiltJar junitJarRule;
   private FakeProjectFilesystem filesystem;
+  private JavaLibrary declaredDep;
+  private JavaLibrary extraDep;
 
   @Before
   public void setUp() throws IOException {
     filesystem = new FakeProjectFilesystem(temp.newFolder());
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//lib:junit");
-    BuildRuleParams buildRuleParams = TestBuildRuleParams.create();
+    declaredDep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//lib:declared_dep"));
+    extraDep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//lib:extra_dep"));
+    BuildRuleParams buildRuleParams =
+        TestBuildRuleParams.create()
+            .withDeclaredDeps(ImmutableSortedSet.of(declaredDep))
+            .withExtraDeps(ImmutableSortedSet.of(extraDep));
 
     junitJarRule =
         new PrebuiltJar(
@@ -73,5 +83,11 @@ public class PrebuiltJarTest {
   public void testGetAnnotationProcessingDataIsEmpty() {
     assertFalse(junitJarRule.getGeneratedAnnotationSourcePath().isPresent());
     assertFalse(junitJarRule.hasAnnotationProcessing());
+  }
+
+  @Test
+  public void testGetDepsForTransitiveClasspathEntries() {
+    assertEquals(1, junitJarRule.getDepsForTransitiveClasspathEntries().size());
+    assertTrue(junitJarRule.getDepsForTransitiveClasspathEntries().contains(declaredDep));
   }
 }
