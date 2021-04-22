@@ -284,6 +284,31 @@ class BcWriter {
     }
   }
 
+  static int[] args(int[] args0, int... args1) {
+    if (args0.length == 0) {
+      return args1;
+    } else if (args1.length == 0) {
+      return args0;
+    } else {
+      int[] args = Arrays.copyOf(args0, args0.length + args1.length);
+      System.arraycopy(args1, 0, args, args0.length, args1.length);
+      return args;
+    }
+  }
+
+  static int[] args(int arg0, int[] args1) {
+    return args(new int[] { arg0 }, args1);
+  }
+
+  static int[] args(int[] args0, int[] args1, int[] args2) {
+    IntArrayBuilder args = new IntArrayBuilder(
+        args0.length + args1.length + args2.length);
+    args.addAll(args0);
+    args.addAll(args1);
+    args.addAll(args2);
+    return args.buildArray();
+  }
+
   /**
    * Write forward condition jump instruction. Return an address to be patched when the jump
    * address is known.

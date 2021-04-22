@@ -30,7 +30,6 @@ import net.starlark.java.syntax.IntLiteral;
 import net.starlark.java.syntax.LambdaExpression;
 import net.starlark.java.syntax.ListExpression;
 import net.starlark.java.syntax.LoadStatement;
-import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.Node;
 import net.starlark.java.syntax.Parameter;
 import net.starlark.java.syntax.Resolver;
@@ -116,6 +115,17 @@ class Bc {
     private void write(BcInstr.Opcode opcode, Node node, int... args) {
       BcWriter.LocOffset locOffset = nodeToLocOffset(node);
       bcWriter.write(opcode, locOffset, args);
+    }
+
+    /** Write complete opcode, allocating out slot if it is {@link BcSlot#ANY_FLAG}. */
+    private CompileExpressionResult writeToOut(BcInstr.Opcode opcode, Node node, int[] args, int out) {
+      if (out == BcSlot.ANY_FLAG) {
+        out = bcWriter.allocSlot();
+      } else {
+        BcSlot.checkLocal(out);
+      }
+      write(opcode, node, BcWriter.args(args, out));
+      return new CompileExpressionResult(out, null);
     }
 
     private void cp(Node node, int from, int to) {
@@ -830,40 +840,21 @@ class Bc {
     private CompileExpressionResult compileList(ListExpression listExpression, int result) {
       BcWriter.SavedState saved = bcWriter.save();
 
-      int[] args = new int[1 + listExpression.getElements().size() + 1];
-      int i = 0;
-      args[i++] = listExpression.getElements().size();
-      Object[] constants = ArraysForStarlark.newObjectArray(listExpression.getElements().size());
-      List<Expression> elements = listExpression.getElements();
-      for (int j = 0; j < elements.size(); j++) {
-        Expression element = elements.get(j);
-        CompileExpressionResult value = compileExpression(element);
-        args[i++] = value.slot;
-        if (constants != null && value.value != null) {
-          constants[j] = value.value;
-        } else {
-          constants = null;
-        }
-      }
+      CompileExpressionListResult elements = compileExpressionList(
+          listExpression.getElements());
 
-      if (constants != null) {
+      if (elements.constants != null) {
         if (listExpression.isTuple()) {
           saved.reset();
-          return compileConstantTo(listExpression, Tuple.wrap(constants), result);
+          return compileConstantTo(listExpression, Tuple.wrap(elements.constants), result);
         }
       }
 
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-
-      args[i++] = result;
-      Preconditions.checkState(i == args.length);
-      write(
+      return writeToOut(
           listExpression.isTuple() ? BcInstr.Opcode.TUPLE : BcInstr.Opcode.LIST,
           listExpression,
-          args);
-      return new CompileExpressionResult(result, null);
+          elements.opcodeArgs,
+          result);
     }
 
     /**
@@ -927,50 +918,42 @@ class Bc {
       if (p > 0 && callExpression.getArguments().get(p - 1) instanceof Argument.Star) {
         star = (Argument.Star) callExpression.getArguments().get(--p);
       }
-      ImmutableList<Argument> regArgs = callExpression.getArguments().subList(0, p);
+      ImmutableList<Expression> regArgs = callExpression
+          .getArguments()
+          .subList(0, p)
+          .stream()
+          .map(Argument::getValue)
+          .collect(ImmutableList.toImmutableList());
 
       StarlarkCallableLinked fn = callable.linkCall(linkSig);
 
-      ArrayList<Object> argObjects = new ArrayList<>(regArgs.size());
+      int lparen = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
+      int fnSlot = bcWriter.allocObject(fn);
 
-      int nargs = 2; // lparen, fn
-      nargs += 1 + regArgs.size();
-      nargs += 3; // star, star-star, result
-      int[] args = new int[nargs];
-      int i = 0;
-      args[i++] = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
-      args[i++] = bcWriter.allocObject(fn);
+      CompileExpressionListResult regArgsResult = compileExpressionList(regArgs);
 
-      args[i++] = regArgs.size();
-      for (Argument argument : regArgs) {
-        CompileExpressionResult argCompileResult = compileExpression(argument.getValue());
-        args[i++] = argCompileResult.slot;
-        if (argObjects != null && argCompileResult.value != null && Starlark.isImmutable(argCompileResult.value)) {
-          argObjects.add(argCompileResult.value);
-        } else {
-          argObjects = null;
-        }
-      }
-
+      int starSlot;
+      int starStarSlot;
       if (star != null) {
-        args[i++] = compileExpression(star.getValue()).slot;
-        argObjects = null;
+        starSlot = compileExpression(star.getValue()).slot;
       } else {
-        args[i++] = BcSlot.NULL_FLAG;
+        starSlot = BcSlot.NULL_FLAG;
       }
       if (starStar != null) {
-        args[i++] = compileExpression(starStar.getValue()).slot;
-        argObjects = null;
+        starStarSlot = compileExpression(starStar.getValue()).slot;
       } else {
-        args[i++] = BcSlot.NULL_FLAG;
+        starStarSlot = BcSlot.NULL_FLAG;
       }
 
       boolean functionIsSpeculativeSafe = callable instanceof BuiltinFunction
           && ((BuiltinFunction) callable).isSpeculativeSafe();
-      if (functionIsSpeculativeSafe && argObjects != null && !linkSig.hasStars()) {
+      if (functionIsSpeculativeSafe
+          && !linkSig.hasStars()
+          && regArgsResult.constants != null
+          && regArgsResult.allConstantsImmutable()) {
         try {
           Object specCallResult = callable
-              .linkAndCall(linkSig, thread, argObjects.toArray(), null, null);
+              .linkAndCall(linkSig, thread, regArgsResult.constants, null, null);
           if (Starlark.isImmutable(specCallResult)) {
             saved.reset();
             return compileConstantTo(callExpression, specCallResult, result);
@@ -1001,29 +984,26 @@ class Bc {
         }
       }
 
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-
-      args[i++] = result;
-      Preconditions.checkState(i == args.length);
-      write(BcInstr.Opcode.CALL_LINKED, callExpression, args);
-      return new CompileExpressionResult(result, null);
+      int[] newArgs = BcWriter.args(
+          new int[] { lparen, fnSlot },
+          regArgsResult.opcodeArgs,
+          new int[] { starSlot, starStarSlot });
+      return writeToOut(BcInstr.Opcode.CALL_LINKED, callExpression, newArgs, result);
     }
 
     private CompileExpressionResult compileCall(CallExpression callExpression, int result) {
       BcWriter.SavedState saved = bcWriter.save();
 
       ArrayList<String> argNames = new ArrayList<>();
-      ArrayList<Argument> regArgs = new ArrayList<>();
+      ArrayList<Expression> regArgs = new ArrayList<>();
       Argument.Star star = null;
       Argument.StarStar starStar = null;
       for (Argument argument : callExpression.getArguments()) {
         if (argument instanceof Argument.Positional) {
-          regArgs.add(argument);
+          regArgs.add(argument.getValue());
         } else if (argument instanceof Argument.Keyword) {
           argNames.add(argument.getName());
-          regArgs.add(argument);
+          regArgs.add(argument.getValue());
         } else if (argument instanceof Argument.Star) {
           Preconditions.checkState(star == null);
           star = (Argument.Star) argument;
@@ -1048,43 +1028,31 @@ class Bc {
         return compileCallLinked((StarlarkCallable) function.value, linkSig, callExpression, result);
       }
 
-      int numCallArgs = 3; // lparen + fn + argNames
-      numCallArgs += 1 + regArgs.size();
-      numCallArgs += 3; // star, star-star, result
-      int[] args = new int[numCallArgs];
+      int lparen = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
+      int fn = function.slot;
+      int sig = bcWriter.allocObject(new BcDynCallSite(linkSig));
 
-      int i = 0;
+      int[] regArgsOpcodes = compileExpressionList(regArgs).opcodeArgs;
 
-      args[i++] = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
-      args[i++] = function.slot;
-
-      args[i++] = bcWriter.allocObject(new BcDynCallSite(linkSig));
-      args[i++] = regArgs.size();
-      for (Argument arg : regArgs) {
-        CompileExpressionResult argCompileResult = compileExpression(arg.getValue());
-        args[i++] = argCompileResult.slot;
-      }
+      int starSlot;
+      int starStarSlot;
       if (star != null) {
-        args[i++] = compileExpression(star.getValue()).slot;
+        starSlot = compileExpression(star.getValue()).slot;
       } else {
-        args[i++] = BcSlot.NULL_FLAG;
+        starSlot = BcSlot.NULL_FLAG;
       }
       if (starStar != null) {
-        args[i++] = compileExpression(starStar.getValue()).slot;
+        starStarSlot = compileExpression(starStar.getValue()).slot;
       } else {
-        args[i++] = BcSlot.NULL_FLAG;
+        starStarSlot = BcSlot.NULL_FLAG;
       }
 
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      args[i++] = result;
+      int[] newArgs = BcWriter.args(
+          new int[] { lparen, fn, sig },
+          regArgsOpcodes,
+          new int[] { starSlot, starStarSlot });
 
-      Preconditions.checkState(i == args.length);
-
-      write(BcInstr.Opcode.CALL, callExpression, args);
-
-      return new CompileExpressionResult(result, null);
+      return writeToOut(BcInstr.Opcode.CALL, callExpression, newArgs, result);
     }
 
     private CompileExpressionResult compileUnaryOperator(UnaryOperatorExpression expression, int result) {
@@ -1150,9 +1118,93 @@ class Bc {
       }
     }
 
+    private static class CompileExpressionListResult {
+      private final int[] opcodeArgs;
+      @Nullable
+      private final Object[] constants;
+
+      CompileExpressionListResult(int[] opcodeArgs, @Nullable Object[] constants) {
+        this.opcodeArgs = opcodeArgs;
+        this.constants = constants;
+      }
+
+      boolean allConstantsImmutable() {
+        if (constants == null) {
+          return false;
+        }
+        for (Object constant : constants) {
+          if (!Starlark.isImmutable(constant)) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+
+    private CompileExpressionListResult compileExpressionList(List<Expression> expressions) {
+      if (expressions.isEmpty()) {
+        return new CompileExpressionListResult(
+            new int[] { 0 },
+            ArraysForStarlark.EMPTY_OBJECT_ARRAY);
+      }
+
+      BcWriter.SavedState saved = bcWriter.save();
+
+      int[] opcodeArgs = new int[1 + expressions.size()];
+      opcodeArgs[0] = expressions.size();
+      Object[] constants = new Object[expressions.size()];
+      for (int i = 0; i < expressions.size(); i++) {
+        Expression elemExpr = expressions.get(i);
+        CompileExpressionResult elem = compileExpression(elemExpr);
+        if (constants != null && elem.value != null) {
+          constants[i] = elem.value;
+        } else {
+          constants = null;
+        }
+        opcodeArgs[i + 1] = elem.slot;
+      }
+      if (constants != null) {
+        saved.reset();
+        int objectIndex = bcWriter.allocObject(constants);
+        return new CompileExpressionListResult(
+            new int[] { BcSlot.objectIndexToNegativeSize(objectIndex) },
+            constants);
+      }
+      return new CompileExpressionListResult(opcodeArgs, null);
+    }
+
+    /** Compile expression {@code x + [...]}. */
+    @Nullable
+    private CompileExpressionResult tryCompilePlusList(
+        BinaryOperatorExpression expression, int result) {
+      if (expression.getOperator() != TokenKind.PLUS) {
+        return null;
+      }
+      if (!(expression.getY() instanceof ListExpression)
+          || ((ListExpression) expression.getY()).isTuple()) {
+        return null;
+      }
+
+      CompileExpressionResult lhs = compileExpression(expression.getX());
+
+      int[] rhs = compileExpressionList(
+          ((ListExpression) expression.getY()).getElements()).opcodeArgs;
+
+      return writeToOut(
+          BcInstr.Opcode.PLUS_LIST,
+          expression,
+          BcWriter.args(lhs.slot, rhs),
+          result);
+    }
+
     private CompileExpressionResult compileBinaryOperatorNonShortCicrcuiting(
         BinaryOperatorExpression expression, int result) {
       BcWriter.SavedState saved = bcWriter.save();
+
+      CompileExpressionResult plusList = tryCompilePlusList(expression, result);
+      if (plusList != null) {
+        return plusList;
+      }
 
       CompileExpressionResult x = compileExpression(expression.getX());
       CompileExpressionResult y = compileExpression(expression.getY());
@@ -1240,7 +1292,13 @@ class Bc {
 
     private CompileExpressionResult writePlus(Node node,
         CompileExpressionResult x, CompileExpressionResult y, int result) {
-      write(BcInstr.Opcode.PLUS, node, x.slot, y.slot, result);
+      BcInstr.Opcode opcode;
+      if (x.value instanceof String || y.value instanceof String) {
+        opcode = BcInstr.Opcode.PLUS_STRING;
+      } else {
+        opcode = BcInstr.Opcode.PLUS;
+      }
+      write(opcode, node, x.slot, y.slot, result);
       return new CompileExpressionResult(result, null);
     }
 

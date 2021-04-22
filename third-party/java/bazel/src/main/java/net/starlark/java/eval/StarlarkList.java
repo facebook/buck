@@ -225,9 +225,16 @@ public final class StarlarkList<E> extends Sequence<E> implements
    */
   public static <T> StarlarkList<T> concat(
       StarlarkList<? extends T> x, StarlarkList<? extends T> y, Mutability mutability) {
-    Object[] res = new Object[x.size + y.size];
+    Object[] res = ArraysForStarlark.newObjectArray(x.size + y.size);
     System.arraycopy(x.elems, 0, res, 0, x.size);
     System.arraycopy(y.elems, 0, res, x.size, y.size);
+    return wrap(mutability, res);
+  }
+
+  static StarlarkList<?> concat(StarlarkList<?> x, Object[] y, Mutability mutability) {
+    Object[] res = ArraysForStarlark.newObjectArray(x.size + y.length);
+    System.arraycopy(x.elems, 0, res, 0, x.size);
+    System.arraycopy(y, 0, res, x.size, y.length);
     return wrap(mutability, res);
   }
 

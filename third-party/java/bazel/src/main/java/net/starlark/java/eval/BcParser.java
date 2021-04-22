@@ -21,6 +21,10 @@ class BcParser {
     return ip == text.length;
   }
 
+  int remaining() {
+    return text.length - ip;
+  }
+
   int[] getText() {
     return text;
   }
@@ -32,6 +36,29 @@ class BcParser {
   int nextInt() {
     Preconditions.checkState(!eof());
     return text[ip++];
+  }
+
+  int[] nextInts(int n) {
+    int[] r = new int[n];
+    for (int i = 0; i != n; ++i) {
+      r[i] = nextInt();
+    }
+    return r;
+  }
+
+  int nextListArg() {
+    int r = ip;
+    int size = nextInt();
+    if (size >= 0) {
+      Preconditions.checkState(remaining() >= size);
+      ip += size;
+    }
+    return r;
+  }
+
+  int lookaheadInt() {
+    Preconditions.checkState(!eof());
+    return text[ip];
   }
 
   void skipNArgs() {

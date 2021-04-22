@@ -17,7 +17,9 @@ class BcInstr {
   public static final int EQ = CP + 1;
   public static final int NOT_EQ = EQ + 1;
   public static final int PLUS = NOT_EQ + 1;
-  public static final int NOT = PLUS + 1;
+  public static final int PLUS_STRING = PLUS + 1;
+  public static final int PLUS_LIST = PLUS_STRING + 1;
+  public static final int NOT = PLUS_LIST + 1;
   public static final int UNARY = NOT + 1;
   public static final int BR = UNARY + 1;
   public static final int IF_BR = BR + 1;
@@ -68,6 +70,17 @@ class BcInstr {
     NOT_EQ(BcInstr.NOT_EQ, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
     /** {@code a2 = a0 + a1}. */
     PLUS(BcInstr.PLUS, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 + a1}. */
+    PLUS_STRING(BcInstr.PLUS_STRING, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 + a1}. */
+    PLUS_LIST(
+        BcInstr.PLUS_LIST,
+        // lhs
+        BcInstrOperand.IN_SLOT,
+        // rhs list elements
+        BcInstrOperand.IN_LIST,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT),
     /**
      * {@code a1 = not a0}.
      *
@@ -162,7 +175,7 @@ class BcInstr {
         // BcDynCallSite
         BcInstrOperand.OBJECT,
         // Positional arguments followed by named parameters
-        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
+        BcInstrOperand.IN_LIST,
         // *args
         BcInstrOperand.IN_SLOT,
         // **kwargs
@@ -176,7 +189,7 @@ class BcInstr {
         // StarlarkCallableLinked
         BcInstrOperand.OBJECT,
         // Positional args followed by named args, no keys
-        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
+        BcInstrOperand.IN_LIST,
         // *args
         BcInstrOperand.IN_SLOT,
         // **kwargs
@@ -241,12 +254,12 @@ class BcInstr {
     LIST(
         BcInstr.LIST,
         // List size followed by list items.
-        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
+        BcInstrOperand.IN_LIST,
         BcInstrOperand.OUT_SLOT),
     /** Tuple constructor; similar to the list constructor above. */
     TUPLE(
         BcInstr.TUPLE,
-        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
+        BcInstrOperand.IN_LIST,
         BcInstrOperand.OUT_SLOT),
     /** Dict constructor. */
     DICT(

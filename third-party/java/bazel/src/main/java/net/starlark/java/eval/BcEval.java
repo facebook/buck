@@ -88,6 +88,12 @@ class BcEval {
           case BcInstr.PLUS:
             plus();
             break;
+          case BcInstr.PLUS_STRING:
+            plusString();
+            break;
+          case BcInstr.PLUS_LIST:
+            plusList();
+            break;
           case BcInstr.NOT:
             not();
             break;
@@ -181,8 +187,12 @@ class BcEval {
         validateInstructionDecodedCorrectly();
 
       }
-    } catch (EvalException e) {
-      fr.setLocation(compiled.locationAt(currentIp));
+    } catch (Throwable e) {
+      try {
+        fr.setLocation(compiled.locationAt(currentIp));
+      } catch (Throwable ignore) {
+        // do not crash if we are already crashing
+      }
       throw e;
     } finally {
       while (loopDepth != 0) {
@@ -347,7 +357,7 @@ class BcEval {
 
   private void newFunction() throws EvalException, InterruptedException {
     Resolver.Function fn = (Resolver.Function) compiled.objects[nextOperand()];
-    Tuple parameterDefaults = Tuple.wrap(nextNSlots());
+    Tuple parameterDefaults = Tuple.wrap(nextNSlotsListSharedArray());
     int result = nextOperand();
     StarlarkFunction starlarkFunction = Eval.newFunction(fr, fn, parameterDefaults);
     setSlot(result, starlarkFunction);
@@ -448,26 +458,46 @@ class BcEval {
     }
   }
 
-  private Object[] nextNSlots() throws EvalException {
-    int size = nextOperand();
+  private Object[] nextNSlots(int size) throws EvalException {
     if (size == 0) {
       return ArraysForStarlark.EMPTY_OBJECT_ARRAY;
     }
+    int[] text = this.text;
+    int ip = this.ip;
     Object[] array = new Object[size];
     for (int j = 0; j != array.length; ++j) {
-      array[j] = getSlot(nextOperand());
+      array[j] = getSlot(text[ip++]);
     }
+    this.ip = ip;
     return array;
   }
 
+  /** Next N slots returning unshared array. */
+  private Object[] nextNSlotsListUnsharedArray() throws EvalException {
+    int size = nextOperand();
+    if (size < 0) {
+      return ((Object[]) compiled.objects[BcSlot.negativeSizeToObjectIndex(size)]).clone();
+    }
+    return nextNSlots(size);
+  }
+
+  /** Next N slots returning maybe shared array. */
+  private Object[] nextNSlotsListSharedArray() throws EvalException {
+    int size = nextOperand();
+    if (size < 0) {
+      return (Object[]) compiled.objects[BcSlot.negativeSizeToObjectIndex(size)];
+    }
+    return nextNSlots(size);
+  }
+
   private void list() throws EvalException {
-    Object[] data = nextNSlots();
+    Object[] data = nextNSlotsListUnsharedArray();
     StarlarkList<?> result = StarlarkList.wrap(fr.thread.mutability(), data);
     setSlot(nextOperand(), result);
   }
 
   private void tuple() throws EvalException {
-    Object[] data = nextNSlots();
+    Object[] data = nextNSlotsListSharedArray();
     Tuple result = Tuple.wrap(data);
     setSlot(nextOperand(), result);
   }
@@ -529,7 +559,7 @@ class BcEval {
 
     StarlarkCallable fn = Starlark.callable(fr.thread, getSlot(nextOperand()));
     BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
-    Object[] args = nextNSlots();
+    Object[] args = nextNSlotsListSharedArray();
     Object star = getSlotOrNull(nextOperand());
     Object starStar = getSlotOrNull(nextOperand());
 
@@ -563,7 +593,7 @@ class BcEval {
 
     StarlarkCallableLinked fn = (StarlarkCallableLinked) compiled.objects[nextOperand()];
 
-    Object[] args = nextNSlots();
+    Object[] args = nextNSlotsListSharedArray();
 
     Object star = getSlotOrNull(nextOperand());
     Object starStar = getSlotOrNull(nextOperand());
@@ -708,6 +738,40 @@ class BcEval {
     Object lhs = getSlot(lhsSlot);
     Object rhs = getSlot(rhsSlot);
     setSlot(resultSlot, EvalUtils.binaryPlus(lhs, rhs, fr.thread.mutability()));
+  }
+
+  /** a + b where a and b are likely strings. */
+  private void plusString() throws EvalException {
+    int lhsSlot = nextOperand();
+    int rhsSlot = nextOperand();
+    int resultSlot = nextOperand();
+    Object lhs = getSlot(lhsSlot);
+    Object rhs = getSlot(rhsSlot);
+    Object result;
+    if (lhs instanceof String && rhs instanceof String) {
+      result = (String) lhs + (String) rhs;
+    } else {
+      result = EvalUtils.binaryPlus(lhs, rhs, fr.thread.mutability());
+    }
+    setSlot(resultSlot, result);
+  }
+
+  /** a + b where b is a {@link BcInstrOperand#IN_LIST}. */
+  private void plusList() throws EvalException {
+    Object lhs = getSlot(nextOperand());
+    Object result;
+    if (lhs instanceof StarlarkList<?>) {
+      Object[] rhs = nextNSlotsListSharedArray();
+      result = StarlarkList.concat((StarlarkList<?>) lhs, rhs, fr.thread.mutability());
+    } else {
+      Object[] rhs = nextNSlotsListUnsharedArray();
+      result = EvalUtils.binaryPlus(
+          lhs,
+          StarlarkList.wrap(fr.thread.mutability(), rhs),
+          fr.thread.mutability());
+    }
+    int resultSlot = nextOperand();
+    setSlot(resultSlot, result);
   }
 
   private void evalException() throws EvalException {

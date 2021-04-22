@@ -1,5 +1,6 @@
 package net.starlark.java.eval;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.base.VerifyException;
 
@@ -71,5 +72,17 @@ class BcSlot {
       case ANY_FLAG: return "ANY:" + index;
       default: return "INCORRECT:" + slot;
     }
+  }
+
+  static int negativeSizeToObjectIndex(int size) {
+    if (Bc.ASSERTIONS) {
+      Preconditions.checkArgument(size < 0);
+    }
+    return -1 - size;
+  }
+
+  static int objectIndexToNegativeSize(int objectIndex) {
+    Preconditions.checkArgument(objectIndex >= 0);
+    return -1 - objectIndex;
   }
 }

@@ -13,11 +13,27 @@ class IntArrayBuilder {
     size = 0;
   }
 
+  public IntArrayBuilder(int capacity) {
+    array = ArraysForStarlark.newIntArray(capacity);
+    size = 0;
+  }
+
   public void add(int value) {
     if (size == array.length) {
       array = Arrays.copyOf(array, Math.max(10, array.length * 2));
     }
     array[size++] = value;
+  }
+
+  public void addAll(int[] values) {
+    if (size + values.length > array.length) {
+      int newCapacity = Math.max(
+          size + values.length,
+          array.length * 2);
+      array = Arrays.copyOf(array, newCapacity);
+    }
+    System.arraycopy(values, 0, array, size, values.length);
+    size += values.length;
   }
 
   public int size() {

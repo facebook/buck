@@ -1,5 +1,6 @@
 package net.starlark.java.eval;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +44,9 @@ class BcInstrOperand {
 
   /** Bytecode operand is a fixed integer, storing {@link TokenKind}. */
   static final Operands TOKEN_KIND = new KindArg();
+
+  /** Either length-delimited slots or an object array. */
+  static final Operands IN_LIST = new ListOperand();
 
   private BcInstrOperand() {}
 
@@ -409,6 +413,63 @@ class BcInstrOperand {
       return new Decoded(IntStream.range(0, parser.nextInt())
           .mapToObj(i -> element.decode(parser))
           .collect(ImmutableList.toImmutableList()));
+    }
+  }
+
+  /** Length-delimited slot or an array in object pool. */
+  static class ListOperand extends Operands {
+
+    @Override
+    void print(OpcodePrinter visitor) {
+      int size = visitor.parser.nextInt();
+      if (size < 0) {
+        visitor.append("o" + (1 - size));
+      } else {
+        visitor.append("[");
+        for (int i = 0; i != size; ++i) {
+          if (i != 0) {
+            visitor.append(" ");
+          }
+          IN_SLOT.print(visitor);
+        }
+        visitor.append("]");
+      }
+    }
+
+    @Override
+    protected void consume(BcParser parser) {
+      int size = parser.nextInt();
+      if (size >= 0) {
+        for (int i = 0; i != size; ++i) {
+          IN_SLOT.consume(parser);
+        }
+      }
+    }
+
+    @Override
+    Operands.Decoded decode(BcParser parser) {
+      int size = parser.nextInt();
+      if (size < 0) {
+        return new Decoded(size, ArraysForStarlark.EMPTY_INT_ARRAY);
+      } else {
+        int[] slots = parser.nextInts(size);
+        return new Decoded(size, slots);
+      }
+    }
+
+    static class Decoded extends Operands.Decoded {
+      final int size;
+      final int[] slots;
+
+      Decoded(int size, int[] slots) {
+        if (size < 0) {
+          Preconditions.checkArgument(slots.length == 0);
+        } else {
+          Preconditions.checkArgument(size == slots.length);
+        }
+        this.size = size;
+        this.slots = slots;
+      }
     }
   }
 }

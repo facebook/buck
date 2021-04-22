@@ -49,7 +49,11 @@ class BcVisitor {
         visitNotEq(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
       case PLUS:
+      case PLUS_STRING:
         visitPlus(parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
+      case PLUS_LIST:
+        visitPlusListConst(parser.nextInt(), parser.nextListArg(), parser.nextInt());
         break;
       case NOT:
         visitNot(parser.nextInt(), parser.nextInt());
@@ -97,8 +101,7 @@ class BcVisitor {
         BcCallLocs callLocs = (BcCallLocs) objects.get(parser.nextInt());
         int fn = parser.nextInt();
         BcDynCallSite callSite = (BcDynCallSite) objects.get(parser.nextInt());
-        int fnArgsOffset = parser.getIp();
-        parser.skipNArgs();
+        int fnArgsOffset = parser.nextListArg();
         int fnStar = parser.nextInt();
         int fnStarStar = parser.nextInt();
         int out = parser.nextInt();
@@ -108,8 +111,7 @@ class BcVisitor {
       case CALL_LINKED: {
         BcCallLocs callLocs = (BcCallLocs) objects.get(parser.nextInt());
         StarlarkCallableLinked callableLinked = (StarlarkCallableLinked) objects.get(parser.nextInt());
-        int fnArgsOffset = parser.getIp();
-        parser.skipNArgs();
+        int fnArgsOffset = parser.nextListArg();
         int fnStar = parser.nextInt();
         int fnStarStar = parser.nextInt();
         int out = parser.nextInt();
@@ -137,17 +139,11 @@ class BcVisitor {
         visitBreak(parser.nextInt());
         break;
       case LIST: {
-        int args = parser.getIp();
-        parser.skipNArgs();
-        int out = parser.nextInt();
-        visitList(args, out);
+        visitList(parser.nextListArg(), parser.nextInt());
         break;
       }
       case TUPLE: {
-        int args = parser.getIp();
-        parser.skipNArgs();
-        int out = parser.nextInt();
-        visitTuple(args, out);
+        visitTuple(parser.nextListArg(), parser.nextInt());
         break;
       }
       case DICT: {
@@ -188,7 +184,7 @@ class BcVisitor {
     unimplemented();
   }
 
-  protected void visitInConst(int index, Object constant) {
+  protected void visitInConst(Object constant) {
     unimplemented();
   }
 
@@ -222,7 +218,7 @@ class BcVisitor {
         break;
       case BcSlot.CONST_FLAG:
         Verify.verify(index < constantRegs.size());
-        visitInConst(index, constantRegs.get(index));
+        visitInConst(constantRegs.get(index));
         break;
       default:
         throw new AssertionError("unreachable");
@@ -248,6 +244,18 @@ class BcVisitor {
     int n = parser.nextInt();
     for (int i = 0; i != n; ++i) {
       visitIn(parser.nextInt());
+    }
+  }
+
+  protected void visitInListArg(int listArgIp) {
+    int size = parser.getText()[listArgIp];
+    if (size < 0) {
+      Object[] consts = (Object[]) objects.get(BcSlot.negativeSizeToObjectIndex(size));
+      for (Object object : consts) {
+        visitInConst(object);
+      }
+    } else {
+      visitNIns(listArgIp);
     }
   }
 
@@ -289,6 +297,12 @@ class BcVisitor {
     visitIn(in0);
     visitIn(in1);
     visitIn(out);
+  }
+
+  protected void visitPlusListConst(int lhs, int listArg, int out) {
+    visitIn(lhs);
+    visitInListArg(listArg);
+    visitOut(out);
   }
 
   protected void visitNot(int in, int out) {
@@ -367,7 +381,7 @@ class BcVisitor {
   protected void visitCall(BcCallLocs callLocs, int fn,
       BcDynCallSite callSite, int argsOffset, int star, int starStar, int out) {
     visitIn(fn);
-    visitNIns(argsOffset);
+    visitInListArg(argsOffset);
     visitInOrNull(star);
     visitInOrNull(starStar);
     visitOut(out);
@@ -375,7 +389,7 @@ class BcVisitor {
 
   protected void visitCallLinked(BcCallLocs callLocs, StarlarkCallableLinked callableLinked,
       int argsOffset, int star, int starStar, int out) {
-    visitNIns(argsOffset);
+    visitInListArg(argsOffset);
     visitInOrNull(star);
     visitInOrNull(starStar);
     visitOut(out);
@@ -407,12 +421,12 @@ class BcVisitor {
   }
 
   protected void visitList(int args, int out) {
-    visitNIns(args);
+    visitInListArg(args);
     visitOut(out);
   }
 
   protected void visitTuple(int args, int out) {
-    visitNIns(args);
+    visitInListArg(args);
     visitOut(out);
   }
 
