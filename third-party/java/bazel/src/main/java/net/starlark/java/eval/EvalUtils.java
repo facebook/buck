@@ -74,47 +74,7 @@ final class EvalUtils {
       throws EvalException {
     switch (op) {
       case PLUS:
-        if (x instanceof StarlarkInt) {
-          if (y instanceof StarlarkInt) {
-            // int + int
-            return StarlarkInt.add((StarlarkInt) x, (StarlarkInt) y);
-          } else if (y instanceof StarlarkFloat) {
-            // int + float
-            double z = ((StarlarkInt) x).toFiniteDouble() + ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.of(z);
-          }
-
-        } else if (x instanceof String) {
-          if (y instanceof String) {
-            // string + string
-            return (String) x + (String) y;
-          }
-
-        } else if (x instanceof Tuple) {
-          if (y instanceof Tuple) {
-            // tuple + tuple
-            return Tuple.concat((Tuple) x, (Tuple) y);
-          }
-
-        } else if (x instanceof StarlarkList) {
-          if (y instanceof StarlarkList) {
-            // list + list
-            return StarlarkList.concat((StarlarkList<?>) x, (StarlarkList<?>) y, mu);
-          }
-
-        } else if (x instanceof StarlarkFloat) {
-          double xf = ((StarlarkFloat) x).toDouble();
-          if (y instanceof StarlarkFloat) {
-            // float + float
-            double z = xf + ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.of(z);
-          } else if (y instanceof StarlarkInt) {
-            // float + int
-            double z = xf + ((StarlarkInt) y).toFiniteDouble();
-            return StarlarkFloat.of(z);
-          }
-        }
-        break;
+        return binaryPlus(x, y, mu);
 
       case PIPE:
         if (x instanceof StarlarkInt) {
@@ -355,6 +315,55 @@ final class EvalUtils {
         throw new AssertionError("not a binary operator: " + op);
     }
 
+    return binaryOpFallback(op, x, y);
+  }
+
+  static Object binaryPlus(Object x, Object y, Mutability mu) throws EvalException {
+    if (x instanceof StarlarkInt) {
+      if (y instanceof StarlarkInt) {
+        // int + int
+        return StarlarkInt.add((StarlarkInt) x, (StarlarkInt) y);
+      } else if (y instanceof StarlarkFloat) {
+        // int + float
+        double z = ((StarlarkInt) x).toFiniteDouble() + ((StarlarkFloat) y).toDouble();
+        return StarlarkFloat.of(z);
+      }
+
+    } else if (x instanceof String) {
+      if (y instanceof String) {
+        // string + string
+        return (String) x + (String) y;
+      }
+
+    } else if (x instanceof Tuple) {
+      if (y instanceof Tuple) {
+        // tuple + tuple
+        return Tuple.concat((Tuple) x, (Tuple) y);
+      }
+
+    } else if (x instanceof StarlarkList) {
+      if (y instanceof StarlarkList) {
+        // list + list
+        return StarlarkList.concat((StarlarkList<?>) x, (StarlarkList<?>) y, mu);
+      }
+
+    } else if (x instanceof StarlarkFloat) {
+      double xf = ((StarlarkFloat) x).toDouble();
+      if (y instanceof StarlarkFloat) {
+        // float + float
+        double z = xf + ((StarlarkFloat) y).toDouble();
+        return StarlarkFloat.of(z);
+      } else if (y instanceof StarlarkInt) {
+        // float + int
+        double z = xf + ((StarlarkInt) y).toFiniteDouble();
+        return StarlarkFloat.of(z);
+      }
+    }
+
+    return binaryOpFallback(TokenKind.PLUS, x, y);
+  }
+
+  private static Object binaryOpFallback(TokenKind op, Object x, Object y) throws EvalException {
     // custom binary operator?
     if (x instanceof HasBinary) {
       Object z = ((HasBinary) x).binaryOp(op, y, true);

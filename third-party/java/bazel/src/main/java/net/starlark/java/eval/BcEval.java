@@ -85,6 +85,9 @@ class BcEval {
           case BcInstr.NOT_EQ:
             notEq();
             break;
+          case BcInstr.PLUS:
+            plus();
+            break;
           case BcInstr.NOT:
             not();
             break;
@@ -695,6 +698,16 @@ class BcEval {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
     setSlot(nextOperand(), !lhs.equals(rhs));
+  }
+
+  /** a + b. */
+  private void plus() throws EvalException {
+    int lhsSlot = nextOperand();
+    int rhsSlot = nextOperand();
+    int resultSlot = nextOperand();
+    Object lhs = getSlot(lhsSlot);
+    Object rhs = getSlot(rhsSlot);
+    setSlot(resultSlot, EvalUtils.binaryPlus(lhs, rhs, fr.thread.mutability()));
   }
 
   private void evalException() throws EvalException {

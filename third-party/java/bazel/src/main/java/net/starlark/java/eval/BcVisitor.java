@@ -48,6 +48,9 @@ class BcVisitor {
       case NOT_EQ:
         visitNotEq(parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
+      case PLUS:
+        visitPlus(parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
       case NOT:
         visitNot(parser.nextInt(), parser.nextInt());
         break;
@@ -277,6 +280,12 @@ class BcVisitor {
   }
 
   protected void visitNotEq(int in0, int in1, int out) {
+    visitIn(in0);
+    visitIn(in1);
+    visitIn(out);
+  }
+
+  protected void visitPlus(int in0, int in1, int out) {
     visitIn(in0);
     visitIn(in1);
     visitIn(out);

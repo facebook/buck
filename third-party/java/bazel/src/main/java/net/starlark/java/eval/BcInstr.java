@@ -16,7 +16,8 @@ class BcInstr {
   public static final int CP = 0;
   public static final int EQ = CP + 1;
   public static final int NOT_EQ = EQ + 1;
-  public static final int NOT = NOT_EQ + 1;
+  public static final int PLUS = NOT_EQ + 1;
+  public static final int NOT = PLUS + 1;
   public static final int UNARY = NOT + 1;
   public static final int BR = UNARY + 1;
   public static final int IF_BR = BR + 1;
@@ -65,6 +66,8 @@ class BcInstr {
      * switching in generic binary operator handling.
      */
     NOT_EQ(BcInstr.NOT_EQ, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 + a1}. */
+    PLUS(BcInstr.PLUS, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
     /**
      * {@code a1 = not a0}.
      *

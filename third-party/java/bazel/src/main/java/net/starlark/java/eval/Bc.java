@@ -1187,24 +1187,31 @@ class Bc {
         }
       }
 
+      return writeBinaryOp(expression, expression.getOperator(), x, y, result);
+    }
+
+    private CompileExpressionResult writeBinaryOp(Node expression,
+        TokenKind operator, CompileExpressionResult x, CompileExpressionResult y, int result) {
       if (result == BcSlot.ANY_FLAG) {
         result = bcWriter.allocSlot();
       }
 
-      switch (expression.getOperator()) {
+      switch (operator) {
         case EQUALS_EQUALS:
           write(BcInstr.Opcode.EQ, expression, x.slot, y.slot, result);
           return new CompileExpressionResult(result, null);
         case NOT_EQUALS:
           write(BcInstr.Opcode.NOT_EQ, expression, x.slot, y.slot, result);
           return new CompileExpressionResult(result, null);
+        case PLUS:
+          return writePlus(expression, x, y, result);
         default:
           write(
               BcInstr.Opcode.BINARY,
               expression,
               x.slot,
               y.slot,
-              expression.getOperator().ordinal(),
+              operator.ordinal(),
               result);
           return new CompileExpressionResult(result, null);
       }
@@ -1228,6 +1235,12 @@ class Bc {
         result = bcWriter.allocSlot();
       }
       write(opcode, expression, bcWriter.allocString(format), percent, y.slot, result);
+      return new CompileExpressionResult(result, null);
+    }
+
+    private CompileExpressionResult writePlus(Node node,
+        CompileExpressionResult x, CompileExpressionResult y, int result) {
+      write(BcInstr.Opcode.PLUS, node, x.slot, y.slot, result);
       return new CompileExpressionResult(result, null);
     }
 
