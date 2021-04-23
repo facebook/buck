@@ -47,7 +47,7 @@ enum DexStore {
     }
 
     @Override
-    String fileNameForSecondary(String prefix, String index) {
+    String formatFileNameForSecondary(String prefix, String index) {
       return String.format("%s%s%s", prefix, index, suffix());
     }
   },
@@ -95,11 +95,16 @@ enum DexStore {
     return index + 1;
   }
 
-  public String index(Optional<Integer> groupIndex, int index) {
+  String getSecondaryDexFileNameIndex(Optional<Integer> groupIndex, int index) {
+    return secondaryDexIndexName(groupIndex, index, "%d");
+  }
+
+  private String secondaryDexIndexName(
+      Optional<Integer> groupIndex, int index, String singleIndexFormat) {
     if (groupIndex.isPresent()) {
       return String.format("%d_%d", groupIndex.get(), secondaryDexIndexOffset(index));
     } else {
-      return String.format("%d", secondaryDexIndexOffset(index));
+      return String.format(singleIndexFormat, secondaryDexIndexOffset(index));
     }
   }
 
@@ -109,21 +114,17 @@ enum DexStore {
    * @return The appropriate name for the dex file at {@code index}.
    */
   public String fileNameForSecondary(APKModule module, int index) {
-    return fileNameForSecondary(module, Integer.toString(secondaryDexIndexOffset(index)));
+    return fileNameForSecondary(module, Optional.empty(), index);
   }
 
-  /**
-   * @param module The apk module the file belongs to
-   * @param index The index of a given secondary dex file
-   * @return The appropriate name for the dex file at {@code index}.
-   */
-  public String fileNameForSecondary(APKModule module, String index) {
+  public String fileNameForSecondary(APKModule module, Optional<Integer> groupIndex, int index) {
+    String fileNameIndex = getSecondaryDexFileNameIndex(groupIndex, index);
     String prefix = module.isRootModule() ? prefix() : module.getName();
-    return fileNameForSecondary(prefix, index);
+    return formatFileNameForSecondary(prefix, fileNameIndex);
   }
 
-  String fileNameForSecondary(String prefix, String index) {
-    return String.format("%s-%s%s", prefix, index, suffix());
+  String formatFileNameForSecondary(String prefix, String fileNameIndex) {
+    return String.format("%s-%s%s", prefix, fileNameIndex, suffix());
   }
 
   /**

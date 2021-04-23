@@ -283,9 +283,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                 String filename =
                     dexSplitMode
                         .getDexStore()
-                        .fileNameForSecondary(
-                            apkModuleGraph.getRootAPKModule(),
-                            dexSplitMode.getDexStore().index(groupIndex, index));
+                        .fileNameForSecondary(apkModuleGraph.getRootAPKModule(), groupIndex, index);
                 Path pathToSecondaryDex =
                     paths
                         .getSecondaryDexPathForModule(apkModuleGraph.getRootAPKModule())

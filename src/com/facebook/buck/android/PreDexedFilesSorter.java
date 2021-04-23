@@ -145,7 +145,7 @@ public class PreDexedFilesSorter {
       int index,
       Path canaryDirectory,
       ImmutableList.Builder<Step> steps) {
-    String canaryIndex = dexStore.index(groupIndex, index);
+    String canaryIndex = dexStore.getSecondaryDexFileNameIndex(groupIndex, index);
     if (!groupIndex.isPresent()) {
       canaryIndex = String.format("%02d", index);
     }
@@ -286,7 +286,7 @@ public class PreDexedFilesSorter {
       secondaryOutputToInputs.orderKeysBy(Ordering.natural());
 
       for (int index = 0; index < secondaryDexesContents.size(); index++) {
-        String filename = dexStore.fileNameForSecondary(module, dexStore.index(groupIndex, index));
+        String filename = dexStore.fileNameForSecondary(module, groupIndex, index);
         Path pathToSecondaryDex = secondaryDexJarFilesDir.resolve(filename);
         metadataTxtEntries.put(pathToSecondaryDex, secondaryDexesContents.get(index).get(0));
         Collection<SourcePath> dexContentPaths =
