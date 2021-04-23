@@ -50,7 +50,7 @@ class DefaultJarContentHasher implements JarContentHasher {
   }
 
   @Override
-  public ImmutableMap<Path, HashCodeAndFileType> getContentHashes() throws IOException {
+  public ImmutableMap<String, HashCodeAndFileType> getContentHashes() throws IOException {
     Manifest manifest = null;
     try (JarInputStream inputStream =
         new JarInputStream(filesystem.newFileInputStream(jarRelativePath))) {
@@ -72,9 +72,8 @@ class DefaultJarContentHasher implements JarContentHasher {
               + " attributes for each file.");
     }
 
-    ImmutableMap.Builder<Path, HashCodeAndFileType> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, HashCodeAndFileType> builder = ImmutableMap.builder();
     for (Map.Entry<String, Attributes> nameAttributesEntry : manifest.getEntries().entrySet()) {
-      Path memberPath = Paths.get(nameAttributesEntry.getKey());
       Attributes attributes = nameAttributesEntry.getValue();
       String hashStringValue = attributes.getValue(CustomJarOutputStream.DIGEST_ATTRIBUTE_NAME);
       if (hashStringValue == null) {
@@ -84,7 +83,9 @@ class DefaultJarContentHasher implements JarContentHasher {
       HashCode memberHash = HashCode.fromString(hashStringValue);
       HashCodeAndFileType memberHashCodeAndFileType = HashCodeAndFileType.ofFile(memberHash);
 
-      builder.put(memberPath, memberHashCodeAndFileType);
+      // Need to invoke Paths.get because on windows the Path element will have `\` but on *nix/mac
+      // it will be '/'. The manifest entry in the zip will always be `/`
+      builder.put(Paths.get(nameAttributesEntry.getKey()).toString(), memberHashCodeAndFileType);
     }
 
     return builder.build();

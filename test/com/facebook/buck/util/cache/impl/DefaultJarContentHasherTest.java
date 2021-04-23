@@ -27,10 +27,10 @@ import com.facebook.buck.util.zip.ZipConstants;
 import com.sun.jna.Platform;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.jar.JarFile;
@@ -81,14 +81,45 @@ public class DefaultJarContentHasherTest {
     JarFile cache = new JarFile(toTest);
     assertThat(
         new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
-        Matchers.contains(Paths.get("Before")));
+        Matchers.contains("Before"));
 
     // Now modify toTest make sure we don't get a cached result when we open it for a second time
     Files.move(modification.toPath(), toTest.toPath(), StandardCopyOption.REPLACE_EXISTING);
     Files.setLastModifiedTime(toTest.toPath(), hardcodedTime);
     assertThat(
         new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
-        Matchers.contains(Paths.get("After")));
+        Matchers.contains("After"));
     cache.close();
+  }
+
+  @Test
+  public void testCaseInsensitive() throws IOException {
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot().toPath());
+    File toTest = temporaryFolder.newFile();
+    new JarBuilder()
+        .setShouldHashEntries(true)
+        .addEntry(
+            new JarEntrySupplier(
+                new CustomZipEntry("a"),
+                "container_test",
+                () -> new ByteArrayInputStream("a".getBytes(StandardCharsets.UTF_8))))
+        .addEntry(
+            new JarEntrySupplier(
+                new CustomZipEntry("A"),
+                "container_test",
+                () -> new ByteArrayInputStream("A".getBytes(StandardCharsets.UTF_8))))
+        .createJarFile(toTest.toPath());
+
+    FileTime hardcodedTime = FileTime.fromMillis(ZipConstants.getFakeTime());
+    Files.setLastModifiedTime(toTest.toPath(), hardcodedTime);
+
+    Path relativeToTestPath = temporaryFolder.getRoot().toPath().relativize(toTest.toPath());
+
+    // Use JarBuilder with toTest -- we cache the open file to make sure it stays mmapped
+    //noinspection unused
+    assertThat(
+        new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
+        Matchers.containsInAnyOrder("a", "A"));
   }
 }

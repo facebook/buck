@@ -171,7 +171,7 @@ class LoadingCacheFileHashCache implements FileHashCacheEngine {
       JarHashCodeAndFileType fileHashCodeAndFileType =
           (JarHashCodeAndFileType) loadingCache.get(relativeFilePath);
       HashCodeAndFileType memberHashCodeAndFileType =
-          fileHashCodeAndFileType.getContents().get(memberPath);
+          fileHashCodeAndFileType.getContents().get(memberPath.toString());
       if (memberHashCodeAndFileType == null) {
         throw new NoSuchFileException(archiveRelativePath.toString());
       }

@@ -66,7 +66,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     // One of FILE_TYPE consts
     private final byte fileType;
 
-    private @Nullable ImmutableMap<Path, HashCode> jarContentsHashes = null;
+    private @Nullable ImmutableMap<String, HashCode> jarContentsHashes = null;
     private volatile @Nullable HashCodeAndFileType hashCodeAndFileType = null;
     private volatile long size = -1;
 
@@ -75,7 +75,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
       this.path = path;
     }
 
-    private ImmutableMap<Path, HashCode> loadJarContentsHashes() {
+    private ImmutableMap<String, HashCode> loadJarContentsHashes() {
       try {
         return new DefaultJarContentHasher(filesystem, path)
             .getContentHashes().entrySet().stream()
@@ -141,9 +141,9 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
       return hashCodeAndFileType;
     }
 
-    ImmutableMap<Path, HashCode> getJarContentsHashes() {
+    ImmutableMap<String, HashCode> getJarContentsHashes() {
       if (jarContentsHashes == null) {
-        ImmutableMap<Path, HashCode> jarCaches = loadJarContentsHashes();
+        ImmutableMap<String, HashCode> jarCaches = loadJarContentsHashes();
         if (!isCacheableFileType()) {
           return jarCaches;
         }
@@ -220,7 +220,7 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     Preconditions.checkState(
         isArchive(relativeFilePath), "%s is not an archive.", relativeFilePath);
     Data data = fileSystemMap.get(relativeFilePath);
-    HashCode hashCode = data.getJarContentsHashes().get(memberPath);
+    HashCode hashCode = data.getJarContentsHashes().get(memberPath.toString());
     if (hashCode == null) {
       throw new NoSuchFileException(archiveRelativePath.toString());
     }

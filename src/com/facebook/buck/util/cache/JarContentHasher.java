@@ -24,5 +24,5 @@ public interface JarContentHasher {
 
   Path getJarRelativePath();
 
-  ImmutableMap<Path, HashCodeAndFileType> getContentHashes() throws IOException;
+  ImmutableMap<String, HashCodeAndFileType> getContentHashes() throws IOException;
 }

@@ -20,13 +20,12 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /** HashCodeAndFileType that also stores and caches hashes or file in a jar */
 public class JarHashCodeAndFileType extends HashCodeAndFileType {
   private final JarContentHasher jarContentHasher;
-  private @Nullable ImmutableMap<Path, HashCodeAndFileType> contents = null;
+  private @Nullable ImmutableMap<String, HashCodeAndFileType> contents = null;
 
   protected JarHashCodeAndFileType(
       byte type, HashCode hashCode, JarContentHasher jarContentHasher) {
@@ -35,7 +34,7 @@ public class JarHashCodeAndFileType extends HashCodeAndFileType {
   }
 
   /** Return hash values for all files in an archive (like a JAR) */
-  public ImmutableMap<Path, HashCodeAndFileType> getContents() {
+  public ImmutableMap<String, HashCodeAndFileType> getContents() {
     if (contents == null) {
       try {
         contents = jarContentHasher.getContentHashes();

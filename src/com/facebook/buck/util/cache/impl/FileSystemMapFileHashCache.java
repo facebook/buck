@@ -92,10 +92,12 @@ class FileSystemMapFileHashCache implements FileHashCacheEngine {
     Path relativeFilePath = archiveRelativePath.normalize();
     JarHashCodeAndFileType fileHashCodeAndFileType =
         (JarHashCodeAndFileType) loadingCache.get(relativeFilePath);
+    String resolvedPath = memberPath.toString();
     HashCodeAndFileType memberHashCodeAndFileType =
-        fileHashCodeAndFileType.getContents().get(memberPath);
+        fileHashCodeAndFileType.getContents().get(resolvedPath);
     if (memberHashCodeAndFileType == null) {
-      throw new NoSuchFileException(archiveRelativePath.toString());
+
+      throw new NoSuchFileException(archiveRelativePath.toString(), "", resolvedPath);
     }
     return memberHashCodeAndFileType.getHashCode();
   }
