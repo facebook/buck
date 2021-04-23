@@ -341,7 +341,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     secondaryDexFromPrimaryDexRejectsInspector.assertTypeExists("Lcom/facebook/sample/Sample2;");
     secondaryDexFromPrimaryDexRejectsInspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
 
-    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of(), false);
+    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of());
 
     // Build again with a different primary dex pattern
     workspace.replaceFileContents(
@@ -377,7 +377,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     newSecondaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
     newSecondaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
 
-    DexTestUtils.validateMetadata(newApkPath, ImmutableSet.of(), false);
+    DexTestUtils.validateMetadata(newApkPath, ImmutableSet.of());
   }
 
   @Test
@@ -557,7 +557,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     zipInspector.getDirectoryContents(Paths.get("assets"));
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-1_1.dex.jar");
     zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary-100_1.dex.jar");
-    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of(), false);
+    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of());
   }
 
   @Test
@@ -571,7 +571,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileExists(secondaryDex2);
     zipInspector.assertFileExists(secondaryDex3);
-    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of(), false);
+    DexTestUtils.validateMetadata(apkPath, ImmutableSet.of());
 
     DexInspector dex2Inspector = new DexInspector(apkPath, secondaryDex2);
     dex2Inspector.assertTypeExists("Lcom/facebook/sample/Sample;");

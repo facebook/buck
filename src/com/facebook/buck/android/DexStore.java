@@ -95,7 +95,12 @@ enum DexStore {
     return index + 1;
   }
 
-  String getSecondaryDexFileNameIndex(Optional<Integer> groupIndex, int index) {
+  // Canary class index must have at least two digits.
+  String getCanaryClassIndexName(Optional<Integer> groupIndex, int index) {
+    return secondaryDexIndexName(groupIndex, index, "%02d");
+  }
+
+  private String getSecondaryDexFileNameIndex(Optional<Integer> groupIndex, int index) {
     return secondaryDexIndexName(groupIndex, index, "%d");
   }
 

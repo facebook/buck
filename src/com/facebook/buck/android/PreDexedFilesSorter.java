@@ -145,12 +145,10 @@ public class PreDexedFilesSorter {
       int index,
       Path canaryDirectory,
       ImmutableList.Builder<Step> steps) {
-    String canaryIndex = dexStore.getSecondaryDexFileNameIndex(groupIndex, index);
-    if (!groupIndex.isPresent()) {
-      canaryIndex = String.format("%02d", index);
-    }
+    String canaryIndex = dexStore.getCanaryClassIndexName(groupIndex, index);
     FileLike fileLike = CanaryFactory.create(apkModule.getCanaryClassName(), canaryIndex);
-    String canaryDirName = String.format("canary_%s_%d", apkModule.getCanaryClassName(), index);
+    String canaryDirName =
+        String.format("canary_%s_%s", apkModule.getCanaryClassName(), canaryIndex);
     Path scratchDirectoryForCanaryClass = canaryDirectory.resolve(canaryDirName);
 
     // Strip the .class suffix to get the class name for the DexWithClasses object.
@@ -261,7 +259,7 @@ public class PreDexedFilesSorter {
                 dexStore,
                 module,
                 groupIndex,
-                secondaryDexesContents.size() + 1,
+                secondaryDexesContents.size(),
                 canaryDirectory,
                 steps);
         currentSecondaryDexSize += canary.getWeightEstimate();
