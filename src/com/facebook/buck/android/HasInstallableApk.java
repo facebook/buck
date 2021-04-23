@@ -35,6 +35,10 @@ public interface HasInstallableApk {
 
   ProjectFilesystem getProjectFilesystem();
 
+  default boolean isConcurrentInstallEnabled() {
+    return false;
+  }
+
   @BuckStyleValue
   abstract class ApkInfo {
     /**

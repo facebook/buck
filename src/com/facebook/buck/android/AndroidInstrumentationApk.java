@@ -97,7 +97,8 @@ public class AndroidInstrumentationApk extends AndroidBinary {
         resourceFilesInfo,
         ImmutableSortedSet.copyOf(enhancementResult.getAPKModuleGraph().getAPKModules()),
         exopackageInfo,
-        withDownwardApi);
+        withDownwardApi,
+        /* isConcurrentInstallEnabled */ false);
     this.apkUnderTest = apkUnderTest;
   }
 

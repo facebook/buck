@@ -48,11 +48,15 @@ public class AndroidBinaryFactory {
 
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
+  private final AndroidInstallConfig androidInstallConfig;
 
   public AndroidBinaryFactory(
-      AndroidBuckConfig androidBuckConfig, DownwardApiConfig downwardApiConfig) {
+      AndroidBuckConfig androidBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      AndroidInstallConfig androidInstallConfig) {
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
+    this.androidInstallConfig = androidInstallConfig;
   }
 
   public AndroidBinary create(
@@ -165,6 +169,7 @@ public class AndroidBinaryFactory {
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
         filesInfo.getExopackageInfo(),
-        downwardApiConfig.isEnabledForAndroid());
+        downwardApiConfig.isEnabledForAndroid(),
+        androidInstallConfig.getConcurrentInstallEnabled(Optional.empty()));
   }
 }

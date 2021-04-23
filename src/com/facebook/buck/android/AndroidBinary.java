@@ -118,6 +118,7 @@ public class AndroidBinary extends AbstractBuildRule
   private final BuildRuleParams buildRuleParams;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
+  @AddToRuleKey private final boolean isConcurrentInstallEnabled;
 
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -157,7 +158,8 @@ public class AndroidBinary extends AbstractBuildRule
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       Optional<ExopackageInfo> exopackageInfo,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean isConcurrentInstallEnabled) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.proguardJvmArgs = proguardJvmArgs;
@@ -245,6 +247,7 @@ public class AndroidBinary extends AbstractBuildRule
 
     this.transitiveClasspathDepsSupplier =
         createTransitiveClasspathDepsSupplier(ruleFinder, enhancementResult);
+    this.isConcurrentInstallEnabled = isConcurrentInstallEnabled;
   }
 
   private static Supplier<ImmutableSet<JavaLibrary>> createTransitiveClasspathDepsSupplier(
@@ -412,5 +415,10 @@ public class AndroidBinary extends AbstractBuildRule
   @Override
   public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
     return enhancementResult.getClasspathEntriesToDex();
+  }
+
+  @Override
+  public boolean isConcurrentInstallEnabled() {
+    return isConcurrentInstallEnabled;
   }
 }

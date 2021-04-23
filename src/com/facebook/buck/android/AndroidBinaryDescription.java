@@ -93,7 +93,6 @@ public class AndroidBinaryDescription
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final AndroidInstallConfig androidInstallConfig;
   private final AdbConfig adbConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BuildBuckConfig buildBuckConfig;
@@ -106,7 +105,6 @@ public class AndroidBinaryDescription
       JavaCDBuckConfig javaCDBuckConfig,
       ProGuardConfig proGuardConfig,
       AndroidBuckConfig androidBuckConfig,
-      AndroidInstallConfig androidInstallConfig,
       AdbConfig adbConfig,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
@@ -123,7 +121,6 @@ public class AndroidBinaryDescription
     this.cxxBuckConfig = cxxBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.buildBuckConfig = buildBuckConfig;
-    this.androidInstallConfig = androidInstallConfig;
     this.adbConfig = adbConfig;
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
@@ -224,8 +221,7 @@ public class AndroidBinaryDescription
             javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
-    new AndroidBinaryInstallGraphEnhancer(
-            androidInstallConfig, adbConfig, projectFilesystem, buildTarget, androidBinary)
+    new AndroidBinaryInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidBinary)
         .enhance(graphBuilder);
     return androidBinary;
   }

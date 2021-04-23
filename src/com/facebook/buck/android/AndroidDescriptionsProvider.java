@@ -88,14 +88,13 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaCDBuckConfig,
             proGuardConfig,
             androidBuckConfig,
-            androidInstallConfig,
             adbConfig,
             cxxBuckConfig,
             downwardApiConfig,
             buildBuckConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
+            new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig, androidInstallConfig)),
         new AndroidBuildConfigDescription(
             toolchainProvider, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidBundleDescription(

@@ -35,7 +35,6 @@ import com.google.common.collect.Multimap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 class AndroidBinaryInstallGraphEnhancer {
   static final Flavor INSTALL_FLAVOR = InternalFlavor.of("install");
@@ -48,11 +47,9 @@ class AndroidBinaryInstallGraphEnhancer {
   private BuildTarget buildTarget;
   private HasInstallableApk installableApk;
   // TODO(bduff): Merge these
-  private AndroidInstallConfig androidInstallConfig;
   private AdbConfig adbConfig;
 
   AndroidBinaryInstallGraphEnhancer(
-      AndroidInstallConfig androidInstallConfig,
       AdbConfig adbConfig,
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
@@ -60,12 +57,11 @@ class AndroidBinaryInstallGraphEnhancer {
     this.projectFilesystem = projectFilesystem;
     this.buildTarget = buildTarget.withFlavors(INSTALL_FLAVOR);
     this.installableApk = installableApk;
-    this.androidInstallConfig = androidInstallConfig;
     this.adbConfig = adbConfig;
   }
 
   public void enhance(ActionGraphBuilder graphBuilder) {
-    if (androidInstallConfig.getConcurrentInstallEnabled(Optional.empty())) {
+    if (installableApk.isConcurrentInstallEnabled()) {
       if (exopackageEnabled()) {
         enhanceForConcurrentExopackageInstall(graphBuilder);
       } else {

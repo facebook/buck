@@ -19,8 +19,6 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.apple.simulator.AppleDeviceController.AppleDeviceKindEnum.IPHONE;
 
 import com.facebook.buck.android.AdbHelper;
-import com.facebook.buck.android.AndroidBinary;
-import com.facebook.buck.android.AndroidInstallConfig;
 import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
@@ -424,15 +422,7 @@ public class InstallCommand extends BuildCommand {
       throws InterruptedException {
     AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
 
-    boolean concurrentInstallEnabled = false;
-    // concurrentInstall is currently only implemented for AndroidBinary (and not subclasses).
-    if (hasInstallableApk.getClass().equals(AndroidBinary.class)
-        && new AndroidInstallConfig(params.getBuckConfig())
-            .getConcurrentInstallEnabled(Optional.of(params.getBuckEventBus()))) {
-      concurrentInstallEnabled = true;
-    }
-
-    if (!concurrentInstallEnabled) {
+    if (!hasInstallableApk.isConcurrentInstallEnabled()) {
       // Uninstall the app first, if requested.
       if (shouldUninstallFirst()) {
         String packageName =

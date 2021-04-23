@@ -71,7 +71,6 @@ public class AndroidBinaryBuilder
             DEFAULT_JAVACD_CONFIG,
             new ProGuardConfig(buckConfig),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
-            new AndroidInstallConfig(buckConfig),
             buckConfig.getView(AdbConfig.class),
             CxxPlatformUtils.DEFAULT_CONFIG,
             DEFAULT_DOWNWARD_API_CONFIG,
@@ -79,7 +78,9 @@ public class AndroidBinaryBuilder
             createToolchainProviderForAndroidBinary(),
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(
-                new AndroidBuckConfig(buckConfig, Platform.detect()), DEFAULT_DOWNWARD_API_CONFIG)),
+                new AndroidBuckConfig(buckConfig, Platform.detect()),
+                DEFAULT_DOWNWARD_API_CONFIG,
+                new AndroidInstallConfig(buckConfig))),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidBinary());
