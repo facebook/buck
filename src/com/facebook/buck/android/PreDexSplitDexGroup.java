@@ -328,6 +328,14 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
     return groupIndex;
   }
 
+  int getSecondaryDexCount() {
+    try {
+      return getProjectFilesystem().readLines(getMetadataTxtPath()).size();
+    } catch (IOException e) {
+      throw new RuntimeException("Couldn't get secondary dex count", e);
+    }
+  }
+
   public Path getPrimaryDexRoot() {
     return BuildPaths.getGenDir(getProjectFilesystem().getBuckPaths(), getBuildTarget())
         .resolve("primary");

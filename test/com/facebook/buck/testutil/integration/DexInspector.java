@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.hamcrest.Matchers;
+import org.tukaani.xz.XZInputStream;
 
 public class DexInspector {
   private final Dex dex;
@@ -36,8 +37,10 @@ public class DexInspector {
   public DexInspector(Path apkFile, String path) throws IOException {
     try (FileSystem zipFile = FileSystems.newFileSystem(apkFile, null)) {
       Path dexFilePath = zipFile.getPath(path);
-      if (path.endsWith(".dex.jar")) {
-        try (InputStream inputStream = Files.newInputStream(dexFilePath)) {
+      if (path.endsWith(".dex.jar") || path.endsWith(".dex.jar.xz")) {
+        try (InputStream fileInputStream = Files.newInputStream(dexFilePath)) {
+          InputStream inputStream =
+              path.endsWith(".xz") ? new XZInputStream(fileInputStream) : fileInputStream;
           ZipInputStream jarInApkFile = new ZipInputStream(inputStream);
           ZipEntry entry;
           while ((entry = jarInApkFile.getNextEntry()) != null) {

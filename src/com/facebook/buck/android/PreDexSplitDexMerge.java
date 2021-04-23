@@ -262,9 +262,21 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                           primaryDexTmpDir, path -> !path.toString().endsWith("classes.dex"))
                       .asList();
 
-              Optional<Integer> groupIndex = getGroupIndex();
-              for (int index = 0; index < secondaryDexes.size(); index++) {
-                Path temporarySecondaryDexPath = secondaryDexes.get(index);
+              Optional<Integer> groupIndex = getNextAvailableGroupIndex();
+              // If we don't have a group index, then we need to make sure that we take the next
+              // available index so that we don't overwrite an existing dex.
+              int baseFilenameIndex =
+                  groupIndex.isPresent()
+                      ? 0
+                      : preDexDeps.stream()
+                          .filter(dex -> dex.apkModule.isRootModule())
+                          .map(PreDexSplitDexGroup::getSecondaryDexCount)
+                          .reduce(Integer::sum)
+                          .orElse(0);
+
+              for (int i = 0; i < secondaryDexes.size(); i++) {
+                Path temporarySecondaryDexPath = secondaryDexes.get(i);
+                int index = baseFilenameIndex + i;
                 ImmutableList.Builder<Step> canarySteps = ImmutableList.builder();
                 DexWithClasses canaryDexWithClasses =
                     PreDexedFilesSorter.createCanary(
@@ -451,8 +463,9 @@ public class PreDexSplitDexMerge extends PreDexMerge {
         .collect(ImmutableList.toImmutableList());
   }
 
-  private Optional<Integer> getGroupIndex() {
+  private Optional<Integer> getNextAvailableGroupIndex() {
     return preDexDeps.stream()
+        .filter(dex -> dex.apkModule.isRootModule())
         .map(PreDexSplitDexGroup::getGroupIndex)
         .filter(Optional::isPresent)
         .map(Optional::get)
