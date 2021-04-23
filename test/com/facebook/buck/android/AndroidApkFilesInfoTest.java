@@ -51,7 +51,7 @@ import org.junit.Test;
 
 public class AndroidApkFilesInfoTest {
 
-  private AndroidBinaryFilesInfo androidBinaryFilesInfo;
+  private AndroidApkFilesInfo androidApkFilesInfo;
   private FakePreDexMerge preDexMerge;
 
   @Before
@@ -78,7 +78,7 @@ public class AndroidApkFilesInfoTest {
             .setAndroidManifestPath(FakeSourcePath.of("AndroidManifest.xml"))
             .setAPKModuleGraph(apkModuleGraph)
             .build();
-    androidBinaryFilesInfo = new AndroidBinaryFilesInfo(enhancementResult, exopackageModes, false);
+    androidApkFilesInfo = new AndroidApkFilesInfo(enhancementResult, exopackageModes, false);
   }
 
   @Test
@@ -89,7 +89,7 @@ public class AndroidApkFilesInfoTest {
             FakeSourcePath.of(Paths.get("module_name")));
     preDexMerge.moduleMetadataAndDexSources = ImmutableList.of(metadataAndSourcePath);
 
-    ExopackageInfo info = androidBinaryFilesInfo.getExopackageInfo().get();
+    ExopackageInfo info = androidApkFilesInfo.getExopackageInfo().get();
     ImmutableList<DexInfo> moduleInfo = info.getModuleInfo().get();
     assertThat(moduleInfo, Matchers.hasSize(1));
     DexInfo dexInfo = moduleInfo.get(0);

@@ -94,7 +94,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             buildBuckConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig, androidInstallConfig)),
+            new AndroidApkFactory(androidBuckConfig, downwardApiConfig, androidInstallConfig)),
         new AndroidBuildConfigDescription(
             toolchainProvider, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidBundleDescription(

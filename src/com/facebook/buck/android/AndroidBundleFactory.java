@@ -74,8 +74,8 @@ public class AndroidBundleFactory {
 
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
-    AndroidBinaryFilesInfo filesInfo =
-        new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
+    AndroidApkFilesInfo filesInfo =
+        new AndroidApkFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
 
     Optional<BuildRule> moduleVerification;
     if (args.getAndroidAppModularityResult().isPresent()) {

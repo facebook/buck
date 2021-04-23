@@ -77,7 +77,7 @@ public class AndroidBinaryBuilder
             DEFAULT_EXTERNAL_ACTIONS_CONFIG,
             createToolchainProviderForAndroidBinary(),
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBinaryFactory(
+            new AndroidApkFactory(
                 new AndroidBuckConfig(buckConfig, Platform.detect()),
                 DEFAULT_DOWNWARD_API_CONFIG,
                 new AndroidInstallConfig(buckConfig))),

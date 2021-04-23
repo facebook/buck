@@ -287,8 +287,8 @@ public class AndroidInstrumentationApkDescription
             resourcePackagesToExclude);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
-    AndroidBinaryFilesInfo filesInfo =
-        new AndroidBinaryFilesInfo(enhancementResult, EnumSet.noneOf(ExopackageMode.class), false);
+    AndroidApkFilesInfo filesInfo =
+        new AndroidApkFilesInfo(enhancementResult, EnumSet.noneOf(ExopackageMode.class), false);
     return new AndroidInstrumentationApk(
         buildTarget,
         context.getProjectFilesystem(),

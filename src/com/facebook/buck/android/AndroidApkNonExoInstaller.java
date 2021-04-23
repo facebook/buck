@@ -42,13 +42,13 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Installs a non-exopackage apk. */
-public class AndroidBinaryNonExoInstaller extends AbstractBuildRule implements HasRuntimeDeps {
+public class AndroidApkNonExoInstaller extends AbstractBuildRule implements HasRuntimeDeps {
   @AddToRuleKey private final InstallTrigger trigger;
   @AddToRuleKey private final HasInstallableApk apk;
 
   private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
 
-  protected AndroidBinaryNonExoInstaller(
+  protected AndroidApkNonExoInstaller(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, HasInstallableApk apk) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkState(!apk.getApkInfo().getExopackageInfo().isPresent());

@@ -43,14 +43,14 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Create an exopackage symlink tree for Android binaries rules */
-public class AndroidBinaryExopackageSymlinkTree extends AbstractBuildRule {
+public class AndroidApkExopackageSymlinkTree extends AbstractBuildRule {
   @AddToRuleKey private final SourcePath manifestPath;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> exoSourcePaths;
 
   private final ExopackageInfo exopackageInfo;
   private final Supplier<ImmutableSortedSet<BuildRule>> depsSupplier;
 
-  protected AndroidBinaryExopackageSymlinkTree(
+  protected AndroidApkExopackageSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder sourcePathRuleFinder,

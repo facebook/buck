@@ -40,7 +40,7 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-public class AndroidBinaryFactory {
+public class AndroidApkFactory {
 
   private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
       InternalFlavor.of("modularity_verification");
@@ -50,7 +50,7 @@ public class AndroidBinaryFactory {
   private final DownwardApiConfig downwardApiConfig;
   private final AndroidInstallConfig androidInstallConfig;
 
-  public AndroidBinaryFactory(
+  public AndroidApkFactory(
       AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
       AndroidInstallConfig androidInstallConfig) {
@@ -86,18 +86,18 @@ public class AndroidBinaryFactory {
 
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
-    AndroidBinaryFilesInfo filesInfo =
-        new AndroidBinaryFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
+    AndroidApkFilesInfo filesInfo =
+        new AndroidApkFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
 
     if (filesInfo.getExopackageInfo().isPresent()) {
-      AndroidBinaryExopackageSymlinkTree androidBinaryExopackageSymlinkTree =
-          new AndroidBinaryExopackageSymlinkTree(
+      AndroidApkExopackageSymlinkTree androidApkExopackageSymlinkTree =
+          new AndroidApkExopackageSymlinkTree(
               buildTarget.withAppendedFlavors(EXO_SYMLINK_TREE),
               projectFilesystem,
               graphBuilder,
               filesInfo.getExopackageInfo().get(),
               result.getAndroidManifestPath());
-      graphBuilder.addToIndex(androidBinaryExopackageSymlinkTree);
+      graphBuilder.addToIndex(androidApkExopackageSymlinkTree);
     }
     Optional<BuildRule> moduleVerification;
     if (args.getAndroidAppModularityResult().isPresent()) {

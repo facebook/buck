@@ -217,7 +217,7 @@ public class AndroidBundleDescription
             javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
-    new AndroidBinaryInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidBundle)
+    new AndroidApkInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidBundle)
         .enhance(graphBuilder);
     return androidBundle;
   }

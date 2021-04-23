@@ -84,7 +84,7 @@ public class AndroidBinaryDescription
           AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
           AndroidBinaryGraphEnhancer.PROGUARD_TEXT_OUTPUT_FLAVOR,
           AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR,
-          AndroidBinaryFactory.EXO_SYMLINK_TREE);
+          AndroidApkFactory.EXO_SYMLINK_TREE);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaCDBuckConfig javaCDBuckConfig;
@@ -98,7 +98,7 @@ public class AndroidBinaryDescription
   private final BuildBuckConfig buildBuckConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
-  private final AndroidBinaryFactory androidBinaryFactory;
+  private final AndroidApkFactory androidApkFactory;
 
   public AndroidBinaryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -111,7 +111,7 @@ public class AndroidBinaryDescription
       BuildBuckConfig buildBuckConfig,
       ToolchainProvider toolchainProvider,
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
-      AndroidBinaryFactory androidBinaryFactory) {
+      AndroidApkFactory androidApkFactory) {
     this.javaBuckConfig = javaBuckConfig;
     this.javaCDBuckConfig = javaCDBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
@@ -124,7 +124,7 @@ public class AndroidBinaryDescription
     this.adbConfig = adbConfig;
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
-    this.androidBinaryFactory = androidBinaryFactory;
+    this.androidApkFactory = androidApkFactory;
   }
 
   @Override
@@ -205,7 +205,7 @@ public class AndroidBinaryDescription
             javacFactory,
             context.getConfigurationRuleRegistry());
     AndroidApk androidApk =
-        androidBinaryFactory.create(
+        androidApkFactory.create(
             toolchainProvider,
             projectFilesystem,
             graphBuilder,
@@ -221,7 +221,8 @@ public class AndroidBinaryDescription
             javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
-    new AndroidBinaryInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidApk)
+    new AndroidApkInstallGraphEnhancer(
+            adbConfig, projectFilesystem, buildTarget, androidApk)
         .enhance(graphBuilder);
     return androidApk;
   }

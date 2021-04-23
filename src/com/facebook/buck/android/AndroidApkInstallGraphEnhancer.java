@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-class AndroidBinaryInstallGraphEnhancer {
+class AndroidApkInstallGraphEnhancer {
   static final Flavor INSTALL_FLAVOR = InternalFlavor.of("install");
   private static final Flavor DIRECTORY_LISTING_FLAVOR = InternalFlavor.of("exo_directory_listing");
   private static final Flavor EXO_FILE_INSTALL_FLAVOR = InternalFlavor.of("exo_file_installer");
@@ -49,7 +49,7 @@ class AndroidBinaryInstallGraphEnhancer {
   // TODO(bduff): Merge these
   private AdbConfig adbConfig;
 
-  AndroidBinaryInstallGraphEnhancer(
+  AndroidApkInstallGraphEnhancer(
       AdbConfig adbConfig,
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
@@ -168,7 +168,7 @@ class AndroidBinaryInstallGraphEnhancer {
 
   private void enhanceForConcurrentInstall(ActionGraphBuilder graphBuilder) {
     graphBuilder.addToIndex(
-        new AndroidBinaryNonExoInstaller(buildTarget, projectFilesystem, installableApk));
+        new AndroidApkNonExoInstaller(buildTarget, projectFilesystem, installableApk));
   }
 
   private void enhanceForLegacyInstall(ActionGraphBuilder graphBuilder) {

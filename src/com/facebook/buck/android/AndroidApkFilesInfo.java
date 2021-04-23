@@ -31,12 +31,12 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 
-public class AndroidBinaryFilesInfo {
+public class AndroidApkFilesInfo {
   private final AndroidGraphEnhancementResult enhancementResult;
   private final EnumSet<ExopackageMode> exopackageModes;
   private final boolean packageAssetLibraries;
 
-  public AndroidBinaryFilesInfo(
+  public AndroidApkFilesInfo(
       AndroidGraphEnhancementResult enhancementResult,
       EnumSet<ExopackageMode> exopackageModes,
       boolean packageAssetLibraries) {
