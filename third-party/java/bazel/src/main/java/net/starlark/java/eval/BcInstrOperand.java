@@ -110,6 +110,37 @@ class BcInstrOperand {
     }
 
     abstract static class Decoded {
+      AddrArg.Decoded asAddr() {
+        return (AddrArg.Decoded) this;
+      }
+
+      FixedOperandsOpcode.Decoded asFixed() {
+        return (FixedOperandsOpcode.Decoded) this;
+      }
+
+      KindArg.Decoded asKind() {
+        return (KindArg.Decoded) this;
+      }
+
+      LengthDelimited.Decoded asLengthDelimited() {
+        return (LengthDelimited.Decoded) this;
+      }
+
+      NumberOperand.Decoded asNumber() {
+        return (NumberOperand.Decoded) this;
+      }
+
+      ObjectArg.Decoded asObject() {
+        return (ObjectArg.Decoded) this;
+      }
+
+      Register.Decoded asRegister() {
+        return (Register.Decoded) this;
+      }
+
+      StringOperand.Decoded asString() {
+        return (StringOperand.Decoded) this;
+      }
     }
 
     abstract Decoded decode(BcParser parser);

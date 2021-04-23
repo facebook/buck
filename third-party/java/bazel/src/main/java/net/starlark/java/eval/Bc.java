@@ -386,7 +386,7 @@ class Bc {
       Expression lhs = assignmentStatement.getLHS();
       if (lhs instanceof Identifier) {
         Identifier lhsIdent = (Identifier) lhs;
-        if (lhsIdent.getBinding().getScope() == Resolver.Scope.LOCAL && !postAssignHook) {
+        if (lhsIdent.getBinding().getScope() == Resolver.Scope.LOCAL) {
           compileExpressionTo(assignmentStatement.getRHS(), localIdentSlot(lhsIdent));
           return;
         }
@@ -1311,7 +1311,7 @@ class Bc {
       Tuple freevars) {
     long start = StarlarkRuntimeStats.ENABLED ? System.nanoTime() : 0;
     Compiler compiler = new Compiler(thread, rfn, module, freevars);
-    compiler.compileStatements(rfn.getBody(), true);
+    compiler.compileStatements(rfn.getBody(), rfn.isToplevel());
     BcCompiled compiled = compiler.finish();
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.recordCompileTimeNanos(System.nanoTime() - start);
