@@ -694,7 +694,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
       Path secondaryJarMetaDirParent = getSecondaryDexRoot().resolve("secondary_meta");
       Path secondaryJarMetaDir =
-          secondaryJarMetaDirParent.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
+          secondaryJarMetaDirParent.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
@@ -789,7 +789,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         secondaryDexDir =
             Optional.of(secondaryDexParentDir.resolve(SMART_DEX_SECONDARY_DEX_SUBDIR));
         Path intraDexReorderSecondaryDexDir =
-            secondaryDexParentDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
+            secondaryDexParentDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
 
         steps.addAll(
             MakeCleanDirectoryStep.of(
@@ -806,7 +806,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                     intraDexReorderSecondaryDexDir)));
       } else {
         secondaryDexDir =
-            Optional.of(secondaryDexParentDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR));
+            Optional.of(secondaryDexParentDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR));
         steps.add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
@@ -933,7 +933,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               primaryDexPath,
               secondaryOutputToInputs,
               SMART_DEX_SECONDARY_DEX_SUBDIR,
-              AndroidBinary.SECONDARY_DEX_SUBDIR,
+              AndroidApk.SECONDARY_DEX_SUBDIR,
               withDownwardApi);
       steps.add(intraDexReorderStep);
     }

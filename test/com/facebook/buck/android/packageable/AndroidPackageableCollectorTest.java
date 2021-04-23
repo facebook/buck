@@ -21,7 +21,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_O
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.AndroidBinary;
+import com.facebook.buck.android.AndroidApk;
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidLibraryBuilder;
 import com.facebook.buck.android.AndroidResource;
@@ -192,7 +192,7 @@ public class AndroidPackageableCollectorTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, toolchainProvider);
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    AndroidBinary binaryRule = (AndroidBinary) graphBuilder.requireRule(binaryTarget);
+    AndroidApk binaryRule = (AndroidApk) graphBuilder.requireRule(binaryTarget);
     NdkLibrary ndkLibraryRule = (NdkLibrary) graphBuilder.requireRule(ndkLibrary.getBuildTarget());
     NativeLibraryBuildRule prebuildNativeLibraryRule =
         (NativeLibraryBuildRule) graphBuilder.requireRule(prebuiltNativeLibraryTarget);
@@ -340,7 +340,7 @@ public class AndroidPackageableCollectorTest {
 
     ImmutableSortedSet<BuildTarget> declaredDepsTargets =
         ImmutableSortedSet.of(a.getBuildTarget(), c.getBuildTarget());
-    AndroidBinary androidBinary =
+    AndroidApk androidApk =
         AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:e"))
             .setManifest(FakeSourcePath.of("AndroidManfiest.xml"))
             .setKeystore(keystoreTarget)
@@ -350,7 +350,7 @@ public class AndroidPackageableCollectorTest {
     assertEquals(
         "Android resources should be topologically sorted.",
         result,
-        androidBinary
+        androidApk
             .getAndroidPackageableCollection()
             .getResourceDetails()
             .get(rootModule)
@@ -443,7 +443,7 @@ public class AndroidPackageableCollectorTest {
 
     ImmutableSortedSet<BuildTarget> originalDepsTargets =
         ImmutableSortedSet.of(androidLibrary.getBuildTarget());
-    AndroidBinary androidBinary =
+    AndroidApk androidApk =
         AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//apps/sample:app"))
             .setManifest(FakeSourcePath.of("apps/sample/AndroidManifest.xml"))
             .setOriginalDeps(originalDepsTargets)
@@ -451,12 +451,12 @@ public class AndroidPackageableCollectorTest {
             .build(graphBuilder);
 
     AndroidPackageableCollection packageableCollection =
-        androidBinary.getAndroidPackageableCollection();
+        androidApk.getAndroidPackageableCollection();
     assertEquals(
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                    androidBinary.getProjectFilesystem().getBuckPaths(),
+                    androidApk.getProjectFilesystem().getBuckPaths(),
                     androidLibraryTarget,
                     "lib__%s__output")
                 .resolveRel(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),

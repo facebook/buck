@@ -684,14 +684,14 @@ java_test(
     ],
 )
 
-ANDROID_BINARY_INTEGRATION_TEST_SRCS = [
-    "*Binary*IntegrationTest.java",
+ANDROID_APK_INTEGRATION_TEST_SRCS = [
+    "*Apk*IntegrationTest.java",
 ]
 
 java_test(
-    name = "binary-integration-1",
+    name = "apk-integration-1",
     srcs = [
-        "AndroidBinaryIntegrationTest.java",
+        "AndroidApkIntegrationTest.java",
     ],
     labels = [
         "long_running",
@@ -772,11 +772,11 @@ java_test(
 )
 
 java_test(
-    name = "binary-integration-2",
+    name = "apk-integration-2",
     srcs = glob(
-        ANDROID_BINARY_INTEGRATION_TEST_SRCS,
+        ANDROID_APK_INTEGRATION_TEST_SRCS,
         exclude = [
-            "AndroidBinaryIntegrationTest.java",
+            "AndroidApkIntegrationTest.java",
         ],
     ),
     labels = [
@@ -1105,7 +1105,7 @@ java_test(
     srcs = glob(
         INTEGRATION_TEST1_SRCS,
         exclude = ANDROID_AAR_INTEGRATION_TEST_SRCS +
-                  ANDROID_BINARY_INTEGRATION_TEST_SRCS +
+                  ANDROID_APK_INTEGRATION_TEST_SRCS +
                   ANDROID_APP_BUNDLE_INTEGRATION_TEST_SRCS +
                   ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
@@ -1273,7 +1273,7 @@ java_test(
     srcs = glob(
         INTEGRATION_TEST2_SRCS,
         exclude = ANDROID_AAR_INTEGRATION_TEST_SRCS +
-                  ANDROID_BINARY_INTEGRATION_TEST_SRCS +
+                  ANDROID_APK_INTEGRATION_TEST_SRCS +
                   ANDROID_APP_BUNDLE_INTEGRATION_TEST_SRCS +
                   ANDROID_BUILD_CONFIG_INTEGRATION_TEST_SRCS +
                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,

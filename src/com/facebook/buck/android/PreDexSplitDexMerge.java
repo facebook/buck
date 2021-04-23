@@ -493,8 +493,8 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       successDir = workDir.resolve("success");
       // These directories must use SECONDARY_DEX_SUBDIR because that mirrors the paths that
       // they will appear at in the APK.
-      metadataSubdir = metadataDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
-      jarfilesSubdir = jarfilesDir.resolve(AndroidBinary.SECONDARY_DEX_SUBDIR);
+      metadataSubdir = metadataDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
+      jarfilesSubdir = jarfilesDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
       additionalJarfilesDir = workDir.resolve("additional_dexes");
       additionalJarfilesSubdir = additionalJarfilesDir.resolve("assets");
       metadataFile = metadataSubdir.resolve("metadata.txt");

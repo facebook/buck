@@ -59,7 +59,7 @@ public class AndroidBinaryFactory {
     this.androidInstallConfig = androidInstallConfig;
   }
 
-  public AndroidBinary create(
+  public AndroidApk create(
       ToolchainProvider toolchainProvider,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -122,7 +122,7 @@ public class AndroidBinaryFactory {
             buildTarget.getTargetConfiguration(),
             AndroidPlatformTarget.class);
 
-    return new AndroidBinary(
+    return new AndroidApk(
         buildTarget,
         projectFilesystem,
         toolchainProvider.getByName(

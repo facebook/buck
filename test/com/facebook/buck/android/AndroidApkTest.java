@@ -70,7 +70,7 @@ import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class AndroidBinaryTest {
+public class AndroidApkTest {
 
   @Test
   public void testAndroidBinaryNoDx() {
@@ -103,7 +103,7 @@ public class AndroidBinaryTest {
         ImmutableSortedSet.of(libraryOneRule.getBuildTarget(), libraryTwoRule.getBuildTarget());
     BuildRule keystoreRule = addKeystoreRule(graphBuilder);
     PathSourcePath proguardConfig = FakeSourcePath.of("proguard.cfg");
-    AndroidBinary androidBinary =
+    AndroidApk androidApk =
         AndroidBinaryBuilder.createBuilder(binaryBuildTarget)
             .setOriginalDeps(originalDepsTargets)
             .setBuildTargetsToExcludeFromDex(ImmutableSet.of(libraryTwoRule.getBuildTarget()))
@@ -113,12 +113,12 @@ public class AndroidBinaryTest {
             .build(graphBuilder);
 
     AndroidPackageableCollection packageableCollection =
-        androidBinary.getAndroidPackageableCollection();
+        androidApk.getAndroidPackageableCollection();
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
-    androidBinary
+    androidApk
         .getEnhancementResult()
         .getNonPreDexedDex()
         .get()
@@ -140,12 +140,12 @@ public class AndroidBinaryTest {
             InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
     RelPath aaptProguardDir =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem().getBuckPaths(), aaptPackageTarget, "%s/proguard");
+            androidApk.getProjectFilesystem().getBuckPaths(), aaptPackageTarget, "%s/proguard");
 
     Path proguardOutputDir =
-        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
+        androidApk.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
     Path proguardInputsDir =
-        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardInputsDir();
+        androidApk.getEnhancementResult().getNonPreDexedDex().get().getProguardInputsDir();
     ImmutableSet<Path> expectedRecordedArtifacts =
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
@@ -187,7 +187,7 @@ public class AndroidBinaryTest {
                         libraryOne.getBuildTarget().getShortNameAndFlavorPostfix()
                             + "-obfuscated.jar"))),
         ImmutableSet.of(
-            androidBinary
+            androidApk
                 .getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getGenPath(
@@ -256,7 +256,7 @@ public class AndroidBinaryTest {
     Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
-    AndroidBinary ruleInRootDirectory =
+    AndroidApk ruleInRootDirectory =
         AndroidBinaryBuilder.createBuilder(targetInRootDirectory)
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystore.getBuildTarget())
@@ -270,7 +270,7 @@ public class AndroidBinaryTest {
 
     BuildTarget targetInNonRootDirectory =
         BuildTargetFactory.newInstance("//java/com/example:fb4a");
-    AndroidBinary ruleInNonRootDirectory =
+    AndroidApk ruleInNonRootDirectory =
         AndroidBinaryBuilder.createBuilder(targetInNonRootDirectory)
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(keystore.getBuildTarget())
@@ -288,7 +288,7 @@ public class AndroidBinaryTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign");
-    AndroidBinary rule =
+    AndroidApk rule =
         AndroidBinaryBuilder.createBuilder(target)
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
             .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
@@ -328,7 +328,7 @@ public class AndroidBinaryTest {
   @Test
   public void testDexingCommand() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    AndroidBinary splitDexRule =
+    AndroidApk splitDexRule =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
@@ -381,7 +381,7 @@ public class AndroidBinaryTest {
     SourcePath reorderTool = FakeSourcePath.of("tools#reorder_tool");
     SourcePath reorderData = FakeSourcePath.of("tools#reorder_data");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    AndroidBinary splitDexRule =
+    AndroidApk splitDexRule =
         AndroidBinaryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
             .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
@@ -441,8 +441,8 @@ public class AndroidBinaryTest {
             .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
             .setKeystore(keystoreRule.getBuildTarget())
             .setManifest(FakeSourcePath.of("manifest"));
-    AndroidBinary androidBinary = builder.build(graphBuilder);
-    ProjectFilesystem projectFilesystem = androidBinary.getProjectFilesystem();
+    AndroidApk androidApk = builder.build(graphBuilder);
+    ProjectFilesystem projectFilesystem = androidApk.getProjectFilesystem();
 
     BuildRule aaptPackageRule =
         graphBuilder.getRule(BuildTargetFactory.newInstance("//:target#aapt_package,dex"));

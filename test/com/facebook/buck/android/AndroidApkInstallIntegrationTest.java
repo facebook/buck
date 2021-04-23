@@ -70,7 +70,7 @@ import org.junit.runners.Parameterized;
  * both the main apk and a single resource file.
  */
 @RunWith(Parameterized.class)
-public class AndroidBinaryInstallIntegrationTest {
+public class AndroidApkInstallIntegrationTest {
 
   private static final String FAKE_PACKAGE_NAME = "buck.exotest.fake";
   private static final Path INSTALL_ROOT =

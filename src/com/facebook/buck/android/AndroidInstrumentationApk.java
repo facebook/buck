@@ -44,9 +44,9 @@ import java.util.stream.Stream;
  * bits are excluded. Failing to do so will generate mysterious runtime errors when running the
  * test.
  */
-public class AndroidInstrumentationApk extends AndroidBinary {
+public class AndroidInstrumentationApk extends AndroidApk {
 
-  private AndroidBinary apkUnderTest;
+  private AndroidApk apkUnderTest;
 
   AndroidInstrumentationApk(
       BuildTarget buildTarget,
@@ -54,7 +54,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
       AndroidSdkLocation androidSdkLocation,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
-      AndroidBinary apkUnderTest,
+      AndroidApk apkUnderTest,
       AndroidGraphEnhancementResult enhancementResult,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
@@ -107,7 +107,7 @@ public class AndroidInstrumentationApk extends AndroidBinary {
     return Stream.of();
   }
 
-  public AndroidBinary getApkUnderTest() {
+  public AndroidApk getApkUnderTest() {
     return apkUnderTest;
   }
 

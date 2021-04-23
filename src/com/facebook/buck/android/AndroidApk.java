@@ -80,7 +80,7 @@ import java.util.stream.Stream;
  * )
  * </pre>
  */
-public class AndroidBinary extends AbstractBuildRule
+public class AndroidApk extends AbstractBuildRule
     implements SupportsInputBasedRuleKey,
         HasDeclaredAndExtraDeps,
         HasClasspathDeps,
@@ -123,7 +123,7 @@ public class AndroidBinary extends AbstractBuildRule
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
   // TODO(cjhopman): What's the difference between shouldProguard and skipProguard?
-  AndroidBinary(
+  AndroidApk(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidSdkLocation androidSdkLocation,

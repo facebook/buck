@@ -43,7 +43,7 @@ import java.util.Locale;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class AndroidBinaryDescriptionTest {
+public class AndroidApkDescriptionTest {
 
   @Test
   public void testNoDxRulesBecomeFirstOrderDeps() {

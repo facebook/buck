@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidBinary;
+import com.facebook.buck.android.AndroidApk;
 import com.facebook.buck.android.AndroidInstrumentationApk;
 import com.facebook.buck.android.AndroidInstrumentationTest;
 import com.facebook.buck.android.HasInstallableApk;
@@ -972,15 +972,15 @@ public class TestCommand extends BuildCommand {
         AndroidInstrumentationTest androidInstrumentationTest = (AndroidInstrumentationTest) test;
 
         HasInstallableApk apk = androidInstrumentationTest.getApk();
-        if (apk instanceof AndroidBinary) {
-          AndroidBinary androidBinary = (AndroidBinary) apk;
-          Iterable<JavaLibrary> transitiveDeps = androidBinary.getTransitiveClasspathDeps();
+        if (apk instanceof AndroidApk) {
+          AndroidApk androidApk = (AndroidApk) apk;
+          Iterable<JavaLibrary> transitiveDeps = androidApk.getTransitiveClasspathDeps();
 
-          if (androidBinary instanceof AndroidInstrumentationApk) {
+          if (androidApk instanceof AndroidInstrumentationApk) {
             transitiveDeps =
                 Iterables.concat(
                     transitiveDeps,
-                    ((AndroidInstrumentationApk) androidBinary)
+                    ((AndroidInstrumentationApk) androidApk)
                         .getApkUnderTest()
                         .getTransitiveClasspathDeps());
           }

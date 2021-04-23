@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AndroidBinaryCrossCellIntegrationTest extends AbiCompilationModeTest {
+public class AndroidApkCrossCellIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 

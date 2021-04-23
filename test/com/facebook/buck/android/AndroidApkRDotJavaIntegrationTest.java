@@ -50,7 +50,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AndroidBinaryRDotJavaIntegrationTest {
+public class AndroidApkRDotJavaIntegrationTest {
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
 
@@ -64,7 +64,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryRDotJavaIntegrationTest(), "android_project", tmpFolder);
+            new AndroidApkRDotJavaIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

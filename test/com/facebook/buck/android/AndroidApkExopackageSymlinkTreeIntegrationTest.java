@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AndroidBinaryExopackageSymlinkTreeIntegrationTest {
+public class AndroidApkExopackageSymlinkTreeIntegrationTest {
   private static final String FULL_EXOPACKAGE_SYMLINK_TREE_TARGET =
       "//apps/multidex:app-full-exo#exo_symlink_tree";
   private static final String DEX_EXOPACKAGE_SYMLINK_TREE_TARGET =
@@ -50,7 +50,7 @@ public class AndroidBinaryExopackageSymlinkTreeIntegrationTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryExopackageSymlinkTreeIntegrationTest(), "android_project", tmpFolder);
+            new AndroidApkExopackageSymlinkTreeIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

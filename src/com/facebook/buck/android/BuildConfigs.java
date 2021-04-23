@@ -80,7 +80,7 @@ public class BuildConfigs {
    *     {@code userFields}. This ensures that the generated {@code BuildConfig.java} can still be
    *     used in Robolectric tests, but does not run the risk of its values being inlined by {@code
    *     javac}. This is important if the generated {@code BuildConfig} class is going to be swapped
-   *     out by a different implementation by {@link AndroidBinary}. See {@link AndroidBuildConfig}
+   *     out by a different implementation by {@link AndroidApk}. See {@link AndroidBuildConfig}
    *     for details.
    * @param userFields represents the fields that should be declared in the generated {@code
    *     BuildConfig} class.

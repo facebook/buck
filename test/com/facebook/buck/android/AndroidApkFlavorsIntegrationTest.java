@@ -33,7 +33,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AndroidBinaryFlavorsIntegrationTest {
+public class AndroidApkFlavorsIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 

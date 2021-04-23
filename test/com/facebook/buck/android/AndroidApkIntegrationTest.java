@@ -88,7 +88,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.tukaani.xz.XZInputStream;
 
-public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
+public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -106,7 +106,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   public void setUp() throws IOException {
     workspace =
         AndroidProjectWorkspace.create(
-            new AndroidBinaryIntegrationTest(), "android_project", tmpFolder);
+            new AndroidApkIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

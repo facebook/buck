@@ -97,7 +97,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Test;
 
-public class AndroidBinaryGraphEnhancerTest {
+public class AndroidApkGraphEnhancerTest {
 
   /**
    * This test verifies that AndroidBinaryGraphEnhancer correctly populates D8 desugar dependencies

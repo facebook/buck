@@ -35,7 +35,7 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
+public class AndroidApkCxxIntegrationTest extends AbiCompilationModeTest {
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
@@ -46,7 +46,7 @@ public class AndroidBinaryCxxIntegrationTest extends AbiCompilationModeTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryCxxIntegrationTest(), "android_project", tmpFolder);
+            new AndroidApkCxxIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

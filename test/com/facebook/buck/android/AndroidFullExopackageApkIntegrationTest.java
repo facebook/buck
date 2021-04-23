@@ -38,7 +38,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AndroidFullExopackageBinaryIntegrationTest {
+public class AndroidFullExopackageApkIntegrationTest {
   private static final String RESOURCES_EXOPACKAGE_TARGET = "//apps/multidex:app-full-exo";
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
@@ -57,7 +57,7 @@ public class AndroidFullExopackageBinaryIntegrationTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidFullExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
+            new AndroidFullExopackageApkIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

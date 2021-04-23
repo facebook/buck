@@ -28,7 +28,7 @@ public class UnsortedAndroidResourceDeps {
 
   private static final ImmutableSet<Class<? extends BuildRule>> TRAVERSABLE_TYPES =
       ImmutableSet.of(
-          AndroidBinary.class,
+          AndroidApk.class,
           AndroidInstrumentationApk.class,
           AndroidLibrary.class,
           AndroidResource.class,

@@ -204,7 +204,7 @@ public class AndroidBinaryDescription
             javaOptions.apply(buildTarget.getTargetConfiguration()),
             javacFactory,
             context.getConfigurationRuleRegistry());
-    AndroidBinary androidBinary =
+    AndroidApk androidApk =
         androidBinaryFactory.create(
             toolchainProvider,
             projectFilesystem,
@@ -221,9 +221,9 @@ public class AndroidBinaryDescription
             javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
-    new AndroidBinaryInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidBinary)
+    new AndroidBinaryInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidApk)
         .enhance(graphBuilder);
-    return androidBinary;
+    return androidApk;
   }
 
   private DexSplitMode createDexSplitMode(

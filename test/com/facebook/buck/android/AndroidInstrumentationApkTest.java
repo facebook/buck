@@ -100,7 +100,7 @@ public class AndroidInstrumentationApkTest {
         .setManifest(FakeSourcePath.of("apps/AndroidManifest.xml"))
         .setKeystore(keystore.getBuildTarget())
         .setOriginalDeps(originalDepsTargets);
-    AndroidBinary androidBinary = androidBinaryBuilder.build(graphBuilder);
+    AndroidApk androidApk = androidBinaryBuilder.build(graphBuilder);
 
     // AndroidInstrumentationApk transitively depends on :lib1, :lib2, :lib3, and :lib4.
     ImmutableSortedSet<BuildTarget> apkOriginalDepsTargets =
@@ -109,7 +109,7 @@ public class AndroidInstrumentationApkTest {
     AndroidInstrumentationApkDescriptionArg arg =
         AndroidInstrumentationApkDescriptionArg.builder()
             .setName(buildTarget.getShortName())
-            .setApk(androidBinary.getBuildTarget())
+            .setApk(androidApk.getBuildTarget())
             .setDeps(apkOriginalDepsTargets)
             .setManifest(FakeSourcePath.of("apps/InstrumentationAndroidManifest.xml"))
             .build();
@@ -118,7 +118,7 @@ public class AndroidInstrumentationApkTest {
     BuildRuleParams params =
         TestBuildRuleParams.create()
             .withDeclaredDeps(graphBuilder.getAllRules(apkOriginalDepsTargets))
-            .withExtraDeps(ImmutableSortedSet.of(androidBinary));
+            .withExtraDeps(ImmutableSortedSet.of(androidApk));
     ToolchainProvider toolchainProvider =
         AndroidInstrumentationApkBuilder.createToolchainProviderForAndroidInstrumentationApk();
     AndroidInstrumentationApk androidInstrumentationApk =
@@ -154,7 +154,7 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary3.getProjectFilesystem().getBuckPaths(),
                 javaLibrary3.getBuildTarget(),
                 "%s.jar")),
-        androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
+        androidApk.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getCellUnsafeRelPath)
             .collect(ImmutableSet.toImmutableSet()));
     assertEquals(

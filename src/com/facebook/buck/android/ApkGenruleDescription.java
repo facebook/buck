@@ -118,9 +118,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
     }
   }
 
-  static AndroidBinary getUnderlyingApk(HasInstallableApk installable) {
-    if (installable instanceof AndroidBinary) {
-      return (AndroidBinary) installable;
+  static AndroidApk getUnderlyingApk(HasInstallableApk installable) {
+    if (installable instanceof AndroidApk) {
+      return (AndroidApk) installable;
     } else if (installable instanceof ApkGenrule) {
       return getUnderlyingApk(((ApkGenrule) installable).getInstallableApk());
     } else {

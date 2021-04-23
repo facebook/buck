@@ -110,7 +110,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   }
 
   /**
-   * If an {@link AndroidPackageableCollector} is traversing this rule for an {@link AndroidBinary},
+   * If an {@link AndroidPackageableCollector} is traversing this rule for an {@link AndroidApk},
    * then it should flag itself as a class that should not be dexed and insert a new classpath entry
    * for a {@code BuildConfig} with the final values for the APK.
    */

@@ -50,7 +50,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class AndroidExopackageBinaryIntegrationTest {
+public class AndroidExopackageApkIntegrationTest {
 
   private static final String DEX_EXOPACKAGE_TARGET = "//apps/multidex:app-dex-exo";
   private static final String NATIVE_EXOPACKAGE_TARGET = "//apps/multidex:app-native-exo";
@@ -79,7 +79,7 @@ public class AndroidExopackageBinaryIntegrationTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidExopackageBinaryIntegrationTest(), "android_project", tmpFolder);
+            new AndroidExopackageApkIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     if (shouldExecuteInSeparateProcess) {
       workspace.enableOutOfProcessExecution();

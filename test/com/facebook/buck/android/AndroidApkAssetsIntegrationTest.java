@@ -36,7 +36,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
+public class AndroidApkAssetsIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -50,7 +50,7 @@ public class AndroidBinaryAssetsIntegrationTest extends AbiCompilationModeTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryAssetsIntegrationTest(), "android_project", tmpFolder);
+            new AndroidApkAssetsIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

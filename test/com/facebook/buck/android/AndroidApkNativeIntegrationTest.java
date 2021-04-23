@@ -50,7 +50,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
+public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
@@ -64,7 +64,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
   public void setUp() throws IOException {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            new AndroidBinaryNativeIntegrationTest(), "android_project", tmpFolder);
+            new AndroidApkNativeIntegrationTest(), "android_project", tmpFolder);
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
