@@ -462,40 +462,44 @@ class Bc {
       bcWriter.writeThrowException(locOffset, message);
     }
 
-    private void writeBinaryInplace(Node node, int lhs, int rhs, TokenKind op, int lhsOut) {
-      write(
-          BcInstr.Opcode.BINARY_IN_PLACE,
-          node,
-          lhs,
-          rhs,
-          op.ordinal(),
-          lhsOut
-      );
-    }
-
     private void compileAgumentedAssignmentToIdentifier(AssignmentStatement assignmentStatement) {
       Identifier lhs = (Identifier) assignmentStatement.getLHS();
 
-      int rhs = compileExpression(assignmentStatement.getRHS()).slot;
+      CompileExpressionResult rhs = compileExpression(assignmentStatement.getRHS());
 
       if (lhs.getBinding().getScope() == Resolver.Scope.LOCAL) {
-        writeBinaryInplace(
+        writeBinaryInPlace(
             assignmentStatement,
             localIdentSlot(lhs),
             rhs,
-            assignmentStatement.getOperator(),
             localIdentSlot(lhs)
         );
       } else {
         CompileExpressionResult value = compileGet(lhs);
         int temp = bcWriter.allocSlot();
-        writeBinaryInplace(
+        writeBinaryInPlace(
             assignmentStatement,
             value.slot,
             rhs,
-            assignmentStatement.getOperator(),
             temp);
         compileSet(temp, lhs, false);
+      }
+    }
+
+    private void writeBinaryInPlace(
+        AssignmentStatement assignmentStatement, int lhs, CompileExpressionResult rhs, int result) {
+      if (assignmentStatement.getOperator() == TokenKind.PLUS) {
+        // The only operator supporting binary in place is plus for lists
+        write(
+            BcInstr.Opcode.PLUS_IN_PLACE,
+            assignmentStatement,
+            lhs,
+            rhs.slot,
+            result);
+      } else {
+        // Otherwise inplace is equivalent to `lhs = lhs + rhs`.
+        writeBinaryOp(assignmentStatement, assignmentStatement.getOperator(),
+            new CompileExpressionResult(lhs, null), rhs, result);
       }
     }
 
@@ -508,16 +512,10 @@ class Bc {
 
         int object = compileExpression(indexExpression.getObject()).slot;
         int key = compileExpression(indexExpression.getKey()).slot;
-        int rhs = compileExpression(assignmentStatement.getRHS()).slot;
+        CompileExpressionResult rhs = compileExpression(assignmentStatement.getRHS());
         int temp = bcWriter.allocSlot();
         write(BcInstr.Opcode.INDEX, assignmentStatement, object, key, temp);
-        write(
-            BcInstr.Opcode.BINARY_IN_PLACE,
-            assignmentStatement,
-            temp,
-            rhs,
-            assignmentStatement.getOperator().ordinal(),
-            temp);
+        writeBinaryInPlace(assignmentStatement, temp, rhs, temp);
         write(BcInstr.Opcode.SET_INDEX, assignmentStatement, object, key, temp);
       } else if (assignmentStatement.getLHS() instanceof ListExpression) {
         compileThrowException(

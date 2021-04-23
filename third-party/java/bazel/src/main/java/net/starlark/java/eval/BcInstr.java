@@ -25,10 +25,10 @@ class BcInstr {
   public static final int IF_BR = BR + 1;
   public static final int IF_NOT_BR = IF_BR + 1;
   public static final int BINARY = IF_NOT_BR + 1;
-  public static final int BINARY_IN_PLACE = BINARY + 1;
-  public static final int PERCENT_S_ONE = BINARY_IN_PLACE + 1;
+  public static final int PERCENT_S_ONE = BINARY + 1;
   public static final int PERCENT_S_ONE_TUPLE = PERCENT_S_ONE + 1;
-  public static final int SET_GLOBAL = PERCENT_S_ONE_TUPLE + 1;
+  public static final int PLUS_IN_PLACE = PERCENT_S_ONE_TUPLE + 1;
+  public static final int SET_GLOBAL = PLUS_IN_PLACE + 1;
   public static final int SET_CELL = SET_GLOBAL + 1;
   public static final int DOT = SET_CELL + 1;
   public static final int INDEX = DOT + 1;
@@ -103,13 +103,6 @@ class BcInstr {
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.TOKEN_KIND,
         BcInstrOperand.OUT_SLOT),
-    /** {@code a3 = a0 (a2)= a1}. */
-    BINARY_IN_PLACE(
-        BcInstr.BINARY_IN_PLACE,
-        BcInstrOperand.IN_SLOT,
-        BcInstrOperand.IN_SLOT,
-        BcInstrOperand.TOKEN_KIND,
-        BcInstrOperand.OUT_SLOT),
     /** "aaa%sbbb" % arg */
     PERCENT_S_ONE(
         BcInstr.PERCENT_S_ONE,
@@ -134,6 +127,12 @@ class BcInstr {
         // Where to store result
         BcInstrOperand.OUT_SLOT
     ),
+    /** {@code a3 = a0 += a1}. */
+    PLUS_IN_PLACE(
+        BcInstr.PLUS_IN_PLACE,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.OUT_SLOT),
     /** Assign a value without destructuring to a global variable. */
     SET_GLOBAL(
         BcInstr.SET_GLOBAL,

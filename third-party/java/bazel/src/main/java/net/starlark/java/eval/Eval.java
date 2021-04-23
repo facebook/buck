@@ -366,7 +366,8 @@ final class Eval {
       Object y = eval(fr, rhs);
       Object z;
       try {
-        z = inplaceBinaryOp(fr, op, x, y);
+        //z = inplaceBinaryOp(fr, op, x, y);
+        if (true) throw new EvalException("dead code");
       } catch (EvalException ex) {
         fr.setErrorLocation(stmt.getOperatorLocation());
         throw ex;
@@ -384,7 +385,8 @@ final class Eval {
       Object y = eval(fr, rhs);
       Object z;
       try {
-        z = inplaceBinaryOp(fr, op, x, y);
+        //z = inplaceBinaryOp(fr, op, x, y);
+        if (true) throw new EvalException("dead code");
       } catch (EvalException ex) {
         fr.setErrorLocation(stmt.getOperatorLocation());
         throw ex;
@@ -412,7 +414,8 @@ final class Eval {
         Object y = eval(fr, rhs);
         Object z;
         try {
-          z = inplaceBinaryOp(fr, op, x, y);
+          //z = inplaceBinaryOp(fr, op, x, y);
+          if (true) throw new EvalException("dead code");
         } catch (EvalException ex) {
           fr.setErrorLocation(stmt.getOperatorLocation());
           throw ex;
@@ -430,16 +433,17 @@ final class Eval {
     }
   }
 
-  static Object inplaceBinaryOp(StarlarkThread.Frame fr, TokenKind op, Object x, Object y)
+  @SuppressWarnings("unchecked")
+  static Object inplaceBinaryPlus(StarlarkThread.Frame fr, Object x, Object y)
       throws EvalException {
     // list += iterable  behaves like  list.extend(iterable)
     // TODO(b/141263526): following Python, allow list+=iterable (but not list+iterable).
-    if (op == TokenKind.PLUS && x instanceof StarlarkList && y instanceof StarlarkList) {
-      StarlarkList<?> list = (StarlarkList) x;
-      list.extend(y);
+    if (x instanceof StarlarkList && y instanceof StarlarkList) {
+      StarlarkList<Object> list = (StarlarkList<Object>) x;
+      list.addElements((StarlarkList<Object>) y);
       return list;
     }
-    return EvalUtils.binaryOp(op, x, y, fr.thread.getSemantics(), fr.thread.mutability());
+    return EvalUtils.binaryPlus(x, y, fr.thread.mutability());
   }
 
   // ---- expressions ----

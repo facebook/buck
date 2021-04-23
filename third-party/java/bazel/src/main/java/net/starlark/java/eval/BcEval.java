@@ -103,8 +103,8 @@ class BcEval {
           case BcInstr.BINARY:
             binary();
             break;
-          case BcInstr.BINARY_IN_PLACE:
-            binaryInPlace();
+          case BcInstr.PLUS_IN_PLACE:
+            plusInPlace();
             break;
           case BcInstr.PERCENT_S_ONE:
             percentSOne();
@@ -640,16 +640,14 @@ class BcEval {
         EvalUtils.binaryOp(op, x, y, fr.thread.getSemantics(), fr.thread.mutability()));
   }
 
-  /**
-   * Generic binary operator
-   *
-   * <p>Note that {@code and} and {@code or} are not emitted as binary operator instruction. .
-   */
-  private void binaryInPlace() throws EvalException {
-    Object x = getSlot(nextOperand());
-    Object y = getSlot(nextOperand());
-    TokenKind op = TOKENS[nextOperand()];
-    setSlot(nextOperand(), Eval.inplaceBinaryOp(fr, op, x, y));
+  /** {@code +=} operator. */
+  private void plusInPlace() throws EvalException {
+    int lhs = nextOperand();
+    int rhs = nextOperand();
+    int result = nextOperand();
+    Object x = getSlot(lhs);
+    Object y = getSlot(rhs);
+    setSlot(result, Eval.inplaceBinaryPlus(fr, x, y));
   }
 
   /** {@code "aaa%sbbb" % string} */
