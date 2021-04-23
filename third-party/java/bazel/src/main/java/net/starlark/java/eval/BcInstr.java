@@ -28,7 +28,9 @@ class BcInstr {
   public static final int PERCENT_S_ONE = BINARY + 1;
   public static final int PERCENT_S_ONE_TUPLE = PERCENT_S_ONE + 1;
   public static final int PLUS_IN_PLACE = PERCENT_S_ONE_TUPLE + 1;
-  public static final int SET_GLOBAL = PLUS_IN_PLACE + 1;
+  public static final int PLUS_STRING_IN_PLACE = PLUS_IN_PLACE + 1;
+  public static final int PLUS_LIST_IN_PLACE = PLUS_STRING_IN_PLACE + 1;
+  public static final int SET_GLOBAL = PLUS_LIST_IN_PLACE + 1;
   public static final int SET_CELL = SET_GLOBAL + 1;
   public static final int DOT = SET_CELL + 1;
   public static final int INDEX = DOT + 1;
@@ -132,6 +134,18 @@ class BcInstr {
         BcInstr.PLUS_IN_PLACE,
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.IN_SLOT,
+        BcInstrOperand.OUT_SLOT),
+    /** {@code a3 = a0 += a1}. */
+    PLUS_STRING_IN_PLACE(
+        BcInstr.PLUS_STRING_IN_PLACE,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.OUT_SLOT),
+    /** {@code a3 = a0 += [a1...]}. */
+    PLUS_LIST_IN_PLACE(
+        BcInstr.PLUS_LIST_IN_PLACE,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_LIST,
         BcInstrOperand.OUT_SLOT),
     /** Assign a value without destructuring to a global variable. */
     SET_GLOBAL(

@@ -112,6 +112,12 @@ class BcEval {
           case BcInstr.PERCENT_S_ONE_TUPLE:
             percentSOneTuple();
             break;
+          case BcInstr.PLUS_STRING_IN_PLACE:
+            plusStringInPlace();
+            break;
+          case BcInstr.PLUS_LIST_IN_PLACE:
+            plusListInPlace();
+            break;
           case BcInstr.BR:
             br();
             continue;
@@ -712,6 +718,39 @@ class BcEval {
     String result = percentSOneImplObject(format, percent, arg);
 
     setSlot(out, result);
+  }
+
+  /** {@code +=} operator where operators are likely strings. */
+  private void plusStringInPlace() throws EvalException {
+    int lhs = nextOperand();
+    int rhs = nextOperand();
+    int resultSlot = nextOperand();
+    Object x = getSlot(lhs);
+    Object y = getSlot(rhs);
+    Object result;
+    if (x instanceof String && y instanceof String) {
+      result = (String) x + (String) y;
+    } else {
+      result = Eval.inplaceBinaryPlus(fr, x, y);
+    }
+    setSlot(resultSlot, result);
+  }
+
+  /** {@code x += [...]}. */
+  @SuppressWarnings("unchecked")
+  private void plusListInPlace() throws EvalException {
+    Object x = getSlot(nextOperand());
+    Object result;
+    if (x instanceof StarlarkList<?>) {
+      Object[] rhsValues = nextNSlotsListSharedArray();
+      ((StarlarkList<Object>) x).addElements(rhsValues);
+      result = x;
+    } else {
+      Object[] rhsValues = nextNSlotsListUnsharedArray();
+      result = Eval.inplaceBinaryPlus(fr, x, StarlarkList.wrap(fr.thread.mutability(), rhsValues));
+    }
+    int resultSlot = nextOperand();
+    setSlot(resultSlot, result);
   }
 
   /** Equality. */

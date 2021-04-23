@@ -407,6 +407,13 @@ public final class StarlarkList<E> extends Sequence<E> implements
     }
   }
 
+  void addElements(Object[] that) throws EvalException {
+    checkMutable();
+    grow(this.size + that.length);
+    System.arraycopy(that, 0, this.elems, this.size, that.length);
+    this.size += that.length;
+  }
+
   /**
    * Removes the element at a given index. The index must already have been validated to be in
    * range.

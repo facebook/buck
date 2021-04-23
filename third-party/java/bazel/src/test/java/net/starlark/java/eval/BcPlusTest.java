@@ -117,4 +117,45 @@ public class BcPlusTest {
     assertEquals(StarlarkList.immutableOf("x", "y"), BcTestUtil.eval(program));
   }
 
+  @Test
+  public void plusStringInPlaceInstructions() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  x += 'a'\n"
+        + "f";
+    assertEquals(
+        ImmutableList.of(BcInstr.Opcode.PLUS_STRING_IN_PLACE),
+        BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void plusStringInPlace() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  x += 'a'\n"
+        + "  return x\n"
+        + "f('x')";
+    assertEquals(
+        "xa",
+        BcTestUtil.eval(program));
+  }
+
+  @Test
+  public void plusListInPlaceInstructions() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  x += [1]\n"
+        + "f";
+    assertEquals(ImmutableList.of(BcInstr.Opcode.PLUS_LIST_IN_PLACE), BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void plusListInPlace() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  x += ['1']\n"
+        + "  return x\n"
+        + "f(['2'])";
+    assertEquals(StarlarkList.immutableOf("2", "1"), BcTestUtil.eval(program));
+  }
 }

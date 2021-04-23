@@ -74,7 +74,11 @@ class BcVisitor {
         visitBinary(parser.nextInt(), parser.nextInt(), TokenKind.values()[parser.nextInt()], parser.nextInt());
         break;
       case PLUS_IN_PLACE:
+      case PLUS_STRING_IN_PLACE:
         visitPlusInPlace(parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
+      case PLUS_LIST_IN_PLACE:
+        visitPlusListInPlace(parser.nextInt(), parser.nextListArg(), parser.nextInt());
         break;
       case PERCENT_S_ONE:
         visitPercentSOne(parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt());
@@ -338,6 +342,12 @@ class BcVisitor {
   protected void visitPlusInPlace(int in0, int in1, int out) {
     visitIn(in0);
     visitIn(in1);
+    visitOut(out);
+  }
+
+  protected void visitPlusListInPlace(int lhs, int list, int out) {
+    visitIn(lhs);
+    visitInListArg(list);
     visitOut(out);
   }
 
