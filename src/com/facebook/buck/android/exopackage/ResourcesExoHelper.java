@@ -43,20 +43,6 @@ public class ResourcesExoHelper implements ExoHelper {
     this.resourcesInfo = resourcesInfo;
   }
 
-  /** Get an instance configured for the resource installer. */
-  public static ResourcesExoHelper getResourceInstallerInstance(
-      SourcePathResolverAdapter resolver,
-      ProjectFilesystem projectFilesystem,
-      Stream<ExopackagePathAndHash> resourcesPaths) {
-    return new ResourcesExoHelper(resolver, projectFilesystem, null) {
-      @Override
-      public ImmutableMap<Path, Path> getFilesToInstall() {
-        return ResourcesExoHelper.getFilesToInstall(
-            getResourceFilesByHash(resolver, projectFilesystem, resourcesPaths));
-      }
-    };
-  }
-
   private static ImmutableMap<Path, Path> getFilesToInstall(
       ImmutableMap<String, Path> filesByHash) {
     return ExopackageUtil.applyFilenameFormat(filesByHash, RESOURCES_DIR, "%s.apk");

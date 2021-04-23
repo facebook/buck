@@ -287,7 +287,7 @@ public class ExopackageInstaller {
     }
   }
 
-  public void installMissingFiles(
+  private void installMissingFiles(
       ImmutableSortedSet<Path> presentFiles,
       ExoHelper helper,
       @Nullable ImmutableMap.Builder<Path, String> metadataToInstall)

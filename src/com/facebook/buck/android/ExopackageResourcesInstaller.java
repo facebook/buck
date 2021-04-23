@@ -17,9 +17,9 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.AdbConfig;
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
-import com.facebook.buck.android.exopackage.ResourcesExoHelper;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -106,7 +106,6 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                     device -> {
                       ImmutableSortedSet<Path> presentFiles =
                           Objects.requireNonNull(contents.get(device.getSerialNumber()));
-                      // TODO(bduff): this bypasses metadata installation. Is that correct?
                       new ExopackageInstaller(
                               resolver,
                               context.getBuckEventBus(),
@@ -114,11 +113,11 @@ public class ExopackageResourcesInstaller extends AbstractBuildRule {
                               packageName,
                               device,
                               adbConfig.getSkipInstallMetadata())
-                          .installMissingFiles(
+                          .installMissingExopackageFiles(
                               presentFiles,
-                              ResourcesExoHelper.getResourceInstallerInstance(
-                                  resolver, getProjectFilesystem(), paths.stream()),
-                              /*metadataToInstall=*/ null);
+                              ExopackageInfo.builder()
+                                  .setResourcesInfo(ExopackageInfo.ResourcesInfo.of(paths))
+                                  .build());
                       return true;
                     },
                     true);
