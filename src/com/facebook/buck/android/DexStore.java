@@ -37,8 +37,8 @@ enum DexStore {
     // Google expects secondary dex files to start at 2.
     // I guess classes.dex is number 1.
     @Override
-    public String index(int index) {
-      return String.format("%d", index + 2);
+    public int secondaryDexIndexOffset(int index) {
+      return index + 2;
     }
 
     @Override
@@ -91,15 +91,15 @@ enum DexStore {
   public abstract String suffix();
 
   // Start at one for easier comprehension by humans.
-  public String index(int index) {
-    return String.format("%d", index + 1);
+  public int secondaryDexIndexOffset(int index) {
+    return index + 1;
   }
 
   public String index(Optional<Integer> groupIndex, int index) {
     if (groupIndex.isPresent()) {
-      return String.format("%d_%s", groupIndex.get(), index(index));
+      return String.format("%d_%d", groupIndex.get(), secondaryDexIndexOffset(index));
     } else {
-      return index(index);
+      return String.format("%d", secondaryDexIndexOffset(index));
     }
   }
 
@@ -109,7 +109,7 @@ enum DexStore {
    * @return The appropriate name for the dex file at {@code index}.
    */
   public String fileNameForSecondary(APKModule module, int index) {
-    return fileNameForSecondary(module, index(index));
+    return fileNameForSecondary(module, Integer.toString(secondaryDexIndexOffset(index)));
   }
 
   /**
