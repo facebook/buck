@@ -63,7 +63,11 @@ public class BuckAddDependencyIntentionFactory {
   public static BuckAddDependencyIntention createAddModuleDependencyIntention(
       PsiReference reference, PsiClass psiClass, BuckAddImportAction importAction) {
     return createAddModuleDependencyIntention(
-        reference, psiClass.getContainingFile().getVirtualFile(), psiClass, importAction);
+        reference,
+        psiClass.getContainingFile().getVirtualFile(),
+        psiClass,
+        importAction,
+        new BuckUpdateModelModuleDependencyAction());
   }
 
   @Nullable
@@ -71,13 +75,20 @@ public class BuckAddDependencyIntentionFactory {
       PsiReference reference,
       VirtualFile importSourceFile,
       @Nullable PsiClass psiClass,
-      BuckAddImportAction addImportAction) {
+      BuckAddImportAction addImportAction,
+      BuckUpdateModelAction updateModelAction) {
     Project project = reference.getElement().getProject();
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     ProjectFileIndex projectFileIndex = ProjectFileIndex.getInstance(project);
     CommonAddDependencyDataWrapper wrapper =
         createCommonAddDependencyDataWrapper(
-            reference, psiClass, addImportAction, project, buckTargetLocator, projectFileIndex);
+            reference,
+            psiClass,
+            addImportAction,
+            updateModelAction,
+            project,
+            buckTargetLocator,
+            projectFileIndex);
     if (wrapper == null || importSourceFile == null) {
       return null;
     }
@@ -120,6 +131,7 @@ public class BuckAddDependencyIntentionFactory {
                 return new AddImportAction(project, reference, editor, psiClass).execute();
               }
             },
+            null,
             project,
             BuckTargetLocator.getInstance(project),
             ProjectFileIndex.getInstance(project));
@@ -160,6 +172,7 @@ public class BuckAddDependencyIntentionFactory {
       PsiReference reference,
       @Nullable PsiClass psiClass,
       BuckAddImportAction addImportAction,
+      BuckUpdateModelAction updateModelAction,
       Project project,
       BuckTargetLocator buckTargetLocator,
       ProjectFileIndex projectFileIndex) {
@@ -192,6 +205,7 @@ public class BuckAddDependencyIntentionFactory {
         editSourceTarget,
         editModule,
         psiClass,
-        addImportAction);
+        addImportAction,
+        updateModelAction);
   }
 }

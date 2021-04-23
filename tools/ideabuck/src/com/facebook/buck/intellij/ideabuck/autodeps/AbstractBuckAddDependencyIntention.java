@@ -76,6 +76,7 @@ public abstract class AbstractBuckAddDependencyIntention extends BaseIntentionAc
   BuckTarget importTarget;
 
   @Nullable final BuckAddImportAction addImportAction;
+  @Nullable final BuckUpdateModelAction updateModelAction;
 
   public AbstractBuckAddDependencyIntention(CommonAddDependencyDataWrapper wrapper) {
     project = wrapper.project;
@@ -86,6 +87,7 @@ public abstract class AbstractBuckAddDependencyIntention extends BaseIntentionAc
     editModule = wrapper.editModule;
     psiClass = wrapper.psiClass;
     addImportAction = wrapper.addImportAction;
+    updateModelAction = wrapper.updateModelAction;
   }
 
   @Nls(capitalization = Nls.Capitalization.Sentence)

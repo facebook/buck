@@ -39,6 +39,7 @@ public class CommonAddDependencyDataWrapper {
 
   // Add import action
   final @Nullable BuckAddImportAction addImportAction;
+  final @Nullable BuckUpdateModelAction updateModelAction;
 
   public CommonAddDependencyDataWrapper(
       Project project,
@@ -48,7 +49,8 @@ public class CommonAddDependencyDataWrapper {
       BuckTarget editSourceTarget,
       Module editModule,
       @Nullable PsiClass psiClass,
-      @Nullable BuckAddImportAction addImportAction) {
+      @Nullable BuckAddImportAction addImportAction,
+      @Nullable BuckUpdateModelAction updateModelAction) {
     this.project = project;
     this.reference = reference;
     this.editBuildFile = editBuildFile;
@@ -57,5 +59,6 @@ public class CommonAddDependencyDataWrapper {
     this.editModule = editModule;
     this.psiClass = psiClass;
     this.addImportAction = addImportAction;
+    this.updateModelAction = updateModelAction;
   }
 }

@@ -31,7 +31,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
@@ -76,7 +75,22 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
       @Nullable PsiClass psiClass,
       BuckAddImportAction importAction) {
     return BuckAddDependencyIntentionFactory.createAddModuleDependencyIntention(
-        reference, importSourceFile, psiClass, importAction);
+        reference,
+        importSourceFile,
+        psiClass,
+        importAction,
+        new BuckUpdateModelModuleDependencyAction());
+  }
+
+  @Nullable
+  public static BuckAddDependencyIntention create(
+      PsiReference reference,
+      VirtualFile importSourceFile,
+      @Nullable PsiClass psiClass,
+      BuckAddImportAction importAction,
+      BuckUpdateModelAction updateModelAction) {
+    return BuckAddDependencyIntentionFactory.createAddModuleDependencyIntention(
+        reference, importSourceFile, psiClass, importAction, updateModelAction);
   }
 
   BuckAddDependencyIntention(
@@ -230,25 +244,15 @@ public class BuckAddDependencyIntention extends AbstractBuckAddDependencyIntenti
     if (!tryToAddBuckDependency(editTargetMetadata, buckEventLogger)) {
       return;
     }
-    ModuleRootModificationUtil.updateModel(
-        editModule,
-        (modifiableRootModel -> {
-          if (modifiableRootModel.findModuleOrderEntry(importModule) != null) {
-            LOGGER.info(
-                "No need to modify module "
-                    + editModule.getName()
-                    + ", already has dependency on "
-                    + importModule.getName());
-          } else {
-            modifiableRootModel.addModuleOrderEntry(importModule);
-            LOGGER.info(
-                "Successfully added module dependency from "
-                    + editModule.getName()
-                    + " on "
-                    + importModule.getName());
-          }
-          buckEventLogger.withExtraData(getExtraLoggingData()).log();
-        }));
+
+    // Update Module with the new dependency
+    if (updateModelAction != null) {
+      updateModelAction.updateModel(editModule, importModule, LOGGER);
+    }
+
+    buckEventLogger.withExtraData(getExtraLoggingData()).log();
+
+    // Manually call add import action for the new dependency
     invokeAddImport(editor);
   }
 
