@@ -19,7 +19,9 @@ class BcInstr {
   public static final int PLUS = NOT_EQ + 1;
   public static final int PLUS_STRING = PLUS + 1;
   public static final int PLUS_LIST = PLUS_STRING + 1;
-  public static final int NOT = PLUS_LIST + 1;
+  public static final int IN = PLUS_LIST + 1;
+  public static final int NOT_IN = IN + 1;
+  public static final int NOT = NOT_IN + 1;
   public static final int UNARY = NOT + 1;
   public static final int BR = UNARY + 1;
   public static final int IF_BR = BR + 1;
@@ -83,6 +85,10 @@ class BcInstr {
         BcInstrOperand.IN_LIST,
         // Where to store result
         BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 in a1}. */
+    IN(BcInstr.IN, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 not in a1}. */
+    NOT_IN(BcInstr.NOT_IN, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
     /**
      * {@code a1 = not a0}.
      *

@@ -1299,6 +1299,12 @@ class Bc {
         case NOT_EQUALS:
           write(BcInstr.Opcode.NOT_EQ, expression, x.slot, y.slot, result);
           return new CompileExpressionResult(result, null);
+        case IN:
+          write(BcInstr.Opcode.IN, expression, x.slot, y.slot, result);
+          return new CompileExpressionResult(result, null);
+        case NOT_IN:
+          write(BcInstr.Opcode.NOT_IN, expression, x.slot, y.slot, result);
+          return new CompileExpressionResult(result, null);
         case PLUS:
           return writePlus(expression, x, y, result);
         default:

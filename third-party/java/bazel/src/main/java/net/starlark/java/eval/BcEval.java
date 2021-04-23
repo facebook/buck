@@ -94,6 +94,12 @@ class BcEval {
           case BcInstr.PLUS_LIST:
             plusList();
             break;
+          case BcInstr.IN:
+            binaryIn();
+            break;
+          case BcInstr.NOT_IN:
+            binaryNotIn();
+            break;
           case BcInstr.NOT:
             not();
             break;
@@ -757,14 +763,14 @@ class BcEval {
   private void eq() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
-    setSlot(nextOperand(), lhs.equals(rhs));
+    setSlot(nextOperand(), lhs == rhs || lhs.equals(rhs));
   }
 
   /** Equality. */
   private void notEq() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
-    setSlot(nextOperand(), !lhs.equals(rhs));
+    setSlot(nextOperand(), lhs != rhs && !lhs.equals(rhs));
   }
 
   /** a + b. */
@@ -809,6 +815,26 @@ class BcEval {
     }
     int resultSlot = nextOperand();
     setSlot(resultSlot, result);
+  }
+
+  /** {@code a in b} */
+  private void binaryIn() throws EvalException {
+    int lhsSlot = nextOperand();
+    int rhsSlot = nextOperand();
+    int resultSlot = nextOperand();
+    Object lhs = getSlot(lhsSlot);
+    Object rhs = getSlot(rhsSlot);
+    setSlot(resultSlot, EvalUtils.binaryIn(lhs, rhs, fr.thread.getSemantics()));
+  }
+
+  /** {@code a not in b} */
+  private void binaryNotIn() throws EvalException {
+    int lhsSlot = nextOperand();
+    int rhsSlot = nextOperand();
+    int resultSlot = nextOperand();
+    Object lhs = getSlot(lhsSlot);
+    Object rhs = getSlot(rhsSlot);
+    setSlot(resultSlot, !EvalUtils.binaryIn(lhs, rhs, fr.thread.getSemantics()));
   }
 
   private void evalException() throws EvalException {

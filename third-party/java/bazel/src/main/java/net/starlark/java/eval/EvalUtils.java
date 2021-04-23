@@ -293,29 +293,30 @@ final class EvalUtils {
         return compare(x, y) >= 0;
 
       case IN:
-        if (y instanceof StarlarkIndexable) {
-          return ((StarlarkIndexable) y).containsKey(semantics, x);
-        } else if (y instanceof String) {
-          if (!(x instanceof String)) {
-            throw Starlark.errorf(
-                "'in <string>' requires string as left operand, not '%s'", Starlark.type(x));
-          }
-          return ((String) y).contains((String) x);
-        }
-        break;
+        return binaryIn(x, y, semantics);
 
       case NOT_IN:
-        Object z = binaryOp(TokenKind.IN, x, y, semantics, mu);
-        if (z != null) {
-          return !Starlark.truth(z);
-        }
-        break;
+        return !binaryIn(x, y, semantics);
 
       default:
         throw new AssertionError("not a binary operator: " + op);
     }
 
     return binaryOpFallback(op, x, y);
+  }
+
+  static boolean binaryIn(Object x, Object y, StarlarkSemantics semantics) throws EvalException {
+    if (y instanceof StarlarkIndexable) {
+      return ((StarlarkIndexable<?>) y).containsKey(semantics, x);
+    } else if (y instanceof String) {
+      if (!(x instanceof String)) {
+        throw Starlark.errorf(
+            "'in <string>' requires string as left operand, not '%s'", Starlark.type(x));
+      }
+      return ((String) y).contains((String) x);
+    } else {
+      return Starlark.truth(binaryOpFallback(TokenKind.IN, x, y));
+    }
   }
 
   static Object binaryPlus(Object x, Object y, Mutability mu) throws EvalException {

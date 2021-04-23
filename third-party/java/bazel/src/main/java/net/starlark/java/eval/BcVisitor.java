@@ -55,6 +55,12 @@ class BcVisitor {
       case PLUS_LIST:
         visitPlusListConst(parser.nextInt(), parser.nextListArg(), parser.nextInt());
         break;
+      case IN:
+        visitBinaryIn(parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
+      case NOT_IN:
+        visitBinaryNotIn(parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
       case NOT:
         visitNot(parser.nextInt(), parser.nextInt());
         break;
@@ -307,6 +313,18 @@ class BcVisitor {
     visitIn(lhs);
     visitInListArg(listArg);
     visitOut(out);
+  }
+
+  protected void visitBinaryIn(int in0, int in1, int out) {
+    visitIn(in0);
+    visitIn(in1);
+    visitIn(out);
+  }
+
+  protected void visitBinaryNotIn(int in0, int in1, int out) {
+    visitIn(in0);
+    visitIn(in1);
+    visitIn(out);
   }
 
   protected void visitNot(int in, int out) {
