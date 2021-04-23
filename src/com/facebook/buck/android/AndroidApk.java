@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.BinaryType.APK;
+
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.apkmodule.APKModule;
@@ -119,6 +121,7 @@ public class AndroidApk extends AbstractBuildRule
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
   @AddToRuleKey private final boolean isConcurrentInstallEnabled;
+  @AddToRuleKey private final AndroidBinaryOptimizer optimizer;
 
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -207,32 +210,37 @@ public class AndroidApk extends AbstractBuildRule
     }
 
     this.buildable =
-        new AndroidBinaryBuildable(
+        new AndroidApkBuildable(
             getBuildTarget(),
             getProjectFilesystem(),
-            androidSdkLocation,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            redexOptions,
-            redexOptions
-                .map(options -> enhancementResult.getAdditionalRedexInputs())
-                .orElse(ImmutableList.of()),
             exopackageModes,
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
             assetCompressionAlgorithm,
             javaRuntimeLauncher,
-            zipalignTool,
             enhancementResult.getAndroidManifestPath(),
-            resourceCompressionMode.isCompressResources(),
             dexFilesInfo,
             nativeFilesInfo,
             resourceFilesInfo,
             apkModules,
-            enhancementResult.getModuleResourceApkPaths(),
-            Optional.empty(),
-            true,
+            enhancementResult.getModuleResourceApkPaths());
+
+    this.optimizer =
+        new AndroidApkOptimizer(
+            getBuildTarget(),
+            getProjectFilesystem(),
+            androidSdkLocation,
+            keystore.getPathToStore(),
+            keystore.getPathToPropertiesFile(),
+            redexOptions,
+            packageAssetLibraries,
+            compressAssetLibraries,
+            assetCompressionAlgorithm,
+            resourceCompressionMode.isCompressResources(),
+            zipalignTool,
             withDownwardApi);
     this.exopackageInfo = exopackageInfo;
 
@@ -362,12 +370,17 @@ public class AndroidApk extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return buildable.getBuildSteps(context, buildableContext);
+    return ImmutableList.<Step>builder()
+        .addAll(buildable.getBuildSteps(context, buildableContext))
+        .addAll(optimizer.getBuildSteps(context, buildableContext))
+        .build();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getFinalApkPath());
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        AndroidBinaryPathUtility.getFinalApkPath(getProjectFilesystem(), getBuildTarget(), APK));
   }
 
   public AndroidPackageableCollection getAndroidPackageableCollection() {

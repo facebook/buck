@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.BinaryType.AAB;
+
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.apkmodule.APKModule;
@@ -106,6 +108,7 @@ public class AndroidBundle extends AbstractBuildRule
   private final BuildRuleParams buildRuleParams;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
+  @AddToRuleKey private final AndroidBinaryOptimizer optimizer;
 
   // TODO(cjhopman): What's the difference between shouldProguard and skipProguard?
   AndroidBundle(
@@ -185,33 +188,40 @@ public class AndroidBundle extends AbstractBuildRule
     }
 
     this.buildable =
-        new AndroidBinaryBuildable(
+        new AndroidBundleBuildable(
             getBuildTarget(),
             getProjectFilesystem(),
-            androidSdkLocation,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            redexOptions,
-            redexOptions
-                .map(options -> enhancementResult.getAdditionalRedexInputs())
-                .orElse(ImmutableList.of()),
             exopackageModes,
             xzCompressionLevel,
             packageAssetLibraries,
             compressAssetLibraries,
             assetCompressionAlgorithm,
             javaRuntimeLauncher,
-            zipalignTool,
             enhancementResult.getAndroidManifestPath(),
-            resourceCompressionMode.isCompressResources(),
             dexFilesInfo,
             nativeFilesInfo,
             resourceFilesInfo,
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
-            bundleConfigFilePath,
-            false,
+            bundleConfigFilePath);
+
+    this.optimizer =
+        new AndroidBundleOptimizer(
+            getBuildTarget(),
+            getProjectFilesystem(),
+            androidSdkLocation,
+            keystore.getPathToStore(),
+            keystore.getPathToPropertiesFile(),
+            redexOptions,
+            packageAssetLibraries,
+            compressAssetLibraries,
+            assetCompressionAlgorithm,
+            resourceCompressionMode.isCompressResources(),
+            zipalignTool,
             withDownwardApi);
+
     this.exopackageInfo = exopackageInfo;
 
     params =
@@ -299,12 +309,17 @@ public class AndroidBundle extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return buildable.getBuildSteps(context, buildableContext);
+    return ImmutableList.<Step>builder()
+        .addAll(buildable.getBuildSteps(context, buildableContext))
+        .addAll(optimizer.getBuildSteps(context, buildableContext))
+        .build();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getFinalApkPath());
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        AndroidBinaryPathUtility.getFinalApkPath(getProjectFilesystem(), getBuildTarget(), AAB));
   }
 
   public Keystore getKeystore() {
