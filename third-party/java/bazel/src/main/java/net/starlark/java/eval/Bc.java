@@ -144,7 +144,8 @@ class Bc {
         return;
       }
 
-      write(BcInstr.Opcode.CP, node, from, to);
+      BcInstr.Opcode opcode = BcSlot.isLocal(from) ? BcInstr.Opcode.CP_LOCAL :  BcInstr.Opcode.CP;
+      write(opcode, node, from, to);
     }
 
     /**
@@ -152,8 +153,16 @@ class Bc {
      * address is known.
      */
     private int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
-      BcWriter.LocOffset locOffset = nodeToLocOffset(expression);
-      return bcWriter.writeForwardCondJump(opcode, locOffset, cond);
+      Preconditions.checkState(
+          opcode == BcInstr.Opcode.IF_BR_LOCAL || opcode == BcInstr.Opcode.IF_NOT_BR_LOCAL);
+      int condLocal;
+      if (!BcSlot.isLocal(cond)) {
+        condLocal = bcWriter.allocSlot();
+        cp(expression, cond, condLocal);
+      } else {
+        condLocal = cond;
+      }
+      return bcWriter.writeForwardCondJump(opcode, nodeToLocOffset(expression), condLocal);
     }
 
     /**
@@ -272,11 +281,11 @@ class Bc {
           && ((UnaryOperatorExpression) condExpr).getOperator() == TokenKind.NOT) {
         // special case `if not cond: ...` micro-optimization
         cond = compileExpression(((UnaryOperatorExpression) condExpr).getX());
-        elseBrOpcode = BcInstr.Opcode.IF_BR;
+        elseBrOpcode = BcInstr.Opcode.IF_BR_LOCAL;
         negate = true;
       } else {
         cond = compileExpression(condExpr);
-        elseBrOpcode = BcInstr.Opcode.IF_NOT_BR;
+        elseBrOpcode = BcInstr.Opcode.IF_NOT_BR_LOCAL;
         negate = false;
       }
 
@@ -832,7 +841,7 @@ class Bc {
             } else if (clause instanceof Comprehension.If) {
               CompileExpressionResult cond = compileExpression(((Comprehension.If) clause).getCondition());
               // TODO: optimize if cond != null
-              int end = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR, clause, cond.slot);
+              int end = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR_LOCAL, clause, cond.slot);
               compileClauses(index + 1);
               bcWriter.patchForwardJump(end);
             } else {
@@ -937,7 +946,7 @@ class Bc {
         result = bcWriter.allocSlot();
       }
 
-      int thenAddr = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR, conditionalExpression,
+      int thenAddr = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR_LOCAL, conditionalExpression,
           cond.slot);
       compileExpressionTo(conditionalExpression.getThenCase(), result);
       int end = writeForwardJump(conditionalExpression);
@@ -1130,9 +1139,10 @@ class Bc {
         case AND:
         case OR:
           {
-
             BcInstr.Opcode opcode =
-                expression.getOperator() == TokenKind.AND ? BcInstr.Opcode.IF_NOT_BR : BcInstr.Opcode.IF_BR;
+                expression.getOperator() == TokenKind.AND
+                    ? BcInstr.Opcode.IF_NOT_BR_LOCAL
+                    : BcInstr.Opcode.IF_BR_LOCAL;
 
             BcWriter.SavedState saved = bcWriter.save();
             CompileExpressionResult lhs = compileExpression(expression.getX());

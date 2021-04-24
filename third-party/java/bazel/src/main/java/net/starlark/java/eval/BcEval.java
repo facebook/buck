@@ -79,6 +79,9 @@ class BcEval {
           case BcInstr.CP:
             cp();
             break;
+          case BcInstr.CP_LOCAL:
+            cpLocal();
+            break;
           case BcInstr.EQ:
             eq();
             break;
@@ -127,11 +130,11 @@ class BcEval {
           case BcInstr.BR:
             br();
             continue;
-          case BcInstr.IF_BR:
-            ifBr();
+          case BcInstr.IF_BR_LOCAL:
+            ifBrLocal();
             continue;
-          case BcInstr.IF_NOT_BR:
-            ifNotBr();
+          case BcInstr.IF_NOT_BR_LOCAL:
+            ifNotBrLocal();
             continue;
           case BcInstr.DOT:
             dot();
@@ -241,11 +244,7 @@ class BcEval {
     int index = slot & ~BcSlot.MASK;
     switch (slot & BcSlot.MASK) {
       case BcSlot.LOCAL_FLAG:
-        Object value = slots[index];
-        if (value == null) {
-          throwLocalNotFound(index);
-        }
-        return value;
+        return getLocal(index);
       case BcSlot.CONST_FLAG:
         return compiled.constSlots[index];
       case BcSlot.GLOBAL_FLAG:
@@ -257,6 +256,15 @@ class BcEval {
       default:
         throw new IllegalStateException("wrong slot: " + slot);
     }
+  }
+
+  /** Get a value from the local slot. */
+  private Object getLocal(int index) throws EvalException {
+    Object value = slots[index];
+    if (value == null) {
+      throwLocalNotFound(index);
+    }
+    return value;
   }
 
   private void throwLocalNotFound(int index) throws EvalException {
@@ -315,8 +323,17 @@ class BcEval {
   }
 
   private void cp() throws EvalException {
-    Object value = getSlot(nextOperand());
-    setSlot(nextOperand(), value);
+    int fromSlot = nextOperand();
+    int resultSlot = nextOperand();
+    Object value = getSlot(fromSlot);
+    setSlot(resultSlot, value);
+  }
+
+  private void cpLocal() throws EvalException {
+    int fromSlot = nextOperand();
+    int resultSlot = nextOperand();
+    Object value = getLocal(fromSlot);
+    setSlot(resultSlot, value);
   }
 
   private void setGlobal() throws EvalException {
@@ -381,9 +398,10 @@ class BcEval {
     ip = dest;
   }
 
-  private void ifBr() throws EvalException {
-    Object cond = getSlot(nextOperand());
+  private void ifBrLocal() throws EvalException {
+    int condSlot = nextOperand();
     int dest = nextOperand();
+    Object cond = getLocal(condSlot);
     if (Starlark.truth(cond)) {
       validateInstructionDecodedCorrectly();
       ip = dest;
@@ -392,9 +410,10 @@ class BcEval {
     }
   }
 
-  private void ifNotBr() throws EvalException {
-    Object cond = getSlot(nextOperand());
+  private void ifNotBrLocal() throws EvalException {
+    int condSlot = nextOperand();
     int dest = nextOperand();
+    Object cond = getLocal(condSlot);
     if (!Starlark.truth(cond)) {
       validateInstructionDecodedCorrectly();
       ip = dest;

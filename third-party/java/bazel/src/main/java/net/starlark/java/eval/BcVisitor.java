@@ -40,6 +40,7 @@ class BcVisitor {
     int expectedIpEnd = parser.getIp() + opcode.operands.codeSize(bc.text, parser.getIp());
     switch (opcode) {
       case CP:
+      case CP_LOCAL:
         visitCp(parser.nextInt(), parser.nextInt());
         break;
       case EQ:
@@ -70,10 +71,10 @@ class BcVisitor {
       case BR:
         visitBr(parser.nextInt());
         break;
-      case IF_BR:
+      case IF_BR_LOCAL:
         visitIfBr(parser.nextInt(), parser.nextInt());
         break;
-      case IF_NOT_BR:
+      case IF_NOT_BR_LOCAL:
         visitIfNotBr(parser.nextInt(), parser.nextInt());
         break;
       case BINARY:

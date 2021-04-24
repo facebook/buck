@@ -315,7 +315,7 @@ class BcWriter {
    */
   int writeForwardCondJump(BcInstr.Opcode opcode, LocOffset locOffset, int cond) {
     Preconditions.checkState(
-        opcode == BcInstr.Opcode.IF_BR || opcode == BcInstr.Opcode.IF_NOT_BR);
+        opcode == BcInstr.Opcode.IF_BR_LOCAL || opcode == BcInstr.Opcode.IF_NOT_BR_LOCAL);
     write(opcode, locOffset, cond, FORWARD_JUMP_ADDR);
     return ip - 1;
   }

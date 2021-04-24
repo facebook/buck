@@ -14,7 +14,8 @@ class BcInstr {
   // our bytecode stores integers, and converting each opcode to enum might be expensive.
 
   public static final int CP = 0;
-  public static final int EQ = CP + 1;
+  public static final int CP_LOCAL = CP + 1;
+  public static final int EQ = CP_LOCAL + 1;
   public static final int NOT_EQ = EQ + 1;
   public static final int PLUS = NOT_EQ + 1;
   public static final int PLUS_STRING = PLUS + 1;
@@ -24,9 +25,9 @@ class BcInstr {
   public static final int NOT = NOT_IN + 1;
   public static final int UNARY = NOT + 1;
   public static final int BR = UNARY + 1;
-  public static final int IF_BR = BR + 1;
-  public static final int IF_NOT_BR = IF_BR + 1;
-  public static final int BINARY = IF_NOT_BR + 1;
+  public static final int IF_BR_LOCAL = BR + 1;
+  public static final int IF_NOT_BR_LOCAL = IF_BR_LOCAL + 1;
+  public static final int BINARY = IF_NOT_BR_LOCAL + 1;
   public static final int PERCENT_S_ONE = BINARY + 1;
   public static final int PERCENT_S_ONE_TUPLE = PERCENT_S_ONE + 1;
   public static final int PLUS_IN_PLACE = PERCENT_S_ONE_TUPLE + 1;
@@ -62,6 +63,8 @@ class BcInstr {
   public enum Opcode {
     /** {@code a1 = a0}. */
     CP(BcInstr.CP, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** Similar to {@link #CP} but assumes in slot is local. */
+    CP_LOCAL(BcInstr.CP_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.OUT_SLOT),
     /**
      * {@code a2 = a0 == a1}. This is quite common operation, which deserves its own opcode to avoid
      * switching in generic binary operator handling.
@@ -101,9 +104,9 @@ class BcInstr {
     /** Goto. */
     BR(BcInstr.BR, BcInstrOperand.addr("j")),
     /** Goto if. */
-    IF_BR(BcInstr.IF_BR, BcInstrOperand.IN_SLOT, BcInstrOperand.addr("t")),
+    IF_BR_LOCAL(BcInstr.IF_BR_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.addr("t")),
     /** Goto if not. */
-    IF_NOT_BR(BcInstr.IF_NOT_BR, BcInstrOperand.IN_SLOT, BcInstrOperand.addr("f")),
+    IF_NOT_BR_LOCAL(BcInstr.IF_NOT_BR_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.addr("f")),
     /** {@code a3 = a0 (a2) a1}. */
     BINARY(
         BcInstr.BINARY,

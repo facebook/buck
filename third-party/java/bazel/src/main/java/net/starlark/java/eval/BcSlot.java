@@ -44,8 +44,12 @@ class BcSlot {
     return index | CONST_FLAG;
   }
 
+  static boolean isLocal(int slot) {
+    return (slot & MASK) == LOCAL_FLAG;
+  }
+
   static void checkLocal(int slot) {
-    Verify.verify((slot & MASK) == LOCAL_FLAG);
+    Verify.verify(isLocal(slot));
   }
 
   static void checkValidSourceSlot(int slot) {

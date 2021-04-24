@@ -36,6 +36,14 @@ class BcInstrOperand {
    */
   static final Operands IN_SLOT = new Register("r");
   /**
+   * Bytecode operand is an input register. Note current implementation does not validate that it is
+   * actually read, not write register, it is used mostly as a hint when bytecode is printed.
+   *
+   * <p>Operand of this type can be a non-negative integer for regular slot, or negative integer for
+   * constants.
+   */
+  static final Operands IN_LOCAL = new Local("r");
+  /**
    * Bytecode operand is an output register.
    *
    * <p>The value of this operand must be a non-negative integer.
@@ -229,6 +237,34 @@ class BcInstrOperand {
     Decoded decode(BcParser parser) {
       return new Decoded(parser.nextInt());
     }
+  }
+
+  static class Local extends OneWordOperand {
+    /** r or w, for read or write */
+    private final String label;
+
+    private Local(String label) {
+      this.label = label;
+    }
+
+    @Override
+    void print(OpcodePrinter visitor) {
+      new Register(label).print(visitor);
+    }
+
+    @Override
+    Decoded decode(BcParser parser) {
+      return new Decoded(parser.nextInt());
+    }
+
+    static class Decoded extends Operands.Decoded {
+      final int register;
+
+      public Decoded(int register) {
+        this.register = register;
+      }
+    }
+
   }
 
   static class Register extends OneWordOperand {
