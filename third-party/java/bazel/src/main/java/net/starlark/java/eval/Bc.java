@@ -2,11 +2,9 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.Argument;
 import net.starlark.java.syntax.AssignmentStatement;
@@ -421,18 +419,38 @@ class Bc {
     }
 
     private void compileAssignmentToList(int rhs, ListExpression list, boolean postAssignHook) {
-      int[] componentRegs =
-          IntStream.range(0, list.getElements().size()).map(i1 -> bcWriter.allocSlot()).toArray();
-
       int[] args = new int[2 + list.getElements().size()];
       args[0] = rhs;
       args[1] = list.getElements().size();
-      System.arraycopy(componentRegs, 0, args, 2, componentRegs.length);
+
+      IntArrayBuilder postUnpackAssignmentSlots = new IntArrayBuilder();
+      ArrayList<Expression> postUnpackAssignmentExprs = new ArrayList<>();
+
+      int i = 2;
+      for (Expression element : list.getElements()) {
+        if (element instanceof Identifier
+            && ((Identifier) element).getBinding().getScope() == Resolver.Scope.LOCAL) {
+          args[i++] = localIdentSlot((Identifier) element);
+        } else {
+          int slot = bcWriter.allocSlot();
+          postUnpackAssignmentSlots.add(slot);
+          postUnpackAssignmentExprs.add(element);
+          args[i++] = slot;
+        }
+      }
+
+      Preconditions.checkState(i == args.length);
+
       write(BcInstr.Opcode.UNPACK, list, args);
 
-      for (int i = 0; i < componentRegs.length; i++) {
-        int componentReg = componentRegs[i];
-        compileAssignment(componentReg, list.getElements().get(i), postAssignHook);
+      Preconditions.checkState(
+          postUnpackAssignmentSlots.size() == postUnpackAssignmentExprs.size());
+
+      for (int j = 0; j < postUnpackAssignmentSlots.size(); ++j) {
+        compileAssignment(
+            postUnpackAssignmentSlots.get(j),
+            postUnpackAssignmentExprs.get(j),
+            postAssignHook);
       }
     }
 
