@@ -5,6 +5,10 @@
 /intellij-out/
 /third-party/java/bazel/intellij-out/
 
+# Override ignore defined in parent directories
+# Note there's also .idea/.gitignore
+!/.idea
+
 # Buck
 /buck-out
 /.buckconfig.local

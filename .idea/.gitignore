@@ -1,6 +1,6 @@
 # Whitelist the IntelliJ settings that we find useful/compelling
 # enough to inflict upon all buck developers.
-/*
+/*.xml
 !/codeInsightSettings.xml
 !/codeStyleSettings.xml
 !/codeStyles/Project.xml
