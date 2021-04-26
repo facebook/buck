@@ -1,7 +1,12 @@
 package net.starlark.java.eval;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -11,18 +16,30 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /** Some Starlark runtime statistics. */
 public class StarlarkRuntimeStats {
 
   private StarlarkRuntimeStats() {}
 
+  @Nullable
+  private static String getStarlarkRtStats() {
+    String prop = System.getProperty("starlark.rt.stats");
+    if (prop != null) {
+      return prop;
+    }
+    return System.getenv("STARLARK_RT_STATS");
+  }
+
+  private static final String STARLARK_RT_STATS = getStarlarkRtStats();
+
+
   /**
    * Whether statistics enabled. This is initialized from property {@code starlark.rt.stats} or from
    * env variable {@code STARLARK_RT_STATS}.
    */
-  public static final boolean ENABLED =
-      Boolean.getBoolean("starlark.rt.stats") || System.getenv("STARLARK_RT_STATS") != null;
+  public static final boolean ENABLED = STARLARK_RT_STATS != null;
 
   static {
     if (ENABLED) {
@@ -122,23 +139,36 @@ public class StarlarkRuntimeStats {
     StarlarkRuntimeStats stats = StarlarkRuntimeStats.stats;
     StarlarkRuntimeStats.stats = new StarlarkRuntimeStats();
 
-    stats.printStats();
+    Preconditions.checkState(STARLARK_RT_STATS != null);
+    if (STARLARK_RT_STATS.equals("true") || STARLARK_RT_STATS.equals("1")) {
+      System.err.println();
+      System.err.println();
+      stats.printStats(System.err);
+      System.err.println();
+    } else {
+      System.err.println("Writing starlark runtime stats to " + STARLARK_RT_STATS);
+      try {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(byteArrayOutputStream);
+        stats.printStats(printStream);
+        printStream.flush();
+        Files.write(Paths.get(STARLARK_RT_STATS), byteArrayOutputStream.toByteArray());
+      } catch (Exception e) {
+        throw new RuntimeException("Failed to write stats", e);
+      }
+    }
   }
 
-  private void printStats() {
-    System.err.println();
-    System.err.println();
-    System.err.println("Starlark stats:");
-    System.err.println();
-    System.err.println("Compile time ms: " + compileTimeNanos.get() / 1_000_000);
+  private void printStats(PrintStream out) {
+    out.println("Starlark stats:");
+    out.println();
+    out.println("Compile time ms: " + compileTimeNanos.get() / 1_000_000);
 
-    printCallStats();
-    printInstructionStats();
-
-    System.err.println();
+    printCallStats(out);
+    printInstructionStats(out);
   }
 
-  private void printCallStats() {
+  private void printCallStats(PrintStream out) {
     int top = 50;
 
     // Take a snapshot, otherwise we are not allowed to perform sort
@@ -190,15 +220,15 @@ public class StarlarkRuntimeStats {
     long totalNativeCalls = nativeCalls.stream().mapToLong(e -> e.getValue().count.get()).sum();
     long totalStarlarkCalls = starlarkCalls.stream().mapToLong(e -> e.getValue().count.get()).sum();
 
-    System.err.println();
-    System.err.println("Total native calls: " + totalNativeCalls);
-    System.err.println(
+    out.println();
+    out.println("Total native calls: " + totalNativeCalls);
+    out.println(
         "Total time spent in native calls, ms: " + totalNativeDurationNanos / 1_000_000);
-    System.err.println("Total native calls: ");
 
-    System.err.println();
-    System.err.println("Top " + top + " native calls by total duration:");
+    out.println();
+    out.println("Top " + top + " native calls by total duration:");
     printTable(
+        out,
         topNativeByDuration,
         new String[] {
           "name", "tot_ms", "count", "avg_ns",
@@ -211,9 +241,10 @@ public class StarlarkRuntimeStats {
               e.getValue().avgDurationNanos()
             });
 
-    System.err.println();
-    System.err.println("Top " + top + " native calls by count:");
+    out.println();
+    out.println("Top " + top + " native calls by count:");
     printTable(
+        out,
         topNativeByCount,
         new String[] {
           "name", "count", "tot_ms", "avg_ns",
@@ -237,11 +268,12 @@ public class StarlarkRuntimeStats {
             .limit(top)
             .collect(ImmutableList.toImmutableList());
 
-    System.err.println();
-    System.err.println("Total starlark calls: " + totalStarlarkCalls);
-    System.err.println();
-    System.err.println("Top " + top + " starlark calls by total steps:");
+    out.println();
+    out.println("Total starlark calls: " + totalStarlarkCalls);
+    out.println();
+    out.println("Top " + top + " starlark calls by total steps:");
     printTable(
+        out,
         topStarlarkByTotalSteps,
         new String[] {
           "name", "steps_tot", "steps_avg", "count",
@@ -251,9 +283,10 @@ public class StarlarkRuntimeStats {
               e.getKey(), e.getValue().steps, e.getValue().avgSteps(), e.getValue().count,
             });
 
-    System.err.println();
-    System.err.println("Top " + top + " starlark calls by count:");
+    out.println();
+    out.println("Top " + top + " starlark calls by count:");
     printTable(
+        out,
         topStarlarkByCount,
         new String[] {
           "name", "count", "steps_tot", "steps_avg",
@@ -264,7 +297,7 @@ public class StarlarkRuntimeStats {
             });
   }
 
-  private void printInstructionStats() {
+  private void printInstructionStats(PrintStream out) {
     ImmutableList<AbstractMap.SimpleEntry<BcInstr.Opcode, Integer>> instructionsCountByOpcode =
         Arrays.stream(BcInstr.Opcode.values())
             .map(o -> new AbstractMap.SimpleEntry<>(o, this.instructions.get(o.ordinal())))
@@ -276,17 +309,19 @@ public class StarlarkRuntimeStats {
     long totalStarlarkSteps =
         instructionsCountByOpcode.stream().mapToLong(AbstractMap.SimpleEntry::getValue).sum();
 
-    System.err.println();
-    System.err.println("Total starlark instruction steps: " + totalStarlarkSteps);
-    System.err.println();
-    System.err.println("Instructions by step count");
+    out.println();
+    out.println("Total starlark instruction steps: " + totalStarlarkSteps);
+    out.println();
+    out.println("Instructions by step count");
     printTable(
+        out,
         instructionsCountByOpcode,
         new String[] {"opcode", "count"},
         e -> new Object[] {e.getKey(), e.getValue()});
   }
 
   private <R> void printTable(
+      PrintStream printStream,
       ImmutableList<R> rows, String[] columnNames, Function<R, Object[]> columns) {
     int[] maxWidthByColumn = Arrays.stream(columnNames).mapToInt(String::length).toArray();
     for (R row : rows) {
@@ -303,7 +338,7 @@ public class StarlarkRuntimeStats {
     for (R row : rows) {
       appendRow(out, maxWidthByColumn, columns.apply(row));
     }
-    System.err.print(out);
+    printStream.print(out);
   }
 
   private static void appendRow(StringBuilder sb, int[] maxWidthByColumn, Object[] row) {
