@@ -366,7 +366,8 @@ public class RealAndroidDevice implements AndroidDevice {
     try {
       try {
         executeCommandWithErrorChecking(
-            String.format("rm -r %s/%s", ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT, packageName));
+            String.format(
+                "rm -rf %s/%s", ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT, packageName));
       } catch (AdbHelper.CommandFailedException e) {
         LOG.debug("Deleting old files failed with message: %s", e.getMessage());
       }
