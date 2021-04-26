@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -35,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -89,7 +91,10 @@ public class CxxPrecompiledHeaderTest {
                 compiler,
                 CxxToolFlags.of(),
                 Optional.empty()),
-            CxxToolFlags.of(),
+            CxxToolFlags.copyOf(
+                ImmutableList.of(),
+                ImmutableList.of(StringArg.of("-fmodule-name=bar")),
+                ImmutableList.of()),
             FakeSourcePath.of("foo.h"),
             CxxSource.Type.C,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
@@ -106,5 +111,13 @@ public class CxxPrecompiledHeaderTest {
         "step that generates pch should have correct flags",
         step.getCommand(),
         hasItem(CxxSource.Type.C.getPrecompiledHeaderLanguage().get()));
+    assertThat(
+        "step that generates pch should have -Wno-translation-unit",
+        step.getCommand(),
+        hasItem("-Wno-empty-translation-unit"));
+    assertThat(
+        "step that generates pch should not have -fmodule-name",
+        step.getCommand(),
+        not(hasItem("-fmodule-name=bar")));
   }
 }

@@ -58,6 +58,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * Rule to generate a precompiled header from an existing header.
@@ -284,6 +285,18 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     }
   }
 
+  // Setting -fmodule-name causes the PCH build to fail.
+  static Iterable<Arg> filterIncompatibleFlags(
+      Iterable<Arg> flags, SourcePathResolverAdapter resolver) {
+    return RichStream.from(flags)
+        .filter((Arg arg) -> !Arg.stringify(arg, resolver).startsWith("-fmodule-name="))
+        // REVIEW: Foundation.pch build fails with -Werror + -Wempty-translation-unit and there's no
+        // compiler_flags or preprocessor_flags on cxx_precompiled_header; is filtering this warning
+        // the right thing to do, or should we filter -Werror, or something else?
+        .concat(Stream.of(StringArg.of("-Wno-empty-translation-unit")))
+        .toOnceIterable();
+  }
+
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(BuildContext context, RelPath scratchDir) {
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
@@ -304,16 +317,19 @@ class CxxPrecompiledHeader extends AbstractBuildRule
             preprocessorDelegate.getCommandPrefix(resolver),
             Arg.stringify(
                 ImmutableList.copyOf(
-                    CxxToolFlags.explicitBuilder()
-                        .addAllRuleFlags(
-                            StringArg.from(
-                                getCxxIncludePaths()
-                                    .getFlags(resolver, preprocessorDelegate.getPreprocessor())))
-                        .addAllRuleFlags(
-                            preprocessorDelegate.getArguments(
-                                compilerFlags, /* no pch */ Optional.empty(), resolver))
-                        .build()
-                        .getAllFlags()),
+                    filterIncompatibleFlags(
+                        CxxToolFlags.explicitBuilder()
+                            .addAllRuleFlags(
+                                StringArg.from(
+                                    getCxxIncludePaths()
+                                        .getFlags(
+                                            resolver, preprocessorDelegate.getPreprocessor())))
+                            .addAllRuleFlags(
+                                preprocessorDelegate.getArguments(
+                                    compilerFlags, /* no pch */ Optional.empty(), resolver))
+                            .build()
+                            .getAllFlags(),
+                        resolver)),
                 resolver),
             preprocessorDelegate.getEnvironment(resolver)),
         context.getSourcePathResolver(),
