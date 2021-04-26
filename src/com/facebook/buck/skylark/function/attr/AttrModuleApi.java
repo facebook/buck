@@ -66,7 +66,7 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = StarlarkList.class, generic1 = StarlarkInt.class))
       })
   AttributeHolder intAttribute(
-      StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<StarlarkInt> values)
+      StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<?> values)
       throws EvalException;
 
   @StarlarkMethod(
@@ -103,7 +103,7 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder intListAttribute(
-      StarlarkList<StarlarkInt> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @StarlarkMethod(
@@ -140,7 +140,7 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = StarlarkList.class, generic1 = String.class))
       })
   AttributeHolder stringAttribute(
-      String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
+      String defaultValue, String doc, Boolean mandatory, StarlarkList<?> values)
       throws EvalException;
 
   @StarlarkMethod(
@@ -177,7 +177,7 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder stringListAttribute(
-      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @StarlarkMethod(
@@ -287,7 +287,7 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = Boolean.class))
       })
   AttributeHolder sourceListAttribute(
-      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @StarlarkMethod(
@@ -329,7 +329,7 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = StarlarkList.class, generic1 = Provider.class))
       })
   AttributeHolder depAttribute(
-      Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
+      Object defaultValue, String doc, boolean mandatory, StarlarkList<?> providers)
       throws EvalException;
 
   @StarlarkMethod(
@@ -378,11 +378,11 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = StarlarkList.class, generic1 = Provider.class))
       })
   AttributeHolder depListAttribute(
-      StarlarkList<String> defaultValue,
+      StarlarkList<?> defaultValue,
       String doc,
       boolean mandatory,
       boolean allowEmpty,
-      StarlarkList<Provider<?>> providers)
+      StarlarkList<?> providers)
       throws EvalException;
 
   @StarlarkMethod(
@@ -462,6 +462,6 @@ public interface AttrModuleApi {
             allowedTypes = @ParamType(type = Boolean.class)),
       })
   AttributeHolder outputListAttribute(
-      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 }

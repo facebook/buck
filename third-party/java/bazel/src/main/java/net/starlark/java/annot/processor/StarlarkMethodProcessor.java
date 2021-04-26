@@ -96,6 +96,10 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
 
     // Ensure StarlarkBuiltin-annotated classes implement StarlarkValue.
     for (Element cls : roundEnv.getElementsAnnotatedWith(StarlarkBuiltin.class)) {
+      if (cls.getKind().isInterface()) {
+        // Interfaces cannot extend `StarlarkValue` so we cannot test it
+        continue;
+      }
       if (!types.isAssignable(cls.asType(), starlarkValueType)) {
         errorf(
             cls,

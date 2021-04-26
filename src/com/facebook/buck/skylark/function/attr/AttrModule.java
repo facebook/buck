@@ -50,7 +50,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder intAttribute(
-      StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<StarlarkInt> values)
+      StarlarkInt defaultValue, String doc, Boolean mandatory, StarlarkList<?> values)
       throws EvalException {
     List<StarlarkInt> validatedValues = Sequence.cast(values, StarlarkInt.class, null).asList();
     return IntAttribute.of(
@@ -71,7 +71,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder intListAttribute(
-      StarlarkList<StarlarkInt> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<Integer> validatedDefaultValue =
         ImmutableList.copyOf(Sequence.cast(defaultValue, StarlarkInt.class, null)).stream()
@@ -90,7 +90,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder stringAttribute(
-      String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
+      String defaultValue, String doc, Boolean mandatory, StarlarkList<?> values)
       throws EvalException {
     List<String> validatedValues = Sequence.cast(values, String.class, null).asList();
 
@@ -99,7 +99,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder stringListAttribute(
-      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<String> validatedDefaultValue =
         ImmutableList.copyOf(Sequence.cast(defaultValue, String.class, null));
@@ -114,7 +114,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder sourceListAttribute(
-      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<String> validatedDefaultValues =
         BuckSkylarkTypes.toJavaList(defaultValue, String.class, null);
@@ -130,7 +130,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder depAttribute(
-      Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
+      Object defaultValue, String doc, boolean mandatory, StarlarkList<?> providers)
       throws EvalException {
     ImmutableList<Provider<?>> validatedProviders =
         BuckSkylarkTypes.toJavaList(providers, Provider.class, "dep");
@@ -140,11 +140,11 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder depListAttribute(
-      StarlarkList<String> defaultValue,
+      StarlarkList<?> defaultValue,
       String doc,
       boolean mandatory,
       boolean allowEmpty,
-      StarlarkList<Provider<?>> providers)
+      StarlarkList<?> providers)
       throws EvalException {
     ImmutableList<String> validatedDefaultValues =
         BuckSkylarkTypes.toJavaList(defaultValue, String.class, "depList");
@@ -166,7 +166,7 @@ public class AttrModule extends StarlarkValue implements AttrModuleApi {
 
   @Override
   public AttributeHolder outputListAttribute(
-      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<?> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     List<String> validatedValues = Sequence.cast(defaultValue, String.class, null).asList();
     return OutputListAttribute.of(validatedValues, doc, mandatory, allowEmpty);

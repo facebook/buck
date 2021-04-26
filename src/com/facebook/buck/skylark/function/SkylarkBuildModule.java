@@ -22,6 +22,7 @@ import com.facebook.buck.skylark.function.packages.Info;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.Param;
@@ -125,9 +126,10 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       },
       documented = false,
       useStarlarkThread = true)
+  @SuppressWarnings("unchecked")
   public StarlarkList<String> glob(
-      StarlarkList<String> include,
-      StarlarkList<String> exclude,
+      StarlarkList<?> include,
+      StarlarkList<?> exclude,
       Boolean excludeDirectories,
       StarlarkThread env)
       throws EvalException, IOException, InterruptedException {
@@ -140,14 +142,20 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
         parseContext.getPackageContext().getCellName().equals(CanonicalCellName.rootCell())
             && parseContext.getPackageContext().getBasePath().equals(ForwardRelativePath.EMPTY);
     if (buildRoot
-        && include.stream().anyMatch(str -> TOP_LEVEL_GLOB_PATTERN.matcher(str).matches())) {
+        && include.stream()
+            .anyMatch(str -> TOP_LEVEL_GLOB_PATTERN.matcher((String) str).matches())) {
       throw new EvalException("Recursive globs are prohibited at top-level directory");
     }
 
+    // TODO(nga): check all arguments are strings
     return StarlarkList.copyOf(
         env.mutability(),
         parseContext.getPackageContext().getGlobber()
-            .run(include.asList(), exclude.asList(), excludeDirectories).stream()
+            .run(
+                (List<String>) include.asList(),
+                (List<String>) exclude.asList(),
+                excludeDirectories)
+            .stream()
             .sorted()
             .collect(ImmutableList.toImmutableList()));
   }

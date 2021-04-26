@@ -18,7 +18,6 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.rules.providers.impl.UserDefinedProvider;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
-import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkMethod;
@@ -86,7 +85,7 @@ public interface SkylarkRuleFunctionsApi {
       useStarlarkThread = true)
   SkylarkUserDefinedRule rule(
       StarlarkFunction implementation,
-      Dict<String, AttributeHolder> attrs,
+      Dict<?, ?> attrs,
       boolean executable,
       boolean test,
       StarlarkThread env)

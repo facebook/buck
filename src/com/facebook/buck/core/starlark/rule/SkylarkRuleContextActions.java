@@ -147,7 +147,7 @@ public class SkylarkRuleContextActions extends StarlarkValue
   }
 
   @Override
-  public void run(StarlarkList<Object> arguments, Object shortName, Object userEnv)
+  public void run(StarlarkList<?> arguments, Object shortName, Object userEnv)
       throws EvalException {
     Map<String, String> userEnvValidated =
         Dict.noneableCast(userEnv, String.class, String.class, "env");

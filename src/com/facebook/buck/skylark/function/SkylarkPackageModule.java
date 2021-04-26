@@ -43,12 +43,12 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
     implements SkylarkFunctionModule {
 
   /** {@code package} */
+  @SuppressWarnings("unchecked")
   @StarlarkMethod(
       name = "package",
       doc = "Allows defining attributes applied to all targets in the build file.",
       documented = true,
       useStarlarkThread = true,
-      allowReturnNones = true,
       parameters = {
         @Param(
             name = "inherit",
@@ -73,15 +73,17 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             doc = "a list of build patterns that targets may depend on."),
       })
   public void packageFunction(
-      Boolean inherit,
-      StarlarkList<String> visibility,
-      StarlarkList<String> within_view,
-      StarlarkThread env)
+      Boolean inherit, StarlarkList<?> visibility, StarlarkList<?> withinView, StarlarkThread env)
       throws EvalException {
+    // TODO(nga): check generic types
+    StarlarkList<String> visibilityStrings = (StarlarkList<String>) visibility;
+    StarlarkList<String> withinViewStrings = (StarlarkList<String>) withinView;
     ParseContext.getParseContext(env, "package")
         .recordPackage(
             PackageMetadata.of(
-                inherit, ImmutableList.copyOf(visibility), ImmutableList.copyOf(within_view)));
+                inherit,
+                ImmutableList.copyOf(visibilityStrings),
+                ImmutableList.copyOf(withinViewStrings)));
   }
 
   public static final SkylarkPackageModule PACKAGE_MODULE = new SkylarkPackageModule();

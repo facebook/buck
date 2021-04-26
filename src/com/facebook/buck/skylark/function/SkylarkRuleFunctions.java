@@ -60,7 +60,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   @Override
   public SkylarkUserDefinedRule rule(
       StarlarkFunction implementation,
-      Dict<String, AttributeHolder> attrs,
+      Dict<?, ?> attrs,
       boolean inferRunInfo,
       boolean test,
       StarlarkThread env)

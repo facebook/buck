@@ -83,6 +83,7 @@ public abstract class AbstractSkylarkFunctions extends StarlarkValue {
       allowReturnNones = true,
       useStarlarkThread = true,
       speculativeSafe = true)
+  @Nullable
   public Object readConfig(String section, String field, Object defaultValue, StarlarkThread env)
       throws EvalException {
     ReadConfigContext configContext = ReadConfigContext.getContext(env);

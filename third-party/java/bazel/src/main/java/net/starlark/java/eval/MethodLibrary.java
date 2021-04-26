@@ -809,7 +809,10 @@ class MethodLibrary {
    * This function is intentionally unspecified.
    * It can be changed or removed any time without notice.
    */
-  @StarlarkMethod(name = "starlark_debug_frame", useStarlarkThread = true)
+  @StarlarkMethod(
+      name = "starlark_debug_frame",
+      useStarlarkThread = true,
+      doc = "Print current stack instructions to the debug output")
   public void starlarkDebugFrame(StarlarkThread thread) {
     StarlarkThread.Frame caller = thread.frame(1);
     thread.getPrintHandler().print(thread, "Debug for frame " + caller.getFunction());

@@ -126,7 +126,7 @@ public interface SkylarkRuleContextActionsApi {
             allowedTypes = {@ParamType(type = Dict.class), @ParamType(type = NoneType.class)},
             defaultValue = "None")
       })
-  void run(StarlarkList<Object> arguments, Object shortName, Object userEnv) throws EvalException;
+  void run(StarlarkList<?> arguments, Object shortName, Object userEnv) throws EvalException;
 
   @StarlarkMethod(
       name = "write",
