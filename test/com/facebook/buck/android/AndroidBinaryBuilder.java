@@ -58,7 +58,7 @@ public class AndroidBinaryBuilder
         AndroidBinaryDescriptionArg.Builder,
         AndroidBinaryDescriptionArg,
         AndroidBinaryDescription,
-    AndroidApk> {
+        AndroidApk> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
     this(FakeBuckConfig.empty(), target);

@@ -88,7 +88,6 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey final boolean compressAssetLibraries;
   @AddToRuleKey final Optional<CompressionAlgorithm> assetCompressionAlgorithm;
 
-
   @AddToRuleKey private final int xzCompressionLevel;
 
   @AddToRuleKey protected final SourcePath keystorePath;
@@ -102,7 +101,6 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
   protected final BinaryType binaryType;
-
 
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;

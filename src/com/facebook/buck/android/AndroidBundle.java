@@ -292,8 +292,7 @@ public class AndroidBundle extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getInstallHelpers() {
-    return Stream.of(
-        getBuildTarget().withFlavors(AndroidApkInstallGraphEnhancer.INSTALL_FLAVOR));
+    return Stream.of(getBuildTarget().withFlavors(AndroidApkInstallGraphEnhancer.INSTALL_FLAVOR));
   }
 
   @Override

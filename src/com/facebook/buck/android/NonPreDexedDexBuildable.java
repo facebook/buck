@@ -693,8 +693,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       Path primaryJarPath = splitZipDir.resolve("primary.jar");
 
       Path secondaryJarMetaDirParent = getSecondaryDexRoot().resolve("secondary_meta");
-      Path secondaryJarMetaDir =
-          secondaryJarMetaDirParent.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
+      Path secondaryJarMetaDir = secondaryJarMetaDirParent.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
