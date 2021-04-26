@@ -701,6 +701,7 @@ public class RealAndroidDevice implements AndroidDevice {
     try {
       doMultiInstall(filesType, installPaths);
     } catch (Exception e) {
+      LOG.warn(e, "doMultiInstall failed, falling back to doMultiInstallViaADB");
       doMultiInstallViaADB(installPaths);
     }
   }
