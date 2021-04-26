@@ -3,6 +3,9 @@ java_library(
     srcs = glob(
         ["*.java"],
     ),
+    plugins = [
+        "//third-party/java/bazel:starlark-annot-processor",
+    ],
     tests = [
         "//test/com/facebook/buck/core/starlark/rule/data:data",
     ],

@@ -3,6 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "attr",
     srcs = glob(["*.java"]),
+    plugins = [
+        "//third-party/java/bazel:starlark-annot-processor",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/cell:cell",

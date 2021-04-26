@@ -1,17 +1,61 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_library(
-    name = "bazel",
+    name = "starlark-annot",
     srcs = glob([
-        "src/main/java/**/*.java",
+        "src/main/java/net/starlark/java/annot/*.java",
     ]),
+    required_for_source_only_abi = True,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "starlark-annot-processor-lib",
+    srcs = glob([
+        "src/main/java/net/starlark/java/annot/processor/*.java",
+    ]),
+    deps = [
+        ":starlark-annot",
+        "//third-party/java/errorprone:error-prone-annotations",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_annotation_processor(
+    name = "starlark-annot-processor",
+    processor_class = "net.starlark.java.annot.processor.StarlarkMethodProcessor",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":starlark-annot-processor-lib",
+    ],
+)
+
+java_library(
+    name = "bazel",
+    srcs = glob(
+        [
+            "src/main/java/**/*.java",
+        ],
+        exclude = [
+            "src/main/java/net/starlark/java/annot/*.java",
+        ],
+    ),
     licenses = ["LICENSE"],
     plugins = [
         "//third-party/java/auto:auto_value_processor",
+        ":starlark-annot-processor",
     ],
-    required_for_source_only_abi = True,
     visibility = ["PUBLIC"],
-    deps = [
+    exported_deps = [
+        ":starlark-annot",
         "//third-party/java/auto:auto_value_annotations",
         "//third-party/java/errorprone:error-prone-annotations",
         "//third-party/java/gson:gson",
@@ -38,6 +82,9 @@ java_test(
             "src/test/java/net/starlark/java/annot/processor/StarlarkMethodProcessorTest.java",
         ],
     ),
+    plugins = [
+        ":starlark-annot-processor",
+    ],
     resources = glob([
         "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
     ]),

@@ -1,6 +1,9 @@
 java_library(
     name = "packages",
     srcs = glob(["*.java"]),
+    plugins = [
+        "//third-party/java/bazel:starlark-annot-processor",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/guava:guava",

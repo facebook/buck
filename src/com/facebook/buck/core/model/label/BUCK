@@ -1,6 +1,9 @@
 java_library(
     name = "label",
     srcs = glob(["*.java"]),
+    plugins = [
+        "//third-party/java/bazel:starlark-annot-processor",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/cell/name:name",
