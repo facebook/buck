@@ -420,7 +420,7 @@ final class StringModule extends StarlarkValue {
       end = start;
     }
     Collections.reverse(res);
-    return StarlarkList.copyOf(thread.mutability(), res);
+    return StarlarkList.copyOfUnchecked(thread.mutability(), res);
   }
 
   @StarlarkMethod(

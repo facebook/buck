@@ -1,6 +1,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import net.starlark.java.syntax.*;
 
 import javax.annotation.Nullable;
@@ -539,7 +540,7 @@ class BcEval {
     if (size == 0) {
       result = Dict.of(fr.thread.mutability());
     } else {
-      LinkedHashMap<Object, Object> lhm = new LinkedHashMap<>(size);
+      LinkedHashMap<Object, Object> lhm = Maps.newLinkedHashMapWithExpectedSize(size);
       for (int j = 0; j != size; ++j) {
         Object key = getSlot(nextOperand());
         Starlark.checkHashable(key);

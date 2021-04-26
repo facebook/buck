@@ -154,7 +154,7 @@ public final class StarlarkList<E> extends Sequence<E> implements
       @Nullable Mutability mutability, Iterable<? extends T> elems) {
     if (mutability == null
         && elems instanceof StarlarkList
-        && ((StarlarkList) elems).isImmutable()) {
+        && ((StarlarkList<?>) elems).isImmutable()) {
       @SuppressWarnings("unchecked")
       StarlarkList<T> list = (StarlarkList<T>) elems; // safe
       return list;
@@ -163,6 +163,22 @@ public final class StarlarkList<E> extends Sequence<E> implements
     Object[] array = Iterables.toArray(elems, Object.class);
     checkElemsValid(array);
     return wrap(mutability, array);
+  }
+
+  /**
+   * Similar to {@link #copyOf(Mutability, Iterable)} but do not verify
+   * values are valid starlark values.
+   */
+  static <T> StarlarkList<T> copyOfUnchecked(
+      Mutability mutability, Iterable<? extends T> elems) {
+    if (elems instanceof StarlarkList
+        && ((StarlarkList<?>) elems).isImmutable()) {
+      @SuppressWarnings("unchecked")
+      StarlarkList<T> list = (StarlarkList<T>) elems; // safe
+      return list;
+    }
+
+    return wrap(mutability, Iterables.toArray(elems, Object.class));
   }
 
   private static void checkElemsValid(Object[] elems) {

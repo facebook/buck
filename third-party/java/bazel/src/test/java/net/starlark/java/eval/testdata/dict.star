@@ -112,3 +112,9 @@ assert_fails(lambda: {1: 2}.get(len), "unhashable type: 'builtin_function_or_met
 # For composite keys, the error message relates to the
 # unhashable subelement of the key, not the key itself.
 assert_fails(lambda: {(0, "", True, [0]): None}, "unhashable type: 'list'")
+
+# equality
+
+assert_eq({}, {})
+assert_eq({1: 'a'}, {1: 'a'})
+assert_({1: 'a'} != {1: 'b'})

@@ -787,7 +787,7 @@ public final class Starlark {
       fields.addAll(((Structure) x).getFieldNames());
     }
     fields.addAll(CallUtils.getAnnotatedMethods(semantics, x.getClass()).keySet());
-    return StarlarkList.copyOf(mu, fields);
+    return StarlarkList.copyOfUnchecked(mu, fields);
   }
 
   // --- methods related to StarlarkMethod-annotated classes ---

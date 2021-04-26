@@ -3,6 +3,7 @@ package net.starlark.java.eval;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -170,7 +171,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     if (fn.kwargsIndex >= 0) {
       // there's **kwargs
       LinkedHashMap<String, Object> newKwargs =
-          new LinkedHashMap<>(
+          Maps.newLinkedHashMapWithExpectedSize(
               (starStarArgs != null ? starStarArgs.size() : 0)
                   + argToStarStar.length
                   - (boundsKeys != null ? boundsKeys.size : 0));

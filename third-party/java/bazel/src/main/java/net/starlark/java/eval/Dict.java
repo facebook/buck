@@ -177,22 +177,19 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
             named = true,
             doc = "The default value to use (instead of None) if the key is not found.")
       },
-      trustReturnsValid = true,
-      useStarlarkThread = true)
+      trustReturnsValid = true)
   // TODO(adonovan): This method is named get2 as a temporary workaround for a bug in
   // StarlarkAnnotations.getStarlarkMethod. The two 'get' methods cause it to get
   // confused as to which one has the annotation. Fix it and remove "2" suffix.
-  public Object get2(Object key, Object defaultValue, StarlarkThread thread) throws EvalException {
+  public Object get2(Object key, Object defaultValue) throws EvalException {
     Object v = this.get(key);
     if (v != null) {
       return v;
     }
 
-    // This statement is executed for its effect, which is to throw "unhashable"
-    // if key is unhashable, instead of returning defaultValue.
     // I think this is a bug: the correct behavior is simply 'return defaultValue'.
     // See https://github.com/bazelbuild/starlark/issues/65.
-    containsKey(thread.getSemantics(), key);
+    Starlark.checkHashable(key);
 
     return defaultValue;
   }
@@ -344,7 +341,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
               + "{2: \"a\", 4: \"b\", 1: \"c\"}.values() == [\"a\", \"b\", \"c\"]</pre>\n",
       useStarlarkThread = true)
   public StarlarkList<?> values0(StarlarkThread thread) throws EvalException {
-    return StarlarkList.copyOf(thread.mutability(), values());
+    return StarlarkList.copyOfUnchecked(thread.mutability(), contents.values());
   }
 
   @StarlarkMethod(
@@ -494,25 +491,9 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
    * @param map the map whose entries are added
    * @throws EvalException if some key is invalid or the dict is frozen
    */
-  public <K2 extends K, V2 extends V> void putEntries(Map<K2, V2> map) throws EvalException {
+  public <K2 extends K, V2 extends V> void putEntries(Dict<K2, V2> map) throws EvalException {
     checkMutable();
-    for (Map.Entry<K2, V2> e : map.entrySet()) {
-      K2 k = e.getKey();
-      Starlark.checkHashable(k);
-      contents.put(k, e.getValue());
-    }
-  }
-
-  /**
-   * Deletes the entry associated with the given key.
-   *
-   * @param key the key to delete
-   * @return the value associated to the key, or {@code null} if not present
-   * @throws EvalException if the dict is frozen
-   */
-  V removeEntry(Object key) throws EvalException {
-    checkMutable();
-    return contents.remove(key);
+    contents.putAll(map.contents);
   }
 
   /**
@@ -586,8 +567,11 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   @Override
   public boolean containsKey(StarlarkSemantics semantics, Object key) throws EvalException {
-    Starlark.checkHashable(key);
-    return this.containsKey(key);
+    boolean contains = this.containsKey(key);
+    if (!contains) {
+      Starlark.checkHashable(key);
+    }
+    return contains;
   }
 
   // java.util.Map accessors
