@@ -885,24 +885,30 @@ public class RealAndroidDevice implements AndroidDevice {
 
     // We only do zstd compression for the Java agent.
     boolean doZstdCompression = this.isZstdCompressionEnabled && !agent.get().isUseNativeAgent();
+
+    String javaLibraryPath = null;
+    if (doZstdCompression) {
+      try {
+        Optional<Path> zstdRelativePath =
+            listDirRecursive(Paths.get(agent.get().getNativePath())).stream()
+                .filter(path -> path.endsWith("libzstd-jni.so"))
+                .findFirst()
+                .map(Path::getParent);
+        if (!zstdRelativePath.isPresent()) {
+          doZstdCompression = false;
+        } else {
+          javaLibraryPath =
+              agent.get().getNativePath() + File.separator + zstdRelativePath.get().toString();
+        }
+      } catch (IOException e) {
+        LOG.info(e, "Couldn't list agent's native libs");
+        doZstdCompression = false;
+      }
+    }
+
     Closer closer = Closer.create();
     BuckInitiatedInstallReceiver receiver =
         new BuckInitiatedInstallReceiver(closer, filesType, installPaths, doZstdCompression);
-
-    String javaLibraryPath;
-    if (doZstdCompression) {
-      List<String> abis = getDeviceAbis();
-      String nativePath = agent.get().getNativePath();
-      StringBuilder javaLibraryPathBuilder = new StringBuilder();
-      javaLibraryPathBuilder.append(nativePath);
-      for (String abi : abis) {
-        javaLibraryPathBuilder.append(":");
-        javaLibraryPathBuilder.append(nativePath).append("/").append(abi);
-      }
-      javaLibraryPath = javaLibraryPathBuilder.toString();
-    } else {
-      javaLibraryPath = null;
-    }
 
     String command =
         "umask 022 && "
