@@ -21,5 +21,6 @@
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
     <orderEntry type="library" scope="TEST" name="diffutils-1.3.0" level="project" />
     <orderEntry type="library" name="compile-testing" level="project" />
+    <orderEntry type="library" name="starlark-annot-processor" level="project" />
   </component>
 </module>

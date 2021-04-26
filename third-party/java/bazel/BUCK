@@ -19,6 +19,10 @@ java_library(
     srcs = glob([
         "src/main/java/net/starlark/java/annot/processor/*.java",
     ]),
+    resources = [
+        "src/main/resources/META-INF/services/javax.annotation.processing.Processor",
+    ],
+    resources_root = "src/main/resources",
     deps = [
         ":starlark-annot",
         "//third-party/java/errorprone:error-prone-annotations",
@@ -99,4 +103,26 @@ java_test(
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/truth:truth",
     ],
+)
+
+filegroup(
+    name = "starlark-annot-sources",
+    srcs = glob([
+        "src/main/java/net/starlark/java/annot/**/*.java",
+    ]),
+)
+
+export_file(
+    name = "jars-for-idea/sources.sha1",
+)
+
+python_test(
+    name = "jars-for-idea-verify",
+    srcs = [
+        "jars-for-idea/verify.py",
+    ],
+    env = {
+        "STARLARK_ANNOT_SOURCES": "$(location :starlark-annot-sources)",
+        "STARLARK_ANNOT_SOURCES_SHA1": "$(location :jars-for-idea/sources.sha1)",
+    },
 )
