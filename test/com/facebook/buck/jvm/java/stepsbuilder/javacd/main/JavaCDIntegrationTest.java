@@ -16,15 +16,17 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -53,6 +55,7 @@ import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
@@ -66,7 +69,6 @@ import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
@@ -113,6 +115,10 @@ public class JavaCDIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Rule public Timeout globalTestTimeout = Timeout.seconds(60);
+
+  @Rule
+  public TestLogSink javacdLogSink =
+      new TestLogSink(JavaCDIntegrationTest.class.getPackage().getName() + ".JavaCDWorkerToolMain");
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -312,11 +318,11 @@ public class JavaCDIntegrationTest {
 
     waitTillEventsProcessed();
 
-    List<String> consoleEventLogMessages = eventBusListener.getConsoleEventLogMessages();
-    assertThat(consoleEventLogMessages, hasSize(1));
-    String consoleEvent = Iterables.getOnlyElement(consoleEventLogMessages);
-    assertThat(consoleEvent, containsString("Failed to execute steps"));
-    assertThat(consoleEvent, containsString("h@shC0de()"));
+    assertThat(
+        javacdLogSink.getRecords(),
+        hasItem(
+            logRecordWithMessage(
+                stringContainsInOrder("Failed to execute isolated step", "h@shC0de()"))));
   }
 
   private BuildJavaCommand createBuildCommand(String target, String baseDirectory) {

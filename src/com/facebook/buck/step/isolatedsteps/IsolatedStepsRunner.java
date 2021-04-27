@@ -17,6 +17,7 @@
 package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.step.StepExecutionResult;
@@ -31,6 +32,8 @@ import java.io.IOException;
  * <p>See also {@link com.facebook.buck.step.StepRunner}.
  */
 public class IsolatedStepsRunner {
+
+  private static final Logger LOG = Logger.get(IsolatedStepsRunner.class);
 
   private IsolatedStepsRunner() {}
 
@@ -66,11 +69,10 @@ public class IsolatedStepsRunner {
     try {
       return execute(steps, executionContext);
     } catch (StepFailedException e) {
-      executionContext.logError(e, "Failed to execute steps");
-
+      LOG.warn(e, "Failed to execute isolated steps");
       return StepExecutionResult.builder()
           .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
-          .setCause(e)
+          .setCause((Exception) e.getCause())
           .build();
     }
   }
@@ -95,8 +97,8 @@ public class IsolatedStepsRunner {
       isolatedEventBus.post(StepEvent.finished(started, executionResult.getExitCode()));
     }
     if (!executionResult.isSuccess()) {
-      throw StepFailedException.createForFailingStepWithExitCode(
-          step, stepDescription, true, executionResult);
+      throw StepFailedException.createForFailingIsolatedStepWithExitCode(
+          step, stepDescription, executionResult);
     }
   }
 

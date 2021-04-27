@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
@@ -197,6 +198,15 @@ public class JavaCDWorkerToolMain {
           IsolatedStepsRunner.executeWithDefaultExceptionHandling(isolatedSteps, executionContext);
     }
 
+    ResultEvent resultEvent = getResultEvent(actionId, stepExecutionResult);
+    DOWNWARD_PROTOCOL.write(
+        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.RESULT_EVENT).build(),
+        resultEvent,
+        eventsOutputStream);
+  }
+
+  private static ResultEvent getResultEvent(
+      String actionId, StepExecutionResult stepExecutionResult) {
     int exitCode = stepExecutionResult.getExitCode();
     ResultEvent.Builder resultEventBuilder =
         ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode);
@@ -210,17 +220,21 @@ public class JavaCDWorkerToolMain {
       stepExecutionResult
           .getCause()
           .ifPresent(
-              cause ->
-                  errorMessage.append("Cause: ").append(Throwables.getStackTraceAsString(cause)));
+              cause -> {
+                LOG.warn(cause, "%s failed with an exception.", actionId);
+                String error;
+                if (cause instanceof HumanReadableException) {
+                  error = ((HumanReadableException) cause).getHumanReadableErrorMessage();
+                } else {
+                  error = Throwables.getStackTraceAsString(cause);
+                }
+                errorMessage.append("Cause: ").append(error);
+              });
       if (errorMessage.length() > 0) {
         resultEventBuilder.setMessage(errorMessage.toString());
       }
     }
 
-    ResultEvent resultEvent = resultEventBuilder.build();
-    DOWNWARD_PROTOCOL.write(
-        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.RESULT_EVENT).build(),
-        resultEvent,
-        eventsOutputStream);
+    return resultEventBuilder.build();
   }
 }

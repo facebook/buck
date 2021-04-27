@@ -7,6 +7,7 @@ standard_java_test(
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event/isolated:isolated",
+        "//src/com/facebook/buck/external/log:log",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/common:common",

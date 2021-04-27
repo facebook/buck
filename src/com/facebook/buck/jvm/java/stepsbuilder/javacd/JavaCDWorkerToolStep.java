@@ -81,7 +81,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
     AbsPath jarPath = ruleCellRoot.resolve(javacdBinaryPathSupplier.get());
     if (!Files.exists(jarPath.getPath())) {
-      throw new IOException("jar " + jarPath.toString() + " is not exist on env");
+      throw new IOException("jar " + jarPath + " is not exist on env");
     }
 
     return ImmutableList.<String>builderWithExpectedSize(
@@ -115,12 +115,20 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     try {
       ResultEvent resultEvent =
           workerToolExecutor.executeCommand(context.getActionId(), buildJavaCommand);
+      int exitCode = resultEvent.getExitCode();
 
-      return StepExecutionResult.builder()
-          .setExitCode(resultEvent.getExitCode())
-          .setExecutedCommand(launchJavaCDCommand)
-          .setStderr(String.format("ResultEvent : %s", resultEvent))
-          .build();
+      StepExecutionResult.Builder builder =
+          StepExecutionResult.builder()
+              .setExitCode(exitCode)
+              .setExecutedCommand(launchJavaCDCommand);
+
+      if (exitCode != 0) {
+        builder.setStderr(
+            String.format(
+                "javacd action id: %s%n%s", context.getActionId(), resultEvent.getMessage()));
+      }
+
+      return builder.build();
 
     } catch (ExecutionException e) {
       return StepExecutionResult.builder()

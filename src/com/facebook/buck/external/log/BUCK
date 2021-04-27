@@ -7,6 +7,7 @@ java_immutables_library(
         "//src/com/facebook/buck/external/...",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main/...",
         "//test/com/facebook/buck/external/...",
+        "//test/com/facebook/buck/step/isolatedsteps:isolatedsteps",
     ],
     deps = [
         "//src-gen:downward-model",

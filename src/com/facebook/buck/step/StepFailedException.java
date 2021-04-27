@@ -31,7 +31,7 @@ import java.util.OptionalInt;
 
 public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
 
-  @VisibleForTesting protected static final int KEEP_FIRST_CHARS = 4 * 80;
+  @VisibleForTesting static final int KEEP_FIRST_CHARS = 4 * 80;
 
   private final Step step;
   private final String description;
@@ -85,13 +85,40 @@ public class StepFailedException extends Exception implements WrapsException, Ex
         .ifPresent(stderr -> appendToErrorMessage(errorMessage, "stderr", stderr, false));
 
     return new StepFailedException(
-        executionResult
-            .getCause()
-            .map(cause -> new HumanReadableException(cause, errorMessage.toString()))
-            .orElse(new HumanReadableException(errorMessage.toString())),
+        getHumanReadableException(executionResult, errorMessage.toString()),
         step,
         descriptionForStep,
         OptionalInt.of(exitCode));
+  }
+
+  /** Creates a StepFailedException based on a StepExecutionResult. */
+  public static StepFailedException createForFailingIsolatedStepWithExitCode(
+      Step step, String descriptionForStep, StepExecutionResult executionResult) {
+    StringBuilder errorMessage = new StringBuilder();
+    errorMessage.append(String.format("Failed to execute isolated step <%s>", step.getShortName()));
+    Optional<String> stderr = executionResult.getStderr();
+    if (stderr.isPresent()) {
+      String error = stderr.get();
+      errorMessage.append(System.lineSeparator()).append(error);
+    }
+    return new StepFailedException(
+        getHumanReadableException(executionResult, errorMessage.toString()),
+        step,
+        descriptionForStep,
+        OptionalInt.of(executionResult.getExitCode()));
+  }
+
+  private static HumanReadableException getHumanReadableException(
+      StepExecutionResult executionResult, String errorMessage) {
+    Optional<Exception> executionResultCause = executionResult.getCause();
+    if (executionResultCause.isPresent()) {
+      Exception cause = executionResultCause.get();
+      if (cause instanceof HumanReadableException) {
+        return (HumanReadableException) cause;
+      }
+      return new HumanReadableException(cause, errorMessage);
+    }
+    return new HumanReadableException(errorMessage);
   }
 
   /** Same as above but includes RE action metadata */

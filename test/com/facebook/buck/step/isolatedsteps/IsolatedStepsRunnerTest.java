@@ -30,14 +30,17 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.downwardapi.testutil.StepEventMatcher;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.isolated.DefaultIsolatedEventBus;
+import com.facebook.buck.external.log.ExternalLogHandler;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
@@ -60,6 +63,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Optional;
@@ -77,6 +81,8 @@ public class IsolatedStepsRunnerTest {
   private static final Ansi ANSI_FOR_TEST = new Ansi(true);
   private static final BuildId BUILD_UUID_FOR_TEST = new BuildId("my_build");
   private static final String ACTION_ID = "my_action_id";
+  public static final DownwardProtocol DOWNWARD_PROTOCOL =
+      DownwardProtocolType.BINARY.getDownwardProtocol();
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem projectFilesystem;
@@ -141,11 +147,7 @@ public class IsolatedStepsRunnerTest {
     Optional<Exception> cause = result.getCause();
     assertThat(cause.isPresent(), is(true));
     assertThat(
-        cause.get().getMessage(),
-        is(
-            "Command failed with exit code 1."
-                + System.lineSeparator()
-                + "  When running <failed_step_description>."));
+        cause.get().getMessage(), is("Failed to execute isolated step <failed_step_short_name>"));
 
     DownwardProtocol protocol = DownwardProtocolType.BINARY.getDownwardProtocol();
     InputStream inputStream = new FileInputStream(downwardApiFile);
@@ -157,15 +159,15 @@ public class IsolatedStepsRunnerTest {
             isolatedStep, StepEvent.StepStatus.FINISHED, protocol, inputStream, context));
 
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
-    ConsoleEvent actualConsoleEvent = protocol.readEvent(inputStream, actualEventType);
-    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
+    LogEvent actualLogEvent = protocol.readEvent(inputStream, actualEventType);
+    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.LOG_EVENT));
 
     assertThat(
-        actualConsoleEvent.getMessage(),
+        actualLogEvent.getMessage(),
         containsString(
-            "Failed to execute steps"
+            "Failed to execute isolated steps"
                 + System.lineSeparator()
-                + "com.facebook.buck.step.StepFailedException: Command failed with exit code 1."
+                + "com.facebook.buck.step.StepFailedException: Failed to execute isolated step <failed_step_short_name>"
                 + System.lineSeparator()
                 + "  When running <failed_step_description>."));
   }
@@ -189,7 +191,7 @@ public class IsolatedStepsRunnerTest {
     assertThat(
         stepFailedException.getMessage(),
         is(
-            "Command failed with exit code 1."
+            "Failed to execute isolated step <failed_step_short_name>"
                 + System.lineSeparator()
                 + "  When running <failed_step_description>."));
 
@@ -273,14 +275,19 @@ public class IsolatedStepsRunnerTest {
 
   private IsolatedExecutionContext createContext(AbsPath root) throws Exception {
     long startExecutionMillis = AT_TIME.toEpochMilli();
+    OutputStream eventsOutputStream = new FileOutputStream(downwardApiFile);
+    Logger logger = Logger.get("");
+    logger.cleanHandlers();
+    logger.addHandler(new ExternalLogHandler(eventsOutputStream, DOWNWARD_PROTOCOL));
+
     IsolatedEventBus buckEventBus =
         new DefaultIsolatedEventBus(
             BUILD_UUID_FOR_TEST,
-            new FileOutputStream(downwardApiFile),
+            eventsOutputStream,
             FakeClock.of(
                 startExecutionMillis + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             startExecutionMillis,
-            DownwardProtocolType.BINARY.getDownwardProtocol());
+            DOWNWARD_PROTOCOL);
     Console console = new Console(VERBOSITY_FOR_TEST, System.out, System.err, ANSI_FOR_TEST);
     ProcessExecutor defaultProcessExecutor = new DefaultProcessExecutor(console);
 
