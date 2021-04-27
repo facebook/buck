@@ -27,37 +27,12 @@
   ]
 }
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-choclate-chips.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "extraData" : {
-    "arbitrary" : "extra",
-    "json" : 1
-  },
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-choclate-chips.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
   "transformProfile" : "default",
-  "extraData" : {
-    "arbitrary" : "extra",
-    "json" : 1
-  },
-  "flavors" : [ ]
-}
-var choclateChips;
-{
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-yoghurt.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
+  "release" : true,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -67,16 +42,21 @@ var choclateChips;
     "release"
   ]
 }
+var choclateChips;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-yoghurt.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
   "transformProfile" : "default",
+  "release" : true,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
   },
-  "flavors" : [ ]
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var yoghurt;

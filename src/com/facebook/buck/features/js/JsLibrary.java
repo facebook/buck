@@ -162,7 +162,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
     return getBuildable().libraryDependencies;
   }
 
-  Stream<JsFile<?>> getJsFiles(SourcePathRuleFinder ruleFinder) {
+  Stream<JsFile> getJsFiles(SourcePathRuleFinder ruleFinder) {
     BuildRule fileRule = ruleFinder.getRule(getBuildable().filesDependency);
     if (fileRule instanceof Files) {
       return ((Files) fileRule).getJsFiles(ruleFinder);
@@ -200,13 +200,13 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
       return getSourcePath(getBuildable().output);
     }
 
-    Stream<JsFile<?>> getJsFiles(SourcePathRuleFinder ruleFinder) {
+    Stream<JsFile> getJsFiles(SourcePathRuleFinder ruleFinder) {
       return getBuildable().sources.stream().map(ruleFinder::getRule).map(this::buildRuleAsJsFile);
     }
 
-    private JsFile<?> buildRuleAsJsFile(BuildRule x) {
+    private JsFile buildRuleAsJsFile(BuildRule x) {
       if (x instanceof JsFile) {
-        return (JsFile<?>) x;
+        return (JsFile) x;
       }
       throw new IllegalStateException(
           String.format(

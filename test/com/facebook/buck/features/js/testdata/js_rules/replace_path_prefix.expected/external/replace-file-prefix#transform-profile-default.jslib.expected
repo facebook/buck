@@ -24,6 +24,7 @@
   "sourceJsFilePath" : "@/external/tropical-fruit/mango.js",
   "sourceJsFileName" : "js/node_modules/tropical-fruit/mango.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var mango;
@@ -33,6 +34,7 @@ var mango;
   "sourceJsFilePath" : "@/external/tropical-fruit/papaya.js",
   "sourceJsFileName" : "js/node_modules/tropical-fruit/papaya.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var papaya;

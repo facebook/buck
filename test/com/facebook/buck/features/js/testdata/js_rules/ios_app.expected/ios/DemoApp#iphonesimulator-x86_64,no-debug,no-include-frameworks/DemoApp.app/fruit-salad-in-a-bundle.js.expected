@@ -60,6 +60,7 @@
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
   "transformProfile" : "default",
+  "release" : false,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -73,6 +74,7 @@ var choclateChips;
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
   "transformProfile" : "default",
+  "release" : false,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -113,6 +115,7 @@ var yoghurt;
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var apple;
@@ -122,6 +125,7 @@ var apple;
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var banana;
@@ -131,6 +135,7 @@ var banana;
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var pear;
@@ -181,6 +186,7 @@ var pear;
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
   "transformProfile" : "default",
+  "release" : false,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -194,6 +200,7 @@ var choclateChips;
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
   "transformProfile" : "default",
+  "release" : false,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -234,6 +241,7 @@ var yoghurt;
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var apple;
@@ -243,6 +251,7 @@ var apple;
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var banana;
@@ -252,6 +261,7 @@ var banana;
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var pear;
@@ -274,6 +284,7 @@ var pear;
   "sourceJsFilePath" : "@/js/fruit-salad.js",
   "sourceJsFileName" : "js/fruit-salad.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var fruitSalad;

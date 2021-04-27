@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.features.js.JsFile.AbstractImpl;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
@@ -47,18 +46,18 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** JS file rule converted to MBR */
-public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
+public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
 
   private JsFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      T impl) {
-    super(buildTarget, projectFilesystem, ruleFinder, impl);
+      JsFileBuildable buildable) {
+    super(buildTarget, projectFilesystem, ruleFinder, buildable);
   }
 
-  /** Internal JsFile specific abstract class with general implementation for Buildable interface */
-  abstract static class AbstractImpl implements Buildable {
+  /** Internal JsFile implementation for Buildable interface */
+  static class JsFileBuildable implements Buildable {
 
     @AddToRuleKey private final BuildTarget buildTarget;
     @AddToRuleKey private final Optional<Arg> extraJson;
@@ -66,13 +65,21 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     @AddToRuleKey final OutputPath output;
     @AddToRuleKey final Optional<String> transformProfile;
     @AddToRuleKey private final boolean withDownwardApi;
+    @AddToRuleKey private final SourcePath src;
+    @AddToRuleKey private final Optional<String> subPath;
+    @AddToRuleKey private final Optional<String> virtualPath;
+    @AddToRuleKey private final boolean release;
 
-    AbstractImpl(
+    JsFileBuildable(
         BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
         Optional<Arg> extraJson,
         WorkerTool workerTool,
-        ProjectFilesystem projectFilesystem,
-        boolean withDownwardApi) {
+        SourcePath src,
+        Optional<String> subPath,
+        Optional<Path> virtualPath,
+        boolean withDownwardApi,
+        boolean release) {
       this.buildTarget = buildTarget;
       this.extraJson = extraJson;
       this.workerTool = workerTool;
@@ -81,7 +88,26 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
               BuildTargetPaths.getGenPath(
                   projectFilesystem.getBuckPaths(), buildTarget, "%s.jsfile"));
       this.transformProfile = JsFlavors.transformProfileArg(buildTarget.getFlavors());
+      this.src = src;
+      this.subPath = subPath;
+      this.virtualPath = virtualPath.map(PathFormatter::pathWithUnixSeparators);
+      this.release = release;
       this.withDownwardApi = withDownwardApi;
+    }
+
+    @VisibleForTesting
+    SourcePath getSource() {
+      return src;
+    }
+
+    @VisibleForTesting
+    Optional<String> getVirtualPath() {
+      return virtualPath;
+    }
+
+    @VisibleForTesting
+    boolean isRelease() {
+      return release;
     }
 
     @Override
@@ -105,74 +131,6 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
               withDownwardApi));
     }
 
-    abstract ObjectBuilder getJobArgs(
-        SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath);
-
-    @Nullable
-    abstract BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder);
-
-    private Optional<String> getExtraJson(SourcePathResolverAdapter sourcePathResolverAdapter) {
-      return extraJson.map(a -> Arg.stringify(a, sourcePathResolverAdapter));
-    }
-  }
-
-  @Override
-  public BuildTargetSourcePath getSourcePathToOutput() {
-    return getSourcePath(getBuildable().output);
-  }
-
-  BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder) {
-    return getBuildable().getSourceBuildTarget(ruleFinder);
-  }
-
-  /** Creates JS file dev rule implementation */
-  public static JsFile<JsFileDev> create(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
-      Optional<Arg> extraJson,
-      WorkerTool worker,
-      SourcePath src,
-      Optional<String> subPath,
-      Optional<Path> virtualPath,
-      boolean withDownwardApi) {
-    return new JsFile<>(
-        buildTarget,
-        projectFilesystem,
-        ruleFinder,
-        new JsFileDev(
-            buildTarget,
-            projectFilesystem,
-            extraJson,
-            worker,
-            src,
-            subPath,
-            virtualPath,
-            withDownwardApi));
-  }
-
-  /** JS file dev rule implementation */
-  static class JsFileDev extends AbstractImpl {
-    @AddToRuleKey private final SourcePath src;
-    @AddToRuleKey private final Optional<String> subPath;
-    @AddToRuleKey private final Optional<String> virtualPath;
-
-    private JsFileDev(
-        BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
-        Optional<Arg> extraJson,
-        WorkerTool workerTool,
-        SourcePath src,
-        Optional<String> subPath,
-        Optional<Path> virtualPath,
-        boolean withDownwardApi) {
-      super(buildTarget, extraJson, workerTool, projectFilesystem, withDownwardApi);
-      this.src = src;
-      this.subPath = subPath;
-      this.virtualPath = virtualPath.map(PathFormatter::pathWithUnixSeparators);
-    }
-
-    @Override
     ObjectBuilder getJobArgs(
         SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath) {
       AbsPath srcPath = sourcePathResolverAdapter.getAbsolutePath(src);
@@ -186,12 +144,12 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
                   () ->
                       PathFormatter.pathWithUnixSeparators(
                           sourcePathResolverAdapter.getCellUnsafeRelPath(src))))
-          .addString("transformProfile", transformProfile);
+          .addString("transformProfile", transformProfile)
+          .addBoolean("release", release);
     }
 
     @Nullable
-    @Override
-    BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder) {
+    BuildTarget getSourceBuildTarget() {
       return Stream.of(src)
           .filter(BuildTargetSourcePath.class::isInstance)
           .map(BuildTargetSourcePath.class::cast)
@@ -200,69 +158,43 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
           .orElse(null);
     }
 
-    @VisibleForTesting
-    SourcePath getSource() {
-      return src;
-    }
-
-    @VisibleForTesting
-    Optional<String> getVirtualPath() {
-      return virtualPath;
+    private Optional<String> getExtraJson(SourcePathResolverAdapter sourcePathResolverAdapter) {
+      return extraJson.map(a -> Arg.stringify(a, sourcePathResolverAdapter));
     }
   }
 
-  /** Creates JS file release rule implementation */
-  public static JsFile<JsFileRelease> create(
+  @Override
+  public BuildTargetSourcePath getSourcePathToOutput() {
+    return getSourcePath(getBuildable().output);
+  }
+
+  BuildTarget getSourceBuildTarget() {
+    return getBuildable().getSourceBuildTarget();
+  }
+
+  /** Creates a JS File */
+  public static JsFile create(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       Optional<Arg> extraJson,
       WorkerTool worker,
-      BuildTargetSourcePath devFile,
-      boolean withDownwardApi) {
-    return new JsFile<>(
-        buildTarget,
-        projectFilesystem,
-        ruleFinder,
-        new JsFileRelease(
-            buildTarget, projectFilesystem, extraJson, worker, devFile, withDownwardApi));
-  }
-
-  /** JS file release rule implementation */
-  static class JsFileRelease extends AbstractImpl {
-
-    @AddToRuleKey private final BuildTargetSourcePath devFile;
-
-    JsFileRelease(
-        BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem,
-        Optional<Arg> extraJson,
-        WorkerTool workerTool,
-        BuildTargetSourcePath devFile,
-        boolean withDownwardApi) {
-      super(buildTarget, extraJson, workerTool, projectFilesystem, withDownwardApi);
-      this.devFile = devFile;
-    }
-
-    @Override
-    ObjectBuilder getJobArgs(
-        SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath) {
-      return JsonBuilder.object()
-          .addString("command", "optimize")
-          .addString("outputFilePath", outputPath)
-          .addString(
-              "transformedJsFilePath",
-              sourcePathResolverAdapter.getAbsolutePath(devFile).toString())
-          .addString("transformProfile", transformProfile);
-    }
-
-    @Override
-    @Nullable
-    @SuppressWarnings("unchecked")
-    BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder) {
-      JsFile<JsFileDev> rule = (JsFile<JsFileDev>) ruleFinder.getRule(devFile);
-      JsFileDev devRule = rule.getBuildable();
-      return devRule.getSourceBuildTarget(ruleFinder);
-    }
+      SourcePath src,
+      Optional<String> subPath,
+      Optional<Path> virtualPath,
+      boolean withDownwardApi,
+      boolean release) {
+    JsFileBuildable buildable =
+        new JsFileBuildable(
+            buildTarget,
+            projectFilesystem,
+            extraJson,
+            worker,
+            src,
+            subPath,
+            virtualPath,
+            withDownwardApi,
+            release);
+    return new JsFile(buildTarget, projectFilesystem, ruleFinder, buildable);
   }
 }

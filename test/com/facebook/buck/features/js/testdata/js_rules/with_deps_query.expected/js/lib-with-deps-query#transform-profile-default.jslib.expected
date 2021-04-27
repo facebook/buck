@@ -36,6 +36,7 @@
   "sourceJsFilePath" : "@/buck-out/gen/external/exported.js/exported.js",
   "sourceJsFileName" : "buck-out/gen/external/exported.js/exported.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var exported;
@@ -64,6 +65,7 @@ var exported;
   "sourceJsFilePath" : "@/js/native-js/photo-album.js",
   "sourceJsFileName" : "js/native-js/photo-album.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var photoAlbum;
@@ -92,6 +94,7 @@ var photoAlbum;
   "sourceJsFilePath" : "@/js/native-js/text-widget.js",
   "sourceJsFileName" : "js/native-js/text-widget.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var textWidget;

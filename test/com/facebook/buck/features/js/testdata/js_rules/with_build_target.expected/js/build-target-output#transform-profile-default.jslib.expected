@@ -23,6 +23,7 @@
   "sourceJsFilePath" : "@/buck-out/gen/external/exported.js/exported.js",
   "sourceJsFileName" : "buck-out/gen/external/exported.js/exported.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var exported;

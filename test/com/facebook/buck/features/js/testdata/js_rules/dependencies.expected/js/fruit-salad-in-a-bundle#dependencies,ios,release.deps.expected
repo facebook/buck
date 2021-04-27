@@ -56,37 +56,12 @@
   ]
 }
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-choclate-chips.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "extraData" : {
-    "arbitrary" : "extra",
-    "json" : 1
-  },
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-choclate-chips.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
   "transformProfile" : "default",
-  "extraData" : {
-    "arbitrary" : "extra",
-    "json" : 1
-  },
-  "flavors" : [ ]
-}
-var choclateChips;
-{
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-yoghurt.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
+  "release" : true,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -96,17 +71,22 @@ var choclateChips;
     "release"
   ]
 }
+var choclateChips;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-yoghurt.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
   "transformProfile" : "default",
+  "release" : true,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
   },
-  "flavors" : [ ]
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var yoghurt;
 {
@@ -139,60 +119,42 @@ var yoghurt;
   ]
 }
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-apple.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-apple.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
+  "release" : true,
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var apple;
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-banana.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-banana.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
-}
-var banana;
-{
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-pear.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
+  "release" : true,
   "flavors" : [
     "ios",
     "release"
   ]
 }
+var banana;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-pear.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
+  "release" : true,
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var pear;
 {
@@ -240,37 +202,12 @@ var pear;
   ]
 }
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-choclate-chips.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "extraData" : {
-    "arbitrary" : "extra",
-    "json" : 1
-  },
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-choclate-chips.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
   "transformProfile" : "default",
-  "extraData" : {
-    "arbitrary" : "extra",
-    "json" : 1
-  },
-  "flavors" : [ ]
-}
-var choclateChips;
-{
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-yoghurt.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
+  "release" : true,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -280,17 +217,22 @@ var choclateChips;
     "release"
   ]
 }
+var choclateChips;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/extras#_files_,file-yoghurt.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
   "transformProfile" : "default",
+  "release" : true,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
   },
-  "flavors" : [ ]
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var yoghurt;
 {
@@ -323,60 +265,42 @@ var yoghurt;
   ]
 }
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-apple.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-apple.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
+  "release" : true,
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var apple;
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-banana.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "flavors" : [
-    "ios",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-banana.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
-}
-var banana;
-{
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-pear.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
+  "release" : true,
   "flavors" : [
     "ios",
     "release"
   ]
 }
+var banana;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,file-pear.js-<HASH>,ios,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
+  "release" : true,
+  "flavors" : [
+    "ios",
+    "release"
+  ]
 }
 var pear;
 {
@@ -394,21 +318,15 @@ var pear;
   ]
 }
 {
-  "command" : "optimize",
+  "command" : "transform",
   "outputFilePath" : "@/buck-out/gen/js/fruit-salad#_files_,file-fruit-salad.js-<HASH>,ios,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/fruit-salad.js",
+  "sourceJsFileName" : "js/fruit-salad.js",
   "transformProfile" : "default",
+  "release" : true,
   "flavors" : [
     "ios",
     "release"
   ]
-}
-{
-  "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit-salad#file-fruit-salad.js-<HASH>,transform-profile-default.jsfile",
-  "sourceJsFilePath" : "@/js/fruit-salad.js",
-  "sourceJsFileName" : "js/fruit-salad.js",
-  "transformProfile" : "default",
-  "flavors" : [ ]
 }
 var fruitSalad;

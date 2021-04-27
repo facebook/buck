@@ -40,7 +40,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.features.js.JsFile.JsFileDev;
 import com.facebook.buck.features.js.JsLibrary.Files;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
@@ -242,10 +241,10 @@ public class JsLibraryDescriptionTest {
 
     ImmutableMap<SourcePath, JsFile> fileRules =
         findJsFileRules(scenario.graphBuilder)
-            .filter(rule -> rule.getBuildable() instanceof JsFileDev)
+            .filter(rule -> !rule.getBuildable().isRelease())
             .collect(
                 ImmutableMap.toImmutableMap(
-                    rule -> ((JsFileDev) rule.getBuildable()).getSource(), Function.identity()));
+                    rule -> rule.getBuildable().getSource(), Function.identity()));
 
     assertThat(a.getTarget(), in(getBuildDepsAsTargets(fileRules.get(a))));
     assertThat(b.getTarget(), not(in(getBuildDepsAsTargets(fileRules.get(a)))));
@@ -537,7 +536,7 @@ public class JsLibraryDescriptionTest {
     BuildRule referenced = scenario.graphBuilder.getRule(referencedTarget);
 
     JsLibrary jsLibraryRule = (JsLibrary) scenario.graphBuilder.getRule(target);
-    Stream<JsFile<?>> jsFiles = jsLibraryRule.getJsFiles(scenario.graphBuilder);
+    Stream<JsFile> jsFiles = jsLibraryRule.getJsFiles(scenario.graphBuilder);
     jsFiles.collect(countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
   }
 
@@ -553,10 +552,10 @@ public class JsLibraryDescriptionTest {
     return RichStream.from(internalFileRule(graphBuilder).getBuildDeps()).filter(JsFile.class);
   }
 
-  private JsFile.JsFileDev findFirstJsFileDevRule(ActionGraphBuilder graphBuilder) {
+  private JsFile.JsFileBuildable findFirstJsFileDevRule(ActionGraphBuilder graphBuilder) {
     return findJsFileRules(graphBuilder)
         .map(JsFile::getBuildable)
-        .filter(JsFileDev.class)
+        .filter(buildable -> !buildable.isRelease())
         .findFirst()
         .get();
   }
@@ -606,8 +605,8 @@ public class JsLibraryDescriptionTest {
       return RichStream.of(o)
           .filter(JsFile.class)
           .map(JsFile::getBuildable)
-          .filter(JsFileDev.class)
-          .map(JsFileDev::getSource)
+          .filter(buildable -> !buildable.isRelease())
+          .map(JsFile.JsFileBuildable::getSource)
           .allMatch(source::equals);
     }
 

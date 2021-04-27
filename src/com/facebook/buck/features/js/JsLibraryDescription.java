@@ -144,24 +144,16 @@ public class JsLibraryDescription
       if (isMissingTransformProfile) {
         throw new HumanReadableException("Cannot instantiate js_file without a transform profile");
       }
-      return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
-          ? createReleaseFileRule(
-              buildTarget,
-              projectFilesystem,
-              graphBuilder,
-              cellRoots,
-              args,
-              worker,
-              withDownwardApi)
-          : createDevFileRule(
-              buildTarget,
-              projectFilesystem,
-              graphBuilder,
-              cellRoots,
-              args,
-              file.get(),
-              worker,
-              withDownwardApi);
+
+      return createFileRule(
+          buildTarget,
+          projectFilesystem,
+          graphBuilder,
+          cellRoots,
+          args,
+          file.get(),
+          worker,
+          withDownwardApi);
     } else {
       if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
         return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors, withDownwardApi)
@@ -244,7 +236,7 @@ public class JsLibraryDescription
     private final boolean withDownwardApi;
     private Optional<String> forbidBuildingReason = Optional.empty();
 
-    @Nullable private ImmutableList<JsFile<?>> jsFileRules;
+    @Nullable private ImmutableList<JsFile> jsFileRules;
 
     public LibraryFilesBuilder(
         ActionGraphBuilder graphBuilder,
@@ -281,7 +273,7 @@ public class JsLibraryDescription
       return this;
     }
 
-    private JsFile<?> requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
+    private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
       Flavor fileFlavor = sourcesToFlavors.get(file);
       BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
       graphBuilder.requireRule(target);
@@ -372,27 +364,7 @@ public class JsLibraryDescription
     }
   }
 
-  private static BuildRule createReleaseFileRule(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots,
-      JsLibraryDescriptionArg args,
-      WorkerTool worker,
-      boolean withDownwardApi) {
-    BuildTarget devTarget = withFileFlavorOnly(buildTarget);
-    graphBuilder.requireRule(devTarget);
-    return JsFile.create(
-        buildTarget,
-        projectFilesystem,
-        graphBuilder,
-        JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
-        worker,
-        graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
-        withDownwardApi);
-  }
-
-  private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
+  private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createFileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -426,14 +398,8 @@ public class JsLibraryDescription
         sourcePath,
         subPath,
         virtualPath,
-        withDownwardApi);
-  }
-
-  private static BuildTarget withFileFlavorOnly(BuildTarget target) {
-    return target.withFlavors(
-        target.getFlavors().getSet().stream()
-            .filter(JsFlavors::isFileFlavor)
-            .toArray(Flavor[]::new));
+        withDownwardApi,
+        buildTarget.getFlavors().contains(JsFlavors.RELEASE));
   }
 
   private static ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>

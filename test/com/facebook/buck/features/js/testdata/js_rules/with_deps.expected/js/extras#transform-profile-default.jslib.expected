@@ -24,6 +24,7 @@
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
   "transformProfile" : "default",
+  "release" : false,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1
@@ -37,6 +38,7 @@ var choclateChips;
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
   "transformProfile" : "default",
+  "release" : false,
   "extraData" : {
     "arbitrary" : "extra",
     "json" : 1

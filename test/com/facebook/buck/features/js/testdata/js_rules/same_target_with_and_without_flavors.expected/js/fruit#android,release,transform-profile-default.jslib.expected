@@ -28,59 +28,41 @@
   ]
 }
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "flavors" : [
-    "android",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-apple.js-<HASH>,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
+  "release" : true,
+  "flavors" : [
+    "android",
+    "release"
+  ]
 }
 var apple;
 {
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
-  "flavors" : [
-    "android",
-    "release"
-  ]
-}
-{
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-banana.js-<HASH>,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
-}
-var banana;
-{
-  "command" : "optimize",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release,transform-profile-default.jsfile",
-  "transformedJsFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
-  "transformProfile" : "default",
+  "release" : true,
   "flavors" : [
     "android",
     "release"
   ]
 }
+var banana;
 {
   "command" : "transform",
-  "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
+  "outputFilePath" : "@/buck-out/gen/js/fruit#_files_,android,file-pear.js-<HASH>,release,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
   "transformProfile" : "default",
-  "flavors" : [ ]
+  "release" : true,
+  "flavors" : [
+    "android",
+    "release"
+  ]
 }
 var pear;

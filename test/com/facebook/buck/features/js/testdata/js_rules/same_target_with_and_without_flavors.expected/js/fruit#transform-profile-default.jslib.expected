@@ -25,6 +25,7 @@
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var apple;
@@ -34,6 +35,7 @@ var apple;
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var banana;
@@ -43,6 +45,7 @@ var banana;
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
   "transformProfile" : "default",
+  "release" : false,
   "flavors" : [ ]
 }
 var pear;
