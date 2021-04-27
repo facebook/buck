@@ -683,7 +683,8 @@ class HeaderSearchPaths {
           // This is duplicated from collectRecursiveHeaderSearchPaths and is here only to maintain
           // the behavior from before the indexing fix change was made. Once that has been tested
           // and can be rolled out, this first if statement can be removed entirely.
-          if ((!enableIndexingFix || nativeNode != targetNode)
+          if (!enableIndexingFix
+              && nativeNode != targetNode
               && headerVisibility.equals(HeaderVisibility.PUBLIC)
               && NodeHelper.isModularAppleLibrary(nativeNode)) {
             BuildTarget flavoredModuleMapTarget =

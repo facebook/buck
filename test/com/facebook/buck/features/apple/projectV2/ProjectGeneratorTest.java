@@ -503,11 +503,10 @@ public class ProjectGeneratorTest {
     projectGenerator.createXcodeProject(
         xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
-    FakeProjectFilesystem frameworkBundleFileSystem =
-        (FakeProjectFilesystem) frameworkBundleNode.getFilesystem();
+    FakeProjectFilesystem appBinaryFileSystem =
+        (FakeProjectFilesystem) appBinaryNode.getFilesystem();
     RelPath expectedXcConfigPath =
-        BuildConfiguration.getXcconfigPath(
-            frameworkBundleFileSystem, frameworkBundleTarget, "Debug");
+        BuildConfiguration.getXcconfigPath(appBinaryFileSystem, appBinaryTarget, "Debug");
     String xccConfigContents =
         this.projectFilesystem.readFileIfItExists(expectedXcConfigPath).get();
     Xcconfig config = Xcconfig.fromString(xccConfigContents);
