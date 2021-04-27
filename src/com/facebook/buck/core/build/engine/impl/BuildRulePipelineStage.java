@@ -73,7 +73,7 @@ class BuildRulePipelineStage<State extends RulePipelineState>
     this.ruleStepRunnerFactory = ruleStepsFactory;
   }
 
-  public void setStateHolder(StateHolder<State> stateHolder) {
+  void init(StateHolder<State> stateHolder) {
     Preconditions.checkState(this.stateHolder == null);
     this.stateHolder = stateHolder;
   }

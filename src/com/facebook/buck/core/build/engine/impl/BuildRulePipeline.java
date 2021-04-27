@@ -22,8 +22,6 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.google.common.util.concurrent.SettableFuture;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,29 +29,28 @@ import java.util.Optional;
  */
 class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
 
+  private final BuildRulePipelineStage<State> rootRule;
   private final StateHolder<State> stateHolder;
-  private final List<BuildRulePipelineStage<State>> stages = new ArrayList<>();
+  private boolean executed = false;
 
   public BuildRulePipeline(BuildRulePipelineStage<State> rootRule, StateHolder<State> stateHolder) {
+    this.rootRule = rootRule;
     this.stateHolder = stateHolder;
-    buildPipeline(rootRule);
-  }
-
-  private void buildPipeline(BuildRulePipelineStage<State> firstStage) {
-    BuildRulePipelineStage<State> current = firstStage;
-
-    while (current != null) {
-      current.setStateHolder(stateHolder);
-      stages.add(current);
-      current = current.getNextStage();
+    for (BuildRulePipelineStage<State> stage = rootRule;
+        stage != null;
+        stage = stage.getNextStage()) {
+      stage.init(stateHolder);
     }
   }
 
   @Override
   public void run() {
+    checkState(!executed);
     try {
       Throwable error = null;
-      for (BuildRulePipelineStage<State> stage : stages) {
+      for (BuildRulePipelineStage<State> stage = rootRule;
+          stage != null;
+          stage = stage.getNextStage()) {
         if (error == null) {
           stage.run();
           error = stage.getError();
@@ -71,7 +68,7 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
       }
     } finally {
       stateHolder.close();
-      stages.clear();
+      executed = true;
     }
   }
 }
