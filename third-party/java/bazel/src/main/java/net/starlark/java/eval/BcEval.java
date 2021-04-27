@@ -47,7 +47,7 @@ class BcEval {
     this.fn = fn;
     this.compiled = fn.compiled;
     this.slots = fr.locals;
-    this.loops = new Object[fn.compiled.loopDepth * 2];
+    this.loops = ArraysForStarlark.newObjectArray(fn.compiled.loopDepth * 2);
     this.text = fn.compiled.text;
   }
 
