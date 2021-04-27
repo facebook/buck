@@ -25,6 +25,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
+import com.facebook.buck.artifact_cache.TopLevelArtifactFetchEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -135,11 +136,13 @@ public class SuperConsoleEventBusListenerTest {
   private final SuperConsoleConfig emptySuperConsoleConfig =
       new SuperConsoleConfig(FakeBuckConfig.empty());
 
-  private String formatCacheStatsLine(boolean running, int artifacts, float size, float ratio) {
+  private String formatCacheStatsLine(
+      boolean running, int artifacts, int artifactStartedDownload, float size, float ratio) {
     String operationString = running ? "Downloading..." : "Downloaded";
     String sizeString = size == 0 ? "0.00 bytes" : String.format("%.2f Mbytes", size);
     return String.format(
-        "%s %d artifacts, %s, %.1f%% cache miss", operationString, artifacts, sizeString, ratio);
+        "%s %d/%d artifacts, %s, %.1f%% cache miss",
+        operationString, artifacts, artifactStartedDownload, sizeString, ratio);
   }
 
   @Before
@@ -299,7 +302,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.1 sec"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -313,7 +316,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (preparing)"));
 
@@ -324,7 +327,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (preparing)"));
 
@@ -341,7 +344,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (running artifact_compress[0.0 sec])"));
 
@@ -359,7 +362,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (preparing)"));
 
@@ -386,7 +389,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (running dir_artifact_fetch[0.0 sec])"));
 
@@ -399,8 +402,8 @@ public class SuperConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     // Test a remote cache request.
-    HttpArtifactCacheEvent.Started remoteFetchStarted =
-        HttpArtifactCacheEvent.newFetchStartedEvent(null, remoteCachedRuleKey);
+    TopLevelArtifactFetchEvent.Started remoteFetchStarted =
+        TopLevelArtifactFetchEvent.newFetchStartedEvent(null, remoteCachedRuleKey);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             remoteFetchStarted, 745L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
@@ -410,15 +413,9 @@ public class SuperConsoleEventBusListenerTest {
     CacheResult remoteCacheResult =
         CacheResult.hit(
             remoteCacheMode.name(), remoteCacheMode, ImmutableMap.of(), remoteArtifactSizeBytes);
-    HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData.Builder fetchDataBuilder =
-        HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData.builder()
-            .setFetchResult(remoteCacheResult)
-            .setArtifactSizeBytes(remoteArtifactSizeBytes);
 
-    HttpArtifactCacheEvent.Finished remoteFetchFinished =
-        HttpArtifactCacheEvent.newFinishedEventBuilder(remoteFetchStarted)
-            .setFetchDataBuilder(fetchDataBuilder)
-            .build();
+    TopLevelArtifactFetchEvent.Finished remoteFetchFinished =
+        TopLevelArtifactFetchEvent.newFetchSuccessEvent(remoteFetchStarted, remoteCacheResult);
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -431,7 +428,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23, 0f),
+            formatCacheStatsLine(true, 1, 1, 23, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (preparing)"));
 
@@ -442,7 +439,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23, 0f),
+            formatCacheStatsLine(true, 1, 1, 23, 0f),
             "Building... 0.4 sec",
             "     - //banana:stand... 0.2 sec (preparing)"));
 
@@ -459,7 +456,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23f, 0f),
+            formatCacheStatsLine(true, 1, 1, 23f, 0f),
             "Building... 0.5 sec",
             "     - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
@@ -479,7 +476,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23f, 0f),
+            formatCacheStatsLine(true, 1, 1, 23f, 0f),
             "Building... 0.5 sec",
             "     - //banana:stand... 0.3 sec (running doing_something_inner[0.1 sec])"));
 
@@ -498,7 +495,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23f, 0f),
+            formatCacheStatsLine(true, 1, 1, 23f, 0f),
             "Building... 0.5 sec",
             "     - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
@@ -539,7 +536,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23f, 0f),
+            formatCacheStatsLine(true, 1, 1, 23f, 0f),
             "Building... 0.6 sec",
             "     - IDLE"));
 
@@ -554,7 +551,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 1, 23f, 0f),
+            formatCacheStatsLine(true, 1, 1, 23f, 0f),
             "Building... 0.7 sec",
             "     - IDLE",
             "     - //chicken:dance... 0.0 sec (preparing)"));
@@ -600,7 +597,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine));
 
@@ -615,7 +612,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine),
         ImmutableList.of(SEVERE_MESSAGE));
@@ -632,7 +629,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             "Installing... 0.5 sec"));
@@ -653,7 +650,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished));
@@ -677,7 +674,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished,
@@ -693,7 +690,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished,
@@ -710,7 +707,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished,
@@ -729,7 +726,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished,
@@ -748,7 +745,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished,
@@ -763,7 +760,7 @@ public class SuperConsoleEventBusListenerTest {
             "1s was spent in GC",
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 1, 23f, 0f),
+            formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
             installingFinished,
@@ -782,7 +779,7 @@ public class SuperConsoleEventBusListenerTest {
               "1s was spent in GC",
               parsingLine,
               actionGraphLine,
-              formatCacheStatsLine(false, 1, 23f, 0f),
+              formatCacheStatsLine(false, 1, 1, 23f, 0f),
               buildingLine,
               totalLine,
               installingFinished,
@@ -880,7 +877,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.1 sec" + " (0%) 0/10 jobs, 0 updated"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
@@ -894,7 +891,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.4 sec" + " (0%) 0/10 jobs, 0 updated",
             "     - //banana:stand... 0.2 sec (preparing)"));
 
@@ -911,7 +908,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.5 sec" + " (0%) 0/10 jobs, 0 updated",
             "     - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
@@ -952,7 +949,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 100f),
+            formatCacheStatsLine(true, 0, 0, 0f, 100f),
             "Building... 0.6 sec (10%) 1/10 jobs, 1 updated",
             "     - IDLE"));
 
@@ -967,7 +964,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 100f),
+            formatCacheStatsLine(true, 0, 0, 0f, 100f),
             "Building... 0.7 sec (10%) 1/10 jobs, 1 updated",
             "     - IDLE",
             "     - //chicken:dance... 0.0 sec (preparing)"));
@@ -1013,7 +1010,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalTime));
   }
@@ -1129,7 +1126,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.1 sec"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
@@ -1143,7 +1140,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.4 sec",
             "     - //:test... 0.2 sec (preparing)"));
 
@@ -1188,7 +1185,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine));
 
@@ -1210,7 +1207,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.5 sec"));
@@ -1226,7 +1223,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
@@ -1244,7 +1241,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
@@ -1264,7 +1261,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
@@ -1286,7 +1283,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
@@ -1316,7 +1313,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (1 PASS/0 FAIL)",
@@ -1346,7 +1343,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             testingLine),
@@ -1435,7 +1432,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.1 sec"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
@@ -1449,7 +1446,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.4 sec",
             "     - //:test... 0.2 sec (preparing)"));
 
@@ -1494,7 +1491,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine));
 
@@ -1516,7 +1513,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.5 sec"));
@@ -1532,7 +1529,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
@@ -1550,7 +1547,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
@@ -1570,7 +1567,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
@@ -1592,7 +1589,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
@@ -1623,7 +1620,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (0 PASS/1 SKIP/0 FAIL)",
@@ -1653,7 +1650,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             testingLine),
@@ -1762,7 +1759,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.1 sec"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(testBuildRule, durationTracker);
@@ -1776,7 +1773,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.4 sec",
             "     - //:test... 0.2 sec (preparing)"));
 
@@ -1821,7 +1818,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine));
 
@@ -1843,7 +1840,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.5 sec"));
@@ -1859,7 +1856,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
@@ -1877,7 +1874,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
@@ -1897,7 +1894,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
@@ -1919,7 +1916,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
@@ -1949,7 +1946,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (0 PASS/1 FAIL)",
@@ -1980,7 +1977,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(false, 0, 0f, 100f),
+            formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
             testingLine),
@@ -2077,7 +2074,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.2 sec",
             "     - IDLE"));
 
@@ -2096,7 +2093,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.3 sec",
             "     - //banana:stand... 0.1 sec (preparing)"));
 
@@ -2114,7 +2111,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.5 sec",
             "     - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
@@ -2157,7 +2154,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 100f),
+            formatCacheStatsLine(true, 0, 0, 0f, 100f),
             "Building... 0.7 sec",
             "     - IDLE"));
   }
@@ -2365,7 +2362,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 0.9 sec (20%)",
-            formatCacheStatsLine(true, 0, 0, 0),
+            formatCacheStatsLine(true, 0, 0, 0, 0),
             "Building... 0.1 sec"));
 
     eventBus.postWithoutConfiguring(
@@ -2383,7 +2380,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 1.0 sec (20%)",
-            formatCacheStatsLine(false, 0, 0, 0),
+            formatCacheStatsLine(false, 0, 0, 0, 0),
             "Building: finished in 0.2 sec"));
 
     progressEstimatorSynchronization.expectCalculation();
@@ -2402,7 +2399,7 @@ public class SuperConsoleEventBusListenerTest {
             "Parsing buck files: finished in 0.2 sec",
             "Creating action graph: finished in 0.1 sec",
             "Generating project: finished in 1.2 sec (100%)",
-            formatCacheStatsLine(false, 0, 0, 0),
+            formatCacheStatsLine(false, 0, 0, 0, 0),
             "Building: finished in 0.2 sec",
             "  Total time: 1.2 sec"));
   }
@@ -2615,7 +2612,7 @@ public class SuperConsoleEventBusListenerTest {
         ImmutableList.of(
             parsingLine,
             actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
+            formatCacheStatsLine(true, 0, 0, 0f, 0f),
             "Building... 0.1 sec"));
   }
 

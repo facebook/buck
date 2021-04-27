@@ -19,6 +19,7 @@ package com.facebook.buck.event.listener.stats.cache;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Scheduled;
+import com.facebook.buck.artifact_cache.TopLevelArtifactFetchEvent;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -128,18 +129,8 @@ public class NetworkStatsTracker {
     switch (event.getOperation()) {
       case MULTI_FETCH:
       case FETCH:
-        if (event.getCacheResult().map(res -> res.getType().isSuccess()).orElse(false)) {
-          // TODO(cjhopman): Does this count two-level artifacts as two things?
-          // TODO(cjhopman): I think we should rename this artifacts->something. I think that
-          // "artifacts" is generally understood to mean "files" and we upload archives of many
-          // files. Maybe we could just use "archives" but that might be confusing, too.
-          networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
-          event
-              .getCacheResult()
-              .get()
-              .artifactSizeBytes()
-              .ifPresent(networkStatsKeeper::addRemoteDownloadedArtifactsBytes);
-        }
+        // Ignoring all the fetch events as we are using the TopLevelArtifactFetchEvent to track
+        // the multi-fetch and fetch
         break;
       case STORE:
         if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
@@ -154,6 +145,25 @@ public class NetworkStatsTracker {
         break;
       case MULTI_CONTAINS:
         break;
+    }
+  }
+
+  @Subscribe
+  @SuppressWarnings("unused")
+  private void onConsoleArtifactCacheFetchStartedEvent(
+      TopLevelArtifactFetchEvent.Started startedEvent) {
+    networkStatsKeeper.incrementRemoteArtifactsDownloadStartedCount();
+  }
+
+  @Subscribe
+  private void onConsoleArtifactCacheFetchFinishedEvent(
+      TopLevelArtifactFetchEvent.Finished finishedEvent) {
+    if (finishedEvent.getCacheResult().getType().isSuccess()) {
+      networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
+      finishedEvent
+          .getCacheResult()
+          .artifactSizeBytes()
+          .ifPresent(networkStatsKeeper::addRemoteDownloadedArtifactsBytes);
     }
   }
 

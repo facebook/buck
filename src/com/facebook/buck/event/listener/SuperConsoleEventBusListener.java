@@ -345,7 +345,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       lines.addAll(provider.createConsoleLinesAtTime(currentTimeMillis));
     }
 
-    if (networkStatsTracker.getRemoteDownloadStats().getArtifacts() > 0
+    if (networkStatsTracker.getRemoteDownloadStats().getArtifactsDownloadStartCount() > 0
         || !this.hideEmptyDownload) {
       lines.add(getNetworkStatsLine(buildFinished));
     }

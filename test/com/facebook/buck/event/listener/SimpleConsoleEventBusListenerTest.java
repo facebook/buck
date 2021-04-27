@@ -78,7 +78,7 @@ public class SimpleConsoleEventBusListenerTest {
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
   private static final String ADDITIONAL_LINE_PROVIDER_TEXT = "[additional line from the provider]";
 
-  private static final String FINISHED_DOWNLOAD_STRING = "DOWNLOADED 0 ARTIFACTS, 0.00 BYTES";
+  private static final String FINISHED_DOWNLOAD_STRING = "DOWNLOADED 0/0 ARTIFACTS, 0.00 BYTES";
 
   private BuildRuleDurationTracker durationTracker;
 

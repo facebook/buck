@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.engine.cache.manager;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.artifact_cache.TopLevelArtifactFetchEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfoStore;
@@ -137,6 +138,9 @@ public class BuildCacheArtifactFetcher {
     // TODO(mbolin): Change ArtifactCache.fetch() so that it returns a File instead of takes one.
     // Then we could download directly from the remote cache into the on-disk cache and unzip it
     // from there.
+    TopLevelArtifactFetchEvent.Started startedEvent =
+        TopLevelArtifactFetchEvent.newFetchStartedEvent(rule.getBuildTarget(), ruleKey);
+    eventBus.post(startedEvent);
     return convertErrorToSoftError(
         Futures.transformAsync(
             fetch(artifactCache, ruleKey, lazyZipPath),
@@ -156,6 +160,14 @@ public class BuildCacheArtifactFetcher {
                         "%s: rule keys in artifact don't match rule key used to fetch it: %s not in %s",
                         rule.getBuildTarget(), ruleKey, ruleKeys);
                   }
+                  eventBus.post(
+                      TopLevelArtifactFetchEvent.newFetchSuccessEvent(startedEvent, cacheResult));
+                } else {
+                  eventBus.post(
+                      TopLevelArtifactFetchEvent.newFetchFailureEvent(
+                          startedEvent,
+                          cacheResult,
+                          "Failed to fetch the rule key:" + ruleKey.toString()));
                 }
 
                 return Futures.immediateFuture(

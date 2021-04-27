@@ -741,17 +741,20 @@ public abstract class AbstractConsoleEventBusListener
         networkStatsTracker.getRemoteDownloadStats();
 
     long remoteDownloadedBytes = downloadStats.getBytes();
-    Pair<Double, SizeUnit> redableRemoteDownloadedBytes =
+    Pair<Double, SizeUnit> readableRemoteDownloadedBytes =
         SizeUnit.getHumanReadableSize(remoteDownloadedBytes, SizeUnit.BYTES);
     columns.add(
         String.format(
-            locale, "%d " + convertToAllCapsIfNeeded("artifacts"), downloadStats.getArtifacts()));
+            locale,
+            "%d/%d " + convertToAllCapsIfNeeded("artifacts"),
+            downloadStats.getArtifacts(),
+            downloadStats.getArtifactsDownloadStartCount()));
     columns.add(
         String.format(
             locale,
             "%s",
             convertToAllCapsIfNeeded(
-                SizeUnit.toHumanReadableString(redableRemoteDownloadedBytes, locale))));
+                SizeUnit.toHumanReadableString(readableRemoteDownloadedBytes, locale))));
     CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
         networkStatsTracker.getCacheRateStats();
     columns.add(

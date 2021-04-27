@@ -25,6 +25,7 @@ public class NetworkStatsKeeper {
   private final AtomicInteger remoteDownloadedArtifactsCount;
 
   private final AtomicLong remoteDownloadedArtifactsBytes;
+  private final AtomicInteger remoteArtifactsDownloadStartedCount;
 
   /** Stats about remote artifact downloads. */
   @BuckStyleValue
@@ -32,11 +33,14 @@ public class NetworkStatsKeeper {
     int getArtifacts();
 
     long getBytes();
+
+    int getArtifactsDownloadStartCount();
   }
 
   NetworkStatsKeeper() {
     remoteDownloadedArtifactsCount = new AtomicInteger(0);
     remoteDownloadedArtifactsBytes = new AtomicLong(0);
+    remoteArtifactsDownloadStartedCount = new AtomicInteger(0);
   }
 
   void incrementRemoteDownloadedArtifactsCount() {
@@ -47,8 +51,14 @@ public class NetworkStatsKeeper {
     remoteDownloadedArtifactsBytes.addAndGet(bytes);
   }
 
+  void incrementRemoteArtifactsDownloadStartedCount() {
+    remoteArtifactsDownloadStartedCount.incrementAndGet();
+  }
+
   RemoteDownloadStats getRemoteDownloadStats() {
     return ImmutableRemoteDownloadStats.ofImpl(
-        remoteDownloadedArtifactsCount.get(), remoteDownloadedArtifactsBytes.get());
+        remoteDownloadedArtifactsCount.get(),
+        remoteDownloadedArtifactsBytes.get(),
+        remoteArtifactsDownloadStartedCount.get());
   }
 }

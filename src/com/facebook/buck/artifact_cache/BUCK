@@ -17,6 +17,7 @@ PUBLIC_API_SOURCES = [
     "ArtifactUploader.java",
     "CacheResultType.java",
     "ClientCertificateHandler.java",
+    "TopLevelArtifactFetchEvent.java",
     "DirArtifactCache.java",
     "DirArtifactCacheEvent.java",
     "HttpArtifactCacheEvent.java",

@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished.Builder;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Scheduled;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Started;
+import com.facebook.buck.artifact_cache.TopLevelArtifactFetchEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
@@ -53,41 +54,37 @@ public class NetworkStatsTrackerTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     eventBus.register(tracker);
 
-    Started started =
-        HttpArtifactCacheEvent.newFetchStartedEvent(
+    TopLevelArtifactFetchEvent.Started started =
+        TopLevelArtifactFetchEvent.newFetchStartedEvent(
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(ImmutableRemoteDownloadStats.ofImpl(0, 0), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(0, 0, 1), tracker.getRemoteDownloadStats());
 
-    Builder finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
-    finishedBuilder
-        .getFetchBuilder()
-        .setFetchResult(
+    TopLevelArtifactFetchEvent.Finished finished =
+        TopLevelArtifactFetchEvent.newFetchSuccessEvent(
+            started,
             CacheResult.hit("dontcare", ArtifactCacheMode.http)
-                .withArtifactSizeBytes(Optional.of(100L)))
-        .setArtifactSizeBytes(100);
-    eventBus.post(finishedBuilder.build());
+                .withArtifactSizeBytes(Optional.of(100L)));
+    eventBus.post(finished);
 
-    assertEquals(ImmutableRemoteDownloadStats.ofImpl(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(1, 100, 1), tracker.getRemoteDownloadStats());
 
     started =
-        HttpArtifactCacheEvent.newFetchStartedEvent(
+        TopLevelArtifactFetchEvent.newFetchStartedEvent(
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(ImmutableRemoteDownloadStats.ofImpl(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(1, 100, 2), tracker.getRemoteDownloadStats());
 
-    finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
-    finishedBuilder
-        .getFetchBuilder()
-        .setFetchResult(
+    finished =
+        TopLevelArtifactFetchEvent.newFetchSuccessEvent(
+            started,
             CacheResult.hit("dontcare", ArtifactCacheMode.http)
-                .withArtifactSizeBytes(Optional.of(200L)))
-        .setArtifactSizeBytes(200);
-    eventBus.post(finishedBuilder.build());
+                .withArtifactSizeBytes(Optional.of(200L)));
+    eventBus.post(finished);
 
-    assertEquals(ImmutableRemoteDownloadStats.ofImpl(2, 300), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.ofImpl(2, 300, 2), tracker.getRemoteDownloadStats());
   }
 
   @Test

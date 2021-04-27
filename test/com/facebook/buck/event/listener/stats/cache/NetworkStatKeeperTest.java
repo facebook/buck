@@ -38,4 +38,15 @@ public class NetworkStatKeeperTest {
 
     Assert.assertEquals(2, networkStatsKeeper.getRemoteDownloadStats().getArtifacts());
   }
+
+  @Test
+  public void artifactDownloadStartedCountTest() {
+    NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
+
+    networkStatsKeeper.incrementRemoteArtifactsDownloadStartedCount();
+    networkStatsKeeper.incrementRemoteArtifactsDownloadStartedCount();
+
+    Assert.assertEquals(
+        2, networkStatsKeeper.getRemoteDownloadStats().getArtifactsDownloadStartCount());
+  }
 }
