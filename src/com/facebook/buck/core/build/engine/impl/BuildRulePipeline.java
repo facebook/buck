@@ -29,17 +29,20 @@ import java.util.Optional;
  */
 class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
 
-  private final BuildRulePipelineStage<State> rootRule;
+  private final BuildRulePipelineStage<State> rootStage;
   private final StateHolder<State> stateHolder;
   private boolean executed = false;
 
-  public BuildRulePipeline(BuildRulePipelineStage<State> rootRule, StateHolder<State> stateHolder) {
-    this.rootRule = rootRule;
+  public BuildRulePipeline(
+      BuildRulePipelineStage<State> rootStage, StateHolder<State> stateHolder) {
+    this.rootStage = rootStage;
     this.stateHolder = stateHolder;
-    for (BuildRulePipelineStage<State> stage = rootRule;
+    boolean isFirst = true;
+    for (BuildRulePipelineStage<State> stage = rootStage;
         stage != null;
         stage = stage.getNextStage()) {
-      stage.init(stateHolder);
+      stage.init(stateHolder, isFirst);
+      isFirst = false;
     }
   }
 
@@ -48,7 +51,7 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
     checkState(!executed);
     try {
       Throwable error = null;
-      for (BuildRulePipelineStage<State> stage = rootRule;
+      for (BuildRulePipelineStage<State> stage = rootStage;
           stage != null;
           stage = stage.getNextStage()) {
         if (error == null) {

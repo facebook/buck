@@ -22,6 +22,7 @@ import java.util.Optional;
 public class StateHolder<State extends RulePipelineState> implements AutoCloseable {
 
   private final Optional<State> state;
+  private boolean isFirstStage = false;
 
   public StateHolder(Optional<State> state) {
     this.state = state;
@@ -42,5 +43,13 @@ public class StateHolder<State extends RulePipelineState> implements AutoCloseab
     if (isStateCreated()) {
       getState().close();
     }
+  }
+
+  public boolean isFirstStage() {
+    return isFirstStage;
+  }
+
+  public void setFirstStage(boolean isFirstStage) {
+    this.isFirstStage = isFirstStage;
   }
 }
