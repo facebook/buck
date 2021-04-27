@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import javax.annotation.Nullable;
+import net.starlark.java.syntax.TokenKind;
 
 /** Some Starlark runtime statistics. */
 public class StarlarkRuntimeStats {
@@ -92,6 +93,7 @@ public class StarlarkRuntimeStats {
   private ConcurrentHashMap<String, NativeCallStats> nativeCalls = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, StarlarkCallStats> starlarkCalls = new ConcurrentHashMap<>();
   private AtomicIntegerArray instructions = new AtomicIntegerArray(BcInstr.Opcode.values().length);
+  private AtomicIntegerArray binaryOps = new AtomicIntegerArray(TokenKind.values().length);
   private AtomicLong compileTimeNanos = new AtomicLong();
 
   static void recordNativeCall(String name, long durationNanos) {
@@ -121,6 +123,14 @@ public class StarlarkRuntimeStats {
     }
 
     stats.instructions.addAndGet(opcode, 1);
+  }
+
+  static void recordBinaryOp(TokenKind op) {
+    if (!ENABLED) {
+      return;
+    }
+
+    stats.binaryOps.addAndGet(op.ordinal(), 1);
   }
 
   public static void recordCompileTimeNanos(long compileTimeNanos) {
@@ -166,6 +176,7 @@ public class StarlarkRuntimeStats {
 
     printCallStats(out);
     printInstructionStats(out);
+    printBinaryOpStats(out);
   }
 
   private void printCallStats(PrintStream out) {
@@ -312,12 +323,39 @@ public class StarlarkRuntimeStats {
     out.println();
     out.println("Total starlark instruction steps: " + totalStarlarkSteps);
     out.println();
-    out.println("Instructions by step count");
+    out.println("Instruction step count by opcode:");
+    printTable(out, instructionsCountByOpcode, "opcode", "count");
+  }
+
+  private void printBinaryOpStats(PrintStream out) {
+    ImmutableList<AbstractMap.SimpleEntry<TokenKind, Integer>> binaryOpCountByOp =
+        Arrays.stream(TokenKind.values())
+            .map(o -> new AbstractMap.SimpleEntry<>(o, this.binaryOps.get(o.ordinal())))
+            .filter(e -> e.getValue() != 0)
+            .sorted(Comparator.comparing(AbstractMap.SimpleEntry<TokenKind, Integer>::getValue)
+                .reversed())
+            .collect(ImmutableList.toImmutableList());
+
+    long totalBinaryOps =
+        binaryOpCountByOp.stream().mapToLong(AbstractMap.SimpleEntry::getValue).sum();
+
+    out.println();
+    out.println("Total " + BcInstr.Opcode.BINARY + " ops: " + totalBinaryOps);
+    out.println();
+    out.println("Binary ops by " + TokenKind.class.getSimpleName() + ":");
+    printTable(out, binaryOpCountByOp, "bin_op", "count");
+  }
+
+  private <K, V> void printTable(
+      PrintStream out,
+      ImmutableList<AbstractMap.SimpleEntry<K, V>> entries,
+      String keyName,
+      String valueName) {
     printTable(
         out,
-        instructionsCountByOpcode,
-        new String[] {"opcode", "count"},
-        e -> new Object[] {e.getKey(), e.getValue()});
+        entries,
+        new String[] { keyName, valueName },
+        e -> new Object[] { e.getKey(), e.getValue() });
   }
 
   private <R> void printTable(

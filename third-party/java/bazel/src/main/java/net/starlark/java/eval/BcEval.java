@@ -667,6 +667,9 @@ class BcEval {
     Object x = getSlot(nextOperand());
     Object y = getSlot(nextOperand());
     TokenKind op = TOKENS[nextOperand()];
+    if (StarlarkRuntimeStats.ENABLED) {
+      StarlarkRuntimeStats.recordBinaryOp(op);
+    }
     setSlot(
         nextOperand(),
         EvalUtils.binaryOp(op, x, y, fr.thread.getSemantics(), fr.thread.mutability()));
