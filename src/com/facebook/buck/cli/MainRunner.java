@@ -679,7 +679,7 @@ public final class MainRunner {
     try {
       CloseableWrapper<Unit> semaphore =
           commandManager.getSemaphoreWrapper(
-              command, unexpandedCommandLineArgs, previousCommandArgsBuilder);
+              command, filteredUnexpandedArgsForLogging, previousCommandArgsBuilder);
       closeAtFinally.add(semaphore);
 
       Optional<ExitCode> busy = handleBusy(command, previousCommandArgsBuilder, semaphore);
