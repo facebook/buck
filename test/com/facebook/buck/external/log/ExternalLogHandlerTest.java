@@ -17,6 +17,7 @@
 package com.facebook.buck.external.log;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 
 import com.facebook.buck.downward.model.EventTypeMessage;
@@ -70,6 +71,30 @@ public class ExternalLogHandlerTest {
 
     assertThat(actualEventType, equalTo(EventTypeMessage.EventType.LOG_EVENT));
     assertThat(actualLogEvent, equalTo(getExpectedLogEvent(LogLevel.WARN, logMessage, loggerName)));
+  }
+
+  @Test
+  public void logRecordWithThrowable() throws IOException {
+    String logMessage = "my logging message";
+    String loggerName = "MyLoggerName";
+    Throwable throwable =
+        new Exception("Test exception message", new IllegalStateException("Test cause"));
+    LogRecord record = new LogRecord(Level.WARNING, logMessage);
+    record.setLoggerName(loggerName);
+    record.setThrown(throwable);
+
+    testHandler.publish(record);
+
+    InputStream inputStream = new FileInputStream(tempFile);
+    EventTypeMessage.EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
+    LogEvent actualLogEvent = DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType);
+
+    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.LOG_EVENT));
+    assertThat(actualLogEvent.getLogLevel(), equalTo(LogLevel.WARN));
+    assertThat(actualLogEvent.getLoggerName(), equalTo(loggerName));
+    assertThat(actualLogEvent.getMessage(), containsString(logMessage));
+    assertThat(
+        actualLogEvent.getMessage(), containsString("java.lang.Exception: Test exception message"));
   }
 
   @Test

@@ -20,10 +20,13 @@ import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.utils.DownwardApiUtils;
+import com.google.common.base.Throwables;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
+import javax.annotation.Nullable;
 
 /**
  * {@link Handler} that writes log events tos the given output stream. Does not manage the life
@@ -54,7 +57,11 @@ public class ExternalLogHandler extends Handler {
     LogEvent event =
         LogEvent.newBuilder()
             .setLogLevel(DownwardApiUtils.convertLogLevel(record.getLevel()))
-            .setMessage(record.getMessage())
+            .setMessage(
+                record.getMessage()
+                    + getThrowableMessage(record.getThrown())
+                        .map(s -> System.lineSeparator() + s)
+                        .orElse(""))
             .setLoggerName(record.getLoggerName())
             .build();
     try {
@@ -63,6 +70,13 @@ public class ExternalLogHandler extends Handler {
       throw new RuntimeException(
           String.format("Failed to write event to named pipe: %s", event), e);
     }
+  }
+
+  private Optional<String> getThrowableMessage(@Nullable Throwable thrown) {
+    if (thrown != null) {
+      return Optional.of(Throwables.getStackTraceAsString(thrown));
+    }
+    return Optional.empty();
   }
 
   @Override
