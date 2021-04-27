@@ -71,8 +71,8 @@ class Bc {
   /**
    * The compiler implementation.
    */
-  private static class Compiler {
-    private final BcWriter bcWriter;
+  static class Compiler {
+    final BcWriter bcWriter;
     private final FileLocations fileLocations;
     private final StarlarkThread thread;
     private final Module module;
@@ -150,7 +150,7 @@ class Bc {
      * Write forward condition jump instruction. Return an address to be patched when the jump
      * address is known.
      */
-    private int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
+    int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
       Preconditions.checkState(
           opcode == BcInstr.Opcode.IF_BR_LOCAL || opcode == BcInstr.Opcode.IF_NOT_BR_LOCAL);
       int condLocal;
@@ -167,13 +167,13 @@ class Bc {
      * Write unconditional forward jump. Return an address to be patched when the jump address is
      * known.
      */
-    private int writeForwardJump(Node expression) {
+    int writeForwardJump(Node expression) {
       BcWriter.LocOffset locOffset = nodeToLocOffset(expression);
       return bcWriter.writeForwardJump(locOffset);
     }
 
     /** Compile. */
-    private void compileStatements(List<Statement> statements, boolean postAssignHook) {
+    void compileStatements(List<Statement> statements, boolean postAssignHook) {
       for (Statement statement : statements) {
         compileStatement(statement, postAssignHook);
       }
@@ -268,47 +268,7 @@ class Bc {
     }
 
     private void compileIfStatement(IfStatement ifStatement) {
-      BcWriter.SavedState saved = bcWriter.save();
-
-      Expression condExpr = ifStatement.getCondition();
-
-      CompileExpressionResult cond;
-      BcInstr.Opcode elseBrOpcode;
-      boolean negate;
-      if (condExpr instanceof UnaryOperatorExpression
-          && ((UnaryOperatorExpression) condExpr).getOperator() == TokenKind.NOT) {
-        // special case `if not cond: ...` micro-optimization
-        cond = compileExpression(((UnaryOperatorExpression) condExpr).getX());
-        elseBrOpcode = BcInstr.Opcode.IF_BR_LOCAL;
-        negate = true;
-      } else {
-        cond = compileExpression(condExpr);
-        elseBrOpcode = BcInstr.Opcode.IF_NOT_BR_LOCAL;
-        negate = false;
-      }
-
-      if (cond.value != null && isTruthImmutable(cond.value)) {
-        saved.reset();
-        if (Starlark.truth(cond.value) != negate) {
-          compileStatements(ifStatement.getThenBlock(), false);
-        } else {
-          if (ifStatement.getElseBlock() != null) {
-            compileStatements(ifStatement.getElseBlock(), false);
-          }
-        }
-        return;
-      }
-
-      int elseBlock = writeForwardCondJump(elseBrOpcode, ifStatement, cond.slot);
-      compileStatements(ifStatement.getThenBlock(), false);
-      if (ifStatement.getElseBlock() != null) {
-        int end = writeForwardJump(ifStatement);
-        bcWriter.patchForwardJump(elseBlock);
-        compileStatements(ifStatement.getElseBlock(), false);
-        bcWriter.patchForwardJump(end);
-      } else {
-        bcWriter.patchForwardJump(elseBlock);
-      }
+      new BcCompilerForIf(this).compileIfStatement(ifStatement);
     }
 
     private void compileFlowStatement(FlowStatement flowStatement) {
@@ -686,10 +646,10 @@ class Bc {
       return starlarkInt;
     }
 
-    private static class CompileExpressionResult {
-      private final int slot;
+    static class CompileExpressionResult {
+      final int slot;
       @Nullable
-      private final Object value;
+      final Object value;
 
       private CompileExpressionResult(int slot, @Nullable Object value) {
         BcSlot.checkValidSourceSlot(slot);
@@ -710,7 +670,7 @@ class Bc {
     }
 
     /** Compile an expression and return a register containing the result. */
-    private CompileExpressionResult compileExpression(Expression expression) {
+    CompileExpressionResult compileExpression(Expression expression) {
       if (expression instanceof Identifier) {
         return compileGet((Identifier) expression);
       } else if (expression instanceof StringLiteral) {
@@ -934,7 +894,7 @@ class Bc {
      * For example, truth of any tuple is immutable. Truth of list
      * is immutable only if the list is immutable.
      */
-    private static boolean isTruthImmutable(Object o) {
+    static boolean isTruthImmutable(Object o) {
       if (Starlark.isImmutable(o)) {
         return true;
       }

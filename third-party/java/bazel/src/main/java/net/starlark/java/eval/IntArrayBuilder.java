@@ -64,4 +64,18 @@ class IntArrayBuilder {
     array = null; // safety
     return result;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder r = new StringBuilder();
+    r.append("[");
+    for (int i = 0; i != size; ++i) {
+      if (i != 0) {
+        r.append(", ");
+      }
+      r.append(get(i));
+    }
+    r.append("]");
+    return r.toString();
+  }
 }

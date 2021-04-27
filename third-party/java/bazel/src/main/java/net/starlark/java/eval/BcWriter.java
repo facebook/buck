@@ -65,6 +65,10 @@ class BcWriter {
     this.instrToLoc = new BcInstrToLoc.Builder(fileLocations);
   }
 
+  public int getIp() {
+    return ip;
+  }
+
   int getSlots() {
     return slots;
   }
@@ -151,6 +155,14 @@ class BcWriter {
       patchForwardJump(endsToPatch);
     }
     fors.remove(fors.size() - 1);
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public int[] text() {
+    return Arrays.copyOf(text, ip);
   }
 
   /** Saved writer state. */
@@ -335,6 +347,12 @@ class BcWriter {
     text[ip] = this.ip;
   }
 
+  void patchForwardJumps(IntArrayBuilder ips) {
+    for (int i = 0; i != ips.size(); ++i) {
+      patchForwardJump(ips.get(i));
+    }
+  }
+
   /** Current for block in the compiler; used to compile break and continue statements. */
   private static class CurrentFor {
     /** Instruction pointer of the for statement body. */
@@ -379,4 +397,25 @@ class BcWriter {
         instrToLoc.build());
   }
 
+  private ImmutableList<String> getFreeVarNames() {
+    return freeVars.stream().map(Resolver.Binding::getName)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  private ImmutableList<String> getLocalNames() {
+    return locals.stream().map(Resolver.Binding::getName).collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
+  public String toString() {
+    return BcCompiled.toStringImpl(
+        name,
+        text(),
+        new BcInstrOperand.OpcodePrinterFunctionContext(
+            getLocalNames(),
+            module.getResolverModule().getGlobalNamesSlow(),
+            getFreeVarNames()),
+        strings.values,
+        constSlots.values);
+  }
 }
