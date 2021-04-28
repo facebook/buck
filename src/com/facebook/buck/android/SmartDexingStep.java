@@ -209,10 +209,16 @@ public class SmartDexingStep implements Step {
       removeExtraneousSecondaryArtifacts(
           secondaryOutputDir.get(), outputToInputs.keySet(), filesystem);
 
-      ImmutableMultimap<Path, Path> xzsOutputsToInputs = createXzsOutputsToInputs(outputToInputs);
+      ImmutableMultimap<Path, Path> xzsOutputsToInputs =
+          createXzsOutputsToInputs(outputToInputs.keySet());
       if (!xzsOutputsToInputs.isEmpty()) {
         try {
-          runXzsCommands(context, xzsOutputsToInputs);
+          runXzsCommands(
+              context,
+              xzsOutputsToInputs,
+              filesystem,
+              xzCompressionLevel,
+              Optional.of(buildTarget));
         } catch (StepFailedException e) {
           context.logError(e, "There was an error producing an xzs file from dex jars");
           return StepExecutionResults.ERROR;
@@ -223,12 +229,11 @@ public class SmartDexingStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
-  private ImmutableMultimap<Path, Path> createXzsOutputsToInputs(
-      Multimap<Path, Path> outputToInputs) {
+  static ImmutableMultimap<Path, Path> createXzsOutputsToInputs(Collection<Path> outputs) {
     // Concatenate if solid compression is specified.
     // create a mapping of the xzs file target and the dex.jar files that go into it
     ImmutableMultimap.Builder<Path, Path> xzsMultimapBuilder = ImmutableMultimap.builder();
-    for (Path p : outputToInputs.keySet()) {
+    for (Path p : outputs) {
       if (DexStore.XZS.matchesPath(p)) {
         String[] matches = p.getFileName().toString().split("-");
         Path output = p.getParent().resolve(matches[0].concat(SECONDARY_SOLID_DEX_EXTENSION));
@@ -238,8 +243,12 @@ public class SmartDexingStep implements Step {
     return xzsMultimapBuilder.build();
   }
 
-  private void runXzsCommands(
-      StepExecutionContext context, ImmutableMultimap<Path, Path> outputsToInputs)
+  static void runXzsCommands(
+      StepExecutionContext context,
+      ImmutableMultimap<Path, Path> outputsToInputs,
+      ProjectFilesystem filesystem,
+      int xzCompressionLevel,
+      Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException {
     for (Map.Entry<Path, Collection<Path>> entry : outputsToInputs.asMap().entrySet()) {
       Path secondaryCompressedBlobOutput = entry.getKey();
@@ -254,8 +263,8 @@ public class SmartDexingStep implements Step {
           new XzStep(
               filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput, xzCompressionLevel);
 
-      StepRunner.runStep(context, concatStep, Optional.of(buildTarget));
-      StepRunner.runStep(context, xzStep, Optional.of(buildTarget));
+      StepRunner.runStep(context, concatStep, buildTarget);
+      StepRunner.runStep(context, xzStep, buildTarget);
     }
   }
 
