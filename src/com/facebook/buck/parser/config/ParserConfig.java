@@ -133,11 +133,11 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    * evaluating a build file.
    */
   @Value.Lazy
-  public Iterable<String> getDefaultIncludes() {
+  public ImmutableList<String> getDefaultIncludes() {
     ImmutableMap<String, String> entries =
         getDelegate().getEntriesForSection(BUILDFILE_SECTION_NAME);
     String includes = Strings.nullToEmpty(entries.get(INCLUDES_PROPERTY_NAME));
-    return Splitter.on(' ').trimResults().omitEmptyStrings().split(includes);
+    return ImmutableList.copyOf(Splitter.on(' ').trimResults().omitEmptyStrings().split(includes));
   }
 
   @Value.Lazy

@@ -52,12 +52,10 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -347,7 +345,7 @@ public class DaemonicParserState {
    * root path). If this value changes, then we need to invalidate all the caches.
    */
   @GuardedBy("cachedStateLock")
-  private Map<AbsPath, Iterable<String>> defaultIncludesByCellRoot;
+  private ConcurrentHashMap<AbsPath, ImmutableList<String>> defaultIncludesByCellRoot;
 
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
@@ -613,24 +611,21 @@ public class DaemonicParserState {
   }
 
   private boolean invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
-    Iterable<String> defaultIncludes =
+    ImmutableList<String> defaultIncludes =
         cell.getBuckConfig().getView(ParserConfig.class).getDefaultIncludes();
 
-    boolean invalidatedByDefaultIncludesChange = false;
-    Iterable<String> expected;
+    ImmutableList<String> expected;
     try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
       expected = defaultIncludesByCellRoot.get(cell.getRoot());
 
-      if (expected == null || !Iterables.elementsEqual(defaultIncludes, expected)) {
-        // Someone's changed the default includes. That's almost definitely caused all our lovingly
-        // cached data to be enormously wonky.
-        invalidatedByDefaultIncludesChange = true;
-      }
-
-      if (!invalidatedByDefaultIncludesChange) {
+      if (expected != null && defaultIncludes.equals(expected)) {
         return false;
       }
+
+      // Someone's changed the default includes. That's almost definitely caused all our lovingly
+      // cached data to be enormously wonky.
     }
+
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
       defaultIncludesByCellRoot.put(cell.getRoot(), defaultIncludes);
     }
