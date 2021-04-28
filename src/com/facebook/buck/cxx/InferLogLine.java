@@ -16,32 +16,33 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import org.immutables.value.Value;
 
-class InferLogLine {
+/** Represents infer log line */
+@BuckStyleValue
+public abstract class InferLogLine {
+
   private static final String SPLIT_TOKEN = "\t";
 
-  private BuildTarget buildTarget;
-  private ImmutableSortedSet<Flavor> flavors;
-  private Path output;
+  abstract BuildTarget getBuildTarget();
 
-  private InferLogLine(BuildTarget buildTarget, ImmutableSortedSet<Flavor> flavors, Path output) {
-    this.buildTarget = buildTarget;
-    this.flavors = flavors;
-    this.output = output;
+  abstract AbsPath getOutputPath();
+
+  /** Returns formatted infer log line */
+  @Value.Derived
+  public String getFormattedString() {
+    BuildTarget buildTarget = getBuildTarget();
+    return String.join(
+        SPLIT_TOKEN,
+        buildTarget.toString(),
+        buildTarget.getFlavors().getSet().toString(),
+        getOutputPath().toString());
   }
 
-  public static InferLogLine fromBuildTarget(BuildTarget target, Path output) {
-    Preconditions.checkArgument(output.isAbsolute(), "Path must be absolute");
-    return new InferLogLine(target, target.getFlavors().getSet(), output);
-  }
-
-  @Override
-  public String toString() {
-    return buildTarget + SPLIT_TOKEN + flavors + SPLIT_TOKEN + output;
+  public static InferLogLine of(BuildTarget buildTarget, AbsPath outputPath) {
+    return ImmutableInferLogLine.ofImpl(buildTarget, outputPath);
   }
 }

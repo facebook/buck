@@ -16,64 +16,57 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Optional;
 
-final class CxxCollectAndLogInferDependenciesStep implements Step {
+/** Isolated step that writes captured infer rules into an output path in infer log line format. */
+class CxxCollectAndLogInferDependenciesStep extends IsolatedStep {
 
-  private Optional<CxxInferCaptureTransitive> captureTransitiveRule;
-  private ProjectFilesystem projectFilesystem;
-  private Path outputFile;
+  private final ImmutableSet<Pair<BuildTarget, AbsPath>> captureRules;
+  private final RelPath outputPath;
 
-  private CxxCollectAndLogInferDependenciesStep(
-      Optional<CxxInferCaptureTransitive> captureTransitiveRule,
-      ProjectFilesystem projectFilesystem,
-      Path outputFile) {
-    this.captureTransitiveRule = captureTransitiveRule;
-    this.projectFilesystem = projectFilesystem;
-    this.outputFile = outputFile;
-  }
-
-  public static CxxCollectAndLogInferDependenciesStep fromCaptureTransitiveRule(
-      CxxInferCaptureTransitive captureTransitiveRule,
-      ProjectFilesystem projectFilesystem,
-      Path outputFile) {
-    return new CxxCollectAndLogInferDependenciesStep(
-        Optional.of(captureTransitiveRule), projectFilesystem, outputFile);
-  }
-
-  private String processCaptureRule(CxxInferCapture captureRule) {
-    return InferLogLine.fromBuildTarget(
-            captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput().getPath())
-        .toString();
-  }
-
-  private ImmutableList<String> processCaptureTransitiveRule(
-      CxxInferCaptureTransitive captureTransitiveRule) {
-    ImmutableList.Builder<String> outputBuilder = ImmutableList.builder();
-    for (CxxInferCapture captureRule : captureTransitiveRule.getCaptureRules()) {
-      outputBuilder.add(processCaptureRule(captureRule));
-    }
-    return outputBuilder.build();
+  public CxxCollectAndLogInferDependenciesStep(
+      ImmutableSet<Pair<BuildTarget, AbsPath>> captureRules, RelPath outputPath) {
+    this.captureRules = captureRules;
+    this.outputPath = outputPath;
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    ImmutableList<String> output;
-    if (captureTransitiveRule.isPresent()) {
-      output = processCaptureTransitiveRule(captureTransitiveRule.get());
-    } else {
-      throw new IllegalStateException("Expected non-empty analysis or capture rules in input");
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException {
+
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+
+    RelPath parentDirectory = outputPath.getParent();
+    if (parentDirectory != null) {
+      ProjectFilesystemUtils.mkdirs(ruleCellRoot, parentDirectory.getPath());
     }
-    projectFilesystem.writeLinesToPath(output, outputFile);
+
+    ImmutableList<String> lines =
+        captureRules.stream()
+            .map(this::toInferLogLine)
+            .map(InferLogLine::getFormattedString)
+            .collect(ImmutableList.toImmutableList());
+
+    ProjectFilesystemUtils.writeLinesToPath(ruleCellRoot, lines, outputPath.getPath());
+
     return StepExecutionResults.SUCCESS;
+  }
+
+  private InferLogLine toInferLogLine(Pair<BuildTarget, AbsPath> captureRule) {
+    BuildTarget buildTarget = captureRule.getFirst();
+    AbsPath output = captureRule.getSecond();
+    return InferLogLine.of(buildTarget, output);
   }
 
   @Override
@@ -82,7 +75,7 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return "Log Infer's dependencies used for the analysis";
   }
 }

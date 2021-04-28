@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL;
 import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static java.io.File.pathSeparator;
@@ -25,6 +26,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.containsStringIgnoringCase;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.oneOf;
@@ -115,9 +117,7 @@ public class CxxBinaryIntegrationTest {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     /*
      * Build the given target and check that it succeeds.
@@ -151,12 +151,10 @@ public class CxxBinaryIntegrationTest {
     BuildTarget captureBuildTarget = cxxSourceRuleFactory.createInferCaptureBuildTarget(sourceName);
 
     // this is flavored, and denotes the analysis step (generates a local report)
-    BuildTarget inferAnalysisTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+    BuildTarget inferAnalysisTarget = inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     // this is the flavored version of the top level target (the one give in input to buck)
-    BuildTarget inferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+    BuildTarget inferReportTarget = inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -189,9 +187,7 @@ public class CxxBinaryIntegrationTest {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     /*
      * Build the given target and check that it succeeds.
@@ -226,8 +222,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget topCaptureBuildTarget =
         cxxSourceRuleFactory.createInferCaptureBuildTarget(sourceName);
 
-    BuildTarget topInferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+    BuildTarget topInferReportTarget = inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     BuildTarget depOneBuildTarget = BuildTargetFactory.newInstance("//foo:dep_one");
     String depOneSourceName = "dep_one.c";
@@ -291,9 +286,7 @@ public class CxxBinaryIntegrationTest {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:simple");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     /*
      * Build the given target and check that it succeeds.
@@ -316,12 +309,10 @@ public class CxxBinaryIntegrationTest {
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             inputBuildTarget, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor());
     // this is flavored, and denotes the analysis step (generates a local report)
-    BuildTarget inferAnalysisTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+    BuildTarget inferAnalysisTarget = inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     // this is flavored and corresponds to the top level target (the one give in input to buck)
-    BuildTarget inferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+    BuildTarget inferReportTarget = inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     BuildTarget aggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -349,9 +340,8 @@ public class CxxBinaryIntegrationTest {
     workspace.resetBuildLogFile(); // clear for new build
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(ImmutableSet.of(inferReportTarget, captureBuildTarget), buildLog.getAllTargets());
+    assertThat(buildLog.getAllTargets(), equalTo(ImmutableSet.of(inferReportTarget)));
     buildLog.assertTargetHadMatchingRuleKey(inferReportTarget);
-    buildLog.assertTargetHadMatchingRuleKey(captureBuildTarget);
 
     /*
      * Check that changing the source file results in running the capture/analysis rules again.
@@ -368,7 +358,7 @@ public class CxxBinaryIntegrationTest {
                 inferAnalysisTarget,
                 inferReportTarget,
                 headerSymlinkTreeTarget);
-    assertEquals(buildLog.getAllTargets(), targetsBuilder.build());
+    assertThat(buildLog.getAllTargets(), equalTo(targetsBuilder.build()));
     buildLog.assertTargetBuiltLocally(captureBuildTarget);
     buildLog.assertTargetBuiltLocally(inferAnalysisTarget);
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget);
@@ -382,9 +372,7 @@ public class CxxBinaryIntegrationTest {
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     /*
      * Build the given target and check that it succeeds.
@@ -409,8 +397,7 @@ public class CxxBinaryIntegrationTest {
             inputBuildTarget, HeaderVisibility.PRIVATE, cxxPlatform.getFlavor());
 
     // this is flavored and corresponds to the top level target (the one give in input to buck)
-    BuildTarget topInferReportTarget =
-        inputBuildTarget.withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+    BuildTarget topInferReportTarget = inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     BuildTarget topAggregatedDepsTarget =
         cxxSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
@@ -461,24 +448,22 @@ public class CxxBinaryIntegrationTest {
     BuildTarget depTwoAggregatedDepsTarget =
         depTwoSourceRuleFactory.createAggregatedPreprocessDepsBuildTarget();
 
-    ImmutableSet.Builder<BuildTarget> buildTargets =
-        ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .add(
-                topAggregatedDepsTarget,
-                topCaptureBuildTarget,
-                topHeaderSymlinkTreeTarget,
-                topInferReportTarget,
-                depOneAggregatedDepsTarget,
-                depOneCaptureBuildTarget,
-                depOneHeaderSymlinkTreeTarget,
-                depOneExportedHeaderSymlinkTreeTarget,
-                depTwoAggregatedDepsTarget,
-                depTwoCaptureBuildTarget,
-                depTwoHeaderSymlinkTreeTarget,
-                depTwoExportedHeaderSymlinkTreeTarget);
+    ImmutableSet<BuildTarget> buildTargets =
+        ImmutableSet.of(
+            topAggregatedDepsTarget,
+            topCaptureBuildTarget,
+            topHeaderSymlinkTreeTarget,
+            topInferReportTarget,
+            depOneAggregatedDepsTarget,
+            depOneCaptureBuildTarget,
+            depOneHeaderSymlinkTreeTarget,
+            depOneExportedHeaderSymlinkTreeTarget,
+            depTwoAggregatedDepsTarget,
+            depTwoCaptureBuildTarget,
+            depTwoHeaderSymlinkTreeTarget,
+            depTwoExportedHeaderSymlinkTreeTarget);
     // Check all the targets are in the buildLog
-    assertEquals(
-        buildTargets.build(), ImmutableSet.copyOf(workspace.getBuildLog().getAllTargets()));
+    assertThat(workspace.getBuildLog().getAllTargets(), equalTo(buildTargets));
 
     /*
      * Check that running a build again results in no builds since nothing has changed.
@@ -486,17 +471,7 @@ public class CxxBinaryIntegrationTest {
     workspace.resetBuildLogFile(); // clear for new build
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(
-            topInferReportTarget,
-            topCaptureBuildTarget,
-            depOneCaptureBuildTarget,
-            depTwoCaptureBuildTarget),
-        buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(topInferReportTarget);
-    buildLog.assertTargetHadMatchingRuleKey(topCaptureBuildTarget);
-    buildLog.assertTargetHadMatchingRuleKey(depOneCaptureBuildTarget);
-    buildLog.assertTargetHadMatchingRuleKey(depTwoCaptureBuildTarget);
+    buildLog.assertTargetHadMatchingRuleKey(inputBuildTargetName);
 
     /*
      * Check that if a library source file changes then the capture/analysis rules run again on
@@ -507,17 +482,16 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     buildLog = workspace.getBuildLog();
     buildTargets =
-        ImmutableSortedSet.<BuildTarget>naturalOrder()
-            .add(
-                topInferReportTarget, // report runs again
-                topCaptureBuildTarget, // cached
-                depOneAggregatedDepsTarget,
-                depOneHeaderSymlinkTreeTarget,
-                depOneExportedHeaderSymlinkTreeTarget,
-                depOneCaptureBuildTarget, // capture of the changed file runs again
-                depTwoCaptureBuildTarget // cached
-                );
-    assertEquals(buildTargets.build(), buildLog.getAllTargets());
+        ImmutableSortedSet.of(
+            topInferReportTarget, // report runs again
+            topCaptureBuildTarget, // cached
+            depOneAggregatedDepsTarget,
+            depOneHeaderSymlinkTreeTarget,
+            depOneExportedHeaderSymlinkTreeTarget,
+            depOneCaptureBuildTarget, // capture of the changed file runs again
+            depTwoCaptureBuildTarget // cached
+            );
+    assertThat(buildLog.getAllTargets(), equalTo(buildTargets));
     buildLog.assertTargetBuiltLocally(topInferReportTarget);
     buildLog.assertTargetHadMatchingRuleKey(topCaptureBuildTarget);
     buildLog.assertTargetBuiltLocally(depOneCaptureBuildTarget);
@@ -532,7 +506,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+            .withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
@@ -540,14 +514,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH)));
 
     String sanitizedChainDepOne = sanitize("chain_dep_one.c.o");
     String sanitizedTopChain = sanitize("top_chain.c.o");
@@ -591,7 +565,7 @@ public class CxxBinaryIntegrationTest {
                     BuildTargetPaths.getGenPath(
                         filesystem.getBuckPaths(), captureChainDepTwoTarget, "infer-out-%s")));
 
-    assertEquals(expectedOutput, loggedDeps);
+    assertThat(loggedDeps, equalTo(expectedOutput));
   }
 
   private static void registerCell(
@@ -634,8 +608,7 @@ public class CxxBinaryIntegrationTest {
     registerCell(primary, "secondary", secondary);
 
     BuildTarget inputBuildTarget =
-        BuildTargetFactory.newInstance("//:cxxbinary")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+        BuildTargetFactory.newInstance("//:cxxbinary").withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     // run from primary workspace
     ProcessResult result =
@@ -649,10 +622,37 @@ public class CxxBinaryIntegrationTest {
 
     ProjectFilesystem filesystem = primary.getProjectFileSystem();
     RelPath depsPath =
-        BuildTargetPaths.getGenPath(
-            filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt");
+        BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+            .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH);
     List<String> lines = filesystem.readLines(depsPath.getPath());
-    assertEquals(2, lines.size());
+    assertThat(lines, hasSize(2));
+  }
+
+  @Test
+  public void testInferCxxBinaryShowOutput() throws IOException {
+    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
+    workspace.enableDirCache();
+
+    BuildTarget inputBuildTarget =
+        BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
+            .withFlavors(INFER_CAPTURE_ALL.getFlavor());
+    String buildTargetName = inputBuildTarget.getFullyQualifiedName();
+
+    ProcessResult processResult = workspace.runBuckBuild("--show-full-output", buildTargetName);
+    processResult.assertSuccess();
+
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    String expectedLine =
+        String.join(
+            " ",
+            buildTargetName,
+            filesystem
+                .resolve(
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                        .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH))
+                .toString());
+
+    assertThat(processResult.getStdout().trim(), equalTo(expectedLine));
   }
 
   @Test
@@ -664,7 +664,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+            .withFlavors(INFER_CAPTURE_ALL.getFlavor());
     String buildTargetName = inputBuildTarget.getFullyQualifiedName();
 
     /*
@@ -679,7 +679,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", buildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
-    assertEquals(5, allInvolvedTargets.size()); // Only main target should be fetched from cache
+    assertThat(allInvolvedTargets, hasSize(1)); // Only main target should be fetched from cache
     for (BuildTarget bt : allInvolvedTargets) {
       buildLog.assertTargetWasFetchedFromCache(bt);
     }
@@ -687,14 +687,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH)));
 
     String sanitizedSimpleCpp = sanitize("simple.cpp.o");
     String sanitizedDepOne = sanitize("dep_one.c.o");
@@ -716,40 +716,32 @@ public class CxxBinaryIntegrationTest {
     AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
-            InferLogLine.fromBuildTarget(
+            InferLogLine.of(
                     srcWithDepsTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s"))
-                        .getPath())
-                .toString(),
-            InferLogLine.fromBuildTarget(
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s")))
+                .getFormattedString(),
+            InferLogLine.of(
                     depOneTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), depOneTarget, "infer-out-%s"))
-                        .getPath())
-                .toString(),
-            InferLogLine.fromBuildTarget(
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), depOneTarget, "infer-out-%s")))
+                .getFormattedString(),
+            InferLogLine.of(
                     depTwoTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s"))
-                        .getPath())
-                .toString(),
-            InferLogLine.fromBuildTarget(
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s")))
+                .getFormattedString(),
+            InferLogLine.of(
                     simpleCppTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s"))
-                        .getPath())
-                .toString());
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s")))
+                .getFormattedString());
 
-    assertEquals(expectedOutput, loggedDeps);
+    assertThat(loggedDeps, equalTo(expectedOutput));
   }
 
   @Test
@@ -761,7 +753,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+            .withFlavors(INFER_CAPTURE_ALL.getFlavor());
     String buildTargetName = inputBuildTarget.getFullyQualifiedName();
 
     /*
@@ -783,14 +775,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH)));
 
     String sanitizedSimpleCpp = sanitize("simple.cpp.o");
     String sanitizedDepOne = sanitize("dep_one.c.o");
@@ -812,116 +804,32 @@ public class CxxBinaryIntegrationTest {
     AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
-            InferLogLine.fromBuildTarget(
+            InferLogLine.of(
                     srcWithDepsTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s"))
-                        .getPath())
-                .toString(),
-            InferLogLine.fromBuildTarget(
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s")))
+                .getFormattedString(),
+            InferLogLine.of(
                     depOneTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), depOneTarget, "infer-out-%s"))
-                        .getPath())
-                .toString(),
-            InferLogLine.fromBuildTarget(
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), depOneTarget, "infer-out-%s")))
+                .getFormattedString(),
+            InferLogLine.of(
                     depTwoTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s"))
-                        .getPath())
-                .toString(),
-            InferLogLine.fromBuildTarget(
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s")))
+                .getFormattedString(),
+            InferLogLine.of(
                     simpleCppTarget,
-                    basePath
-                        .resolve(
-                            BuildTargetPaths.getGenPath(
-                                filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s"))
-                        .getPath())
-                .toString());
+                    basePath.resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s")))
+                .getFormattedString());
 
-    assertEquals(expectedOutput, loggedDeps);
-  }
-
-  @Test
-  public void testInferCxxBinaryWithDiamondDepsHasRuntimeDepsOfAllCaptureRulesWhenCacheHits()
-      throws IOException {
-    ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    workspace.enableDirCache();
-    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-
-    BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps");
-    String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
-
-    /*
-     * Build the given target and check that it succeeds.
-     */
-    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
-
-    /*
-     * Check that building after clean will use the cache
-     */
-    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
-    workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
-    BuckBuildLog buildLog = workspace.getBuildLog();
-    for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget);
-    }
-
-    /*
-     * Check that runtime deps have been fetched from cache as well
-     */
-    assertTrue(
-        "This file was expected to exist because it's declared as runtime dep",
-        Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:simple_lib#default,infer-capture-" + sanitize("simple.cpp.o")),
-                        "infer-out-%s")
-                    .resolve("captured/simple.cpp_captured/simple.cpp.cfg"))));
-    assertTrue(
-        "This file was expected to exist because it's declared as runtime dep",
-        Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:diamond_dep_one#default,infer-capture-"
-                                + sanitize("dep_one.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/dep_one.c_captured/dep_one.c.cfg"))));
-    assertTrue(
-        "This file was expected to exist because it's declared as runtime dep",
-        Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:diamond_dep_two#default,infer-capture-"
-                                + sanitize("dep_two.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/dep_two.c_captured/dep_two.c.cfg"))));
-    assertTrue(
-        "This file was expected to exist because it's declared as runtime dep",
-        Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:binary_with_diamond_deps#default,infer-capture-"
-                                + sanitize("src_with_deps.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/src_with_deps.c_captured/src_with_deps.c.cfg"))));
+    assertThat(loggedDeps, equalTo(expectedOutput));
   }
 
   @Test
@@ -933,9 +841,7 @@ public class CxxBinaryIntegrationTest {
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_unused_header");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
     CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
@@ -985,7 +891,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_diamond_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+            .withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
@@ -993,14 +899,14 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt"))));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH))));
 
     Set<String> loggedDeps =
         getUniqueLines(
             workspace.getFileContents(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), inputBuildTarget, "infer-%s/infer-deps.txt")));
+                BuildPaths.getGenDir(filesystem.getBuckPaths(), inputBuildTarget)
+                    .resolve(CxxInferCaptureTransitiveRule.OUTPUT_PATH)));
 
     String sanitizedSimpleCpp = sanitize("simple.cpp.o");
     String sanitizedDepOne = sanitize("dep_one.c.o");
@@ -1055,7 +961,7 @@ public class CxxBinaryIntegrationTest {
                     BuildTargetPaths.getGenPath(
                         filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s")));
 
-    assertEquals(expectedOutput, loggedDeps);
+    assertThat(loggedDeps, equalTo(expectedOutput));
   }
 
   @Test
@@ -1066,9 +972,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
@@ -1118,9 +1022,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_chain_deps");
     String inputBuildTargetName =
-        inputBuildTarget
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
-            .getFullyQualifiedName();
+        inputBuildTarget.withFlavors(INFER_CAPTURE_ALL.getFlavor()).getFullyQualifiedName();
 
     // Build the given target and check that it succeeds.
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
@@ -1168,7 +1070,7 @@ public class CxxBinaryIntegrationTest {
 
     BuildTarget inputBuildTarget =
         BuildTargetFactory.newInstance("//foo:binary_with_chain_deps")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
+            .withFlavors(INFER_CAPTURE_ALL.getFlavor());
 
     /*
      * Build the given target and check that it succeeds.
@@ -1374,11 +1276,16 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
 
-    assertEquals(
-        ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, headerSymlinkTreeTarget, compileTarget, binaryTarget, target)
-            .build(),
-        buildLog.getAllTargets());
+    assertThat(
+        buildLog.getAllTargets(),
+        equalTo(
+            ImmutableSet.of(
+                aggregatedDepsTarget,
+                headerSymlinkTreeTarget,
+                compileTarget,
+                binaryTarget,
+                target)));
+
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
     buildLog.assertTargetBuiltLocally(compileTarget);
@@ -1392,7 +1299,8 @@ public class CxxBinaryIntegrationTest {
     // date.
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(ImmutableSet.of(target, binaryTarget), buildLog.getAllTargets());
+    assertThat(buildLog.getAllTargets(), equalTo(ImmutableSet.of(target, binaryTarget)));
+
     buildLog.assertTargetHadMatchingRuleKey(binaryTarget);
     buildLog.assertTargetHadMatchingRuleKey(target);
 
@@ -1406,11 +1314,16 @@ public class CxxBinaryIntegrationTest {
     // re-linked, but does not cause the header rules to re-run.
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, compileTarget, binaryTarget, headerSymlinkTreeTarget, target)
-            .build(),
-        buildLog.getAllTargets());
+    assertThat(
+        buildLog.getAllTargets(),
+        equalTo(
+            ImmutableSet.of(
+                aggregatedDepsTarget,
+                compileTarget,
+                binaryTarget,
+                headerSymlinkTreeTarget,
+                target)));
+
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget);
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
@@ -1427,11 +1340,16 @@ public class CxxBinaryIntegrationTest {
     // re-linked, but does not cause the header rules to re-run.
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.<BuildTarget>builder()
-            .add(aggregatedDepsTarget, compileTarget, binaryTarget, headerSymlinkTreeTarget, target)
-            .build(),
-        buildLog.getAllTargets());
+    assertThat(
+        buildLog.getAllTargets(),
+        equalTo(
+            ImmutableSet.of(
+                aggregatedDepsTarget,
+                compileTarget,
+                binaryTarget,
+                headerSymlinkTreeTarget,
+                target)));
+
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget);
     assertThat(buildLog.getLogEntry(binaryTarget).getStatus(), equalTo(BuildRuleStatus.FAIL));
     assertThat(buildLog.getLogEntry(target).getStatus(), equalTo(BuildRuleStatus.FAIL));
@@ -1471,10 +1389,16 @@ public class CxxBinaryIntegrationTest {
     // successfully.
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(
-            aggregatedDepsTarget, headerSymlinkTreeTarget, compileTarget, binaryTarget, target),
-        buildLog.getAllTargets());
+    assertThat(
+        buildLog.getAllTargets(),
+        equalTo(
+            ImmutableSet.of(
+                aggregatedDepsTarget,
+                headerSymlinkTreeTarget,
+                compileTarget,
+                binaryTarget,
+                target)));
+
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
     buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
     buildLog.assertTargetBuiltLocally(compileTarget);
@@ -1491,10 +1415,16 @@ public class CxxBinaryIntegrationTest {
     // re-linked, but does not cause the header rules to re-run.
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    assertEquals(
-        ImmutableSet.of(
-            headerSymlinkTreeTarget, aggregatedDepsTarget, compileTarget, binaryTarget, target),
-        buildLog.getAllTargets());
+    assertThat(
+        buildLog.getAllTargets(),
+        equalTo(
+            ImmutableSet.of(
+                headerSymlinkTreeTarget,
+                aggregatedDepsTarget,
+                compileTarget,
+                binaryTarget,
+                target)));
+
     buildLog.assertTargetHadMatchingInputRuleKey(headerSymlinkTreeTarget);
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
     buildLog.assertTargetBuiltLocally(compileTarget);

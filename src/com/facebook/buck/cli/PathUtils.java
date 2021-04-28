@@ -45,7 +45,7 @@ public class PathUtils {
    *     HasMultipleOutputs#getSourcePathToOutput(OutputLabel)}
    */
   static Optional<AbsPath> getUserFacingOutputPath(
-      SourcePathResolverAdapter pathResolver,
+      SourcePathResolverAdapter sourcePathResolver,
       BuildRule rule,
       boolean buckOutCompatLink,
       OutputLabel outputLabel) {
@@ -57,7 +57,7 @@ public class PathUtils {
           sourcePaths == null || sourcePaths.isEmpty()
               ? Optional.empty()
               : Optional.of(
-                  pathResolver
+                  sourcePathResolver
                       .getCellUnsafeRelPath(Iterables.getOnlyElement(sourcePaths))
                       .getPath());
     } else {
@@ -68,7 +68,7 @@ public class PathUtils {
           rule.getFullyQualifiedName());
       outputPathOptional =
           Optional.ofNullable(rule.getSourcePathToOutput())
-              .map(sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath());
+              .map(sourcePath -> sourcePathResolver.getCellUnsafeRelPath(sourcePath).getPath());
     }
     // When using buck out compat mode, we favor using the default buck output path in the UI, so
     // amend the output paths when this is set.

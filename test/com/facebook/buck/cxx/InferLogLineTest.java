@@ -17,37 +17,43 @@
 package com.facebook.buck.cxx;
 
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.startsWith;
+import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Paths;
-import org.hamcrest.junit.ExpectedException;
 import org.junit.Assume;
-import org.junit.Rule;
+import org.junit.Before;
 import org.junit.Test;
 
 public class InferLogLineTest {
 
-  @Rule public ExpectedException expectedException = ExpectedException.none();
+  @Before
+  public void setUp() throws Exception {
+    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+  }
 
   @Test
   public void testFromBuildTargetThrowsWhenPathIsNotAbsolute() {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage("Path must be absolute");
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
             "//target", "short", CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
-
-    InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("buck-out/a/b/c/"));
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> InferLogLine.of(testBuildTarget, AbsPath.get("buck-out/a/b/c/")));
+    assertThat(exception, notNullValue());
+    assertThat(exception.getMessage(), startsWith("path must be absolute"));
   }
 
   @Test
   public void testToStringWithCell() {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("cellname//target:short")
             .withFlavors(
@@ -57,13 +63,12 @@ public class InferLogLineTest {
         "cellname//target:short#infer-capture-all\t[infer-capture-all]\t/User/user/src/buck-out/a/b/c";
     assertEquals(
         expectedOutput,
-        InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("/User/user/src/buck-out/a/b/c/"))
-            .toString());
+        InferLogLine.of(testBuildTarget, AbsPath.get("/User/user/src/buck-out/a/b/c/"))
+            .getFormattedString());
   }
 
   @Test
   public void testToStringWithoutCell() {
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
             "//target", "short", CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
@@ -72,7 +77,7 @@ public class InferLogLineTest {
         "//target:short#infer-capture-all\t[infer-capture-all]\t/User/user/src/buck-out/a/b/c";
     assertEquals(
         expectedOutput,
-        InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("/User/user/src/buck-out/a/b/c/"))
-            .toString());
+        InferLogLine.of(testBuildTarget, AbsPath.get("/User/user/src/buck-out/a/b/c/"))
+            .getFormattedString());
   }
 }

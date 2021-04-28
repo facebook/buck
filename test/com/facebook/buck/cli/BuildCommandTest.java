@@ -17,6 +17,8 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.equalTo;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
@@ -97,7 +99,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import javax.annotation.Nullable;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -155,7 +156,7 @@ public class BuildCommandTest {
             .getBuildTargetWithOutputs();
     assertThat(
         result,
-        Matchers.contains(
+        contains(
             BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.of("label"))));
   }
@@ -191,7 +192,7 @@ public class BuildCommandTest {
             .getBuildTargetWithOutputs();
     assertThat(
         result,
-        Matchers.contains(
+        contains(
             BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.of("label1"))));
   }
@@ -230,7 +231,7 @@ public class BuildCommandTest {
             .getBuildTargetWithOutputs();
     assertThat(
         result,
-        Matchers.contains(
+        contains(
             BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName1), OutputLabel.of("label1")),
             BuildTargetWithOutputs.of(
@@ -270,7 +271,7 @@ public class BuildCommandTest {
             .getBuildTargetWithOutputs();
     assertThat(
         result,
-        Matchers.contains(
+        contains(
             BuildTargetWithOutputs.of(
                 BuildTargetFactory.newInstance(buildTargetName), OutputLabel.defaultLabel())));
   }
@@ -310,7 +311,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(
+        equalTo(
             getExpectedShowOutputsLog(
                 ImmutableMap.of(
                     "//foo:foo",
@@ -359,7 +360,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(
+        equalTo(
             getExpectedShowOutputsLog(
                 ImmutableMap.of(
                     "//foo:foo[foo]",
@@ -402,7 +403,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(
+        equalTo(
             getExpectedShowOutputsLog(
                 ImmutableMap.of(
                     "//foo:foo",
@@ -446,7 +447,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[baz]", expected3))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[baz]", expected3))));
   }
 
   @Test
@@ -481,7 +482,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(
+        equalTo(
             getExpectedShowOutputsLog(
                 ImmutableMap.of("//foo:foo[bar]", expected2, "//foo:foo[baz]", expected3))));
   }
@@ -505,7 +506,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
   }
 
   @Test
@@ -524,7 +525,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
   }
 
   @Test
@@ -546,7 +547,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
   }
 
   @Test
@@ -567,7 +568,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[label]", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[label]", expected))));
   }
 
   @Test
@@ -596,7 +597,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(
+        equalTo(
             getExpectedShowOutputsLog(
                 ImmutableMap.of("//foo:foo[label]", expected, "//bar:bar[label2]", expected2))));
   }
@@ -632,7 +633,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
   }
 
   @Test
@@ -655,7 +656,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo", expected))));
   }
 
   @Test
@@ -681,7 +682,7 @@ public class BuildCommandTest {
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
     assertThat(
         console.getTextWrittenToStdOut(),
-        Matchers.equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[label]", expected))));
+        equalTo(getExpectedShowOutputsLog(ImmutableMap.of("//foo:foo[label]", expected))));
   }
 
   @Test
@@ -721,7 +722,8 @@ public class BuildCommandTest {
 
     BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
-    assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo[label]\n"));
+    assertThat(
+        console.getTextWrittenToStdOut(), equalTo("//foo:foo[label]" + System.lineSeparator()));
   }
 
   @Test
@@ -738,13 +740,13 @@ public class BuildCommandTest {
 
     BuildCommand command = getCommand("--show-output");
     command.processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
-    assertThat(console.getTextWrittenToStdOut(), Matchers.equalTo("//foo:foo\n"));
+    assertThat(console.getTextWrittenToStdOut(), equalTo("//foo:foo" + System.lineSeparator()));
   }
 
   private String getExpectedShowOutputsLog(ImmutableMap<String, Path> expectedTargetNamesToPaths) {
     StringBuilder sb = new StringBuilder();
     for (Map.Entry<String, Path> expected : expectedTargetNamesToPaths.entrySet()) {
-      sb.append(String.format("%s %s\n", expected.getKey(), expected.getValue()));
+      sb.append(String.format("%s %s%n", expected.getKey(), expected.getValue()));
     }
     return sb.toString();
   }

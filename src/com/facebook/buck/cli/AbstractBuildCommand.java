@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
@@ -68,6 +69,7 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -76,6 +78,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -774,19 +777,13 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   private Optional<Path> getOutputPath(
       BuildRule rule,
       OutputLabel outputLabel,
-      SourcePathResolverAdapter sourcePathResolverAdapter,
+      SourcePathResolverAdapter sourcePathResolver,
       boolean buckOutCompatLink,
       ProjectFilesystem fileSystem) {
-    Optional<Path> outputPath =
-        PathUtils.getUserFacingOutputPath(
-                sourcePathResolverAdapter, rule, buckOutCompatLink, outputLabel)
-            .map(
-                path ->
-                    isShowOutputsPathAbsolute()
-                        ? path.getPath()
-                        : fileSystem.relativize(path).getPath());
-
-    return outputPath;
+    return PathUtils.getUserFacingOutputPath(
+            sourcePathResolver, rule, buckOutCompatLink, outputLabel)
+        .map(path -> isShowOutputsPathAbsolute() ? path : fileSystem.relativize(path))
+        .map(PathWrapper::getPath);
   }
 
   private void addOutputForJson(
@@ -803,7 +800,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       BuildTargetWithOutputs targetWithOutputs,
       Optional<Path> outputPath) {
     return String.format(
-        "%s%s%s\n",
+        "%s%s%s%n",
         targetWithOutputs,
         isShowRuleKey() ? " " + ruleKeyFactory.get().build(rule) : "",
         isShowListOutput() ? getOutputPathToShow(outputPath) : "");
@@ -836,9 +833,11 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       Optional<DefaultRuleKeyFactory> ruleKeyFactory)
       throws IOException {
     TreeMap<String, String> sortedJsonOutputs = new TreeMap<>();
+    PrintStream stdOut = params.getConsole().getStdOut();
+
     for (BuildTargetWithOutputs buildTargetToCompute : buildTargetsToPrint) {
       BuildRule buildRule = graphBuilder.requireRule(buildTargetToCompute.getBuildTarget());
-      params.getConsole().getStdOut().flush();
+      stdOut.flush();
       Optional<Path> outputPath =
           getOutputPath(
               buildRule,
@@ -849,17 +848,14 @@ abstract class AbstractBuildCommand extends AbstractCommand {
       if (isShowJsonOutput()) {
         addOutputForJson(sortedJsonOutputs, buildTargetToCompute, outputPath);
       } else {
-        String outputString =
-            addOutputForList(buildRule, ruleKeyFactory, buildTargetToCompute, outputPath);
-        params.getConsole().getStdOut().printf(outputString);
+        stdOut.print(addOutputForList(buildRule, ruleKeyFactory, buildTargetToCompute, outputPath));
       }
     }
     if (isShowJsonOutput()) {
       // Print the build rule information as JSON.
       StringWriter stringWriter = new StringWriter();
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
-      String output = stringWriter.getBuffer().toString();
-      params.getConsole().getStdOut().println(output);
+      stdOut.println(stringWriter.toString());
     }
   }
 
@@ -928,7 +924,10 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   }
 
   private String getOutputPathToShow(Optional<Path> path) {
-    return path.map(p -> p.toString().isEmpty() ? "" : " " + p.toString()).orElse("");
+    return path.map(Objects::toString)
+        .filter(Predicates.not(String::isEmpty))
+        .map(s -> " " + s)
+        .orElse("");
   }
 
   private ExitCode executeLocalBuild(
@@ -1038,6 +1037,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   /** Data class for graph and targets. */
   @BuckStyleValue
   interface GraphsAndBuildTargets {
+
     ActionAndTargetGraphs getGraphs();
 
     ImmutableSet<BuildTargetWithOutputs> getBuildTargetWithOutputs();
@@ -1055,6 +1055,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   /** Result of the build. */
   @BuckStyleValue
   interface BuildRunResult {
+
     ExitCode getExitCode();
 
     ImmutableSet<BuildTarget> getBuildTargets();
@@ -1062,6 +1063,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
 
   /** An exception thrown when action graph creation failed. */
   public static class ActionGraphCreationException extends Exception {
+
     public ActionGraphCreationException(String message) {
       super(message);
     }

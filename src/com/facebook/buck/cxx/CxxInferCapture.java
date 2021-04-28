@@ -178,7 +178,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   }
 
   @Override
-  public SourcePath getSourcePathToOutput() {
+  public ExplicitBuildTargetSourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), resultsDir);
   }
 
