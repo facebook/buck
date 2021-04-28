@@ -352,7 +352,6 @@ public class WatchmanWatcher {
           perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
         }
 
-        List<WatchmanMultiplePathEvent.Change> changes = new ArrayList<>(files.size());
         for (Map<String, Object> file : files) {
           String fileName = (String) file.get("name");
           if (fileName == null) {
@@ -391,8 +390,6 @@ public class WatchmanWatcher {
 
           ForwardRelativePath filePath = ForwardRelativePath.of(fileName);
 
-          changes.add(ImmutableChange.ofImpl(type, filePath, kind));
-
           if (type != WatchmanEvent.Type.DIRECTORY) {
             // WatchmanPathEvent is sent for everything but directories - this is legacy
             // behavior and we want to keep it.
@@ -401,11 +398,6 @@ public class WatchmanWatcher {
             postWatchEvent(
                 buckEventBus, ImmutableWatchmanPathEvent.ofImpl(cellPath, kind, filePath));
           }
-        }
-
-        if (!changes.isEmpty()) {
-          postWatchEvent(
-              buckEventBus, ImmutableWatchmanMultiplePathEvent.ofImpl(cellPath, changes));
         }
 
         if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {

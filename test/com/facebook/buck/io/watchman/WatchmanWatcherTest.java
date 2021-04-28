@@ -36,7 +36,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
-import com.facebook.buck.io.watchman.WatchmanEvent.Type;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -635,71 +634,6 @@ public class WatchmanWatcherTest {
       zeroFilesChangedSeen |= event.getEventName().equals("WatchmanZeroFileChanges");
     }
     assertFalse(zeroFilesChangedSeen);
-  }
-
-  @Test
-  public void whenMultipleFilesThenMultiplePathEventGeneratedOnce()
-      throws IOException, InterruptedException {
-    ImmutableMap<String, Object> watchmanOutput =
-        ImmutableMap.of(
-            "files",
-            ImmutableList.of(
-                ImmutableMap.<String, Object>of(
-                    "name", "foo/bar/changedfile", "type", "f", "exists", true, "new", false),
-                ImmutableMap.<String, Object>of(
-                    "name", "foo/bar/deleteddir", "type", "d", "exists", false, "new", false),
-                ImmutableMap.<String, Object>of(
-                    "name", "foo/bar/newfile", "type", "f", "exists", true, "new", true),
-                ImmutableMap.<String, Object>of(
-                    "name", "foo/bar/newdir", "type", "d", "exists", true, "new", true)));
-    WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
-    watcher.postEvents(
-        BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
-        WatchmanWatcher.FreshInstanceAction.NONE);
-
-    List<WatchmanMultiplePathEvent> multiplePathEvents =
-        eventBuffer.events.stream()
-            .filter(event -> event instanceof WatchmanMultiplePathEvent)
-            .map(event -> (WatchmanMultiplePathEvent) event)
-            .collect(Collectors.toList());
-
-    assertEquals(1, multiplePathEvents.size());
-    WatchmanMultiplePathEvent event = multiplePathEvents.get(0);
-    ImmutableList<WatchmanMultiplePathEvent.Change> changes = event.getChanges();
-    assertEquals(4, changes.size());
-
-    // Replace with JUnit lambda matchers when we have ones
-    assertTrue(
-        changes.stream()
-            .anyMatch(
-                c ->
-                    c.getType() == Type.FILE
-                        && c.getKind() == Kind.MODIFY
-                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/changedfile"))));
-
-    assertTrue(
-        changes.stream()
-            .anyMatch(
-                c ->
-                    c.getType() == Type.DIRECTORY
-                        && c.getKind() == Kind.DELETE
-                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/deleteddir"))));
-
-    assertTrue(
-        changes.stream()
-            .anyMatch(
-                c ->
-                    c.getType() == Type.FILE
-                        && c.getKind() == Kind.CREATE
-                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/newfile"))));
-
-    assertTrue(
-        changes.stream()
-            .anyMatch(
-                c ->
-                    c.getType() == Type.DIRECTORY
-                        && c.getKind() == Kind.CREATE
-                        && c.getPath().equals(ForwardRelativePath.of("foo/bar/newdir"))));
   }
 
   private WatchmanWatcher createWatcher(EventBus eventBus, ImmutableMap<String, Object> response) {
