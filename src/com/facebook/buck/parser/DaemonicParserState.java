@@ -604,8 +604,6 @@ public class DaemonicParserState {
   private void invalidatePath(DaemonicCellState state, AbsPath path) {
     LOG.verbose("Invalidating path %s for cell %s", path, state.getCellRoot());
 
-    // Paths passed in may not be absolute.
-    path = state.getCellRoot().resolve(path.getPath());
     int invalidatedNodes = state.invalidatePath(path, true);
     rulesInvalidatedByWatchEventsCounter.inc(invalidatedNodes);
   }
