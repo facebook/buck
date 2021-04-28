@@ -48,7 +48,7 @@ public class CxxInferCaptureTransitiveRule
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSet<CxxInferCapture> captureRules) {
+      ImmutableSet<CxxInferCaptureRule> captureRules) {
     super(buildTarget, filesystem, ruleFinder, new Impl(captureRules));
   }
 
@@ -66,11 +66,11 @@ public class CxxInferCaptureTransitiveRule
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final ImmutableSet<BuildTargetSourcePath> captureRulesOutputs;
 
-    public Impl(ImmutableSet<CxxInferCapture> captureRules) {
+    public Impl(ImmutableSet<CxxInferCaptureRule> captureRules) {
       this.output = new OutputPath(OUTPUT_PATH);
       this.captureRulesOutputs =
           captureRules.stream()
-              .map(CxxInferCapture::getSourcePathToOutput)
+              .map(CxxInferCaptureRule::getSourcePathToOutput)
               .collect(ImmutableSet.toImmutableSet());
     }
 

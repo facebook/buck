@@ -566,68 +566,55 @@ public abstract class CxxSourceRuleFactory {
         .build();
   }
 
-  private CxxInferCapture requireInferCaptureBuildRule(
+  private CxxInferCaptureRule requireInferCaptureBuildRule(
       String name,
       CxxSource source,
       InferBuckConfig inferConfig,
       DownwardApiConfig downwardApiConfig) {
-    return (CxxInferCapture)
+    return (CxxInferCaptureRule)
         getActionGraphBuilder()
             .computeIfAbsent(
                 createInferCaptureBuildTarget(name),
                 target -> {
-                  Preconditions.checkArgument(
-                      CxxSourceTypes.isPreprocessableType(source.getType()));
+                  CxxSource.Type sourceType = source.getType();
+                  Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(sourceType));
 
                   LOG.verbose(
                       "Creating preprocessed InferCapture build rule %s for %s", target, source);
 
-                  DepsBuilder depsBuilder = new DepsBuilder(getActionGraphBuilder());
-                  depsBuilder.add(requireAggregatedPreprocessDepsRule());
-
+                  ActionGraphBuilder graphBuilder = getActionGraphBuilder();
                   PreprocessorDelegateCacheValue preprocessorDelegateValue =
                       getPreprocessorDelegateCacheValue(source);
-                  depsBuilder.add(preprocessorDelegateValue.getPreprocessorDelegate());
 
                   Stream<Arg> commandPrefixFlags =
                       CxxSourceTypes.getCompiler(
                               getCxxPlatform(),
-                              CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                          .resolve(
-                              getActionGraphBuilder(),
-                              getBaseBuildTarget().getTargetConfiguration())
+                              CxxSourceTypes.getPreprocessorOutputType(sourceType))
+                          .resolve(graphBuilder, getBaseBuildTarget().getTargetConfiguration())
                           .getCommandPrefix(getPathResolver()).stream()
                           .skip(1) // drop the binary
-                          .map(a -> ArgFactory.from(a));
-
-                  CompilerDelegate compilerDelegate =
-                      makeCompilerDelegateForPreprocessAndCompile(source);
+                          .map(ArgFactory::from);
 
                   CxxToolFlags ppFlags =
                       CxxToolFlags.copyOf(
                           Stream.concat(
                                   commandPrefixFlags,
-                                  getPlatformPreprocessorFlags(source.getType()).stream())
+                                  getPlatformPreprocessorFlags(sourceType).stream())
                               .collect(ImmutableList.toImmutableList()),
-                          rulePreprocessorFlags.apply(source.getType()),
+                          rulePreprocessorFlags.apply(sourceType),
                           ImmutableList.of());
 
-                  CxxToolFlags cFlags = computeCompilerFlags(source.getType(), source.getFlags());
-
-                  depsBuilder.add(source);
-
-                  return new CxxInferCapture(
+                  return new CxxInferCaptureRule(
                       target,
                       getProjectFilesystem(),
-                      getActionGraphBuilder(),
-                      ImmutableSortedSet.copyOf(depsBuilder.build()),
-                      compilerDelegate,
+                      graphBuilder,
                       ppFlags,
-                      cFlags,
+                      computeCompilerFlags(sourceType, source.getFlags()),
                       source.getPath(),
-                      source.getType(),
+                      sourceType,
                       getPreInclude(),
                       getCompileOutputName(name),
+                      makeCompilerDelegateForPreprocessAndCompile(source),
                       preprocessorDelegateValue.getPreprocessorDelegate(),
                       inferConfig,
                       downwardApiConfig.isEnabledForCxx());
@@ -793,10 +780,6 @@ public abstract class CxxSourceRuleFactory {
    * <p>The {@code sourceType} and {@code sourceFlags} come from one of the source in the rule which
    * is using the PCH. This is so we can obtain certain flags (language options and such) so the PCH
    * is compatible with the rule requesting it.
-   *
-   * @param preprocessorDelegateCacheValue
-   * @param sourceType
-   * @param sourceFlags
    */
   private CxxPrecompiledHeader requirePrecompiledHeaderBuildRule(
       PreprocessorDelegateCacheValue preprocessorDelegateCacheValue,
@@ -891,18 +874,18 @@ public abstract class CxxSourceRuleFactory {
     return extractionRules.build();
   }
 
-  public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
+  /** Returns a set of {@link CxxInferCaptureRule} derived from {@code sources} param */
+  public ImmutableSet<CxxInferCaptureRule> requireInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
       InferBuckConfig inferConfig,
       DownwardApiConfig downwardApiConfig) {
 
-    ImmutableSet.Builder<CxxInferCapture> objects = ImmutableSet.builder();
+    ImmutableSet.Builder<CxxInferCaptureRule> rules = ImmutableSet.builder();
 
     CxxInferSourceFilter sourceFilter = new CxxInferSourceFilter(inferConfig);
     for (Map.Entry<String, CxxSource> entry : sources.entrySet()) {
       String name = entry.getKey();
       CxxSource source = entry.getValue();
-
       if (sourceFilter.isBlacklisted(source)) {
         continue;
       }
@@ -910,13 +893,10 @@ public abstract class CxxSourceRuleFactory {
       Preconditions.checkState(
           CxxSourceTypes.isPreprocessableType(source.getType()),
           "Only preprocessable source types are currently supported");
-
-      CxxInferCapture rule =
-          requireInferCaptureBuildRule(name, source, inferConfig, downwardApiConfig);
-      objects.add(rule);
+      rules.add(requireInferCaptureBuildRule(name, source, inferConfig, downwardApiConfig));
     }
 
-    return objects.build();
+    return rules.build();
   }
 
   public ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
@@ -1011,6 +991,7 @@ public abstract class CxxSourceRuleFactory {
   }
 
   private class PreprocessorDelegateCacheValue {
+
     private final Function<AddsToRuleKey, String> commandHashCache = memoize(this::computeHash);
     private final PreprocessorDelegate preprocessorDelegate;
     private final Supplier<String> preprocessorHash;
@@ -1082,6 +1063,7 @@ public abstract class CxxSourceRuleFactory {
   }
 
   private class HashBuilder extends AbstractRuleKeyBuilder<String> {
+
     private final GuavaRuleKeyHasher hasher =
         new GuavaRuleKeyHasher(Hashing.murmur3_32().newHasher());
     private final Function<AddsToRuleKey, String> commandHashCache;

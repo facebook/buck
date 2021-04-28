@@ -83,7 +83,6 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private final PlatformMappedCache<NativeLinkable> linkableCache = new PlatformMappedCache<>();
 
-  /** @param buildRuleParams the params for this PCH rule, <b>including</b> {@code deps} */
   PreInclude(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -114,7 +113,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   private static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {
-    return new BuildRuleParams(() -> deps, () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
+    return new BuildRuleParams(() -> deps, ImmutableSortedSet::of, ImmutableSortedSet.of());
   }
 
   private ImmutableSortedSet<BuildRule> getExportedDeps() {

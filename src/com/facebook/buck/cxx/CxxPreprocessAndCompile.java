@@ -367,7 +367,10 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       RelPath resolvedOutput = outputPathResolver.resolvePath(output);
       preprocessDelegate
           .flatMap(PreprocessorDelegate::checkConflictingHeaders)
-          .ifPresent(result -> result.throwHumanReadableExceptionWithContext(targetName));
+          .ifPresent(
+              result ->
+                  result.throwHumanReadableExceptionWithContext(
+                      targetName.getFullyQualifiedName()));
       return new ImmutableList.Builder<Step>()
           .add(
               MkdirStep.of(

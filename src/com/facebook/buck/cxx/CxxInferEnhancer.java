@@ -154,7 +154,7 @@ public final class CxxInferEnhancer {
         requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
             target, cellRoots, filesystem, args);
 
-    ImmutableSet<CxxInferCapture> captureRules = aggregator.getAllTransitiveCaptures();
+    ImmutableSet<CxxInferCaptureRule> captureRules = aggregator.getAllTransitiveCaptures();
 
     return graphBuilder.addToIndex(
         new CxxInferCaptureTransitiveRule(target, filesystem, graphBuilder, captureRules));
@@ -178,7 +178,7 @@ public final class CxxInferEnhancer {
               ImmutableMap<String, CxxSource> sources =
                   collectSources(cleanTarget, cellRoots, args);
 
-              ImmutableSet<CxxInferCapture> captureRules =
+              ImmutableSet<CxxInferCaptureRule> captureRules =
                   requireInferCaptureBuildRules(cleanTarget, cellRoots, filesystem, sources, args);
 
               ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatorRules =
@@ -268,7 +268,7 @@ public final class CxxInferEnhancer {
         projectFilesystem);
   }
 
-  private ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
+  private ImmutableSet<CxxInferCaptureRule> requireInferCaptureBuildRules(
       BuildTarget target,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,

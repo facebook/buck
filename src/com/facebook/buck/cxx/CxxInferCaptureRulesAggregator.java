@@ -34,25 +34,25 @@ import com.google.common.collect.ImmutableSet;
  */
 class CxxInferCaptureRulesAggregator extends NoopBuildRule {
 
-  private final ImmutableSet<CxxInferCapture> captureRules;
+  private final ImmutableSet<CxxInferCaptureRule> captureRules;
   private final ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatingRules;
 
   public CxxInferCaptureRulesAggregator(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSet<CxxInferCapture> captureRules,
+      ImmutableSet<CxxInferCaptureRule> captureRules,
       ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatingRules) {
     super(buildTarget, projectFilesystem);
     this.captureRules = captureRules;
     this.transitiveAggregatingRules = transitiveAggregatingRules;
   }
 
-  private ImmutableSet<CxxInferCapture> getCaptureRules() {
+  private ImmutableSet<CxxInferCaptureRule> getCaptureRules() {
     return captureRules;
   }
 
-  public ImmutableSet<CxxInferCapture> getAllTransitiveCaptures() {
-    ImmutableSet.Builder<CxxInferCapture> captureBuilder = ImmutableSet.builder();
+  public ImmutableSet<CxxInferCaptureRule> getAllTransitiveCaptures() {
+    ImmutableSet.Builder<CxxInferCaptureRule> captureBuilder = ImmutableSet.builder();
     captureBuilder.addAll(captureRules);
     for (CxxInferCaptureRulesAggregator aggregator : transitiveAggregatingRules) {
       captureBuilder.addAll(aggregator.getCaptureRules());

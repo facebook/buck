@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -381,14 +380,15 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     }
 
     /** Throw an exception with a user friendly message detailing the conflict. */
-    public HumanReadableException throwHumanReadableExceptionWithContext(BuildTarget buildTarget) {
+    public HumanReadableException throwHumanReadableExceptionWithContext(
+        String fullyQualifiedName) {
       throw new HumanReadableException(
           "Target '%s' has dependencies using headers that can be included using the same path.\n\n"
               + "'%s' maps to the following header files:\n"
               + "- %s\n"
               + "- and %s\n\n"
               + "Please rename one of them or export one of them to a different path.",
-          buildTarget, includeFilePath, headerPath1, headerPath2);
+          fullyQualifiedName, includeFilePath, headerPath1, headerPath2);
     }
   }
 

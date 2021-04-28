@@ -546,24 +546,24 @@ public class CxxBinaryIntegrationTest {
                 + sanitizedTopChain
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), captureTopChainTarget, "infer-out-%s")),
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), captureTopChainTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)),
             captureChainDepOneTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedChainDepOne
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), captureChainDepOneTarget, "infer-out-%s")),
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), captureChainDepOneTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)),
             captureChainDepTwoTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedChainDepTwo
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), captureChainDepTwoTarget, "infer-out-%s")));
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), captureChainDepTwoTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)));
 
     assertThat(loggedDeps, equalTo(expectedOutput));
   }
@@ -716,30 +716,10 @@ public class CxxBinaryIntegrationTest {
     AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
-            InferLogLine.of(
-                    srcWithDepsTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s")))
-                .getFormattedString(),
-            InferLogLine.of(
-                    depOneTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), depOneTarget, "infer-out-%s")))
-                .getFormattedString(),
-            InferLogLine.of(
-                    depTwoTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s")))
-                .getFormattedString(),
-            InferLogLine.of(
-                    simpleCppTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s")))
-                .getFormattedString());
+            createInferLogLine(filesystem, srcWithDepsTarget, basePath).getFormattedString(),
+            createInferLogLine(filesystem, depOneTarget, basePath).getFormattedString(),
+            createInferLogLine(filesystem, depTwoTarget, basePath).getFormattedString(),
+            createInferLogLine(filesystem, simpleCppTarget, basePath).getFormattedString());
 
     assertThat(loggedDeps, equalTo(expectedOutput));
   }
@@ -804,32 +784,21 @@ public class CxxBinaryIntegrationTest {
     AbsPath basePath = filesystem.getRootPath().toRealPath();
     Set<String> expectedOutput =
         ImmutableSet.of(
-            InferLogLine.of(
-                    srcWithDepsTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s")))
-                .getFormattedString(),
-            InferLogLine.of(
-                    depOneTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), depOneTarget, "infer-out-%s")))
-                .getFormattedString(),
-            InferLogLine.of(
-                    depTwoTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s")))
-                .getFormattedString(),
-            InferLogLine.of(
-                    simpleCppTarget,
-                    basePath.resolve(
-                        BuildTargetPaths.getGenPath(
-                            filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s")))
-                .getFormattedString());
+            createInferLogLine(filesystem, srcWithDepsTarget, basePath).getFormattedString(),
+            createInferLogLine(filesystem, depOneTarget, basePath).getFormattedString(),
+            createInferLogLine(filesystem, depTwoTarget, basePath).getFormattedString(),
+            createInferLogLine(filesystem, simpleCppTarget, basePath).getFormattedString());
 
     assertThat(loggedDeps, equalTo(expectedOutput));
+  }
+
+  private InferLogLine createInferLogLine(
+      ProjectFilesystem filesystem, BuildTarget buildTarget, AbsPath basePath) {
+    return InferLogLine.of(
+        buildTarget,
+        basePath.resolve(
+            BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget)
+                .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)));
   }
 
   @Test
@@ -934,32 +903,32 @@ public class CxxBinaryIntegrationTest {
                 + sanitizedSrcWithDeps
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), srcWithDepsTarget, "infer-out-%s")),
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), srcWithDepsTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)),
             depOneTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedDepOne
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), depOneTarget, "infer-out-%s")),
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), depOneTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)),
             depTwoTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedDepTwo
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), depTwoTarget, "infer-out-%s")),
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), depTwoTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)),
             simpleCppTarget.getFullyQualifiedName()
                 + "\t"
                 + "[default, infer-capture-"
                 + sanitizedSimpleCpp
                 + "]\t"
                 + basePath.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(), simpleCppTarget, "infer-out-%s")));
+                    BuildPaths.getGenDir(filesystem.getBuckPaths(), simpleCppTarget)
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)));
 
     assertThat(loggedDeps, equalTo(expectedOutput));
   }
@@ -981,37 +950,39 @@ public class CxxBinaryIntegrationTest {
     assertFalse(
         "Cfg file for chain_dep_one.c should not exist",
         Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:chain_dep_one#default,infer-capture-"
-                                + sanitize("chain_dep_one.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/chain_dep_one.c_captured/chain_dep_one.c.cfg"))));
+            workspace
+                .getPath(
+                    BuildPaths.getGenDir(
+                            filesystem.getBuckPaths(),
+                            BuildTargetFactory.newInstance(
+                                "//foo:chain_dep_one#default,infer-capture-"
+                                    + sanitize("chain_dep_one.c.o")))
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH))
+                .resolve("captured/chain_dep_one.c_captured/chain_dep_one.c.cfg")));
 
     // Check that the remaining files still have their cfgs
     assertTrue(
         "Expected cfg for chain_dep_two.c not found",
         Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:chain_dep_two#default,infer-capture-"
-                                + sanitize("chain_dep_two.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/chain_dep_two.c_captured/chain_dep_two.c.cfg"))));
+            workspace
+                .getPath(
+                    BuildPaths.getGenDir(
+                            filesystem.getBuckPaths(),
+                            BuildTargetFactory.newInstance(
+                                "//foo:chain_dep_two#default,infer-capture-"
+                                    + sanitize("chain_dep_two.c.o")))
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH))
+                .resolve("captured/chain_dep_two.c_captured/chain_dep_two.c.cfg")));
     assertTrue(
         "Expected cfg for top_chain.c not found",
         Files.exists(
             workspace.getPath(
-                BuildTargetPaths.getGenPath(
+                BuildPaths.getGenDir(
                         filesystem.getBuckPaths(),
                         BuildTargetFactory.newInstance(
                             "//foo:binary_with_chain_deps#default,infer-capture-"
-                                + sanitize("top_chain.c.o")),
-                        "infer-out-%s")
+                                + sanitize("top_chain.c.o")))
+                    .resolve(CxxInferCaptureRule.RESULT_DIR_PATH)
                     .resolve("captured/top_chain.c_captured/top_chain.c.cfg"))));
   }
 
@@ -1031,36 +1002,39 @@ public class CxxBinaryIntegrationTest {
     assertTrue(
         "Expected cfg for chain_dep_one.c not found",
         Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:chain_dep_one#default,infer-capture-"
-                                + sanitize("chain_dep_one.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/chain_dep_one.c_captured/chain_dep_one.c.cfg"))));
+            workspace
+                .getPath(
+                    BuildPaths.getGenDir(
+                            filesystem.getBuckPaths(),
+                            BuildTargetFactory.newInstance(
+                                "//foo:chain_dep_one#default,infer-capture-"
+                                    + sanitize("chain_dep_one.c.o")))
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH))
+                .resolve("captured/chain_dep_one.c_captured/chain_dep_one.c.cfg")));
     assertTrue(
         "Expected cfg for chain_dep_two.c not found",
         Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:chain_dep_two#default,infer-capture-"
-                                + sanitize("chain_dep_two.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/chain_dep_two.c_captured/chain_dep_two.c.cfg"))));
+            workspace
+                .getPath(
+                    BuildPaths.getGenDir(
+                            filesystem.getBuckPaths(),
+                            BuildTargetFactory.newInstance(
+                                "//foo:chain_dep_two#default,infer-capture-"
+                                    + sanitize("chain_dep_two.c.o")))
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH))
+                .resolve("captured/chain_dep_two.c_captured/chain_dep_two.c.cfg")));
     assertTrue(
         "Expected cfg for top_chain.c not found",
         Files.exists(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                        filesystem.getBuckPaths(),
-                        BuildTargetFactory.newInstance(
-                            "//foo:binary_with_chain_deps#default,infer-capture-"
-                                + sanitize("top_chain.c.o")),
-                        "infer-out-%s")
-                    .resolve("captured/top_chain.c_captured/top_chain.c.cfg"))));
+            workspace
+                .getPath(
+                    BuildPaths.getGenDir(
+                            filesystem.getBuckPaths(),
+                            BuildTargetFactory.newInstance(
+                                "//foo:binary_with_chain_deps#default,infer-capture-"
+                                    + sanitize("top_chain.c.o")))
+                        .resolve(CxxInferCaptureRule.RESULT_DIR_PATH))
+                .resolve("captured/top_chain.c_captured/top_chain.c.cfg")));
   }
 
   @Test

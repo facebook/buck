@@ -32,7 +32,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -40,7 +39,7 @@ import java.util.function.Supplier;
 /** Infer support for Cxx */
 public class InferBuckConfig implements AddsToRuleKey {
 
-  private BuckConfig delegate;
+  private final BuckConfig delegate;
 
   @AddToRuleKey private Supplier<? extends Tool> clangCompiler;
   @AddToRuleKey private Supplier<? extends Tool> clangPlugin;
@@ -80,7 +79,7 @@ public class InferBuckConfig implements AddsToRuleKey {
     this.inferVersion =
         MoreSuppliers.memoize(
             () -> {
-              Path topLevel = InferBuckConfig.this.getInferTopLevel();
+              Path topLevel = getInferTopLevel();
               ProcessExecutorParams params =
                   ProcessExecutorParams.builder()
                       .setCommand(ImmutableList.of(topLevel.toString(), "--version"))
@@ -111,13 +110,17 @@ public class InferBuckConfig implements AddsToRuleKey {
     return getValueFromConfig(delegate, "blacklist_regex");
   }
 
+  private Path getInferTopLevel() {
+    return getInferBin().resolve("infer");
+  }
+
   private Path getInferBin() {
     return Objects.requireNonNull(
-        getPathFromConfig(this.delegate, "infer_bin").orElse(null),
+        getPathFromConfig(delegate, "infer_bin").orElse(null),
         "path to infer bin/ folder not found on the current configuration");
   }
 
-  public Path getInferTopLevel() {
-    return Paths.get(InferBuckConfig.this.getInferBin().toString(), "infer");
+  public Supplier<VersionedTool> getInferToolSupplier() {
+    return inferVersion;
   }
 }

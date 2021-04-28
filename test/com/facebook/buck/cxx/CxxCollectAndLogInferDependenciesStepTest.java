@@ -72,7 +72,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     return new DefaultProjectFilesystemFactory().createProjectFilesystem(cellName, fakeRoot, true);
   }
 
-  private CxxInferCapture createCaptureRule(
+  private CxxInferCaptureRule createCaptureRule(
       BuildTarget buildTarget, ProjectFilesystem filesystem, InferBuckConfig inferBuckConfig) {
     class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
 
@@ -102,7 +102,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
                     ImmutableList.of())),
             ImmutableSortedSet.of());
 
-    CompilerDelegate cd =
+    CompilerDelegate compilerDelegate =
         new CompilerDelegate(
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
             new GccCompiler(
@@ -112,24 +112,23 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             CxxToolFlags.of(),
             Optional.empty());
 
-    return new CxxInferCapture(
+    return new CxxInferCaptureRule(
         buildTarget,
         filesystem,
         new TestActionGraphBuilder(),
-        ImmutableSortedSet.of(),
-        cd,
         CxxToolFlags.of(),
         CxxToolFlags.of(),
         FakeSourcePath.of("src.c"),
         CxxSource.Type.C,
         Optional.empty(),
         "src.o",
+        compilerDelegate,
         preprocessorDelegate,
         inferBuckConfig,
         false);
   }
 
-  private Pair<BuildTarget, AbsPath> toCaptureRulePair(CxxInferCapture captureRule) {
+  private Pair<BuildTarget, AbsPath> toCaptureRulePair(CxxInferCaptureRule captureRule) {
     return new Pair<>(captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput());
   }
 
@@ -147,7 +146,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
-    CxxInferCapture captureRule = createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
+    CxxInferCaptureRule captureRule =
+        createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =
@@ -180,7 +180,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
-    CxxInferCapture captureRule = createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
+    CxxInferCaptureRule captureRule =
+        createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =
@@ -223,8 +224,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
-    CxxInferCapture captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
-    CxxInferCapture captureRule1 = createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
+    CxxInferCaptureRule captureRule2 =
+        createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
+    CxxInferCaptureRule captureRule1 =
+        createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =
@@ -269,8 +272,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
-    CxxInferCapture captureRule1 = createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
-    CxxInferCapture captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
+    CxxInferCaptureRule captureRule1 =
+        createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
+    CxxInferCaptureRule captureRule2 =
+        createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =

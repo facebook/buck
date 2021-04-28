@@ -160,7 +160,10 @@ class CxxPrecompiledHeader extends AbstractBuildRule
       BuildContext context, BuildableContext buildableContext) {
     preprocessorDelegate
         .checkConflictingHeaders()
-        .ifPresent(result -> result.throwHumanReadableExceptionWithContext(getBuildTarget()));
+        .ifPresent(
+            result ->
+                result.throwHumanReadableExceptionWithContext(
+                    getBuildTarget().getFullyQualifiedName()));
 
     RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
