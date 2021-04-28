@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.PackageFileManifest;
@@ -58,8 +57,7 @@ public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFi
   public ListenableFuture<PackageFileManifest> getFileJob(Cell cell, AbsPath packageFile)
       throws BuildTargetException {
     // If the file exists, parse the file and cache accordingly.
-    RelPath relativePath = cell.getRoot().relativize(packageFile);
-    if (cell.getFilesystem().isFile(relativePath)) {
+    if (cell.getFilesystem().isFile(packageFile)) {
       return super.getFileJob(cell, packageFile);
     }
 
