@@ -345,7 +345,7 @@ public class DaemonicParserState {
    * root path). If this value changes, then we need to invalidate all the caches.
    */
   @GuardedBy("cachedStateLock")
-  private ConcurrentHashMap<AbsPath, ImmutableList<String>> defaultIncludesByCellRoot;
+  private ConcurrentHashMap<CanonicalCellName, ImmutableList<String>> defaultIncludesByCellName;
 
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
@@ -385,7 +385,7 @@ public class DaemonicParserState {
                         cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
                   }
                 });
-    this.defaultIncludesByCellRoot = new ConcurrentHashMap<>();
+    this.defaultIncludesByCellName = new ConcurrentHashMap<>();
     this.cellToDaemonicState =
         new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, parsingThreads);
 
@@ -616,7 +616,7 @@ public class DaemonicParserState {
 
     ImmutableList<String> expected;
     try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
-      expected = defaultIncludesByCellRoot.get(cell.getRoot());
+      expected = defaultIncludesByCellName.get(cell.getCanonicalName());
 
       if (expected != null && defaultIncludes.equals(expected)) {
         return false;
@@ -627,7 +627,7 @@ public class DaemonicParserState {
     }
 
     try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
-      defaultIncludesByCellRoot.put(cell.getRoot(), defaultIncludes);
+      defaultIncludesByCellName.put(cell.getCanonicalName(), defaultIncludes);
     }
     if (invalidateCellCaches(cell)) {
       LOG.warn(
