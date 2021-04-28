@@ -30,8 +30,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
-import com.facebook.buck.counters.IntegerCounter;
-import com.facebook.buck.counters.TagSetCounter;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
@@ -50,7 +48,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -80,19 +77,6 @@ public class DaemonicParserState {
 
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
 
-  private static final String COUNTER_CATEGORY = "buck_parser_state";
-  private static final String INVALIDATED_BY_ENV_VARS_COUNTER_NAME = "invalidated_by_env_vars";
-  private static final String INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME =
-      "invalidated_by_default_includes";
-  private static final String INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME =
-      "invalidated_by_watch_overflow";
-  private static final String BUILD_FILES_INVALIDATED_BY_FILE_ADD_OR_REMOVE_COUNTER_NAME =
-      "build_files_invalidated_by_add_or_remove";
-  private static final String FILES_CHANGED_COUNTER_NAME = "files_changed";
-  private static final String RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME =
-      "rules_invalidated_by_watch_events";
-  private static final String PATHS_ADDED_OR_REMOVED_INVALIDATING_BUILD_FILES =
-      "paths_added_or_removed_invalidating_build_files";
   // pattern all implicit include paths from build file includes should match
   // this should be kept in sync with pattern used in buck.py
   private static final Pattern INCLUDE_PATH_PATTERN = Pattern.compile("^([A-Za-z0-9_]*)//(.*)$");
@@ -298,14 +282,6 @@ public class DaemonicParserState {
         .orElseGet(() -> cell.getFilesystem().resolve(includePath));
   }
 
-  private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;
-  private final IntegerCounter cacheInvalidatedByDefaultIncludesChangeCounter;
-  private final IntegerCounter cacheInvalidatedByWatchOverflowCounter;
-  private final IntegerCounter buildFilesInvalidatedByFileAddOrRemoveCounter;
-  private final IntegerCounter filesChangedCounter;
-  private final IntegerCounter rulesInvalidatedByWatchEventsCounter;
-  private final TagSetCounter pathsAddedOrRemovedInvalidatingBuildFiles;
-
   /**
    * The set of {@link Cell} instances that have been seen by this state. This information is used
    * for cache invalidation. Please see {@link #invalidateBasedOn(WatchmanPathEvent)} for example
@@ -338,6 +314,8 @@ public class DaemonicParserState {
 
   private final int parsingThreads;
 
+  private final DaemonicParserStateCounters counters;
+
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
   /**
@@ -352,28 +330,7 @@ public class DaemonicParserState {
 
   public DaemonicParserState(int parsingThreads) {
     this.parsingThreads = parsingThreads;
-    this.cacheInvalidatedByEnvironmentVariableChangeCounter =
-        new TagSetCounter(
-            COUNTER_CATEGORY, INVALIDATED_BY_ENV_VARS_COUNTER_NAME, ImmutableMap.of());
-    this.cacheInvalidatedByDefaultIncludesChangeCounter =
-        new IntegerCounter(
-            COUNTER_CATEGORY, INVALIDATED_BY_DEFAULT_INCLUDES_COUNTER_NAME, ImmutableMap.of());
-    this.cacheInvalidatedByWatchOverflowCounter =
-        new IntegerCounter(
-            COUNTER_CATEGORY, INVALIDATED_BY_WATCH_OVERFLOW_COUNTER_NAME, ImmutableMap.of());
-    this.buildFilesInvalidatedByFileAddOrRemoveCounter =
-        new IntegerCounter(
-            COUNTER_CATEGORY,
-            BUILD_FILES_INVALIDATED_BY_FILE_ADD_OR_REMOVE_COUNTER_NAME,
-            ImmutableMap.of());
-    this.filesChangedCounter =
-        new IntegerCounter(COUNTER_CATEGORY, FILES_CHANGED_COUNTER_NAME, ImmutableMap.of());
-    this.rulesInvalidatedByWatchEventsCounter =
-        new IntegerCounter(
-            COUNTER_CATEGORY, RULES_INVALIDATED_BY_WATCH_EVENTS_COUNTER_NAME, ImmutableMap.of());
-    this.pathsAddedOrRemovedInvalidatingBuildFiles =
-        new TagSetCounter(
-            COUNTER_CATEGORY, PATHS_ADDED_OR_REMOVED_INVALIDATING_BUILD_FILES, ImmutableMap.of());
+    this.counters = new DaemonicParserStateCounters();
     this.buildFileTrees =
         CacheBuilder.newBuilder()
             .build(
@@ -458,7 +415,7 @@ public class DaemonicParserState {
 
     if (invalidateAllCaches()) {
       LOG.warn("Invalidated cache on watch event %s.", event);
-      cacheInvalidatedByWatchOverflowCounter.inc();
+      counters.recordCacheInvalidatedByWatchOverflow();
     }
   }
 
@@ -466,7 +423,7 @@ public class DaemonicParserState {
   public void invalidateBasedOn(WatchmanPathEvent event) {
     LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
 
-    filesChangedCounter.inc();
+    counters.recordFilesChanged();
 
     ForwardRelativePath path = event.getPath();
     AbsPath fullPath = event.getCellPath().resolve(event.getRelPath());
@@ -581,8 +538,8 @@ public class DaemonicParserState {
       return;
     }
 
-    buildFilesInvalidatedByFileAddOrRemoveCounter.inc(packageBuildFiles.size());
-    pathsAddedOrRemovedInvalidatingBuildFiles.add(path.toString());
+    counters.recordBuildFilesInvalidatedByFileAddOrRemove(packageBuildFiles.size());
+    counters.recordPathsAddedOrRemovedInvalidatingBuildFiles(path.toString());
 
     // Invalidate all the packages we found.
     for (ForwardRelativePath buildFile : packageBuildFiles) {
@@ -603,7 +560,7 @@ public class DaemonicParserState {
     LOG.verbose("Invalidating path %s for cell %s", path, state.getCellRoot());
 
     int invalidatedNodes = state.invalidatePath(path, true);
-    rulesInvalidatedByWatchEventsCounter.inc(invalidatedNodes);
+    counters.recordRulesInvalidatedByWatchEvents(invalidatedNodes);
   }
 
   public static boolean isPathCreateOrDeleteEvent(WatchmanPathEvent event) {
@@ -632,7 +589,7 @@ public class DaemonicParserState {
     if (invalidateCellCaches(cell)) {
       LOG.warn(
           "Invalidating cache on default includes change (%s != %s)", expected, defaultIncludes);
-      cacheInvalidatedByDefaultIncludesChangeCounter.inc();
+      counters.recordCacheInvalidatedByDefaultIncludesChange();
     }
     return true;
   }
@@ -668,14 +625,7 @@ public class DaemonicParserState {
   }
 
   public ImmutableList<Counter> getCounters() {
-    return ImmutableList.of(
-        cacheInvalidatedByEnvironmentVariableChangeCounter,
-        cacheInvalidatedByDefaultIncludesChangeCounter,
-        cacheInvalidatedByWatchOverflowCounter,
-        buildFilesInvalidatedByFileAddOrRemoveCounter,
-        filesChangedCounter,
-        rulesInvalidatedByWatchEventsCounter,
-        pathsAddedOrRemovedInvalidatingBuildFiles);
+    return counters.get();
   }
 
   @Override
