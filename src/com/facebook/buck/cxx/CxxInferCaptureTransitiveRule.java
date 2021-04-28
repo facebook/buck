@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -32,6 +33,7 @@ import com.facebook.buck.rules.modern.HasBrokenInputBasedRuleKey;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -48,8 +50,9 @@ public class CxxInferCaptureTransitiveRule
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSet<CxxInferCaptureRule> captureRules) {
-    super(buildTarget, filesystem, ruleFinder, new Impl(captureRules));
+      ImmutableSet<CxxInferCaptureRule> captureRules,
+      boolean executeRemotely) {
+    super(buildTarget, filesystem, ruleFinder, new Impl(captureRules, executeRemotely));
   }
 
   @Override
@@ -66,12 +69,18 @@ public class CxxInferCaptureTransitiveRule
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final ImmutableSet<BuildTargetSourcePath> captureRulesOutputs;
 
-    public Impl(ImmutableSet<CxxInferCaptureRule> captureRules) {
+    /** Whether or not infer rules can be executed remotely. Fails serialization if false. */
+    @AddToRuleKey
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean executeRemotely;
+
+    public Impl(ImmutableSet<CxxInferCaptureRule> captureRules, boolean executeRemotely) {
       this.output = new OutputPath(OUTPUT_PATH);
       this.captureRulesOutputs =
           captureRules.stream()
               .map(CxxInferCaptureRule::getSourcePathToOutput)
               .collect(ImmutableSet.toImmutableSet());
+      this.executeRemotely = executeRemotely;
     }
 
     @Override

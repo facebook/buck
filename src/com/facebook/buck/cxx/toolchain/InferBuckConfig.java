@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.immutables.value.Value;
 
 /** Infer support for Cxx */
 public class InferBuckConfig implements AddsToRuleKey {
@@ -122,5 +123,10 @@ public class InferBuckConfig implements AddsToRuleKey {
 
   public Supplier<VersionedTool> getInferToolSupplier() {
     return inferVersion;
+  }
+
+  @Value.Lazy
+  public boolean canExecuteRemotely() {
+    return delegate.getBooleanValue(INFER_SECTION_PREFIX, "execute_remotely", false);
   }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -43,6 +44,7 @@ import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -99,7 +101,8 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
             outputName,
             withDownwardApi,
             inputType,
-            preInclude));
+            preInclude,
+            inferConfig.canExecuteRemotely()));
   }
 
   /** Internal Buildable for {@link CxxInferCaptureRule} rule. */
@@ -107,7 +110,6 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
 
     // used to retrieve compiler dependencies
     @AddToRuleKey private final CompilerDelegate compilerDelegate;
-
     @AddToRuleKey private final Supplier<VersionedTool> inferToolSupplier;
     @AddToRuleKey private final CxxToolFlags preprocessorFlags;
     @AddToRuleKey private final CxxToolFlags compilerFlags;
@@ -119,6 +121,11 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
     @AddToRuleKey private final Optional<String> headerRelPath;
     @AddToRuleKey private final OutputPath resultDirectoryPath;
     @AddToRuleKey private final OutputPath output;
+
+    /** Whether or not infer rules can be executed remotely. Fails serialization if false. */
+    @AddToRuleKey
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean executeRemotely;
 
     Impl(
         BuildTarget buildTarget,
@@ -132,7 +139,8 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
         String outputName,
         boolean withDownwardApi,
         CxxSource.Type inputType,
-        Optional<PreInclude> preInclude) {
+        Optional<PreInclude> preInclude,
+        boolean executeRemotely) {
       this.inferToolSupplier = inferConfig.getInferToolSupplier();
       this.preprocessorFlags = preprocessorFlags;
       this.compilerFlags = compilerFlags;
@@ -142,6 +150,7 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
       this.buildTargetFullyQualifiedName = buildTarget.getFullyQualifiedName();
       this.withDownwardApi = withDownwardApi;
       this.inputTypeLanguage = inputType.getLanguage();
+      this.executeRemotely = executeRemotely;
       this.headerRelPath =
           preInclude
               .map(PreInclude::getAbsoluteHeaderPath)
