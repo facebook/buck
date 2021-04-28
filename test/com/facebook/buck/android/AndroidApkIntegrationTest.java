@@ -525,6 +525,169 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testPrimaryDexOnlyIncludesSpecifiedClassesWithXZSCompression() throws IOException {
+    Path apkPath =
+        workspace.buildAndReturnOutput(
+            "//apps/multidex:app_with_sample_class_in_primary_and_xzs_compression",
+            "-c",
+            "java.is_pre_dex_per_class_primary_dex_matching=true");
+
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+
+    String primaryDex = "classes.dex";
+    DexInspector primaryDexInspector = new DexInspector(apkPath, primaryDex);
+    primaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample;");
+    primaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
+    primaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample3;");
+
+    List<String> metadata =
+        zipInspector.getFileContentsLines("assets/secondary-program-dex-jars/metadata.txt");
+    List<DexTestUtils.DexMetadata> metadataFiles = DexTestUtils.moduleMetadata(metadata);
+    assertEquals(2, metadataFiles.size());
+
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary.dex.jar.xzs");
+    byte[] xzsBytes =
+        zipInspector.getFileContents("assets/secondary-program-dex-jars/secondary.dex.jar.xzs");
+    Path unpackedXzsPath =
+        workspace.getPath(apkPath.getParent().resolve("unxzs/secondary.dex.jar"));
+    unpackedXzsPath.getParent().toFile().mkdirs();
+    Files.copy(new XZInputStream(new ByteArrayInputStream(xzsBytes)), unpackedXzsPath);
+
+    ImmutableMap.Builder<Path, Integer> dexSizeMapBuilder = ImmutableMap.builder();
+    for (DexTestUtils.DexMetadata dexMetadata : metadataFiles) {
+      String xzMeta =
+          zipInspector
+              .getFileContentsLines(
+                  "assets/secondary-program-dex-jars/" + dexMetadata.dexFile + ".meta")
+              .get(0);
+      int jarSize = readJarSize(xzMeta);
+      dexSizeMapBuilder.put(dexMetadata.dexFile, jarSize);
+    }
+    ImmutableMap<Path, Integer> dexSizeMap = dexSizeMapBuilder.build();
+
+    int totalDexSize =
+        metadataFiles.stream()
+            .map(dexMetadata -> dexSizeMap.get(dexMetadata.dexFile))
+            .reduce(0, Integer::sum);
+    assertEquals(totalDexSize, unpackedXzsPath.toFile().length());
+
+    FileInputStream jarConcatStream = new FileInputStream(unpackedXzsPath.toFile());
+    for (int i = 0; i < 2; i++) {
+      DexTestUtils.DexMetadata dexMetadata = metadataFiles.get(i);
+      int jarSize = dexSizeMap.get(dexMetadata.dexFile);
+      byte[] dexJarContents = new byte[jarSize];
+      assertEquals(jarConcatStream.read(dexJarContents, 0, jarSize), jarSize);
+
+      Path dexJarFile =
+          workspace.getPath(
+              apkPath.getParent().resolve(String.format("unxzs/secondary-%s.dex.jar", i + 1)));
+      Files.write(dexJarFile, dexJarContents);
+
+      ZipInspector dexJarInspector = new ZipInspector(dexJarFile);
+
+      dexJarInspector.assertFileExists("classes.dex");
+
+      DexInspector dexInspector = new DexInspector(dexJarFile);
+      dexInspector.assertTypeExists(dexMetadata.getJvmName());
+
+      if (i == 0) {
+        dexInspector.assertTypeExists("Lcom/facebook/sample/Small;");
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample3;");
+      } else {
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Small;");
+        dexInspector.assertTypeExists("Lcom/facebook/sample/Sample2;");
+        dexInspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
+      }
+    }
+
+    // Build again with a different primary dex pattern
+    workspace.replaceFileContents(
+        "apps/multidex/BUCK",
+        "# ADDED_IN_XZS_COMPRESSION_PRIMARY_CLASS_NAMES_TEST",
+        "\"/Sample2^\"");
+    Path newApkPath =
+        workspace.buildAndReturnOutput(
+            "//apps/multidex:app_with_sample_class_in_primary_and_xzs_compression",
+            "-c",
+            "java.is_pre_dex_per_class_primary_dex_matching=true");
+
+    DexTestUtils.validateMetadata(newApkPath);
+
+    ZipInspector newZipInspector = new ZipInspector(apkPath);
+
+    String newPrimaryDex = "classes.dex";
+    newZipInspector.assertFileExists(newPrimaryDex);
+    DexInspector newPrimaryDexInspector = new DexInspector(newApkPath, newPrimaryDex);
+    newPrimaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample;");
+    newPrimaryDexInspector.assertTypeExists("Lcom/facebook/sample/Sample2;");
+    newPrimaryDexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample3;");
+
+    List<String> newMetadata =
+        zipInspector.getFileContentsLines("assets/secondary-program-dex-jars/metadata.txt");
+    List<DexTestUtils.DexMetadata> newMetadataFiles = DexTestUtils.moduleMetadata(newMetadata);
+    assertEquals(2, newMetadataFiles.size());
+
+    newZipInspector.assertFileExists("assets/secondary-program-dex-jars/secondary.dex.jar.xzs");
+    byte[] newXzsBytes =
+        zipInspector.getFileContents("assets/secondary-program-dex-jars/secondary.dex.jar.xzs");
+    Path newUnpackedXzsPath =
+        workspace.getPath(newApkPath.getParent().resolve("newunxzs/secondary.dex.jar"));
+    newUnpackedXzsPath.getParent().toFile().mkdirs();
+    Files.copy(new XZInputStream(new ByteArrayInputStream(newXzsBytes)), newUnpackedXzsPath);
+
+    ImmutableMap.Builder<Path, Integer> newDexSizeMapBuilder = ImmutableMap.builder();
+    for (DexTestUtils.DexMetadata dexMetadata : newMetadataFiles) {
+      String xzMeta =
+          newZipInspector
+              .getFileContentsLines(
+                  "assets/secondary-program-dex-jars/" + dexMetadata.dexFile + ".meta")
+              .get(0);
+      int jarSize = readJarSize(xzMeta);
+      newDexSizeMapBuilder.put(dexMetadata.dexFile, jarSize);
+    }
+    ImmutableMap<Path, Integer> newDexSizeMap = newDexSizeMapBuilder.build();
+
+    int newTotalDexSize =
+        newMetadataFiles.stream()
+            .map(dexMetadata -> newDexSizeMap.get(dexMetadata.dexFile))
+            .reduce(0, Integer::sum);
+    assertEquals(newTotalDexSize, newUnpackedXzsPath.toFile().length());
+
+    FileInputStream newJarConcatStream = new FileInputStream(newUnpackedXzsPath.toFile());
+    for (int i = 0; i < 2; i++) {
+      DexTestUtils.DexMetadata newDexMetadata = newMetadataFiles.get(i);
+      int jarSize = newDexSizeMap.get(newDexMetadata.dexFile);
+      byte[] dexJarContents = new byte[jarSize];
+      assertEquals(newJarConcatStream.read(dexJarContents, 0, jarSize), jarSize);
+
+      Path dexJarFile =
+          workspace.getPath(
+              newApkPath
+                  .getParent()
+                  .resolve(String.format("newunxzs/secondary-%s.dex.jar", i + 1)));
+      Files.write(dexJarFile, dexJarContents);
+
+      ZipInspector dexJarInspector = new ZipInspector(dexJarFile);
+
+      dexJarInspector.assertFileExists("classes.dex");
+
+      DexInspector dexInspector = new DexInspector(dexJarFile);
+      dexInspector.assertTypeExists(newDexMetadata.getJvmName());
+
+      if (i == 0) {
+        dexInspector.assertTypeExists("Lcom/facebook/sample/Small;");
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample3;");
+      } else {
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Small;");
+        dexInspector.assertTypeDoesNotExist("Lcom/facebook/sample/Sample2;");
+        dexInspector.assertTypeExists("Lcom/facebook/sample/Sample3;");
+      }
+    }
+  }
+
+  @Test
   public void testNotAllJavaLibrariesFetched() throws IOException {
     String target = "//apps/multidex:app_with_deeper_deps";
     workspace.runBuckCommand("build", target).assertSuccess();

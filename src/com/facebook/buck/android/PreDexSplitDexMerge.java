@@ -22,6 +22,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -30,13 +31,16 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
@@ -374,6 +378,38 @@ public class PreDexSplitDexMerge extends PreDexMerge {
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
+    if (isPerClassPrimaryDexMatching && dexSplitMode.getDexStore().equals(DexStore.XZS)) {
+      steps.add(
+          new AbstractExecutionStep("combine_xzs_dex_files") {
+            @Override
+            public StepExecutionResult execute(StepExecutionContext context)
+                throws IOException, InterruptedException {
+              ImmutableCollection<Path> secondaryDexPaths =
+                  ProjectFilesystemUtils.getDirectoryContents(
+                      getProjectFilesystem().getRootPath(),
+                      ImmutableList.of(),
+                      paths.getSecondaryDexPathForModule(apkModuleGraph.getRootAPKModule()));
+              ImmutableMultimap<Path, Path> outputsToInputs =
+                  SmartDexingStep.createXzsOutputsToInputs(secondaryDexPaths);
+              for (Path output : outputsToInputs.keySet()) {
+                RmIsolatedStep.of(RelPath.of(output)).execute(context);
+              }
+              try {
+                SmartDexingStep.runXzsCommands(
+                    context,
+                    outputsToInputs,
+                    getProjectFilesystem(),
+                    xzCompressionLevel,
+                    Optional.of(getBuildTarget()));
+              } catch (StepFailedException e) {
+                context.logError(e, "There was an error producing an xzs file from dex jars");
+                return StepExecutionResults.ERROR;
+              }
+              return StepExecutionResults.SUCCESS;
+            }
+          });
+    }
+
     steps.add(
         new AbstractExecutionStep("merge_metadata") {
           @Override
@@ -388,7 +424,17 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                 mergedDexEntriesBuilder.put(partialDex.apkModule, line);
               }
             }
+
+            mergedDexEntriesBuilder.putAll(
+                apkModuleGraph.getRootAPKModule(), extraSecondaryDexesMetadataBuilder.build());
+
             ImmutableMultimap<APKModule, String> mergedDexEntries = mergedDexEntriesBuilder.build();
+
+            if (dexSplitMode.getDexStore() == DexStore.RAW) {
+              Preconditions.checkState(
+                  mergedDexEntries.get(apkModuleGraph.getRootAPKModule()).size() < 100,
+                  "Build produces more than 100 secondary dexes, this can break native multidex loading and/or redex. Increase linear_alloc_hard_limit or disable predexing");
+            }
 
             for (APKModule apkModule : modulesWithDexes) {
               Collection<String> dexEntries = mergedDexEntries.get(apkModule);
@@ -406,16 +452,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                 }
               }
 
-              ImmutableList<String> extraSecondaryDexesMetadata =
-                  extraSecondaryDexesMetadataBuilder.build();
-              if (dexSplitMode.getDexStore() == DexStore.RAW) {
-                Preconditions.checkState(
-                    dexEntries.size() + extraSecondaryDexesMetadata.size() < 100,
-                    "Build produces more than 100 secondary dexes, this can break native multidex loading and/or redex. Increase linear_alloc_hard_limit or disable predexing");
-              }
-
               lines.addAll(dexEntries);
-              lines.addAll(extraSecondaryDexesMetadata);
               getProjectFilesystem()
                   .writeLinesToPath(lines, paths.getMetadataTxtPathForModule(apkModule));
             }

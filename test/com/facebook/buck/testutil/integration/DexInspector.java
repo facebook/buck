@@ -37,10 +37,14 @@ public class DexInspector {
   public DexInspector(Path apkFile, String path) throws IOException {
     try (FileSystem zipFile = FileSystems.newFileSystem(apkFile, null)) {
       Path dexFilePath = zipFile.getPath(path);
-      if (path.endsWith(".dex.jar") || path.endsWith(".dex.jar.xz")) {
+      if (path.endsWith(".dex.jar")
+          || path.endsWith(".dex.jar.xz")
+          || path.endsWith(".dex.jar.xzs")) {
         try (InputStream fileInputStream = Files.newInputStream(dexFilePath)) {
           InputStream inputStream =
-              path.endsWith(".xz") ? new XZInputStream(fileInputStream) : fileInputStream;
+              path.endsWith(".xz") || path.endsWith(".xzs")
+                  ? new XZInputStream(fileInputStream)
+                  : fileInputStream;
           ZipInputStream jarInApkFile = new ZipInputStream(inputStream);
           ZipEntry entry;
           while ((entry = jarInApkFile.getNextEntry()) != null) {
