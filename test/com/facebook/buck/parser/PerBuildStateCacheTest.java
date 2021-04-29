@@ -41,7 +41,7 @@ import org.junit.Test;
 
 public class PerBuildStateCacheTest {
 
-  private PerBuildStateCache.PackageCache packageCache;
+  private PackageCachePerBuild packageCache;
   private BuckEventBus eventBus;
   private ProjectFilesystem filesystem;
   private Cells cells;
@@ -52,7 +52,7 @@ public class PerBuildStateCacheTest {
   @Before
   public void setUp() throws IOException {
     eventBus = BuckEventBusForTests.newInstance();
-    packageCache = new PerBuildStateCache().getPackageCache();
+    packageCache = new PackageCachePerBuild();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot());
     tempDir.newFolder("xplat");
     tempDir.newFile("xplat/.buckconfig");

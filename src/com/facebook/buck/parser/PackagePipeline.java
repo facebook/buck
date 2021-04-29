@@ -64,8 +64,7 @@ public class PackagePipeline implements AutoCloseable {
   PackagePipeline(
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
-      PackageFileParsePipeline packageFileParsePipeline,
-      PerBuildStateCache.PackageCache packageCache) {
+      PackageFileParsePipeline packageFileParsePipeline) {
     this.executorService = executorService;
     this.eventBus = eventBus;
     this.packageFileParsePipeline = packageFileParsePipeline;
@@ -76,7 +75,7 @@ public class PackagePipeline implements AutoCloseable {
         SimplePerfEvent.scope(
             eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("package_pipeline"));
 
-    this.cache = new PipelineNodeCache<>(packageCache, n -> false);
+    this.cache = new PipelineNodeCache<>(new PackageCachePerBuild(), n -> false);
   }
 
   /**

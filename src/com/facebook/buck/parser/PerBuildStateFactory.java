@@ -201,14 +201,8 @@ public class PerBuildStateFactory {
             eventBus,
             watchman);
 
-    PerBuildStateCache perBuildStateCache = new PerBuildStateCache();
-
     PackagePipeline packagePipeline =
-        new PackagePipeline(
-            executorService,
-            eventBus,
-            packageFileParsePipeline,
-            perBuildStateCache.getPackageCache());
+        new PackagePipeline(executorService, eventBus, packageFileParsePipeline);
 
     ListeningExecutorService pipelineExecutorService =
         parserConfig.getEnableParallelParsing()

@@ -642,14 +642,8 @@ public class ParsePipelineTest {
               eventBus,
               new WatchmanFactory.NullWatchman("test"));
 
-      PerBuildStateCache perStateBuildCache = new PerBuildStateCache();
-
       PackagePipeline packagePipeline =
-          new PackagePipeline(
-              executorService,
-              eventBus,
-              packageFileParsePipeline,
-              perStateBuildCache.getPackageCache());
+          new PackagePipeline(executorService, eventBus, packageFileParsePipeline);
 
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline =
           new UnconfiguredTargetNodePipeline(
