@@ -83,10 +83,9 @@ public class TestParserFactory {
       Cell cell,
       PerBuildStateFactory perBuildStateFactory,
       BuckEventBus eventBus) {
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
     return new ParserWithConfigurableAttributes(
-        new DaemonicParserState(parserConfig.getNumParsingThreads()),
+        new DaemonicParserState(),
         perBuildStateFactory,
         TestTargetSpecResolverFactory.create(executor, cell.getCellProvider(), eventBus),
         eventBus);

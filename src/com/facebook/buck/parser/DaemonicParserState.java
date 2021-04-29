@@ -81,11 +81,6 @@ public class DaemonicParserState {
   // this should be kept in sync with pattern used in buck.py
   private static final Pattern INCLUDE_PATH_PATTERN = Pattern.compile("^([A-Za-z0-9_]*)//(.*)$");
 
-  /** Taken from {@link ConcurrentMap}. */
-  static final int DEFAULT_INITIAL_CAPACITY = 16;
-
-  static final float DEFAULT_LOAD_FACTOR = 0.75f;
-
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
   private class DaemonicCacheView<K, T> implements PipelineNodeCache.Cache<K, T> {
 
@@ -312,8 +307,6 @@ public class DaemonicParserState {
 
   private final DaemonicPackageCache packageFileCache;
 
-  private final int parsingThreads;
-
   private final DaemonicParserStateCounters counters;
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
@@ -328,8 +321,7 @@ public class DaemonicParserState {
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
 
-  public DaemonicParserState(int parsingThreads) {
-    this.parsingThreads = parsingThreads;
+  public DaemonicParserState() {
     this.counters = new DaemonicParserStateCounters();
     this.buildFileTrees =
         CacheBuilder.newBuilder()
@@ -343,8 +335,7 @@ public class DaemonicParserState {
                   }
                 });
     this.defaultIncludesByCellName = new ConcurrentHashMap<>();
-    this.cellToDaemonicState =
-        new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, parsingThreads);
+    this.cellToDaemonicState = new ConcurrentHashMap<>();
 
     this.rawNodeCache = new DaemonicRawCacheView();
     this.packageFileCache = new DaemonicPackageCache();
@@ -404,7 +395,7 @@ public class DaemonicParserState {
   private DaemonicCellState getOrCreateCellState(Cell cell) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       return cellToDaemonicState.computeIfAbsent(
-          cell.getCanonicalName(), r -> new DaemonicCellState(cell, parsingThreads));
+          cell.getCanonicalName(), r -> new DaemonicCellState(cell));
     }
   }
 

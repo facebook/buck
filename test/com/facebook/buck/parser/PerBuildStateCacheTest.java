@@ -52,7 +52,7 @@ public class PerBuildStateCacheTest {
   @Before
   public void setUp() throws IOException {
     eventBus = BuckEventBusForTests.newInstance();
-    packageCache = new PerBuildStateCache(1).getPackageCache();
+    packageCache = new PerBuildStateCache().getPackageCache();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot());
     tempDir.newFolder("xplat");
     tempDir.newFile("xplat/.buckconfig");

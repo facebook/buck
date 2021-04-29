@@ -126,9 +126,7 @@ public class BuckGlobalStateFactory {
     VersionedTargetGraphCache versionedTargetGraphCache = new VersionedTargetGraphCache();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
-    DaemonicParserState daemonicParserState =
-        new DaemonicParserState(parserConfig.getNumParsingThreads());
+    DaemonicParserState daemonicParserState = new DaemonicParserState();
     fileEventBus.register(daemonicParserState);
 
     // Build the the rule key cache recycler.

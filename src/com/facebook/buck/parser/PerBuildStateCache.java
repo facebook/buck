@@ -31,15 +31,12 @@ import javax.annotation.Nullable;
 /** A cache for caching objects per build state with multiple {@link Cell}s. */
 class PerBuildStateCache {
 
-  private final int parsingThreads;
-
   private final ConcurrentMap<CanonicalCellName, CellState> cellPathToCellState;
 
   /** Cache mapping the package file path to the {@link Package} defined in that file. */
   private final PackageCache packageCache;
 
-  PerBuildStateCache(int parsingThreads) {
-    this.parsingThreads = parsingThreads;
+  PerBuildStateCache() {
 
     this.cellPathToCellState = new ConcurrentHashMap<>();
 
@@ -57,7 +54,7 @@ class PerBuildStateCache {
 
   private CellState getOrCreateCellState(Cell cell) {
     return cellPathToCellState.computeIfAbsent(
-        cell.getCanonicalName(), canonicalCellName -> new CellState(parsingThreads));
+        cell.getCanonicalName(), canonicalCellName -> new CellState());
   }
 
   /** Per {@link Cell} threadsafe packageCache for {@link Package}s. */
@@ -66,8 +63,8 @@ class PerBuildStateCache {
     /** Used as an unbounded packageCache to stored computed packages by package file path. */
     private final ConcurrentMapCache<AbsPath, Package> packages;
 
-    CellState(int parsingThreads) {
-      this.packages = new ConcurrentMapCache<>(parsingThreads);
+    CellState() {
+      this.packages = new ConcurrentMapCache<>();
     }
 
     Optional<Package> lookupPackage(AbsPath packageFile) {

@@ -36,9 +36,8 @@ class ConcurrentMapCache<K, V> {
 
   private final ConcurrentMap<K, V> values;
 
-  public ConcurrentMapCache(int numThreads) {
-    this.values =
-        new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, numThreads);
+  public ConcurrentMapCache() {
+    this.values = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
   }
 
   public V putIfAbsentAndGet(K key, V newValue) {

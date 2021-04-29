@@ -201,7 +201,7 @@ public class PerBuildStateFactory {
             eventBus,
             watchman);
 
-    PerBuildStateCache perBuildStateCache = new PerBuildStateCache(numParsingThreads);
+    PerBuildStateCache perBuildStateCache = new PerBuildStateCache();
 
     PackagePipeline packagePipeline =
         new PackagePipeline(

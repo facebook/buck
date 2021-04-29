@@ -27,7 +27,7 @@ public class ConcurrentMapCacheTest {
 
   @Test
   public void shouldAllowAnEntryToBeAdded() {
-    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
+    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>();
     cache.putIfAbsentAndGet("cake", 1);
 
     Integer value = cache.getIfPresent("cake");
@@ -37,7 +37,7 @@ public class ConcurrentMapCacheTest {
 
   @Test
   public void shouldRemoveValues() {
-    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
+    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>();
     cache.putIfAbsentAndGet("cake", 1);
 
     cache.invalidate("cake");
@@ -47,7 +47,7 @@ public class ConcurrentMapCacheTest {
 
   @Test
   public void shouldOnlyAddAnItemOnceToTheCache() {
-    ConcurrentMapCache<String, WeirdInt> cache = new ConcurrentMapCache<>(1);
+    ConcurrentMapCache<String, WeirdInt> cache = new ConcurrentMapCache<>();
     WeirdInt value = new WeirdInt(42);
     WeirdInt value2 = new WeirdInt(42);
 
@@ -59,7 +59,7 @@ public class ConcurrentMapCacheTest {
 
   @Test(expected = NullPointerException.class)
   public void disallowsNullValuesInTheCache() {
-    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
+    ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>();
     cache.putIfAbsentAndGet("cake", null);
   }
 

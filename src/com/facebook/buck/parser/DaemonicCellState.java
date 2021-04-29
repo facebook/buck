@@ -60,8 +60,7 @@ class DaemonicCellState {
 
     /** Unbounded cache for all computed objects associated with build targets. */
     @GuardedBy("cachesLock")
-    public final ConcurrentMapCache<K, T> allComputedNodes =
-        new ConcurrentMapCache<>(parsingThreads);
+    public final ConcurrentMapCache<K, T> allComputedNodes = new ConcurrentMapCache<>();
 
     /**
      * Provides access to all flavored build targets created and stored in all of the caches for a
@@ -190,17 +189,15 @@ class DaemonicCellState {
   private final Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> rawTargetNodeCache;
 
   private final AutoCloseableReadWriteUpdateLock cachesLock;
-  private final int parsingThreads;
 
-  DaemonicCellState(Cell cell, int parsingThreads) {
+  DaemonicCellState(Cell cell) {
     this.cell = new AtomicReference<>(cell);
-    this.parsingThreads = parsingThreads;
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
     this.buildFileDependents = new ConcurrentHashMap<>();
     this.packageFileDependents = new ConcurrentHashMap<>();
-    this.allBuildFileManifests = new ConcurrentMapCache<>(parsingThreads);
-    this.allPackageFileManifests = new ConcurrentMapCache<>(parsingThreads);
+    this.allBuildFileManifests = new ConcurrentMapCache<>();
+    this.allPackageFileManifests = new ConcurrentMapCache<>();
     this.allRawNodeTargets = Collections.newSetFromMap(new ConcurrentHashMap<>());
     this.cachesLock = new AutoCloseableReadWriteUpdateLock();
     this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);

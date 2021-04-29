@@ -575,7 +575,7 @@ public class ParsePipelineTest {
       TypeCoercerFactory coercerFactory = new DefaultTypeCoercerFactory();
       ConstructorArgMarshaller constructorArgMarshaller = new DefaultConstructorArgMarshaller();
 
-      this.daemonicParserState = new DaemonicParserState(NUM_THREADS);
+      this.daemonicParserState = new DaemonicParserState();
 
       projectBuildFileParserPool =
           new ProjectBuildFileParserPool(
@@ -642,7 +642,7 @@ public class ParsePipelineTest {
               eventBus,
               new WatchmanFactory.NullWatchman("test"));
 
-      PerBuildStateCache perStateBuildCache = new PerBuildStateCache(NUM_THREADS);
+      PerBuildStateCache perStateBuildCache = new PerBuildStateCache();
 
       PackagePipeline packagePipeline =
           new PackagePipeline(
