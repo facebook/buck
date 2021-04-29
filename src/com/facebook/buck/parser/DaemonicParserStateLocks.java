@@ -16,10 +16,10 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
+import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
 
 /** Lock objects shared by different state objects. */
 class DaemonicParserStateLocks {
   /** Locks cache data. */
-  final AutoCloseableReadWriteUpdateLock cachesLock = new AutoCloseableReadWriteUpdateLock();
+  final AutoCloseableReadWriteLock cachesLock = new AutoCloseableReadWriteLock();
 }
