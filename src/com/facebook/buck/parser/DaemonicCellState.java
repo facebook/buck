@@ -42,7 +42,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import javax.annotation.concurrent.GuardedBy;
 
 class DaemonicCellState {
 
@@ -58,7 +57,6 @@ class DaemonicCellState {
     private final CellCacheType<K, T> type;
 
     /** Unbounded cache for all computed objects associated with build targets. */
-    @GuardedBy("cachesLock")
     public final ConcurrentMapCache<K, T> allComputedNodes = new ConcurrentMapCache<>();
 
     /**
@@ -68,7 +66,6 @@ class DaemonicCellState {
      * <p>This map is used to locate all the build targets that need to be invalidated when a build
      * build file that produced those build targets has changed.
      */
-    @GuardedBy("cachesLock")
     private final ConcurrentHashMap<UnflavoredBuildTarget, Set<K>> targetsCornucopia =
         new ConcurrentHashMap<>();
 
@@ -116,7 +113,6 @@ class DaemonicCellState {
    * include that dependent file explicitly or transitively. This allows us to track which build
    * files to invalidate when a dependent file changes.
    */
-  @GuardedBy("cachesLock")
   private final ConcurrentHashMap<AbsPath, Set<AbsPath>> buildFileDependents;
 
   /**
@@ -124,15 +120,12 @@ class DaemonicCellState {
    * dependent file explicitly or transitively. This allows us to track which PACKAGE files to
    * invalidate when a dependent file changes.
    */
-  @GuardedBy("cachesLock")
   private final ConcurrentHashMap<AbsPath, Set<AbsPath>> packageFileDependents;
 
   /** Used as an unbounded cache to stored build file manifests by build file path. */
-  @GuardedBy("cachesLock")
   private final ConcurrentMapCache<AbsPath, BuildFileManifest> allBuildFileManifests;
 
   /** Used as an unbounded cache to stored package file manifests by package file path. */
-  @GuardedBy("cachesLock")
   private final ConcurrentMapCache<AbsPath, PackageFileManifest> allPackageFileManifests;
 
   /**
@@ -143,7 +136,6 @@ class DaemonicCellState {
    * Cache#allComputedNodes}) is also in {@link #allBuildFileManifests}, as we use the latter to
    * handle invalidations.
    */
-  @GuardedBy("cachesLock")
   private final Set<UnflavoredBuildTarget> allRawNodeTargets;
 
   /** Type-safe accessor to one of state caches */

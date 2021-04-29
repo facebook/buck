@@ -64,8 +64,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
-import javax.annotation.concurrent.ThreadSafe;
 
 /**
  * Persistent parsing data, that can exist between invocations of the {@link Parser}. All public
@@ -73,7 +71,6 @@ import javax.annotation.concurrent.ThreadSafe;
  * #invalidateIfProjectBuildFileParserStateChanged(Cell)} in order to ensure that state is
  * maintained correctly.
  */
-@ThreadSafe
 public class DaemonicParserState {
 
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
@@ -283,7 +280,6 @@ public class DaemonicParserState {
    * for cache invalidation. Please see {@link #invalidateBasedOn(WatchmanPathEvent)} for example
    * usage.
    */
-  @GuardedBy("cellStateLock")
   private final ConcurrentMap<CanonicalCellName, DaemonicCellState> cellToDaemonicState;
 
   private final DaemonicCacheView<BuildTarget, TargetNodeMaybeIncompatible> targetNodeCache =
@@ -316,7 +312,6 @@ public class DaemonicParserState {
    * The default includes used by the previous run of the parser in each cell (the key is the cell's
    * root path). If this value changes, then we need to invalidate all the caches.
    */
-  @GuardedBy("cachedStateLock")
   private ConcurrentHashMap<CanonicalCellName, ImmutableList<String>> defaultIncludesByCellName;
 
   private final AutoCloseableReadWriteLock cachedStateLock;
